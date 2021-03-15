@@ -50,6 +50,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Sascha Woo
  */
 public class SimpleElasticsearchPersistentPropertyUnitTests {
 
@@ -257,11 +258,10 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	}
 
 	static class DatesProperty {
-		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "dd.MM.uuuu") LocalDate localDate;
+		@Nullable @Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate localDate;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) Date legacyDate;
-		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom,
-				pattern = "dd.MM.uuuu") List<LocalDate> localDateList;
+		@Nullable @Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") List<LocalDate> localDateList;
 	}
 
 	@Data

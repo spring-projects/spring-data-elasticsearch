@@ -36,6 +36,7 @@ import org.springframework.core.annotation.AliasFor;
  * @author Aleksei Arsenev
  * @author Brian Kimmig
  * @author Morgan Lutz
+ * @author Sascha Woo
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
@@ -65,9 +66,9 @@ public @interface Field {
 
 	boolean index() default true;
 
-	DateFormat format() default DateFormat.none;
+	DateFormat[] format() default { DateFormat.date_optional_time, DateFormat.epoch_millis };
 
-	String pattern() default "";
+	String[] pattern() default {};
 
 	boolean store() default false;
 

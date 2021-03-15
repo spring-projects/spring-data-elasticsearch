@@ -23,9 +23,21 @@ package org.springframework.data.elasticsearch.annotations;
  * @author Jakub Vavrik
  * @author Tim te Beek
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  */
 public enum DateFormat {
+	/**
+	 * @deprecated since 4.2, will be removed in a future version. Use <code>format = {}</code> to disable built-in date
+	 *             formats in the @Field annotation.
+	 */
+	@Deprecated
 	none(""), //
+	/**
+	 * @deprecated since 4.2, will be removed in a future version.It is no longer required for using a custom date format
+	 *             pattern. If you want to use only a custom date format pattern, you must set the <code>format</code>
+	 *             property to empty <code>{}</code>.
+	 */
+	@Deprecated
 	custom(""), //
 	basic_date("uuuuMMdd"), //
 	basic_date_time("uuuuMMdd'T'HHmmss.SSSXXX"), //

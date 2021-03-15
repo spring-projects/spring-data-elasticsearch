@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -154,67 +155,80 @@ public class SimpleElasticsearchPersistentProperty extends
 
 		if (field != null && (field.type() == FieldType.Date || field.type() == FieldType.Date_Nanos)
 				&& (isTemporalAccessor || isDate)) {
-			DateFormat dateFormat = field.format();
+
+			DateFormat[] dateFormats = field.format();
+			String[] dateFormatPatterns = field.pattern();
 
 			String property = getOwner().getType().getSimpleName() + "." + getName();
 
-			if (dateFormat == DateFormat.none) {
+			if (dateFormats.length == 0 && dateFormatPatterns.length == 0) {
 				LOGGER.warn(
-						String.format("No DateFormat defined for property %s. Make sure you have a Converter registered for %s",
-								property, actualType.getSimpleName()));
+						"Property '{}' has @Field type '{}' but has no built-in format or custom date pattern defined. Make sure you have a converter registered for type {}.",
+						property, field.type().name(), actualType.getSimpleName());
 				return;
 			}
 
-			ElasticsearchDateConverter converter = null;
+			List<ElasticsearchDateConverter> converters = new ArrayList<>();
 
-			if (dateFormat == DateFormat.custom) {
-				String pattern = field.pattern();
-
-				if (!StringUtils.hasLength(pattern)) {
-					throw new MappingException(
-							String.format("Property %s is annotated with FieldType.%s and a custom format but has no pattern defined",
-									property, field.type().name()));
-				}
-
-				converter = ElasticsearchDateConverter.of(pattern);
-			} else {
-
+			// register converters for built-in formats
+			for (DateFormat dateFormat : dateFormats) {
 				switch (dateFormat) {
+					case none:
+					case custom:
+						break;
 					case weekyear:
 					case weekyear_week:
 					case weekyear_week_day:
-						LOGGER.warn("no Converter available for " + actualType.getName() + " and date format " + dateFormat.name()
-								+ ". Use a custom converter instead");
+						LOGGER.warn("No default converter available for '{}' and date format '{}'. Use a custom converter instead.",
+								actualType.getName(), dateFormat.name());
 						break;
 					default:
-						converter = ElasticsearchDateConverter.of(dateFormat);
+						converters.add(ElasticsearchDateConverter.of(dateFormat));
 						break;
 				}
 			}
 
-			if (converter != null) {
-				ElasticsearchDateConverter finalConverter = converter;
+			// register converters for custom formats
+			for (String dateFormatPattern : dateFormatPatterns) {
+				if (!StringUtils.hasText(dateFormatPattern)) {
+					throw new MappingException(
+							String.format("Date pattern of property '%s' must not be empty", property));
+				}
+				converters.add(ElasticsearchDateConverter.of(dateFormatPattern));
+			}
+
+			if (!converters.isEmpty()) {
 				propertyConverter = new ElasticsearchPersistentPropertyConverter() {
-					final ElasticsearchDateConverter dateConverter = finalConverter;
+					final List<ElasticsearchDateConverter> dateConverters = converters;
+
+					@SuppressWarnings("unchecked")
+					@Override
+					public Object read(String s) {
+						for (ElasticsearchDateConverter dateConverter : dateConverters) {
+							try {
+								if (isTemporalAccessor) {
+									return dateConverter.parse(s, (Class<? extends TemporalAccessor>) actualType);
+								} else { // must be date
+									return dateConverter.parse(s);
+								}
+							} catch (Exception e) {
+								LOGGER.trace(e.getMessage(), e);
+							}
+						}
+
+						throw new RuntimeException(String
+								.format("Unable to parse date value '%s' of property '%s' with configured converters", s, property));
+					}
 
 					@Override
 					public String write(Object property) {
+						ElasticsearchDateConverter dateConverter = dateConverters.get(0);
 						if (isTemporalAccessor && TemporalAccessor.class.isAssignableFrom(property.getClass())) {
 							return dateConverter.format((TemporalAccessor) property);
 						} else if (isDate && Date.class.isAssignableFrom(property.getClass())) {
 							return dateConverter.format((Date) property);
 						} else {
 							return property.toString();
-						}
-					}
-
-					@SuppressWarnings("unchecked")
-					@Override
-					public Object read(String s) {
-						if (isTemporalAccessor) {
-							return dateConverter.parse(s, (Class<? extends TemporalAccessor>) actualType);
-						} else { // must be date
-							return dateConverter.parse(s);
 						}
 					}
 				};

@@ -40,9 +40,9 @@ public @interface InnerField {
 
 	boolean index() default true;
 
-	DateFormat format() default DateFormat.none;
+	DateFormat[] format() default { DateFormat.date_optional_time, DateFormat.epoch_millis };
 
-	String pattern() default "";
+	String[] pattern() default {};
 
 	boolean store() default false;
 

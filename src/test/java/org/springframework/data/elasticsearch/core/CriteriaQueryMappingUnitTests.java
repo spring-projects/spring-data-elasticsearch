@@ -48,6 +48,7 @@ import org.springframework.lang.Nullable;
  * {@link CriteriaQueryProcessor} as this is needed to get the String representation to assert.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  */
 public class CriteriaQueryMappingUnitTests {
 
@@ -346,8 +347,7 @@ public class CriteriaQueryMappingUnitTests {
 		@Nullable @Field(name = "first-name") String firstName;
 		@Nullable @Field(name = "last-name") String lastName;
 		@Nullable @Field(name = "created-date", type = FieldType.Date, format = DateFormat.epoch_millis) Date createdDate;
-		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = DateFormat.custom,
-				pattern = "dd.MM.uuuu") LocalDate birthDate;
+		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate birthDate;
 	}
 
 	static class GeoShapeEntity {

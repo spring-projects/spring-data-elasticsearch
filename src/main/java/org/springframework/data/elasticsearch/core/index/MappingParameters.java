@@ -17,6 +17,9 @@ package org.springframework.data.elasticsearch.core.index;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.elasticsearch.common.Nullable;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -41,6 +44,7 @@ import org.springframework.util.StringUtils;
  * @author Aleksei Arsenev
  * @author Brian Kimmig
  * @author Morgan Lutz
+ * @author Sascha Woo
  * @since 4.0
  */
 public final class MappingParameters {
@@ -78,12 +82,12 @@ public final class MappingParameters {
 	private final String analyzer;
 	private final boolean coerce;
 	@Nullable private final String[] copyTo;
-	private final String datePattern;
+	private final DateFormat[] dateFormats;
+	private final String[] dateFormatPatterns;
 	private final boolean docValues;
 	private final boolean eagerGlobalOrdinals;
 	private final boolean enabled;
 	private final boolean fielddata;
-	private final DateFormat format;
 	@Nullable private final Integer ignoreAbove;
 	private final boolean ignoreMalformed;
 	private final boolean index;
@@ -129,8 +133,8 @@ public final class MappingParameters {
 		store = field.store();
 		fielddata = field.fielddata();
 		type = field.type();
-		format = field.format();
-		datePattern = field.pattern();
+		dateFormats = field.format();
+		dateFormatPatterns = field.pattern();
 		analyzer = field.analyzer();
 		searchAnalyzer = field.searchAnalyzer();
 		normalizer = field.normalizer();
@@ -171,8 +175,8 @@ public final class MappingParameters {
 		store = field.store();
 		fielddata = field.fielddata();
 		type = field.type();
-		format = field.format();
-		datePattern = field.pattern();
+		dateFormats = field.format();
+		dateFormatPatterns = field.pattern();
 		analyzer = field.analyzer();
 		searchAnalyzer = field.searchAnalyzer();
 		normalizer = field.normalizer();
@@ -226,8 +230,24 @@ public final class MappingParameters {
 
 		if (type != FieldType.Auto) {
 			builder.field(FIELD_PARAM_TYPE, type.name().toLowerCase());
-			if (type == FieldType.Date && format != DateFormat.none) {
-				builder.field(FIELD_PARAM_FORMAT, format == DateFormat.custom ? datePattern : format.toString());
+
+			if (type == FieldType.Date) {
+				List<String> formats = new ArrayList<>();
+
+				// built-in formats
+				for (DateFormat dateFormat : dateFormats) {
+					if (dateFormat == DateFormat.none || dateFormat == DateFormat.custom) {
+						continue;
+					}
+					formats.add(dateFormat.toString());
+				}
+
+				// custom date formats
+				Collections.addAll(formats, dateFormatPatterns);
+
+				if (!formats.isEmpty()) {
+					builder.field(FIELD_PARAM_FORMAT, String.join("||", formats));
+				}
 			}
 		}
 
