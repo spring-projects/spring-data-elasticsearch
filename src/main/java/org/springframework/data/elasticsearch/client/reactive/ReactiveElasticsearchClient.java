@@ -389,6 +389,20 @@ public interface ReactiveElasticsearchClient {
 	/**
 	 * Executes a {@link SearchTemplateRequest} against the {@literal search template} API.
 	 *
+	 * @param consumer must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-template.html">Search Template
+	 * 			API on elastic.co</a>
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
+	 */
+	default Flux<SearchHit> searchTemplate(Consumer<SearchTemplateRequest> consumer) {
+		SearchTemplateRequest request = new SearchTemplateRequest();
+		consumer.accept(request);
+		return searchTemplate(request);
+	}
+
+	/**
+	 * Executes a {@link SearchTemplateRequest} against the {@literal search template} API.
+	 *
 	 * @param searchTemplateRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-template.html">Search Template
 	 * 			API on elastic.co</a>
