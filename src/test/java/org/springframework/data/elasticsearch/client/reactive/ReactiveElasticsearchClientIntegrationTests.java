@@ -436,7 +436,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.verifyComplete();
 	}
 
-	@Test // [GH-1725]
+	@Test // #1725
 	public void inlineSearchTemplateShouldFindMatchingDocuments() {
 
 		addSourceDocument().to(INDEX_I);
