@@ -34,6 +34,7 @@ import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.util.RequestConverters;
 
@@ -47,6 +48,10 @@ public interface RequestCreator {
 
 	default Function<SearchRequest, Request> search() {
 		return RequestConverters::search;
+	}
+
+	default Function<SearchTemplateRequest, Request> searchTemplate() {
+		return RequestConverters::searchTemplate;
 	}
 
 	default Function<SearchScrollRequest, Request> scroll() {

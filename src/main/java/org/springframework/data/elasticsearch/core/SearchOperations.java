@@ -68,7 +68,7 @@ public interface SearchOperations {
 	 * Does a suggest query
 	 *
 	 * @param suggestion the query
-	 * @param the entity class
+	 * @param clazz the entity class
 	 * @return the suggest response
 	 * @since 4.1
 	 */

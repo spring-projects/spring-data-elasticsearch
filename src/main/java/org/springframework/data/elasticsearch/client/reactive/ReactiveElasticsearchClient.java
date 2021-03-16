@@ -52,6 +52,7 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
@@ -384,6 +385,43 @@ public interface ReactiveElasticsearchClient {
 	 * @since 4.0
 	 */
 	Mono<Long> count(HttpHeaders headers, SearchRequest searchRequest);
+
+	/**
+	 * Executes a {@link SearchTemplateRequest} against the {@literal search template} API.
+	 *
+	 * @param consumer must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-template.html">Search Template
+	 * 			API on elastic.co</a>
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
+	 */
+	default Flux<SearchHit> searchTemplate(Consumer<SearchTemplateRequest> consumer) {
+		SearchTemplateRequest request = new SearchTemplateRequest();
+		consumer.accept(request);
+		return searchTemplate(request);
+	}
+
+	/**
+	 * Executes a {@link SearchTemplateRequest} against the {@literal search template} API.
+	 *
+	 * @param searchTemplateRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-template.html">Search Template
+	 * 			API on elastic.co</a>
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
+	 */
+	default Flux<SearchHit> searchTemplate(SearchTemplateRequest searchTemplateRequest) {
+		return searchTemplate(HttpHeaders.EMPTY, searchTemplateRequest);
+	}
+
+	/**
+	 * Executes a {@link SearchTemplateRequest} against the {@literal search template} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param searchTemplateRequest must not be {@literal null}.
+	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-template.html">Search Template
+	 * 			API on elastic.co</a>
+	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
+	 */
+	Flux<SearchHit> searchTemplate(HttpHeaders headers, SearchTemplateRequest searchTemplateRequest);
 
 	/**
 	 * Execute a {@link SearchRequest} against the {@literal search} API.

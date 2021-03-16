@@ -52,6 +52,7 @@ import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
+import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -73,6 +74,7 @@ import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -432,6 +434,63 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.as(StepVerifier::create) //
 				.consumeNextWith(it -> assertThat(it.status()).isEqualTo(RestStatus.NOT_FOUND)) //
 				.verifyComplete();
+	}
+
+	@Test // #1725
+	public void inlineSearchTemplateShouldFindMatchingDocuments() {
+
+		addSourceDocument().to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
+
+		Map<String, Object> testDoc = new LinkedHashMap<>();
+		testDoc.put("firstname", "inline");
+		testDoc.put("lastname", "template");
+		add(testDoc).to(INDEX_I);
+
+		SearchTemplateRequest request = new SearchTemplateRequest(new SearchRequest(INDEX_I));
+		request.setScriptType(ScriptType.INLINE);
+		request.setScript("{\"query\":{\"match\":{\"firstname\":\"{{firstname}}\"}}}");
+		Map<String, Object> params = new LinkedHashMap<>();
+		params.put("firstname", "inline");
+		request.setScriptParams(params);
+
+		client.searchTemplate(request)
+			.as(StepVerifier::create)
+			.expectNextCount(1)
+			.verifyComplete();
+	}
+
+	@Test // #1725
+	public void storedSearchTemplateShouldFindMatchingDocuments() {
+
+		addSourceDocument().to(INDEX_I);
+		addSourceDocument().to(INDEX_I);
+
+		Map<String, Object> testDoc = new LinkedHashMap<>();
+		testDoc.put("firstname", "stored");
+		testDoc.put("lastname", "template");
+		add(testDoc).to(INDEX_I);
+
+		client.execute(c -> c.post()
+			.uri(builder -> builder.path("_scripts/searchbyfirstname").build())
+			.contentType(MediaType.APPLICATION_JSON)
+			.bodyValue(
+				"{\"script\":{\"lang\":\"mustache\",\"source\":{\"query\":{\"match\":{\"firstname\":\"{{firstname}}\"}}}}}")
+			.retrieve()
+			.bodyToMono(Void.class))
+			.block();
+
+		SearchTemplateRequest request = new SearchTemplateRequest(new SearchRequest(INDEX_I));
+		request.setScriptType(ScriptType.STORED);
+		request.setScript("searchbyfirstname");
+		Map<String, Object> params = new LinkedHashMap<>();
+		params.put("firstname", "stored");
+		request.setScriptParams(params);
+
+		client.searchTemplate(request)
+			.as(StepVerifier::create)
+			.expectNextCount(1)
+			.verifyComplete();
 	}
 
 	@Test // DATAES-488
