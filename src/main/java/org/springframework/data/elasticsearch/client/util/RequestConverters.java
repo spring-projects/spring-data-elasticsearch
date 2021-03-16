@@ -416,7 +416,7 @@ public class RequestConverters {
 		SearchRequest searchRequest = templateRequest.getRequest();
 
 		String endpoint = new EndpointBuilder().addCommaSeparatedPathParts(templateRequest.getRequest().indices())
-			.addPathPart("_search").addPathPart("template").build();
+				.addPathPart("_search").addPathPart("template").build();
 
 		Request request = new Request(HttpMethod.GET.name(), endpoint);
 		Params params = new Params(request);
@@ -751,21 +751,21 @@ public class RequestConverters {
 		return request;
 	}
 
-    public static Request indexExists(org.elasticsearch.client.indices.GetIndexRequest getIndexRequest) {
-        // this can be called with no indices as argument by transport client, not via REST though
-        if (getIndexRequest.indices() == null || getIndexRequest.indices().length == 0) {
-            throw new IllegalArgumentException("indices are mandatory");
-        }
-        String endpoint = endpoint(getIndexRequest.indices(), "");
-        Request request = new Request(HttpMethod.HEAD.name(), endpoint);
+	public static Request indexExists(org.elasticsearch.client.indices.GetIndexRequest getIndexRequest) {
+		// this can be called with no indices as argument by transport client, not via REST though
+		if (getIndexRequest.indices() == null || getIndexRequest.indices().length == 0) {
+			throw new IllegalArgumentException("indices are mandatory");
+		}
+		String endpoint = endpoint(getIndexRequest.indices(), "");
+		Request request = new Request(HttpMethod.HEAD.name(), endpoint);
 
-        Params params = new Params(request);
-        params.withLocal(getIndexRequest.local());
-        params.withHuman(getIndexRequest.humanReadable());
-        params.withIndicesOptions(getIndexRequest.indicesOptions());
-        params.withIncludeDefaults(getIndexRequest.includeDefaults());
-        return request;
-    }
+		Params params = new Params(request);
+		params.withLocal(getIndexRequest.local());
+		params.withHuman(getIndexRequest.humanReadable());
+		params.withIndicesOptions(getIndexRequest.indicesOptions());
+		params.withIncludeDefaults(getIndexRequest.includeDefaults());
+		return request;
+	}
 
 	public static Request indexOpen(OpenIndexRequest openIndexRequest) {
 		String endpoint = RequestConverters.endpoint(openIndexRequest.indices(), "_open");
@@ -804,7 +804,7 @@ public class RequestConverters {
 	}
 
 	public static Request indexCreate(org.elasticsearch.client.indices.CreateIndexRequest createIndexRequest) {
-		String endpoint = RequestConverters.endpoint(new String[]{createIndexRequest.index()});
+		String endpoint = RequestConverters.endpoint(new String[] { createIndexRequest.index() });
 		Request request = new Request(HttpMethod.PUT.name(), endpoint);
 
 		Params parameters = new Params(request);
@@ -846,17 +846,17 @@ public class RequestConverters {
 		return request;
 	}
 
-    public static Request putMapping(org.elasticsearch.client.indices.PutMappingRequest putMappingRequest) {
-        Request request = new Request(HttpMethod.PUT.name(),
-                RequestConverters.endpoint(putMappingRequest.indices(), "_mapping"));
+	public static Request putMapping(org.elasticsearch.client.indices.PutMappingRequest putMappingRequest) {
+		Request request = new Request(HttpMethod.PUT.name(),
+				RequestConverters.endpoint(putMappingRequest.indices(), "_mapping"));
 
-        new RequestConverters.Params(request) //
-                .withTimeout(putMappingRequest.timeout()) //
-                .withMasterTimeout(putMappingRequest.masterNodeTimeout()) //
-                .withIncludeTypeName(false);
-        request.setEntity(RequestConverters.createEntity(putMappingRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
-        return request;
-    }
+		new RequestConverters.Params(request) //
+				.withTimeout(putMappingRequest.timeout()) //
+				.withMasterTimeout(putMappingRequest.masterNodeTimeout()) //
+				.withIncludeTypeName(false);
+		request.setEntity(RequestConverters.createEntity(putMappingRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
+		return request;
+	}
 
 	public static Request flushIndex(FlushRequest flushRequest) {
 		String[] indices = flushRequest.indices() == null ? Strings.EMPTY_ARRAY : flushRequest.indices();
@@ -883,10 +883,10 @@ public class RequestConverters {
 		return request;
 	}
 
-    public static Request getMapping(org.elasticsearch.client.indices.GetMappingsRequest getMappingsRequest) {
-        String[] indices = getMappingsRequest.indices() == null ? Strings.EMPTY_ARRAY : getMappingsRequest.indices();
+	public static Request getMapping(org.elasticsearch.client.indices.GetMappingsRequest getMappingsRequest) {
+		String[] indices = getMappingsRequest.indices() == null ? Strings.EMPTY_ARRAY : getMappingsRequest.indices();
 
-        Request request = new Request(HttpMethod.GET.name(), RequestConverters.endpoint(indices, "_mapping"));
+		Request request = new Request(HttpMethod.GET.name(), RequestConverters.endpoint(indices, "_mapping"));
 
 		RequestConverters.Params parameters = new RequestConverters.Params(request);
 		parameters.withMasterTimeout(getMappingsRequest.masterNodeTimeout());

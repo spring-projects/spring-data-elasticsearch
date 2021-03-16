@@ -391,7 +391,7 @@ public interface ReactiveElasticsearchClient {
 	 *
 	 * @param consumer must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-template.html">Search Template
-	 * 			API on elastic.co</a>
+	 *      API on elastic.co</a>
 	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
 	 */
 	default Flux<SearchHit> searchTemplate(Consumer<SearchTemplateRequest> consumer) {
@@ -405,7 +405,7 @@ public interface ReactiveElasticsearchClient {
 	 *
 	 * @param searchTemplateRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-template.html">Search Template
-	 * 			API on elastic.co</a>
+	 *      API on elastic.co</a>
 	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
 	 */
 	default Flux<SearchHit> searchTemplate(SearchTemplateRequest searchTemplateRequest) {
@@ -418,7 +418,7 @@ public interface ReactiveElasticsearchClient {
 	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
 	 * @param searchTemplateRequest must not be {@literal null}.
 	 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-template.html">Search Template
-	 * 			API on elastic.co</a>
+	 *      API on elastic.co</a>
 	 * @return the {@link Flux} emitting {@link SearchHit hits} one by one.
 	 */
 	Flux<SearchHit> searchTemplate(HttpHeaders headers, SearchTemplateRequest searchTemplateRequest);

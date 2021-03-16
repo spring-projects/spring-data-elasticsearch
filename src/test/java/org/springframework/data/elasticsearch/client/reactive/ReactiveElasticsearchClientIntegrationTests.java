@@ -454,10 +454,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		params.put("firstname", "inline");
 		request.setScriptParams(params);
 
-		client.searchTemplate(request)
-			.as(StepVerifier::create)
-			.expectNextCount(1)
-			.verifyComplete();
+		client.searchTemplate(request).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
 	@Test // #1725
@@ -471,14 +468,13 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		testDoc.put("lastname", "template");
 		add(testDoc).to(INDEX_I);
 
-		client.execute(c -> c.post()
-			.uri(builder -> builder.path("_scripts/searchbyfirstname").build())
-			.contentType(MediaType.APPLICATION_JSON)
-			.bodyValue(
-				"{\"script\":{\"lang\":\"mustache\",\"source\":{\"query\":{\"match\":{\"firstname\":\"{{firstname}}\"}}}}}")
-			.retrieve()
-			.bodyToMono(Void.class))
-			.block();
+		client.execute(c -> c.post().uri(builder -> builder.path("_scripts/searchbyfirstname").build())
+				.contentType(MediaType.APPLICATION_JSON)
+				.bodyValue(
+						"{\"script\":{\"lang\":\"mustache\",\"source\":{\"query\":{\"match\":{\"firstname\":\"{{firstname}}\"}}}}}")
+				.retrieve().bodyToMono(Void.class)).block();
+
+		client.indices().refreshIndex(request -> request.indices(INDEX_I)).block();
 
 		SearchTemplateRequest request = new SearchTemplateRequest(new SearchRequest(INDEX_I));
 		request.setScriptType(ScriptType.STORED);
@@ -487,10 +483,10 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		params.put("firstname", "stored");
 		request.setScriptParams(params);
 
-		client.searchTemplate(request)
-			.as(StepVerifier::create)
-			.expectNextCount(1)
-			.verifyComplete();
+		client.searchTemplate(request) //
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete(); //
 	}
 
 	@Test // DATAES-488

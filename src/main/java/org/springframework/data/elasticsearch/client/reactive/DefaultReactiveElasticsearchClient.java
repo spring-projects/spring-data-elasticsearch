@@ -22,7 +22,6 @@ import io.netty.handler.ssl.IdentityCipherSuiteFilter;
 import io.netty.handler.ssl.JdkSslContext;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import org.elasticsearch.action.get.MultiGetItemResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -64,6 +63,7 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteResponse;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.get.MultiGetResponse;
 import org.elasticsearch.action.index.IndexRequest;
@@ -409,8 +409,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	@Override
 	public Flux<SearchHit> searchTemplate(HttpHeaders headers, SearchTemplateRequest searchTemplateRequest) {
 		return sendRequest(searchTemplateRequest, requestCreator.searchTemplate(), SearchTemplateResponse.class, headers)
-			.map(r ->  r.getResponse().getHits())
-			.flatMap(Flux::fromIterable);
+				.map(response -> response.getResponse().getHits()).flatMap(Flux::fromIterable);
 	}
 
 	/*
@@ -876,10 +875,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		String mediaType = response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType());
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
-				.switchIfEmpty(Mono
-						.error(new ElasticsearchStatusException(String.format("%s request to %s returned error code %s and no body.",
-								request.getMethod(), request.getEndpoint(), statusCode), status))
-				)
+				.switchIfEmpty(Mono.error(
+						new ElasticsearchStatusException(String.format("%s request to %s returned error code %s and no body.",
+								request.getMethod(), request.getEndpoint(), statusCode), status)))
 				.map(bytes -> new String(bytes, StandardCharsets.UTF_8)) //
 				.flatMap(content -> contentOrError(content, mediaType, status))
 				.flatMap(unused -> Mono
