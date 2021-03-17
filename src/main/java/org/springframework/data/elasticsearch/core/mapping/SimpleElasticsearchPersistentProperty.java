@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.core.completion.Completion;
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoJson;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -191,8 +192,7 @@ public class SimpleElasticsearchPersistentProperty extends
 			// register converters for custom formats
 			for (String dateFormatPattern : dateFormatPatterns) {
 				if (!StringUtils.hasText(dateFormatPattern)) {
-					throw new MappingException(
-							String.format("Date pattern of property '%s' must not be empty", property));
+					throw new MappingException(String.format("Date pattern of property '%s' must not be empty", property));
 				}
 				converters.add(ElasticsearchDateConverter.of(dateFormatPattern));
 			}
@@ -216,7 +216,7 @@ public class SimpleElasticsearchPersistentProperty extends
 							}
 						}
 
-						throw new RuntimeException(String
+						throw new ConversionException(String
 								.format("Unable to parse date value '%s' of property '%s' with configured converters", s, property));
 					}
 

@@ -34,6 +34,7 @@ import java.lang.Integer;
 import java.lang.Object;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -614,6 +615,40 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
+    @Test // #1727
+    @DisplayName("should map according to the annotated properties")
+    void shouldMapAccordingToTheAnnotatedProperties() throws JSONException {
+
+	    String expected = "{\n" +
+            "    \"properties\": {\n" + //
+            "        \"field1\": {\n" + //
+            "            \"type\": \"date\",\n" + //
+            "            \"format\": \"date_optional_time||epoch_millis\"\n" + //
+            "        },\n" + //
+            "        \"field2\": {\n" + //
+            "            \"type\": \"date\",\n" + //
+            "            \"format\": \"basic_date\"\n" + //
+            "        },\n" + //
+            "        \"field3\": {\n" + //
+            "            \"type\": \"date\",\n" + //
+            "            \"format\": \"basic_date||basic_time\"\n" + //
+            "        },\n" + //
+            "        \"field4\": {\n" + //
+            "            \"type\": \"date\",\n" + //
+            "            \"format\": \"date_optional_time||epoch_millis||dd.MM.uuuu\"\n" + //
+            "        },\n" + //
+            "        \"field5\": {\n" + //
+            "            \"type\": \"date\",\n" + //
+            "            \"format\": \"dd.MM.uuuu\"\n" + //
+            "        }\n" + //
+            "    }\n" + //
+            "}"; //
+
+        String mapping = getMappingBuilder().buildPropertyMapping(DateFormatsEntity.class);
+
+        assertEquals(expected, mapping, false);
+    }
+
 	@Setter
 	@Getter
 	@NoArgsConstructor
@@ -971,7 +1006,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	}
 
 	static class ValueObject {
-		private String value;
+		private final String value;
 
 		public ValueObject(String value) {
 			this.value = value;
@@ -1059,5 +1094,22 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		static class ObjectEntity {
 			@Field(type = Text) private String objectField;
 		}
+	}
+
+	@Data
+	@AllArgsConstructor
+	@NoArgsConstructor
+	static class DateFormatsEntity {
+		@Id private String id;
+		@Field(type = FieldType.Date) private LocalDateTime field1;
+
+		@Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime field2;
+
+		@Field(type = FieldType.Date,
+				format = { DateFormat.basic_date, DateFormat.basic_time }) private LocalDateTime field3;
+
+		@Field(type = FieldType.Date, pattern = "dd.MM.uuuu") private LocalDateTime field4;
+
+		@Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") private LocalDateTime field5;
 	}
 }

@@ -58,20 +58,57 @@ Constructor arguments are mapped by name to the key values in the retrieved Docu
 ** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
 ** `type`: The field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_.
 See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]
-** `format`: One or more built-in formats, default value is _strict_date_optional_time_ and _epoch_millis_.
-See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats[Elasticsearch Built In Formats]
-** `pattern`: One or more custom date formats. NOTE: If you want to use only custom date formats, you must set the `format` property to empty `{}`.
-See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#custom-date-formats[Elasticsearch Custom Date Formats]
+** `format`: One or more built-in date formats, see the next section <<elasticsearch.mapping.meta-model.date-formats>>.
+** `pattern`: One or more custom date formats, see the next section <<elasticsearch.mapping.meta-model.date-formats>>.
 ** `store`: Flag whether the original field value should be store in Elasticsearch, default value is _false_.
 ** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom analyzers and normalizer.
 * `@GeoPoint`: Marks a field as _geo_point_ datatype.
 Can be omitted if the field is an instance of the `GeoPoint` class.
 
-NOTE: Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation of type `FieldType.Date`.
-If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_.
-This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
-
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
+
+[[elasticsearch.mapping.meta-model.date-formats]]
+==== Date format mapping
+
+Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation
+of type `FieldType.Date` or a custom converter must be registered for this type. This paragraph describes the use of 
+`FieldType.Date`.
+
+There are two attributes of the `@Field` annotation that define which date format information is written to the 
+mapping (also see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats[Elasticsearch Built In Formats] and https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#custom-date-formats[Elasticsearch Custom Date Formats])
+
+The `format` attributes is used to define at least one of the predefined formats. If it is not defined, then a 
+default value of  __date_optional_time_ and _epoch_millis_ is used.
+
+The `pattern` attribute can be used to add additional custom format strings. If you want to use only custom date formats, you must set the `format` property to empty `{}`.
+
+The following table shows the different attributes and the mapping created from their values:
+
+
+[cols=2*,options=header]
+|===
+| annotation
+| format string in Elasticsearch mapping
+
+| @Field(type=FieldType.Date)
+| "date_optional_time\|\|epoch_millis",
+
+| @Field(type=FieldType.Date, format=DateFormat.basic_date)
+| "basic_date"
+
+| @Field(type=FieldType.Date, format={DateFormat.basic_date, DateFormat.basic_time})
+| "basic_date\|\|basic_time"
+
+| @Field(type=FieldType.Date, pattern="dd.MM.uuuu")
+| "date_optional_time\|\|epoch_millis\|\|dd.MM.uuuu",
+
+| @Field(type=FieldType.Date, format={}, pattern="dd.MM.uuuu")
+| "dd.MM.uuuu"
+
+|===
+
+NOTE: If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_.
+This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
 
 ==== Mapped field names
 
