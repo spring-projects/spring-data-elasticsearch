@@ -1,6 +1,23 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.2.0-M5 (2021-03-17)
+----------------------------------------
+* #1725 - Add support for SearchTemplate for reactive client.
+* #1721 - IndexOps.getMapping raises exception if mapping contains "dynamic_templates".
+* #1718 - Create index with mapping in one step.
+* #1712 - Requests with ReactiveElasticsearchRepository methods doesn't fail if it can't connect with Elasticsearch.
+* #1711 - Add the type hint _class attribute to the index mapping.
+* #1704 - Add SearchFailure field in ByQueryResponse.
+* #1700 - Add missing "Document ranking types".
+* #1687 - Upgrade to Elasticsearch 7.11.
+* #1686 - Add rescore functionality.
+* #1678 - Errors are silent in multiGet.
+* #1658 - ReactiveElasticsearchClient should use the same request parameters as non-reactive code.
+* #1646 - Add function to list all indexes.
+* #1514 - Add `matched_queries` field in SearchHit [DATAES-979].
+
+
 Changes in version 4.1.6 (2021-03-17)
 -------------------------------------
 * #1712 - Requests with ReactiveElasticsearchRepository methods doesn't fail if it can't connect with Elasticsearch.
@@ -1475,6 +1492,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
