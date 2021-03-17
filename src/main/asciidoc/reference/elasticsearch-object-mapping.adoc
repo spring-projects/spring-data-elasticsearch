@@ -56,16 +56,18 @@ Default value is _EXTERNAL_.
 Constructor arguments are mapped by name to the key values in the retrieved Document.
 * `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions (the following list is not complete, check the annotation Javadoc for a complete reference):
 ** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
-** `type`: the field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_.
+** `type`: The field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_.
 See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]
-** `format` and `pattern` definitions for the _Date_ type.
+** `format`: One or more built-in formats, default value is _strict_date_optional_time_ and _epoch_millis_.
+See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats[Elasticsearch Built In Formats]
+** `pattern`: One or more custom date formats. NOTE: If you want to use only custom date formats, you must set the `format` property to empty `{}`.
+See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#custom-date-formats[Elasticsearch Custom Date Formats]
 ** `store`: Flag whether the original field value should be store in Elasticsearch, default value is _false_.
 ** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom analyzers and normalizer.
-* `@GeoPoint`: marks a field as _geo_point_ datatype.
+* `@GeoPoint`: Marks a field as _geo_point_ datatype.
 Can be omitted if the field is an instance of the `GeoPoint` class.
 
-NOTE: Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation of type `FieldType.Date` and a
-format different from `DateFormat.none` or a custom converter must be registered for this type. +
+NOTE: Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation of type `FieldType.Date`.
 If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_.
 This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
 

@@ -36,6 +36,7 @@ import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
  * @author Mohsin Husen
  * @author Don Wellington
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  */
 public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests {
 
@@ -62,8 +63,7 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 
 		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
 
-		@Field(type = Date, format = DateFormat.custom,
-				pattern = "dd.MM.uuuu hh:mm") private LocalDateTime customFormatDate;
+		@Field(type = Date, format = {}, pattern = "dd.MM.uuuu hh:mm") private LocalDateTime customFormatDate;
 
 		@Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime basicFormatDate;
 	}

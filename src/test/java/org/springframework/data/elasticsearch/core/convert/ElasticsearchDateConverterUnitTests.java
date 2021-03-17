@@ -23,6 +23,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 /**
  * @author Peter-Josef Meisch
  * @author Tim te Beek
+ * @author Sascha Woo
  */
 class ElasticsearchDateConverterUnitTests {
 
@@ -34,16 +35,28 @@ class ElasticsearchDateConverterUnitTests {
 
 		switch (dateFormat) {
 			case none:
+			case custom:
 			case weekyear:
 			case weekyear_week:
 			case weekyear_week_day:
 				return;
 		}
 
-		String pattern = (dateFormat != DateFormat.custom) ? dateFormat.name() : "dd.MM.uuuu";
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(dateFormat.name());
 
+		assertThat(converter).isNotNull();
+	}
+
+	@Test // DATAES-716
+	void shouldCreateConvertersForDateFormatPattern() {
+
+		// given
+		String pattern = "dd.MM.uuuu";
+
+		// when
 		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(pattern);
 
+		// then
 		assertThat(converter).isNotNull();
 	}
 

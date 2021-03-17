@@ -83,6 +83,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Konrad Kurdej
  * @author Roman Puchkovskiy
+ * @author Sascha Woo
  */
 public class MappingElasticsearchConverterUnitTests {
 
@@ -1218,8 +1219,7 @@ public class MappingElasticsearchConverterUnitTests {
 		String name;
 		@Field(name = "first-name") String firstName;
 		@Field(name = "last-name") String lastName;
-		@Field(name = "birth-date", type = FieldType.Date, format = DateFormat.custom,
-				pattern = "dd.MM.uuuu") LocalDate birthDate;
+		@Field(name = "birth-date", type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate birthDate;
 		Gender gender;
 		Address address;
 

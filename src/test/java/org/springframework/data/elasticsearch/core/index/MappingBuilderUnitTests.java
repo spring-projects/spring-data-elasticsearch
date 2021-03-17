@@ -921,7 +921,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable @Field(copyTo = { "foo", "bar" }) private String copyTo;
 		@Nullable @Field(ignoreAbove = 42) private String ignoreAbove;
 		@Nullable @Field(type = FieldType.Integer) private String type;
-		@Nullable @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "YYYYMMDD") private LocalDate date;
+		@Nullable @Field(type = FieldType.Date, format = {}, pattern = "YYYYMMDD") private LocalDate date;
 		@Nullable @Field(analyzer = "ana", searchAnalyzer = "sana", normalizer = "norma") private String analyzers;
 		@Nullable @Field(type = Keyword) private String docValuesTrue;
 		@Nullable @Field(type = Keyword, docValues = false) private String docValuesFalse;
