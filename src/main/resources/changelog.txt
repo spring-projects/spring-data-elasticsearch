@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.8.RELEASE (2021-03-17)
+---------------------------------------------
+* #1712 - Requests with ReactiveElasticsearchRepository methods doesn't fail if it can't connect with Elasticsearch.
+
+
 Changes in version 4.2.0-M4 (2021-02-18)
 ----------------------------------------
 
@@ -1484,6 +1489,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
