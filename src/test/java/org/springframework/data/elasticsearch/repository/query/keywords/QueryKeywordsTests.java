@@ -17,12 +17,6 @@ package org.springframework.data.elasticsearch.repository.query.keywords;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,18 +70,12 @@ class QueryKeywordsTests {
 		indexOperations = operations.indexOps(Product.class);
 		IndexInitializer.init(indexOperations);
 
-		Product product1 = Product.builder().id("1").name("Sugar").text("Cane sugar").price(1.0f).available(false)
-				.sortName("sort5").build();
-		Product product2 = Product.builder().id("2").name("Sugar").text("Cane sugar").price(1.2f).available(true)
-				.sortName("sort4").build();
-		Product product3 = Product.builder().id("3").name("Sugar").text("Beet sugar").price(1.1f).available(true)
-				.sortName("sort3").build();
-		Product product4 = Product.builder().id("4").name("Salt").text("Rock salt").price(1.9f).available(true)
-				.sortName("sort2").build();
-		Product product5 = Product.builder().id("5").name("Salt").text("Sea salt").price(2.1f).available(false)
-				.sortName("sort1").build();
-		Product product6 = Product.builder().id("6").name(null).text("no name").price(3.4f).available(false)
-				.sortName("sort0").build();
+		Product product1 = new Product("1", "Sugar", "Cane sugar", 1.0f, false, "sort5");
+		Product product2 = new Product("2", "Sugar", "Cane sugar", 1.2f, true, "sort4");
+		Product product3 = new Product("3", "Sugar", "Beet sugar", 1.1f, true, "sort3");
+		Product product4 = new Product("4", "Salt", "Rock salt", 1.9f, true, "sort2");
+		Product product5 = new Product("5", "Salt", "Sea salt", 2.1f, false, "sort1");
+		Product product6 = new Product("6", null, "no name", 3.4f, false, "sort0");
 
 		repository.saveAll(Arrays.asList(product1, product2, product3, product4, product5, product6));
 	}
@@ -285,34 +273,79 @@ class QueryKeywordsTests {
 		assertThat(products).isEmpty();
 	}
 
-	/**
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-product-query-keywords", replicas = 0, refreshInterval = "-1")
 	static class Product {
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Keyword) private String text;
+		@Nullable @Field(type = FieldType.Float) private Float price;
+		@Nullable private boolean available;
+		@Nullable @Field(name = "sort-name", type = FieldType.Keyword) private String sortName;
 
-		@Id private String id;
+		public Product(@Nullable String id, @Nullable String name, @Nullable String text, @Nullable Float price,
+				boolean available, @Nullable String sortName) {
+			this.id = id;
+			this.name = name;
+			this.text = text;
+			this.price = price;
+			this.available = available;
+			this.sortName = sortName;
+		}
 
-		private String name;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		@Field(type = FieldType.Keyword) private String text;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@Field(type = FieldType.Float) private Float price;
+		@Nullable
+		public String getName() {
+			return name;
+		}
 
-		private boolean available;
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 
-		@Field(name = "sort-name", type = FieldType.Keyword) private String sortName;
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
+
+		@Nullable
+		public Float getPrice() {
+			return price;
+		}
+
+		public void setPrice(@Nullable Float price) {
+			this.price = price;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public String getSortName() {
+			return sortName;
+		}
+
+		public void setSortName(@Nullable String sortName) {
+			this.sortName = sortName;
+		}
 	}
 
-	/**
-	 * Created by akonczak on 04/09/15.
-	 */
 	interface ProductRepository extends ElasticsearchRepository<Product, String> {
 
 		List<Product> findByName(@Nullable String name);

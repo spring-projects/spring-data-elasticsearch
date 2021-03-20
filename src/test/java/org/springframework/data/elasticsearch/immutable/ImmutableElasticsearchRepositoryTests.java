@@ -17,9 +17,6 @@ package org.springframework.data.elasticsearch.immutable;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
 import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
@@ -95,15 +92,20 @@ public class ImmutableElasticsearchRepositoryTests {
 	 * @author Oliver Gierke
 	 */
 	@Document(indexName = "test-index-immutable")
-	@NoArgsConstructor(force = true)
-	@Getter
 	static class ImmutableEntity {
 		private final String id, name;
 
 		public ImmutableEntity(String name) {
-
 			this.id = null;
 			this.name = name;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public String getName() {
+			return name;
 		}
 	}
 

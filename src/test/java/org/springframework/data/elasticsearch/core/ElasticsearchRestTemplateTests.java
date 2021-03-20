@@ -21,10 +21,6 @@ import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.val;
-
 import java.lang.Object;
 import java.time.Duration;
 import java.util.Collections;
@@ -37,6 +33,7 @@ import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,6 +46,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -81,13 +79,29 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 				.isInstanceOf(UncategorizedElasticsearchException.class);
 	}
 
-	@Data
-	@Builder
 	@Document(indexName = "test-index-sample-core-rest-template", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
-
-		@Id private String id;
+		@Nullable @Id private String id;
+		@Nullable
 		@Field(type = Text, store = true, fielddata = true) private String type;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
 	}
 
 	@Test // DATAES-768
@@ -122,7 +136,7 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		assertThat(request.retryOnConflict()).isEqualTo(7);
 		assertThat(request.timeout()).isEqualByComparingTo(TimeValue.parseTimeValue("4711s", "test"));
 		assertThat(request.waitForActiveShards()).isEqualTo(ActiveShardCount.ALL);
-		val fetchSourceContext = request.fetchSource();
+		FetchSourceContext fetchSourceContext = request.fetchSource();
 		assertThat(fetchSourceContext).isNotNull();
 		assertThat(fetchSourceContext.includes()).containsExactlyInAnyOrder("incl");
 		assertThat(fetchSourceContext.excludes()).containsExactlyInAnyOrder("excl");

@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.core.event;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.Data;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -216,20 +214,56 @@ abstract class ElasticsearchOperationsCallbackIntegrationTest {
 		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.getPrimaryTerm());
 	}
 
-	@Data
 	@Document(indexName = INDEX)
 	static class SampleEntity {
-		@Id private String id;
-		private String text;
+		@Nullable @Id private String id;
+		@Nullable private String text;
 
-		@JoinTypeRelations(relations = { @JoinTypeRelation(parent = "question",
-				children = { "answer" }) }) @Nullable private JoinField<String> joinField;
+		@Nullable @JoinTypeRelations(relations = { @JoinTypeRelation(parent = "question",
+				children = { "answer" }) })
+		 private JoinField<String> joinField;
 
-		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 
 		public SampleEntity(String id, String text) {
 			this.id = id;
 			this.text = text;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
+
+		@Nullable
+		public JoinField<String> getJoinField() {
+			return joinField;
+		}
+
+		public void setJoinField(@Nullable JoinField<String> joinField) {
+			this.joinField = joinField;
+		}
+
+		@Nullable
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		public void setSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
 		}
 	}
 }

@@ -19,15 +19,6 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
-import lombok.Setter;
-
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -156,10 +147,10 @@ public class MappingElasticsearchConverterUnitTests {
 		observatoryRoad.location = new Point(-118.3026284D, 34.118347D);
 
 		bigBunsCafe = new Place();
-		bigBunsCafe.name = "Big Buns Cafe";
-		bigBunsCafe.city = "Los Angeles";
-		bigBunsCafe.street = "15 South Fremont Avenue";
-		bigBunsCafe.location = new Point(-118.1545845D, 34.0945637D);
+		bigBunsCafe.setName("Big Buns Cafe");
+		bigBunsCafe.setCity("Los Angeles");
+		bigBunsCafe.setStreet("15 South Fremont Avenue");
+		bigBunsCafe.setLocation(new Point(-118.1545845D, 34.0945637D));
 
 		sarahAsMap = Document.create();
 		sarahAsMap.put("id", "sarah");
@@ -258,13 +249,11 @@ public class MappingElasticsearchConverterUnitTests {
 
 	@Test // DATAES-530
 	public void shouldMapObjectToJsonString() {
-		// Given
+		Car car = new Car();
+		car.setModel(CAR_MODEL);
+		car.setName(CAR_NAME);
+		String jsonResult = mappingElasticsearchConverter.mapObject(car).toJson();
 
-		// When
-		String jsonResult = mappingElasticsearchConverter.mapObject(Car.builder().model(CAR_MODEL).name(CAR_NAME).build())
-				.toJson();
-
-		// Then
 		assertThat(jsonResult).isEqualTo(JSON_STRING);
 	}
 
@@ -307,19 +296,14 @@ public class MappingElasticsearchConverterUnitTests {
 				"  ]\n" + //
 				"}\n"; //
 
-		GeoEntity geoEntity = GeoEntity.builder().pointA(point).pointB(GeoPoint.fromPoint(point)).pointC(pointAsString)
-				.pointD(pointAsArray).build();
-		// when
+		GeoEntity geoEntity = new GeoEntity();
+		geoEntity.setPointA(point);
+		geoEntity.setPointB(GeoPoint.fromPoint(point));
+		geoEntity.setPointC(pointAsString);
+		geoEntity.setPointD(pointAsArray);
 		String jsonResult = mappingElasticsearchConverter.mapObject(geoEntity).toJson();
 
-		// then
-
 		assertEquals(expected, jsonResult, false);
-		// assertThat(jsonResult).contains(pointTemplate("pointA", point));
-		// assertThat(jsonResult).contains(pointTemplate("pointB", point));
-		// assertThat(jsonResult).contains(String.format(Locale.ENGLISH, "\"%s\":\"%s\"", "pointC", pointAsString));
-		// assertThat(jsonResult)
-		// .contains(String.format(Locale.ENGLISH, "\"%s\":[%.1f,%.1f]", "pointD", pointAsArray[0], pointAsArray[1]));
 	}
 
 	@Test // DATAES-530
@@ -327,10 +311,10 @@ public class MappingElasticsearchConverterUnitTests {
 
 		// given
 		Sample sample = new Sample();
-		sample.readOnly = "readOnly";
-		sample.property = "property";
-		sample.javaTransientProperty = "javaTransient";
-		sample.annotatedTransientProperty = "transient";
+		sample.setReadOnly("readOnly");
+		sample.setProperty("property");
+		sample.setJavaTransientProperty("javaTransient");
+		sample.setAnnotatedTransientProperty("transient");
 
 		// when
 		String result = mappingElasticsearchConverter.mapObject(sample).toJson();
@@ -360,8 +344,8 @@ public class MappingElasticsearchConverterUnitTests {
 	public void writesConcreteList() {
 
 		Person ginger = new Person();
-		ginger.id = "ginger";
-		ginger.gender = Gender.MAN;
+		ginger.setId("ginger");
+		ginger.setGender(Gender.MAN);
 
 		sarahConnor.coWorkers = Arrays.asList(kyleReese, ginger);
 
@@ -630,9 +614,9 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-716
 	void shouldWriteLocalDate() throws JSONException {
 		Person person = new Person();
-		person.id = "4711";
-		person.firstName = "John";
-		person.lastName = "Doe";
+		person.setId("4711");
+		person.setFirstName("John");
+		person.setLastName("Doe");
 		person.birthDate = LocalDate.of(2000, 8, 22);
 		person.gender = Gender.MAN;
 
@@ -703,8 +687,8 @@ public class MappingElasticsearchConverterUnitTests {
 	void writeEntityWithMapDataType() {
 
 		Notification notification = new Notification();
-		notification.fromEmail = "from@email.com";
-		notification.toEmail = "to@email.com";
+		notification.setFromEmail("from@email.com");
+		notification.setToEmail("to@email.com");
 		Map<String, Object> data = new HashMap<>();
 		data.put("documentType", "abc");
 		data.put("content", null);
@@ -920,23 +904,22 @@ public class MappingElasticsearchConverterUnitTests {
 					.of(Arrays.asList(GeoJsonPoint.of(12, 34), GeoJsonPolygon
 							.of(GeoJsonLineString.of(new Point(12, 34), new Point(56, 78), new Point(90, 12), new Point(12, 34)))));
 
-			entity = GeoJsonEntity.builder() //
-					.id("42") //
-					.point1(GeoJsonPoint.of(12, 34)) //
-					.point2(GeoJsonPoint.of(56, 78)) //
-					.multiPoint1(GeoJsonMultiPoint.of(new Point(12, 34), new Point(56, 78), new Point(90, 12))) //
-					.multiPoint2(GeoJsonMultiPoint.of(new Point(90, 12), new Point(56, 78), new Point(12, 34))) //
-					.lineString1(GeoJsonLineString.of(new Point(12, 34), new Point(56, 78), new Point(90, 12))) //
-					.lineString2(GeoJsonLineString.of(new Point(90, 12), new Point(56, 78), new Point(12, 34))) //
-					.multiLineString1(multiLineString) //
-					.multiLineString2(multiLineString) //
-					.polygon1(geoJsonPolygon) //
-					.polygon2(geoJsonPolygon) //
-					.multiPolygon1(geoJsonMultiPolygon) //
-					.multiPolygon2(geoJsonMultiPolygon) //
-					.geometryCollection1(geoJsonGeometryCollection) //
-					.geometryCollection2(geoJsonGeometryCollection) //
-					.build();
+			entity = new GeoJsonEntity();
+			entity.setId("42");
+			entity.setPoint1(GeoJsonPoint.of(12, 34));
+			entity.setPoint2(GeoJsonPoint.of(56, 78));
+			entity.setMultiPoint1(GeoJsonMultiPoint.of(new Point(12, 34), new Point(56, 78), new Point(90, 12)));
+			entity.setMultiPoint2(GeoJsonMultiPoint.of(new Point(90, 12), new Point(56, 78), new Point(12, 34)));
+			entity.setLineString1(GeoJsonLineString.of(new Point(12, 34), new Point(56, 78), new Point(90, 12)));
+			entity.setLineString2(GeoJsonLineString.of(new Point(90, 12), new Point(56, 78), new Point(12, 34)));
+			entity.setMultiLineString1(multiLineString);
+			entity.setMultiLineString2(multiLineString);
+			entity.setPolygon1(geoJsonPolygon);
+			entity.setPolygon2(geoJsonPolygon);
+			entity.setMultiPolygon1(geoJsonMultiPolygon);
+			entity.setMultiPolygon2(geoJsonMultiPolygon);
+			entity.setGeometryCollection1(geoJsonGeometryCollection);
+			entity.setGeometryCollection2(geoJsonGeometryCollection);
 		}
 
 		@Test // DATAES-930
@@ -1205,37 +1188,233 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	public static class Sample {
-
 		@Nullable public @ReadOnlyProperty String readOnly;
 		@Nullable public @Transient String annotatedTransientProperty;
 		@Nullable public transient String javaTransientProperty;
 		@Nullable public String property;
+
+		@Nullable
+		public String getReadOnly() {
+			return readOnly;
+		}
+
+		public void setReadOnly(@Nullable String readOnly) {
+			this.readOnly = readOnly;
+		}
+
+		@Nullable
+		public String getAnnotatedTransientProperty() {
+			return annotatedTransientProperty;
+		}
+
+		public void setAnnotatedTransientProperty(@Nullable String annotatedTransientProperty) {
+			this.annotatedTransientProperty = annotatedTransientProperty;
+		}
+
+		@Nullable
+		public String getJavaTransientProperty() {
+			return javaTransientProperty;
+		}
+
+		public void setJavaTransientProperty(@Nullable String javaTransientProperty) {
+			this.javaTransientProperty = javaTransientProperty;
+		}
+
+		@Nullable
+		public String getProperty() {
+			return property;
+		}
+
+		public void setProperty(@Nullable String property) {
+			this.property = property;
+		}
 	}
 
-	@Data
 	static class Person {
+		@Nullable @Id String id;
+		@Nullable String name;
+		@Nullable @Field(name = "first-name") String firstName;
+		@Nullable @Field(name = "last-name") String lastName;
+		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = {},
+				pattern = "dd.MM.uuuu") LocalDate birthDate;
+		@Nullable Gender gender;
+		@Nullable Address address;
+		@Nullable List<Person> coWorkers;
+		@Nullable List<Inventory> inventoryList;
+		@Nullable Map<String, Address> shippingAddresses;
+		@Nullable Map<String, Inventory> inventoryMap;
 
-		@Id String id;
-		String name;
-		@Field(name = "first-name") String firstName;
-		@Field(name = "last-name") String lastName;
-		@Field(name = "birth-date", type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate birthDate;
-		Gender gender;
-		Address address;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		List<Person> coWorkers;
-		List<Inventory> inventoryList;
-		Map<String, Address> shippingAddresses;
-		Map<String, Inventory> inventoryMap;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public void setFirstName(@Nullable String firstName) {
+			this.firstName = firstName;
+		}
+
+		@Nullable
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(@Nullable String lastName) {
+			this.lastName = lastName;
+		}
+
+		@Nullable
+		public LocalDate getBirthDate() {
+			return birthDate;
+		}
+
+		public void setBirthDate(@Nullable LocalDate birthDate) {
+			this.birthDate = birthDate;
+		}
+
+		@Nullable
+		public Gender getGender() {
+			return gender;
+		}
+
+		public void setGender(@Nullable Gender gender) {
+			this.gender = gender;
+		}
+
+		@Nullable
+		public Address getAddress() {
+			return address;
+		}
+
+		public void setAddress(@Nullable Address address) {
+			this.address = address;
+		}
+
+		@Nullable
+		public List<Person> getCoWorkers() {
+			return coWorkers;
+		}
+
+		public void setCoWorkers(@Nullable List<Person> coWorkers) {
+			this.coWorkers = coWorkers;
+		}
+
+		@Nullable
+		public List<Inventory> getInventoryList() {
+			return inventoryList;
+		}
+
+		public void setInventoryList(@Nullable List<Inventory> inventoryList) {
+			this.inventoryList = inventoryList;
+		}
+
+		@Nullable
+		public Map<String, Address> getShippingAddresses() {
+			return shippingAddresses;
+		}
+
+		public void setShippingAddresses(@Nullable Map<String, Address> shippingAddresses) {
+			this.shippingAddresses = shippingAddresses;
+		}
+
+		@Nullable
+		public Map<String, Inventory> getInventoryMap() {
+			return inventoryMap;
+		}
+
+		public void setInventoryMap(@Nullable Map<String, Inventory> inventoryMap) {
+			this.inventoryMap = inventoryMap;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			Person person = (Person) o;
+
+			if (id != null ? !id.equals(person.id) : person.id != null)
+				return false;
+			if (name != null ? !name.equals(person.name) : person.name != null)
+				return false;
+			if (firstName != null ? !firstName.equals(person.firstName) : person.firstName != null)
+				return false;
+			if (lastName != null ? !lastName.equals(person.lastName) : person.lastName != null)
+				return false;
+			if (birthDate != null ? !birthDate.equals(person.birthDate) : person.birthDate != null)
+				return false;
+			if (gender != person.gender)
+				return false;
+			if (address != null ? !address.equals(person.address) : person.address != null)
+				return false;
+			if (coWorkers != null ? !coWorkers.equals(person.coWorkers) : person.coWorkers != null)
+				return false;
+			if (inventoryList != null ? !inventoryList.equals(person.inventoryList) : person.inventoryList != null)
+				return false;
+			if (shippingAddresses != null ? !shippingAddresses.equals(person.shippingAddresses)
+					: person.shippingAddresses != null)
+				return false;
+			return inventoryMap != null ? inventoryMap.equals(person.inventoryMap) : person.inventoryMap == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (name != null ? name.hashCode() : 0);
+			result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
+			result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
+			result = 31 * result + (birthDate != null ? birthDate.hashCode() : 0);
+			result = 31 * result + (gender != null ? gender.hashCode() : 0);
+			result = 31 * result + (address != null ? address.hashCode() : 0);
+			result = 31 * result + (coWorkers != null ? coWorkers.hashCode() : 0);
+			result = 31 * result + (inventoryList != null ? inventoryList.hashCode() : 0);
+			result = 31 * result + (shippingAddresses != null ? shippingAddresses.hashCode() : 0);
+			result = 31 * result + (inventoryMap != null ? inventoryMap.hashCode() : 0);
+			return result;
+		}
 	}
 
-	@Data
-	@Getter
-	@Setter
 	static class LocalDatesEntity {
-		@Id private String id;
-		@Field(name = "dates", type = FieldType.Date, format = DateFormat.custom,
+		@Nullable @Id private String id;
+		@Nullable @Field(name = "dates", type = FieldType.Date, format = DateFormat.custom,
 				pattern = "dd.MM.uuuu") private List<LocalDate> dates;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public List<LocalDate> getDates() {
+			return dates;
+		}
+
+		public void setDates(@Nullable List<LocalDate> dates) {
+			this.dates = dates;
+		}
 	}
 
 	enum Gender {
@@ -1258,89 +1437,314 @@ public class MappingElasticsearchConverterUnitTests {
 		String getLabel();
 	}
 
-	@Getter
-	@RequiredArgsConstructor
-	@EqualsAndHashCode
 	static class Gun implements Inventory {
-
 		final String label;
 		final int shotsPerMagazine;
+
+		public Gun(@Nullable String label, int shotsPerMagazine) {
+			this.label = label;
+			this.shotsPerMagazine = shotsPerMagazine;
+		}
 
 		@Override
 		public String getLabel() {
 			return label;
 		}
+
+		public int getShotsPerMagazine() {
+			return shotsPerMagazine;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			Gun gun = (Gun) o;
+
+			if (shotsPerMagazine != gun.shotsPerMagazine)
+				return false;
+			return label.equals(gun.label);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = label.hashCode();
+			result = 31 * result + shotsPerMagazine;
+			return result;
+		}
 	}
 
-	@RequiredArgsConstructor
-	@EqualsAndHashCode
 	static class Grenade implements Inventory {
-
 		final String label;
+
+		public Grenade(String label) {
+			this.label = label;
+		}
 
 		@Override
 		public String getLabel() {
 			return label;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof Grenade))
+				return false;
+
+			Grenade grenade = (Grenade) o;
+
+			return label.equals(grenade.label);
+		}
+
+		@Override
+		public int hashCode() {
+			return label.hashCode();
 		}
 	}
 
 	@TypeAlias("rifle")
-	@EqualsAndHashCode
-	@RequiredArgsConstructor
 	static class Rifle implements Inventory {
 
 		final String label;
 		final double weight;
 		final int maxShotsPerMagazine;
 
+		public Rifle(String label, double weight, int maxShotsPerMagazine) {
+			this.label = label;
+			this.weight = weight;
+			this.maxShotsPerMagazine = maxShotsPerMagazine;
+		}
+
 		@Override
 		public String getLabel() {
 			return label;
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof Rifle))
+				return false;
+
+			Rifle rifle = (Rifle) o;
+
+			if (Double.compare(rifle.weight, weight) != 0)
+				return false;
+			if (maxShotsPerMagazine != rifle.maxShotsPerMagazine)
+				return false;
+			return label.equals(rifle.label);
+		}
+
+		@Override
+		public int hashCode() {
+			int result;
+			long temp;
+			result = label.hashCode();
+			temp = Double.doubleToLongBits(weight);
+			result = 31 * result + (int) (temp ^ (temp >>> 32));
+			result = 31 * result + maxShotsPerMagazine;
+			return result;
+		}
 	}
 
-	@EqualsAndHashCode
-	@RequiredArgsConstructor
 	static class ShotGun implements Inventory {
 
-		final String label;
+		private final String label;
+
+		public ShotGun(String label) {
+			this.label = label;
+		}
 
 		@Override
 		public String getLabel() {
 			return label;
 		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof ShotGun))
+				return false;
+
+			ShotGun shotGun = (ShotGun) o;
+
+			return label.equals(shotGun.label);
+		}
+
+		@Override
+		public int hashCode() {
+			return label.hashCode();
+		}
 	}
 
-	@Data
 	static class Address {
+		@Nullable private Point location;
+		@Nullable private String street;
+		@Nullable private String city;
 
-		Point location;
-		String street;
-		String city;
+		@Nullable
+		public Point getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable Point location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public String getStreet() {
+			return street;
+		}
+
+		public void setStreet(@Nullable String street) {
+			this.street = street;
+		}
+
+		@Nullable
+		public String getCity() {
+			return city;
+		}
+
+		public void setCity(@Nullable String city) {
+			this.city = city;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof Address))
+				return false;
+
+			Address address = (Address) o;
+
+			if (location != null ? !location.equals(address.location) : address.location != null)
+				return false;
+			if (street != null ? !street.equals(address.street) : address.street != null)
+				return false;
+			return city != null ? city.equals(address.city) : address.city == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = location != null ? location.hashCode() : 0;
+			result = 31 * result + (street != null ? street.hashCode() : 0);
+			result = 31 * result + (city != null ? city.hashCode() : 0);
+			return result;
+		}
 	}
 
-	@EqualsAndHashCode(callSuper = true)
-	@Data
 	static class Place extends Address {
+		@Nullable private String name;
 
-		String name;
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof Place))
+				return false;
+
+			Place place = (Place) o;
+
+			return name != null ? name.equals(place.name) : place.name == null;
+		}
+
+		@Override
+		public int hashCode() {
+			return name != null ? name.hashCode() : 0;
+		}
 	}
 
-	@Data
 	static class Skynet {
+		@Nullable private Object object;
+		@Nullable private List<Object> objectList;
+		@Nullable private Map<String, Object> objectMap;
 
-		Object object;
-		List<Object> objectList;
-		Map<String, Object> objectMap;
+		@Nullable
+		public Object getObject() {
+			return object;
+		}
+
+		public void setObject(@Nullable Object object) {
+			this.object = object;
+		}
+
+		@Nullable
+		public List<Object> getObjectList() {
+			return objectList;
+		}
+
+		public void setObjectList(@Nullable List<Object> objectList) {
+			this.objectList = objectList;
+		}
+
+		@Nullable
+		public Map<String, Object> getObjectMap() {
+			return objectMap;
+		}
+
+		public void setObjectMap(@Nullable Map<String, Object> objectMap) {
+			this.objectMap = objectMap;
+		}
 	}
 
-	@Data
 	static class Notification {
+		@Nullable private Long id;
+		@Nullable private String fromEmail;
+		@Nullable private String toEmail;
+		@Nullable private Map<String, Object> params;
 
-		Long id;
-		String fromEmail;
-		String toEmail;
-		Map<String, Object> params;
+		@Nullable
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(@Nullable Long id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getFromEmail() {
+			return fromEmail;
+		}
+
+		public void setFromEmail(@Nullable String fromEmail) {
+			this.fromEmail = fromEmail;
+		}
+
+		@Nullable
+		public String getToEmail() {
+			return toEmail;
+		}
+
+		public void setToEmail(@Nullable String toEmail) {
+			this.toEmail = toEmail;
+		}
+
+		@Nullable
+		public Map<String, Object> getParams() {
+			return params;
+		}
+
+		public void setParams(@Nullable Map<String, Object> params) {
+			this.params = params;
+		}
 	}
 
 	@WritingConverter
@@ -1365,81 +1769,244 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	static class Car {
+		@Nullable private String name;
+		@Nullable private String model;
 
-		private String name;
-		private String model;
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(@Nullable String model) {
+			this.model = model;
+		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-geo-core-entity-mapper",
 			replicas = 0, refreshInterval = "-1")
 	static class GeoEntity {
-
-		@Id private String id;
-
+		@Nullable @Id private String id;
 		// geo shape - Spring Data
-		private Box box;
-		private Circle circle;
-		private Polygon polygon;
-
+		@Nullable private Box box;
+		@Nullable private Circle circle;
+		@Nullable private Polygon polygon;
 		// geo point - Custom implementation + Spring Data
-		@GeoPointField private Point pointA;
+		@Nullable @GeoPointField private Point pointA;
+		@Nullable private GeoPoint pointB;
+		@Nullable @GeoPointField private String pointC;
+		@Nullable @GeoPointField private double[] pointD;
 
-		private GeoPoint pointB;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		@GeoPointField private String pointC;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@GeoPointField private double[] pointD;
+		@Nullable
+		public Box getBox() {
+			return box;
+		}
+
+		public void setBox(@Nullable Box box) {
+			this.box = box;
+		}
+
+		@Nullable
+		public Circle getCircle() {
+			return circle;
+		}
+
+		public void setCircle(@Nullable Circle circle) {
+			this.circle = circle;
+		}
+
+		@Nullable
+		public Polygon getPolygon() {
+			return polygon;
+		}
+
+		public void setPolygon(@Nullable Polygon polygon) {
+			this.polygon = polygon;
+		}
+
+		@Nullable
+		public Point getPointA() {
+			return pointA;
+		}
+
+		public void setPointA(@Nullable Point pointA) {
+			this.pointA = pointA;
+		}
+
+		@Nullable
+		public GeoPoint getPointB() {
+			return pointB;
+		}
+
+		public void setPointB(@Nullable GeoPoint pointB) {
+			this.pointB = pointB;
+		}
+
+		@Nullable
+		public String getPointC() {
+			return pointC;
+		}
+
+		public void setPointC(@Nullable String pointC) {
+			this.pointC = pointC;
+		}
+
+		@Nullable
+		public double[] getPointD() {
+			return pointD;
+		}
+
+		public void setPointD(@Nullable double[] pointD) {
+			this.pointD = pointD;
+		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	static class SchemaLessObjectWrapper {
+		@Nullable private Map<String, Object> schemaLessObject;
 
-		private Map<String, Object> schemaLessObject;
+		@Nullable
+		public Map<String, Object> getSchemaLessObject() {
+			return schemaLessObject;
+		}
+
+		public void setSchemaLessObject(@Nullable Map<String, Object> schemaLessObject) {
+			this.schemaLessObject = schemaLessObject;
+		}
 	}
 
-	@Data
 	@org.springframework.data.elasticsearch.annotations.Document(
 			indexName = "test-index-entity-with-seq-no-primary-term-mapper")
 	static class EntityWithSeqNoPrimaryTerm {
-
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
+
+		@Nullable
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		public void setSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
 	}
 
-	@Data
 	static class EntityWithListProperty {
-		@Id private String id;
+		@Nullable @Id private String id;
+		@Nullable private List<String> values;
 
-		private List<String> values;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public List<String> getValues() {
+			return values;
+		}
+
+		public void setValues(@Nullable List<String> values) {
+			this.values = values;
+		}
 	}
 
-	@Data
 	static class GeoPointListEntity {
-		@Id String id;
-		List<GeoPoint> locations;
+		@Nullable private @Id String id;
+		@Nullable private List<GeoPoint> locations;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public List<GeoPoint> getLocations() {
+			return locations;
+		}
+
+		public void setLocations(@Nullable List<GeoPoint> locations) {
+			this.locations = locations;
+		}
 	}
 
-	@Data
 	static class EntityWithObject {
-		@Id private String id;
-		private Object content;
+		@Nullable @Id private String id;
+		@Nullable private Object content;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public Object getContent() {
+			return content;
+		}
+
+		public void setContent(@Nullable Object content) {
+			this.content = content;
+		}
 	}
 
-	@Data
 	static class EntityWithNullField {
-		@Id private String id;
-		@Field(type = FieldType.Text) private String notSaved;
-		@Field(type = FieldType.Text, storeNullValue = true) private String saved;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Text) private String notSaved;
+		@Nullable @Field(type = FieldType.Text, storeNullValue = true) private String saved;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getNotSaved() {
+			return notSaved;
+		}
+
+		public void setNotSaved(@Nullable String notSaved) {
+			this.notSaved = notSaved;
+		}
+
+		@Nullable
+		public String getSaved() {
+			return saved;
+		}
+
+		public void setSaved(@Nullable String saved) {
+			this.saved = saved;
+		}
 	}
 
 }

@@ -17,12 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -76,10 +70,10 @@ public class SearchAsYouTypeTests {
 
 	private void loadEntities() {
 		List<IndexQuery> indexQueries = new ArrayList<>();
-		indexQueries.add(SearchAsYouTypeEntity.builder().id("1").name("test 1").suggest("test 1234").build().toIndex());
-		indexQueries.add(SearchAsYouTypeEntity.builder().id("2").name("test 2").suggest("test 5678").build().toIndex());
-		indexQueries.add(SearchAsYouTypeEntity.builder().id("3").name("test 3").suggest("asd 5678").build().toIndex());
-		indexQueries.add(SearchAsYouTypeEntity.builder().id("4").name("test 4").suggest("not match").build().toIndex());
+		indexQueries.add(new SearchAsYouTypeEntity("1", "test 1", "test 1234").toIndex());
+		indexQueries.add(new SearchAsYouTypeEntity("2", "test 2", "test 5678").toIndex());
+		indexQueries.add(new SearchAsYouTypeEntity("3", "test 3", "asd 5678").toIndex());
+		indexQueries.add(new SearchAsYouTypeEntity("4", "test 4", "not match").toIndex());
 		IndexCoordinates index = IndexCoordinates.of("test-index-core-search-as-you-type");
 		operations.bulkIndex(indexQueries, index);
 		operations.indexOps(SearchAsYouTypeEntity.class).refresh();
@@ -109,9 +103,8 @@ public class SearchAsYouTypeTests {
 				.collect(Collectors.toList());
 
 		// then
-		assertThat(result).hasSize(2);
-		assertThat(result).contains(new SearchAsYouTypeEntity("1"));
-		assertThat(result).contains(new SearchAsYouTypeEntity("2"));
+		List<String> ids = result.stream().map(SearchAsYouTypeEntity::getId).collect(Collectors.toList());
+		assertThat(ids).containsExactlyInAnyOrder("1", "2");
 	}
 
 	@Test // DATAES-773
@@ -131,9 +124,8 @@ public class SearchAsYouTypeTests {
 				.collect(Collectors.toList());
 
 		// then
-		assertThat(result).hasSize(2);
-		assertThat(result).contains(new SearchAsYouTypeEntity("2"));
-		assertThat(result).contains(new SearchAsYouTypeEntity("3"));
+		List<String> ids = result.stream().map(SearchAsYouTypeEntity::getId).collect(Collectors.toList());
+		assertThat(ids).containsExactlyInAnyOrder("2", "3");
 	}
 
 	@Test // DATAES-773
@@ -153,18 +145,12 @@ public class SearchAsYouTypeTests {
 				.collect(Collectors.toList());
 
 		// then
-		assertThat(result).hasSize(1);
-		assertThat(result).contains(new SearchAsYouTypeEntity("4"));
+		assertThat(result.get(0).getId()).isEqualTo("4");
 	}
 
 	/**
 	 * @author Aleksei Arsenev
 	 */
-	@Data
-	@Builder
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 	@Document(indexName = "test-index-core-search-as-you-type", replicas = 0, refreshInterval = "-1")
 	static class SearchAsYouTypeEntity {
 
@@ -172,17 +158,71 @@ public class SearchAsYouTypeTests {
 			this.id = id;
 		}
 
-		@NonNull @Id @EqualsAndHashCode.Include private String id;
-
+		@Nullable @Id private String id;
 		@Nullable private String name;
-
 		@Nullable @Field(type = FieldType.Search_As_You_Type, maxShingleSize = 4) private String suggest;
+
+		public SearchAsYouTypeEntity() {
+		}
+
+		public SearchAsYouTypeEntity(String id, @Nullable String name, @Nullable String suggest) {
+			this.id = id;
+			this.name = name;
+			this.suggest = suggest;
+		}
 
 		public IndexQuery toIndex() {
 			IndexQuery indexQuery = new IndexQuery();
 			indexQuery.setId(getId());
 			indexQuery.setObject(this);
 			return indexQuery;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public String getSuggest() {
+			return suggest;
+		}
+
+		public void setSuggest(@Nullable String suggest) {
+			this.suggest = suggest;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+
+			SearchAsYouTypeEntity that = (SearchAsYouTypeEntity) o;
+
+			if (id != null ? !id.equals(that.id) : that.id != null) return false;
+			if (name != null ? !name.equals(that.name) : that.name != null) return false;
+			return suggest != null ? suggest.equals(that.suggest) : that.suggest == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (name != null ? name.hashCode() : 0);
+			result = 31 * result + (suggest != null ? suggest.hashCode() : 0);
+			return result;
 		}
 	}
 }

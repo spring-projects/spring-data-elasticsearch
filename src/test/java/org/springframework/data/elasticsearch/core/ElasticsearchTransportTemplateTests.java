@@ -21,9 +21,6 @@ import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import lombok.Data;
-import lombok.val;
-
 import java.lang.Object;
 import java.time.Duration;
 import java.util.Collections;
@@ -55,6 +52,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -108,18 +106,18 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		doc.put("message", "test");
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.from(doc);
-        UpdateQuery updateQuery = UpdateQuery.builder("1") //
-            .withDocument(document) //
-            .withIfSeqNo(42) //
-            .withIfPrimaryTerm(13) //
-            .withScript("script")//
-            .withLang("lang") //
-            .withRefreshPolicy(RefreshPolicy.WAIT_UNTIL) //
-            .withRetryOnConflict(7) //
-            .withTimeout("4711s") //
-            .withWaitForActiveShards("all").withFetchSourceIncludes(Collections.singletonList("incl")) //
-            .withFetchSourceExcludes(Collections.singletonList("excl")) //
-            .build();
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withIfSeqNo(42) //
+				.withIfPrimaryTerm(13) //
+				.withScript("script")//
+				.withLang("lang") //
+				.withRefreshPolicy(RefreshPolicy.WAIT_UNTIL) //
+				.withRetryOnConflict(7) //
+				.withTimeout("4711s") //
+				.withWaitForActiveShards("all").withFetchSourceIncludes(Collections.singletonList("incl")) //
+				.withFetchSourceExcludes(Collections.singletonList("excl")) //
+				.build();
 
 		UpdateRequestBuilder request = getRequestFactory().updateRequestBuilderFor(client, updateQuery,
 				IndexCoordinates.of("index"));
@@ -133,7 +131,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		assertThat(request.request().retryOnConflict()).isEqualTo(7);
 		assertThat(request.request().timeout()).isEqualByComparingTo(TimeValue.parseTimeValue("4711s", "test"));
 		assertThat(request.request().waitForActiveShards()).isEqualTo(ActiveShardCount.ALL);
-        FetchSourceContext fetchSourceContext = request.request().fetchSource();
+		FetchSourceContext fetchSourceContext = request.request().fetchSource();
 		assertThat(fetchSourceContext).isNotNull();
 		assertThat(fetchSourceContext.includes()).containsExactlyInAnyOrder("incl");
 		assertThat(fetchSourceContext.excludes()).containsExactlyInAnyOrder("excl");
@@ -197,11 +195,25 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		assertThat(request.request().getScript().getType()).isEqualTo(org.elasticsearch.script.ScriptType.STORED);
 	}
 
-	@Data
 	@Document(indexName = "test-index-sample-core-transport-template", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
 
-		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
 	}
 }

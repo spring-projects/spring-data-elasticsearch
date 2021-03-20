@@ -19,10 +19,6 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -443,13 +439,53 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 		assertThat(iterator.next().firstname).isEqualTo("before-convert");
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Person {
+		@Nullable @Id String id;
+		@Nullable  String firstname;
 
-		@Id String id;
-		String firstname;
+		public Person(@Nullable String id, @Nullable String firstname) {
+			this.id = id;
+			this.firstname = firstname;
+		}
+
+		public Person() {
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getFirstname() {
+			return firstname;
+		}
+
+		public void setFirstname(@Nullable String firstname) {
+			this.firstname = firstname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+
+			Person person = (Person) o;
+
+			if (id != null ? !id.equals(person.id) : person.id != null) return false;
+			return firstname != null ? firstname.equals(person.firstname) : person.firstname == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (firstname != null ? firstname.hashCode() : 0);
+			return result;
+		}
 	}
 
 	static class ValueCapturingEntityCallback<T> {

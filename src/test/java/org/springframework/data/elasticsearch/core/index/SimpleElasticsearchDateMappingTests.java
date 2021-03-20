@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.core.index;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.Data;
-
 import java.time.LocalDateTime;
 
 import org.json.JSONException;
@@ -30,6 +28,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Jakub Vavrik
@@ -52,19 +51,47 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 		assertEquals(EXPECTED_MAPPING, mapping, false);
 	}
 
-	/**
-	 * @author Jakub Vavrik
-	 */
-	@Data
 	@Document(indexName = "test-index-date-mapping-core", replicas = 0, refreshInterval = "-1")
 	static class SampleDateMappingEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+		@Nullable @Field(type = Date, format = {}, pattern = "dd.MM.uuuu hh:mm") private LocalDateTime customFormatDate;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime basicFormatDate;
 
-		@Id private String id;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@Field(type = Date, format = {}, pattern = "dd.MM.uuuu hh:mm") private LocalDateTime customFormatDate;
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
 
-		@Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime basicFormatDate;
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		@Nullable
+		public LocalDateTime getCustomFormatDate() {
+			return customFormatDate;
+		}
+
+		public void setCustomFormatDate(@Nullable LocalDateTime customFormatDate) {
+			this.customFormatDate = customFormatDate;
+		}
+
+		@Nullable
+		public LocalDateTime getBasicFormatDate() {
+			return basicFormatDate;
+		}
+
+		public void setBasicFormatDate(@Nullable LocalDateTime basicFormatDate) {
+			this.basicFormatDate = basicFormatDate;
+		}
 	}
 }

@@ -19,12 +19,6 @@ package org.springframework.data.elasticsearch.repositories.nestedobject;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,6 +42,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -101,26 +96,60 @@ public class InnerObjectTests {
 		assertThat(bookRepository.findById(id)).isNotNull();
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Nordine Bittich
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-book", replicas = 0, refreshInterval = "-1")
 	static class Book {
-
-		@Id private String id;
-		private String name;
-		@Field(type = FieldType.Object) private Author author;
-		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Object) private Author author;
+		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(@Nullable Author author) {
+			this.author = author;
+		}
+
+		@Nullable
+		public Map<Integer, Collection<String>> getBuckets() {
+			return buckets;
+		}
+
+		public void setBuckets(@Nullable Map<Integer, Collection<String>> buckets) {
+			this.buckets = buckets;
+		}
+
+		@Nullable
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(@Nullable String description) {
+			this.description = description;
+		}
 	}
 
 	public interface SampleElasticSearchBookRepository extends ElasticsearchRepository<Book, String> {}

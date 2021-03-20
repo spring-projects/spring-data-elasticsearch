@@ -17,9 +17,6 @@ package org.springframework.data.elasticsearch.core.geo;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.util.Arrays;
 
 import org.junit.jupiter.api.AfterEach;
@@ -38,6 +35,7 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.geo.Point;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -60,7 +58,7 @@ class GeoJsonIntegrationTest {
 			new Point(20, 20), //
 			new Point(10, 20), //
 			new Point(10, 10));
-	private final Area area10To20 = Area.builder().id("area10To20").area(geoShape10To20) /**/.build();
+	private final Area area10To20 = new Area("area10To20", geoShape10To20);
 
 	private final GeoJsonPolygon geoShape5To35 = GeoJsonPolygon.of( //
 			new Point(5, 5), //
@@ -68,7 +66,7 @@ class GeoJsonIntegrationTest {
 			new Point(35, 35), //
 			new Point(5, 35), //
 			new Point(5, 5));
-	private final Area area5To35 = Area.builder().id("area5To35").area(geoShape5To35).build();
+	private final Area area5To35 = new Area("area5To35", geoShape5To35);
 
 	private final GeoJsonPolygon geoShape15To25 = GeoJsonPolygon.of( //
 			new Point(15, 15), //
@@ -76,7 +74,7 @@ class GeoJsonIntegrationTest {
 			new Point(25, 25), //
 			new Point(15, 25), //
 			new Point(15, 15));
-	private final Area area15To25 = Area.builder().id("area15To25").area(geoShape15To25).build();
+	private final Area area15To25 = new Area("area15To25", geoShape15To25);
 
 	private final GeoJsonPolygon geoShape30To40 = GeoJsonPolygon.of( //
 			new Point(30, 30), //
@@ -84,7 +82,7 @@ class GeoJsonIntegrationTest {
 			new Point(40, 40), //
 			new Point(30, 40), //
 			new Point(30, 30));
-	private final Area area30To40 = Area.builder().id("area30To40").area(geoShape30To40).build();
+	private final Area area30To40 = new Area("area30To40",geoShape30To40);
 
 	private final GeoJsonPolygon geoShape32To37 = GeoJsonPolygon.of( //
 			new Point(32, 32), //
@@ -92,7 +90,7 @@ class GeoJsonIntegrationTest {
 			new Point(37, 37), //
 			new Point(32, 37), //
 			new Point(32, 32));
-	private final Area area32To37 = Area.builder().id("area32To37").area(geoShape30To40).build();
+	private final Area area32To37 = new Area("area32To37",geoShape30To40);
 	// endregion
 
 	// region setup
@@ -137,23 +135,22 @@ class GeoJsonIntegrationTest {
 				.of(Arrays.asList(GeoJsonPoint.of(12, 34), GeoJsonPolygon
 						.of(GeoJsonLineString.of(new Point(12, 34), new Point(56, 78), new Point(90, 12), new Point(12, 34)))));
 
-		GeoJsonEntity entity = GeoJsonEntity.builder() //
-				.id("42") //
-				.point1(GeoJsonPoint.of(12, 34)) //
-				.point2(GeoJsonPoint.of(56, 78)) //
-				.multiPoint1(GeoJsonMultiPoint.of(new Point(12, 34), new Point(56, 78), new Point(90, 12))) //
-				.multiPoint2(GeoJsonMultiPoint.of(new Point(90, 12), new Point(56, 78), new Point(12, 34))) //
-				.lineString1(GeoJsonLineString.of(new Point(12, 34), new Point(56, 78), new Point(90, 12))) //
-				.lineString2(GeoJsonLineString.of(new Point(90, 12), new Point(56, 78), new Point(12, 34))) //
-				.multiLineString1(multiLineString) //
-				.multiLineString2(multiLineString) //
-				.polygon1(geoJsonPolygon) //
-				.polygon2(geoJsonPolygon) //
-				.multiPolygon1(geoJsonMultiPolygon) //
-				.multiPolygon2(geoJsonMultiPolygon) //
-				.geometryCollection1(geoJsonGeometryCollection) //
-				.geometryCollection2(geoJsonGeometryCollection) //
-				.build(); //
+		GeoJsonEntity entity = new GeoJsonEntity();
+		entity.setId("42");
+		entity.setPoint1(GeoJsonPoint.of(12, 34));
+		entity.setPoint2(GeoJsonPoint.of(56, 78));
+		entity.setMultiPoint1(GeoJsonMultiPoint.of(new Point(12, 34), new Point(56, 78), new Point(90, 12)));
+		entity.setMultiPoint2(GeoJsonMultiPoint.of(new Point(90, 12), new Point(56, 78), new Point(12, 34)));
+		entity.setLineString1(GeoJsonLineString.of(new Point(12, 34), new Point(56, 78), new Point(90, 12)));
+		entity.setLineString2(GeoJsonLineString.of(new Point(90, 12), new Point(56, 78), new Point(12, 34)));
+		entity.setMultiLineString1(multiLineString);
+		entity.setMultiLineString2(multiLineString);
+		entity.setPolygon1(geoJsonPolygon);
+		entity.setPolygon2(geoJsonPolygon);
+		entity.setMultiPolygon1(geoJsonMultiPolygon);
+		entity.setMultiPolygon2(geoJsonMultiPolygon);
+		entity.setGeometryCollection1(geoJsonGeometryCollection);
+		entity.setGeometryCollection2(geoJsonGeometryCollection);
 
 		operations.save(entity);
 		indexOps.refresh();
@@ -209,12 +206,33 @@ class GeoJsonIntegrationTest {
 	// endregion
 
 	// region test classes
-	@Data
-	@Builder
 	@Document(indexName = "areas")
 	static class Area {
-		@Id private String id;
-		@Field(name = "the_area") private GeoJsonPolygon area;
+		@Nullable @Id private String id;
+		@Nullable @Field(name = "the_area") private GeoJsonPolygon area;
+
+		public Area(@Nullable String id, @Nullable GeoJsonPolygon area) {
+			this.id = id;
+			this.area = area;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public GeoJsonPolygon getArea() {
+			return area;
+		}
+
+		public void setArea(@Nullable GeoJsonPolygon area) {
+			this.area = area;
+		}
 	}
 	// endregion
 

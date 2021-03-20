@@ -17,10 +17,6 @@ package org.springframework.data.elasticsearch.core.routing;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -94,34 +90,94 @@ class DefaultRoutingResolverUnitTest {
 		assertThat(routing).isEqualTo("route 42");
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@Document(indexName = "routing-resolver-test")
 	@Routing("theRouting")
 	static class ValidRoutingEntity {
-		@Id private String id;
-		private String theRouting;
+		@Nullable @Id private String id;
+		@Nullable private String theRouting;
+
+		public ValidRoutingEntity(@Nullable String id, @Nullable String theRouting) {
+			this.id = id;
+			this.theRouting = theRouting;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getTheRouting() {
+			return theRouting;
+		}
+
+		public void setTheRouting(@Nullable String theRouting) {
+			this.theRouting = theRouting;
+		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@Document(indexName = "routing-resolver-test")
 	@Routing(value = "@spelRouting.getRouting(#entity)")
 	static class ValidSpelRoutingEntity {
-		@Id private String id;
-		private String theRouting;
+		@Nullable @Id private String id;
+		@Nullable private String theRouting;
+
+		public ValidSpelRoutingEntity(@Nullable String id, @Nullable String theRouting) {
+			this.id = id;
+			this.theRouting = theRouting;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getTheRouting() {
+			return theRouting;
+		}
+
+		public void setTheRouting(@Nullable String theRouting) {
+			this.theRouting = theRouting;
+		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@Document(indexName = "routing-resolver-test")
 	@Routing("unknownProperty")
 	static class InvalidRoutingEntity {
-		@Id private String id;
-		private String theRouting;
+		@Nullable @Id private String id;
+		@Nullable private String theRouting;
+
+		public InvalidRoutingEntity(@Nullable String id, @Nullable String theRouting) {
+			this.id = id;
+			this.theRouting = theRouting;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getTheRouting() {
+			return theRouting;
+		}
+
+		public void setTheRouting(@Nullable String theRouting) {
+			this.theRouting = theRouting;
+		}
 	}
 
 	static class SpelRouting {

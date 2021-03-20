@@ -17,8 +17,6 @@ package org.springframework.data.elasticsearch.repositories.synonym;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.Data;
-
 import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,6 +38,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -95,23 +94,31 @@ public class SynonymRepositoryTests {
 		assertThat(synonymEntities).hasSize(1);
 	}
 
-	/**
-	 * @author Mohsin Husen
-	 */
-	@Data
 	@Document(indexName = "test-index-synonym")
 	@Setting(settingPath = "/synonyms/settings.json")
 	@Mapping(mappingPath = "/synonyms/mappings.json")
 	static class SynonymEntity {
+		@Nullable @Id private String id;
+		@Nullable private String text;
 
-		@Id private String id;
-		private String text;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
 	}
 
-	/**
-	 * SynonymRepository
-	 *
-	 * @author Artur Konczak
-	 */
 	interface SynonymRepository extends ElasticsearchRepository<SynonymEntity, String> {}
 }

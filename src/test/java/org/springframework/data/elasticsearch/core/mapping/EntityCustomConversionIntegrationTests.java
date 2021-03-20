@@ -17,11 +17,6 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -45,6 +40,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -84,10 +80,9 @@ public class EntityCustomConversionIntegrationTests {
 	@DisplayName("should use CustomConversions on entity")
 	void shouldUseCustomConversionsOnEntity() {
 
-		Entity entity = Entity.builder() //
-				.value("hello") //
-				.location(GeoJsonPoint.of(8.0, 42.7)) //
-				.build();
+		Entity entity = new Entity();
+		entity.setValue("hello"); //
+		entity.setLocation(GeoJsonPoint.of(8.0, 42.7));
 
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
@@ -102,10 +97,9 @@ public class EntityCustomConversionIntegrationTests {
 	@DisplayName("should store and load entity from Elasticsearch")
 	void shouldStoreAndLoadEntityFromElasticsearch() {
 
-		Entity entity = Entity.builder() //
-				.value("hello") //
-				.location(GeoJsonPoint.of(8.0, 42.7)) //
-				.build();
+		Entity entity = new Entity();
+		entity.setValue("hello"); //
+		entity.setLocation(GeoJsonPoint.of(8.0, 42.7));
 
 		Entity savedEntity = operations.save(entity);
 
@@ -115,14 +109,49 @@ public class EntityCustomConversionIntegrationTests {
 		assertThat(foundEntity).isEqualTo(entity);
 	}
 
-	@Data
-	@Builder
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@Document(indexName = "entity-with-custom-conversions")
 	static class Entity {
-		private String value;
-		private GeoJsonPoint location;
+		@Nullable private String value;
+		@Nullable private GeoJsonPoint location;
+
+		@Nullable
+		public String getValue() {
+			return value;
+		}
+
+		public void setValue(@Nullable String value) {
+			this.value = value;
+		}
+
+		@Nullable
+		public GeoJsonPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoJsonPoint location) {
+			this.location = location;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof Entity))
+				return false;
+
+			Entity entity = (Entity) o;
+
+			if (value != null ? !value.equals(entity.value) : entity.value != null)
+				return false;
+			return location != null ? location.equals(entity.location) : entity.location == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = value != null ? value.hashCode() : 0;
+			result = 31 * result + (location != null ? location.hashCode() : 0);
+			return result;
+		}
 	}
 
 	@WritingConverter

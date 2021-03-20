@@ -18,10 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -132,39 +128,103 @@ public class InnerHitsTests {
 		softly.assertAll();
 	}
 
-	@Data
-	@AllArgsConstructor
-	@RequiredArgsConstructor
 	@Document(indexName = INDEX_NAME)
 	static class City {
-
-		@Id private String name;
-
+		@Nullable @Id private String name;
 		// NOTE: using a custom names here to cover property name matching
-		@Field(name = "hou-ses", type = FieldType.Nested) private Collection<House> houses = new ArrayList<>();
+		@Nullable @Field(name = "hou-ses", type = FieldType.Nested) private Collection<House> houses = new ArrayList<>();
+
+		public City(@Nullable String name, @Nullable Collection<House> houses) {
+			this.name = name;
+			this.houses = houses;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public Collection<House> getHouses() {
+			return houses;
+		}
+
+		public void setHouses(@Nullable Collection<House> houses) {
+			this.houses = houses;
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@RequiredArgsConstructor
 	static class House {
-
-		@Field(type = FieldType.Text) private String street;
-
-		@Field(type = FieldType.Text) private String streetNumber;
-
+		@Nullable @Field(type = FieldType.Text) private String street;
+		@Nullable @Field(type = FieldType.Text) private String streetNumber;
 		// NOTE: using a custom names here to cover property name matching
-		@Field(name = "in-habi-tants", type = FieldType.Nested) private List<Inhabitant> inhabitants = new ArrayList<>();
+		@Nullable @Field(name = "in-habi-tants",
+				type = FieldType.Nested) private List<Inhabitant> inhabitants = new ArrayList<>();
+
+		public House(@Nullable String street, @Nullable String streetNumber, @Nullable List<Inhabitant> inhabitants) {
+			this.street = street;
+			this.streetNumber = streetNumber;
+			this.inhabitants = inhabitants;
+		}
+
+		@Nullable
+		public String getStreet() {
+			return street;
+		}
+
+		public void setStreet(@Nullable String street) {
+			this.street = street;
+		}
+
+		@Nullable
+		public String getStreetNumber() {
+			return streetNumber;
+		}
+
+		public void setStreetNumber(@Nullable String streetNumber) {
+			this.streetNumber = streetNumber;
+		}
+
+		@Nullable
+		public List<Inhabitant> getInhabitants() {
+			return inhabitants;
+		}
+
+		public void setInhabitants(@Nullable List<Inhabitant> inhabitants) {
+			this.inhabitants = inhabitants;
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@RequiredArgsConstructor
 	static class Inhabitant {
 		// NOTE: using a custom names here to cover property name matching
+		@Nullable @Field(name = "first-name", type = FieldType.Text) private String firstName;
+		@Nullable @Field(name = "last-name", type = FieldType.Text) private String lastName;
 
-		@Field(name = "first-name", type = FieldType.Text) private String firstName;
+		public Inhabitant(@Nullable String firstName, @Nullable String lastName) {
+			this.firstName = firstName;
+			this.lastName = lastName;
+		}
 
-		@Field(name = "last-name", type = FieldType.Text) private String lastName;
+		@Nullable
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public void setFirstName(@Nullable String firstName) {
+			this.firstName = firstName;
+		}
+
+		@Nullable
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(@Nullable String lastName) {
+			this.lastName = lastName;
+		}
 	}
 }

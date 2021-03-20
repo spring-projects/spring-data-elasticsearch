@@ -23,12 +23,6 @@ import static org.springframework.data.elasticsearch.core.document.Document.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
 import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Long;
@@ -65,8 +59,6 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.rescore.QueryRescoreMode;
-import org.elasticsearch.search.rescore.QueryRescorerBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
@@ -1989,8 +1981,11 @@ public abstract class ElasticsearchTemplateTests {
 
 		// given
 		String documentId = nextIdAsString();
-		GTEVersionEntity entity = GTEVersionEntity.builder().id(documentId).name("FooBar")
-				.version(System.currentTimeMillis()).build();
+
+		GTEVersionEntity entity = new GTEVersionEntity();
+		entity.setId(documentId);
+		entity.setName("FooBar");
+		entity.setVersion(System.currentTimeMillis());
 
 		IndexQueryBuilder indexQueryBuilder = new IndexQueryBuilder().withId(documentId).withVersion(entity.getVersion())
 				.withObject(entity);
@@ -3072,7 +3067,10 @@ public abstract class ElasticsearchTemplateTests {
 	@Test // DATAES-714
 	void shouldReturnSortFieldsInSearchHits() {
 		IndexCoordinates index = IndexCoordinates.of("test-index-searchhits-entity-template");
-		SearchHitsEntity entity = SearchHitsEntity.builder().id("1").number(1000L).keyword("thousands").build();
+		SearchHitsEntity entity = new SearchHitsEntity();
+		entity.setId("1");
+		entity.setNumber(1000L);
+		entity.setKeyword("thousands");
 		IndexQuery indexQuery = new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build();
 		operations.index(indexQuery, index);
 		operations.indexOps(index).refresh();
@@ -3107,10 +3105,9 @@ public abstract class ElasticsearchTemplateTests {
 	@Test // DATAES-715
 	void shouldReturnHighlightFieldsInSearchHit() {
 		IndexCoordinates index = IndexCoordinates.of("test-index-highlight-entity-template");
-		HighlightEntity entity = HighlightEntity.builder().id("1")
-				.message("This message is a long text which contains the word to search for "
-						+ "in two places, the first being near the beginning and the second near the end of the message")
-				.build();
+		HighlightEntity entity = new HighlightEntity("1",
+				"This message is a long text which contains the word to search for "
+						+ "in two places, the first being near the beginning and the second near the end of the message");
 		IndexQuery indexQuery = new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build();
 		operations.index(indexQuery, index);
 		operations.indexOps(index).refresh();
@@ -3140,16 +3137,14 @@ public abstract class ElasticsearchTemplateTests {
 		SampleEntity entity = SampleEntity.builder() //
 				.id("1") //
 				.message("some message") //
-				.rate(java.lang.Integer.MAX_VALUE)
-				.version(System.currentTimeMillis()) //
+				.rate(java.lang.Integer.MAX_VALUE).version(System.currentTimeMillis()) //
 				.build();
 
 		// high score from rescore query
 		SampleEntity entity2 = SampleEntity.builder() //
 				.id("2") //
 				.message("nothing") //
-				.rate(1)
-				.version(System.currentTimeMillis()) //
+				.rate(1).version(System.currentTimeMillis()) //
 				.build();
 
 		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(entity, entity2));
@@ -3158,26 +3153,15 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.refresh();
 
 		NativeSearchQuery query = new NativeSearchQueryBuilder() //
-				.withQuery(
-						boolQuery().filter(existsQuery("rate")).should(termQuery("message", "message"))) //
-				.withRescorerQuery(new RescorerQuery(
-						new NativeSearchQueryBuilder().withQuery(
-								QueryBuilders.functionScoreQuery(
-										new FunctionScoreQueryBuilder.FilterFunctionBuilder[]{
-												new FilterFunctionBuilder(
-														new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5)
-																.setWeight(1f)),
-												new FilterFunctionBuilder(
-														new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5)
-																.setWeight(100f))}
-								)
-										.scoreMode(FunctionScoreQuery.ScoreMode.SUM)
-										.maxBoost(80f)
-										.boostMode(CombineFunction.REPLACE)
-						).build()
-				)
-						.withScoreMode(ScoreMode.Max)
-						.withWindowSize(100))
+				.withQuery(boolQuery().filter(existsQuery("rate")).should(termQuery("message", "message"))) //
+				.withRescorerQuery(
+						new RescorerQuery(new NativeSearchQueryBuilder().withQuery(QueryBuilders
+								.functionScoreQuery(new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {
+										new FilterFunctionBuilder(new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5).setWeight(1f)),
+										new FilterFunctionBuilder(
+												new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5).setWeight(100f)) })
+								.scoreMode(FunctionScoreQuery.ScoreMode.SUM).maxBoost(80f).boostMode(CombineFunction.REPLACE)).build())
+										.withScoreMode(ScoreMode.Max).withWindowSize(100))
 				.build();
 
 		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class, index);
@@ -3187,12 +3171,12 @@ public abstract class ElasticsearchTemplateTests {
 
 		SearchHit<SampleEntity> searchHit = searchHits.getSearchHit(0);
 		assertThat(searchHit.getContent().getMessage()).isEqualTo("nothing");
-		//score capped to 80
+		// score capped to 80
 		assertThat(searchHit.getScore()).isEqualTo(80f);
 	}
 
 	@Test
-		// DATAES-738
+	// DATAES-738
 	void shouldSaveEntityWithIndexCoordinates() {
 		String id = "42";
 		SampleEntity entity = new SampleEntity();
@@ -3766,130 +3750,560 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(explanation).isNotNull();
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@EqualsAndHashCode(exclude = "score")
-	@Builder
 	@Document(indexName = INDEX_NAME_SAMPLE_ENTITY, replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable @ScriptedField private Double scriptedRate;
+		@Nullable private boolean available;
+		@Nullable private GeoPoint location;
+		@Nullable @Version private Long version;
 
-		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Double scriptedRate;
-		private boolean available;
-		private GeoPoint location;
-		@Version private Long version;
+		static Builder builder() {
+			return new Builder();
+		}
+
+		static class Builder {
+
+			@Nullable private String id;
+			@Nullable private String type;
+			@Nullable private String message;
+			@Nullable private Long version;
+			@Nullable private int rate;
+			@Nullable private GeoPoint location;
+
+			public Builder id(String id) {
+				this.id = id;
+				return this;
+			}
+
+			public Builder type(String type) {
+				this.type = type;
+				return this;
+			}
+
+			public Builder message(String message) {
+				this.message = message;
+				return this;
+			}
+
+			public Builder version(Long version) {
+				this.version = version;
+				return this;
+			}
+
+			public Builder rate(int rate) {
+				this.rate = rate;
+				return this;
+			}
+
+			public Builder location(GeoPoint location) {
+				this.location = location;
+				return this;
+			}
+
+			public SampleEntity build() {
+				SampleEntity sampleEntity = new SampleEntity();
+				sampleEntity.setId(id);
+				sampleEntity.setType(type);
+				sampleEntity.setMessage(message);
+				sampleEntity.setRate(rate);
+				sampleEntity.setVersion(version);
+				sampleEntity.setLocation(location);
+				return sampleEntity;
+			}
+		}
+
+		public SampleEntity() {}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		@Nullable
+		public java.lang.Double getScriptedRate() {
+			return scriptedRate;
+		}
+
+		public void setScriptedRate(@Nullable java.lang.Double scriptedRate) {
+			this.scriptedRate = scriptedRate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			SampleEntity that = (SampleEntity) o;
+
+			if (rate != that.rate)
+				return false;
+			if (available != that.available)
+				return false;
+			if (id != null ? !id.equals(that.id) : that.id != null)
+				return false;
+			if (type != null ? !type.equals(that.type) : that.type != null)
+				return false;
+			if (message != null ? !message.equals(that.message) : that.message != null)
+				return false;
+			if (scriptedRate != null ? !scriptedRate.equals(that.scriptedRate) : that.scriptedRate != null)
+				return false;
+			if (location != null ? !location.equals(that.location) : that.location != null)
+				return false;
+			return version != null ? version.equals(that.version) : that.version == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (type != null ? type.hashCode() : 0);
+			result = 31 * result + (message != null ? message.hashCode() : 0);
+			result = 31 * result + rate;
+			result = 31 * result + (scriptedRate != null ? scriptedRate.hashCode() : 0);
+			result = 31 * result + (available ? 1 : 0);
+			result = 31 * result + (location != null ? location.hashCode() : 0);
+			result = 31 * result + (version != null ? version.hashCode() : 0);
+			return result;
+		}
 	}
 
-	/**
-	 * @author Gad Akuka
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
-	@Data
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-uuid-keyed-core-template", replicas = 0, refreshInterval = "-1")
 	private static class SampleEntityUUIDKeyed {
+		@Nullable @Id private UUID id;
+		@Nullable private String type;
+		@Nullable @Field(type = FieldType.Text, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable @ScriptedField private Long scriptedRate;
+		@Nullable private boolean available;
+		@Nullable private GeoPoint location;
+		@Nullable @Version private Long version;
 
-		@Id private UUID id;
-		private String type;
-		@Field(type = FieldType.Text, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Long scriptedRate;
-		private boolean available;
-		private GeoPoint location;
-		@Version private Long version;
+		@Nullable
+		public UUID getId() {
+			return id;
+		}
 
+		public void setId(@Nullable UUID id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		@Nullable
+		public java.lang.Long getScriptedRate() {
+			return scriptedRate;
+		}
+
+		public void setScriptedRate(@Nullable java.lang.Long scriptedRate) {
+			this.scriptedRate = scriptedRate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 
-	@Data
-	@Builder
-	@AllArgsConstructor
-	@NoArgsConstructor
 	@Document(indexName = "test-index-book-core-template", replicas = 0, refreshInterval = "-1")
 	static class Book {
-
-		@Id private String id;
-		private String name;
-		@Field(type = FieldType.Object) private Author author;
-		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Object) private Author author;
+		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
+
+		public Book(@Nullable String id, @Nullable String name, @Nullable Author author,
+				@Nullable Map<java.lang.Integer, Collection<String>> buckets, @Nullable String description) {
+			this.id = id;
+			this.name = name;
+			this.author = author;
+			this.buckets = buckets;
+			this.description = description;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(@Nullable Author author) {
+			this.author = author;
+		}
+
+		@Nullable
+		public Map<java.lang.Integer, Collection<String>> getBuckets() {
+			return buckets;
+		}
+
+		public void setBuckets(@Nullable Map<java.lang.Integer, Collection<String>> buckets) {
+			this.buckets = buckets;
+		}
+
+		@Nullable
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(@Nullable String description) {
+			this.description = description;
+		}
+
+		static Builder builder() {
+			return new Builder();
+		}
+
+		static class Builder {
+			@Nullable private String id;
+			@Nullable private String name;
+			@Nullable private Author author;
+			@Nullable private Map<Integer, Collection<String>> buckets = new HashMap<>();
+			@Nullable private String description;
+
+			public Builder id(@Nullable String id) {
+				this.id = id;
+				return this;
+			}
+
+			public Builder name(@Nullable String name) {
+				this.name = name;
+				return this;
+			}
+
+			public Builder author(@Nullable Author author) {
+				this.author = author;
+				return this;
+			}
+
+			public Builder buckets(@Nullable Map<java.lang.Integer, Collection<String>> buckets) {
+				this.buckets = buckets;
+				return this;
+			}
+
+			public Builder description(@Nullable String description) {
+				this.description = description;
+				return this;
+			}
+
+			Book build() {
+				return new Book(id, name, author, buckets, description);
+			}
+		}
 	}
 
-	@Data
 	static class Author {
-		private String id;
-		private String name;
+		@Nullable private String id;
+		@Nullable private String name;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 	}
 
-	@Data
-	@Builder
-	@AllArgsConstructor
-	@NoArgsConstructor
 	@Document(indexName = "test-index-version-core-template", replicas = 0, refreshInterval = "-1",
 			versionType = VersionType.EXTERNAL_GTE)
 	private static class GTEVersionEntity {
+		@Nullable @Version private Long version;
+		@Nullable @Id private String id;
+		@Nullable private String name;
 
-		@Version private Long version;
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
 
-		@Id private String id;
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 
-		private String name;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-hetro1-core-template", replicas = 0)
 	static class HetroEntity1 {
-
-		@Id private String id;
-		private String firstName;
-		@Version private Long version;
+		@Nullable @Id private String id;
+		@Nullable private String firstName;
+		@Nullable @Version private Long version;
 
 		HetroEntity1(String id, String firstName) {
 			this.id = id;
 			this.firstName = firstName;
 			this.version = System.currentTimeMillis();
 		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public void setFirstName(@Nullable String firstName) {
+			this.firstName = firstName;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-hetro2-core-template", replicas = 0)
 	static class HetroEntity2 {
 
-		@Id private String id;
-		private String lastName;
-		@Version private Long version;
+		@Nullable @Id private String id;
+		@Nullable private String lastName;
+		@Nullable @Version private Long version;
 
 		HetroEntity2(String id, String lastName) {
 			this.id = id;
 			this.lastName = lastName;
 			this.version = System.currentTimeMillis();
 		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(@Nullable String lastName) {
+			this.lastName = lastName;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-server-configuration", useServerConfiguration = true, shards = 10, replicas = 10,
 			refreshInterval = "-1")
 	private static class UseServerConfigurationEntity {
 
-		@Id private String id;
-		private String val;
+		@Nullable @Id private String id;
+		@Nullable private String val;
 
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getVal() {
+			return val;
+		}
+
+		public void setVal(@Nullable String val) {
+			this.val = val;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-sample-mapping", replicas = 0, refreshInterval = "-1")
 	static class SampleMappingEntity {
 
-		@Id private String id;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
 
-		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
 
 		static class NestedEntity {
 
@@ -3906,58 +4320,211 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-searchhits-entity-template")
 	static class SearchHitsEntity {
-		@Id private String id;
-		@Field(type = FieldType.Long) Long number;
-		@Field(type = FieldType.Keyword) String keyword;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Long) Long number;
+		@Nullable @Field(type = FieldType.Keyword) String keyword;
+
+		public SearchHitsEntity() {}
+
+		public SearchHitsEntity(@Nullable String id, @Nullable java.lang.Long number, @Nullable String keyword) {
+			this.id = id;
+			this.number = number;
+			this.keyword = keyword;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public java.lang.Long getNumber() {
+			return number;
+		}
+
+		public void setNumber(@Nullable java.lang.Long number) {
+			this.number = number;
+		}
+
+		@Nullable
+		public String getKeyword() {
+			return keyword;
+		}
+
+		public void setKeyword(@Nullable String keyword) {
+			this.keyword = keyword;
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-highlight-entity-template")
 	static class HighlightEntity {
-		@Id private String id;
-		private String message;
+		@Nullable @Id private String id;
+		@Nullable private String message;
+
+		public HighlightEntity(@Nullable String id, @Nullable String message) {
+			this.id = id;
+			this.message = message;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-optimistic-entity-template")
 	static class OptimisticEntity {
-		@Id private String id;
-		private String message;
-		private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Nullable @Id private String id;
+		@Nullable private String message;
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		@Nullable
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		public void setSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-optimistic-and-versioned-entity-template")
 	static class OptimisticAndVersionedEntity {
-		@Id private String id;
-		private String message;
-		private SeqNoPrimaryTerm seqNoPrimaryTerm;
-		@Version private Long version;
+		@Nullable @Id private String id;
+		@Nullable private String message;
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Nullable @Version private Long version;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		@Nullable
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		public void setSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-versioned-entity-template")
 	static class VersionedEntity {
-		@Id private String id;
-		@Version private Long version;
+		@Nullable @Id private String id;
+		@Nullable @Version private Long version;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = INDEX_NAME_JOIN_SAMPLE_ENTITY)
 	static class SampleJoinEntity {
-		@Id @Field(type = Keyword) private String uuid;
-		@JoinTypeRelations(relations = {
+		@Nullable @Id @Field(type = Keyword) private String uuid;
+		@Nullable @JoinTypeRelations(relations = {
 				@JoinTypeRelation(parent = "question", children = { "answer" }) }) private JoinField<String> myJoinField;
-		@Field(type = Text) private String text;
+		@Nullable @Field(type = Text) private String text;
+
+		@Nullable
+		public String getUuid() {
+			return uuid;
+		}
+
+		public void setUuid(@Nullable String uuid) {
+			this.uuid = uuid;
+		}
+
+		@Nullable
+		public JoinField<String> getMyJoinField() {
+			return myJoinField;
+		}
+
+		public void setMyJoinField(@Nullable JoinField<String> myJoinField) {
+			this.myJoinField = myJoinField;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
 	}
 }

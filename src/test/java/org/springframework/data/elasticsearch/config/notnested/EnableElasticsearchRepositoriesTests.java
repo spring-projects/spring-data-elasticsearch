@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.config.notnested;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.Data;
-
 import java.lang.Double;
 import java.lang.Long;
 import java.util.UUID;
@@ -122,33 +120,187 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		assertThat(nestedRepository).isNull();
 	}
 
-	@Data
 	@Document(indexName = "test-index-sample-config-not-nested", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable @ScriptedField private Double scriptedRate;
+		@Nullable private boolean available;
+		@Nullable private String highlightedMessage;
+		@Nullable private GeoPoint location;
+		@Nullable @Version private Long version;
 
-		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Double scriptedRate;
-		private boolean available;
-		private String highlightedMessage;
-		private GeoPoint location;
-		@Version private Long version;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		@Nullable
+		public java.lang.Double getScriptedRate() {
+			return scriptedRate;
+		}
+
+		public void setScriptedRate(@Nullable java.lang.Double scriptedRate) {
+			this.scriptedRate = scriptedRate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public String getHighlightedMessage() {
+			return highlightedMessage;
+		}
+
+		public void setHighlightedMessage(@Nullable String highlightedMessage) {
+			this.highlightedMessage = highlightedMessage;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-uuid-keyed-config-not-nested", replicas = 0, refreshInterval = "-1")
 	static class SampleEntityUUIDKeyed {
+		@Nullable @Id private UUID id;
+		@Nullable private String type;
+		@Nullable @Field(type = FieldType.Text, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable @ScriptedField private Long scriptedRate;
+		@Nullable private boolean available;
+		@Nullable private String highlightedMessage;
+		@Nullable private GeoPoint location;
+		@Nullable @Version private Long version;
 
-		@Id private UUID id;
-		private String type;
-		@Field(type = FieldType.Text, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Long scriptedRate;
-		private boolean available;
-		private String highlightedMessage;
-		private GeoPoint location;
-		@Version private Long version;
+		@Nullable
+		public UUID getId() {
+			return id;
+		}
+
+		public void setId(@Nullable UUID id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		@Nullable
+		public java.lang.Long getScriptedRate() {
+			return scriptedRate;
+		}
+
+		public void setScriptedRate(@Nullable java.lang.Long scriptedRate) {
+			this.scriptedRate = scriptedRate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public String getHighlightedMessage() {
+			return highlightedMessage;
+		}
+
+		public void setHighlightedMessage(@Nullable String highlightedMessage) {
+			this.highlightedMessage = highlightedMessage;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 }

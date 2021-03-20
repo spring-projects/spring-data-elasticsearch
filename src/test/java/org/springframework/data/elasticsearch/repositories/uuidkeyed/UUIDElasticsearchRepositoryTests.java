@@ -18,11 +18,6 @@ package org.springframework.data.elasticsearch.repositories.uuidkeyed;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -55,6 +50,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -549,24 +545,139 @@ public class UUIDElasticsearchRepositoryTests {
 		return sampleEntities;
 	}
 
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
-	@Data
 	@Document(indexName = "test-index-uuid-keyed", replicas = 0, refreshInterval = "-1")
 	static class SampleEntityUUIDKeyed {
+		@Nullable @Id private UUID id;
+		@Nullable private String type;
+		@Nullable @Field(type = FieldType.Text, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable @ScriptedField private Long scriptedRate;
+		@Nullable private boolean available;
+		@Nullable private String highlightedMessage;
+		@Nullable private GeoPoint location;
+		@Nullable @Version private Long version;
 
-		@Id private UUID id;
-		private String type;
-		@Field(type = FieldType.Text, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Long scriptedRate;
-		private boolean available;
-		private String highlightedMessage;
+		@Nullable
+		public UUID getId() {
+			return id;
+		}
 
-		private GeoPoint location;
+		public void setId(@Nullable UUID id) {
+			this.id = id;
+		}
 
-		@Version private Long version;
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		@Nullable
+		public Long getScriptedRate() {
+			return scriptedRate;
+		}
+
+		public void setScriptedRate(@Nullable Long scriptedRate) {
+			this.scriptedRate = scriptedRate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public String getHighlightedMessage() {
+			return highlightedMessage;
+		}
+
+		public void setHighlightedMessage(@Nullable String highlightedMessage) {
+			this.highlightedMessage = highlightedMessage;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable Long version) {
+			this.version = version;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof SampleEntityUUIDKeyed))
+				return false;
+
+			SampleEntityUUIDKeyed that = (SampleEntityUUIDKeyed) o;
+
+			if (rate != that.rate)
+				return false;
+			if (available != that.available)
+				return false;
+			if (id != null ? !id.equals(that.id) : that.id != null)
+				return false;
+			if (type != null ? !type.equals(that.type) : that.type != null)
+				return false;
+			if (message != null ? !message.equals(that.message) : that.message != null)
+				return false;
+			if (scriptedRate != null ? !scriptedRate.equals(that.scriptedRate) : that.scriptedRate != null)
+				return false;
+			if (highlightedMessage != null ? !highlightedMessage.equals(that.highlightedMessage)
+					: that.highlightedMessage != null)
+				return false;
+			if (location != null ? !location.equals(that.location) : that.location != null)
+				return false;
+			return version != null ? version.equals(that.version) : that.version == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (type != null ? type.hashCode() : 0);
+			result = 31 * result + (message != null ? message.hashCode() : 0);
+			result = 31 * result + rate;
+			result = 31 * result + (scriptedRate != null ? scriptedRate.hashCode() : 0);
+			result = 31 * result + (available ? 1 : 0);
+			result = 31 * result + (highlightedMessage != null ? highlightedMessage.hashCode() : 0);
+			result = 31 * result + (location != null ? location.hashCode() : 0);
+			result = 31 * result + (version != null ? version.hashCode() : 0);
+			return result;
+		}
 	}
 
 	/**

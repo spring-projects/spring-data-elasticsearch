@@ -20,10 +20,6 @@ import static org.elasticsearch.action.search.SearchRequest.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -62,6 +58,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
@@ -253,27 +250,89 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		assertThat(captor.getValue().indicesOptions()).isEqualTo(IndicesOptions.LENIENT_EXPAND_OPEN);
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Chris White
-	 * @author Sascha Woo
-	 */
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-sample-core-reactive-template-Unit", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 
-		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Double scriptedRate;
-		private boolean available;
-		private String highlightedMessage;
-		private GeoPoint location;
-		@Version private Long version;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable @ScriptedField private Double scriptedRate;
+		@Nullable private boolean available;
+		@Nullable private String highlightedMessage;
+		@Nullable private GeoPoint location;
+		@Nullable @Version private Long version;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
+		}
+
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(String message) {
+			this.message = message;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		public java.lang.Double getScriptedRate() {
+			return scriptedRate;
+		}
+
+		public void setScriptedRate(java.lang.Double scriptedRate) {
+			this.scriptedRate = scriptedRate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		public String getHighlightedMessage() {
+			return highlightedMessage;
+		}
+
+		public void setHighlightedMessage(String highlightedMessage) {
+			this.highlightedMessage = highlightedMessage;
+		}
+
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(GeoPoint location) {
+			this.location = location;
+		}
+
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(java.lang.Long version) {
+			this.version = version;
+		}
 	}
 }

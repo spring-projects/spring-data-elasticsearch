@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
-import lombok.Data;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -506,27 +505,69 @@ public class ReactiveIndexOperationsTest {
 		assertThat(exists).isFalse();
 	}
 
-	@Data
 	@Document(indexName = TESTINDEX, shards = 3, replicas = 2, refreshInterval = "4s")
 	static class Entity {
-		@Id private String id;
-		@Field(type = FieldType.Text) private String text;
-		@Field(name = "publication-date", type = FieldType.Date,
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Text) private String text;
+		@Nullable @Field(name = "publication-date", type = FieldType.Date,
 				format = DateFormat.basic_date) private LocalDate publicationDate;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
+
+		@Nullable
+		public LocalDate getPublicationDate() {
+			return publicationDate;
+		}
+
+		public void setPublicationDate(@Nullable LocalDate publicationDate) {
+			this.publicationDate = publicationDate;
+		}
 	}
 
-	@Data
 	@Document(indexName = TESTINDEX, useServerConfiguration = true)
 	static class EntityUseServerConfig {
-		@Id private String id;
+		@Nullable @Id private String id;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 	}
 
-	@Data
 	@Document(indexName = TESTINDEX)
 	@Setting(settingPath = "/settings/test-settings.json")
 	@Mapping(mappingPath = "/mappings/test-mappings.json")
 	static class EntityWithAnnotatedSettingsAndMappings {
-		@Id private String id;
+		@Nullable @Id private String id;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 	}
 
 	@Document(indexName = "test-template", shards = 3, replicas = 2, refreshInterval = "5s")
