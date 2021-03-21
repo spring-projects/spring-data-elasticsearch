@@ -17,11 +17,6 @@ package org.springframework.data.elasticsearch.core.routing;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.List;
 import java.util.function.Function;
 
@@ -84,7 +79,7 @@ public class ReactiveElasticsearchOperationsRoutingTests {
 	@DisplayName("should store data with different routing and be able to get it")
 	void shouldStoreDataWithDifferentRoutingAndBeAbleToGetIt() {
 
-		RoutingEntity entity = RoutingEntity.builder().id(ID_1).routing(ID_2).build();
+		RoutingEntity entity = new RoutingEntity(ID_1, ID_2);
 		operations.save(entity).then(indexOps.refresh()).block();
 
 		RoutingEntity savedEntity = operations.withRouting(RoutingResolver.just(ID_2)).get(entity.id, RoutingEntity.class)
@@ -97,7 +92,7 @@ public class ReactiveElasticsearchOperationsRoutingTests {
 	@DisplayName("should store data with different routing and be able to delete it")
 	void shouldStoreDataWithDifferentRoutingAndBeAbleToDeleteIt() {
 
-		RoutingEntity entity = RoutingEntity.builder().id(ID_1).routing(ID_2).build();
+		RoutingEntity entity = new RoutingEntity(ID_1, ID_2);
 		operations.save(entity).then(indexOps.refresh()).block();
 
 		String deletedId = operations.withRouting(RoutingResolver.just(ID_2)).delete(entity.id, IndexCoordinates.of(INDEX))
@@ -110,7 +105,7 @@ public class ReactiveElasticsearchOperationsRoutingTests {
 	@DisplayName("should store data with different routing and get the routing in the search result")
 	void shouldStoreDataWithDifferentRoutingAndGetTheRoutingInTheSearchResult() {
 
-		RoutingEntity entity = RoutingEntity.builder().id(ID_1).routing(ID_2).build();
+		RoutingEntity entity = new RoutingEntity(ID_1, ID_2);
 		operations.save(entity).then(indexOps.refresh()).block();
 
 		List<SearchHit<RoutingEntity>> searchHits = operations.search(Query.findAll(), RoutingEntity.class).collectList()
@@ -120,14 +115,54 @@ public class ReactiveElasticsearchOperationsRoutingTests {
 		assertThat(searchHits.get(0).getRouting()).isEqualTo(ID_2);
 	}
 
-	@Data
-	@Builder
-	@AllArgsConstructor
-	@NoArgsConstructor
 	@Document(indexName = INDEX, shards = 5)
 	@Routing("routing")
 	static class RoutingEntity {
-		@Id private String id;
-		private String routing;
+		@Nullable @Id private String id;
+		@Nullable private String routing;
+
+		public RoutingEntity(@Nullable String id, @Nullable String routing) {
+			this.id = id;
+			this.routing = routing;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getRouting() {
+			return routing;
+		}
+
+		public void setRouting(@Nullable String routing) {
+			this.routing = routing;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof RoutingEntity))
+				return false;
+
+			RoutingEntity that = (RoutingEntity) o;
+
+			if (id != null ? !id.equals(that.id) : that.id != null)
+				return false;
+			return routing != null ? routing.equals(that.routing) : that.routing == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (routing != null ? routing.hashCode() : 0);
+			return result;
+		}
 	}
 }

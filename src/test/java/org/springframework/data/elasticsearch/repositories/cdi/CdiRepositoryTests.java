@@ -17,11 +17,6 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -157,39 +152,129 @@ public class CdiRepositoryTests {
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
 	 */
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-product-cdi-repository", replicas = 0, refreshInterval = "-1")
 	static class Product {
+		@Nullable @Id private String id;
+		@Nullable private List<String> title;
+		@Nullable private String name;
+		@Nullable private String description;
+		@Nullable private String text;
+		@Nullable private List<String> categories;
+		@Nullable private Float weight;
+		@Nullable @Field(type = FieldType.Float) private Float price;
+		@Nullable private Integer popularity;
+		@Nullable private boolean available;
+		@Nullable private String location;
+		@Nullable private Date lastModified;
 
-		@Id private String id;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		private List<String> title;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		private String name;
+		@Nullable
+		public List<String> getTitle() {
+			return title;
+		}
 
-		private String description;
+		public void setTitle(@Nullable List<String> title) {
+			this.title = title;
+		}
 
-		private String text;
+		@Nullable
+		public String getName() {
+			return name;
+		}
 
-		private List<String> categories;
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 
-		private Float weight;
+		@Nullable
+		public String getDescription() {
+			return description;
+		}
 
-		@Field(type = FieldType.Float) private Float price;
+		public void setDescription(@Nullable String description) {
+			this.description = description;
+		}
 
-		private Integer popularity;
+		@Nullable
+		public String getText() {
+			return text;
+		}
 
-		private boolean available;
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
 
-		private String location;
+		@Nullable
+		public List<String> getCategories() {
+			return categories;
+		}
 
-		private Date lastModified;
+		public void setCategories(@Nullable List<String> categories) {
+			this.categories = categories;
+		}
+
+		@Nullable
+		public Float getWeight() {
+			return weight;
+		}
+
+		public void setWeight(@Nullable Float weight) {
+			this.weight = weight;
+		}
+
+		@Nullable
+		public Float getPrice() {
+			return price;
+		}
+
+		public void setPrice(@Nullable Float price) {
+			this.price = price;
+		}
+
+		@Nullable
+		public Integer getPopularity() {
+			return popularity;
+		}
+
+		public void setPopularity(@Nullable Integer popularity) {
+			this.popularity = popularity;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public String getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable String location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public Date getLastModified() {
+			return lastModified;
+		}
+
+		public void setLastModified(@Nullable Date lastModified) {
+			this.lastModified = lastModified;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-person-cdi-repository", replicas = 0, refreshInterval = "-1")
 	static class Person {
 
@@ -203,37 +288,106 @@ public class CdiRepositoryTests {
 
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-book-cdi-repository", replicas = 0, refreshInterval = "-1")
 	static class Book {
-
-		@Id private String id;
-		private String name;
-		@Field(type = FieldType.Object) private Author author;
-		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Object) private Author author;
+		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(@Nullable Author author) {
+			this.author = author;
+		}
+
+		@Nullable
+		public Map<Integer, Collection<String>> getBuckets() {
+			return buckets;
+		}
+
+		public void setBuckets(@Nullable Map<Integer, Collection<String>> buckets) {
+			this.buckets = buckets;
+		}
+
+		@Nullable
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(@Nullable String description) {
+			this.description = description;
+		}
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	static class Car {
+		@Nullable private String name;
+		@Nullable private String model;
 
-		private String name;
-		private String model;
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(@Nullable String model) {
+			this.model = model;
+		}
 	}
 
-	@Data
 	static class Author {
+		@Nullable private String id;
+		@Nullable private String name;
 
-		private String id;
-		private String name;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 	}
 
 }

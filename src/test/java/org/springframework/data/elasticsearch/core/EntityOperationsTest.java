@@ -17,11 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -66,7 +61,9 @@ class EntityOperationsTest {
 	@DisplayName("should return routing from DefaultRoutingAccessor")
 	void shouldReturnRoutingFromDefaultRoutingAccessor() {
 
-		EntityWithRouting entity = EntityWithRouting.builder().id("42").routing("theRoute").build();
+		EntityWithRouting entity = new EntityWithRouting();
+		entity.setId("42");
+		entity.setRouting("theRoute");
 		EntityOperations.AdaptibleEntity<EntityWithRouting> adaptibleEntity = entityOperations.forEntity(entity,
 				conversionService, new DefaultRoutingResolver(mappingContext));
 
@@ -79,8 +76,9 @@ class EntityOperationsTest {
 	@DisplayName("should return routing from JoinField when routing value is null")
 	void shouldReturnRoutingFromJoinFieldWhenRoutingValueIsNull() {
 
-		EntityWithRoutingAndJoinField entity = EntityWithRoutingAndJoinField.builder().id("42")
-				.joinField(new JoinField<>("foo", "foo-routing")).build();
+		EntityWithRoutingAndJoinField entity = new EntityWithRoutingAndJoinField();
+		entity.setId("42");
+		entity.setJoinField(new JoinField<>("foo", "foo-routing"));
 
 		EntityOperations.AdaptibleEntity<EntityWithRoutingAndJoinField> adaptibleEntity = entityOperations.forEntity(entity,
 				conversionService, new DefaultRoutingResolver(mappingContext));
@@ -93,8 +91,10 @@ class EntityOperationsTest {
 	@Test // #1218
 	@DisplayName("should return routing from routing when JoinField is set")
 	void shouldReturnRoutingFromRoutingWhenJoinFieldIsSet() {
-		EntityWithRoutingAndJoinField entity = EntityWithRoutingAndJoinField.builder().id("42").routing("theRoute")
-				.joinField(new JoinField<>("foo", "foo-routing")).build();
+		EntityWithRoutingAndJoinField entity = new EntityWithRoutingAndJoinField();
+		entity.setId("42");
+		entity.setRouting("theRoute");
+		entity.setJoinField(new JoinField<>("foo", "foo-routing"));
 
 		EntityOperations.AdaptibleEntity<EntityWithRoutingAndJoinField> adaptibleEntity = entityOperations.forEntity(entity,
 				conversionService, new DefaultRoutingResolver(mappingContext));
@@ -104,26 +104,63 @@ class EntityOperationsTest {
 		assertThat(routing).isEqualTo("theRoute");
 	}
 
-	@Data
-	@Builder
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@Document(indexName = "entity-operations-test")
 	@Routing("routing")
 	static class EntityWithRouting {
-		@Id private String id;
-		private String routing;
+		@Nullable @Id private String id;
+		@Nullable private String routing;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getRouting() {
+			return routing;
+		}
+
+		public void setRouting(@Nullable String routing) {
+			this.routing = routing;
+		}
 	}
 
-	@Data
-	@Builder
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@Document(indexName = "entity-operations-test")
 	@Routing("routing")
 	static class EntityWithRoutingAndJoinField {
-		@Id private String id;
-		private String routing;
-		private JoinField<String> joinField;
+		@Nullable @Id private String id;
+		@Nullable private String routing;
+		@Nullable private JoinField<String> joinField;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getRouting() {
+			return routing;
+		}
+
+		public void setRouting(@Nullable String routing) {
+			this.routing = routing;
+		}
+
+		@Nullable
+		public JoinField<String> getJoinField() {
+			return joinField;
+		}
+
+		public void setJoinField(@Nullable JoinField<String> joinField) {
+			this.joinField = joinField;
+		}
 	}
 }

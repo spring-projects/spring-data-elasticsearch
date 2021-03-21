@@ -20,12 +20,6 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.lang.Long;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +41,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -761,23 +756,18 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldReturnDocumentAboveMinimalScoreGivenCriteria() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
-
-		indexQueries.add(buildIndex(SampleEntity.builder().id("1").message("ab").build()));
-		indexQueries.add(buildIndex(SampleEntity.builder().id("2").message("bc").build()));
-		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac").build()));
-
+		indexQueries.add(buildIndex(new SampleEntity("1", "ab")));
+		indexQueries.add(buildIndex(new SampleEntity("2", "bc")));
+		indexQueries.add(buildIndex(new SampleEntity("3", "ac")));
 		operations.bulkIndex(indexQueries, index);
 		indexOperations.refresh();
 
-		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("a").or(new Criteria("message").contains("b")));
 		criteriaQuery.setMinScore(2.0F);
 		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
 
-		// then
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 		assertThat(searchHits.getSearchHit(0).getContent().getMessage()).isEqualTo("ab");
 	}
@@ -807,18 +797,65 @@ public class CriteriaQueryIntegrationTests {
 		assertThat(sampleEntity1).isNotNull();
 	}
 
-	@Builder
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@Document(indexName = "test-index-sample-core-query", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
-
+		@Nullable
 		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		private int rate;
-		@Version private Long version;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable @Version private Long version;
+
+		public SampleEntity() {
+		}
+
+		public SampleEntity(@Nullable String id, @Nullable String message) {
+			this.id = id;
+			this.message = message;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 }

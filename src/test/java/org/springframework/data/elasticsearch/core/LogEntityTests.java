@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.Data;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -44,6 +42,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -133,21 +132,16 @@ public class LogEntityTests {
 	/**
 	 * Simple type to test facets
 	 */
-	@Data
 	@Document(indexName = "test-index-log-core", replicas = 0, refreshInterval = "-1")
 	static class LogEntity {
 
 		private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
-		@Id private String id;
-
-		private String action;
-
-		private long sequenceCode;
-
-		@Field(type = Ip) private String ip;
-
-		@Field(type = Date, format = DateFormat.date_time) private java.util.Date date;
+		@Nullable @Id private String id;
+		@Nullable private String action;
+		@Nullable private long sequenceCode;
+		@Nullable @Field(type = Ip) private String ip;
+		@Nullable @Field(type = Date, format = DateFormat.date_time) private java.util.Date date;
 
 		private LogEntity() {}
 
@@ -155,6 +149,49 @@ public class LogEntityTests {
 			this.id = id;
 		}
 
+		public static SimpleDateFormat getFormat() {
+			return format;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getAction() {
+			return action;
+		}
+
+		public void setAction(String action) {
+			this.action = action;
+		}
+
+		public long getSequenceCode() {
+			return sequenceCode;
+		}
+
+		public void setSequenceCode(long sequenceCode) {
+			this.sequenceCode = sequenceCode;
+		}
+
+		public String getIp() {
+			return ip;
+		}
+
+		public void setIp(String ip) {
+			this.ip = ip;
+		}
+
+		public java.util.Date getDate() {
+			return date;
+		}
+
+		public void setDate(java.util.Date date) {
+			this.date = date;
+		}
 	}
 
 	/**

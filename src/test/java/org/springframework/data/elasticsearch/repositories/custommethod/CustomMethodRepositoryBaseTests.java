@@ -19,11 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.lang.Long;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -66,6 +61,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Rizwan Idrees
@@ -1635,21 +1631,87 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(count).isEqualTo(20);
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-sample-repositories-custom-method", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
-
+		@Nullable
 		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		@Field(type = Keyword) private String keyword;
-		private int rate;
-		private boolean available;
-		private GeoPoint location;
-		@Version private Long version;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable @Field(type = Keyword) private String keyword;
+		@Nullable private int rate;
+		@Nullable private boolean available;
+		@Nullable private GeoPoint location;
+		@Nullable @Version private Long version;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		@Nullable
+		public String getKeyword() {
+			return keyword;
+		}
+
+		public void setKeyword(@Nullable String keyword) {
+			this.keyword = keyword;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 
 	/**

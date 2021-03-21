@@ -17,8 +17,6 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.Data;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -264,30 +262,61 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		@Nullable @Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") List<LocalDate> localDateList;
 	}
 
-	@Data
 	static class SeqNoPrimaryTermProperty {
-		SeqNoPrimaryTerm seqNoPrimaryTerm;
-		String string;
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Nullable private String string;
+
+		@Nullable
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		public void setSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
+
+		@Nullable
+		public String getString() {
+			return string;
+		}
+
+		public void setString(@Nullable String string) {
+			this.string = string;
+		}
 	}
 
-	@Data
-	static class DateFieldWithNoFormat {
-		@Field(type = FieldType.Date) LocalDateTime datetime;
-	}
-
-	@Data
 	static class DateFieldWithCustomFormatAndNoPattern {
-		@Field(type = FieldType.Date, format = DateFormat.custom, pattern = "") LocalDateTime datetime;
+		@Nullable private @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "") LocalDateTime datetime;
+
+		@Nullable
+		public LocalDateTime getDatetime() {
+			return datetime;
+		}
+
+		public void setDatetime(@Nullable LocalDateTime datetime) {
+			this.datetime = datetime;
+		}
 	}
 
-	@Data
-	static class DateNanosFieldWithNoFormat {
-		@Field(type = FieldType.Date_Nanos) LocalDateTime datetime;
-	}
-
-	@Data
 	static class FieldNamingStrategyEntity {
-		private String withoutCustomFieldName;
+		@Nullable private String withoutCustomFieldName;
 		@Field(name = "CUStomFIEldnAME") private String withCustomFieldName;
+
+		@Nullable
+		public String getWithoutCustomFieldName() {
+			return withoutCustomFieldName;
+		}
+
+		public void setWithoutCustomFieldName(@Nullable String withoutCustomFieldName) {
+			this.withoutCustomFieldName = withoutCustomFieldName;
+		}
+
+		public String getWithCustomFieldName() {
+			return withCustomFieldName;
+		}
+
+		public void setWithCustomFieldName(String withCustomFieldName) {
+			this.withCustomFieldName = withCustomFieldName;
+		}
 	}
 }

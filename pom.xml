@@ -226,6 +226,22 @@
 			<scope>test</scope>
 		</dependency>
 
+		<!--
+		  we don't use lombok in Spring Data Elasticsearch anymore. But the dependency is set in the parent project, and so the
+		  lombok compiler stuff is executed regardless of the fact that we don't need it.
+		  On AdoptOpenJdk 16.0.0 this leads to an error, so the project does not build.
+		  Therefore we replace lombok with a jar - that just contains an empty file - that lives in a local maven repository in
+		  src/test/resources/local-maven-repo/
+		  It was installed with
+		   mvn deploy:deploy-file -DgroupId=org.projectlombok -DartifactId=lombok -Dversion=999999 -Durl=file:./src/test/resources/local-maven-repo/ -DrepositoryId=local-maven-repo -DupdateReleaseInfo=true -Dfile=path/to/empty.jar
+		-->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>999999</version>
+			<scope>test</scope>
+		</dependency>
+
 		<dependency>
 			<groupId>org.apache.openwebbeans.test</groupId>
 			<artifactId>cditest-owb</artifactId>
@@ -435,6 +451,12 @@
 			<id>spring-libs-snapshot</id>
 			<url>https://repo.spring.io/libs-snapshot</url>
 		</repository>
+
+			<repository>
+				<id>local-maven-repo</id>
+				<url>file:///${project.basedir}/src/test/resources/local-maven-repo</url>
+			</repository>
+
 	</repositories>
 
 	<pluginRepositories>

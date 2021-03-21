@@ -17,12 +17,6 @@ package org.springframework.data.elasticsearch.repositories.geo;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.Locale;
 import java.util.Optional;
 
@@ -47,6 +41,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -84,8 +79,11 @@ public class SpringDataGeoRepositoryTests {
 
 		// given
 		Point point = new Point(15, 25);
-		GeoEntity entity = GeoEntity.builder().pointA(point).pointB(new GeoPoint(point.getX(), point.getY()))
-				.pointC(toGeoString(point)).pointD(toGeoArray(point)).build();
+		GeoEntity entity = new GeoEntity();
+		entity.setPointA(point);
+		entity.setPointB(new GeoPoint(point.getX(), point.getY()));
+		entity.setPointC(toGeoString(point));
+		entity.setPointD(toGeoArray(point));
 
 		// when
 		GeoEntity saved = repository.save(entity);
@@ -112,32 +110,90 @@ public class SpringDataGeoRepositoryTests {
 		return new double[] { point.getX(), point.getY() };
 	}
 
-	/**
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-geo-repository", replicas = 0, refreshInterval = "-1")
 	static class GeoEntity {
-
-		@Id private String id;
-
+		@Nullable @Id private String id;
 		// geo shape - Spring Data
-		private Box box;
-		private Circle circle;
-		private Polygon polygon;
-
+		@Nullable private Box box;
+		@Nullable private Circle circle;
+		@Nullable private Polygon polygon;
 		// geo point - Custom implementation + Spring Data
-		@GeoPointField private Point pointA;
+		@Nullable @GeoPointField private Point pointA;
+		@Nullable private GeoPoint pointB;
+		@Nullable @GeoPointField private String pointC;
+		@Nullable @GeoPointField private double[] pointD;
 
-		private GeoPoint pointB;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		@GeoPointField private String pointC;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@GeoPointField private double[] pointD;
+		@Nullable
+		public Box getBox() {
+			return box;
+		}
+
+		public void setBox(@Nullable Box box) {
+			this.box = box;
+		}
+
+		@Nullable
+		public Circle getCircle() {
+			return circle;
+		}
+
+		public void setCircle(@Nullable Circle circle) {
+			this.circle = circle;
+		}
+
+		@Nullable
+		public Polygon getPolygon() {
+			return polygon;
+		}
+
+		public void setPolygon(@Nullable Polygon polygon) {
+			this.polygon = polygon;
+		}
+
+		@Nullable
+		public Point getPointA() {
+			return pointA;
+		}
+
+		public void setPointA(@Nullable Point pointA) {
+			this.pointA = pointA;
+		}
+
+		@Nullable
+		public GeoPoint getPointB() {
+			return pointB;
+		}
+
+		public void setPointB(@Nullable GeoPoint pointB) {
+			this.pointB = pointB;
+		}
+
+		@Nullable
+		public String getPointC() {
+			return pointC;
+		}
+
+		public void setPointC(@Nullable String pointC) {
+			this.pointC = pointC;
+		}
+
+		@Nullable
+		public double[] getPointD() {
+			return pointD;
+		}
+
+		public void setPointD(@Nullable double[] pointD) {
+			this.pointD = pointD;
+		}
 	}
 
 	/**

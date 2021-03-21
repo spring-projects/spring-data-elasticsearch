@@ -17,11 +17,6 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -224,64 +219,85 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Nordine Bittich
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-book-reactive-repository-string-query", replicas = 0, refreshInterval = "-1")
 	static class Book {
-
-		@Id private String id;
-		private String name;
-		@Field(type = FieldType.Object) private Author author;
-		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Object) private Author author;
+		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
-	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
-	static class Car {
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		private String name;
-		private String model;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
+		@Nullable
 		public String getName() {
 			return name;
 		}
 
-		public void setName(String name) {
+		public void setName(@Nullable String name) {
 			this.name = name;
 		}
 
+		@Nullable
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(@Nullable Author author) {
+			this.author = author;
+		}
+
+		@Nullable
+		public Map<Integer, Collection<String>> getBuckets() {
+			return buckets;
+		}
+
+		public void setBuckets(@Nullable Map<Integer, Collection<String>> buckets) {
+			this.buckets = buckets;
+		}
+
+		@Nullable
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(@Nullable String description) {
+			this.description = description;
+		}
+	}
+
+	static class Car {
+		@Nullable private String name;
+		@Nullable private String model;
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
 		public String getModel() {
 			return model;
 		}
 
-		public void setModel(String model) {
+		public void setModel(@Nullable String model) {
 			this.model = model;
 		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
 	static class Author {
 
 		@Nullable private String id;

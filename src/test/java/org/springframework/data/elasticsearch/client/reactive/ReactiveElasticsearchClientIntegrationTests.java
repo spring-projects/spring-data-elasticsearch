@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.SneakyThrows;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -1112,7 +1111,6 @@ public class ReactiveElasticsearchClientIntegrationTests {
 				.create(true);
 	}
 
-	@SneakyThrows
 	private String doIndex(Map<String, ?> source, String index) {
 		return operations.save(source, IndexCoordinates.of(index)).block().get("id").toString();
 	}

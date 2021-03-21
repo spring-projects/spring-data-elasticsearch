@@ -18,9 +18,6 @@ package org.springframework.data.elasticsearch.core.mapping;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 
-import lombok.Builder;
-import lombok.Data;
-
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +39,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTem
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -81,7 +79,9 @@ public class FieldNamingStrategyIntegrationTest {
 	@DisplayName("should use configured FieldNameStrategy")
 	void shouldUseConfiguredFieldNameStrategy() {
 
-		Entity entity = new Entity.EntityBuilder().id("42").someText("the text to be searched").build();
+		Entity entity = new Entity();
+		entity.setId("42");
+		entity.setSomeText("the text to be searched");
 		operations.save(entity);
 
 		// use a native query here to prevent automatic property name matching
@@ -91,11 +91,27 @@ public class FieldNamingStrategyIntegrationTest {
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 	}
 
-	@Data
-	@Builder
 	@Document(indexName = "field-naming-strategy-test")
 	static class Entity {
-		@Id private String id;
-		@Field(type = FieldType.Text) private String someText;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Text) private String someText;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getSomeText() {
+			return someText;
+		}
+
+		public void setSomeText(@Nullable String someText) {
+			this.someText = someText;
+		}
 	}
 }

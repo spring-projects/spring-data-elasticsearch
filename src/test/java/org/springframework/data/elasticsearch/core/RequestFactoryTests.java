@@ -20,11 +20,6 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.mockito.Mockito.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -460,8 +455,7 @@ class RequestFactoryTests {
 	@DisplayName("should set op_type INDEX if not specified")
 	void shouldSetOpTypeIndexIfNotSpecifiedAndIdIsSet() {
 
-		IndexQuery indexQuery = new IndexQueryBuilder().withId("42").withObject(Person.builder().id("42").lastName("Smith"))
-				.build();
+		IndexQuery indexQuery = new IndexQueryBuilder().withId("42").withObject(new Person("42", "Smith")).build();
 
 		IndexRequest indexRequest = requestFactory.indexRequest(indexQuery, IndexCoordinates.of("optype"));
 
@@ -473,7 +467,7 @@ class RequestFactoryTests {
 	void shouldSetOpTypeCreateIfSpecified() {
 
 		IndexQuery indexQuery = new IndexQueryBuilder().withOpType(IndexQuery.OpType.CREATE).withId("42")
-				.withObject(Person.builder().id("42").lastName("Smith")).build();
+				.withObject(new Person("42", "Smith")).build();
 
 		IndexRequest indexRequest = requestFactory.indexRequest(indexQuery, IndexCoordinates.of("optype"));
 
@@ -485,7 +479,7 @@ class RequestFactoryTests {
 	void shouldSetOpTypeIndexIfSpecified() {
 
 		IndexQuery indexQuery = new IndexQueryBuilder().withOpType(IndexQuery.OpType.INDEX).withId("42")
-				.withObject(Person.builder().id("42").lastName("Smith")).build();
+				.withObject(new Person("42", "Smith")).build();
 
 		IndexRequest indexRequest = requestFactory.indexRequest(indexQuery, IndexCoordinates.of("optype"));
 
@@ -601,14 +595,50 @@ class RequestFactoryTests {
 		assertEquals(expected, searchRequest, false);
 	}
 
-	@Data
-	@Builder
-	@NoArgsConstructor
-	@AllArgsConstructor
 	static class Person {
 		@Nullable @Id String id;
 		@Nullable @Field(name = "last-name") String lastName;
 		@Nullable @Field(name = "current-location") GeoPoint location;
+
+		public Person() {}
+
+		public Person(@Nullable String id, @Nullable String lastName) {
+			this.id = id;
+			this.lastName = lastName;
+		}
+
+		public Person(@Nullable String id, @Nullable String lastName, @Nullable GeoPoint location) {
+			this.id = id;
+			this.lastName = lastName;
+			this.location = location;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(@Nullable String lastName) {
+			this.lastName = lastName;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
+		}
 	}
 
 	static class EntityWithSeqNoPrimaryTerm {

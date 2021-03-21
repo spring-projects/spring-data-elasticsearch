@@ -19,10 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,6 +49,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -384,82 +381,238 @@ public class NestedObjectTests {
 		assertThat(books.getSearchHit(0).getContent().getId()).isEqualTo(book2.getId());
 	}
 
-	@Setter
-	@Getter
 	@Document(indexName = "test-index-book-nested-objects", replicas = 0, refreshInterval = "-1")
 	static class Book {
 
-		@Id private String id;
-		private String name;
-		@Field(type = FieldType.Object) private Author author;
-		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Object) private Author author;
+		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(@Nullable Author author) {
+			this.author = author;
+		}
+
+		@Nullable
+		public Map<Integer, Collection<String>> getBuckets() {
+			return buckets;
+		}
+
+		public void setBuckets(@Nullable Map<Integer, Collection<String>> buckets) {
+			this.buckets = buckets;
+		}
+
+		@Nullable
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(@Nullable String description) {
+			this.description = description;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-person", replicas = 0, refreshInterval = "-1")
 	static class Person {
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
+		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
 
-		@Id private String id;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		private String name;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@Field(type = FieldType.Nested) private List<Car> car;
+		@Nullable
+		public String getName() {
+			return name;
+		}
 
-		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public List<Car> getCar() {
+			return car;
+		}
+
+		public void setCar(@Nullable List<Car> car) {
+			this.car = car;
+		}
+
+		@Nullable
+		public List<Book> getBooks() {
+			return books;
+		}
+
+		public void setBooks(@Nullable List<Book> books) {
+			this.books = books;
+		}
 	}
 
-	@Data
 	static class Car {
+		@Nullable private String name;
+		@Nullable private String model;
 
-		private String name;
-		private String model;
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(String model) {
+			this.model = model;
+		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-	@Data
 	@Document(indexName = "test-index-person-multiple-level-nested", replicas = 0, refreshInterval = "-1")
 	static class PersonMultipleLevelNested {
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Nested) private List<GirlFriend> girlFriends;
+		@Nullable @Field(type = FieldType.Nested) private List<Car> cars;
+		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Car> bestCars;
 
-		@Id private String id;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		private String name;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@Field(type = FieldType.Nested) private List<GirlFriend> girlFriends;
+		@Nullable
+		public String getName() {
+			return name;
+		}
 
-		@Field(type = FieldType.Nested) private List<Car> cars;
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 
-		@Field(type = FieldType.Nested, includeInParent = true) private List<Car> bestCars;
+		@Nullable
+		public List<GirlFriend> getGirlFriends() {
+			return girlFriends;
+		}
+
+		public void setGirlFriends(@Nullable List<GirlFriend> girlFriends) {
+			this.girlFriends = girlFriends;
+		}
+
+		@Nullable
+		public List<Car> getCars() {
+			return cars;
+		}
+
+		public void setCars(@Nullable List<Car> cars) {
+			this.cars = cars;
+		}
+
+		@Nullable
+		public List<Car> getBestCars() {
+			return bestCars;
+		}
+
+		public void setBestCars(@Nullable List<Car> bestCars) {
+			this.bestCars = bestCars;
+		}
 	}
 
-	/**
-	 * @author Mohsin Husen
-	 */
-	@Data
 	static class GirlFriend {
+		@Nullable private String name;
+		@Nullable private String type;
+		@Nullable @Field(type = FieldType.Nested) private List<Car> cars;
 
-		private String name;
+		@Nullable
+		public String getName() {
+			return name;
+		}
 
-		private String type;
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 
-		@Field(type = FieldType.Nested) private List<Car> cars;
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public List<Car> getCars() {
+			return cars;
+		}
+
+		public void setCars(@Nullable List<Car> cars) {
+			this.cars = cars;
+		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
-	@Data
 	static class Author {
+		@Nullable private String id;
+		@Nullable private String name;
 
-		private String id;
-		private String name;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 	}
 
 }

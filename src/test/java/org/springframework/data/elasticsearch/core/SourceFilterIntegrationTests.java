@@ -17,11 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.Collections;
 import java.util.List;
 
@@ -39,6 +34,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -57,7 +53,12 @@ public class SourceFilterIntegrationTests {
 		indexOps.create();
 		indexOps.putMapping();
 
-		operations.save(Entity.builder().id("42").field1("one").field2("two").field3("three").build());
+		Entity entity = new Entity();
+		entity.setId("42");
+		entity.setField1("one");
+		entity.setField2("two");
+		entity.setField3("three");
+		operations.save(entity);
 	}
 
 	@AfterEach
@@ -201,15 +202,47 @@ public class SourceFilterIntegrationTests {
 		assertThat(entity.getField3()).isNull();
 	}
 
-	@Data
-	@Builder
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@Document(indexName = "sourcefilter-tests")
 	public static class Entity {
-		@Id private String id;
-		@Field(type = FieldType.Text) private String field1;
-		@Field(type = FieldType.Text) private String field2;
-		@Field(type = FieldType.Text) private String field3;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Text) private String field1;
+		@Nullable @Field(type = FieldType.Text) private String field2;
+		@Nullable @Field(type = FieldType.Text) private String field3;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getField1() {
+			return field1;
+		}
+
+		public void setField1(@Nullable String field1) {
+			this.field1 = field1;
+		}
+
+		@Nullable
+		public String getField2() {
+			return field2;
+		}
+
+		public void setField2(@Nullable String field2) {
+			this.field2 = field2;
+		}
+
+		@Nullable
+		public String getField3() {
+			return field3;
+		}
+
+		public void setField3(@Nullable String field3) {
+			this.field3 = field3;
+		}
 	}
 }

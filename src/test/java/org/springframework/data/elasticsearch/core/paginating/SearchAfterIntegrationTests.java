@@ -17,11 +17,6 @@ package org.springframework.data.elasticsearch.core.paginating;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,6 +36,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -56,8 +52,8 @@ public class SearchAfterIntegrationTests {
 	@DisplayName("should read pages with search_after")
 	void shouldReadPagesWithSearchAfter() {
 
-		List<Entity> entities = IntStream.rangeClosed(1, 10)
-				.mapToObj(i -> Entity.builder().id((long) i).message("message " + i).build()).collect(Collectors.toList());
+		List<Entity> entities = IntStream.rangeClosed(1, 10).mapToObj(i -> new Entity((long) i, "message " + i))
+				.collect(Collectors.toList());
 		operations.save(entities);
 
 		Query query = Query.findAll();
@@ -86,13 +82,53 @@ public class SearchAfterIntegrationTests {
 		assertThat(foundEntities).containsExactlyElementsOf(entities);
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
-	@Builder
 	@Document(indexName = "test-search-after")
 	private static class Entity {
-		@Id private Long id;
-		@Field(type = FieldType.Text) private String message;
+		@Nullable @Id private Long id;
+		@Nullable @Field(type = FieldType.Text) private String message;
+
+		public Entity(@Nullable Long id, @Nullable String message) {
+			this.id = id;
+			this.message = message;
+		}
+
+		@Nullable
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(@Nullable Long id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (!(o instanceof Entity))
+				return false;
+
+			Entity entity = (Entity) o;
+
+			if (id != null ? !id.equals(entity.id) : entity.id != null)
+				return false;
+			return message != null ? message.equals(entity.message) : entity.message == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (message != null ? message.hashCode() : 0);
+			return result;
+		}
 	}
 }

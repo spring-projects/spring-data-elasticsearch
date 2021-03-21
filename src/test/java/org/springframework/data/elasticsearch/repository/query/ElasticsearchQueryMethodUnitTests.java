@@ -17,10 +17,6 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.lang.reflect.Method;
 import java.util.List;
 
@@ -80,13 +76,37 @@ public class ElasticsearchQueryMethodUnitTests {
 		Long validCountQueryResult(String name);
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	@Document(indexName = "query-method-unit-tests")
 	private static class Person {
-		@Id private String id;
+		@Nullable @Id private String id;
 		@Nullable private String name;
 		@Nullable private String firstName;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public void setFirstName(@Nullable String firstName) {
+			this.firstName = firstName;
+		}
 	}
 }

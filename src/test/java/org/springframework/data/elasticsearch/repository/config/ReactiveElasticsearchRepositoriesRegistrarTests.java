@@ -17,11 +17,6 @@ package org.springframework.data.elasticsearch.repository.config;
 
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +29,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -62,15 +58,37 @@ public class ReactiveElasticsearchRepositoriesRegistrarTests {
 
 	interface ReactiveSampleEntityRepository extends ReactiveElasticsearchRepository<SampleEntity, String> {}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-sample-reactive-repositories-registrar", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
 
-		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
 	}
 }

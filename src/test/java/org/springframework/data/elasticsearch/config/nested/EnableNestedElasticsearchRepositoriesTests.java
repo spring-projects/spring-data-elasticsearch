@@ -18,9 +18,6 @@ package org.springframework.data.elasticsearch.config.nested;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import lombok.Builder;
-import lombok.Data;
-
 import java.lang.Double;
 import java.lang.Long;
 
@@ -41,6 +38,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTem
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.repository.Repository;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -75,20 +73,17 @@ public class EnableNestedElasticsearchRepositoriesTests {
 		assertThat(nestedRepository).isNotNull();
 	}
 
-	@Data
-	@Builder
 	@Document(indexName = "test-index-sample-config-nested", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
-
-		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		private int rate;
-		@ScriptedField private Double scriptedRate;
-		private boolean available;
-		private String highlightedMessage;
-		private GeoPoint location;
-		@Version private Long version;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable @ScriptedField private Double scriptedRate;
+		@Nullable private boolean available;
+		@Nullable private String highlightedMessage;
+		@Nullable private GeoPoint location;
+		@Nullable @Version private Long version;
 	}
 
 	interface SampleRepository extends Repository<SampleEntity, Long> {}

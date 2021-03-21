@@ -21,13 +21,6 @@ import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Object;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.lang.Boolean;
 import java.lang.Double;
 import java.lang.Integer;
@@ -649,18 +642,30 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
         assertEquals(expected, mapping, false);
     }
 
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Keyword, ignoreAbove = 10) private String message;
 
-		@Id private String id;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		@Field(type = FieldType.Keyword, ignoreAbove = 10) private String message;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
 	}
+
 
 	static class FieldNameEntity {
 
@@ -726,68 +731,168 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-book-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class Book {
-
-		@Id private String id;
-		private String name;
-		@Field(type = FieldType.Object) private Author author;
-		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Object) private Author author;
+		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(@Nullable Author author) {
+			this.author = author;
+		}
+
+		@Nullable
+		public Map<java.lang.Integer, Collection<String>> getBuckets() {
+			return buckets;
+		}
+
+		public void setBuckets(@Nullable Map<java.lang.Integer, Collection<String>> buckets) {
+			this.buckets = buckets;
+		}
+
+		@Nullable
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(@Nullable String description) {
+			this.description = description;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-simple-recursive-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class SimpleRecursiveEntity {
-
 		@Nullable @Id private String id;
 		@Nullable @Field(type = FieldType.Object,
 				ignoreFields = { "circularObject" }) private SimpleRecursiveEntity circularObject;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public SimpleRecursiveEntity getCircularObject() {
+			return circularObject;
+		}
+
+		public void setCircularObject(@Nullable SimpleRecursiveEntity circularObject) {
+			this.circularObject = circularObject;
+		}
 	}
 
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-copy-to-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class CopyToEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Keyword, copyTo = "name") private String firstName;
+		@Nullable @Field(type = FieldType.Keyword, copyTo = "name") private String lastName;
+		@Nullable @Field(type = FieldType.Keyword) private String name;
 
-		@Id private String id;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		@Field(type = FieldType.Keyword, copyTo = "name") private String firstName;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@Field(type = FieldType.Keyword, copyTo = "name") private String lastName;
+		@Nullable
+		public String getFirstName() {
+			return firstName;
+		}
 
-		@Field(type = FieldType.Keyword) private String name;
+		public void setFirstName(@Nullable String firstName) {
+			this.firstName = firstName;
+		}
+
+		@Nullable
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(@Nullable String lastName) {
+			this.lastName = lastName;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
 	}
 
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-normalizer-mapping-builder", replicas = 0, refreshInterval = "-1")
 	@Setting(settingPath = "/settings/test-normalizer.json")
 	static class NormalizerEntity {
-
-		@Id private String id;
-
-		@Field(type = FieldType.Keyword, normalizer = "lower_case_normalizer") private String name;
-
-		@MultiField(mainField = @Field(type = FieldType.Text), otherFields = { @InnerField(suffix = "lower_case",
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Keyword, normalizer = "lower_case_normalizer") private String name;
+		@Nullable @MultiField(mainField = @Field(type = FieldType.Text), otherFields = { @InnerField(suffix = "lower_case",
 				type = FieldType.Keyword, normalizer = "lower_case_normalizer") }) private String description;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public String getDescription() {
+			return description;
+		}
+
+		public void setDescription(@Nullable String description) {
+			this.description = description;
+		}
 	}
 
 	static class Author {
-
 		@Nullable private String id;
 		@Nullable private String name;
 
@@ -825,19 +930,38 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-stock-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class StockPrice {
+		@Nullable @Id private String id;
+		@Nullable private String symbol;
+		@Nullable @Field(type = FieldType.Double) private BigDecimal price;
 
-		@Id private String id;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		private String symbol;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@Field(type = FieldType.Double) private BigDecimal price;
+		@Nullable
+		public String getSymbol() {
+			return symbol;
+		}
+
+		public void setSymbol(@Nullable String symbol) {
+			this.symbol = symbol;
+		}
+
+		@Nullable
+		public BigDecimal getPrice() {
+			return price;
+		}
+
+		public void setPrice(@Nullable BigDecimal price) {
+			this.price = price;
+		}
 	}
 
 	static class AbstractInheritedEntity {
@@ -916,31 +1040,112 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-geo-mapping-builder", replicas = 0, refreshInterval = "-1")
 	static class GeoEntity {
-
-		@Id private String id;
-
+		@Nullable @Id private String id;
 		// geo shape - Spring Data
-		private Box box;
-		private Circle circle;
-		private Polygon polygon;
-
+		@Nullable private Box box;
+		@Nullable private Circle circle;
+		@Nullable private Polygon polygon;
 		// geo point - Custom implementation + Spring Data
-		@GeoPointField private Point pointA;
-		private GeoPoint pointB;
-		@GeoPointField private String pointC;
-		@GeoPointField private double[] pointD;
-
+		@Nullable @GeoPointField private Point pointA;
+		@Nullable private GeoPoint pointB;
+		@Nullable @GeoPointField private String pointC;
+		@Nullable @GeoPointField private double[] pointD;
 		// geo shape, until e have the classes for this, us a strng
-		@GeoShapeField private String shape1;
-		@GeoShapeField(coerce = true, ignoreMalformed = true, ignoreZValue = false,
+		@Nullable @GeoShapeField private String shape1;
+		@Nullable @GeoShapeField(coerce = true, ignoreMalformed = true, ignoreZValue = false,
 				orientation = GeoShapeField.Orientation.clockwise) private String shape2;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public Box getBox() {
+			return box;
+		}
+
+		public void setBox(@Nullable Box box) {
+			this.box = box;
+		}
+
+		@Nullable
+		public Circle getCircle() {
+			return circle;
+		}
+
+		public void setCircle(@Nullable Circle circle) {
+			this.circle = circle;
+		}
+
+		@Nullable
+		public Polygon getPolygon() {
+			return polygon;
+		}
+
+		public void setPolygon(@Nullable Polygon polygon) {
+			this.polygon = polygon;
+		}
+
+		@Nullable
+		public Point getPointA() {
+			return pointA;
+		}
+
+		public void setPointA(@Nullable Point pointA) {
+			this.pointA = pointA;
+		}
+
+		@Nullable
+		public GeoPoint getPointB() {
+			return pointB;
+		}
+
+		public void setPointB(@Nullable GeoPoint pointB) {
+			this.pointB = pointB;
+		}
+
+		@Nullable
+		public String getPointC() {
+			return pointC;
+		}
+
+		public void setPointC(@Nullable String pointC) {
+			this.pointC = pointC;
+		}
+
+		@Nullable
+		public double[] getPointD() {
+			return pointD;
+		}
+
+		public void setPointD(@Nullable double[] pointD) {
+			this.pointD = pointD;
+		}
+
+		@Nullable
+		public String getShape1() {
+			return shape1;
+		}
+
+		public void setShape1(@Nullable String shape1) {
+			this.shape1 = shape1;
+		}
+
+		@Nullable
+		public String getShape2() {
+			return shape2;
+		}
+
+		public void setShape2(@Nullable String shape2) {
+			this.shape2 = shape2;
+		}
 	}
 
 	@Document(indexName = "test-index-field-mapping-parameters")
@@ -1022,94 +1227,309 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable @Field(type = Text) private ValueObject valueObject;
 	}
 
-	@Getter
-	@Setter
 	@Document(indexName = "completion")
 	static class CompletionDocument {
-		@Id private String id;
-
-		@CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
+		@Nullable @Id private String id;
+		@Nullable @CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
 				path = "proppath") }) private Completion suggest;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public Completion getSuggest() {
+			return suggest;
+		}
+
+		public void setSuggest(@Nullable Completion suggest) {
+			this.suggest = suggest;
+		}
 	}
 
-	@Data
 	@Document(indexName = "test-index-entity-with-seq-no-primary-term-mapping-builder")
 	static class EntityWithSeqNoPrimaryTerm {
-
 		@Field(type = Object) private SeqNoPrimaryTerm seqNoPrimaryTerm;
+
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		public void setSeqNoPrimaryTerm(SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
 	}
 
-	@Data
 	static class RankFeatureEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Rank_Feature) private Integer pageRank;
+		@Nullable @Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
+		@Nullable @Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
 
-		@Id private String id;
-		@Field(type = FieldType.Rank_Feature) private Integer pageRank;
-		@Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
-		@Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public java.lang.Integer getPageRank() {
+			return pageRank;
+		}
+
+		public void setPageRank(@Nullable java.lang.Integer pageRank) {
+			this.pageRank = pageRank;
+		}
+
+		@Nullable
+		public java.lang.Integer getUrlLength() {
+			return urlLength;
+		}
+
+		public void setUrlLength(@Nullable java.lang.Integer urlLength) {
+			this.urlLength = urlLength;
+		}
+
+		@Nullable
+		public Map<String, java.lang.Integer> getTopics() {
+			return topics;
+		}
+
+		public void setTopics(@Nullable Map<String, java.lang.Integer> topics) {
+			this.topics = topics;
+		}
 	}
 
-	@Data
 	static class DenseVectorEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Dense_Vector, dims = 16) private float[] my_vector;
 
-		@Id private String id;
-		@Field(type = FieldType.Dense_Vector, dims = 16) private float[] my_vector;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public float[] getMy_vector() {
+			return my_vector;
+		}
+
+		public void setMy_vector(@Nullable float[] my_vector) {
+			this.my_vector = my_vector;
+		}
 	}
 
-	@Data
 	@Mapping(enabled = false)
 	static class DisabledMappingEntity {
-		@Id private String id;
-		@Field(type = Text) private String text;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text) private String text;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
 	}
 
-	@Data
 	static class InvalidDisabledMappingProperty {
-		@Id private String id;
-		@Mapping(enabled = false) @Field(type = Text) private String text;
+		@Nullable @Id private String id;
+		@Nullable @Mapping(enabled = false) @Field(type = Text) private String text;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
 	}
 
-	@Data
 	static class DisabledMappingProperty {
-		@Id private String id;
-		@Field(type = Text) private String text;
-		@Mapping(enabled = false) @Field(type = Object) private Object object;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text) private String text;
+		@Nullable @Mapping(enabled = false) @Field(type = Object) private Object object;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
+
+		@Nullable
+		public java.lang.Object getObject() {
+			return object;
+		}
+
+		public void setObject(@Nullable java.lang.Object object) {
+			this.object = object;
+		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class TypeHintEntity {
-		@Id @Field(type = Keyword) private String id;
+		@Nullable @Id @Field(type = Keyword) private String id;
+		@Nullable @Field(type = Nested) private NestedEntity nestedEntity;
+		@Nullable @Field(type = Object) private ObjectEntity objectEntity;
 
-		@Field(type = Nested) private NestedEntity nestedEntity;
-
-		@Field(type = Object) private ObjectEntity objectEntity;
-
-		@Data
-		static class NestedEntity {
-			@Field(type = Text) private String nestedField;
+		@Nullable
+		public String getId() {
+			return id;
 		}
 
-		@Data
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public NestedEntity getNestedEntity() {
+			return nestedEntity;
+		}
+
+		public void setNestedEntity(@Nullable NestedEntity nestedEntity) {
+			this.nestedEntity = nestedEntity;
+		}
+
+		@Nullable
+		public ObjectEntity getObjectEntity() {
+			return objectEntity;
+		}
+
+		public void setObjectEntity(@Nullable ObjectEntity objectEntity) {
+			this.objectEntity = objectEntity;
+		}
+
+		static class NestedEntity {
+			@Nullable @Field(type = Text) private String nestedField;
+
+			@Nullable
+			public String getNestedField() {
+				return nestedField;
+			}
+
+			public void setNestedField(@Nullable String nestedField) {
+				this.nestedField = nestedField;
+			}
+		}
+
 		static class ObjectEntity {
-			@Field(type = Text) private String objectField;
+			@Nullable @Field(type = Text) private String objectField;
+
+			@Nullable
+			public String getObjectField() {
+				return objectField;
+			}
+
+			public void setObjectField(@Nullable String objectField) {
+				this.objectField = objectField;
+			}
 		}
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class DateFormatsEntity {
-		@Id private String id;
-		@Field(type = FieldType.Date) private LocalDateTime field1;
+		@Nullable @Id private String id;
+		@Nullable @Field(type = FieldType.Date) private LocalDateTime field1;
+		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime field2;
+		@Nullable @Field(type = FieldType.Date, format = { DateFormat.basic_date, DateFormat.basic_time }) private LocalDateTime field3;
+		@Nullable @Field(type = FieldType.Date, pattern = "dd.MM.uuuu") private LocalDateTime field4;
+		@Nullable @Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") private LocalDateTime field5;
 
-		@Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime field2;
+		@Nullable
+		public String getId() {
+			return id;
+		}
 
-		@Field(type = FieldType.Date,
-				format = { DateFormat.basic_date, DateFormat.basic_time }) private LocalDateTime field3;
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 
-		@Field(type = FieldType.Date, pattern = "dd.MM.uuuu") private LocalDateTime field4;
+		@Nullable
+		public LocalDateTime getField1() {
+			return field1;
+		}
 
-		@Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") private LocalDateTime field5;
+		public void setField1(@Nullable LocalDateTime field1) {
+			this.field1 = field1;
+		}
+
+		@Nullable
+		public LocalDateTime getField2() {
+			return field2;
+		}
+
+		public void setField2(@Nullable LocalDateTime field2) {
+			this.field2 = field2;
+		}
+
+		@Nullable
+		public LocalDateTime getField3() {
+			return field3;
+		}
+
+		public void setField3(@Nullable LocalDateTime field3) {
+			this.field3 = field3;
+		}
+
+		@Nullable
+		public LocalDateTime getField4() {
+			return field4;
+		}
+
+		public void setField4(@Nullable LocalDateTime field4) {
+			this.field4 = field4;
+		}
+
+		@Nullable
+		public LocalDateTime getField5() {
+			return field5;
+		}
+
+		public void setField5(@Nullable LocalDateTime field5) {
+			this.field5 = field5;
+		}
 	}
 }

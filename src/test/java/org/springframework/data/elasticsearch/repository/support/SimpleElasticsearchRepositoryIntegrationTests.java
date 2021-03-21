@@ -20,13 +20,9 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.io.IOException;
 import java.lang.Long;
+import java.lang.Object;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -59,6 +55,7 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.data.util.StreamUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -76,8 +73,7 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(
-			basePackages = { "org.springframework.data.elasticsearch.repository.support" },
+	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.repository.support" },
 			considerNestedRepositories = true)
 	static class Config {}
 
@@ -681,32 +677,101 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		return sampleEntities;
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Chris White
-	 * @author Sascha Woo
-	 */
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-sample-simple-repository", replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
+		@Nullable @Id private String id;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable private int rate;
+		@Nullable private boolean available;
+		@Nullable @Version private Long version;
 
-		@Id private String id;
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		private int rate;
-		private boolean available;
-		@Version private Long version;
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			SampleEntity that = (SampleEntity) o;
+
+			if (rate != that.rate)
+				return false;
+			if (available != that.available)
+				return false;
+			if (id != null ? !id.equals(that.id) : that.id != null)
+				return false;
+			if (type != null ? !type.equals(that.type) : that.type != null)
+				return false;
+			if (message != null ? !message.equals(that.message) : that.message != null)
+				return false;
+			return version != null ? version.equals(that.version) : that.version == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (type != null ? type.hashCode() : 0);
+			result = 31 * result + (message != null ? message.hashCode() : 0);
+			result = 31 * result + rate;
+			result = 31 * result + (available ? 1 : 0);
+			result = 31 * result + (version != null ? version.hashCode() : 0);
+			return result;
+		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Christoph Strobl
-	 */
 	interface SampleElasticsearchRepository extends ElasticsearchRepository<SampleEntity, String> {
 
 		long deleteSampleEntityById(String id);

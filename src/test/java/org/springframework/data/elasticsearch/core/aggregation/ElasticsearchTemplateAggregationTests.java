@@ -21,8 +21,6 @@ import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 
-import lombok.Data;
-
 import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +48,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -131,32 +130,78 @@ public class ElasticsearchTemplateAggregationTests {
 		assertThat(searchHits.hasSearchHits()).isFalse();
 	}
 
-	/**
-	 * Simple type to test facets
-	 *
-	 * @author Artur Konczak
-	 * @author Mohsin Husen
-	 */
-	@Data
 	@Document(indexName = "test-index-articles-core-aggregation", replicas = 0, refreshInterval = "-1")
 	static class ArticleEntity {
 
-		@Id private String id;
-		private String title;
-		@Field(type = Text, fielddata = true) private String subject;
+		@Nullable @Id private String id;
+		@Nullable private String title;
+		@Nullable @Field(type = Text, fielddata = true) private String subject;
 
-		@MultiField(mainField = @Field(type = Text),
+		@Nullable @MultiField(mainField = @Field(type = Text),
 				otherFields = {
 						@InnerField(suffix = "untouched", type = Text, store = true, fielddata = true, analyzer = "keyword"),
 						@InnerField(suffix = "sort", type = Text, store = true,
 								analyzer = "keyword") }) private List<String> authors = new ArrayList<>();
 
-		@Field(type = Integer, store = true) private List<Integer> publishedYears = new ArrayList<>();
+		@Nullable @Field(type = Integer, store = true) private List<Integer> publishedYears = new ArrayList<>();
 
-		private int score;
+		@Nullable private int score;
 
 		public ArticleEntity(String id) {
 			this.id = id;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getTitle() {
+			return title;
+		}
+
+		public void setTitle(@Nullable String title) {
+			this.title = title;
+		}
+
+		@Nullable
+		public String getSubject() {
+			return subject;
+		}
+
+		public void setSubject(@Nullable String subject) {
+			this.subject = subject;
+		}
+
+		@Nullable
+		public List<String> getAuthors() {
+			return authors;
+		}
+
+		public void setAuthors(@Nullable List<String> authors) {
+			this.authors = authors;
+		}
+
+		@Nullable
+		public List<java.lang.Integer> getPublishedYears() {
+			return publishedYears;
+		}
+
+		public void setPublishedYears(@Nullable List<java.lang.Integer> publishedYears) {
+			this.publishedYears = publishedYears;
+		}
+
+		public int getScore() {
+			return score;
+		}
+
+		public void setScore(int score) {
+			this.score = score;
 		}
 	}
 

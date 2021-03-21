@@ -17,8 +17,6 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.Data;
-
 import java.util.List;
 
 import org.json.JSONException;
@@ -36,6 +34,7 @@ import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -98,11 +97,19 @@ public class IndexOperationIntegrationTests {
 		JSONAssert.assertEquals(expectedMappings, indexInformation.getMapping().toJson(), false);
 	}
 
-	@Data
 	@Document(indexName = INDEX_NAME)
 	@Setting(settingPath = "settings/test-settings.json")
 	@Mapping(mappingPath = "mappings/test-mappings.json")
 	protected static class EntityWithSettingsAndMappings {
-		@Id String id;
+		@Nullable private @Id String id;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
 	}
 }

@@ -18,10 +18,6 @@ package org.springframework.data.elasticsearch.annotations;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -41,6 +37,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchPersistentEntity;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
@@ -144,14 +141,47 @@ public class ComposableAnnotationsUnitTest {
 	public @interface TextKeywordField {
 	}
 
-	@Data
-	@NoArgsConstructor
-	@AllArgsConstructor
 	@DocumentNoCreate(indexName = "test-no-create")
 	static class ComposedAnnotationEntity {
-		@Id private String id;
-		@NullValueField(name = "null-value") private String nullValue;
-		@LocalDateField private LocalDate theDate;
-		@TextKeywordField private String multiField;
+		@Nullable @Id private String id;
+		@Nullable @NullValueField(name = "null-value") private String nullValue;
+		@Nullable @LocalDateField private LocalDate theDate;
+		@Nullable @TextKeywordField private String multiField;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getNullValue() {
+			return nullValue;
+		}
+
+		public void setNullValue(@Nullable String nullValue) {
+			this.nullValue = nullValue;
+		}
+
+		@Nullable
+		public LocalDate getTheDate() {
+			return theDate;
+		}
+
+		public void setTheDate(@Nullable LocalDate theDate) {
+			this.theDate = theDate;
+		}
+
+		@Nullable
+		public String getMultiField() {
+			return multiField;
+		}
+
+		public void setMultiField(@Nullable String multiField) {
+			this.multiField = multiField;
+		}
 	}
 }

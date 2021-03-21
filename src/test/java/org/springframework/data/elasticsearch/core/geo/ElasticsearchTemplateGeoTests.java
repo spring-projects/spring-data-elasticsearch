@@ -17,13 +17,6 @@ package org.springframework.data.elasticsearch.core.geo;
 
 import static org.assertj.core.api.Assertions.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +43,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTem
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.data.geo.Point;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -106,23 +100,24 @@ public class ElasticsearchTemplateGeoTests {
 		String latLonString = "51.000000, 0.100000";
 		String geohash = "u10j46mkfekr";
 		Geohash.stringEncode(0.100000, 51.000000);
-		LocationMarkerEntity location1 = LocationMarkerEntity.builder() //
-				.id("1").name("Artur Konczak") //
-				.locationAsString(latLonString) //
-				.locationAsArray(lonLatArray) //
-				.locationAsGeoHash(geohash).build();
-		LocationMarkerEntity location2 = LocationMarkerEntity.builder() //
-				.id("2").name("Mohsin Husen") //
-				.locationAsString(geohash.substring(0, 8)) //
-				.locationAsArray(lonLatArray) //
-				.locationAsGeoHash(geohash.substring(0, 8)) //
-				.build();
-		LocationMarkerEntity location3 = LocationMarkerEntity.builder() //
-				.id("3").name("Rizwan Idrees") //
-				.locationAsString(geohash) //
-				.locationAsArray(lonLatArray) //
-				.locationAsGeoHash(geohash) //
-				.build();
+		LocationMarkerEntity location1 = new LocationMarkerEntity();
+		location1.setId("1");
+		location1.setName("Artur Konczak");
+		location1.setLocationAsString(latLonString);
+		location1.setLocationAsArray(lonLatArray);
+		location1.setLocationAsGeoHash(geohash);
+		LocationMarkerEntity location2 = new LocationMarkerEntity();
+		location2.setId("2");
+		location2.setName("Mohsin Husen");
+		location2.setLocationAsString(geohash.substring(0, 8));
+		location2.setLocationAsArray(lonLatArray);
+		location2.setLocationAsGeoHash(geohash.substring(0, 8));
+		LocationMarkerEntity location3 = new LocationMarkerEntity();
+		location3.setId("3");
+		location3.setName("Rizwan Idrees");
+		location3.setLocationAsString(geohash);
+		location3.setLocationAsArray(lonLatArray);
+		location3.setLocationAsGeoHash(geohash);
 		indexQueries.add(buildIndex(location1));
 		indexQueries.add(buildIndex(location2));
 		indexQueries.add(buildIndex(location3));
@@ -366,19 +361,43 @@ public class ElasticsearchTemplateGeoTests {
 	 * @author Franck Marchand
 	 * @author Mohsin Husen
 	 */
-	@Data
 	@Document(indexName = "test-index-author-marker-core-geo", replicas = 0, refreshInterval = "-1")
 	static class AuthorMarkerEntity {
-
-		@Id private String id;
-		private String name;
-
-		private GeoPoint location;
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable private GeoPoint location;
 
 		private AuthorMarkerEntity() {}
 
 		public AuthorMarkerEntity(String id) {
 			this.id = id;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
 		}
 	}
 
@@ -417,25 +436,52 @@ public class ElasticsearchTemplateGeoTests {
 		}
 	}
 
-	/**
-	 * @author Franck Marchand
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
 	@Document(indexName = "test-index-location-marker-core-geo", replicas = 0, refreshInterval = "-1")
 	static class LocationMarkerEntity {
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @GeoPointField private String locationAsString;
+		@Nullable @GeoPointField private double[] locationAsArray;
+		@Nullable @GeoPointField private String locationAsGeoHash;
 
-		@Id private String id;
-		private String name;
+		public String getId() {
+			return id;
+		}
 
-		@GeoPointField private String locationAsString;
+		public void setId(String id) {
+			this.id = id;
+		}
 
-		@GeoPointField private double[] locationAsArray;
+		public String getName() {
+			return name;
+		}
 
-		@GeoPointField private String locationAsGeoHash;
+		public void setName(String name) {
+			this.name = name;
+		}
 
+		public String getLocationAsString() {
+			return locationAsString;
+		}
+
+		public void setLocationAsString(String locationAsString) {
+			this.locationAsString = locationAsString;
+		}
+
+		public double[] getLocationAsArray() {
+			return locationAsArray;
+		}
+
+		public void setLocationAsArray(double[] locationAsArray) {
+			this.locationAsArray = locationAsArray;
+		}
+
+		public String getLocationAsGeoHash() {
+			return locationAsGeoHash;
+		}
+
+		public void setLocationAsGeoHash(String locationAsGeoHash) {
+			this.locationAsGeoHash = locationAsGeoHash;
+		}
 	}
 }

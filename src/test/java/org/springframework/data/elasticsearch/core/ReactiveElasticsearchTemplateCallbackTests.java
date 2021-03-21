@@ -18,9 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import reactor.core.publisher.Flux;
@@ -378,13 +375,53 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		assertThat(saved.get(1).firstname).isEqualTo("before-convert");
 	}
 
-	@Data
-	@AllArgsConstructor
-	@NoArgsConstructor
 	static class Person {
+		@Nullable @Id String id;
+		@Nullable String firstname;
 
-		@Id String id;
-		String firstname;
+		public Person() {
+		}
+
+		public Person(@Nullable String id, @Nullable String firstname) {
+			this.id = id;
+			this.firstname = firstname;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getFirstname() {
+			return firstname;
+		}
+
+		public void setFirstname(@Nullable String firstname) {
+			this.firstname = firstname;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o) return true;
+			if (o == null || getClass() != o.getClass()) return false;
+
+			Person person = (Person) o;
+
+			if (id != null ? !id.equals(person.id) : person.id != null) return false;
+			return firstname != null ? firstname.equals(person.firstname) : person.firstname == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (firstname != null ? firstname.hashCode() : 0);
+			return result;
+		}
 	}
 
 	static class ValueCapturingEntityCallback<T> {
