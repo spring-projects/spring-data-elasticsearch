@@ -24,8 +24,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.webbeans.cditest.CdiTestContainer;
-import org.apache.webbeans.cditest.CdiTestContainerLoader;
+import javax.enterprise.inject.se.SeContainer;
+import javax.enterprise.inject.se.SeContainerInitializer;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,7 +49,9 @@ import org.springframework.lang.Nullable;
 @IntegrationTest
 public class CdiRepositoryTests {
 
-	@Nullable private static CdiTestContainer cdiContainer;
+	@Nullable private static SeContainer container;
+
+	// @Nullable private static CdiTestContainer cdiContainer;
 	private CdiProductRepository repository;
 	private SamplePersonRepository personRepository;
 	private QualifiedProductRepository qualifiedProductRepository;
@@ -56,22 +59,24 @@ public class CdiRepositoryTests {
 	@BeforeAll
 	public static void init() throws Exception {
 
-		cdiContainer = CdiTestContainerLoader.getCdiContainer();
-		cdiContainer.startApplicationScope();
-		cdiContainer.bootContainer();
+		container = SeContainerInitializer.newInstance() //
+				.disableDiscovery()//
+				.addPackages(CdiRepositoryTests.class) //
+				.initialize();
 	}
 
 	@AfterAll
 	public static void shutdown() throws Exception {
 
-		cdiContainer.stopContexts();
-		cdiContainer.shutdownContainer();
+		if (container != null) {
+			container.close();
+		}
 	}
 
 	@BeforeEach
 	public void setUp() {
 
-		CdiRepositoryClient client = cdiContainer.getInstance(CdiRepositoryClient.class);
+		CdiRepositoryClient client = container.select(CdiRepositoryClient.class).get();
 		repository = client.getRepository();
 		personRepository = client.getSamplePersonRepository();
 		repository.deleteAll();
