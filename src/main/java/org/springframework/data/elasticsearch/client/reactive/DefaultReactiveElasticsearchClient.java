@@ -912,7 +912,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		ElasticsearchException exception = getElasticsearchException(content, mediaType, status);
 
 		if (exception != null) {
-			StringBuilder sb = new StringBuilder();
+			StringBuilder sb = new StringBuilder(128);
 			buildExceptionMessages(sb, exception);
 			return Mono.error(new ElasticsearchStatusException(sb.toString(), status, exception));
 		}
