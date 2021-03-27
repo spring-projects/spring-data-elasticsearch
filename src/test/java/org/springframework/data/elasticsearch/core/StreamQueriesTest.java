@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.util.StreamUtils;
 
@@ -39,6 +40,8 @@ public class StreamQueriesTest {
 		// given
 		List<SearchHit<String>> hits = new ArrayList<>();
 		hits.add(getOneSearchHit());
+		hits.add(getOneSearchHit());
+		hits.add(getOneSearchHit());
 
 		SearchScrollHits<String> searchHits = newSearchScrollHits(hits, "1234");
 
@@ -51,9 +54,7 @@ public class StreamQueriesTest {
 				scrollId -> newSearchScrollHits(Collections.emptyList(), scrollId), //
 				scrollIds -> clearScrollCalled.set(true));
 
-		while (iterator.hasNext()) {
-			iterator.next();
-		}
+		iterator.next();
 		iterator.close();
 
 		// then
@@ -61,6 +62,27 @@ public class StreamQueriesTest {
 
 	}
 
+	@Test // #1745
+	@DisplayName("should call clearScroll when no more data is available")
+	void shouldCallClearScrollWhenNoMoreDataIsAvailable() {
+
+		List<SearchHit<String>> hits = new ArrayList<>();
+		hits.add(getOneSearchHit());
+		SearchScrollHits<String> searchHits = newSearchScrollHits(hits, "1234");
+		AtomicBoolean clearScrollCalled = new AtomicBoolean(false);
+
+		SearchHitsIterator<String> iterator = StreamQueries.streamResults( //
+				0, //
+				searchHits, //
+				scrollId -> newSearchScrollHits(Collections.emptyList(), scrollId), //
+				scrollIds -> clearScrollCalled.set(true));
+
+		while (iterator.hasNext()) {
+			iterator.next();
+		}
+
+		assertThat(clearScrollCalled).isTrue();
+	}
 	private SearchHit<String> getOneSearchHit() {
 		return new SearchHit<String>(null, null, null, 0, null, null, null, null, null, null, "one");
 	}

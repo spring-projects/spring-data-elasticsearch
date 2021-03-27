@@ -66,10 +66,14 @@ abstract class StreamQueries {
 			private volatile Iterator<SearchHit<T>> currentScrollHits = searchHits.iterator();
 			private volatile boolean continueScroll = currentScrollHits.hasNext();
 			private volatile ScrollState scrollState = new ScrollState(searchHits.getScrollId());
+			private volatile boolean isClosed = false;
 
 			@Override
 			public void close() {
-				clearScrollConsumer.accept(scrollState.getScrollIds());
+				if (!isClosed) {
+					clearScrollConsumer.accept(scrollState.getScrollIds());
+					isClosed = true;
+				}
 			}
 
 			@Override
@@ -96,18 +100,24 @@ abstract class StreamQueries {
 			@Override
 			public boolean hasNext() {
 
-				if (!continueScroll || (maxCount > 0 && currentCount.get() >= maxCount)) {
-					return false;
+				boolean hasNext = false;
+
+				if (!isClosed && continueScroll && (maxCount <= 0 || currentCount.get() < maxCount)) {
+
+					if (!currentScrollHits.hasNext()) {
+						SearchScrollHits<T> nextPage = continueScrollFunction.apply(scrollState.getScrollId());
+						currentScrollHits = nextPage.iterator();
+						scrollState.updateScrollId(nextPage.getScrollId());
+						continueScroll = currentScrollHits.hasNext();
+					}
+					hasNext = currentScrollHits.hasNext();
 				}
 
-				if (!currentScrollHits.hasNext()) {
-					SearchScrollHits<T> nextPage = continueScrollFunction.apply(scrollState.getScrollId());
-					currentScrollHits = nextPage.iterator();
-					scrollState.updateScrollId(nextPage.getScrollId());
-					continueScroll = currentScrollHits.hasNext();
+				if (!hasNext) {
+					close();
 				}
 
-				return currentScrollHits.hasNext();
+				return hasNext;
 			}
 
 			@Override
