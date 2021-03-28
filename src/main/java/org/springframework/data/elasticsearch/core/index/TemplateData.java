@@ -27,13 +27,13 @@ import org.springframework.lang.Nullable;
  */
 public class TemplateData {
 	@Nullable private final String[] indexPatterns;
-	@Nullable Document settings;
+	@Nullable Settings settings;
 	@Nullable Document mapping;
 	@Nullable private final Map<String, AliasData> aliases;
 	int order;
 	@Nullable Integer version;
 
-	private TemplateData(@Nullable String[] indexPatterns, @Nullable Document settings, @Nullable Document mapping,
+	private TemplateData(@Nullable String[] indexPatterns, @Nullable Settings settings, @Nullable Document mapping,
 			@Nullable Map<String, AliasData> aliases, int order, @Nullable Integer version) {
 		this.indexPatterns = indexPatterns;
 		this.settings = settings;
@@ -53,7 +53,7 @@ public class TemplateData {
 	}
 
 	@Nullable
-	public Document getSettings() {
+	public Settings getSettings() {
 		return settings;
 	}
 
@@ -77,7 +77,7 @@ public class TemplateData {
 	}
 
 	public static final class TemplateDataBuilder {
-		@Nullable Document settings;
+		@Nullable Settings settings;
 		@Nullable Document mapping;
 		int order;
 		@Nullable Integer version;
@@ -91,8 +91,8 @@ public class TemplateData {
 			return this;
 		}
 
-		public TemplateDataBuilder withSettings(Document settings) {
-			this.settings = settings;
+		public TemplateDataBuilder withSettings(Map<String, Object> settings) {
+			this.settings = new Settings(settings);
 			return this;
 		}
 

@@ -27,6 +27,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
+import org.springframework.data.elasticsearch.ResourceFailureException;
+import org.springframework.util.Assert;
 
 /**
  * Utility to reactively read {@link org.springframework.core.io.Resource}s.
@@ -47,6 +49,8 @@ public abstract class ReactiveResourceUtil {
 	 */
 	public static Mono<String> readFileFromClasspath(String url) {
 
+		Assert.notNull(url, "url must not be null");
+
 		return DataBufferUtils
 				.join(DataBufferUtils.read(new ClassPathResource(url), new DefaultDataBufferFactory(), BUFFER_SIZE))
 				.<String> handle((it, sink) -> {
@@ -65,15 +69,12 @@ public abstract class ReactiveResourceUtil {
 						sink.next(sb.toString());
 						sink.complete();
 					} catch (Exception e) {
-						LOGGER.warn(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
 						sink.complete();
 					} finally {
 						DataBufferUtils.release(it);
 					}
-				}).onErrorResume(throwable -> {
-					LOGGER.warn(String.format("Failed to load file from url: %s: %s", url, throwable.getMessage()));
-					return Mono.empty();
-				});
+				}).onErrorResume(
+						throwable -> Mono.error(new ResourceFailureException("Could not load resource from " + url, throwable)));
 	}
 
 	// Utility constructor

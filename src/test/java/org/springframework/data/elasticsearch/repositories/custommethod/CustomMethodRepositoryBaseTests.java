@@ -1631,7 +1631,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(count).isEqualTo(20);
 	}
 
-	@Document(indexName = "test-index-sample-repositories-custom-method", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-repositories-custom-method")
 	static class SampleEntity {
 		@Nullable
 		@Id private String id;

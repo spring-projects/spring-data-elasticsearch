@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.lang.Nullable;
 
@@ -66,7 +67,8 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 	/**
 	 * @author Petr Kukral
 	 */
-	@Document(indexName = "test-dynamictemplates", indexStoreType = "memory", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-dynamictemplates")
+	@Setting(indexStoreType = "memory")
 	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings.json")
 	static class SampleDynamicTemplatesEntity {
 
@@ -78,7 +80,8 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 	/**
 	 * @author Petr Kukral
 	 */
-	@Document(indexName = "test-dynamictemplates", indexStoreType = "memory", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-dynamictemplates")
+	@Setting(indexStoreType = "memory")
 	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings_two.json")
 	static class SampleDynamicTemplatesEntityTwo {
 

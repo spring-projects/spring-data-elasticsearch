@@ -130,7 +130,7 @@ public class ElasticsearchTemplateAggregationTests {
 		assertThat(searchHits.hasSearchHits()).isFalse();
 	}
 
-	@Document(indexName = "test-index-articles-core-aggregation", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-articles-core-aggregation")
 	static class ArticleEntity {
 
 		@Nullable @Id private String id;

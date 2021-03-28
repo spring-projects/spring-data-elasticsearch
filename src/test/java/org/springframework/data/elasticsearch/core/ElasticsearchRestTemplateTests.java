@@ -79,7 +79,7 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 				.isInstanceOf(UncategorizedElasticsearchException.class);
 	}
 
-	@Document(indexName = "test-index-sample-core-rest-template", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-rest-template")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable

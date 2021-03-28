@@ -19,16 +19,18 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.elasticsearch.common.collect.MapBuilder;
 import org.elasticsearch.index.VersionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
@@ -66,16 +68,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private @Nullable String indexName;
-	private boolean useServerConfiguration;
-	private short shards;
-	private short replicas;
-	private @Nullable String refreshInterval;
-	private @Nullable String indexStoreType;
+	private final Lazy<SettingsParameter> settingsParameter;
 	@Deprecated private @Nullable String parentType;
 	@Deprecated private @Nullable ElasticsearchPersistentProperty parentIdProperty;
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
-	private @Nullable String settingPath;
 	private @Nullable VersionType versionType;
 	private boolean createIndexAndMapping;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
@@ -90,27 +87,20 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		super(typeInformation);
 
 		Class<T> clazz = typeInformation.getType();
+
 		org.springframework.data.elasticsearch.annotations.Document document = AnnotatedElementUtils
 				.findMergedAnnotation(clazz, org.springframework.data.elasticsearch.annotations.Document.class);
+
+		// need a Lazy here, because we need the persistent properties available
+		this.settingsParameter = Lazy.of(() -> buildSettingsParameter(clazz));
 
 		if (document != null) {
 
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
 			this.indexName = document.indexName();
-			this.useServerConfiguration = document.useServerConfiguration();
-			this.shards = document.shards();
-			this.replicas = document.replicas();
-			this.refreshInterval = document.refreshInterval();
-			this.indexStoreType = document.indexStoreType();
 			this.versionType = document.versionType();
 			this.createIndexAndMapping = document.createIndex();
-
-			Setting setting = AnnotatedElementUtils.getMergedAnnotation(clazz, Setting.class);
-
-			if (setting != null) {
-				this.settingPath = setting.settingPath();
-			}
 		}
 
 		Routing routingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Routing.class);
@@ -135,28 +125,28 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Nullable
 	@Override
 	public String getIndexStoreType() {
-		return indexStoreType;
+		return settingsParameter.get().indexStoreType;
 	}
 
 	@Override
 	public short getShards() {
-		return shards;
+		return settingsParameter.get().shards;
 	}
 
 	@Override
 	public short getReplicas() {
-		return replicas;
+		return settingsParameter.get().replicas;
 	}
 
 	@Override
 	public boolean isUseServerConfiguration() {
-		return useServerConfiguration;
+		return settingsParameter.get().useServerConfiguration;
 	}
 
 	@Nullable
 	@Override
 	public String getRefreshInterval() {
-		return refreshInterval;
+		return settingsParameter.get().refreshIntervall;
 	}
 
 	@Nullable
@@ -177,11 +167,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public VersionType getVersionType() {
 		return versionType;
-	}
-
-	@Override
-	public String settingPath() {
-		return settingPath;
 	}
 
 	@Override
@@ -207,7 +192,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 			Parent parentAnnotation = property.findAnnotation(Parent.class);
 			this.parentIdProperty = property;
-			this.parentType = parentAnnotation.type();
+
+			if (parentAnnotation != null) {
+				this.parentType = parentAnnotation.type();
+			}
 		}
 
 		if (property.isSeqNoPrimaryTermProperty()) {
@@ -407,17 +395,167 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	// endregion
 
+	// region index settings
 	@Override
-	public Document getDefaultSettings() {
+	public String settingPath() {
+		return settingsParameter.get().settingPath;
+	}
 
-		if (isUseServerConfiguration()) {
-			return Document.create();
+	@Override
+	public Settings getDefaultSettings() {
+		return settingsParameter.get().toSettings(); //
+	}
+
+	private SettingsParameter buildSettingsParameter(Class<?> clazz) {
+
+		SettingsParameter settingsParameter = new SettingsParameter();
+		Document documentAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Document.class);
+		Setting settingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
+
+		if (documentAnnotation != null) {
+			settingsParameter.useServerConfiguration = documentAnnotation.useServerConfiguration();
+			settingsParameter.shards = documentAnnotation.shards();
+			settingsParameter.replicas = documentAnnotation.replicas();
+			settingsParameter.refreshIntervall = documentAnnotation.refreshInterval();
+			settingsParameter.indexStoreType = documentAnnotation.indexStoreType();
 		}
 
-		Map<String, String> map = new MapBuilder<String, String>()
-				.put("index.number_of_shards", String.valueOf(getShards()))
-				.put("index.number_of_replicas", String.valueOf(getReplicas()))
-				.put("index.refresh_interval", getRefreshInterval()).put("index.store.type", getIndexStoreType()).map();
-		return Document.from(map);
+		if (settingAnnotation != null) {
+			processSettingAnnotation(settingAnnotation, settingsParameter);
+		}
+
+		return settingsParameter;
 	}
+
+	private void processSettingAnnotation(Setting settingAnnotation, SettingsParameter settingsParameter) {
+		settingsParameter.useServerConfiguration = settingAnnotation.useServerConfiguration();
+		settingsParameter.settingPath = settingAnnotation.settingPath();
+		settingsParameter.shards = settingAnnotation.shards();
+		settingsParameter.replicas = settingAnnotation.replicas();
+		settingsParameter.refreshIntervall = settingAnnotation.refreshInterval();
+		settingsParameter.indexStoreType = settingAnnotation.indexStoreType();
+
+		String[] sortFields = settingAnnotation.sortFields();
+
+		if (sortFields.length > 0) {
+			String[] fieldNames = new String[sortFields.length];
+			int index = 0;
+			for (String propertyName : sortFields) {
+				ElasticsearchPersistentProperty property = getPersistentProperty(propertyName);
+
+				if (property == null) {
+					throw new IllegalArgumentException("sortField property " + propertyName + " not found");
+				}
+				Field fieldAnnotation = property.getRequiredAnnotation(Field.class);
+
+				FieldType fieldType = fieldAnnotation.type();
+				switch (fieldType) {
+					case Boolean:
+					case Long:
+					case Integer:
+					case Short:
+					case Byte:
+					case Float:
+					case Half_Float:
+					case Scaled_Float:
+					case Date:
+					case Date_Nanos:
+					case Keyword:
+						break;
+					default:
+						throw new IllegalArgumentException("field type " + fieldType + " not allowed for sortField");
+				}
+
+				if (!fieldAnnotation.docValues()) {
+					throw new IllegalArgumentException("doc_values must be set to true for sortField");
+				}
+				fieldNames[index++] = property.getFieldName();
+			}
+			settingsParameter.sortFields = fieldNames;
+
+			Setting.SortOrder[] sortOrders = settingAnnotation.sortOrders();
+			if (sortOrders.length > 0) {
+
+				if (sortOrders.length != sortFields.length) {
+					throw new IllegalArgumentException("@Settings parameter sortFields and sortOrders must have the same size");
+				}
+				settingsParameter.sortOrders = sortOrders;
+			}
+
+			Setting.SortMode[] sortModes = settingAnnotation.sortModes();
+			if (sortModes.length > 0) {
+
+				if (sortModes.length != sortFields.length) {
+					throw new IllegalArgumentException("@Settings parameter sortFields and sortModes must have the same size");
+				}
+				settingsParameter.sortModes = sortModes;
+			}
+
+			Setting.SortMissing[] sortMissingValues = settingAnnotation.sortMissingValues();
+			if (sortMissingValues.length > 0) {
+
+				if (sortMissingValues.length != sortFields.length) {
+					throw new IllegalArgumentException(
+							"@Settings parameter sortFields and sortMissingValues must have the same size");
+				}
+				settingsParameter.sortMissingValues = sortMissingValues;
+			}
+		}
+	}
+
+	/**
+	 * internal class to collect settings values from the {@link Document} and {@link Setting} annotations-
+	 */
+	private static class SettingsParameter {
+		boolean useServerConfiguration = false;
+		@Nullable String settingPath;
+		short shards;
+		short replicas;
+		@Nullable String refreshIntervall;
+		@Nullable String indexStoreType;
+		@Nullable private String[] sortFields;
+		@Nullable private Setting.SortOrder[] sortOrders;
+		@Nullable private Setting.SortMode[] sortModes;
+		@Nullable private Setting.SortMissing[] sortMissingValues;
+
+		Settings toSettings() {
+
+			if (useServerConfiguration) {
+				return new Settings();
+			}
+
+			Settings settings = new Settings() //
+					.append("index.number_of_shards", String.valueOf(shards))
+					.append("index.number_of_replicas", String.valueOf(replicas));
+
+			if (refreshIntervall != null) {
+				settings.append("index.refresh_interval", refreshIntervall);
+			}
+
+			if (indexStoreType != null) {
+				settings.append("index.store.type", indexStoreType);
+			}
+
+			if (sortFields != null && sortFields.length > 0) {
+				settings.append("index.sort.field", sortFields);
+
+				if (sortOrders != null && sortOrders.length > 0) {
+					settings.append("index.sort.order", sortOrders);
+				}
+
+				if (sortModes != null && sortModes.length > 0) {
+					settings.append("index.sort.mode", sortModes);
+				}
+
+				if (sortMissingValues != null && sortMissingValues.length > 0) {
+					settings.append("index.sort.missing", sortMissingValues);
+				}
+			}
+
+			return settings; //
+
+		}
+	}
+
+	// endregion
 }

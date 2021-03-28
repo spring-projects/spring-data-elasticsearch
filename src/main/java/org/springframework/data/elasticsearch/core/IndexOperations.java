@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
@@ -60,7 +61,7 @@ public interface IndexOperations {
 	 * @param settings the index settings
 	 * @return {@literal true} if the index was created
 	 */
-	boolean create(Document settings);
+	boolean create(Map<String, Object> settings);
 
 	/**
 	 * Create an index for given settings and mapping.
@@ -70,7 +71,7 @@ public interface IndexOperations {
 	 * @return {@literal true} if the index was created
 	 * @since 4.2
 	 */
-	boolean create(Document settings, Document mapping);
+	boolean create(Map<String, Object> settings, Document mapping);
 
 	/**
 	 * Create an index with the settings and mapping defined for the entity this IndexOperations is bound to.
@@ -161,7 +162,7 @@ public interface IndexOperations {
 	 * @return a settings document.
 	 * @since 4.1
 	 */
-	Document createSettings();
+	Settings createSettings();
 
 	/**
 	 * Creates the index settings from the annotations on the given class
@@ -170,14 +171,14 @@ public interface IndexOperations {
 	 * @return a settings document.
 	 * @since 4.1
 	 */
-	Document createSettings(Class<?> clazz);
+	Settings createSettings(Class<?> clazz);
 
 	/**
 	 * Get the index settings.
 	 *
 	 * @return the settings
 	 */
-	Map<String, Object> getSettings();
+	Settings getSettings();
 
 	/**
 	 * Get the index settings.
@@ -185,7 +186,7 @@ public interface IndexOperations {
 	 * @param includeDefaults whether or not to include all the default settings
 	 * @return the settings
 	 */
-	Map<String, Object> getSettings(boolean includeDefaults);
+	Settings getSettings(boolean includeDefaults);
 	// endregion
 
 	// region aliases

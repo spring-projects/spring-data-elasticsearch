@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Routing;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -117,7 +118,8 @@ public class ElasticsearchOperationsRoutingTests {
 		assertThat(searchHits.getSearchHit(0).getRouting()).isEqualTo(ID_2);
 	}
 
-	@Document(indexName = INDEX, shards = 5)
+	@Document(indexName = INDEX)
+	@Setting(shards = 5)
 	@Routing("routing")
 	static class RoutingEntity {
 		@Nullable @Id private String id;

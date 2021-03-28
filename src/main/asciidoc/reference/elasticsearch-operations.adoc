@@ -21,7 +21,8 @@ The default implementations of the interfaces offer:
 ====
 .Index management and automatic creation of indices and mappings.
 
-The `IndexOperations` interface and the provided implementation which can be obtained from an `ElasticsearchOperations` instance - for example with a call to `operations.indexOps(clazz)`- give the user the ability to create indices, put mappings or store template and alias information in the Elasticsearch cluster.
+The `IndexOperations` interface and the provided implementation which can be obtained from an `ElasticsearchOperations` instance - for example with a call to `operations.indexOps(clazz)`- give the user the ability to create indices, put mappings or store template and alias information in the Elasticsearch cluster. Details of the index that will be created
+can be set by using the `@Setting` annotation, refer to <<elasticsearc.misc.index.settings>> for further information.
 
 **None of these operations are done automatically** by the implementations of `IndexOperations` or `ElasticsearchOperations`. It is the user's responsibility to call the methods.
 

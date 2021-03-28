@@ -96,7 +96,7 @@ public class InnerObjectTests {
 		assertThat(bookRepository.findById(id)).isNotNull();
 	}
 
-	@Document(indexName = "test-index-book", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book")
 	static class Book {
 		@Nullable @Id private String id;
 		@Nullable private String name;

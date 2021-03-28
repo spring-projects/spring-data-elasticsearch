@@ -20,6 +20,7 @@ import java.util.List;
 
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.lang.Nullable;
 
 /**
@@ -31,16 +32,16 @@ import org.springframework.lang.Nullable;
  */
 public class IndexInformation {
 	private final String name;
-	@Nullable private final Document settings;
+	@Nullable private final Settings settings;
 	@Nullable private final Document mapping;
 	@Nullable private final List<AliasData> aliases;
 
-	public static IndexInformation of(String name, @Nullable Document settings, @Nullable Document mapping,
+	public static IndexInformation of(String name, @Nullable Settings settings, @Nullable Document mapping,
 			@Nullable List<AliasData> aliases) {
 		return new IndexInformation(name, settings, mapping, aliases);
 	}
 
-	private IndexInformation(String name, @Nullable Document settings, @Nullable Document mapping,
+	private IndexInformation(String name, @Nullable Settings settings, @Nullable Document mapping,
 			@Nullable List<AliasData> aliases) {
 		this.name = name;
 		this.settings = settings;
@@ -58,7 +59,7 @@ public class IndexInformation {
 	}
 
 	@Nullable
-	public Document getSettings() {
+	public Settings getSettings() {
 		return settings;
 	}
 

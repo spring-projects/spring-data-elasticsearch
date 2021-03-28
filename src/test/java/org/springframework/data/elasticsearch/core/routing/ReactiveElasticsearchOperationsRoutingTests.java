@@ -29,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Routing;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -115,7 +116,8 @@ public class ReactiveElasticsearchOperationsRoutingTests {
 		assertThat(searchHits.get(0).getRouting()).isEqualTo(ID_2);
 	}
 
-	@Document(indexName = INDEX, shards = 5)
+	@Document(indexName = INDEX)
+	@Setting(shards = 5)
 	@Routing("routing")
 	static class RoutingEntity {
 		@Nullable @Id private String id;

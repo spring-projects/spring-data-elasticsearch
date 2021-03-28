@@ -18,10 +18,9 @@ package org.springframework.data.elasticsearch.core;
 import java.io.InputStream;
 import java.nio.charset.Charset;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.lang.Nullable;
+import org.springframework.data.elasticsearch.ResourceFailureException;
+import org.springframework.util.Assert;
 import org.springframework.util.StreamUtils;
 
 /**
@@ -33,23 +32,20 @@ import org.springframework.util.StreamUtils;
  */
 public abstract class ResourceUtil {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ResourceUtil.class);
-
 	/**
 	 * Read a {@link ClassPathResource} into a {@link String}.
 	 *
-	 * @param url url the file url
-	 * @return the contents of the file or null if it could not be read
+	 * @param url url the resource
+	 * @return the contents of the resource
 	 */
-	@Nullable
 	public static String readFileFromClasspath(String url) {
 
-		ClassPathResource classPathResource = new ClassPathResource(url);
-		try (InputStream is = classPathResource.getInputStream()) {
+		Assert.notNull(url, "url must not be null");
+
+		try (InputStream is = new ClassPathResource(url).getInputStream()) {
 			return StreamUtils.copyToString(is, Charset.defaultCharset());
 		} catch (Exception e) {
-			LOGGER.warn(String.format("Failed to load file from url: %s: %s", url, e.getMessage()));
-			return null;
+			throw new ResourceFailureException("Could not load resource from " + url, e);
 		}
 	}
 

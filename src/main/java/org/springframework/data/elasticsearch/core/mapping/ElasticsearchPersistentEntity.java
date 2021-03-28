@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentEntity;
@@ -148,14 +149,14 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	/**
 	 * returns the default settings for an index.
 	 *
-	 * @return settings as {@link Document}
+	 * @return settings
 	 * @since 4.1
 	 */
-	Document getDefaultSettings();
+	Settings getDefaultSettings();
 
 	/**
 	 * Resolves the routing for a bean.
-	 * 
+	 *
 	 * @param bean the bean to resolve the routing for
 	 * @return routing value, may be {@literal null}
 	 */

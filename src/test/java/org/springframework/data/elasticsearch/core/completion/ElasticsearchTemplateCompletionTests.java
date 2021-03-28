@@ -248,7 +248,7 @@ public class ElasticsearchTemplateCompletionTests {
 	/**
 	 * @author Mewes Kochheim
 	 */
-	@Document(indexName = "test-index-core-completion", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-core-completion")
 	static class CompletionEntity {
 
 		@Nullable @Id private String id;
@@ -334,7 +334,7 @@ public class ElasticsearchTemplateCompletionTests {
 	/**
 	 * @author Mewes Kochheim
 	 */
-	@Document(indexName = "test-index-annotated-completion", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-annotated-completion")
 	static class AnnotatedCompletionEntity {
 
 		@Nullable @Id private String id;

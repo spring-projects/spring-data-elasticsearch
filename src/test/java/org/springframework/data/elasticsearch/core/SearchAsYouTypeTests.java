@@ -151,7 +151,7 @@ public class SearchAsYouTypeTests {
 	/**
 	 * @author Aleksei Arsenev
 	 */
-	@Document(indexName = "test-index-core-search-as-you-type", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-core-search-as-you-type")
 	static class SearchAsYouTypeEntity {
 
 		public SearchAsYouTypeEntity(@Nonnull String id) {

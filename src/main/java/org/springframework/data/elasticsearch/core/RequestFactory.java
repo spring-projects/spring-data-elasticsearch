@@ -355,11 +355,14 @@ class RequestFactory {
 
 	// region index management
 
-	public CreateIndexRequest createIndexRequest(IndexCoordinates index, @Nullable Document settings,
-			@Nullable Document mapping) {
+	public CreateIndexRequest createIndexRequest(IndexCoordinates index, Map<String, Object> settings, @Nullable Document mapping) {
+
+		Assert.notNull(index, "index must not be null");
+		Assert.notNull(settings, "settings must not be null");
+
 		CreateIndexRequest request = new CreateIndexRequest(index.getIndexName());
 
-		if (settings != null && !settings.isEmpty()) {
+		if (!settings.isEmpty()) {
 			request.settings(settings);
 		}
 
@@ -371,13 +374,15 @@ class RequestFactory {
 	}
 
 	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, IndexCoordinates index,
-			@Nullable Document settings, @Nullable Document mapping) {
+			Map<String, Object> settings, @Nullable Document mapping) {
+
+		Assert.notNull(index, "index must not be null");
+		Assert.notNull(settings, "settings must not be null");
 
 		String indexName = index.getIndexName();
 		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
 
-		if (settings != null && !settings.isEmpty()) {
-
+		if (!settings.isEmpty()) {
 			createIndexRequestBuilder.setSettings(settings);
 		}
 

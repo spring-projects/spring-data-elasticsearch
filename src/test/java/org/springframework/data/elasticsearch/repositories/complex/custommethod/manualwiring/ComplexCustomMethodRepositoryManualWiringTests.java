@@ -77,7 +77,7 @@ public class ComplexCustomMethodRepositoryManualWiringTests {
 		assertThat(result).isEqualTo("3+3=6");
 	}
 
-	@Document(indexName = "test-index-sample-repository-manual-wiring", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-repository-manual-wiring")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;

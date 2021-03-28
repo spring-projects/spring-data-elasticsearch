@@ -731,7 +731,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-book-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-mapping-builder")
 	static class Book {
 		@Nullable @Id private String id;
 		@Nullable private String name;
@@ -787,7 +787,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-simple-recursive-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-simple-recursive-mapping-builder")
 	static class SimpleRecursiveEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = FieldType.Object,
@@ -812,7 +812,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-copy-to-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-copy-to-mapping-builder")
 	static class CopyToEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = FieldType.Keyword, copyTo = "name") private String firstName;
@@ -856,7 +856,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-normalizer-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-normalizer-mapping-builder")
 	@Setting(settingPath = "/settings/test-normalizer.json")
 	static class NormalizerEntity {
 		@Nullable @Id private String id;
@@ -915,7 +915,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-sample-inherited-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-inherited-mapping-builder")
 	static class SampleInheritedEntity extends AbstractInheritedEntity {
 
 		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
@@ -930,7 +930,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-stock-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-stock-mapping-builder")
 	static class StockPrice {
 		@Nullable @Id private String id;
 		@Nullable private String symbol;
@@ -989,7 +989,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-recursive-mapping-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-recursive-mapping-mapping-builder")
 	static class SampleTransientEntity {
 
 		@Nullable @Id private String id;
@@ -1040,7 +1040,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-geo-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-geo-mapping-builder")
 	static class GeoEntity {
 		@Nullable @Id private String id;
 		// geo shape - Spring Data

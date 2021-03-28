@@ -120,7 +120,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		assertThat(nestedRepository).isNull();
 	}
 
-	@Document(indexName = "test-index-sample-config-not-nested", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-config-not-nested")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
@@ -212,7 +212,7 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 		}
 	}
 
-	@Document(indexName = "test-index-uuid-keyed-config-not-nested", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-uuid-keyed-config-not-nested")
 	static class SampleEntityUUIDKeyed {
 		@Nullable @Id private UUID id;
 		@Nullable private String type;

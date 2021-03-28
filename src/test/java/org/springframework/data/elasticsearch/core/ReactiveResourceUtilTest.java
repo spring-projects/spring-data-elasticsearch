@@ -60,9 +60,9 @@ class ReactiveResourceUtilTest {
 	}
 
 	@Test
-	void shouldReturnEmptyMonoOnNonExistingResource() {
+	void shouldErrorOnNonExistingResource() {
 		ReactiveResourceUtil.readFileFromClasspath("/this/should/really/not/exist") //
 				.as(StepVerifier::create) //
-				.verifyComplete();
+				.verifyError();
 	}
 }

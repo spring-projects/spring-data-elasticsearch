@@ -103,7 +103,7 @@ public class SpELEntityTests {
 	 *
 	 * @author Artur Konczak
 	 */
-	@Document(indexName = "#{'test-index-abz'+'-'+'entity'}", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "#{'test-index-abz'+'-'+'entity'}")
 	static class SpELEntity {
 
 		@Id private String id;

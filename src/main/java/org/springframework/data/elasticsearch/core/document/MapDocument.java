@@ -21,6 +21,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
+import org.springframework.data.elasticsearch.support.StringObjectMap;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.lang.Nullable;
 
@@ -38,7 +40,7 @@ class MapDocument implements Document {
 
 	static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
-	private final LinkedHashMap<String, Object> documentAsMap;
+	private final DefaultStringObjectMap<?> documentAsMap;
 
 	private @Nullable String index;
 	private @Nullable String id;
@@ -50,8 +52,8 @@ class MapDocument implements Document {
 		this(new LinkedHashMap<>());
 	}
 
-	MapDocument(Map<String, ? extends Object> documentAsMap) {
-		this.documentAsMap = new LinkedHashMap<>(documentAsMap);
+	MapDocument(Map<String, ?> documentAsMap) {
+		this.documentAsMap = new DefaultStringObjectMap<>(documentAsMap);
 	}
 
 	@Override

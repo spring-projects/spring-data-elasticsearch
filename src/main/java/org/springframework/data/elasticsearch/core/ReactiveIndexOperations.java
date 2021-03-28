@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
@@ -56,7 +57,7 @@ public interface ReactiveIndexOperations {
 	 * @return a {@link Mono} signalling successful operation completion or an {@link Mono#error(Throwable) error} if eg.
 	 *         the index already exist.
 	 */
-	Mono<Boolean> create(Document settings);
+	Mono<Boolean> create(Map<String, Object> settings);
 
 	/**
 	 * Create an index for given settings and mapping.
@@ -67,7 +68,7 @@ public interface ReactiveIndexOperations {
 	 *         the index already exist.
 	 * @since 4.2
 	 */
-	Mono<Boolean> create(Document settings, Document mapping);
+	Mono<Boolean> create(Map<String, Object> settings, Document mapping);
 
 	/**
 	 * Create an index with the settings and mapping defined for the entity this IndexOperations is bound to.
@@ -159,7 +160,7 @@ public interface ReactiveIndexOperations {
 	 * @return a settings document.
 	 * @since 4.1
 	 */
-	Mono<Document> createSettings();
+	Mono<Settings> createSettings();
 
 	/**
 	 * Creates the index settings from the annotations on the given class
@@ -168,14 +169,14 @@ public interface ReactiveIndexOperations {
 	 * @return a settings document.
 	 * @since 4.1
 	 */
-	Mono<Document> createSettings(Class<?> clazz);
+	Mono<Settings> createSettings(Class<?> clazz);
 
 	/**
 	 * get the settings for the index
 	 *
 	 * @return a {@link Mono} with a {@link Document} containing the index settings
 	 */
-	default Mono<Document> getSettings() {
+	default Mono<Settings> getSettings() {
 		return getSettings(false);
 	}
 
@@ -185,7 +186,7 @@ public interface ReactiveIndexOperations {
 	 * @param includeDefaults whether or not to include all the default settings
 	 * @return a {@link Mono} with a {@link Document} containing the index settings
 	 */
-	Mono<Document> getSettings(boolean includeDefaults);
+	Mono<Settings> getSettings(boolean includeDefaults);
 	// endregion
 
 	// region aliases

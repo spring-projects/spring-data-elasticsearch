@@ -6,6 +6,10 @@ This section describes breaking changes from version 4.1.x to 4.2.x and how remo
 [[elasticsearch-migration-guide-4.1-4.2.deprecations]]
 == Deprecations
 
+=== @Document parameters
+
+The parameters of the `@Document` annotation that are relevant for  the index settings (`useServerConfiguration`, `shards`. `replicas`, `refreshIntervall` and `indexStoretype`) have been moved to the `@Setting` annotation. Use in `@Document` is still possible but deprecated.
+
 [[elasticsearch-migration-guide-4.1-4.2.removal]]
 == Removals
 

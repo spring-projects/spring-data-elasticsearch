@@ -166,7 +166,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 	 * @author Artur Konczak
 	 */
 
-	@Document(indexName = INDEX_NAME, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = INDEX_NAME)
 	static class Person {
 
 		@Nullable @Id private String id;
@@ -215,7 +215,7 @@ public class ReactiveElasticsearchQueryMethodUnitTests {
 		}
 	}
 
-	@Document(indexName = "test-index-book-reactive-repository-query", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-reactive-repository-query")
 	static class Book {
 		@Nullable @Id private String id;
 		@Nullable private String name;

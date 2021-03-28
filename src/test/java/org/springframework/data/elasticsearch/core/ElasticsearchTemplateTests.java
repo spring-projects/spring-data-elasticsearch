@@ -83,6 +83,7 @@ import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
 import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -3006,7 +3007,7 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(aliases).isEmpty();
 	}
 
-	@Document(indexName = INDEX_2_NAME, replicas = 0)
+	@Document(indexName = INDEX_2_NAME)
 	class ResultAggregator {
 
 		private String id;
@@ -3750,7 +3751,8 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(explanation).isNotNull();
 	}
 
-	@Document(indexName = INDEX_NAME_SAMPLE_ENTITY, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = INDEX_NAME_SAMPLE_ENTITY)
+	@Setting(shards = 1, replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
@@ -3928,7 +3930,7 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Document(indexName = "test-index-uuid-keyed-core-template", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-uuid-keyed-core-template")
 	private static class SampleEntityUUIDKeyed {
 		@Nullable @Id private UUID id;
 		@Nullable private String type;
@@ -4010,7 +4012,7 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Document(indexName = "test-index-book-core-template", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-core-template")
 	static class Book {
 		@Nullable @Id private String id;
 		@Nullable private String name;
@@ -4139,8 +4141,7 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Document(indexName = "test-index-version-core-template", replicas = 0, refreshInterval = "-1",
-			versionType = VersionType.EXTERNAL_GTE)
+	@Document(indexName = "test-index-version-core-template", versionType = VersionType.EXTERNAL_GTE)
 	private static class GTEVersionEntity {
 		@Nullable @Version private Long version;
 		@Nullable @Id private String id;
@@ -4174,7 +4175,7 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Document(indexName = "test-index-hetro1-core-template", replicas = 0)
+	@Document(indexName = "test-index-hetro1-core-template")
 	static class HetroEntity1 {
 		@Nullable @Id private String id;
 		@Nullable private String firstName;
@@ -4214,7 +4215,7 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Document(indexName = "test-index-hetro2-core-template", replicas = 0)
+	@Document(indexName = "test-index-hetro2-core-template")
 	static class HetroEntity2 {
 
 		@Nullable @Id private String id;
@@ -4255,8 +4256,8 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Document(indexName = "test-index-server-configuration", useServerConfiguration = true, shards = 10, replicas = 10,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-server-configuration")
+	@Setting(useServerConfiguration = true, shards = 10, replicas = 10, refreshInterval = "-1")
 	private static class UseServerConfigurationEntity {
 
 		@Nullable @Id private String id;
@@ -4281,7 +4282,7 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Document(indexName = "test-index-sample-mapping", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-mapping")
 	static class SampleMappingEntity {
 
 		@Nullable @Id private String id;
