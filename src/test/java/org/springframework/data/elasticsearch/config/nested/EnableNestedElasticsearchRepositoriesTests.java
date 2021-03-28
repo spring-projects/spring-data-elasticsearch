@@ -73,7 +73,7 @@ public class EnableNestedElasticsearchRepositoriesTests {
 		assertThat(nestedRepository).isNotNull();
 	}
 
-	@Document(indexName = "test-index-sample-config-nested", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-config-nested")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;

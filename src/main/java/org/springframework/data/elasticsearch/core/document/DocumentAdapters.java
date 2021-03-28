@@ -458,6 +458,7 @@ public class DocumentAdapters {
 			}
 		}
 
+
 		@Override
 		public String toString() {
 			return getClass().getSimpleName() + '@' + this.id + '#' + this.version + ' ' + toJson();

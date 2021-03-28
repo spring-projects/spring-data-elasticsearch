@@ -677,7 +677,7 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		return sampleEntities;
 	}
 
-	@Document(indexName = "test-index-sample-simple-repository", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-simple-repository")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;

@@ -157,7 +157,7 @@ public class CdiRepositoryTests {
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
 	 */
-	@Document(indexName = "test-index-product-cdi-repository", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-product-cdi-repository")
 	static class Product {
 		@Nullable @Id private String id;
 		@Nullable private List<String> title;
@@ -280,7 +280,7 @@ public class CdiRepositoryTests {
 		}
 	}
 
-	@Document(indexName = "test-index-person-cdi-repository", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-person-cdi-repository")
 	static class Person {
 
 		@Id private String id;
@@ -293,7 +293,7 @@ public class CdiRepositoryTests {
 
 	}
 
-	@Document(indexName = "test-index-book-cdi-repository", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-cdi-repository")
 	static class Book {
 		@Nullable @Id private String id;
 		@Nullable private String name;

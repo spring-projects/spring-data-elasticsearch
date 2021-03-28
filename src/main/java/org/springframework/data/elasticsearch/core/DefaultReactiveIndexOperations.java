@@ -42,7 +42,6 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
@@ -52,6 +51,7 @@ import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -106,7 +106,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		if (boundClass != null) {
 			return createSettings(boundClass).flatMap(settings -> doCreate(index, settings, null));
 		} else {
-			return doCreate(index, null, null);
+			return doCreate(index, new Settings(), null);
 		}
 	}
 
@@ -119,16 +119,23 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	}
 
 	@Override
-	public Mono<Boolean> create(Document settings) {
+	public Mono<Boolean> create(Map<String, Object> settings) {
+
+		Assert.notNull(settings, "settings must not be null");
+
 		return doCreate(getIndexCoordinates(), settings, null);
 	}
 
 	@Override
-	public Mono<Boolean> create(Document settings, Document mapping) {
-		throw new UnsupportedOperationException("not implemented");
+	public Mono<Boolean> create(Map<String, Object> settings, Document mapping) {
+
+		Assert.notNull(settings, "settings must not be null");
+		Assert.notNull(mapping, "mapping must not be null");
+
+		return doCreate(getIndexCoordinates(), settings, mapping);
 	}
 
-	private Mono<Boolean> doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
+	private Mono<Boolean> doCreate(IndexCoordinates index, Map<String, Object> settings, @Nullable Document mapping) {
 
 		CreateIndexRequest request = requestFactory.createIndexRequest(index, settings, mapping);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.createIndex(request)));
@@ -208,24 +215,25 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	// region settings
 
 	@Override
-	public Mono<Document> createSettings() {
+	public Mono<Settings> createSettings() {
 		return createSettings(checkForBoundClass());
 	}
 
 	@Override
-	public Mono<Document> createSettings(Class<?> clazz) {
+	public Mono<Settings> createSettings(Class<?> clazz) {
 
-		Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
+		Assert.notNull(clazz, "clazz must not be null");
 
-		if (setting != null) {
-			return loadDocument(setting.settingPath(), "@Setting");
-		}
-
-		return Mono.just(getRequiredPersistentEntity(clazz).getDefaultSettings());
+		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(clazz);
+		String settingPath = persistentEntity.settingPath();
+		return hasText(settingPath) //
+				? loadDocument(settingPath, "@Setting") //
+						.map(Settings::new) //
+				: Mono.just(persistentEntity.getDefaultSettings());
 	}
 
 	@Override
-	public Mono<Document> getSettings(boolean includeDefaults) {
+	public Mono<Settings> getSettings(boolean includeDefaults) {
 
 		String indexName = getIndexCoordinates().getIndexName();
 		GetSettingsRequest request = requestFactory.getSettingsRequest(indexName, includeDefaults);

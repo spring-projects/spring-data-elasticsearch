@@ -58,7 +58,7 @@ public class ReactiveElasticsearchRepositoriesRegistrarTests {
 
 	interface ReactiveSampleEntityRepository extends ReactiveElasticsearchRepository<SampleEntity, String> {}
 
-	@Document(indexName = "test-index-sample-reactive-repositories-registrar", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-reactive-repositories-registrar")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;

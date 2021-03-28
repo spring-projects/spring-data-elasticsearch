@@ -122,7 +122,7 @@ public class IntegerIDRepositoryTests {
 	 * @author Mohsin Husen
 	 */
 
-	@Document(indexName = "test-index-integer-keyed-entity", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-integer-keyed-entity")
 	static class IntegerIDEntity {
 
 		@Id private Integer id;

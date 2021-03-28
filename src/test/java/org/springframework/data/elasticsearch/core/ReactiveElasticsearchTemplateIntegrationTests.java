@@ -1257,7 +1257,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}
 	}
 
-	@Document(indexName = DEFAULT_INDEX, replicas = 0, refreshInterval = "-1")
+	@Document(indexName = DEFAULT_INDEX)
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;

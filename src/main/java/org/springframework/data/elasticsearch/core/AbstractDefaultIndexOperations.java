@@ -29,17 +29,16 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Base implementation of {@link IndexOperations} common to Transport and Rest based Implementations of IndexOperations.
@@ -90,33 +89,20 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	@Override
 	public boolean create() {
 
-		Document settings = null;
-
-		if (boundClass != null) {
-			settings = createSettings(boundClass);
-		}
-
+		Settings settings = boundClass != null ? createSettings(boundClass) : new Settings();
 		return doCreate(getIndexCoordinates(), settings, null);
 	}
 
 	@Override
-	public Document createSettings(Class<?> clazz) {
+	public Settings createSettings(Class<?> clazz) {
 
 		Assert.notNull(clazz, "clazz must not be null");
 
-		Document settings = null;
-
-		Setting setting = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
-
-		if (setting != null) {
-			settings = loadSettings(setting.settingPath());
-		}
-
-		if (settings == null) {
-			settings = getRequiredPersistentEntity(clazz).getDefaultSettings();
-		}
-
-		return settings;
+		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(clazz);
+		String settingPath = persistentEntity.settingPath();
+		return hasText(settingPath) //
+				? Settings.parse(ResourceUtil.readFileFromClasspath(settingPath)) //
+				: persistentEntity.getDefaultSettings();
 	}
 
 	@Override
@@ -125,16 +111,23 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public boolean create(Document settings) {
+	public boolean create(Map<String, Object> settings) {
+
+		Assert.notNull(settings, "settings must not be null");
+
 		return doCreate(getIndexCoordinates(), settings, null);
 	}
 
 	@Override
-	public boolean create(Document settings, Document mapping) {
+	public boolean create(Map<String, Object> settings, Document mapping) {
+
+		Assert.notNull(settings, "settings must not be null");
+		Assert.notNull(mapping, "mapping must not be null");
+
 		return doCreate(getIndexCoordinates(), settings, mapping);
 	}
 
-	protected abstract boolean doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping);
+	protected abstract boolean doCreate(IndexCoordinates index, Map<String, Object> settings, @Nullable Document mapping);
 
 	@Override
 	public boolean delete() {
@@ -165,16 +158,16 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	abstract protected Map<String, Object> doGetMapping(IndexCoordinates index);
 
 	@Override
-	public Map<String, Object> getSettings() {
+	public Settings getSettings() {
 		return getSettings(false);
 	}
 
 	@Override
-	public Map<String, Object> getSettings(boolean includeDefaults) {
+	public Settings getSettings(boolean includeDefaults) {
 		return doGetSettings(getIndexCoordinates(), includeDefaults);
 	}
 
-	protected abstract Map<String, Object> doGetSettings(IndexCoordinates index, boolean includeDefaults);
+	protected abstract Settings doGetSettings(IndexCoordinates index, boolean includeDefaults);
 
 	@Override
 	public void refresh() {
@@ -244,10 +237,10 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		if (mappingAnnotation != null) {
 			String mappingPath = mappingAnnotation.mappingPath();
 
-			if (StringUtils.hasText(mappingPath)) {
+			if (hasText(mappingPath)) {
 				String mappings = ResourceUtil.readFileFromClasspath(mappingPath);
 
-				if (StringUtils.hasText(mappings)) {
+				if (hasText(mappings)) {
 					return Document.parse(mappings);
 				}
 			} else {
@@ -265,7 +258,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	}
 
 	@Override
-	public Document createSettings() {
+	public Settings createSettings() {
 		return createSettings(checkForBoundClass());
 	}
 
@@ -283,20 +276,6 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
 		return getRequiredPersistentEntity(clazz).getIndexCoordinates();
-	}
-
-	@Nullable
-	private Document loadSettings(String settingPath) {
-		if (hasText(settingPath)) {
-			String settingsFile = ResourceUtil.readFileFromClasspath(settingPath);
-
-			if (hasText(settingsFile)) {
-				return Document.parse(settingsFile);
-			}
-		} else {
-			LOGGER.info("settingPath in @Setting has to be defined. Using default instead.");
-		}
-		return null;
 	}
 	// endregion
 }

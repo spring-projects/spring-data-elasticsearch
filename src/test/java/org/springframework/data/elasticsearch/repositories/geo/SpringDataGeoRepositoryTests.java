@@ -110,7 +110,7 @@ public class SpringDataGeoRepositoryTests {
 		return new double[] { point.getX(), point.getY() };
 	}
 
-	@Document(indexName = "test-index-geo-repository", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-geo-repository")
 	static class GeoEntity {
 		@Nullable @Id private String id;
 		// geo shape - Spring Data

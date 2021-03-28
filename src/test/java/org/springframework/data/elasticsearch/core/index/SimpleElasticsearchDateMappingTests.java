@@ -51,7 +51,7 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 		assertEquals(EXPECTED_MAPPING, mapping, false);
 	}
 
-	@Document(indexName = "test-index-date-mapping-core", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-date-mapping-core")
 	static class SampleDateMappingEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;

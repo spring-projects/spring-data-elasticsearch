@@ -36,9 +36,9 @@ import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
-import org.elasticsearch.common.settings.Settings;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -91,7 +91,7 @@ public class ResponseConverter {
 		List<IndexInformation> indexInformationList = new ArrayList<>();
 
 		for (String indexName : getIndexResponse.getIndices()) {
-			Document settings = settingsFromGetIndexResponse(getIndexResponse, indexName);
+			Settings settings = settingsFromGetIndexResponse(getIndexResponse, indexName);
 			Document mappings = mappingsFromGetIndexResponse(getIndexResponse, indexName);
 			List<AliasData> aliases = aliasDataFromIndexResponse(getIndexResponse, indexName);
 
@@ -108,18 +108,18 @@ public class ResponseConverter {
 	 * @param indexName the index name
 	 * @return a document that represents {@link Settings}
 	 */
-	private static Document settingsFromGetIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
-		Document document = Document.create();
+	private static Settings settingsFromGetIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
+		Settings settings= new Settings();
 
-		Settings indexSettings = getIndexResponse.getSettings().get(indexName);
+		org.elasticsearch.common.settings.Settings indexSettings = getIndexResponse.getSettings().get(indexName);
 
 		if (!indexSettings.isEmpty()) {
 			for (String key : indexSettings.keySet()) {
-				document.put(key, indexSettings.get(key));
+				settings.put(key, indexSettings.get(key));
 			}
 		}
 
-		return document;
+		return settings;
 	}
 
 	/**
@@ -162,7 +162,7 @@ public class ResponseConverter {
 		List<IndexInformation> indexInformationList = new ArrayList<>();
 
 		for (String indexName : getIndexResponse.getIndices()) {
-			Document settings = settingsFromGetIndexResponse(getIndexResponse, indexName);
+			Settings settings = settingsFromGetIndexResponse(getIndexResponse, indexName);
 			Document mappings = mappingsFromGetIndexResponse(getIndexResponse, indexName);
 			List<AliasData> aliases = aliasDataFromIndexResponse(getIndexResponse, indexName);
 
@@ -172,19 +172,20 @@ public class ResponseConverter {
 		return indexInformationList;
 	}
 
-	private static Document settingsFromGetIndexResponse(
+	private static Settings settingsFromGetIndexResponse(
 			org.elasticsearch.action.admin.indices.get.GetIndexResponse getIndexResponse, String indexName) {
-		Document document = Document.create();
+
+		Settings settings = new Settings();
 
 		if (getIndexResponse.getSettings().containsKey(indexName)) {
-			Settings indexSettings = getIndexResponse.getSettings().get(indexName);
+			org.elasticsearch.common.settings.Settings indexSettings = getIndexResponse.getSettings().get(indexName);
 
 			for (String key : indexSettings.keySet()) {
-				document.put(key, indexSettings.get(key));
+				settings.put(key, indexSettings.get(key));
 			}
 		}
 
-		return document;
+		return settings;
 	}
 
 	private static Document mappingsFromGetIndexResponse(
@@ -222,8 +223,8 @@ public class ResponseConverter {
 
 			if (indexTemplateMetadata.name().equals(templateName)) {
 
-				Document settings = Document.create();
-				Settings templateSettings = indexTemplateMetadata.settings();
+				Settings settings = new Settings();
+				org.elasticsearch.common.settings.Settings templateSettings = indexTemplateMetadata.settings();
 				templateSettings.keySet().forEach(key -> settings.put(key, templateSettings.get(key)));
 
 				Map<String, AliasData> aliases = new LinkedHashMap<>();
@@ -253,21 +254,21 @@ public class ResponseConverter {
 	 *
 	 * @param response the Elasticsearch response
 	 * @param indexName the index name
-	 * @return settings as {@link Document}
+	 * @return settings
 	 */
-	public static Document fromSettingsResponse(GetSettingsResponse response, String indexName) {
+	public static Settings fromSettingsResponse(GetSettingsResponse response, String indexName) {
 
-		Document settings = Document.create();
+		Settings settings = new Settings();
 
 		if (!response.getIndexToDefaultSettings().isEmpty()) {
-			Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
+			org.elasticsearch.common.settings.Settings defaultSettings = response.getIndexToDefaultSettings().get(indexName);
 			for (String key : defaultSettings.keySet()) {
 				settings.put(key, defaultSettings.get(key));
 			}
 		}
 
 		if (!response.getIndexToSettings().isEmpty()) {
-			Settings customSettings = response.getIndexToSettings().get(indexName);
+			org.elasticsearch.common.settings.Settings customSettings = response.getIndexToSettings().get(indexName);
 			for (String key : customSettings.keySet()) {
 				settings.put(key, customSettings.get(key));
 			}

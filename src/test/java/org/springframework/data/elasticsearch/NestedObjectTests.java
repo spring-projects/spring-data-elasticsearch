@@ -381,7 +381,7 @@ public class NestedObjectTests {
 		assertThat(books.getSearchHit(0).getContent().getId()).isEqualTo(book2.getId());
 	}
 
-	@Document(indexName = "test-index-book-nested-objects", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-nested-objects")
 	static class Book {
 
 		@Nullable @Id private String id;
@@ -438,7 +438,7 @@ public class NestedObjectTests {
 		}
 	}
 
-	@Document(indexName = "test-index-person", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-person")
 	static class Person {
 		@Nullable @Id private String id;
 		@Nullable private String name;
@@ -505,7 +505,7 @@ public class NestedObjectTests {
 		}
 	}
 
-	@Document(indexName = "test-index-person-multiple-level-nested", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-person-multiple-level-nested")
 	static class PersonMultipleLevelNested {
 		@Nullable @Id private String id;
 		@Nullable private String name;

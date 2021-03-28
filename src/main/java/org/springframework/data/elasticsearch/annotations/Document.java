@@ -55,29 +55,45 @@ public @interface Document {
 
 	/**
 	 * Use server-side settings when creating the index.
+	 *
+	 * @deprecated since 4.2, use the {@link Setting} annotation to configure settings
 	 */
+	@Deprecated
 	boolean useServerConfiguration() default false;
 
 	/**
 	 * Number of shards for the index {@link #indexName()}. Used for index creation. <br/>
 	 * With version 4.0, the default value is changed from 5 to 1 to reflect the change in the default settings of
 	 * Elasticsearch which changed to 1 as well in Elasticsearch 7.0.
+	 * ComposableAnnotationsUnitTest.documentAnnotationShouldBeComposable:60
+	 *
+	 * @deprecated since 4.2, use the {@link Setting} annotation to configure settings
 	 */
+	@Deprecated
 	short shards() default 1;
 
 	/**
 	 * Number of replicas for the index {@link #indexName()}. Used for index creation.
+	 *
+	 * @deprecated since 4.2, use the {@link Setting} annotation to configure settings
 	 */
+	@Deprecated
 	short replicas() default 1;
 
 	/**
 	 * Refresh interval for the index {@link #indexName()}. Used for index creation.
+	 *
+	 * @deprecated since 4.2, use the {@link Setting} annotation to configure settings
 	 */
+	@Deprecated
 	String refreshInterval() default "1s";
 
 	/**
 	 * Index storage type for the index {@link #indexName()}. Used for index creation.
+	 *
+	 * @deprecated since 4.2, use the {@link Setting} annotation to configure settings
 	 */
+	@Deprecated
 	String indexStoreType() default "fs";
 
 	/**

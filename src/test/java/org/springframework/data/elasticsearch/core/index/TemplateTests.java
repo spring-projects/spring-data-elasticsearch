@@ -28,6 +28,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -51,8 +52,7 @@ public class TemplateTests {
 		IndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
 
 		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class);
-		org.springframework.data.elasticsearch.core.document.Document settings = indexOps
-				.createSettings(TemplateClass.class);
+		Settings settings = indexOps.createSettings(TemplateClass.class);
 
 		AliasActions aliasActions = new AliasActions(
 				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
@@ -84,8 +84,7 @@ public class TemplateTests {
 		IndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
 
 		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class);
-		org.springframework.data.elasticsearch.core.document.Document settings = indexOps
-				.createSettings(TemplateClass.class);
+		Settings settings = indexOps.createSettings(TemplateClass.class);
 
 		AliasActions aliasActions = new AliasActions(
 				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
@@ -166,7 +165,8 @@ public class TemplateTests {
 
 	}
 
-	@Document(indexName = "test-template", shards = 3, replicas = 2, refreshInterval = "5s")
+	@Document(indexName = "test-template")
+	@Setting(shards = 3)
 	static class TemplateClass {
 		@Id @Nullable private String id;
 		@Field(type = FieldType.Text) @Nullable private String message;

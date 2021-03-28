@@ -132,7 +132,7 @@ public class LogEntityTests {
 	/**
 	 * Simple type to test facets
 	 */
-	@Document(indexName = "test-index-log-core", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-log-core")
 	static class LogEntity {
 
 		private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");

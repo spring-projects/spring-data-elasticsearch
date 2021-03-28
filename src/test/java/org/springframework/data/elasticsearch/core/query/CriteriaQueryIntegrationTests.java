@@ -797,17 +797,15 @@ public class CriteriaQueryIntegrationTests {
 		assertThat(sampleEntity1).isNotNull();
 	}
 
-	@Document(indexName = "test-index-sample-core-query", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-query")
 	static class SampleEntity {
-		@Nullable
-		@Id private String id;
+		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
 		@Nullable private int rate;
 		@Nullable @Version private Long version;
 
-		public SampleEntity() {
-		}
+		public SampleEntity() {}
 
 		public SampleEntity(@Nullable String id, @Nullable String message) {
 			this.id = id;

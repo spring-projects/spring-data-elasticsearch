@@ -4,6 +4,48 @@
 This chapter covers additional support for Elasticsearch operations that cannot be directly accessed via the repository interface.
 It is recommended to add those operations as custom implementation as described in <<repositories.custom-implementations>> .
 
+[[elasticsearc.misc.index.settings]]
+== Index settings
+
+When creating Elasticsearch indices with Spring Data Elasticsearch different index settings can be defined by using the `@Setting` annotation. The following arguments are available:
+
+* `useServerConfiguration` does not send any settings parameters, so the Elasticsearch server configuration determines them.
+* `settingPath` refers to a JSON file defining the settings that must be resolvable in the classpath
+* `shards` the number of shards to use, defaults to _1_
+* `replicas` the number of replicas, defaults to _1_
+* `refreshIntervall`, defaults to _"1s"_
+* `indexStoreType`, defaults to _"fs"_
+
+
+It is as well possible to define https://www.elastic.co/guide/en/elasticsearch/reference/7.11/index-modules-index-sorting.html[index sorting] (check the linked Elasticsearch documentation for the possible field types and values):
+
+====
+[source,java]
+----
+@Document(indexName = "entities")
+@Setting(
+  sortFields = { "secondField", "firstField" },                                  <.>
+  sortModes = { Setting.SortMode.max, Setting.SortMode.min },                    <.>
+  sortOrders = { Setting.SortOrder.desc, Setting.SortOrder.asc },
+  sortMissingValues = { Setting.SortMissing._last, Setting.SortMissing._first })
+class Entity {
+    @Nullable
+    @Id private String id;
+
+    @Nullable
+    @Field(name = "first_field", type = FieldType.Keyword)
+    private String firstField;
+
+    @Nullable @Field(name = "second_field", type = FieldType.Keyword)
+    private String secondField;
+
+    // getter and setter...
+}
+----
+<.> when defining sort fields, use the name of the Java property (_firstField_), not the name that might be defined for Elasticsearch (_first_field_)
+<.> `sortModes`, `sortOrders` and `sortMissingValues` are optional, but if they are set, the number of entries must match the number of `sortFields` elements
+====
+
 [[elasticsearch.misc.filter]]
 == Filter Builder
 
@@ -20,7 +62,7 @@ SearchQuery searchQuery = new NativeSearchQueryBuilder()
   .withQuery(matchAllQuery())
   .withFilter(boolFilter().must(termFilter("id", documentId)))
   .build();
-  
+
 Page<SampleEntity> sampleEntities = operations.searchForPage(searchQuery, SampleEntity.class, index);
 ----
 ====
@@ -31,6 +73,7 @@ Page<SampleEntity> sampleEntities = operations.searchForPage(searchQuery, Sample
 Elasticsearch has a scroll API for getting big result set in chunks.
 This is internally used by Spring Data Elasticsearch to provide the implementations of the `<T> SearchHitsIterator<T> SearchOperations.searchForStream(Query query, Class<T> clazz, IndexCoordinates index)` method.
 
+====
 [source,java]
 ----
 IndexCoordinates index = IndexCoordinates.of("sample-index");
@@ -50,9 +93,11 @@ while (stream.hasNext()) {
 
 stream.close();
 ----
+====
 
 There are no methods in the `SearchOperations` API to access the scroll id, if it should be necessary to access this, the following methods of the `ElasticsearchRestTemplate` can be used:
 
+====
 [source,java]
 ----
 
@@ -77,10 +122,12 @@ while (scroll.hasSearchHits()) {
 }
 template.searchScrollClear(scrollId);
 ----
+====
 
 To use the Scroll API with repository methods, the return type must defined as `Stream` in the Elasticsearch Repository.
 The implementation of the method will then use the scroll methods from the ElasticsearchTemplate.
 
+====
 [source,java]
 ----
 interface SampleEntityRepository extends Repository<SampleEntity, String> {
@@ -89,6 +136,7 @@ interface SampleEntityRepository extends Repository<SampleEntity, String> {
 
 }
 ----
+====
 
 [[elasticsearch.misc.sorts]]
 == Sort options
@@ -97,7 +145,9 @@ In addition to the default sort options described <<repositories.paging-and-sort
 
 If the class to be retrieved has a `GeoPoint` property named _location_, the following `Sort` would sort the results by distance to the given point:
 
+====
 [source,java]
 ----
 Sort.by(new GeoDistanceOrder("location", new GeoPoint(48.137154, 11.5761247)))
 ----
+====

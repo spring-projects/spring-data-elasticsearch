@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
+import org.springframework.data.elasticsearch.core.index.Settings;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -390,8 +391,7 @@ public class ReactiveIndexOperationsTest {
 
 		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
 				.block();
-		org.springframework.data.elasticsearch.core.document.Document settings = indexOps
-				.createSettings(TemplateClass.class).block();
+		Settings settings = indexOps .createSettings(TemplateClass.class).block();
 
 		AliasActions aliasActions = new AliasActions(
 				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
@@ -423,8 +423,7 @@ public class ReactiveIndexOperationsTest {
 
 		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
 				.block();
-		org.springframework.data.elasticsearch.core.document.Document settings = indexOps
-				.createSettings(TemplateClass.class).block();
+		Settings settings = indexOps .createSettings(TemplateClass.class).block();
 
 		AliasActions aliasActions = new AliasActions(
 				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
@@ -505,7 +504,8 @@ public class ReactiveIndexOperationsTest {
 		assertThat(exists).isFalse();
 	}
 
-	@Document(indexName = TESTINDEX, shards = 3, replicas = 2, refreshInterval = "4s")
+	@Document(indexName = TESTINDEX)
+	@Setting(shards = 3, replicas = 2, refreshInterval = "4s")
 	static class Entity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = FieldType.Text) private String text;
@@ -540,7 +540,8 @@ public class ReactiveIndexOperationsTest {
 		}
 	}
 
-	@Document(indexName = TESTINDEX, useServerConfiguration = true)
+	@Document(indexName = TESTINDEX)
+	@Setting(useServerConfiguration = true)
 	static class EntityUseServerConfig {
 		@Nullable @Id private String id;
 
@@ -570,7 +571,8 @@ public class ReactiveIndexOperationsTest {
 		}
 	}
 
-	@Document(indexName = "test-template", shards = 3, replicas = 2, refreshInterval = "5s")
+	@Document(indexName = "test-template")
+	@Setting(refreshInterval = "5s")
 	static class TemplateClass {
 		@Id @Nullable private String id;
 		@Field(type = FieldType.Text) @Nullable private String message;

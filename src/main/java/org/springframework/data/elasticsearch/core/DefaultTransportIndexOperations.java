@@ -46,7 +46,6 @@ import org.elasticsearch.cluster.metadata.IndexTemplateMetadata;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
-import org.elasticsearch.common.settings.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -57,6 +56,7 @@ import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
@@ -90,7 +90,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	protected boolean doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
+	protected boolean doCreate(IndexCoordinates index, Map<String, Object> settings, @Nullable Document mapping) {
 		CreateIndexRequestBuilder createIndexRequestBuilder = requestFactory.createIndexRequestBuilder(client, index,
 				settings, mapping);
 		return createIndexRequestBuilder.execute().actionGet().isAcknowledged();
@@ -193,7 +193,7 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 	}
 
 	@Override
-	protected Map<String, Object> doGetSettings(IndexCoordinates index, boolean includeDefaults) {
+	protected Settings doGetSettings(IndexCoordinates index, boolean includeDefaults) {
 
 		Assert.notNull(index, "index must not be null");
 
@@ -238,8 +238,8 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 
 			if (indexTemplateMetadata.getName().equals(getTemplateRequest.getTemplateName())) {
 
-				Document settings = Document.create();
-				Settings templateSettings = indexTemplateMetadata.settings();
+				Settings settings = new Settings();
+				org.elasticsearch.common.settings.Settings templateSettings = indexTemplateMetadata.settings();
 				templateSettings.keySet().forEach(key -> settings.put(key, templateSettings.get(key)));
 
 				Map<String, AliasData> aliases = new LinkedHashMap<>();

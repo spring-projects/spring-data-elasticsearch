@@ -19,6 +19,8 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import java.util.Map;
+
 /**
  * Request to create an index template. This is to create legacy templates (@see
  * https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-templates-v1.html)
@@ -29,13 +31,13 @@ import org.springframework.util.Assert;
 public class PutTemplateRequest {
 	private final String name;
 	private final String[] indexPatterns;
-	@Nullable final private Document settings;
+	@Nullable final private Settings settings;
 	@Nullable final private Document mappings;
 	@Nullable final AliasActions aliasActions;
 	private final int order;
 	@Nullable final Integer version;
 
-	private PutTemplateRequest(String name, String[] indexPatterns, @Nullable Document settings,
+	private PutTemplateRequest(String name, String[] indexPatterns, @Nullable Settings settings,
 			@Nullable Document mappings, @Nullable AliasActions aliasActions, int order, @Nullable Integer version) {
 		this.name = name;
 		this.indexPatterns = indexPatterns;
@@ -55,7 +57,7 @@ public class PutTemplateRequest {
 	}
 
 	@Nullable
-	public Document getSettings() {
+	public Settings getSettings() {
 		return settings;
 	}
 
@@ -85,7 +87,7 @@ public class PutTemplateRequest {
 	public static final class TemplateRequestBuilder {
 		private final String name;
 		private final String[] indexPatterns;
-		@Nullable private Document settings;
+		@Nullable private Settings settings;
 		@Nullable private Document mappings;
 		@Nullable AliasActions aliasActions;
 		private int order = 0;
@@ -100,8 +102,8 @@ public class PutTemplateRequest {
 			this.indexPatterns = indexPatterns;
 		}
 
-		public TemplateRequestBuilder withSettings(Document settings) {
-			this.settings = settings;
+		public TemplateRequestBuilder withSettings(Map<String, Object> settings) {
+			this.settings = new Settings(settings);
 			return this;
 		}
 

@@ -31,7 +31,7 @@ class Book {
 
 The `@Document` annotation has an argument `createIndex`. If this argument is set to true - which is the default value  - Spring Data Elasticsearch will during bootstrapping the repository support on application startup check if the index defined by the `@Document` annotation exists.
 
-If it does not exist, the index will be created and the mappings derived from the entity's annotations (see <<elasticsearch.mapping>>) will be written to the newly created index.
+If it does not exist, the index will be created and the mappings derived from the entity's annotations (see <<elasticsearch.mapping>>) will be written to the newly created index. Details of the index that will be created can be set by using the `@Setting` annotation, refer to <<elasticsearc.misc.index.settings>> for further information.
 
 include::elasticsearch-repository-queries.adoc[leveloffset=+1]
 
@@ -131,7 +131,7 @@ class ProductService {
   public void setRepository(ProductRepository repository) {
     this.repository = repository;
   }
-}                
+}
 ----
 <1> Create a component by using the same calls as are used in the <<elasticsearch.operations>> chapter.
 <2> Let the CDI framework inject the Repository into your class.

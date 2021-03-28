@@ -121,7 +121,7 @@ public class DoubleIDRepositoryTests {
 	 * @author Mohsin Husen
 	 */
 
-	@Document(indexName = "test-index-double-keyed-entity", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-double-keyed-entity")
 	static class DoubleIDEntity {
 
 		@Id private Double id;

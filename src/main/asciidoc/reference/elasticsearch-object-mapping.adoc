@@ -36,14 +36,6 @@ The most important attributes are:
 This can contain a SpEL template expression like `"log-#{T(java.time.LocalDate).now().toString()}"`
 ** `type`: [line-through]#the mapping type.
 If not set, the lowercased simple name of the class is used.# (deprecated since version 4.0)
-** `shards`: the number of shards for the index.
-** `replicas`: the number of replicas for the index.
-** `refreshIntervall`: Refresh interval for the index.
-Used for index creation.
-Default value is _"1s"_.
-** `indexStoreType`: Index storage type for the index.
-Used for index creation.
-Default value is _"fs"_.
 ** `createIndex`: flag whether to create an index on repository bootstrapping.
 Default value is _true_.
 See <<elasticsearch.repositories.autocreation>>
@@ -71,13 +63,13 @@ The mapping metadata infrastructure is defined in a separate spring-data-commons
 ==== Date format mapping
 
 Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation
-of type `FieldType.Date` or a custom converter must be registered for this type. This paragraph describes the use of 
+of type `FieldType.Date` or a custom converter must be registered for this type. This paragraph describes the use of
 `FieldType.Date`.
 
-There are two attributes of the `@Field` annotation that define which date format information is written to the 
+There are two attributes of the `@Field` annotation that define which date format information is written to the
 mapping (also see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats[Elasticsearch Built In Formats] and https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#custom-date-formats[Elasticsearch Custom Date Formats])
 
-The `format` attributes is used to define at least one of the predefined formats. If it is not defined, then a 
+The `format` attributes is used to define at least one of the predefined formats. If it is not defined, then a
 default value of  __date_optional_time_ and _epoch_millis_ is used.
 
 The `pattern` attribute can be used to add additional custom format strings. If you want to use only custom date formats, you must set the `format` property to empty `{}`.

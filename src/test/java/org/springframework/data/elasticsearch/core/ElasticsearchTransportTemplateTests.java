@@ -195,7 +195,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		assertThat(request.request().getScript().getType()).isEqualTo(org.elasticsearch.script.ScriptType.STORED);
 	}
 
-	@Document(indexName = "test-index-sample-core-transport-template", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-transport-template")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;

@@ -273,7 +273,7 @@ class QueryKeywordsTests {
 		assertThat(products).isEmpty();
 	}
 
-	@Document(indexName = "test-index-product-query-keywords", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-product-query-keywords")
 	static class Product {
 		@Nullable @Id private String id;
 		@Nullable private String name;

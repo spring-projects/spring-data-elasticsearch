@@ -545,7 +545,7 @@ public class UUIDElasticsearchRepositoryTests {
 		return sampleEntities;
 	}
 
-	@Document(indexName = "test-index-uuid-keyed", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-uuid-keyed")
 	static class SampleEntityUUIDKeyed {
 		@Nullable @Id private UUID id;
 		@Nullable private String type;

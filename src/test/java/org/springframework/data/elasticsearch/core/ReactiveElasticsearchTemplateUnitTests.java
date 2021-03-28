@@ -250,7 +250,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		assertThat(captor.getValue().indicesOptions()).isEqualTo(IndicesOptions.LENIENT_EXPAND_OPEN);
 	}
 
-	@Document(indexName = "test-index-sample-core-reactive-template-Unit", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-core-reactive-template-Unit")
 	static class SampleEntity {
 
 		@Nullable @Id private String id;

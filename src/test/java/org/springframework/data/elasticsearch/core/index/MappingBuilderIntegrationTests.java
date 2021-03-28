@@ -122,9 +122,9 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 		IndexCoordinates index = IndexCoordinates.of("test-index-stock-mapping-builder");
 		StockPrice stockPrice = new StockPrice(); //
-				stockPrice.setId(id);
-				stockPrice.setSymbol(symbol);
-				stockPrice.setPrice(BigDecimal.valueOf(price));
+		stockPrice.setId(id);
+		stockPrice.setSymbol(symbol);
+		stockPrice.setPrice(BigDecimal.valueOf(price));
 		operations.index(buildIndex(stockPrice), index);
 		operations.indexOps(StockPrice.class).refresh();
 
@@ -384,7 +384,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-book-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-mapping-builder")
 	static class Book {
 		@Nullable @Id private String id;
 		@Nullable private String name;
@@ -440,7 +440,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-simple-recursive-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-simple-recursive-mapping-builder")
 	static class SimpleRecursiveEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = FieldType.Object,
@@ -465,7 +465,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-copy-to-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-copy-to-mapping-builder")
 	static class CopyToEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = FieldType.Keyword, copyTo = "name") private String firstName;
@@ -509,7 +509,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-normalizer-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-normalizer-mapping-builder")
 	@Setting(settingPath = "/settings/test-normalizer.json")
 	static class NormalizerEntity {
 		@Nullable @Id private String id;
@@ -569,7 +569,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-sample-inherited-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-inherited-mapping-builder")
 	static class SampleInheritedEntity extends AbstractInheritedEntity {
 
 		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
@@ -615,7 +615,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "test-index-stock-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-stock-mapping-builder")
 	static class StockPrice {
 		@Nullable @Id private String id;
 		@Nullable private String symbol;
@@ -652,35 +652,41 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	static class AbstractInheritedEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.date_time, index = false) private Date createdDate;
-		@Nullable public String getId() {
+
+		@Nullable
+		public String getId() {
 			return id;
 		}
+
 		public void setId(String id) {
 			this.id = id;
 		}
-		@Nullable public Date getCreatedDate() {
+
+		@Nullable
+		public Date getCreatedDate() {
 			return createdDate;
 		}
+
 		public void setCreatedDate(Date createdDate) {
 			this.createdDate = createdDate;
 		}
 	}
 
-	@Document(indexName = "test-index-geo-mapping-builder", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-geo-mapping-builder")
 	static class GeoEntity {
-@Nullable 		@Id private String id;
-// geo shape - Spring Data
-@Nullable 		private Box box;
-@Nullable 		private Circle circle;
-@Nullable 		private Polygon polygon;
-// geo point - Custom implementation + Spring Data
-@Nullable 		@GeoPointField private Point pointA;
-@Nullable 		private GeoPoint pointB;
-@Nullable 		@GeoPointField private String pointC;
-@Nullable 		@GeoPointField private double[] pointD;
- 		// geo shape, until e have the classes for this, us a strng
-@Nullable 		@GeoShapeField private String shape1;
-@Nullable 		@GeoShapeField(coerce = true, ignoreMalformed = true, ignoreZValue = false,
+		@Nullable @Id private String id;
+		// geo shape - Spring Data
+		@Nullable private Box box;
+		@Nullable private Circle circle;
+		@Nullable private Polygon polygon;
+		// geo point - Custom implementation + Spring Data
+		@Nullable @GeoPointField private Point pointA;
+		@Nullable private GeoPoint pointB;
+		@Nullable @GeoPointField private String pointC;
+		@Nullable @GeoPointField private double[] pointD;
+		// geo shape, until e have the classes for this, us a strng
+		@Nullable @GeoShapeField private String shape1;
+		@Nullable @GeoShapeField(coerce = true, ignoreMalformed = true, ignoreZValue = false,
 				orientation = GeoShapeField.Orientation.clockwise) private String shape2;
 
 		@Nullable
@@ -890,7 +896,8 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Nullable @Field(type = FieldType.Text, termVector = TermVector.yes) private String yes;
 		@Nullable @Field(type = FieldType.Text, termVector = TermVector.with_positions) private String with_positions;
 		@Nullable @Field(type = FieldType.Text, termVector = TermVector.with_offsets) private String with_offsets;
-		@Nullable @Field(type = FieldType.Text, termVector = TermVector.with_positions_offsets) private String with_positions_offsets;
+		@Nullable @Field(type = FieldType.Text,
+				termVector = TermVector.with_positions_offsets) private String with_positions_offsets;
 		@Nullable @Field(type = FieldType.Text,
 				termVector = TermVector.with_positions_payloads) private String with_positions_payloads;
 		@Nullable @Field(type = FieldType.Text,

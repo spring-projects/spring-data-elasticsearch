@@ -50,6 +50,7 @@ import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.AliasQuery;
@@ -81,7 +82,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	protected boolean doCreate(IndexCoordinates index, @Nullable Document settings, @Nullable Document mapping) {
+	protected boolean doCreate(IndexCoordinates index, Map<String, Object> settings, @Nullable Document mapping) {
 		CreateIndexRequest request = requestFactory.createIndexRequest(index, settings, mapping);
 		return restTemplate.execute(client -> client.indices().create(request, RequestOptions.DEFAULT).isAcknowledged());
 	}
@@ -192,7 +193,7 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 	}
 
 	@Override
-	protected Map<String, Object> doGetSettings(IndexCoordinates index, boolean includeDefaults) {
+	protected Settings doGetSettings(IndexCoordinates index, boolean includeDefaults) {
 
 		Assert.notNull(index, "index must not be null");
 

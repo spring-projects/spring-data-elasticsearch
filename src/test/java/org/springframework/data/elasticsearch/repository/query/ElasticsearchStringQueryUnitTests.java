@@ -118,7 +118,7 @@ public class ElasticsearchStringQueryUnitTests {
 	 * @author Artur Konczak
 	 */
 
-	@Document(indexName = "test-index-person-query-unittest", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-person-query-unittest")
 	static class Person {
 
 		@Nullable @Id private String id;
@@ -163,7 +163,7 @@ public class ElasticsearchStringQueryUnitTests {
 		}
 	}
 
-	@Document(indexName = "test-index-book-query-unittest", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-book-query-unittest")
 	static class Book {
 		@Nullable @Id private String id;
 		@Nullable private String name;

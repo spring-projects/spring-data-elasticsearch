@@ -79,11 +79,9 @@ public class ComplexCustomMethodRepositoryTests {
 		assertThat(result).isEqualTo("2+2=4");
 	}
 
-	@Document(indexName = "test-index-sample-repositories-complex-custommethod-autowiring", replicas = 0,
-			refreshInterval = "-1")
+	@Document(indexName = "test-index-sample-repositories-complex-custommethod-autowiring")
 	static class SampleEntity {
-		@Nullable
-		@Id private String id;
+		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
 

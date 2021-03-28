@@ -244,7 +244,7 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 	 * @author Mewes Kochheim
 	 * @author Robert Gruendler
 	 */
-	@Document(indexName = "test-index-context-completion", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-context-completion")
 	static class ContextCompletionEntity {
 
 		public static final String LANGUAGE_CATEGORY = "language";

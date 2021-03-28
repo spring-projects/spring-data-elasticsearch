@@ -26,6 +26,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.time.LocalDate;
 
+import org.elasticsearch.index.VersionType;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -57,7 +58,7 @@ public class ComposableAnnotationsUnitTest {
 
 		assertThat(entity.getIndexCoordinates()).isEqualTo(IndexCoordinates.of("test-no-create"));
 		assertThat(entity.isCreateIndexAndMapping()).isFalse();
-		assertThat(entity.getShards()).isEqualTo((short) 42);
+		assertThat(entity.getVersionType()).isEqualTo(VersionType.INTERNAL);
 	}
 
 	@Test // DATAES-362
@@ -105,7 +106,7 @@ public class ComposableAnnotationsUnitTest {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.TYPE })
-	@Document(indexName = "", createIndex = false, shards = 42)
+	@Document(indexName = "", createIndex = false, versionType = VersionType.INTERNAL)
 	public @interface DocumentNoCreate {
 
 		@AliasFor(value = "indexName", annotation = Document.class)

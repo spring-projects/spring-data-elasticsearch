@@ -361,7 +361,7 @@ public class ElasticsearchTemplateGeoTests {
 	 * @author Franck Marchand
 	 * @author Mohsin Husen
 	 */
-	@Document(indexName = "test-index-author-marker-core-geo", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-author-marker-core-geo")
 	static class AuthorMarkerEntity {
 		@Nullable @Id private String id;
 		@Nullable private String name;
@@ -436,7 +436,7 @@ public class ElasticsearchTemplateGeoTests {
 		}
 	}
 
-	@Document(indexName = "test-index-location-marker-core-geo", replicas = 0, refreshInterval = "-1")
+	@Document(indexName = "test-index-location-marker-core-geo")
 	static class LocationMarkerEntity {
 		@Nullable @Id private String id;
 		@Nullable private String name;

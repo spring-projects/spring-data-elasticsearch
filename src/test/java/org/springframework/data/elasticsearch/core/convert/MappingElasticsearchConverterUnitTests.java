@@ -1792,8 +1792,7 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 	}
 
-	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-geo-core-entity-mapper",
-			replicas = 0, refreshInterval = "-1")
+	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-geo-core-entity-mapper")
 	static class GeoEntity {
 		@Nullable @Id private String id;
 		// geo shape - Spring Data
