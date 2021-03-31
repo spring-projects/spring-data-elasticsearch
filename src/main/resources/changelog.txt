@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.2.0-RC1 (2021-03-31)
+-----------------------------------------
+* #1745 - Automatically close scroll context when returning streamed results.
+* #1741 - Upgrade to Elasticsearch 7.12.
+* #1738 - Readme lists artifacts with .RELEASE and .BUILD-SNAPSHOT suffixes.
+* #1736 - Upgrade to OpenWebBeans 2.0.
+* #1734 - Remove lombok.
+* #1733 - Update CI to Java 16.
+* #1727 - Allow multiple date formats for date fields.
+* #1719 - Configure index settings with @Setting annotation.
+
+
 Changes in version 4.2.0-M5 (2021-03-17)
 ----------------------------------------
 * #1725 - Add support for SearchTemplate for reactive client.
@@ -1511,6 +1523,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
