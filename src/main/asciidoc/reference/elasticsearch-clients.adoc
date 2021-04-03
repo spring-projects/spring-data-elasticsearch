@@ -40,7 +40,8 @@ public class TransportClientConfig extends ElasticsearchConfigurationSupport {
 
 // ...
 
-IndexRequest request = new IndexRequest("spring-data", "elasticsearch", randomID())
+IndexRequest request = new IndexRequest("spring-data")
+ .id(randomID())
  .source(someObject);
 
 IndexResponse response = client.index(request);
