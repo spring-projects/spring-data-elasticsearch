@@ -85,11 +85,12 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
 
 // ...
 
-IndexRequest request = new IndexRequest("spring-data", "elasticsearch", randomID())
+IndexRequest request = new IndexRequest("spring-data")
+  .id(randomID())
   .source(singletonMap("feature", "high-level-rest-client"))
   .setRefreshPolicy(IMMEDIATE);
 
-IndexResponse response = highLevelClient.index(request);
+IndexResponse response = highLevelClient.index(request,RequestOptions.DEFAULT);
 ----
 <1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
 <2> Create the RestHighLevelClient.
