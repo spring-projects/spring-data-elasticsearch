@@ -24,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -136,7 +137,7 @@ class CriteriaQueryProcessor {
 			return null;
 
 		String fieldName = field.getName();
-		Assert.notNull(fieldName, "Unknown field");
+		Assert.notNull(fieldName, "Unknown field " + fieldName);
 
 		Iterator<Criteria.CriteriaEntry> it = criteria.getQueryCriteriaEntries().iterator();
 		QueryBuilder query;
@@ -152,6 +153,14 @@ class CriteriaQueryProcessor {
 		}
 
 		addBoost(query, criteria.getBoost());
+
+		int dotPosition = fieldName.lastIndexOf('.');
+
+		if (dotPosition > 0) {
+			String nestedPath = fieldName.substring(0, dotPosition);
+			query = nestedQuery(nestedPath, query, ScoreMode.Avg);
+		}
+
 		return query;
 	}
 

@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import org.json.JSONException;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 
@@ -333,6 +334,37 @@ class CriteriaQueryProcessorUnitTests {
 				"}\n"; //
 
 		Criteria criteria = new Criteria("field1").matchesAll("value1 value2");
+
+		String query = queryProcessor.createQuery(criteria).toString();
+
+		assertEquals(expected, query, false);
+	}
+
+	@Test // #1753
+	@DisplayName("should build nested query")
+	void shouldBuildNestedQuery() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"bool\" : {\n" + //
+				"    \"must\" : [\n" + //
+				"      {\n" + //
+				"        \"nested\" : {\n" + //
+				"          \"query\" : {\n" + //
+				"            \"query_string\" : {\n" + //
+				"              \"query\" : \"murphy\",\n" + //
+				"              \"fields\" : [\n" + //
+				"                \"houses.inhabitants.lastName^1.0\"\n" + //
+				"              ]\n" + //
+				"            }\n" + //
+				"          },\n" + //
+				"          \"path\" : \"houses.inhabitants\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    ]\n" + //
+				"  }\n" + //
+				"}"; //
+
+		Criteria criteria = new Criteria("houses.inhabitants.lastName").is("murphy");
 
 		String query = queryProcessor.createQuery(criteria).toString();
 
