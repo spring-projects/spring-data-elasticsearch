@@ -168,8 +168,15 @@ public class MappingElasticsearchConverter
 	@SuppressWarnings("unchecked")
 	@Override
 	public <R> R read(Class<R> type, Document source) {
+
 		TypeInformation<R> typeHint = ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type));
-		return read(typeHint, source);
+		R r = read(typeHint, source);
+
+		if (r == null) {
+			throw new ConversionException("could not convert into object of class " + type);
+		}
+
+		return r;
 	}
 
 	protected <R> R readEntity(ElasticsearchPersistentEntity<?> entity, Map<String, Object> source) {
@@ -188,7 +195,7 @@ public class MappingElasticsearchConverter
 
 		EntityInstantiator instantiator = instantiators.getInstantiatorFor(targetEntity);
 
-		@SuppressWarnings({ "unchecked", "ConstantConditions" })
+		@SuppressWarnings({ "unchecked" })
 		R instance = (R) instantiator.createInstance(targetEntity, propertyValueProvider);
 
 		if (!targetEntity.requiresPropertyPopulation()) {
@@ -246,6 +253,7 @@ public class MappingElasticsearchConverter
 		ElasticsearchPropertyValueProvider provider = new ElasticsearchPropertyValueProvider(source, evaluator);
 
 		// TODO: Support for non-static inner classes via ObjectPath
+		// noinspection ConstantConditions
 		PersistentEntityParameterValueProvider<ElasticsearchPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<>(
 				entity, provider, null);
 
@@ -281,7 +289,6 @@ public class MappingElasticsearchConverter
 		return accessor.getBean();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Nullable
 	protected <R> R readValue(@Nullable Object value, ElasticsearchPersistentProperty property, TypeInformation<?> type) {
 
@@ -349,7 +356,7 @@ public class MappingElasticsearchConverter
 		}
 
 		if (typeToUse.isMap()) {
-			return (R) readMap(typeToUse, source);
+			return readMap(typeToUse, source);
 		}
 
 		if (typeToUse.equals(ClassTypeInformation.OBJECT)) {
@@ -549,7 +556,7 @@ public class MappingElasticsearchConverter
 		}
 
 		Class<?> entityType = ClassUtils.getUserClass(source.getClass());
-		TypeInformation<? extends Object> typeInformation = ClassTypeInformation.from(entityType);
+		TypeInformation<?> typeInformation = ClassTypeInformation.from(entityType);
 
 		if (requiresTypeHint(entityType)) {
 			typeMapper.writeType(typeInformation, sink);
@@ -561,9 +568,9 @@ public class MappingElasticsearchConverter
 	/**
 	 * Internal write conversion method which should be used for nested invocations.
 	 *
-	 * @param source
-	 * @param sink
-	 * @param typeInformation
+	 * @param source the object to write
+	 * @param sink the write destination
+	 * @param typeInformation type information for the source
 	 */
 	@SuppressWarnings("unchecked")
 	protected void writeInternal(@Nullable Object source, Map<String, Object> sink,
@@ -578,7 +585,10 @@ public class MappingElasticsearchConverter
 
 		if (customTarget.isPresent()) {
 			Map<String, Object> result = conversionService.convert(source, Map.class);
-			sink.putAll(result);
+
+			if (result != null) {
+				sink.putAll(result);
+			}
 			return;
 		}
 
@@ -600,9 +610,9 @@ public class MappingElasticsearchConverter
 	/**
 	 * Internal write conversion method which should be used for nested invocations.
 	 *
-	 * @param source
-	 * @param sink
-	 * @param entity
+	 * @param source the object to write
+	 * @param sink the write destination
+	 * @param entity entity for the source
 	 */
 	protected void writeInternal(@Nullable Object source, Map<String, Object> sink,
 			@Nullable ElasticsearchPersistentEntity<?> entity) {
@@ -734,7 +744,6 @@ public class MappingElasticsearchConverter
 	 *
 	 * @param collection must not be {@literal null}.
 	 * @param property must not be {@literal null}.
-	 * @return
 	 */
 	protected List<Object> createCollection(Collection<?> collection, ElasticsearchPersistentProperty property) {
 		return writeCollectionInternal(collection, property.getTypeInformation(), new ArrayList<>(collection.size()));
@@ -745,7 +754,6 @@ public class MappingElasticsearchConverter
 	 *
 	 * @param map must not {@literal null}.
 	 * @param property must not be {@literal null}.
-	 * @return
 	 */
 	protected Map<String, Object> createMap(Map<?, ?> map, ElasticsearchPersistentProperty property) {
 
@@ -761,7 +769,6 @@ public class MappingElasticsearchConverter
 	 * @param source must not be {@literal null}.
 	 * @param sink must not be {@literal null}.
 	 * @param propertyType must not be {@literal null}.
-	 * @return
 	 */
 	protected Map<String, Object> writeMapInternal(Map<?, ?> source, Map<String, Object> sink,
 			TypeInformation<?> propertyType) {
@@ -801,7 +808,6 @@ public class MappingElasticsearchConverter
 	 * @param source the collection to create a {@link Collection} for, must not be {@literal null}.
 	 * @param type the {@link TypeInformation} to consider or {@literal null} if unknown.
 	 * @param sink the {@link Collection} to write to.
-	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	private List<Object> writeCollectionInternal(Collection<?> source, @Nullable TypeInformation<?> type,
@@ -837,8 +843,7 @@ public class MappingElasticsearchConverter
 	/**
 	 * Returns a {@link String} representation of the given {@link Map} key
 	 *
-	 * @param key
-	 * @return
+	 * @param key the key to convert
 	 */
 	private String potentiallyConvertMapKey(Object key) {
 
@@ -846,17 +851,22 @@ public class MappingElasticsearchConverter
 			return (String) key;
 		}
 
-		return conversions.hasCustomWriteTarget(key.getClass(), String.class)
-				? (String) getPotentiallyConvertedSimpleWrite(key, Object.class)
-				: key.toString();
+		if (conversions.hasCustomWriteTarget(key.getClass(), String.class)) {
+			Object potentiallyConvertedSimpleWrite = getPotentiallyConvertedSimpleWrite(key, Object.class);
+
+			if (potentiallyConvertedSimpleWrite == null) {
+				return key.toString();
+			}
+			return (String) potentiallyConvertedSimpleWrite;
+		}
+		return key.toString();
 	}
 
 	/**
 	 * Checks whether we have a custom conversion registered for the given value into an arbitrary simple Elasticsearch
 	 * type. Returns the converted value if so. If not, we perform special enum handling or simply return the value as is.
 	 *
-	 * @param value
-	 * @return
+	 * @param value value to convert
 	 */
 	@Nullable
 	private Object getPotentiallyConvertedSimpleWrite(@Nullable Object value, @Nullable Class<?> typeHint) {
@@ -869,6 +879,10 @@ public class MappingElasticsearchConverter
 
 			if (conversionService.canConvert(value.getClass(), typeHint)) {
 				value = conversionService.convert(value, typeHint);
+
+				if (value == null) {
+					return null;
+				}
 			}
 		}
 
@@ -908,8 +922,8 @@ public class MappingElasticsearchConverter
 	 * @deprecated since 4.2, use {@link #writeInternal(Object, Map, TypeInformation)} instead.
 	 */
 	@Deprecated
-	protected Object getWriteComplexValue(ElasticsearchPersistentProperty property, TypeInformation<?> typeHint,
-			Object value) {
+	protected Object getWriteComplexValue(ElasticsearchPersistentProperty property,
+			@SuppressWarnings("unused") TypeInformation<?> typeHint, Object value) {
 
 		Document document = Document.create();
 		writeInternal(value, document, property.getTypeInformation());
@@ -928,11 +942,19 @@ public class MappingElasticsearchConverter
 	 *
 	 * @param source must not be {@literal null}.
 	 * @param sink must not be {@literal null}.
-	 * @param type
+	 * @param type type to compare to
 	 */
-	protected void addCustomTypeKeyIfNecessary(Object source, Map<String, Object> sink, @Nullable TypeInformation<?> type) {
+	protected void addCustomTypeKeyIfNecessary(Object source, Map<String, Object> sink,
+			@Nullable TypeInformation<?> type) {
 
-		Class<?> reference = type != null ? type.getActualType().getType() : Object.class;
+		Class<?> reference;
+
+		if (type == null) {
+			reference = Object.class;
+		} else {
+			TypeInformation<?> actualType = type.getActualType();
+			reference = actualType == null ? Object.class : actualType.getType();
+		}
 		Class<?> valueType = ClassUtils.getUserClass(source.getClass());
 
 		boolean notTheSameClass = !valueType.equals(reference);
@@ -987,8 +1009,7 @@ public class MappingElasticsearchConverter
 	 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
 	 * collection for everything else.
 	 *
-	 * @param source
-	 * @return
+	 * @param source object to convert
 	 */
 	private static Collection<?> asCollection(Object source) {
 
@@ -1019,21 +1040,42 @@ public class MappingElasticsearchConverter
 	}
 
 	private void updateCriteria(Criteria criteria, ElasticsearchPersistentEntity<?> persistentEntity) {
+
 		Field field = criteria.getField();
 
 		if (field == null) {
 			return;
 		}
 
-		String name = field.getName();
-		ElasticsearchPersistentProperty property = persistentEntity.getPersistentProperty(name);
+		String[] fieldNames = field.getName().split("\\.");
+		ElasticsearchPersistentEntity<?> currentEntity = persistentEntity;
+		ElasticsearchPersistentProperty persistentProperty = null;
+		for (int i = 0; i < fieldNames.length; i++) {
+			persistentProperty = currentEntity.getPersistentProperty(fieldNames[i]);
 
-		if (property != null && property.getName().equals(name)) {
-			field.setName(property.getFieldName());
+			if (persistentProperty != null) {
+				fieldNames[i] = persistentProperty.getFieldName();
+				try {
+					currentEntity = mappingContext.getPersistentEntity(persistentProperty.getActualType());
+				} catch (Exception e) {
+					// using system types like UUIDs will lead to java.lang.reflect.InaccessibleObjectException in JDK 16
+					// so if we cannot get an entity here, bail out.
+					currentEntity = null;
+				}
+			}
 
-			if (property.hasPropertyConverter()) {
+			if (currentEntity == null) {
+				break;
+			}
+		}
+
+		field.setName(String.join(".", fieldNames));
+
+		if (persistentProperty != null) {
+
+			if (persistentProperty.hasPropertyConverter()) {
 				ElasticsearchPersistentPropertyConverter propertyConverter = Objects
-						.requireNonNull(property.getPropertyConverter());
+						.requireNonNull(persistentProperty.getPropertyConverter());
 				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
 					Object value = criteriaEntry.getValue();
 					if (value.getClass().isArray()) {
@@ -1047,7 +1089,7 @@ public class MappingElasticsearchConverter
 				});
 			}
 
-			org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = property
+			org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = persistentProperty
 					.findAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
 
 			if (fieldAnnotation != null) {
@@ -1055,6 +1097,7 @@ public class MappingElasticsearchConverter
 			}
 		}
 	}
+
 	// endregion
 
 	static class MapValueAccessor {
@@ -1148,7 +1191,6 @@ public class MappingElasticsearchConverter
 			this.evaluator = evaluator;
 		}
 
-		@SuppressWarnings("unchecked")
 		@Override
 		public <T> T getPropertyValue(ElasticsearchPersistentProperty property) {
 
