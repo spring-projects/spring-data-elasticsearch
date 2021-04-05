@@ -41,4 +41,17 @@ public interface Field {
 	 */
 	@Nullable
 	FieldType getFieldType();
+
+	/**
+	 * Sets the path if this field has a multi-part name that should be used in a nested query.
+	 * @param path the value to set
+	 * @since 4.2
+	 */
+	void setPath(@Nullable String path);
+
+	/**
+	 * @return the path if this is a field for a nested query
+	 * @since 4.2
+	 */
+	@Nullable String getPath();
 }

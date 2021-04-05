@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.index.query.Operator.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.core.query.Criteria.*;
+import static org.springframework.util.StringUtils.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -154,11 +155,8 @@ class CriteriaQueryProcessor {
 
 		addBoost(query, criteria.getBoost());
 
-		int dotPosition = fieldName.lastIndexOf('.');
-
-		if (dotPosition > 0) {
-			String nestedPath = fieldName.substring(0, dotPosition);
-			query = nestedQuery(nestedPath, query, ScoreMode.Avg);
+		if (hasText(field.getPath())) {
+			query = nestedQuery(field.getPath(), query, ScoreMode.Avg);
 		}
 
 		return query;

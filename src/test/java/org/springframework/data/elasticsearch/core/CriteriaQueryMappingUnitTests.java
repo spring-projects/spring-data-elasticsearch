@@ -34,6 +34,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.convert.GeoConverters;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -362,6 +364,39 @@ public class CriteriaQueryMappingUnitTests {
 
 		assertEquals(expected, queryString, false);
 	}
+
+	@Test // #1753
+	@DisplayName("should map names and value in nested entities with sub-fields")
+	void shouldMapNamesAndValueInNestedEntitiesWithSubfields() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"bool\": {\n" + //
+				"    \"must\": [\n" + //
+				"      {\n" + //
+				"        \"nested\": {\n" + //
+				"          \"query\": {\n" + //
+				"            \"query_string\": {\n" + //
+				"              \"query\": \"Foobar\",\n" + //
+				"              \"fields\": [\n" + //
+				"                \"per-sons.nick-name.keyword^1.0\"\n" + //
+				"              ]\n" + //
+				"            }\n" + //
+				"          },\n" + //
+				"          \"path\": \"per-sons\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    ]\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(
+				new Criteria("persons.nickName.keyword").is("Foobar")
+		);
+		mappingElasticsearchConverter.updateQuery(criteriaQuery, House.class);
+		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
+
+		assertEquals(expected, queryString, false);
+	}
 	// endregion
 
 	// region helper functions
@@ -379,6 +414,7 @@ public class CriteriaQueryMappingUnitTests {
 		@Nullable @Id String id;
 		@Nullable @Field(name = "first-name") String firstName;
 		@Nullable @Field(name = "last-name") String lastName;
+		@Nullable @MultiField(mainField = @Field(name="nick-name"), otherFields = {@InnerField(suffix = "keyword", type = FieldType.Keyword)}) String nickName;
 		@Nullable @Field(name = "created-date", type = FieldType.Date, format = DateFormat.epoch_millis) Date createdDate;
 		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = {},
 				pattern = "dd.MM.uuuu") LocalDate birthDate;

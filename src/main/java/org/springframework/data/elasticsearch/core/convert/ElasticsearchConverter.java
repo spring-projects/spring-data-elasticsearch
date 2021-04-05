@@ -86,21 +86,18 @@ public interface ElasticsearchConverter
 
 	// region query
 	/**
-	 * Updates a query by renaming the property names in the query to the correct mapped field names and the values to the
-	 * converted values if the {@link ElasticsearchPersistentProperty} for a property has a
+	 * Updates a {@link CriteriaQuery} by renaming the property names in the query to the correct mapped field names and
+	 * the values to the converted values if the {@link ElasticsearchPersistentProperty} for a property has a
 	 * {@link org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter}. If
-	 * domainClass is null, it's a noop; handling null here eliminates null checks in the caller.
-	 * 
+	 * domainClass is null or query is not a {@link CriteriaQuery}, it's a noop.
+	 *
 	 * @param query the query that is internally updated
 	 * @param domainClass the class of the object that is searched with the query
 	 */
 	default void updateQuery(Query query, @Nullable Class<?> domainClass) {
 
-		if (domainClass != null) {
-
-			if (query instanceof CriteriaQuery) {
-				updateCriteriaQuery((CriteriaQuery) query, domainClass);
-			}
+		if (domainClass != null && query instanceof CriteriaQuery) {
+			updateCriteriaQuery((CriteriaQuery) query, domainClass);
 		}
 	}
 
@@ -109,8 +106,8 @@ public interface ElasticsearchConverter
 	 * the values to the converted values if the {@link ElasticsearchPersistentProperty} for a property has a
 	 * {@link org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter}.
 	 *
-	 * @param criteriaQuery the query that is internally updated
-	 * @param domainClass the class of the object that is searched with the query
+	 * @param criteriaQuery the query that is internally updated, must not be {@literal null}
+	 * @param domainClass the class of the object that is searched with the query, must not be {@literal null}
 	 */
 	void updateCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass);
 	// endregion

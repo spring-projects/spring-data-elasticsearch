@@ -31,6 +31,7 @@ public class SimpleField implements Field {
 
 	private String name;
 	@Nullable private FieldType fieldType;
+	@Nullable private String path;
 
 	public SimpleField(String name) {
 
@@ -61,6 +62,17 @@ public class SimpleField implements Field {
 	@Override
 	public FieldType getFieldType() {
 		return fieldType;
+	}
+
+	@Override
+	public void setPath(@Nullable String path) {
+		this.path = path;
+	}
+
+	@Override
+	@Nullable
+	public String getPath() {
+		return path;
 	}
 
 	@Override

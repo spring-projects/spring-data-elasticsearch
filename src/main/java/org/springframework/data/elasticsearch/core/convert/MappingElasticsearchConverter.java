@@ -1025,6 +1025,9 @@ public class MappingElasticsearchConverter
 	@Override
 	public void updateCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
 
+		Assert.notNull(criteriaQuery, "criteriaQuery must not be null");
+		Assert.notNull(domainClass, "domainClass must not be null");
+
 		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
 
 		if (persistentEntity != null) {
@@ -1048,12 +1051,15 @@ public class MappingElasticsearchConverter
 		}
 
 		String[] fieldNames = field.getName().split("\\.");
+
 		ElasticsearchPersistentEntity<?> currentEntity = persistentEntity;
 		ElasticsearchPersistentProperty persistentProperty = null;
+		int propertyCount = 0;
 		for (int i = 0; i < fieldNames.length; i++) {
 			persistentProperty = currentEntity.getPersistentProperty(fieldNames[i]);
 
 			if (persistentProperty != null) {
+				propertyCount++;
 				fieldNames[i] = persistentProperty.getFieldName();
 				try {
 					currentEntity = mappingContext.getPersistentEntity(persistentProperty.getActualType());
@@ -1070,6 +1076,11 @@ public class MappingElasticsearchConverter
 		}
 
 		field.setName(String.join(".", fieldNames));
+
+		if (propertyCount > 1) {
+			List<String> propertyNames = Arrays.asList(fieldNames);
+			field.setPath(String.join(".", propertyNames.subList(0, propertyCount - 1)));
+		}
 
 		if (persistentProperty != null) {
 
