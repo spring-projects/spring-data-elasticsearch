@@ -365,6 +365,7 @@ class CriteriaQueryProcessorUnitTests {
 				"}"; //
 
 		Criteria criteria = new Criteria("houses.inhabitants.lastName").is("murphy");
+		criteria.getField().setPath("houses.inhabitants");
 
 		String query = queryProcessor.createQuery(criteria).toString();
 
