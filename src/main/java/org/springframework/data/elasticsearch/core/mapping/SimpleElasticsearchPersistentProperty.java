@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Parent;
+import org.springframework.data.elasticsearch.annotations.IdSourceMap;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
@@ -83,8 +84,7 @@ public class SimpleElasticsearchPersistentProperty extends
 		this.annotatedFieldName = getAnnotatedFieldName();
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
 				: fieldNamingStrategy;
-		this.isId = super.isIdProperty()
-				|| (SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName()) && !hasExplicitFieldName());
+		this.isId = propertyIsId();
 		this.isParent = isAnnotationPresent(Parent.class);
 		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
 
@@ -249,6 +249,14 @@ public class SimpleElasticsearchPersistentProperty extends
 		}
 
 		return StringUtils.hasText(name) ? name : null;
+	}
+
+	private boolean propertyIsId() {
+		return super.isIdProperty() || (
+				SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName()) &&
+				!hasExplicitFieldName() &&
+				!isAnnotationPresent(IdSourceMap.class)
+		);
 	}
 
 	@Override

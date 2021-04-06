@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.IdSourceMap;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -242,6 +243,36 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(property.getFieldName()).isEqualTo("CUStomFIEldnAME");
 	}
 
+	@Test
+	@DisplayName("must not be primary key")
+	void seqNoIdSourceMapIsNotId() {
+		FieldNamingStrategy fieldNamingStrategy = new SnakeCaseFieldNamingStrategy();
+
+		ElasticsearchPersistentEntity<IdSourceMapEntity> entity = new SimpleElasticsearchPersistentEntity<>(
+				ClassTypeInformation.from(IdSourceMapEntity.class));
+
+		ClassTypeInformation<IdSourceMapEntity> type = ClassTypeInformation.from(IdSourceMapEntity.class);
+		java.lang.reflect.Field idField = ReflectionUtils.findField(IdSourceMapEntity.class,"id");
+		java.lang.reflect.Field sourceId = ReflectionUtils.findField(IdSourceMapEntity.class,"sourceId");
+
+		SimpleElasticsearchPersistentProperty idProperty = new SimpleElasticsearchPersistentProperty(
+				Property.of(type, idField),
+				entity,
+				SimpleTypeHolder.DEFAULT,
+				fieldNamingStrategy
+		);
+
+		SimpleElasticsearchPersistentProperty sourceIdProperty = new SimpleElasticsearchPersistentProperty(
+				Property.of(type, sourceId),
+				entity,
+				SimpleTypeHolder.DEFAULT,
+				fieldNamingStrategy
+		);
+
+		assertThat(idProperty.isIdProperty()).isTrue();
+		assertThat(sourceIdProperty.isIdProperty()).isFalse();
+	}
+
 	static class FieldNameProperty {
 		@Nullable @Field(name = "by-name") String fieldProperty;
 	}
@@ -318,5 +349,13 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		public void setWithCustomFieldName(String withCustomFieldName) {
 			this.withCustomFieldName = withCustomFieldName;
 		}
+	}
+
+	static class IdSourceMapEntity {
+		private String id;
+
+		@Field("id")
+		@IdSourceMap
+		private String sourceId;
 	}
 }
