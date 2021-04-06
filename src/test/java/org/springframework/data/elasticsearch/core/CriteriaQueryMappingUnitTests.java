@@ -397,6 +397,34 @@ public class CriteriaQueryMappingUnitTests {
 
 		assertEquals(expected, queryString, false);
 	}
+
+	@Test // #1761
+	@DisplayName("should map names and value in object entities")
+	void shouldMapNamesAndValueInObjectEntities() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"bool\": {\n" + //
+				"    \"must\": [\n" + //
+				"      {\n" + //
+				"         \"query_string\": {\n" + //
+				"              \"query\": \"03.10.1999\",\n" + //
+				"              \"fields\": [\n" + //
+				"                \"per-sons.birth-date^1.0\"\n" + //
+				"              ]\n" + //
+				"            }\n" + //
+				"      }\n" + //
+				"    ]\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		CriteriaQuery criteriaQuery = new CriteriaQuery(
+				new Criteria("persons.birthDate").is(LocalDate.of(1999, 10, 3))
+		);
+		mappingElasticsearchConverter.updateQuery(criteriaQuery, ObjectWithPerson.class);
+		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
+
+		assertEquals(expected, queryString, false);
+	}
 	// endregion
 
 	// region helper functions
@@ -424,6 +452,13 @@ public class CriteriaQueryMappingUnitTests {
 		@Nullable @Id String id;
 		@Nullable
 		@Field(name = "per-sons", type = FieldType.Nested)
+		List<Person> persons;
+	}
+
+	static class ObjectWithPerson {
+		@Nullable @Id String id;
+		@Nullable
+		@Field(name = "per-sons", type = FieldType.Object)
 		List<Person> persons;
 	}
 

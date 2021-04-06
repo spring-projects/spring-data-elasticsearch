@@ -33,6 +33,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
@@ -1055,12 +1056,22 @@ public class MappingElasticsearchConverter
 		ElasticsearchPersistentEntity<?> currentEntity = persistentEntity;
 		ElasticsearchPersistentProperty persistentProperty = null;
 		int propertyCount = 0;
+		boolean isNested = false;
+
 		for (int i = 0; i < fieldNames.length; i++) {
 			persistentProperty = currentEntity.getPersistentProperty(fieldNames[i]);
 
 			if (persistentProperty != null) {
 				propertyCount++;
 				fieldNames[i] = persistentProperty.getFieldName();
+
+				org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = persistentProperty
+						.findAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
+
+				if (fieldAnnotation != null && fieldAnnotation.type() == FieldType.Nested) {
+					isNested = true;
+				}
+
 				try {
 					currentEntity = mappingContext.getPersistentEntity(persistentProperty.getActualType());
 				} catch (Exception e) {
@@ -1077,7 +1088,7 @@ public class MappingElasticsearchConverter
 
 		field.setName(String.join(".", fieldNames));
 
-		if (propertyCount > 1) {
+		if (propertyCount > 1 && isNested) {
 			List<String> propertyNames = Arrays.asList(fieldNames);
 			field.setPath(String.join(".", propertyNames.subList(0, propertyCount - 1)));
 		}
