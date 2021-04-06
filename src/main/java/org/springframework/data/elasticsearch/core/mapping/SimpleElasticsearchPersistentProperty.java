@@ -59,6 +59,7 @@ import org.springframework.util.StringUtils;
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Mikael Lemos
  */
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {

@@ -50,6 +50,7 @@ import org.springframework.util.ReflectionUtils;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  * @author Sascha Woo
+ * @author Mikael Lemos
  */
 public class SimpleElasticsearchPersistentPropertyUnitTests {
 
