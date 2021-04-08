@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,9 +34,10 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
-public interface HostProvider {
+public interface HostProvider<T extends HostProvider<T>> {
 
 	/**
 	 * Create a new {@link HostProvider} best suited for the given {@link WebClientProvider} and number of hosts.
@@ -46,7 +47,7 @@ public interface HostProvider {
 	 * @param endpoints must not be {@literal null} nor empty.
 	 * @return new instance of {@link HostProvider}.
 	 */
-	static HostProvider provider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
+	static HostProvider<?> provider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
 			InetSocketAddress... endpoints) {
 
 		Assert.notNull(clientProvider, "WebClientProvider must not be null");

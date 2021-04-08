@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2020 the original author or authors.
+ * Copyright 2018-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,10 @@ import org.springframework.web.reactive.function.client.WebClient;
  *
  * @author Christoph Strobl
  * @author Mark Paluch
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
-class SingleNodeHostProvider implements HostProvider {
+class SingleNodeHostProvider implements HostProvider<SingleNodeHostProvider> {
 
 	private final WebClientProvider clientProvider;
 	private final Supplier<HttpHeaders> headersSupplier;
