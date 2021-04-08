@@ -541,14 +541,34 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.flatMap(callback::doWithClient) //
 				.onErrorResume(throwable -> {
 
-					if (throwable instanceof ConnectException) {
-
+					if (isCausedByConnectionException(throwable)) {
 						return hostProvider.getActive(Verification.ACTIVE) //
 								.flatMap(callback::doWithClient);
 					}
 
 					return Mono.error(throwable);
 				});
+	}
+
+	/**
+	 * checks if the given throwable is a {@link ConnectException} or has one in it's cause chain
+	 *
+	 * @param throwable the throwable to check
+	 * @return true if throwable is caused by a {@link ConnectException}
+	 */
+	private boolean isCausedByConnectionException(Throwable throwable) {
+
+		Throwable t = throwable;
+		do {
+
+			if (t instanceof ConnectException) {
+				return true;
+			}
+
+			t = t.getCause();
+		} while (t != null);
+
+		return false;
 	}
 
 	@Override
