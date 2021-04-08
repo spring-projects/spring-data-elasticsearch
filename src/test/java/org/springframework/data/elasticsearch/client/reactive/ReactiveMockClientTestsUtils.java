@@ -186,7 +186,7 @@ public class ReactiveMockClientTestsUtils {
 			return delegate;
 		}
 
-		public MockDelegatingElasticsearchHostProvider<T> withActiveDefaultHost(String host) {
+		public MockDelegatingElasticsearchHostProvider<? extends HostProvider<?>> withActiveDefaultHost(String host) {
 			return new MockDelegatingElasticsearchHostProvider(HttpHeaders.EMPTY, clientProvider, errorCollector, delegate,
 					host);
 		}

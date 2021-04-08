@@ -145,7 +145,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  */
 public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient, Indices {
 
-	private final HostProvider hostProvider;
+	private final HostProvider<?> hostProvider;
 	private final RequestCreator requestCreator;
 	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
 
@@ -155,7 +155,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 *
 	 * @param hostProvider must not be {@literal null}.
 	 */
-	public DefaultReactiveElasticsearchClient(HostProvider hostProvider) {
+	public DefaultReactiveElasticsearchClient(HostProvider<?> hostProvider) {
 		this(hostProvider, new DefaultRequestCreator());
 	}
 
@@ -166,7 +166,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	 * @param hostProvider must not be {@literal null}.
 	 * @param requestCreator must not be {@literal null}.
 	 */
-	public DefaultReactiveElasticsearchClient(HostProvider hostProvider, RequestCreator requestCreator) {
+	public DefaultReactiveElasticsearchClient(HostProvider<?> hostProvider, RequestCreator requestCreator) {
 
 		Assert.notNull(hostProvider, "HostProvider must not be null");
 		Assert.notNull(requestCreator, "RequestCreator must not be null");
@@ -535,14 +535,34 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.flatMap(callback::doWithClient) //
 				.onErrorResume(throwable -> {
 
-					if (throwable instanceof ConnectException) {
-
+					if (isCausedByConnectionException(throwable)) {
 						return hostProvider.getActive(Verification.ACTIVE) //
 								.flatMap(callback::doWithClient);
 					}
 
 					return Mono.error(throwable);
 				});
+	}
+
+	/**
+	 * checks if the given throwable is a {@link ConnectException} or has one in it's cause chain
+	 *
+	 * @param throwable the throwable to check
+	 * @return true if throwable is caused by a {@link ConnectException}
+	 */
+	private boolean isCausedByConnectionException(Throwable throwable) {
+
+		Throwable t = throwable;
+		do {
+
+			if (t instanceof ConnectException) {
+				return true;
+			}
+
+			t = t.getCause();
+		} while (t != null);
+
+		return false;
 	}
 
 	@Override
@@ -823,10 +843,9 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		String mediaType = response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType());
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
-				.switchIfEmpty(Mono
-						.error(new ElasticsearchStatusException(String.format("%s request to %s returned error code %s and no body.",
-								request.getMethod(), request.getEndpoint(), statusCode), status))
-				)
+				.switchIfEmpty(Mono.error(
+						new ElasticsearchStatusException(String.format("%s request to %s returned error code %s and no body.",
+								request.getMethod(), request.getEndpoint(), statusCode), status)))
 				.map(bytes -> new String(bytes, StandardCharsets.UTF_8)) //
 				.flatMap(content -> contentOrError(content, mediaType, status))
 				.flatMap(unused -> Mono
