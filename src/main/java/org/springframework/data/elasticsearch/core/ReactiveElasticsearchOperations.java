@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -57,6 +58,16 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	<T> Publisher<T> executeWithIndicesClient(IndicesClientCallback<Publisher<T>> callback);
 
 	/**
+	 * Execute within a {@link ClusterClientCallback} managing resources and translating errors.
+	 *
+	 * @param callback must not be {@literal null}.
+	 * @param <T> the type the Publisher emits
+	 * @return the {@link Publisher} emitting results.
+	 * @since 4.1
+	 */
+	<T> Publisher<T> executeWithClusterClient(ClusterClientCallback<Publisher<T>> callback);
+
+	/**
 	 * Get the {@link ElasticsearchConverter} used.
 	 *
 	 * @return never {@literal null}
@@ -75,6 +86,7 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 
 	/**
 	 * Creates a {@link ReactiveIndexOperations} that is bound to the given index
+	 *
 	 * @param index IndexCoordinates specifying the index
 	 * @return ReactiveIndexOperations implementation
 	 * @since 4.1
@@ -83,13 +95,23 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 
 	/**
 	 * Creates a {@link ReactiveIndexOperations} that is bound to the given class
+	 *
 	 * @param clazz the entity clazz specifiying the index information
 	 * @return ReactiveIndexOperations implementation
 	 * @since 4.1
 	 */
 	ReactiveIndexOperations indexOps(Class<?> clazz);
 
-	//region routing
+	/**
+	 * return a {@link ReactiveClusterOperations} instance that uses the same client communication setup as this
+	 * ElasticsearchOperations instance.
+	 *
+	 * @return ClusterOperations implementation
+	 * @since 4.2
+	 */
+	ReactiveClusterOperations cluster();
+
+	// region routing
 	/**
 	 * Returns a copy of this instance with the same configuration, but that uses a different {@link RoutingResolver} to
 	 * obtain routing information.
@@ -98,7 +120,7 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	 * @return DocumentOperations instance
 	 */
 	ReactiveElasticsearchOperations withRouting(RoutingResolver routingResolver);
-	//endregion
+	// endregion
 
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
@@ -114,13 +136,24 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	}
 
 	/**
-	 * Callback interface to be used with {@link #executeWithIndicesClient(IndicesClientCallback)} for operating directly on
-	 * {@link ReactiveElasticsearchClient.Indices}.
+	 * Callback interface to be used with {@link #executeWithIndicesClient(IndicesClientCallback)} for operating directly
+	 * on {@link ReactiveElasticsearchClient.Indices}.
 	 *
 	 * @param <T> the return type
 	 * @since 4.1
 	 */
 	interface IndicesClientCallback<T extends Publisher<?>> {
 		T doWithClient(ReactiveElasticsearchClient.Indices client);
+	}
+
+	/**
+	 * Callback interface to be used with {@link #executeWithClusterClient(ClusterClientCallback)} for operating directly
+	 * on {@link ReactiveElasticsearchClient.Cluster}.
+	 *
+	 * @param <T> the return type
+	 * @since 4.2
+	 */
+	interface ClusterClientCallback<T extends Publisher<?>> {
+		T doWithClient(ReactiveElasticsearchClient.Cluster client);
 	}
 }

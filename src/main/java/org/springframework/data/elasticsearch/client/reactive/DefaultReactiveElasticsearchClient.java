@@ -45,6 +45,8 @@ import javax.net.ssl.SSLContext;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
@@ -105,6 +107,7 @@ import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
 import org.springframework.data.elasticsearch.client.reactive.HostProvider.Verification;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Cluster;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices;
 import org.springframework.data.elasticsearch.client.util.NamedXContents;
 import org.springframework.data.elasticsearch.client.util.ScrollState;
@@ -142,7 +145,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @see ClientConfiguration
  * @see ReactiveRestClients
  */
-public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient, Indices {
+public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient, Indices, Cluster {
 
 	private final HostProvider<?> hostProvider;
 	private final RequestCreator requestCreator;
@@ -297,10 +300,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		this.headersSupplier = headersSupplier;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders)
-	 */
 	@Override
 	public Mono<Boolean> ping(HttpHeaders headers) {
 
@@ -309,10 +308,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.onErrorResume(NoReachableHostException.class, error -> Mono.just(false)).next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#info(org.springframework.http.HttpHeaders)
-	 */
 	@Override
 	public Mono<MainResponse> info(HttpHeaders headers) {
 
@@ -320,10 +315,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#get(org.springframework.http.HttpHeaders, org.elasticsearch.action.get.GetRequest)
-	 */
 	@Override
 	public Mono<GetResult> get(HttpHeaders headers, GetRequest getRequest) {
 
@@ -341,10 +332,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.flatMap(Flux::fromArray); //
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#exists(org.springframework.http.HttpHeaders, org.elasticsearch.action.get.GetRequest)
-	 */
 	@Override
 	public Mono<Boolean> exists(HttpHeaders headers, GetRequest getRequest) {
 
@@ -353,37 +340,26 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.index.IndexRequest)
-	 */
 	@Override
 	public Mono<IndexResponse> index(HttpHeaders headers, IndexRequest indexRequest) {
 		return sendRequest(indexRequest, requestCreator.index(), IndexResponse.class, headers).next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#indices()
-	 */
 	@Override
 	public Indices indices() {
 		return this;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.update.UpdateRequest)
-	 */
+	@Override
+	public Cluster cluster() {
+		return this;
+	}
+
 	@Override
 	public Mono<UpdateResponse> update(HttpHeaders headers, UpdateRequest updateRequest) {
 		return sendRequest(updateRequest, requestCreator.update(), UpdateResponse.class, headers).next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.delete.DeleteRequest)
-	 */
 	@Override
 	public Mono<DeleteResponse> delete(HttpHeaders headers, DeleteRequest deleteRequest) {
 
@@ -391,10 +367,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.next();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#count(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
-	 */
 	@Override
 	public Mono<Long> count(HttpHeaders headers, SearchRequest searchRequest) {
 		searchRequest.source().trackTotalHits(true);
@@ -412,10 +384,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.map(response -> response.getResponse().getHits()).flatMap(Flux::fromIterable);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
-	 */
 	@Override
 	public Flux<SearchHit> search(HttpHeaders headers, SearchRequest searchRequest) {
 
@@ -435,10 +403,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.map(SearchResponse::getSuggest);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#aggregate(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
-	 */
 	@Override
 	public Flux<Aggregation> aggregate(HttpHeaders headers, SearchRequest searchRequest) {
 
@@ -453,10 +417,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.flatMap(Flux::fromIterable);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#scroll(org.springframework.http.HttpHeaders, org.elasticsearch.action.search.SearchRequest)
-	 */
 	@Override
 	public Flux<SearchHit> scroll(HttpHeaders headers, SearchRequest searchRequest) {
 
@@ -506,10 +466,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		return sendRequest(clearScrollRequest, requestCreator.clearScroll(), ClearScrollResponse.class, headers);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#ping(org.springframework.http.HttpHeaders, org.elasticsearch.index.reindex.DeleteByQueryRequest)
-	 */
 	@Override
 	public Mono<BulkByScrollResponse> deleteBy(HttpHeaders headers, DeleteByQueryRequest deleteRequest) {
 
@@ -524,10 +480,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				.map(ByQueryResponse::of);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient#bulk(org.springframework.http.HttpHeaders, org.elasticsearch.action.bulk.BulkRequest)
-	 */
 	@Override
 	public Mono<BulkResponse> bulk(HttpHeaders headers, BulkRequest bulkRequest) {
 		return sendRequest(bulkRequest, requestCreator.bulk(), BulkResponse.class, headers) //
@@ -812,6 +764,14 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	// endregion
 
+	// region cluster operations
+	@Override
+	public Mono<ClusterHealthResponse> health(HttpHeaders headers, ClusterHealthRequest clusterHealthRequest) {
+		return sendRequest(clusterHealthRequest, requestCreator.clusterHealth(), ClusterHealthResponse.class, headers)
+				.next();
+	}
+	// endregion
+
 	// region helper functions
 	private <T> Publisher<? extends T> readResponseBody(String logId, Request request, ClientResponse response,
 			Class<T> responseType) {
@@ -965,7 +925,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			} while (token == XContentParser.Token.FIELD_NAME);
 
 			return null;
-		} catch (IOException e) {
+		} catch (Exception e) {
 			return new ElasticsearchStatusException(content, status);
 		}
 	}

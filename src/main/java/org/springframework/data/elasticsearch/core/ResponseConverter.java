@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetResponse;
@@ -36,6 +37,7 @@ import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.elasticsearch.common.collect.ImmutableOpenMap;
 import org.elasticsearch.common.compress.CompressedXContent;
+import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.Settings;
@@ -109,7 +111,7 @@ public class ResponseConverter {
 	 * @return a document that represents {@link Settings}
 	 */
 	private static Settings settingsFromGetIndexResponse(GetIndexResponse getIndexResponse, String indexName) {
-		Settings settings= new Settings();
+		Settings settings = new Settings();
 
 		org.elasticsearch.common.settings.Settings indexSettings = getIndexResponse.getSettings().get(indexName);
 
@@ -289,4 +291,26 @@ public class ResponseConverter {
 	}
 	// endregion
 
+	// region cluster operations
+	public static ClusterHealth clusterHealth(ClusterHealthResponse clusterHealthResponse) {
+		return ClusterHealth.builder() //
+				.withActivePrimaryShards(clusterHealthResponse.getActivePrimaryShards()) //
+				.withActiveShards(clusterHealthResponse.getActiveShards()) //
+				.withActiveShardsPercent(clusterHealthResponse.getActiveShardsPercent()) //
+				.withClusterName(clusterHealthResponse.getClusterName()) //
+				.withDelayedUnassignedShards(clusterHealthResponse.getDelayedUnassignedShards()) //
+				.withInitializingShards(clusterHealthResponse.getInitializingShards()) //
+				.withNumberOfDataNodes(clusterHealthResponse.getNumberOfDataNodes()) //
+				.withNumberOfInFlightFetch(clusterHealthResponse.getNumberOfInFlightFetch()) //
+				.withNumberOfNodes(clusterHealthResponse.getNumberOfNodes()) //
+				.withNumberOfPendingTasks(clusterHealthResponse.getNumberOfPendingTasks()) //
+				.withRelocatingShards(clusterHealthResponse.getRelocatingShards()) //
+				.withStatus(clusterHealthResponse.getStatus().toString()) //
+				.withTaskMaxWaitingTimeMillis(clusterHealthResponse.getTaskMaxWaitingTime().millis()) //
+				.withTimedOut(clusterHealthResponse.isTimedOut()) //
+				.withUnassignedShards(clusterHealthResponse.getUnassignedShards()) //
+				.build(); //
+
+	}
+	// endregion
 }

@@ -3,6 +3,7 @@ package org.springframework.data.elasticsearch.client.reactive;
 import java.io.IOException;
 import java.util.function.Function;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
@@ -265,5 +266,12 @@ public interface RequestCreator {
 	 */
 	default Function<GetIndexRequest, Request> getIndex() {
 		return RequestConverters::getIndex;
+	}
+
+	/**
+	 * @since 4.2
+	 */
+	default Function<ClusterHealthRequest, Request> clusterHealth() {
+		return RequestConverters::clusterHealth;
 	}
 }

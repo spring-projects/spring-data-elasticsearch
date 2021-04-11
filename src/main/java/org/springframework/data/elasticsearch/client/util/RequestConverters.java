@@ -107,8 +107,9 @@ import org.springframework.lang.Nullable;
 
 /**
  * <p>
- * Original implementation source {@link org.elasticsearch.client.RequestConverters} and
- * {@link org.elasticsearch.client.IndicesRequestConverters} by {@literal Elasticsearch}
+ * Original implementation source {@link org.elasticsearch.client.RequestConverters},
+ * {@link org.elasticsearch.client.IndicesRequestConverters} and
+ * {@link org.elasticsearch.client.ClusterRequestConverters} by {@literal Elasticsearch}
  * (<a href="https://www.elastic.co">https://www.elastic.co</a>) licensed under the Apache License, Version 2.0.
  * </p>
  * Modified for usage with {@link ReactiveElasticsearchClient}.
@@ -1000,6 +1001,26 @@ public class RequestConverters {
 		parameters.withIndicesOptions(getFieldMappingsRequest.indicesOptions());
 		parameters.withIncludeDefaults(getFieldMappingsRequest.includeDefaults());
 		parameters.withIncludeTypeName(false);
+		return request;
+	}
+
+	public static Request clusterHealth(ClusterHealthRequest healthRequest) {
+		String[] indices = healthRequest.indices() == null ? Strings.EMPTY_ARRAY : healthRequest.indices();
+		String endpoint = new EndpointBuilder().addPathPartAsIs(new String[] { "_cluster/health" })
+				.addCommaSeparatedPathParts(indices).build();
+
+		Request request = new Request("GET", endpoint);
+
+		RequestConverters.Params parameters = new Params(request);
+		parameters.withWaitForStatus(healthRequest.waitForStatus());
+		parameters.withWaitForNoRelocatingShards(healthRequest.waitForNoRelocatingShards());
+		parameters.withWaitForNoInitializingShards(healthRequest.waitForNoInitializingShards());
+		parameters.withWaitForActiveShards(healthRequest.waitForActiveShards(), ActiveShardCount.NONE);
+		parameters.withWaitForNodes(healthRequest.waitForNodes());
+		parameters.withWaitForEvents(healthRequest.waitForEvents());
+		parameters.withTimeout(healthRequest.timeout());
+		parameters.withMasterTimeout(healthRequest.masterNodeTimeout());
+		parameters.withLocal(healthRequest.local()).withLevel(healthRequest.level());
 		return request;
 	}
 

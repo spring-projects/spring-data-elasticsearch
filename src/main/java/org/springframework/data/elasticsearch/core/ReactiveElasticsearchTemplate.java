@@ -57,6 +57,8 @@ import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity;
+import org.springframework.data.elasticsearch.core.cluster.DefaultReactiveClusterOperations;
+import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -922,6 +924,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
+	public <T> Publisher<T> executeWithClusterClient(ClusterClientCallback<Publisher<T>> callback) {
+		return Flux.defer(() -> callback.doWithClient(getClusterClient())).onErrorMap(this::translateException);
+	}
+
+	@Override
 	public ElasticsearchConverter getElasticsearchConverter() {
 		return converter;
 	}
@@ -934,6 +941,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	@Override
 	public ReactiveIndexOperations indexOps(Class<?> clazz) {
 		return new DefaultReactiveIndexOperations(this, clazz);
+	}
+
+	@Override
+	public ReactiveClusterOperations cluster() {
+		return new DefaultReactiveClusterOperations(this);
 	}
 
 	@Override
@@ -970,7 +982,19 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		throw new UncategorizedElasticsearchException("No ReactiveElasticsearchClient.Indices implementation available");
 	}
 
-	// endregion
+	/**
+	 * Obtain the {@link ReactiveElasticsearchClient.Cluster} to operate upon.
+	 *
+	 * @return never {@literal null}.
+	 */
+	protected ReactiveElasticsearchClient.Cluster getClusterClient() {
+
+		if (client instanceof ReactiveElasticsearchClient.Cluster) {
+			return (ReactiveElasticsearchClient.Cluster) client;
+		}
+
+		throw new UncategorizedElasticsearchException("No ReactiveElasticsearchClient.Cluster implementation available");
+	}
 
 	/**
 	 * translates an Exception if possible. Exceptions that are no {@link RuntimeException}s are wrapped in a
