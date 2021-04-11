@@ -22,6 +22,8 @@ import java.net.ConnectException;
 import java.util.Collection;
 import java.util.function.Consumer;
 
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
+import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
@@ -268,6 +270,14 @@ public interface ReactiveElasticsearchClient {
 	 * @return access to index related commands.
 	 */
 	Indices indices();
+
+	/**
+	 * Gain Access to cluster related commands.
+	 *
+	 * @return Cluster implementations
+	 * @since 4.2
+	 */
+	Cluster cluster();
 
 	/**
 	 * Execute an {@link UpdateRequest} against the {@literal update} API to alter a document.
@@ -1677,5 +1687,46 @@ public interface ReactiveElasticsearchClient {
 		 * @since 4.2
 		 */
 		Mono<GetIndexResponse> getIndex(HttpHeaders headers, GetIndexRequest getIndexRequest);
+	}
+
+	/**
+	 * Encapsulation of methods for accessing the Cluster API.
+	 *
+	 * @author Peter-Josef Meisch
+	 * @since 4.2
+	 */
+	interface Cluster {
+
+		/**
+		 * Execute the given {{@link ClusterHealthRequest}} against the {@literal cluster} API.
+		 *
+		 * @param consumer never {@literal null}.
+		 * @return Mono emitting the {@link ClusterHealthResponse}.
+		 */
+		default Mono<ClusterHealthResponse> health(Consumer<ClusterHealthRequest> consumer) {
+
+			ClusterHealthRequest clusterHealthRequest = new ClusterHealthRequest();
+			consumer.accept(clusterHealthRequest);
+			return health(clusterHealthRequest);
+		}
+
+		/**
+		 * Execute the given {{@link ClusterHealthRequest}} against the {@literal cluster} API.
+		 *
+		 * @param clusterHealthRequest must not be {@literal null} // * @return Mono emitting the
+		 *          {@link ClusterHealthResponse}.
+		 */
+		default Mono<ClusterHealthResponse> health(ClusterHealthRequest clusterHealthRequest) {
+			return health(HttpHeaders.EMPTY, clusterHealthRequest);
+		}
+
+		/**
+		 * Execute the given {{@link ClusterHealthRequest}} against the {@literal cluster} API.
+		 *
+		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+		 * @param clusterHealthRequest must not be {@literal null} // * @return Mono emitting the
+		 *          {@link ClusterHealthResponse}.
+		 */
+		Mono<ClusterHealthResponse> health(HttpHeaders headers, ClusterHealthRequest clusterHealthRequest);
 	}
 }

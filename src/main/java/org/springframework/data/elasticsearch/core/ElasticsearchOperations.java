@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.Objects;
 
+import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
@@ -39,17 +40,26 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 
 	/**
 	 * get an {@link IndexOperations} that is bound to the given class
-	 * 
+	 *
 	 * @return IndexOperations
 	 */
 	IndexOperations indexOps(Class<?> clazz);
 
 	/**
 	 * get an {@link IndexOperations} that is bound to the given index
-	 * 
+	 *
 	 * @return IndexOperations
 	 */
 	IndexOperations indexOps(IndexCoordinates index);
+
+	/**
+	 * return a {@link ClusterOperations} instance that uses the same client communication setup as this
+	 * ElasticsearchOperations instance.
+	 *
+	 * @return ClusterOperations implementation
+	 * @since 4.2
+	 */
+	ClusterOperations cluster();
 
 	ElasticsearchConverter getElasticsearchConverter();
 
@@ -57,7 +67,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 
 	/**
 	 * gets the routing for an entity which might be defined by a join-type relation
-	 * 
+	 *
 	 * @param entity the entity
 	 * @return the routing, may be null if not set.
 	 * @since 4.1
@@ -68,7 +78,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	// region helper
 	/**
 	 * gets the String representation for an id.
-	 * 
+	 *
 	 * @param id
 	 * @return
 	 * @since 4.0

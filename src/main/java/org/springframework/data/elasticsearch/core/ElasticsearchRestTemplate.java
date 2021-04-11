@@ -44,6 +44,7 @@ import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -139,6 +140,13 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(index, "index must not be null");
 
 		return new DefaultIndexOperations(this, index);
+	}
+	// endregion
+
+	// region ClusterOperations
+	@Override
+	public ClusterOperations cluster() {
+		return ClusterOperations.forTemplate(this);
 	}
 	// endregion
 
