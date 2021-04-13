@@ -120,8 +120,7 @@ public class ElasticsearchConfigurationSupport {
 	}
 
 	/**
-	 * Scans the given base package for entities, i.e. Elasticsearch specific types annotated with {@link Document} and
-	 * {@link Persistent}.
+	 * Scans the given base package for entities, i.e. Elasticsearch specific types annotated with {@link Document}.
 	 *
 	 * @param basePackage must not be {@literal null}.
 	 * @return never {@literal null}.
@@ -137,7 +136,6 @@ public class ElasticsearchConfigurationSupport {
 		ClassPathScanningCandidateComponentProvider componentProvider = new ClassPathScanningCandidateComponentProvider(
 				false);
 		componentProvider.addIncludeFilter(new AnnotationTypeFilter(Document.class));
-		componentProvider.addIncludeFilter(new AnnotationTypeFilter(Persistent.class));
 
 		for (BeanDefinition candidate : componentProvider.findCandidateComponents(basePackage)) {
 
