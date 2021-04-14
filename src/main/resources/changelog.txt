@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.2.0 (2021-04-14)
+-------------------------------------
+* #1771 - Remove `@Persistent` from entity-scan include filters.
+* #1761 - CriteriaQuery must use nested query only with properties of type nested.
+* #1759 - health check with DefaultReactiveElasticsearchClient.
+* #1758 - Nested Criteria queries must consider sub-fields.
+* #1755 - Documentation fix to not show deprecated calls.
+* #1754 - Types are in the process of being removed.
+* #1753 - CriteriaQuery must support nested queries.
+* #1390 - Introduce ClusterOperations [DATAES-818].
+
+
 Changes in version 4.1.8 (2021-04-14)
 -------------------------------------
 * #1759 - health check with DefaultReactiveElasticsearchClient.
@@ -1537,6 +1549,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
