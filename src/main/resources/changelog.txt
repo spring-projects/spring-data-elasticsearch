@@ -1,6 +1,11 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.0.9.RELEASE (2021-04-14)
+---------------------------------------------
+* #1759 - health check with DefaultReactiveElasticsearchClient.
+
+
 Changes in version 4.1.7 (2021-03-31)
 -------------------------------------
 
@@ -1527,6 +1532,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
