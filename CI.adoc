@@ -1,6 +1,6 @@
 = Continuous Integration
 
-image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2Fmaster&subject=2020.0.0%20(master)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
+image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2Fmain&subject=2020.0.0%20(main)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
 image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2F4.0.x&subject=Neumann%20(4.0.x)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
 image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2F3.2.x&subject=Moore%20(3.2.x)[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/]
 
