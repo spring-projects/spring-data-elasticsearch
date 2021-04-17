@@ -215,6 +215,7 @@ public class MappingBuilder {
 		Field fieldAnnotation = property.findAnnotation(Field.class);
 		boolean isCompletionProperty = isCompletionProperty(property);
 		boolean isNestedOrObjectProperty = isNestedOrObjectProperty(property);
+		DynamicMapping dynamicMapping = property.findAnnotation(DynamicMapping.class);
 
 		if (!isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
 
@@ -228,8 +229,8 @@ public class MappingBuilder {
 						? elasticsearchConverter.getMappingContext().getPersistentEntity(iterator.next())
 						: null;
 
-				mapEntity(builder, persistentEntity, false, property.getFieldName(), isNestedOrObjectProperty,
-						fieldAnnotation.type(), fieldAnnotation, property.findAnnotation(DynamicMapping.class));
+				mapEntity(builder, persistentEntity, false, property.getFieldName(), isNestedOrObjectProperty, fieldAnnotation.type(),
+						fieldAnnotation, dynamicMapping);
 				return;
 			}
 		}
@@ -244,9 +245,9 @@ public class MappingBuilder {
 		if (isRootObject && fieldAnnotation != null && property.isIdProperty()) {
 			applyDefaultIdFieldMapping(builder, property);
 		} else if (multiField != null) {
-			addMultiFieldMapping(builder, property, multiField, isNestedOrObjectProperty);
+			addMultiFieldMapping(builder, property, multiField, isNestedOrObjectProperty, dynamicMapping);
 		} else if (fieldAnnotation != null) {
-			addSingleFieldMapping(builder, property, fieldAnnotation, isNestedOrObjectProperty);
+			addSingleFieldMapping(builder, property, fieldAnnotation, isNestedOrObjectProperty, dynamicMapping);
 		}
 	}
 
@@ -320,7 +321,7 @@ public class MappingBuilder {
 	 * @throws IOException
 	 */
 	private void addSingleFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property,
-			Field annotation, boolean nestedOrObjectField) throws IOException {
+			Field annotation, boolean nestedOrObjectField, @Nullable DynamicMapping dynamicMapping) throws IOException {
 
 		// build the property json, if empty skip it as this is no valid mapping
 		XContentBuilder propertyBuilder = jsonBuilder().startObject();
@@ -332,6 +333,11 @@ public class MappingBuilder {
 		}
 
 		builder.startObject(property.getFieldName());
+
+		if (nestedOrObjectField && dynamicMapping != null) {
+			builder.field(TYPE_DYNAMIC, dynamicMapping.value().name().toLowerCase());
+		}
+
 		addFieldMappingParameters(builder, annotation, nestedOrObjectField);
 		builder.endObject();
 	}
@@ -342,10 +348,15 @@ public class MappingBuilder {
 	 * @throws IOException
 	 */
 	private void addMultiFieldMapping(XContentBuilder builder, ElasticsearchPersistentProperty property,
-			MultiField annotation, boolean nestedOrObjectField) throws IOException {
+			MultiField annotation, boolean nestedOrObjectField, @Nullable DynamicMapping dynamicMapping) throws IOException {
 
 		// main field
 		builder.startObject(property.getFieldName());
+
+		if (nestedOrObjectField && dynamicMapping != null) {
+			builder.field(TYPE_DYNAMIC, dynamicMapping.value().name().toLowerCase());
+		}
+
 		addFieldMappingParameters(builder, annotation.mainField(), nestedOrObjectField);
 
 		// inner fields

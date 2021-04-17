@@ -541,19 +541,28 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
-	@Test
+	@Test // DATAES-148, #1767
 	void shouldWriteDynamicMappingSettings() throws JSONException {
 
 		String expected = "{\n" + //
-				"    \"dynamic\": \"false\",\n" + //
-				"    \"properties\": {\n" + //
-				"      \"author\": {\n" + //
-				"        \"dynamic\": \"strict\",\n" + //
-				"        \"type\": \"object\",\n" + //
-				"        \"properties\": {}\n" + //
+				"  \"dynamic\": \"false\",\n" + //
+				"  \"properties\": {\n" + //
+				"    \"author\": {\n" + //
+				"      \"type\": \"object\",\n" + //
+				"      \"dynamic\": \"strict\",\n" + //
+				"      \"properties\": {\n" + //
 				"      }\n" + //
+				"    },\n" + //
+				"    \"objectMap\": {\n" + //
+				"      \"type\": \"object\",\n" + //
+				"      \"dynamic\": \"false\"\n" + //
+				"    },\n" + //
+				"    \"nestedObjectMap\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"dynamic\": \"false\"\n" + //
 				"    }\n" + //
-				"}\n";
+				"  }\n" + //
+				"}"; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ConfigureDynamicMappingEntity.class);
 
@@ -1058,6 +1067,10 @@ public class MappingBuilderTests extends MappingContextBaseTests {
 	static class ConfigureDynamicMappingEntity {
 
 		@Nullable @DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
+		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
+				type = FieldType.Object) private Map<String, Object> objectMap;
+		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
+				type = FieldType.Nested) private List<Map<String, Object>> nestedObjectMap;
 
 		@Nullable
 		public Author getAuthor() {
