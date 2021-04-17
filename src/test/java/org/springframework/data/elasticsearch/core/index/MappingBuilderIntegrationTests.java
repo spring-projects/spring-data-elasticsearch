@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.lang.Integer;
+import java.lang.Object;
 import java.math.BigDecimal;
 import java.util.Collection;
 import java.util.Collections;
@@ -263,11 +264,21 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	/**
 	 * @author Xiao Yu
 	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
+	@Test // #1767
+	@DisplayName("should write dynamic mapping entries")
+	void shouldWriteDynamicMappingEntries() {
+
+		IndexOperations indexOps = operations.indexOps(DynamicMappingEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
+		indexOps.delete();
+	}
+
+    @Setter
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
 
@@ -647,4 +658,25 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Text,
 				termVector = TermVector.with_positions_offsets_payloads) private String with_positions_offsets_payloads;
 	}
+
+	@Document(indexName = "dynamic-mapping")
+	@DynamicMapping(DynamicMappingValue.False)
+	static class DynamicMappingEntity {
+
+		@Nullable @DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
+		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
+				type = FieldType.Object) private Map<String, Object> objectMap;
+		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
+				type = FieldType.Nested) private List<Map<String, Object>> nestedObjectMap;
+
+		@Nullable
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+	}
+
 }
