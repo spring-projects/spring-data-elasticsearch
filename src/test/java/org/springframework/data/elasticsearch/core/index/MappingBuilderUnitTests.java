@@ -31,6 +31,7 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
@@ -415,23 +416,42 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-	@Test
+	@Test // DATAES-148, #1767
 	void shouldWriteDynamicMappingSettings() throws JSONException {
 
 		String expected = "{\n" + //
-				"    \"dynamic\": \"false\",\n" + //
-				"    \"properties\": {\n" + //
-				"      \"author\": {\n" + //
-				"        \"dynamic\": \"strict\",\n" + //
-				"        \"type\": \"object\",\n" + //
-				"        \"properties\": {}\n" + //
+				"  \"dynamic\": \"false\",\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"author\": {\n" + //
+				"      \"type\": \"object\",\n" + //
+				"      \"dynamic\": \"strict\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        }\n" + //
 				"      }\n" + //
+				"    },\n" + //
+				"    \"objectMap\": {\n" + //
+				"      \"type\": \"object\",\n" + //
+				"      \"dynamic\": \"false\"\n" + //
+				"    },\n" + //
+				"    \"nestedObjectMap\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"dynamic\": \"false\"\n" + //
 				"    }\n" + //
-				"}\n";
+				"  }\n" + //
+				"}"; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ConfigureDynamicMappingEntity.class);
 
-		assertEquals(expected, mapping, false);
+		assertEquals(expected, mapping, true);
 	}
 
 	@Test // DATAES-784
@@ -608,39 +628,38 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
-    @Test // #1727
-    @DisplayName("should map according to the annotated properties")
-    void shouldMapAccordingToTheAnnotatedProperties() throws JSONException {
+	@Test // #1727
+	@DisplayName("should map according to the annotated properties")
+	void shouldMapAccordingToTheAnnotatedProperties() throws JSONException {
 
-	    String expected = "{\n" +
-            "    \"properties\": {\n" + //
-            "        \"field1\": {\n" + //
-            "            \"type\": \"date\",\n" + //
-            "            \"format\": \"date_optional_time||epoch_millis\"\n" + //
-            "        },\n" + //
-            "        \"field2\": {\n" + //
-            "            \"type\": \"date\",\n" + //
-            "            \"format\": \"basic_date\"\n" + //
-            "        },\n" + //
-            "        \"field3\": {\n" + //
-            "            \"type\": \"date\",\n" + //
-            "            \"format\": \"basic_date||basic_time\"\n" + //
-            "        },\n" + //
-            "        \"field4\": {\n" + //
-            "            \"type\": \"date\",\n" + //
-            "            \"format\": \"date_optional_time||epoch_millis||dd.MM.uuuu\"\n" + //
-            "        },\n" + //
-            "        \"field5\": {\n" + //
-            "            \"type\": \"date\",\n" + //
-            "            \"format\": \"dd.MM.uuuu\"\n" + //
-            "        }\n" + //
-            "    }\n" + //
-            "}"; //
+		String expected = "{\n" + "    \"properties\": {\n" + //
+				"        \"field1\": {\n" + //
+				"            \"type\": \"date\",\n" + //
+				"            \"format\": \"date_optional_time||epoch_millis\"\n" + //
+				"        },\n" + //
+				"        \"field2\": {\n" + //
+				"            \"type\": \"date\",\n" + //
+				"            \"format\": \"basic_date\"\n" + //
+				"        },\n" + //
+				"        \"field3\": {\n" + //
+				"            \"type\": \"date\",\n" + //
+				"            \"format\": \"basic_date||basic_time\"\n" + //
+				"        },\n" + //
+				"        \"field4\": {\n" + //
+				"            \"type\": \"date\",\n" + //
+				"            \"format\": \"date_optional_time||epoch_millis||dd.MM.uuuu\"\n" + //
+				"        },\n" + //
+				"        \"field5\": {\n" + //
+				"            \"type\": \"date\",\n" + //
+				"            \"format\": \"dd.MM.uuuu\"\n" + //
+				"        }\n" + //
+				"    }\n" + //
+				"}"; //
 
-        String mapping = getMappingBuilder().buildPropertyMapping(DateFormatsEntity.class);
+		String mapping = getMappingBuilder().buildPropertyMapping(DateFormatsEntity.class);
 
-        assertEquals(expected, mapping, false);
-    }
+		assertEquals(expected, mapping, false);
+	}
 
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
@@ -665,7 +684,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			this.message = message;
 		}
 	}
-
 
 	static class FieldNameEntity {
 
@@ -1199,6 +1217,10 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	static class ConfigureDynamicMappingEntity {
 
 		@Nullable @DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
+		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
+				type = FieldType.Object) private Map<String, Object> objectMap;
+		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
+				type = FieldType.Nested) private List<Map<String, Object>> nestedObjectMap;
 
 		@Nullable
 		public Author getAuthor() {
@@ -1474,7 +1496,8 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = FieldType.Date) private LocalDateTime field1;
 		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime field2;
-		@Nullable @Field(type = FieldType.Date, format = { DateFormat.basic_date, DateFormat.basic_time }) private LocalDateTime field3;
+		@Nullable @Field(type = FieldType.Date,
+				format = { DateFormat.basic_date, DateFormat.basic_time }) private LocalDateTime field3;
 		@Nullable @Field(type = FieldType.Date, pattern = "dd.MM.uuuu") private LocalDateTime field4;
 		@Nullable @Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") private LocalDateTime field5;
 
