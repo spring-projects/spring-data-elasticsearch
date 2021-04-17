@@ -296,6 +296,16 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		indexOps.delete();
 	}
 
+	@Test // #1767
+	@DisplayName("should write dynamic mapping entries")
+	void shouldWriteDynamicMappingEntries() {
+
+		IndexOperations indexOps = operations.indexOps(DynamicMappingEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
+		indexOps.delete();
+	}
+
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
 		@Nullable @Id private String id;
@@ -1082,4 +1092,25 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 			this.dense_vector = dense_vector;
 		}
 	}
+
+	@Document(indexName = "dynamic-mapping")
+	@DynamicMapping(DynamicMappingValue.False)
+	static class DynamicMappingEntity {
+
+		@Nullable @DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
+		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
+				type = FieldType.Object) private Map<String, Object> objectMap;
+		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
+				type = FieldType.Nested) private List<Map<String, Object>> nestedObjectMap;
+
+		@Nullable
+		public Author getAuthor() {
+			return author;
+		}
+
+		public void setAuthor(Author author) {
+			this.author = author;
+		}
+	}
+
 }
