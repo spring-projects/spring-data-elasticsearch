@@ -29,7 +29,6 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
@@ -66,7 +65,6 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	private static final List<String> SUPPORTED_ID_PROPERTY_NAMES = Arrays.asList("id", "document");
 
-	private final boolean isParent;
 	private final boolean isId;
 	private final boolean isSeqNoPrimaryTerm;
 	private final @Nullable String annotatedFieldName;
@@ -85,17 +83,12 @@ public class SimpleElasticsearchPersistentProperty extends
 				: fieldNamingStrategy;
 		this.isId = super.isIdProperty()
 				|| (SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName()) && !hasExplicitFieldName());
-		this.isParent = isAnnotationPresent(Parent.class);
 		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
 
 		boolean isField = isAnnotationPresent(Field.class);
 
 		if (isVersionProperty() && !getType().equals(Long.class)) {
 			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
-		}
-
-		if (isParent && !getType().equals(String.class)) {
-			throw new MappingException(String.format("Parent property %s must be of type String!", property.getName()));
 		}
 
 		if (isField && isAnnotationPresent(MultiField.class)) {
@@ -281,11 +274,6 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean isImmutable() {
 		return false;
-	}
-
-	@Override
-	public boolean isParentProperty() {
-		return isParent;
 	}
 
 	@Override

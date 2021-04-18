@@ -11,26 +11,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.springframework.data.geo.Point;
 
-/**
- * @author Artur Konaczak
- * @deprecated since 4.1, not used anymore
- */
-@Deprecated
-public class CustomGeoModule extends SimpleModule {
-
-	private static final long serialVersionUID = 1L;
-
-	/**
-	 * Creates a new {@link org.springframework.data.elasticsearch.core.geo.CustomGeoModule} registering serializers and deserializers for spring data commons geo-spatial types.
-	 */
-	public CustomGeoModule() {
-
-		super("Spring Data Elasticsearch Geo", new Version(1, 0, 0, null, "org.springframework.data.elasticsearch", "spring-data-elasticsearch-geo"));
-		addSerializer(Point.class, new PointSerializer());
-		addDeserializer(Point.class, new PointDeserializer());
-	}
-}
-
 class PointSerializer extends JsonSerializer<Point> {
 	@Override
 	public void serialize(Point value, JsonGenerator gen, SerializerProvider serializers) throws IOException {

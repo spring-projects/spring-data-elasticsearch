@@ -923,7 +923,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		Map<String, Object> jsonMap = Collections.singletonMap("properties",
 				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-		client.indices().updateMapping(request -> request.indices(INDEX_I).source(jsonMap)) //
+		client.indices().putMapping(request -> request.indices(INDEX_I).source(jsonMap)) //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
@@ -935,7 +935,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		Map<String, Object> jsonMap = Collections.singletonMap("properties",
 				Collections.singletonMap("message", Collections.singletonMap("type", "text")));
 
-		client.indices().updateMapping(request -> request.indices(INDEX_I).source(jsonMap)) //
+		client.indices().putMapping(request -> request.indices(INDEX_I).source(jsonMap)) //
 				.as(StepVerifier::create) //
 				.verifyError(ElasticsearchStatusException.class);
 	}

@@ -48,20 +48,6 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 	private final GenericConversionService conversionService = new GenericConversionService();
 
-	{
-		if (!conversionService.canConvert(java.util.Date.class, String.class)) {
-			conversionService.addConverter(DateTimeConverters.JavaDateConverter.INSTANCE);
-		}
-		if (ClassUtils.isPresent("org.joda.time.DateTimeZone", ElasticsearchStringQuery.class.getClassLoader())) {
-			if (!conversionService.canConvert(org.joda.time.ReadableInstant.class, String.class)) {
-				conversionService.addConverter(DateTimeConverters.JodaDateTimeConverter.INSTANCE);
-			}
-			if (!conversionService.canConvert(org.joda.time.LocalDateTime.class, String.class)) {
-				conversionService.addConverter(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE);
-			}
-		}
-	}
-
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
 			String query) {
 		super(queryMethod, elasticsearchOperations);

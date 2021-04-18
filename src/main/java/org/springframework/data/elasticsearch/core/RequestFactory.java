@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.elasticsearch.action.DocWriteRequest;
@@ -136,37 +135,6 @@ class RequestFactory {
 	}
 
 	// region alias
-	@Deprecated
-	public IndicesAliasesRequest.AliasActions aliasAction(AliasQuery query, IndexCoordinates index) {
-
-		Assert.notNull(index, "No index defined for Alias");
-		Assert.notNull(query.getAliasName(), "No alias defined");
-
-		String[] indexNames = index.getIndexNames();
-		IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.add()
-				.alias(query.getAliasName()).indices(indexNames);
-
-		if (query.getFilterBuilder() != null) {
-			aliasAction.filter(query.getFilterBuilder());
-		} else if (query.getFilter() != null) {
-			aliasAction.filter(query.getFilter());
-		}
-
-		if (!StringUtils.isEmpty(query.getRouting())) {
-			aliasAction.routing(query.getRouting());
-		}
-
-		if (!StringUtils.isEmpty(query.getSearchRouting())) {
-			aliasAction.searchRouting(query.getSearchRouting());
-		}
-
-		if (!StringUtils.isEmpty(query.getIndexRouting())) {
-			aliasAction.indexRouting(query.getIndexRouting());
-		}
-
-		return aliasAction;
-	}
-
 	public GetAliasesRequest getAliasesRequest(IndexCoordinates index) {
 
 		String[] indexNames = index.getIndexNames();
@@ -180,14 +148,6 @@ class RequestFactory {
 			getAliasesRequest.indices(indexNames);
 		}
 		return getAliasesRequest;
-	}
-
-	@Deprecated
-	public IndicesAliasesRequest indicesAddAliasesRequest(AliasQuery query, IndexCoordinates index) {
-		IndicesAliasesRequest.AliasActions aliasAction = aliasAction(query, index);
-		IndicesAliasesRequest request = new IndicesAliasesRequest();
-		request.addAliasAction(aliasAction);
-		return request;
 	}
 
 	public IndicesAliasesRequest indicesAliasesRequest(AliasActions aliasActions) {
@@ -257,27 +217,6 @@ class RequestFactory {
 		indicesAliasesRequest(aliasActions).getAliasActions().forEach(requestBuilder::addAliasAction);
 		return requestBuilder;
 	}
-
-	@Deprecated
-	public IndicesAliasesRequest indicesRemoveAliasesRequest(AliasQuery query, IndexCoordinates index) {
-
-		String[] indexNames = index.getIndexNames();
-		IndicesAliasesRequest.AliasActions aliasAction = IndicesAliasesRequest.AliasActions.remove() //
-				.indices(indexNames) //
-				.alias(query.getAliasName());
-
-		return Requests.indexAliasesRequest() //
-				.addAliasAction(aliasAction);
-	}
-
-	@Deprecated
-	IndicesAliasesRequestBuilder indicesRemoveAliasesRequestBuilder(Client client, AliasQuery query,
-			IndexCoordinates index) {
-
-		String indexName = index.getIndexName();
-		return client.admin().indices().prepareAliases().removeAlias(indexName, query.getAliasName());
-	}
-
 	// endregion
 
 	// region bulk
@@ -355,7 +294,8 @@ class RequestFactory {
 
 	// region index management
 
-	public CreateIndexRequest createIndexRequest(IndexCoordinates index, Map<String, Object> settings, @Nullable Document mapping) {
+	public CreateIndexRequest createIndexRequest(IndexCoordinates index, Map<String, Object> settings,
+			@Nullable Document mapping) {
 
 		Assert.notNull(index, "index must not be null");
 		Assert.notNull(settings, "settings must not be null");
@@ -1276,10 +1216,10 @@ class RequestFactory {
 
 	private QueryRescorerBuilder getQueryRescorerBuilder(RescorerQuery rescorerQuery) {
 
-        QueryBuilder queryBuilder = getQuery(rescorerQuery.getQuery());
-        Assert.notNull("queryBuilder", "Could not build query for rescorerQuery");
+		QueryBuilder queryBuilder = getQuery(rescorerQuery.getQuery());
+		Assert.notNull("queryBuilder", "Could not build query for rescorerQuery");
 
-        QueryRescorerBuilder builder = new QueryRescorerBuilder(queryBuilder);
+		QueryRescorerBuilder builder = new QueryRescorerBuilder(queryBuilder);
 
 		if (rescorerQuery.getScoreMode() != ScoreMode.Default) {
 			builder.setScoreMode(QueryRescoreMode.valueOf(rescorerQuery.getScoreMode().name()));

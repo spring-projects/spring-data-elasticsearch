@@ -53,7 +53,6 @@ import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -139,27 +138,6 @@ class DefaultIndexOperations extends AbstractDefaultIndexOperations implements I
 			// we have at least one, take the first from the iterator
 			return mappings.entrySet().iterator().next().getValue().getSourceAsMap();
 		});
-	}
-
-	@Override
-	@Deprecated
-	protected boolean doAddAlias(AliasQuery query, IndexCoordinates index) {
-
-		IndicesAliasesRequest request = requestFactory.indicesAddAliasesRequest(query, index);
-		return restTemplate
-				.execute(client -> client.indices().updateAliases(request, RequestOptions.DEFAULT).isAcknowledged());
-	}
-
-	@Override
-	@Deprecated
-	protected boolean doRemoveAlias(AliasQuery query, IndexCoordinates index) {
-
-		Assert.notNull(index, "No index defined for Alias");
-		Assert.notNull(query.getAliasName(), "No alias defined");
-
-		IndicesAliasesRequest indicesAliasesRequest = requestFactory.indicesRemoveAliasesRequest(query, index);
-		return restTemplate.execute(
-				client -> client.indices().updateAliases(indicesAliasesRequest, RequestOptions.DEFAULT).isAcknowledged());
 	}
 
 	@Override

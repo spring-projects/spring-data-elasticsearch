@@ -841,8 +841,7 @@ public class RequestConverters {
 
 		RequestConverters.Params parameters = new RequestConverters.Params(request) //
 				.withTimeout(putMappingRequest.timeout()) //
-				.withMasterTimeout(putMappingRequest.masterNodeTimeout()) //
-				.withIncludeTypeName(false);
+				.withMasterTimeout(putMappingRequest.masterNodeTimeout());
 		request.setEntity(RequestConverters.createEntity(putMappingRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
 		return request;
 	}
@@ -853,8 +852,7 @@ public class RequestConverters {
 
 		new RequestConverters.Params(request) //
 				.withTimeout(putMappingRequest.timeout()) //
-				.withMasterTimeout(putMappingRequest.masterNodeTimeout()) //
-				.withIncludeTypeName(false);
+				.withMasterTimeout(putMappingRequest.masterNodeTimeout());
 		request.setEntity(RequestConverters.createEntity(putMappingRequest, RequestConverters.REQUEST_BODY_CONTENT_TYPE));
 		return request;
 	}
@@ -880,7 +878,6 @@ public class RequestConverters {
 		parameters.withMasterTimeout(getMappingsRequest.masterNodeTimeout());
 		parameters.withIndicesOptions(getMappingsRequest.indicesOptions());
 		parameters.withLocal(getMappingsRequest.local());
-		parameters.withIncludeTypeName(false);
 		return request;
 	}
 
@@ -893,7 +890,6 @@ public class RequestConverters {
 		parameters.withMasterTimeout(getMappingsRequest.masterNodeTimeout());
 		parameters.withIndicesOptions(getMappingsRequest.indicesOptions());
 		parameters.withLocal(getMappingsRequest.local());
-		parameters.withIncludeTypeName(false);
 		return request;
 	}
 
@@ -1000,7 +996,6 @@ public class RequestConverters {
 		RequestConverters.Params parameters = new Params(request);
 		parameters.withIndicesOptions(getFieldMappingsRequest.indicesOptions());
 		parameters.withIncludeDefaults(getFieldMappingsRequest.includeDefaults());
-		parameters.withIncludeTypeName(false);
 		return request;
 	}
 
@@ -1371,18 +1366,6 @@ public class RequestConverters {
 				return putParam("wait_for_events", waitForEvents.name().toLowerCase(Locale.ROOT));
 			}
 			return this;
-		}
-
-		/**
-		 * sets the include_type_name parameter. Needed for Elasticsearch 7 to be used with the mapping types still
-		 * available. Will be removed again when Elasticsearch drops the support for this parameter in Elasticsearch 8.
-		 *
-		 * @deprecated since 4.0
-		 * @since 4.0
-		 */
-		@Deprecated
-		Params withIncludeTypeName(boolean includeTypeName) {
-			return putParam("include_type_name", String.valueOf(includeTypeName));
 		}
 	}
 

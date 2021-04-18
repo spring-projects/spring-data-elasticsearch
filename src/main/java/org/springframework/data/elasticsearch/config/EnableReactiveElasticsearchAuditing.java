@@ -41,32 +41,22 @@ public @interface EnableReactiveElasticsearchAuditing {
 
 	/**
 	 * Configures the {@link AuditorAware} bean to be used to lookup the current principal.
-	 *
-	 * @return
 	 */
 	String auditorAwareRef() default "";
 
 	/**
 	 * Configures whether the creation and modification dates are set. Defaults to {@literal true}.
-	 *
-	 * @return
 	 */
 	boolean setDates() default true;
 
 	/**
 	 * Configures whether the entity shall be marked as modified on creation. Defaults to {@literal true}.
-	 *
-	 * @return
 	 */
 	boolean modifyOnCreate() default true;
 
 	/**
 	 * Configures a {@link DateTimeProvider} bean name that allows customizing the {@link org.joda.time.DateTime} to be
 	 * used for setting creation and modification dates.
-	 *
-	 * @return
-	 * @deprecated since 4.1
 	 */
-	@Deprecated
 	String dateTimeProviderRef() default "";
 }

@@ -34,44 +34,6 @@ public final class DateTimeConverters {
 
 	private static DateTimeFormatter formatter = ISODateTimeFormat.dateTime().withZone(DateTimeZone.UTC);
 
-	/**
-	 * @deprecated since 4.1
-	 */
-	@Deprecated
-	public enum JodaDateTimeConverter implements Converter<ReadableInstant, String> {
-		INSTANCE;
-
-		@Override
-		public String convert(ReadableInstant source) {
-			if (source == null) {
-				return null;
-			}
-			return formatter.print(source);
-		}
-
-	}
-
-	/**
-	 * @deprecated since 4.1
-	 */
-	@Deprecated
-	public enum JodaLocalDateTimeConverter implements Converter<LocalDateTime, String> {
-		INSTANCE;
-
-		@Override
-		public String convert(LocalDateTime source) {
-			if (source == null) {
-				return null;
-			}
-			return formatter.print(source.toDateTime(DateTimeZone.UTC));
-		}
-
-	}
-
-	/**
-	 * @deprecated since 4.1
-	 */
-	@Deprecated
 	public enum JavaDateConverter implements Converter<Date, String> {
 		INSTANCE;
 

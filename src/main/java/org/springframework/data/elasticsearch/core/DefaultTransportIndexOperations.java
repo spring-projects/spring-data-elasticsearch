@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
@@ -59,7 +58,6 @@ import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -144,24 +142,6 @@ class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations imp
 		}
 		// we have at least one, take the first from the iterator
 		return mappings.iterator().next().value.get(IndexCoordinates.TYPE).getSourceAsMap();
-	}
-
-	@Override
-	protected boolean doAddAlias(AliasQuery query, IndexCoordinates index) {
-		IndicesAliasesRequest.AliasActions aliasAction = requestFactory.aliasAction(query, index);
-		return client.admin().indices().prepareAliases().addAliasAction(aliasAction).execute().actionGet().isAcknowledged();
-	}
-
-	@Override
-	@Deprecated
-	protected boolean doRemoveAlias(AliasQuery query, IndexCoordinates index) {
-
-		Assert.notNull(index, "No index defined for Alias");
-		Assert.notNull(query.getAliasName(), "No alias defined");
-
-		IndicesAliasesRequestBuilder indicesAliasesRequestBuilder = requestFactory
-				.indicesRemoveAliasesRequestBuilder(client, query, index);
-		return indicesAliasesRequestBuilder.execute().actionGet().isAcknowledged();
 	}
 
 	@Override

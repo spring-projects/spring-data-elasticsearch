@@ -1111,58 +1111,6 @@ public interface ReactiveElasticsearchClient {
 		 *         does not exist.
 		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
 		 *      Put Mapping API on elastic.co</a>
-		 * @deprecated since 4.1, use {@link #putMapping(Consumer)}
-		 */
-		@Deprecated
-		default Mono<Boolean> updateMapping(
-				Consumer<org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest> consumer) {
-			return putMapping(consumer);
-		}
-
-		/**
-		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
-		 * {@literal indices} API.
-		 *
-		 * @param putMappingRequest must not be {@literal null}.
-		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
-		 *         does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
-		 *      Put Mapping API on elastic.co</a>
-		 * @deprecated since 4.1, use {@link #putMapping(PutMappingRequest)}
-		 */
-		@Deprecated
-		default Mono<Boolean> updateMapping(
-				org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequest) {
-			return putMapping(putMappingRequest);
-		}
-
-		/**
-		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
-		 * {@literal indices} API.
-		 *
-		 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
-		 * @param putMappingRequest must not be {@literal null}.
-		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
-		 *         does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
-		 *      Put Mapping API on elastic.co</a>
-		 * @deprecated since 4.1, use {@link #putMapping(HttpHeaders, PutMappingRequest)}
-		 */
-		@Deprecated
-		default Mono<Boolean> updateMapping(HttpHeaders headers,
-				org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest putMappingRequest) {
-			return putMapping(headers, putMappingRequest);
-		}
-
-		/**
-		 * Execute the given {@link org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest} against the
-		 * {@literal indices} API.
-		 *
-		 * @param consumer never {@literal null}.
-		 * @return a {@link Mono} signalling operation completion or an {@link Mono#error(Throwable) error} if eg. the index
-		 *         does not exist.
-		 * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/indices-put-mapping.html"> Indices
-		 *      Put Mapping API on elastic.co</a>
 		 * @deprecated since 4.2
 		 */
 		@Deprecated

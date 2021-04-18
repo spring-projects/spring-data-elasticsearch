@@ -41,11 +41,4 @@ public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation
 
 	@Nullable
 	VersionType getVersionType();
-
-	/**
-	 * @deprecated since 4.1, not supported anymore by Elasticsearch
-	 */
-	@Deprecated
-	@Nullable
-	String getParentId(T entity);
 }
