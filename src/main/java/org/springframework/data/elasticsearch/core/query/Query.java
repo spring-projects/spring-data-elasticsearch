@@ -104,6 +104,13 @@ public interface Query {
 	List<String> getFields();
 
 	/**
+	 * Set fields to be returned as part of search request
+	 * @param fields must not be {@literal null}
+	 * @since 4.2.1
+	 */
+	void setFields(List<String> fields);
+
+	/**
 	 * Add source filter to be added as part of search request
 	 *
 	 * @param sourceFilter
