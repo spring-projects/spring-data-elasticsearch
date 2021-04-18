@@ -42,8 +42,11 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.elasticsearch.core.query.Field;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
@@ -1024,7 +1027,61 @@ public class MappingElasticsearchConverter
 
 	// region queries
 	@Override
-	public void updateCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
+	public void updateQuery(Query query, @Nullable Class<?> domainClass) {
+
+		Assert.notNull(query, "query must not be null");
+
+		if (domainClass != null) {
+
+			updateFieldsAndSourceFilter(query, domainClass);
+
+			if (query instanceof CriteriaQuery) {
+				updateCriteriaQuery((CriteriaQuery) query, domainClass);
+			}
+		}
+	}
+
+	private void updateFieldsAndSourceFilter(Query query, Class<?> domainClass) {
+
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
+
+		if (persistentEntity != null) {
+			List<String> fields = query.getFields();
+
+			if (!fields.isEmpty()) {
+				query.setFields(updateFieldNames(fields, persistentEntity));
+			}
+
+			SourceFilter sourceFilter = query.getSourceFilter();
+
+			if (sourceFilter != null) {
+
+				String[] includes = null;
+				String[] excludes = null;
+
+				if (sourceFilter.getIncludes() != null) {
+					includes = updateFieldNames(Arrays.asList(sourceFilter.getIncludes()), persistentEntity)
+							.toArray(new String[] {});
+				}
+
+				if (sourceFilter.getExcludes() != null) {
+					excludes = updateFieldNames(Arrays.asList(sourceFilter.getExcludes()), persistentEntity)
+							.toArray(new String[] {});
+				}
+
+				query.addSourceFilter(new FetchSourceFilter(includes, excludes));
+			}
+		}
+	}
+
+	private List<String> updateFieldNames(List<String> fields, ElasticsearchPersistentEntity<?> persistentEntity) {
+		return fields.stream().map(fieldName -> {
+			ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(fieldName);
+			return persistentProperty != null ? persistentProperty.getFieldName() : fieldName;
+		}).collect(Collectors.toList());
+	}
+
+	private void updateCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
 
 		Assert.notNull(criteriaQuery, "criteriaQuery must not be null");
 		Assert.notNull(domainClass, "domainClass must not be null");

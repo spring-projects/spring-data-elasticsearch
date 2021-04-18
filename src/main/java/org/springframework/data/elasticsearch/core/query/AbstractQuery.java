@@ -97,6 +97,15 @@ abstract class AbstractQuery implements Query {
 	}
 
 	@Override
+	public void setFields(List<String> fields) {
+
+		Assert.notNull(fields, "fields must not be null");
+
+		this.fields.clear();
+		this.fields.addAll(fields);
+	}
+
+	@Override
 	public void addSourceFilter(SourceFilter sourceFilter) {
 		this.sourceFilter = sourceFilter;
 	}

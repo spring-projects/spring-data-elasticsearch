@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.time.LocalDate;
@@ -25,6 +24,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
+import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +44,9 @@ import org.springframework.data.elasticsearch.core.geo.GeoJsonPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.lang.Nullable;
 
 /**
@@ -356,9 +359,7 @@ public class CriteriaQueryMappingUnitTests {
 				"  }\n" + //
 				"}\n"; //
 
-		CriteriaQuery criteriaQuery = new CriteriaQuery(
-				new Criteria("persons.birthDate").is(LocalDate.of(1999, 10, 3))
-		);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("persons.birthDate").is(LocalDate.of(1999, 10, 3)));
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, House.class);
 		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
 
@@ -389,9 +390,7 @@ public class CriteriaQueryMappingUnitTests {
 				"  }\n" + //
 				"}\n"; //
 
-		CriteriaQuery criteriaQuery = new CriteriaQuery(
-				new Criteria("persons.nickName.keyword").is("Foobar")
-		);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("persons.nickName.keyword").is("Foobar"));
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, House.class);
 		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
 
@@ -417,14 +416,33 @@ public class CriteriaQueryMappingUnitTests {
 				"  }\n" + //
 				"}\n"; //
 
-		CriteriaQuery criteriaQuery = new CriteriaQuery(
-				new Criteria("persons.birthDate").is(LocalDate.of(1999, 10, 3))
-		);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("persons.birthDate").is(LocalDate.of(1999, 10, 3)));
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, ObjectWithPerson.class);
 		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
 
 		assertEquals(expected, queryString, false);
 	}
+
+	@Test // #1778
+	@DisplayName("should map names in source fields and SourceFilters")
+	void shouldMapNamesInSourceFieldsAndSourceFilters() {
+
+		Query query = Query.findAll();
+		// Note: we don't care if these filters make sense here, this test is only about name mapping
+		query.addFields("firstName", "lastName");
+		query.addSourceFilter(new FetchSourceFilter(new String[] { "firstName" }, new String[] { "lastName" }));
+
+		mappingElasticsearchConverter.updateQuery(query, Person.class);
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(query.getFields()).containsExactly("first-name", "last-name");
+		SourceFilter sourceFilter = query.getSourceFilter();
+		softly.assertThat(sourceFilter).isNotNull();
+		softly.assertThat(sourceFilter.getIncludes()).containsExactly("first-name");
+		softly.assertThat(sourceFilter.getExcludes()).containsExactly("last-name");
+		softly.assertAll();
+	}
+
 	// endregion
 
 	// region helper functions
@@ -442,7 +460,8 @@ public class CriteriaQueryMappingUnitTests {
 		@Nullable @Id String id;
 		@Nullable @Field(name = "first-name") String firstName;
 		@Nullable @Field(name = "last-name") String lastName;
-		@Nullable @MultiField(mainField = @Field(name="nick-name"), otherFields = {@InnerField(suffix = "keyword", type = FieldType.Keyword)}) String nickName;
+		@Nullable @MultiField(mainField = @Field(name = "nick-name"),
+				otherFields = { @InnerField(suffix = "keyword", type = FieldType.Keyword) }) String nickName;
 		@Nullable @Field(name = "created-date", type = FieldType.Date, format = DateFormat.epoch_millis) Date createdDate;
 		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = {},
 				pattern = "dd.MM.uuuu") LocalDate birthDate;
@@ -450,16 +469,12 @@ public class CriteriaQueryMappingUnitTests {
 
 	static class House {
 		@Nullable @Id String id;
-		@Nullable
-		@Field(name = "per-sons", type = FieldType.Nested)
-		List<Person> persons;
+		@Nullable @Field(name = "per-sons", type = FieldType.Nested) List<Person> persons;
 	}
 
 	static class ObjectWithPerson {
 		@Nullable @Id String id;
-		@Nullable
-		@Field(name = "per-sons", type = FieldType.Object)
-		List<Person> persons;
+		@Nullable @Field(name = "per-sons", type = FieldType.Object) List<Person> persons;
 	}
 
 	static class GeoShapeEntity {
