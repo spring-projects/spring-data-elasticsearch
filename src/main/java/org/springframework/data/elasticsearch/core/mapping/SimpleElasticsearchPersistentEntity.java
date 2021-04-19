@@ -27,7 +27,6 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Parent;
 import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.index.Settings;
@@ -151,20 +150,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Nullable
 	@Override
-	@Deprecated
-	public String getParentType() {
-		return parentType;
-	}
-
-	@Nullable
-	@Override
-	@Deprecated
-	public ElasticsearchPersistentProperty getParentIdProperty() {
-		return parentIdProperty;
-	}
-
-	@Nullable
-	@Override
 	public VersionType getVersionType() {
 		return versionType;
 	}
@@ -179,24 +164,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
 		super.addPersistentProperty(property);
-
-		if (property.isParentProperty()) {
-			ElasticsearchPersistentProperty parentProperty = this.parentIdProperty;
-
-			if (parentProperty != null) {
-				throw new MappingException(String.format(
-						"Attempt to add parent property %s but already have property %s registered "
-								+ "as parent property. Check your mapping configuration!",
-						property.getField(), parentProperty.getField()));
-			}
-
-			Parent parentAnnotation = property.findAnnotation(Parent.class);
-			this.parentIdProperty = property;
-
-			if (parentAnnotation != null) {
-				this.parentType = parentAnnotation.type();
-			}
-		}
 
 		if (property.isSeqNoPrimaryTermProperty()) {
 

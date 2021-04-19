@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,7 +45,6 @@ import org.assertj.core.util.Lists;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.index.VersionType;
@@ -89,7 +87,6 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -2802,209 +2799,6 @@ public abstract class ElasticsearchTemplateTests {
 			indexQueries.add(getIndexQuery(sampleEntity));
 		}
 		return indexQueries;
-	}
-
-	@Test
-	public void shouldAddAlias() {
-
-		// given
-		String aliasName = "test-alias";
-		AliasQuery aliasQuery = new AliasBuilder() //
-				.withAliasName(aliasName) //
-				.build();
-
-		// when
-		indexOperations.addAlias(aliasQuery);
-
-		// then
-		List<AliasMetadata> aliases = indexOperations.queryForAlias();
-		assertThat(aliases).isNotNull();
-		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
-	}
-
-	@Test // DATAES-864
-	void shouldAddAliasesWithAliasActions() {
-
-		AliasActions aliasActions = new AliasActions();
-		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
-				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
-
-		indexOperations.alias(aliasActions);
-
-		List<AliasMetadata> aliases = indexOperations.queryForAlias();
-		assertThat(aliases).hasSize(2);
-		assertThat(aliases.stream().map(AliasMetadata::alias).collect(Collectors.toList())).contains("aliasA", "aliasB");
-	}
-
-	@Test // DATAES-864
-	void shouldRemoveAliasesWithAliasActions() {
-
-		AliasActions aliasActions = new AliasActions();
-		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
-				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
-
-		indexOperations.alias(aliasActions);
-
-		aliasActions = new AliasActions();
-		aliasActions.add(new AliasAction.Remove(AliasActionParameters.builder()
-				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
-
-		indexOperations.alias(aliasActions);
-
-		List<AliasMetadata> aliases = indexOperations.queryForAlias();
-		assertThat(aliases).hasSize(0);
-	}
-
-	@Test // DATAES-864
-	void shouldGetAliasData() {
-		AliasActions aliasActions = new AliasActions();
-		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
-				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
-
-		indexOperations.alias(aliasActions);
-
-		Map<String, Set<AliasData>> aliasDatas = indexOperations.getAliases("aliasA");
-
-		Set<AliasData> aliasData = aliasDatas.get(indexOperations.getIndexCoordinates().getIndexName());
-
-		assertThat(aliasData.stream().map(AliasData::getAlias)).containsExactly("aliasA");
-	}
-
-	@Test // DATAES-70
-	public void shouldAddAliasForVariousRoutingValues() {
-
-		// given
-		String alias1 = "test-alias-1";
-		String alias2 = "test-alias-2";
-
-		AliasQuery aliasQuery1 = new AliasBuilder() //
-				.withAliasName(alias1) //
-				.withIndexRouting("0") //
-				.build();
-
-		AliasQuery aliasQuery2 = new AliasBuilder() //
-				.withAliasName(alias2) //
-				.withSearchRouting("1") //
-				.build();
-
-		// when
-		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
-		indexOperations.addAlias(aliasQuery1);
-		indexOperations.addAlias(aliasQuery2);
-
-		String documentId = nextIdAsString();
-		SampleEntity entity = SampleEntity.builder() //
-				.id(documentId) //
-				.message("some message") //
-				.version(System.currentTimeMillis()) //
-				.build();
-
-		IndexQuery indexQuery = new IndexQueryBuilder() //
-				.withId(entity.getId()) //
-				.withObject(entity) //
-				.build();
-
-		operations.index(indexQuery, IndexCoordinates.of(alias1));
-
-		// then
-		List<AliasMetadata> aliasMetaData = indexOperations.queryForAlias();
-		assertThat(aliasMetaData).isNotEmpty();
-
-		AliasMetadata aliasMetaData1 = aliasMetaData.get(0);
-		assertThat(aliasMetaData1).isNotNull();
-		if (aliasMetaData1.alias().equals(alias1)) {
-			assertThat(aliasMetaData1.indexRouting()).isEqualTo("0");
-		} else if (aliasMetaData1.alias().equals(alias2)) {
-			assertThat(aliasMetaData1.searchRouting()).isEqualTo("1");
-		} else {
-			fail("unknown alias");
-		}
-
-		AliasMetadata aliasMetaData2 = aliasMetaData.get(1);
-		assertThat(aliasMetaData2).isNotNull();
-		if (aliasMetaData2.alias().equals(alias1)) {
-			assertThat(aliasMetaData2.indexRouting()).isEqualTo("0");
-		} else if (aliasMetaData2.alias().equals(alias2)) {
-			assertThat(aliasMetaData2.searchRouting()).isEqualTo("1");
-		} else {
-			fail("unknown alias");
-		}
-
-		// cleanup
-		indexOperations.removeAlias(aliasQuery1);
-		indexOperations.removeAlias(aliasQuery2);
-	}
-
-	@Test // DATAES-70
-	public void shouldAddAliasWithGivenRoutingValue() {
-
-		// given
-		String alias = "test-alias";
-		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
-
-		AliasQuery aliasQuery = new AliasBuilder() //
-				.withAliasName(alias) //
-				.withRouting("0") //
-				.build();
-
-		// when
-		indexOperations.addAlias(aliasQuery);
-
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = SampleEntity.builder() //
-				.id(documentId) //
-				.message("some message") //
-				.version(System.currentTimeMillis()) //
-				.build();
-
-		IndexQuery indexQuery = new IndexQueryBuilder() //
-				.withId(sampleEntity.getId()) //
-				.withObject(sampleEntity) //
-				.build();
-
-		operations.index(indexQuery, IndexCoordinates.of(alias));
-		operations.indexOps(IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY)).refresh();
-
-		NativeSearchQuery query = new NativeSearchQueryBuilder() //
-				.withQuery(matchAllQuery()) //
-				.build();
-
-		long count = operations.count(query, IndexCoordinates.of(alias));
-
-		// then
-		List<AliasMetadata> aliases = indexOperations.queryForAlias();
-		assertThat(aliases).isNotNull();
-		AliasMetadata aliasMetaData = aliases.get(0);
-		assertThat(aliasMetaData.alias()).isEqualTo(alias);
-		assertThat(aliasMetaData.searchRouting()).isEqualTo("0");
-		assertThat(aliasMetaData.indexRouting()).isEqualTo("0");
-		assertThat(count).isEqualTo(1);
-
-		// cleanup
-		indexOperations.removeAlias(aliasQuery);
-	}
-
-	@Test // DATAES-541
-	public void shouldRemoveAlias() {
-
-		// given
-		String aliasName = "test-alias";
-		IndexCoordinates index = IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY);
-
-		AliasQuery aliasQuery = new AliasBuilder() //
-				.withAliasName(aliasName) //
-				.build();
-
-		// when
-		indexOperations.addAlias(aliasQuery);
-		List<AliasMetadata> aliases = indexOperations.queryForAlias();
-		assertThat(aliases).isNotNull();
-		assertThat(aliases.get(0).alias()).isEqualTo(aliasName);
-
-		// then
-		indexOperations.removeAlias(aliasQuery);
-		aliases = indexOperations.queryForAlias();
-		assertThat(aliases).isEmpty();
 	}
 
 	@Document(indexName = INDEX_2_NAME)

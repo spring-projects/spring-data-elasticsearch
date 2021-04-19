@@ -100,44 +100,10 @@ class EntityOperations {
 	 * @param entity the entity to determine the index name. Can be {@literal null} if {@code index} and {@literal type}
 	 *          are provided.
 	 * @param index index name override can be {@literal null}.
-	 * @param type index type override can be {@literal null}.
-	 * @return the {@link IndexCoordinates} containing index name and index type.
-	 * @deprecated since 4.1, use {@link EntityOperations#determineIndex(Entity, String)}
-	 */
-	@Deprecated
-	IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index, @Nullable String type) {
-		return determineIndex(entity.getPersistentEntity(), index, type);
-	}
-
-	/**
-	 * Determine index name and type name from {@link Entity} with {@code index} and {@code type} overrides. Allows using
-	 * preferred values for index and type if provided, otherwise fall back to index and type defined on entity level.
-	 *
-	 * @param entity the entity to determine the index name. Can be {@literal null} if {@code index} and {@literal type}
-	 *          are provided.
-	 * @param index index name override can be {@literal null}.
 	 * @return the {@link IndexCoordinates} containing index name and index type.
 	 */
 	IndexCoordinates determineIndex(Entity<?> entity, @Nullable String index) {
 		return determineIndex(entity.getPersistentEntity(), index);
-	}
-
-	/**
-	 * Determine index name and type name from {@link ElasticsearchPersistentEntity} with {@code index} and {@code type}
-	 * overrides. Allows using preferred values for index and type if provided, otherwise fall back to index and type
-	 * defined on entity level.
-	 *
-	 * @param persistentEntity the entity to determine the index name. Can be {@literal null} if {@code index} and
-	 *          {@literal type} are provided.
-	 * @param index index name override can be {@literal null}.
-	 * @param type index type override can be {@literal null}.
-	 * @return the {@link IndexCoordinates} containing index name and index type.
-	 * @deprecated since 4.1, use {@link EntityOperations#determineIndex(ElasticsearchPersistentEntity, String)}
-	 */
-	@Deprecated
-	IndexCoordinates determineIndex(ElasticsearchPersistentEntity<?> persistentEntity, @Nullable String index,
-			@Nullable String type) {
-		return determineIndex(persistentEntity, index);
 	}
 
 	/**
@@ -235,25 +201,6 @@ class EntityOperations {
 	interface AdaptibleEntity<T> extends Entity<T> {
 
 		/**
-		 * Returns whether the entity has a parent.
-		 *
-		 * @return {@literal true} if the entity has a parent that has an {@literal id}.
-		 * @deprecated since 4.1, not supported anymore by Elasticsearch
-		 */
-		@Deprecated
-		boolean hasParent();
-
-		/**
-		 * Returns the parent Id. Can be {@literal null}.
-		 *
-		 * @return can be {@literal null}.
-		 * @deprecated since 4.1, not supported anymore by Elasticsearch
-		 */
-		@Deprecated
-		@Nullable
-		Object getParentId();
-
-		/**
 		 * Populates the identifier of the backing entity if it has an identifier property and there's no identifier
 		 * currently present.
 		 *
@@ -337,24 +284,6 @@ class EntityOperations {
 		@Override
 		public Object getId() {
 			return map.get(ID_FIELD);
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#hasParent()
-		 */
-		@Override
-		public boolean hasParent() {
-			return false;
-		}
-
-		/*
-		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#getParentId()
-		 */
-		@Override
-		public Entity<?> getParentId() {
-			return null;
 		}
 
 		/*
@@ -579,19 +508,6 @@ class EntityOperations {
 
 			return new AdaptibleMappedEntity<>(bean, entity, identifierAccessor,
 					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), conversionService, routingResolver);
-		}
-
-		@Override
-		public boolean hasParent() {
-			return getRequiredPersistentEntity().getParentIdProperty() != null;
-		}
-
-		@Deprecated
-		@Override
-		public Object getParentId() {
-
-			ElasticsearchPersistentProperty parentProperty = getRequiredPersistentEntity().getParentIdProperty();
-			return propertyAccessor.getProperty(parentProperty);
 		}
 
 		@Nullable

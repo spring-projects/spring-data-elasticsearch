@@ -54,8 +54,6 @@ import org.springframework.util.StringUtils;
 public class Criteria {
 
 	public static final String CRITERIA_VALUE_SEPARATOR = " ";
-	/** @deprecated since 4.1, use {@link #CRITERIA_VALUE_SEPARATOR} */
-	@SuppressWarnings("SpellCheckingInspection") public static final String CRITERIA_VALUE_SEPERATOR = CRITERIA_VALUE_SEPARATOR;
 
 	private @Nullable Field field;
 	private float boost = Float.NaN;
@@ -112,7 +110,7 @@ public class Criteria {
 	/**
 	 * Creates a Criteria for the given field, sets it's criteriaChain to the given value and adds itself to the end of
 	 * the chain.
-	 * 
+	 *
 	 * @param criteriaChain the chain to add to
 	 * @param fieldName field to create the Criteria for
 	 */
@@ -123,7 +121,7 @@ public class Criteria {
 	/**
 	 * Creates a Criteria for the given field, sets it's criteriaChain to the given value and adds itself to the end of
 	 * the chain.
-	 * 
+	 *
 	 * @param criteriaChain the chain to add to
 	 * @param field field to create the Criteria for
 	 */
@@ -172,16 +170,6 @@ public class Criteria {
 
 	public Set<CriteriaEntry> getFilterCriteriaEntries() {
 		return Collections.unmodifiableSet(this.filterCriteriaEntries);
-	}
-
-	/**
-	 * Conjunction to be used with this criteria (AND | OR)
-	 *
-	 * @deprecated since 4.1, use {@link #getOperator()}
-	 */
-	@Deprecated
-	public String getConjunctionOperator() {
-		return Operator.AND.name();
 	}
 
 	public Operator getOperator() {
@@ -332,7 +320,7 @@ public class Criteria {
 
 	/**
 	 * adds a Criteria as subCriteria
-	 * 
+	 *
 	 * @param criteria the criteria to add, must not be {@literal null}
 	 * @return this object
 	 * @since 4.1
@@ -570,7 +558,7 @@ public class Criteria {
 	/**
 	 * Add a {@link OperationKey#MATCHES} entry to the {@link #queryCriteriaEntries}. This will build a match query with
 	 * the OR operator.
-	 * 
+	 *
 	 * @param value the value to match
 	 * @return this object
 	 * @since 4.1
@@ -733,7 +721,7 @@ public class Criteria {
 
 	/**
 	 * Adds a new filter CriteriaEntry for GEO_INTERSECTS.
-	 * 
+	 *
 	 * @param geoShape the GeoJson shape
 	 * @return this object
 	 */
@@ -870,11 +858,6 @@ public class Criteria {
 		}
 
 		@Override
-		public String getConjunctionOperator() {
-			return Operator.OR.name();
-		}
-
-		@Override
 		public Operator getOperator() {
 			return Operator.OR;
 		}
@@ -882,7 +865,7 @@ public class Criteria {
 
 	/**
 	 * a list of {@link Criteria} objects that belong to one query.
-	 * 
+	 *
 	 * @since 4.1
 	 */
 	public static class CriteriaChain extends LinkedList<Criteria> {}

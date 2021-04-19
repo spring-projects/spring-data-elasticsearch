@@ -33,24 +33,10 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 
 	/**
 	 * Returns the name to be used to store the property in the document.
-	 * 
+	 *
 	 * @return
 	 */
 	String getFieldName();
-
-	/**
-	 * Returns whether the current property is a <em>potential</em> parent property of the owning
-	 * {@link ElasticsearchPersistentEntity}. This method is mainly used by {@link ElasticsearchPersistentEntity}
-	 * implementation to discover parent property candidates on {@link ElasticsearchPersistentEntity} creation you should
-	 * rather call {@link ElasticsearchPersistentEntity#getScoreProperty()} to determine whether the current property is
-	 * the parent property of that {@link ElasticsearchPersistentEntity} under consideration.
-	 *
-	 * @return
-	 * @since 3.1
-	 * @deprecated since 4.1, not supported anymore by Elasticsearch
-	 */
-	@Deprecated
-	boolean isParentProperty();
 
 	/**
 	 * Returns whether the current property is a {@link SeqNoPrimaryTerm} property.
@@ -113,7 +99,7 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 
 	/**
 	 * calls {@link #getActualType()} but returns null when an exception is thrown
-	 * 
+	 *
 	 * @since 4.1
 	 */
 	@Nullable

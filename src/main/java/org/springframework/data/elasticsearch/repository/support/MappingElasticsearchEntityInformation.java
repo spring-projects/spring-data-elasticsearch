@@ -74,16 +74,4 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 		return persistentEntity.getVersionType();
 	}
 
-	@Deprecated
-	@Override
-	public String getParentId(T entity) {
-
-		ElasticsearchPersistentProperty parentProperty = persistentEntity.getParentIdProperty();
-		try {
-			return parentProperty != null ? (String) persistentEntity.getPropertyAccessor(entity).getProperty(parentProperty)
-					: null;
-		} catch (Exception e) {
-			throw new IllegalStateException("failed to load parent ID: " + e, e);
-		}
-	}
 }

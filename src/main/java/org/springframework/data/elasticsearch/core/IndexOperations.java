@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
@@ -30,7 +29,6 @@ import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 
 /**
@@ -190,35 +188,6 @@ public interface IndexOperations {
 	// endregion
 
 	// region aliases
-	/**
-	 * Add an alias.
-	 *
-	 * @param query query defining the alias
-	 * @return true if the alias was created
-	 * @deprecated since 4.1 use {@link #alias(AliasActions)}
-	 */
-	@Deprecated
-	boolean addAlias(AliasQuery query);
-
-	/**
-	 * Get the alias information for a specified index.
-	 *
-	 * @return alias information
-	 * @deprecated since 4.1, use {@link #getAliases(String...)} or {@link #getAliasesForIndex(String...)}.
-	 */
-	@Deprecated
-	List<AliasMetadata> queryForAlias();
-
-	/**
-	 * Remove an alias.
-	 *
-	 * @param query query defining the alias
-	 * @return true if the alias was removed
-	 * @deprecated since 4.1 use {@link #alias(AliasActions)}
-	 */
-	@Deprecated
-	boolean removeAlias(AliasQuery query);
-
 	/**
 	 * Executes the given {@link AliasActions}.
 	 *

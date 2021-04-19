@@ -36,7 +36,6 @@ import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.AliasQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -176,30 +175,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 	protected abstract void doRefresh(IndexCoordinates indexCoordinates);
 
-	@Override
-	@Deprecated
-	public boolean addAlias(AliasQuery query) {
-		return doAddAlias(query, getIndexCoordinates());
-	}
-
-	@Deprecated
-	protected abstract boolean doAddAlias(AliasQuery query, IndexCoordinates index);
-
-	@Override
-	public List<AliasMetadata> queryForAlias() {
-		return doQueryForAlias(getIndexCoordinates());
-	}
-
 	protected abstract List<AliasMetadata> doQueryForAlias(IndexCoordinates index);
-
-	@Override
-	@Deprecated
-	public boolean removeAlias(AliasQuery query) {
-		return doRemoveAlias(query, getIndexCoordinates());
-	}
-
-	@Deprecated
-	protected abstract boolean doRemoveAlias(AliasQuery query, IndexCoordinates index);
 
 	@Override
 	public Map<String, Set<AliasData>> getAliases(String... aliasNames) {

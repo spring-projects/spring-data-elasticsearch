@@ -116,12 +116,6 @@ public class MappingBuilder {
 			// Dynamic templates
 			addDynamicTemplatesMapping(builder, entity);
 
-			// Parent
-			String parentType = entity.getParentType();
-			if (hasText(parentType)) {
-				builder.startObject(FIELD_PARENT).field(FIELD_PARAM_TYPE, parentType).endObject();
-			}
-
 			mapEntity(builder, entity, true, "", false, FieldType.Auto, null, entity.findAnnotation(DynamicMapping.class));
 
 			builder.endObject() // root object

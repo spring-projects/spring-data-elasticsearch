@@ -32,31 +32,6 @@ import org.junit.jupiter.api.Test;
 public class DateTimeConvertersTests {
 
 	@Test
-	public void testJodaDateTimeConverterWithNullValue() {
-		assertThat(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(null)).isNull();
-	}
-
-	@Test
-	public void testJodaDateTimeConverter() {
-		DateTime dateTime = new DateTime(2013, 1, 24, 6, 35, 0, DateTimeZone.UTC);
-		assertThat(DateTimeConverters.JodaDateTimeConverter.INSTANCE.convert(dateTime))
-				.isEqualTo("2013-01-24T06:35:00.000Z");
-	}
-
-	@Test
-	public void testJodaLocalDateTimeConverterWithNullValue() {
-		assertThat(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(null)).isNull();
-	}
-
-	@Test
-	public void testJodaLocalDateTimeConverter() {
-		LocalDateTime dateTime = new LocalDateTime(new DateTime(2013, 1, 24, 6, 35, 0, DateTimeZone.UTC).getMillis(),
-				DateTimeZone.UTC);
-		assertThat(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE.convert(dateTime))
-				.isEqualTo("2013-01-24T06:35:00.000Z");
-	}
-
-	@Test
 	public void testJavaDateConverterWithNullValue() {
 		assertThat(DateTimeConverters.JavaDateConverter.INSTANCE.convert(null)).isNull();
 	}
