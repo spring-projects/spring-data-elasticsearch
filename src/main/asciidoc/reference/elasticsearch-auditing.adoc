@@ -30,8 +30,10 @@ public class Person implements Persistable<Long> {
     @Id private Long id;
     private String lastName;
     private String firstName;
+    @CreatedDate
     @Field(type = FieldType.Date, format = DateFormat.basic_date_time)
     private Instant createdDate;
+    @CreatedBy
     private String createdBy
     @Field(type = FieldType.Date, format = DateFormat.basic_date_time)
     private Instant lastModifiedDate;
