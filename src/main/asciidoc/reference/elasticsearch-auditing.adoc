@@ -36,7 +36,9 @@ public class Person implements Persistable<Long> {
     @CreatedBy
     private String createdBy
     @Field(type = FieldType.Date, format = DateFormat.basic_date_time)
+    @LastModifiedDate
     private Instant lastModifiedDate;
+    @LastModifiedBy
     private String lastModifiedBy;
 
     public Long getId() {                                                 // <.>
