@@ -26,7 +26,6 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.data.annotation.Persistent;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -72,6 +71,7 @@ public class ElasticsearchConfigurationSupport {
 		mappingContext.setInitialEntitySet(getInitialEntitySet());
 		mappingContext.setSimpleTypeHolder(elasticsearchCustomConversions.getSimpleTypeHolder());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
+		mappingContext.setWriteTypeHints(writeTypeHints());
 
 		return mappingContext;
 	}
@@ -170,5 +170,18 @@ public class ElasticsearchConfigurationSupport {
 	 */
 	protected FieldNamingStrategy fieldNamingStrategy() {
 		return PropertyNameFieldNamingStrategy.INSTANCE;
+	}
+
+	/**
+	 * Flag specifiying if type hints (_class fields) should be written in the index. It is strongly advised to keep the
+	 * default value of {@literal true}. If you need to write to an existing index that does not have a mapping defined
+	 * for these fields and that has a strict mapping set, then it might be necessary to disable type hints. But notice
+	 * that in this case reading polymorphic types may fail.
+	 *
+	 * @return flag if type hints should be written
+	 * @since 4.3
+	 */
+	protected boolean writeTypeHints() {
+		return true;
 	}
 }

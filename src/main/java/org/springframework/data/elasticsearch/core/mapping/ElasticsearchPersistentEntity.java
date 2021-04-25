@@ -17,11 +17,11 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import org.elasticsearch.index.VersionType;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.lang.Nullable;
 
 /**
@@ -148,4 +148,16 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 */
 	@Nullable
 	String resolveRouting(T bean);
+
+	/**
+	 * @return the {@link FieldNamingStrategy} for the entity
+	 * @since 4.3
+	 */
+	FieldNamingStrategy getFieldNamingStrategy();
+
+	/**
+	 * @return true if type hints on this entity should be written.
+	 * @since 4.3
+	 */
+	boolean writeTypeHints();
 }

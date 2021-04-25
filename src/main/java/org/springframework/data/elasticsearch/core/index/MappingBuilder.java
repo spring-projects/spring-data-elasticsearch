@@ -95,6 +95,8 @@ public class MappingBuilder {
 
 	private final ElasticsearchConverter elasticsearchConverter;
 
+	private boolean writeTypeHints = true;
+
 	public MappingBuilder(ElasticsearchConverter elasticsearchConverter) {
 		this.elasticsearchConverter = elasticsearchConverter;
 	}
@@ -110,6 +112,8 @@ public class MappingBuilder {
 		try {
 			ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
 					.getRequiredPersistentEntity(clazz);
+
+			writeTypeHints = entity.writeTypeHints();
 
 			XContentBuilder builder = jsonBuilder().startObject();
 
@@ -128,11 +132,14 @@ public class MappingBuilder {
 	}
 
 	private void writeTypeHintMapping(XContentBuilder builder) throws IOException {
-		builder.startObject(TYPEHINT_PROPERTY) //
-				.field(FIELD_PARAM_TYPE, TYPE_VALUE_KEYWORD) //
-				.field(FIELD_PARAM_INDEX, false) //
-				.field(FIELD_PARAM_DOC_VALUES, false) //
-				.endObject();
+
+		if (writeTypeHints) {
+			builder.startObject(TYPEHINT_PROPERTY) //
+					.field(FIELD_PARAM_TYPE, TYPE_VALUE_KEYWORD) //
+					.field(FIELD_PARAM_INDEX, false) //
+					.field(FIELD_PARAM_DOC_VALUES, false) //
+					.endObject();
+		}
 	}
 
 	private void mapEntity(XContentBuilder builder, @Nullable ElasticsearchPersistentEntity<?> entity,
