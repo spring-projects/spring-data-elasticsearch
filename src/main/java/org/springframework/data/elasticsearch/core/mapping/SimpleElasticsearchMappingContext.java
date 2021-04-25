@@ -37,6 +37,7 @@ public class SimpleElasticsearchMappingContext
 	private static final FieldNamingStrategy DEFAULT_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
+	private boolean writeTypeHints = true;
 
 	/**
 	 * Configures the {@link FieldNamingStrategy} to be used to determine the field name if no manual mapping is applied.
@@ -50,6 +51,15 @@ public class SimpleElasticsearchMappingContext
 		this.fieldNamingStrategy = fieldNamingStrategy == null ? DEFAULT_NAMING_STRATEGY : fieldNamingStrategy;
 	}
 
+	/**
+	 * Sets the flag if type hints should be written in Entities created by this instance.
+	 *
+	 * @since 4.3
+	 */
+	public void setWriteTypeHints(boolean writeTypeHints) {
+		this.writeTypeHints = writeTypeHints;
+	}
+
 	@Override
 	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
 		return !ElasticsearchSimpleTypes.HOLDER.isSimpleType(type.getType());
@@ -57,12 +67,13 @@ public class SimpleElasticsearchMappingContext
 
 	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
-		return new SimpleElasticsearchPersistentEntity<>(typeInformation);
+		return new SimpleElasticsearchPersistentEntity<>(typeInformation,
+				new SimpleElasticsearchPersistentEntity.ContextConfiguration(fieldNamingStrategy, writeTypeHints));
 	}
 
 	@Override
 	protected ElasticsearchPersistentProperty createPersistentProperty(Property property,
 			SimpleElasticsearchPersistentEntity<?> owner, SimpleTypeHolder simpleTypeHolder) {
-		return new SimpleElasticsearchPersistentProperty(property, owner, simpleTypeHolder, fieldNamingStrategy);
+		return new SimpleElasticsearchPersistentProperty(property, owner, simpleTypeHolder);
 	}
 }

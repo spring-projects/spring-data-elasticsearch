@@ -34,8 +34,6 @@ The following annotations are available:
 The most important attributes are:
 ** `indexName`: the name of the index to store this entity in.
 This can contain a SpEL template expression like `"log-#{T(java.time.LocalDate).now().toString()}"`
-** `type`: [line-through]#the mapping type.
-If not set, the lowercased simple name of the class is used.# (deprecated since version 4.0)
 ** `createIndex`: flag whether to create an index on repository bootstrapping.
 Default value is _true_.
 See <<elasticsearch.repositories.autocreation>>
@@ -169,6 +167,22 @@ public class Person {
 ====
 
 NOTE: Type hints will not be written for nested Objects unless the properties type is `Object`, an interface or the actual value type does not match the properties declaration.
+
+===== Disabling Type Hints
+
+It may be necessary to disable writing of type hints when the index that should be used already exists without having the type hints defined in its mapping and with the mapping mode set to strict. In this case, writing the type hint will produce an error, as the field cannot be added automatically.
+
+Type hints can be disabled for the whole application by overriding the method `writeTypeHints()` in a configuration class derived from `AbstractElasticsearchConfiguration` (see <<elasticsearch.clients>>).
+
+As an alternativ they can be disabled for a single index with the `@Document` annotation:
+====
+[source,java]
+----
+@Document(indexName = "index", writeTypeHint = WriteTypeHint.FALSE)
+----
+====
+
+WARNING: We strongly advise against disabling Type Hints. Only do this if you are forced to. Disabling type hints can lead to documents not being retrieved correctly from Elasticsearch in case of polymorphic data or document retrieval may fail completely.
 
 ==== Geospatial Types
 

@@ -44,6 +44,7 @@ import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -661,6 +662,119 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, false);
 	}
 
+	@Test // #1454
+	@DisplayName("should write type hints when context is configured to do so")
+	void shouldWriteTypeHintsWhenContextIsConfiguredToDoSo() throws JSONException {
+
+		((SimpleElasticsearchMappingContext) (elasticsearchConverter.get().getMappingContext())).setWriteTypeHints(true);
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"title\": {\n" + //
+				"      \"type\": \"text\"\n" + //
+				"    },\n" + //
+				"    \"authors\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(Magazine.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	@Test // #1454
+	@DisplayName("should not write type hints when context is configured to not do so")
+	void shouldNotWriteTypeHintsWhenContextIsConfiguredToNotDoSo() throws JSONException {
+
+		((SimpleElasticsearchMappingContext) (elasticsearchConverter.get().getMappingContext())).setWriteTypeHints(false);
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"title\": {\n" + //
+				"      \"type\": \"text\"\n" + //
+				"    },\n" + //
+				"    \"authors\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"properties\": {\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(Magazine.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	@Test // #1454
+	@DisplayName("should write type hints when context is configured to not do so but entity should")
+	void shouldWriteTypeHintsWhenContextIsConfiguredToNotDoSoButEntityShould() throws JSONException {
+
+		((SimpleElasticsearchMappingContext) (elasticsearchConverter.get().getMappingContext())).setWriteTypeHints(false);
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"title\": {\n" + //
+				"      \"type\": \"text\"\n" + //
+				"    },\n" + //
+				"    \"authors\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(MagazineWithTypeHints.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	@Test // #1454
+	@DisplayName("should not write type hints when context is configured to do so but entity should not")
+	void shouldNotWriteTypeHintsWhenContextIsConfiguredToDoSoButEntityShouldNot() throws JSONException {
+
+		((SimpleElasticsearchMappingContext) (elasticsearchConverter.get().getMappingContext())).setWriteTypeHints(true);
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"title\": {\n" + //
+				"      \"type\": \"text\"\n" + //
+				"    },\n" + //
+				"    \"authors\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"properties\": {\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(MagazineWithoutTypeHints.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	// region entities
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
 		@Nullable @Id private String id;
@@ -1555,4 +1669,26 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			this.field5 = field5;
 		}
 	}
+
+	@Document(indexName = "magazine")
+	private static class Magazine {
+		@Id @Nullable private String id;
+		@Field(type = Text) @Nullable private String title;
+		@Field(type = Nested) @Nullable private List<Author> authors;
+	}
+
+	@Document(indexName = "magazine-without-type-hints", writeTypeHint = WriteTypeHint.FALSE)
+	private static class MagazineWithoutTypeHints {
+		@Id @Nullable private String id;
+		@Field(type = Text) @Nullable private String title;
+		@Field(type = Nested) @Nullable private List<Author> authors;
+	}
+
+	@Document(indexName = "magazine-with-type-hints", writeTypeHint = WriteTypeHint.TRUE)
+	private static class MagazineWithTypeHints {
+		@Id @Nullable private String id;
+		@Field(type = Text) @Nullable private String title;
+		@Field(type = Nested) @Nullable private List<Author> authors;
+	}
+	// endregion
 }

@@ -34,6 +34,7 @@ import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
+import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
@@ -66,10 +67,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchPersistentEntity.class);
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
+	private @Nullable final Document document;
 	private @Nullable String indexName;
 	private final Lazy<SettingsParameter> settingsParameter;
-	@Deprecated private @Nullable String parentType;
-	@Deprecated private @Nullable ElasticsearchPersistentProperty parentIdProperty;
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
 	private @Nullable VersionType versionType;
@@ -77,18 +77,21 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, Expression> routingExpressions = new ConcurrentHashMap<>();
 	private @Nullable String routing;
+	private final ContextConfiguration contextConfiguration;
 
 	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
 	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
 
-	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation) {
+	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation,
+			ContextConfiguration contextConfiguration) {
 
 		super(typeInformation);
+		this.contextConfiguration = contextConfiguration;
 
 		Class<T> clazz = typeInformation.getType();
 
-		org.springframework.data.elasticsearch.annotations.Document document = AnnotatedElementUtils
-				.findMergedAnnotation(clazz, org.springframework.data.elasticsearch.annotations.Document.class);
+		document = AnnotatedElementUtils.findMergedAnnotation(clazz,
+				org.springframework.data.elasticsearch.annotations.Document.class);
 
 		// need a Lazy here, because we need the persistent properties available
 		this.settingsParameter = Lazy.of(() -> buildSettingsParameter(clazz));
@@ -159,7 +162,31 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return createIndexAndMapping;
 	}
 
-	// endregion
+	@Override
+	public FieldNamingStrategy getFieldNamingStrategy() {
+		return contextConfiguration.getFieldNamingStrategy();
+	}
+
+	@Override
+	public boolean writeTypeHints() {
+
+		boolean writeTypeHints = contextConfiguration.writeTypeHints;
+
+		if (document != null) {
+			switch (document.writeTypeHint()) {
+				case TRUE:
+					writeTypeHints = true;
+					break;
+				case FALSE:
+					writeTypeHints = false;
+					break;
+				case DEFAULT:
+					break;
+			}
+		}
+
+		return writeTypeHints;
+	}
 
 	@Override
 	public void addPersistentProperty(ElasticsearchPersistentProperty property) {
@@ -215,6 +242,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	 * (non-Javadoc)
 	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#setPersistentPropertyAccessorFactory(org.springframework.data.mapping.model.PersistentPropertyAccessorFactory)
 	 */
+	@SuppressWarnings("SpellCheckingInspection")
 	@Override
 	public void setPersistentPropertyAccessorFactory(PersistentPropertyAccessorFactory factory) {
 
@@ -327,6 +355,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		ExpressionDependencies expressionDependencies = expression != null ? ExpressionDependencies.discover(expression)
 				: ExpressionDependencies.none();
 
+		// noinspection ConstantConditions
 		return getEvaluationContext(null, expressionDependencies);
 	}
 
@@ -350,6 +379,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			Expression expression = routingExpressions.computeIfAbsent(routing, PARSER::parseExpression);
 			ExpressionDependencies expressionDependencies = ExpressionDependencies.discover(expression);
 
+			// noinspection ConstantConditions
 			EvaluationContext context = getEvaluationContext(null, expressionDependencies);
 			context.setVariable("entity", bean);
 
@@ -525,4 +555,22 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	// endregion
+
+	/**
+	 * Configuration settings passed in from the creating {@link SimpleElasticsearchMappingContext}.
+	 */
+	static class ContextConfiguration {
+
+		private final FieldNamingStrategy fieldNamingStrategy;
+		private final boolean writeTypeHints;
+
+		ContextConfiguration(FieldNamingStrategy fieldNamingStrategy, boolean writeTypeHints) {
+			this.fieldNamingStrategy = fieldNamingStrategy;
+			this.writeTypeHints = writeTypeHints;
+		}
+
+		public FieldNamingStrategy getFieldNamingStrategy() {
+			return fieldNamingStrategy;
+		}
+	}
 }

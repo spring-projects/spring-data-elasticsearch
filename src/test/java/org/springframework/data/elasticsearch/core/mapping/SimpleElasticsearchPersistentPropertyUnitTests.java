@@ -36,6 +36,7 @@ import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
+import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy;
 import org.springframework.data.util.ClassTypeInformation;
@@ -200,20 +201,22 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	@DisplayName("should use default FieldNamingStrategy")
 	void shouldUseDefaultFieldNamingStrategy() {
 
+		SimpleElasticsearchPersistentEntity.ContextConfiguration contextConfiguration = new SimpleElasticsearchPersistentEntity.ContextConfiguration(
+				PropertyNameFieldNamingStrategy.INSTANCE, true);
+
 		ElasticsearchPersistentEntity<FieldNamingStrategyEntity> entity = new SimpleElasticsearchPersistentEntity<>(
-				ClassTypeInformation.from(FieldNamingStrategyEntity.class));
+				ClassTypeInformation.from(FieldNamingStrategyEntity.class), contextConfiguration);
 		ClassTypeInformation<FieldNamingStrategyEntity> type = ClassTypeInformation.from(FieldNamingStrategyEntity.class);
 
 		java.lang.reflect.Field field = ReflectionUtils.findField(FieldNamingStrategyEntity.class,
 				"withoutCustomFieldName");
 		SimpleElasticsearchPersistentProperty property = new SimpleElasticsearchPersistentProperty(Property.of(type, field),
-				entity, SimpleTypeHolder.DEFAULT, null);
+				entity, SimpleTypeHolder.DEFAULT);
 
 		assertThat(property.getFieldName()).isEqualTo("withoutCustomFieldName");
 
 		field = ReflectionUtils.findField(FieldNamingStrategyEntity.class, "withCustomFieldName");
-		property = new SimpleElasticsearchPersistentProperty(Property.of(type, field), entity, SimpleTypeHolder.DEFAULT,
-				null);
+		property = new SimpleElasticsearchPersistentProperty(Property.of(type, field), entity, SimpleTypeHolder.DEFAULT);
 
 		assertThat(property.getFieldName()).isEqualTo("CUStomFIEldnAME");
 	}
@@ -223,25 +226,27 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	void shouldUseCustomFieldNamingStrategy() {
 
 		FieldNamingStrategy fieldNamingStrategy = new SnakeCaseFieldNamingStrategy();
+		SimpleElasticsearchPersistentEntity.ContextConfiguration contextConfiguration = new SimpleElasticsearchPersistentEntity.ContextConfiguration(
+				fieldNamingStrategy, true);
 
 		ElasticsearchPersistentEntity<FieldNamingStrategyEntity> entity = new SimpleElasticsearchPersistentEntity<>(
-				ClassTypeInformation.from(FieldNamingStrategyEntity.class));
+				ClassTypeInformation.from(FieldNamingStrategyEntity.class), contextConfiguration);
 		ClassTypeInformation<FieldNamingStrategyEntity> type = ClassTypeInformation.from(FieldNamingStrategyEntity.class);
 
 		java.lang.reflect.Field field = ReflectionUtils.findField(FieldNamingStrategyEntity.class,
 				"withoutCustomFieldName");
 		SimpleElasticsearchPersistentProperty property = new SimpleElasticsearchPersistentProperty(Property.of(type, field),
-				entity, SimpleTypeHolder.DEFAULT, fieldNamingStrategy);
+				entity, SimpleTypeHolder.DEFAULT);
 
 		assertThat(property.getFieldName()).isEqualTo("without_custom_field_name");
 
 		field = ReflectionUtils.findField(FieldNamingStrategyEntity.class, "withCustomFieldName");
-		property = new SimpleElasticsearchPersistentProperty(Property.of(type, field), entity, SimpleTypeHolder.DEFAULT,
-				fieldNamingStrategy);
+		property = new SimpleElasticsearchPersistentProperty(Property.of(type, field), entity, SimpleTypeHolder.DEFAULT);
 
 		assertThat(property.getFieldName()).isEqualTo("CUStomFIEldnAME");
 	}
 
+	// region entities
 	static class FieldNameProperty {
 		@Nullable @Field(name = "by-name") String fieldProperty;
 	}
@@ -319,4 +324,5 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 			this.withCustomFieldName = withCustomFieldName;
 		}
 	}
+	// endregion
 }

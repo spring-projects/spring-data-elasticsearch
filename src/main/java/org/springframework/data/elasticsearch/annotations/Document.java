@@ -105,4 +105,11 @@ public @interface Document {
 	 * Configuration of version management.
 	 */
 	VersionType versionType() default VersionType.EXTERNAL;
+
+	/**
+	 * Defines if type hints should be written. {@see WriteTypeHint}.
+	 *
+	 * @since 4.3
+	 */
+	WriteTypeHint writeTypeHint() default WriteTypeHint.DEFAULT;
 }

@@ -64,23 +64,20 @@ public class SimpleElasticsearchPersistentProperty extends
 	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchPersistentProperty.class);
 
 	private static final List<String> SUPPORTED_ID_PROPERTY_NAMES = Arrays.asList("id", "document");
+	private static final PropertyNameFieldNamingStrategy DEFAULT_FIELD_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
 
 	private final boolean isId;
 	private final boolean isSeqNoPrimaryTerm;
 	private final @Nullable String annotatedFieldName;
 	@Nullable private ElasticsearchPersistentPropertyConverter propertyConverter;
 	private final boolean storeNullValue;
-	private final FieldNamingStrategy fieldNamingStrategy;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
-			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder,
-			@Nullable FieldNamingStrategy fieldNamingStrategy) {
+			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
 
 		super(property, owner, simpleTypeHolder);
 
 		this.annotatedFieldName = getAnnotatedFieldName();
-		this.fieldNamingStrategy = fieldNamingStrategy == null ? PropertyNameFieldNamingStrategy.INSTANCE
-				: fieldNamingStrategy;
 		this.isId = super.isIdProperty()
 				|| (SUPPORTED_ID_PROPERTY_NAMES.contains(getFieldName()) && !hasExplicitFieldName());
 		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
@@ -248,6 +245,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	public String getFieldName() {
 
 		if (annotatedFieldName == null) {
+			FieldNamingStrategy fieldNamingStrategy = getFieldNamingStrategy();
 			String fieldName = fieldNamingStrategy.getFieldName(this);
 
 			if (!StringUtils.hasText(fieldName)) {
@@ -259,6 +257,16 @@ public class SimpleElasticsearchPersistentProperty extends
 		}
 
 		return annotatedFieldName;
+	}
+
+	private FieldNamingStrategy getFieldNamingStrategy() {
+		PersistentEntity<?, ElasticsearchPersistentProperty> owner = getOwner();
+
+		if (owner instanceof ElasticsearchPersistentEntity) {
+			return ((ElasticsearchPersistentEntity<?>) owner).getFieldNamingStrategy();
+		}
+
+		return DEFAULT_FIELD_NAMING_STRATEGY;
 	}
 
 	@Override

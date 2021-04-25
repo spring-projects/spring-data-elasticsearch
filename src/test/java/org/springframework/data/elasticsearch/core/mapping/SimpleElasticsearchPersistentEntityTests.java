@@ -28,10 +28,14 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
+import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
@@ -52,13 +56,16 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 	@DisplayName("properties setup")
 	class PropertiesTests {
 
+		private final SimpleElasticsearchPersistentEntity.ContextConfiguration contextConfiguration = new SimpleElasticsearchPersistentEntity.ContextConfiguration(
+				PropertyNameFieldNamingStrategy.INSTANCE, true);
+
 		@Test
 		public void shouldThrowExceptionGivenVersionPropertyIsNotLong() {
 
 			TypeInformation<EntityWithWrongVersionType> typeInformation = ClassTypeInformation
 					.from(EntityWithWrongVersionType.class);
 			SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType> entity = new SimpleElasticsearchPersistentEntity<>(
-					typeInformation);
+					typeInformation, contextConfiguration);
 
 			assertThatThrownBy(() -> createProperty(entity, "version")).isInstanceOf(MappingException.class);
 		}
@@ -69,7 +76,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			TypeInformation<EntityWithMultipleVersionField> typeInformation = ClassTypeInformation
 					.from(EntityWithMultipleVersionField.class);
 			SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField> entity = new SimpleElasticsearchPersistentEntity<>(
-					typeInformation);
+					typeInformation, contextConfiguration);
 			SimpleElasticsearchPersistentProperty persistentProperty1 = createProperty(entity, "version1");
 			SimpleElasticsearchPersistentProperty persistentProperty2 = createProperty(entity, "version2");
 			entity.addPersistentProperty(persistentProperty1);
@@ -98,7 +105,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			TypeInformation<EntityWithoutSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
 					.from(EntityWithoutSeqNoPrimaryTerm.class);
 			SimpleElasticsearchPersistentEntity<EntityWithoutSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
-					typeInformation);
+					typeInformation, contextConfiguration);
 
 			assertThat(entity.hasSeqNoPrimaryTermProperty()).isFalse();
 		}
@@ -109,7 +116,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
 					.from(EntityWithSeqNoPrimaryTerm.class);
 			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
-					typeInformation);
+					typeInformation, contextConfiguration);
 
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
 
@@ -123,7 +130,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
 					.from(EntityWithSeqNoPrimaryTerm.class);
 			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
-					typeInformation);
+					typeInformation, contextConfiguration);
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
 			EntityWithSeqNoPrimaryTerm instance = new EntityWithSeqNoPrimaryTerm();
 			SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm(1, 2);
@@ -142,7 +149,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
 					.from(EntityWithSeqNoPrimaryTerm.class);
 			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
-					typeInformation);
+					typeInformation, contextConfiguration);
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
 
 			assertThatThrownBy(() -> entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm2")))
@@ -165,10 +172,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@DisplayName("should error if index sorting parameters do not have the same number of arguments")
 		void shouldErrorIfIndexSortingParametersDoNotHaveTheSameNumberOfArguments() {
 
-			assertThatThrownBy(() -> {
-				elasticsearchConverter.get().getMappingContext()
-						.getRequiredPersistentEntity(SettingsInvalidSortParameterSizes.class).getDefaultSettings();
-			}).isInstanceOf(IllegalArgumentException.class);
+			assertThatThrownBy(() -> elasticsearchConverter.get().getMappingContext()
+					.getRequiredPersistentEntity(SettingsInvalidSortParameterSizes.class).getDefaultSettings())
+							.isInstanceOf(IllegalArgumentException.class);
 		}
 
 		@Test // #1719
@@ -190,6 +196,75 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		}
 	}
 
+	@Nested
+	@DisplayName("configuration")
+	class ConfigurationTests {
+
+		@Test // #1454
+		@DisplayName("should return FieldNamingStrategy from context configuration")
+		void shouldReturnFieldNamingStrategyFromContextConfiguration() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			FieldNamingStrategy fieldNamingStrategy = new FieldNamingStrategy() {
+				@Override
+				public String getFieldName(PersistentProperty<?> property) {
+					return property.getName() + "foo";
+				}
+			};
+			context.setFieldNamingStrategy(fieldNamingStrategy);
+			SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+					.getRequiredPersistentEntity(FieldNameEntity.class);
+
+			assertThat(persistentEntity.getFieldNamingStrategy()).isSameAs(fieldNamingStrategy);
+		}
+
+		@Test // #1454
+		@DisplayName("should write type hints on default context settings")
+		void shouldWriteTypeHintsOnDefaultContextSettings() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			SimpleElasticsearchPersistentEntity<?> entity = context
+					.getRequiredPersistentEntity(DisableTypeHintNoSetting.class);
+
+			assertThat(entity.writeTypeHints()).isTrue();
+		}
+
+		@Test // #1454
+		@DisplayName("should not write type hints when configured in context settings")
+		void shouldNotWriteTypeHintsWhenConfiguredInContextSettings() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			context.setWriteTypeHints(false);
+			SimpleElasticsearchPersistentEntity<?> entity = context
+					.getRequiredPersistentEntity(DisableTypeHintNoSetting.class);
+
+			assertThat(entity.writeTypeHints()).isFalse();
+		}
+
+		@Test // #1454
+		@DisplayName("should not write type hints when configured explicitly on entity")
+		void shouldNotWriteTypeHintsWhenConfiguredExplicitlyOnEntity() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			SimpleElasticsearchPersistentEntity<?> entity = context
+					.getRequiredPersistentEntity(DisableTypeHintExplicitSetting.class);
+
+			assertThat(entity.writeTypeHints()).isFalse();
+		}
+
+		@Test // #1454
+		@DisplayName("should write type hints when  configured explicitly on entity and global setting is false")
+		void shouldWriteTypeHintsWhenConfiguredExplicitlyOnEntityAndGlobalSettingIsFalse() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			context.setWriteTypeHints(false);
+			SimpleElasticsearchPersistentEntity<?> entity = context
+					.getRequiredPersistentEntity(EnableTypeHintExplicitSetting.class);
+
+			assertThat(entity.writeTypeHints()).isTrue();
+		}
+	}
+
 	// region helper functions
 	private static SimpleElasticsearchPersistentProperty createProperty(SimpleElasticsearchPersistentEntity<?> entity,
 			String fieldName) {
@@ -198,7 +273,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		java.lang.reflect.Field field = ReflectionUtils.findField(entity.getType(), fieldName);
 		assertThat(field).isNotNull();
 		Property property = Property.of(type, field);
-		return new SimpleElasticsearchPersistentProperty(property, entity, SimpleTypeHolder.DEFAULT, null);
+		return new SimpleElasticsearchPersistentProperty(property, entity, SimpleTypeHolder.DEFAULT);
 
 	}
 	// endregion
@@ -275,16 +350,29 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Nullable @Field(name = "second-field", type = FieldType.Keyword) private String secondField;
 	}
 
-@Document(indexName = "dontcare")
-// property names here, not field names
-@Setting(sortFields = { "secondField", "firstField" }, sortModes = { Setting.SortMode.max, Setting.SortMode.min },
-		sortOrders = { Setting.SortOrder.desc, Setting.SortOrder.asc },
-		sortMissingValues = { Setting.SortMissing._last, Setting.SortMissing._first })
-private static class SettingsValidSortParameterSizes {
-	@Nullable @Id private String id;
-	@Nullable @Field(name = "first_field", type = FieldType.Keyword) private String firstField;
-	@Nullable @Field(name = "second_field", type = FieldType.Keyword) private String secondField;
-}
+	@Document(indexName = "dontcare")
+	// property names here, not field names
+	@Setting(sortFields = { "secondField", "firstField" }, sortModes = { Setting.SortMode.max, Setting.SortMode.min },
+			sortOrders = { Setting.SortOrder.desc, Setting.SortOrder.asc },
+			sortMissingValues = { Setting.SortMissing._last, Setting.SortMissing._first })
+	private static class SettingsValidSortParameterSizes {
+		@Nullable @Id private String id;
+		@Nullable @Field(name = "first_field", type = FieldType.Keyword) private String firstField;
+		@Nullable @Field(name = "second_field", type = FieldType.Keyword) private String secondField;
+	}
 
+	private static class DisableTypeHintNoSetting {
+		@Nullable @Id String id;
+	}
+
+	@Document(indexName = "foo", writeTypeHint = WriteTypeHint.FALSE)
+	private static class DisableTypeHintExplicitSetting {
+		@Nullable @Id String id;
+	}
+
+	@Document(indexName = "foo", writeTypeHint = WriteTypeHint.TRUE)
+	private static class EnableTypeHintExplicitSetting {
+		@Nullable @Id String id;
+	}
 	// endregion
 }

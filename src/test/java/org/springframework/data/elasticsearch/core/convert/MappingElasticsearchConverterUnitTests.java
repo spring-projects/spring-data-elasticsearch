@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.json.JSONException;
@@ -1176,8 +1175,74 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 	}
 
-	private String pointTemplate(String name, Point point) {
-		return String.format(Locale.ENGLISH, "\"%s\":{\"lat\":%.1f,\"lon\":%.1f}", name, point.getY(), point.getX());
+	@Test // #1454
+	@DisplayName("should write type hints if configured")
+	void shouldWriteTypeHintsIfConfigured() throws JSONException {
+
+		((SimpleElasticsearchMappingContext) mappingElasticsearchConverter.getMappingContext()).setWriteTypeHints(true);
+		PersonWithCars person = new PersonWithCars();
+		person.setId("42");
+		person.setName("Smith");
+		Car car1 = new Car();
+		car1.setModel("Ford Mustang");
+		Car car2 = new ElectricCar();
+		car2.setModel("Porsche Taycan");
+		person.setCars(Arrays.asList(car1, car2));
+
+		String expected = "{\n" + //
+				"  \"_class\": \"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$PersonWithCars\",\n"
+				+ "  \"id\": \"42\",\n" + //
+				"  \"name\": \"Smith\",\n" + //
+				"  \"cars\": [\n" + //
+				"    {\n" + //
+				"      \"model\": \"Ford Mustang\"\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"_class\": \"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$ElectricCar\",\n"
+				+ "      \"model\": \"Porsche Taycan\"\n" + //
+				"    }\n" + //
+				"  ]\n" + //
+				"}\n"; //
+
+		Document document = Document.create();
+
+		mappingElasticsearchConverter.write(person, document);
+
+		assertEquals(expected, document.toJson(), true);
+	}
+
+	@Test // #1454
+	@DisplayName("should not write type hints if configured")
+	void shouldNotWriteTypeHintsIfNotConfigured() throws JSONException {
+
+		((SimpleElasticsearchMappingContext) mappingElasticsearchConverter.getMappingContext()).setWriteTypeHints(false);
+		PersonWithCars person = new PersonWithCars();
+		person.setId("42");
+		person.setName("Smith");
+		Car car1 = new Car();
+		car1.setModel("Ford Mustang");
+		Car car2 = new ElectricCar();
+		car2.setModel("Porsche Taycan");
+		person.setCars(Arrays.asList(car1, car2));
+
+		String expected = "{\n" + //
+				"  \"id\": \"42\",\n" + //
+				"  \"name\": \"Smith\",\n" + //
+				"  \"cars\": [\n" + //
+				"    {\n" + //
+				"      \"model\": \"Ford Mustang\"\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"model\": \"Porsche Taycan\"\n" + //
+				"    }\n" + //
+				"  ]\n" + //
+				"}\n"; //
+
+		Document document = Document.create();
+
+		mappingElasticsearchConverter.write(person, document);
+
+		assertEquals(expected, document.toJson(), true);
 	}
 
 	private Map<String, Object> writeToMap(Object source) {
@@ -1187,6 +1252,7 @@ public class MappingElasticsearchConverterUnitTests {
 		return sink;
 	}
 
+	// region entities
 	public static class Sample {
 		@Nullable public @ReadOnlyProperty String readOnly;
 		@Nullable public @Transient String annotatedTransientProperty;
@@ -2008,4 +2074,39 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 	}
 
+	private static class ElectricCar extends Car {}
+
+	private static class PersonWithCars {
+		@Id @Nullable String id;
+		@Field(type = FieldType.Text) @Nullable private String name;
+		@Field(type = FieldType.Nested) @Nullable private List<? extends Car> cars;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public List<? extends Car> getCars() {
+			return cars;
+		}
+
+		public void setCars(@Nullable List<Car> cars) {
+			this.cars = cars;
+		}
+	}
+	// endregion
 }
