@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2020 the original author or authors.
+ * Copyright 2014-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1093,6 +1093,49 @@ public abstract class ElasticsearchTemplateTests {
 		List<SampleEntity> content = searchHits.getSearchHits().stream().map(SearchHit::getContent)
 				.collect(Collectors.toList());
 		assertThat(content).contains(sampleEntity);
+	}
+
+	@Test // #1787
+	@DisplayName("should use Pageable on MoreLikeThis queries")
+	void shouldUsePageableOnMoreLikeThisQueries() {
+
+		String sampleMessage = "So we build a web site or an application and want to add search to it, "
+				+ "and then it hits us: getting search working is hard. We want our search solution to be fast,"
+				+ " we want a painless setup and a completely free search schema, we want to be able to index data simply using JSON over HTTP, "
+				+ "we want our search server to be always available, we want to be able to start with one machine and scale to hundreds, "
+				+ "we want real-time search, we want simple multi-tenancy, and we want a solution that is built for the cloud.";
+		String referenceId = nextIdAsString();
+		Collection<String> ids = IntStream.rangeClosed(1, 10).mapToObj(i -> nextIdAsString()).collect(Collectors.toList());
+		ids.add(referenceId);
+		ids.stream()
+				.map(id -> getIndexQuery(SampleEntity.builder().id(id).message(sampleMessage).version(System.currentTimeMillis()).build()))
+				.forEach(indexQuery -> operations.index(indexQuery, index));
+		indexOperations.refresh();
+
+		MoreLikeThisQuery moreLikeThisQuery = new MoreLikeThisQuery();
+		moreLikeThisQuery.setId(referenceId);
+		moreLikeThisQuery.addFields("message");
+		moreLikeThisQuery.setMinDocFreq(1);
+		moreLikeThisQuery.setPageable(PageRequest.of(0, 5));
+
+		SearchHits<SampleEntity> searchHits = operations.search(moreLikeThisQuery, SampleEntity.class, index);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(10);
+		assertThat(searchHits.getSearchHits()).hasSize(5);
+
+		Collection<String> returnedIds = searchHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
+
+		moreLikeThisQuery.setPageable(PageRequest.of(1, 5));
+
+		searchHits = operations.search(moreLikeThisQuery, SampleEntity.class, index);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(10);
+		assertThat(searchHits.getSearchHits()).hasSize(5);
+
+		searchHits.getSearchHits().stream().map(SearchHit::getId).forEach(returnedIds::add);
+
+		assertThat(returnedIds).hasSize(10);
+		assertThat(ids).containsAll(returnedIds);
 	}
 
 	@Test // DATAES-167
@@ -3822,4 +3865,5 @@ public abstract class ElasticsearchTemplateTests {
 				@JoinTypeRelation(parent = "question", children = { "answer" }) }) private JoinField<String> myJoinField;
 		@Field(type = Text) private String text;
 	}
+	//endregion
 }
