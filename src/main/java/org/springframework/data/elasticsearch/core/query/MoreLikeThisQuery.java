@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * MoreLikeThisQuery
@@ -176,6 +177,9 @@ public class MoreLikeThisQuery {
 	}
 
 	public void setPageable(Pageable pageable) {
+
+		Assert.notNull(pageable, "pageable must not be null");
+
 		this.pageable = pageable;
 	}
 }
