@@ -15,22 +15,16 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
-import org.springframework.util.NumberUtils;
 
 /**
  * ElasticsearchStringQuery
@@ -43,10 +37,7 @@ import org.springframework.util.NumberUtils;
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
-	private static final Pattern PARAMETER_PLACEHOLDER = Pattern.compile("\\?(\\d+)");
 	private String query;
-
-	private final GenericConversionService conversionService = new GenericConversionService();
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
 			String query) {
@@ -104,31 +95,8 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
-		String queryString = replacePlaceholders(this.query, parameterAccessor);
+		String queryString = StringQueryUtil.replacePlaceholders(this.query, parameterAccessor);
 		return new StringQuery(queryString);
 	}
 
-	private String replacePlaceholders(String input, ParametersParameterAccessor accessor) {
-
-		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
-		String result = input;
-		while (matcher.find()) {
-
-			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
-			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
-			result = result.replaceAll(placeholder, getParameterWithIndex(accessor, index));
-		}
-		return result;
-	}
-
-	private String getParameterWithIndex(ParametersParameterAccessor accessor, int index) {
-		Object parameter = accessor.getBindableValue(index);
-		if (parameter == null) {
-			return "null";
-		}
-		if (conversionService.canConvert(parameter.getClass(), String.class)) {
-			return conversionService.convert(parameter, String.class);
-		}
-		return parameter.toString();
-	}
 }
