@@ -15,15 +15,11 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.util.NumberUtils;
-import org.springframework.util.ObjectUtils;
 
 /**
  * @author Christoph Strobl
@@ -32,7 +28,6 @@ import org.springframework.util.ObjectUtils;
  */
 public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsearchRepositoryQuery {
 
-	private static final Pattern PARAMETER_PLACEHOLDER = Pattern.compile("\\?(\\d+)");
 	private final String query;
 
 	public ReactiveElasticsearchStringQuery(ReactiveElasticsearchQueryMethod queryMethod,
@@ -52,25 +47,8 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 
 	@Override
 	protected StringQuery createQuery(ElasticsearchParameterAccessor parameterAccessor) {
-		String queryString = replacePlaceholders(this.query, parameterAccessor);
+		String queryString = StringQueryUtil.replacePlaceholders(this.query, parameterAccessor);
 		return new StringQuery(queryString);
-	}
-
-	private String replacePlaceholders(String input, ElasticsearchParameterAccessor accessor) {
-
-		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
-		String result = input;
-		while (matcher.find()) {
-
-			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
-			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
-			result = result.replaceAll(placeholder, getParameterWithIndex(accessor, index));
-		}
-		return result;
-	}
-
-	private String getParameterWithIndex(ElasticsearchParameterAccessor accessor, int index) {
-		return ObjectUtils.nullSafeToString(accessor.getBindableValue(index));
 	}
 
 	@Override
