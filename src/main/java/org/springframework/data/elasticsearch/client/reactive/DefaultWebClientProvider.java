@@ -48,6 +48,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 	private final HttpHeaders headers;
 	private final @Nullable String pathPrefix;
 	private final Function<WebClient, WebClient> webClientConfigurer;
+	private final Consumer<WebClient.RequestHeadersSpec<?>> requestConfigurer;
 
 	/**
 	 * Create new {@link DefaultWebClientProvider} with empty {@link HttpHeaders} and no-op {@literal error listener}.
@@ -56,7 +57,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 	 * @param connector can be {@literal null}.
 	 */
 	DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector) {
-		this(scheme, connector, e -> {}, HttpHeaders.EMPTY, null, Function.identity());
+		this(scheme, connector, e -> {}, HttpHeaders.EMPTY, null, Function.identity(), requestHeadersSpec -> {});
 	}
 
 	/**
@@ -66,18 +67,21 @@ class DefaultWebClientProvider implements WebClientProvider {
 	 * @param connector can be {@literal null}.
 	 * @param errorListener must not be {@literal null}.
 	 * @param headers must not be {@literal null}.
-	 * @param pathPrefix can be {@literal null}
+	 * @param pathPrefix can be {@literal null}.
 	 * @param webClientConfigurer must not be {@literal null}.
+	 * @param requestConfigurer must not be {@literal null}.
 	 */
 	private DefaultWebClientProvider(String scheme, @Nullable ClientHttpConnector connector,
 			Consumer<Throwable> errorListener, HttpHeaders headers, @Nullable String pathPrefix,
-			Function<WebClient, WebClient> webClientConfigurer) {
+			Function<WebClient, WebClient> webClientConfigurer, Consumer<WebClient.RequestHeadersSpec<?>> requestConfigurer) {
 
 		Assert.notNull(scheme, "Scheme must not be null! A common scheme would be 'http'.");
 		Assert.notNull(errorListener, "errorListener must not be null! You may want use a no-op one 'e -> {}' instead.");
 		Assert.notNull(headers, "headers must not be null! Think about using 'HttpHeaders.EMPTY' as an alternative.");
 		Assert.notNull(webClientConfigurer,
 				"webClientConfigurer must not be null! You may want use a no-op one 'Function.identity()' instead.");
+		Assert.notNull(requestConfigurer,
+				"requestConfigurer must not be null! You may want use a no-op one 'r -> {}' instead.\"");
 
 		this.cachedClients = new ConcurrentHashMap<>();
 		this.scheme = scheme;
@@ -86,6 +90,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 		this.headers = headers;
 		this.pathPrefix = pathPrefix;
 		this.webClientConfigurer = webClientConfigurer;
+		this.requestConfigurer = requestConfigurer;
 	}
 
 	@Override
@@ -106,6 +111,7 @@ class DefaultWebClientProvider implements WebClientProvider {
 		return this.errorListener;
 	}
 
+	@Nullable
 	@Override
 	public String getPathPrefix() {
 		return pathPrefix;
@@ -120,7 +126,17 @@ class DefaultWebClientProvider implements WebClientProvider {
 		merged.addAll(this.headers);
 		merged.addAll(headers);
 
-		return new DefaultWebClientProvider(scheme, connector, errorListener, merged, pathPrefix, webClientConfigurer);
+		return new DefaultWebClientProvider(scheme, connector, errorListener, merged, pathPrefix, webClientConfigurer,
+				requestConfigurer);
+	}
+
+	@Override
+	public WebClientProvider withRequestConfigurer(Consumer<WebClient.RequestHeadersSpec<?>> requestConfigurer) {
+
+		Assert.notNull(requestConfigurer, "requestConfigurer must not be null.");
+
+		return new DefaultWebClientProvider(scheme, connector, errorListener, headers, pathPrefix, webClientConfigurer,
+				requestConfigurer);
 	}
 
 	@Override
@@ -129,7 +145,8 @@ class DefaultWebClientProvider implements WebClientProvider {
 		Assert.notNull(errorListener, "Error listener must not be null.");
 
 		Consumer<Throwable> listener = this.errorListener.andThen(errorListener);
-		return new DefaultWebClientProvider(scheme, this.connector, listener, headers, pathPrefix, webClientConfigurer);
+		return new DefaultWebClientProvider(scheme, this.connector, listener, headers, pathPrefix, webClientConfigurer,
+				requestConfigurer);
 	}
 
 	@Override
@@ -137,18 +154,21 @@ class DefaultWebClientProvider implements WebClientProvider {
 		Assert.notNull(pathPrefix, "pathPrefix must not be null.");
 
 		return new DefaultWebClientProvider(this.scheme, this.connector, this.errorListener, this.headers, pathPrefix,
-				webClientConfigurer);
+				webClientConfigurer, requestConfigurer);
 	}
 
 	@Override
 	public WebClientProvider withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer) {
-		return new DefaultWebClientProvider(scheme, connector, errorListener, headers, pathPrefix, webClientConfigurer);
+		return new DefaultWebClientProvider(scheme, connector, errorListener, headers, pathPrefix, webClientConfigurer,
+				requestConfigurer);
 
 	}
 
 	protected WebClient createWebClientForSocketAddress(InetSocketAddress socketAddress) {
 
-		Builder builder = WebClient.builder().defaultHeaders(it -> it.addAll(getDefaultHeaders()));
+		Builder builder = WebClient.builder() //
+				.defaultHeaders(it -> it.addAll(getDefaultHeaders())) //
+				.defaultRequest(requestConfigurer);
 
 		if (connector != null) {
 			builder = builder.clientConnector(connector);

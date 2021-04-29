@@ -101,7 +101,7 @@ public interface WebClientProvider {
 
 	/**
 	 * Obtain the {@link String pathPrefix} to be used.
-	 * 
+	 *
 	 * @return the pathPrefix if set.
 	 * @since 4.0
 	 */
@@ -126,7 +126,7 @@ public interface WebClientProvider {
 
 	/**
 	 * Create a new instance of {@link WebClientProvider} where HTTP requests are called with the given path prefix.
-	 * 
+	 *
 	 * @param pathPrefix Path prefix to add to requests
 	 * @return new instance of {@link WebClientProvider}
 	 * @since 4.0
@@ -136,10 +136,20 @@ public interface WebClientProvider {
 	/**
 	 * Create a new instance of {@link WebClientProvider} calling the given {@link Function} to configure the
 	 * {@link WebClient}.
-	 * 
+	 *
 	 * @param webClientConfigurer configuration function
 	 * @return new instance of {@link WebClientProvider}
 	 * @since 4.0
 	 */
 	WebClientProvider withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer);
+
+	/**
+	 * Create a new instance of {@link WebClientProvider} calling the given {@link Consumer} to configure the requests of
+	 * this {@link WebClient}.
+	 *
+	 * @param requestConfigurer request configuration callback
+	 * @return new instance of {@link WebClientProvider}
+	 * @since 4.3
+	 */
+	WebClientProvider withRequestConfigurer(Consumer<WebClient.RequestHeadersSpec<?>> requestConfigurer);
 }
