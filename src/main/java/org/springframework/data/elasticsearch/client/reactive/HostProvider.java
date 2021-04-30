@@ -54,9 +54,9 @@ public interface HostProvider<T extends HostProvider<T>> {
 		Assert.notEmpty(endpoints, "Please provide at least one endpoint to connect to.");
 
 		if (endpoints.length == 1) {
-			return new SingleNodeHostProvider(clientProvider, headersSupplier, endpoints[0]);
+			return new SingleNodeHostProvider(clientProvider, endpoints[0]);
 		} else {
-			return new MultiNodeHostProvider(clientProvider, headersSupplier, endpoints);
+			return new MultiNodeHostProvider(clientProvider, endpoints);
 		}
 	}
 

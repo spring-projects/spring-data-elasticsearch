@@ -19,12 +19,10 @@ import reactor.core.publisher.Mono;
 
 import java.net.InetSocketAddress;
 import java.util.Collections;
-import java.util.function.Supplier;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -38,15 +36,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 class SingleNodeHostProvider implements HostProvider<SingleNodeHostProvider> {
 
 	private final WebClientProvider clientProvider;
-	private final Supplier<HttpHeaders> headersSupplier;
 	private final InetSocketAddress endpoint;
 	private volatile ElasticsearchHost state;
 
-	SingleNodeHostProvider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
-			InetSocketAddress endpoint) {
+	SingleNodeHostProvider(WebClientProvider clientProvider, InetSocketAddress endpoint) {
 
 		this.clientProvider = clientProvider;
-		this.headersSupplier = headersSupplier;
 		this.endpoint = endpoint;
 		this.state = new ElasticsearchHost(this.endpoint, State.UNKNOWN);
 	}
@@ -60,7 +55,6 @@ class SingleNodeHostProvider implements HostProvider<SingleNodeHostProvider> {
 
 		return createWebClient(endpoint) //
 				.head().uri("/") //
-				.headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
 				.exchangeToMono(it -> {
 					if (it.statusCode().isError()) {
 						state = ElasticsearchHost.offline(endpoint);

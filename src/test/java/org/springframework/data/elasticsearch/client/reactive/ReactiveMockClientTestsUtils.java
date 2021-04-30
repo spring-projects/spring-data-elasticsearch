@@ -83,10 +83,10 @@ public class ReactiveMockClientTestsUtils {
 
 		if (hosts.length == 1) {
 			// noinspection unchecked
-			delegate = (T) new SingleNodeHostProvider(clientProvider, HttpHeaders::new, getInetSocketAddress(hosts[0])) {};
+			delegate = (T) new SingleNodeHostProvider(clientProvider, getInetSocketAddress(hosts[0])) {};
 		} else {
 			// noinspection unchecked
-			delegate = (T) new MultiNodeHostProvider(clientProvider, HttpHeaders::new, Arrays.stream(hosts)
+			delegate = (T) new MultiNodeHostProvider(clientProvider, Arrays.stream(hosts)
 					.map(ReactiveMockClientTestsUtils::getInetSocketAddress).toArray(InetSocketAddress[]::new)) {};
 		}
 
@@ -294,6 +294,11 @@ public class ReactiveMockClientTestsUtils {
 
 		@Override
 		public WebClientProvider withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer) {
+			throw new UnsupportedOperationException("not implemented");
+		}
+
+		@Override
+		public WebClientProvider withRequestConfigurer(Consumer<WebClient.RequestHeadersSpec<?>> requestConfigurer) {
 			throw new UnsupportedOperationException("not implemented");
 		}
 
