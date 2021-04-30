@@ -281,15 +281,23 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			scheme = "https";
 		}
 
-		ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
-		WebClientProvider provider = WebClientProvider.create(scheme, connector);
+		WebClientProvider provider = WebClientProvider.create(scheme, new ReactorClientHttpConnector(httpClient));
 
 		if (clientConfiguration.getPathPrefix() != null) {
 			provider = provider.withPathPrefix(clientConfiguration.getPathPrefix());
 		}
 
-		provider = provider.withDefaultHeaders(clientConfiguration.getDefaultHeaders()) //
-				.withWebClientConfigurer(clientConfiguration.getWebClientConfigurer());
+		provider = provider //
+				.withDefaultHeaders(clientConfiguration.getDefaultHeaders()) //
+				.withWebClientConfigurer(clientConfiguration.getWebClientConfigurer()) //
+				.withRequestConfigurer(requestHeadersSpec -> requestHeadersSpec.headers(httpHeaders -> {
+					HttpHeaders suppliedHeaders = clientConfiguration.getHeadersSupplier().get();
+
+					if (suppliedHeaders != null && suppliedHeaders != HttpHeaders.EMPTY) {
+						httpHeaders.addAll(suppliedHeaders);
+					}
+				}));
+
 		return provider;
 	}
 
@@ -584,12 +592,6 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 							request.getOptions().getHeaders().forEach(it -> theHeaders.add(it.getName(), it.getValue()));
 						}
 					}
-
-					// plus the ones from the supplier
-					HttpHeaders suppliedHeaders = headersSupplier.get();
-					if (suppliedHeaders != null && suppliedHeaders != HttpHeaders.EMPTY) {
-						theHeaders.addAll(suppliedHeaders);
-					}
 				});
 
 		if (request.getEntity() != null) {
@@ -599,8 +601,8 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 			ClientLogger.logRequest(logId, request.getMethod().toUpperCase(), request.getEndpoint(), request.getParameters(),
 					body::get);
 
-			requestBodySpec.contentType(MediaType.valueOf(request.getEntity().getContentType().getValue()));
-			requestBodySpec.body(Mono.fromSupplier(body), String.class);
+			requestBodySpec.contentType(MediaType.valueOf(request.getEntity().getContentType().getValue()))
+					.body(Mono.fromSupplier(body), String.class);
 		} else {
 			ClientLogger.logRequest(logId, request.getMethod().toUpperCase(), request.getEndpoint(), request.getParameters());
 		}

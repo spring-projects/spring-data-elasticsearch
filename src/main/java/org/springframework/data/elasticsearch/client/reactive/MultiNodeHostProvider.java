@@ -28,14 +28,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
-import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -53,14 +51,11 @@ class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 	private final static Logger LOG = LoggerFactory.getLogger(MultiNodeHostProvider.class);
 
 	private final WebClientProvider clientProvider;
-	private final Supplier<HttpHeaders> headersSupplier;
 	private final Map<InetSocketAddress, ElasticsearchHost> hosts;
 
-	MultiNodeHostProvider(WebClientProvider clientProvider, Supplier<HttpHeaders> headersSupplier,
-			InetSocketAddress... endpoints) {
+	MultiNodeHostProvider(WebClientProvider clientProvider, InetSocketAddress... endpoints) {
 
 		this.clientProvider = clientProvider;
-		this.headersSupplier = headersSupplier;
 		this.hosts = new ConcurrentHashMap<>();
 		for (InetSocketAddress endpoint : endpoints) {
 			this.hosts.put(endpoint, new ElasticsearchHost(endpoint, State.UNKNOWN));
@@ -166,7 +161,6 @@ class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 
 					Mono<ClientResponse> clientResponseMono = createWebClient(host) //
 							.head().uri("/") //
-							.headers(httpHeaders -> httpHeaders.addAll(headersSupplier.get())) //
 							.exchangeToMono(Mono::just) //
 							.timeout(Duration.ofSeconds(1)) //
 							.doOnError(throwable -> {
