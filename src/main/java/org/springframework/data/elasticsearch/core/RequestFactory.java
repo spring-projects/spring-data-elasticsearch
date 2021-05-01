@@ -1001,6 +1001,10 @@ class RequestFactory {
 
 		query.getRescorerQueries().forEach(rescorer -> sourceBuilder.addRescorer(getQueryRescorerBuilder(rescorer)));
 
+		if (query.getRequestCache() != null) {
+			request.requestCache(query.getRequestCache());
+		}
+
 		request.source(sourceBuilder);
 		return request;
 	}
@@ -1088,6 +1092,10 @@ class RequestFactory {
 		}
 
 		query.getRescorerQueries().forEach(rescorer -> searchRequestBuilder.addRescorer(getQueryRescorerBuilder(rescorer)));
+
+		if (query.getRequestCache() != null) {
+			searchRequestBuilder.setRequestCache(query.getRequestCache());
+		}
 
 		return searchRequestBuilder;
 	}

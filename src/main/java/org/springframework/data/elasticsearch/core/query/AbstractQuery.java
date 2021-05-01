@@ -65,6 +65,7 @@ abstract class AbstractQuery implements Query {
 	private boolean explain = false;
 	@Nullable private List<Object> searchAfter;
 	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
+	@Nullable protected Boolean requestCache;
 
 	@Override
 	@Nullable
@@ -327,5 +328,16 @@ abstract class AbstractQuery implements Query {
 	@Override
 	public List<RescorerQuery> getRescorerQueries() {
 		return rescorerQueries;
+	}
+
+	@Override
+	public void setRequestCache(@Nullable Boolean value) {
+		this.requestCache = value;
+	}
+
+	@Override
+	@Nullable
+	public Boolean getRequestCache() {
+		return this.requestCache;
 	}
 }
