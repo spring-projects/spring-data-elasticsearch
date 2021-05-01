@@ -105,6 +105,7 @@ public interface Query {
 
 	/**
 	 * Set fields to be returned as part of search request
+	 *
 	 * @param fields must not be {@literal null}
 	 * @since 4.3
 	 */
@@ -344,4 +345,19 @@ public interface Query {
 	default List<RescorerQuery> getRescorerQueries() {
 		return Collections.emptyList();
 	}
+
+	/**
+	 * sets the request_cache value for the query.
+	 *
+	 * @param value new value
+	 * @since 4.3
+	 */
+	void setRequestCache(@Nullable Boolean value);
+
+	/**
+	 * @return the request_cache value for this query.
+	 * @since 4.3
+	 */
+	@Nullable
+	Boolean getRequestCache();
 }

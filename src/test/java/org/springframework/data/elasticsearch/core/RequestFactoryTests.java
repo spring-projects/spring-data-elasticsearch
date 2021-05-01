@@ -81,6 +81,7 @@ import org.springframework.lang.Nullable;
  * @author Roman Puchkovskiy
  * @author Peer Mueller
  */
+@SuppressWarnings("ConstantConditions")
 @ExtendWith(MockitoExtension.class)
 class RequestFactoryTests {
 
@@ -595,6 +596,54 @@ class RequestFactoryTests {
 		assertEquals(expected, searchRequest, false);
 	}
 
+	@Test // #1564
+	@DisplayName("should not set request_cache on default SearchRequest")
+	void shouldNotSetRequestCacheOnDefaultSearchRequest() {
+
+		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+
+		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
+		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
+				IndexCoordinates.of("persons"));
+
+		assertThat(searchRequest.requestCache()).isNull();
+		assertThat(searchRequestBuilder.request().requestCache()).isNull();
+	}
+
+	@Test // #1564
+	@DisplayName("should set request_cache true on SearchRequest")
+	void shouldSetRequestCacheTrueOnSearchRequest() {
+
+		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		query.setRequestCache(true);
+
+		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
+		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
+				IndexCoordinates.of("persons"));
+
+		assertThat(searchRequest.requestCache()).isTrue();
+		assertThat(searchRequestBuilder.request().requestCache()).isTrue();
+	}
+
+	@Test // #1564
+	@DisplayName("should set request_cache false on SearchRequest")
+	void shouldSetRequestCacheFalseOnSearchRequest() {
+
+		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		query.setRequestCache(false);
+
+		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
+		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
+				IndexCoordinates.of("persons"));
+
+		assertThat(searchRequest.requestCache()).isFalse();
+		assertThat(searchRequestBuilder.request().requestCache()).isFalse();
+	}
+
+	// region entities
 	static class Person {
 		@Nullable @Id String id;
 		@Nullable @Field(name = "last-name") String lastName;
@@ -644,4 +693,5 @@ class RequestFactoryTests {
 	static class EntityWithSeqNoPrimaryTerm {
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 	}
+	// endregion
 }

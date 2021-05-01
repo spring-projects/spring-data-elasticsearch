@@ -732,13 +732,15 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private Flux<SearchDocument> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		return Flux.defer(() -> {
-			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
-			request = prepareSearchRequest(request);
 
-			if (query.getPageable().isPaged() || query.isLimiting()) {
-				return doFind(request);
-			} else {
+			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
+			boolean useScroll = !(query.getPageable().isPaged() || query.isLimiting());
+			request = prepareSearchRequest(request, useScroll);
+
+			if (useScroll) {
 				return doScroll(request);
+			} else {
+				return doFind(request);
 			}
 		});
 	}
@@ -747,7 +749,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Mono.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
-			request = prepareSearchRequest(request);
+			request = prepareSearchRequest(request, false);
 			return doFindForResponse(request);
 		});
 	}
@@ -782,7 +784,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	private Flux<Aggregation> doAggregate(Query query, Class<?> entityType, IndexCoordinates index) {
 		return Flux.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
-			request = prepareSearchRequest(request);
+			request = prepareSearchRequest(request, false);
 			return doAggregate(request);
 		});
 	}
@@ -801,7 +803,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Mono.defer(() -> {
 
 			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
-			request = prepareSearchRequest(request);
+			request = prepareSearchRequest(request, false);
 			return doCount(request);
 		});
 	}
@@ -890,15 +892,21 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
 	 *
 	 * @param request the generated {@link SearchRequest}.
+	 * @param useScroll
 	 * @return never {@literal null}.
 	 */
-	protected SearchRequest prepareSearchRequest(SearchRequest request) {
+	protected SearchRequest prepareSearchRequest(SearchRequest request, boolean useScroll) {
 
-		if (indicesOptions == null) {
-			return request;
+		if (indicesOptions != null) {
+			request = request.indicesOptions(indicesOptions);
 		}
 
-		return request.indicesOptions(indicesOptions);
+		// request_cache is not allowed on scroll requests.
+		if (useScroll) {
+			request = request.requestCache(null);
+		}
+		return request;
+
 	}
 
 	// endregion
