@@ -60,7 +60,6 @@ import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -137,7 +136,8 @@ public abstract class ElasticsearchTemplateTests {
 	@BeforeEach
 	public void before() {
 		indexOperations = operations.indexOps(SampleEntity.class);
-		deleteIndices();
+
+		operations.indexOps(IndexCoordinates.of("*")).delete();
 
 		indexOperations.create();
 		indexOperations.putMapping(SampleEntity.class);
@@ -153,29 +153,6 @@ public abstract class ElasticsearchTemplateTests {
 		IndexOperations indexOpsJoinEntity = operations.indexOps(SampleJoinEntity.class);
 		indexOpsJoinEntity.create();
 		indexOpsJoinEntity.putMapping(SampleJoinEntity.class);
-	}
-
-	@AfterEach
-	public void after() {
-
-		deleteIndices();
-	}
-
-	private void deleteIndices() {
-
-		indexOperations.delete();
-		operations.indexOps(SampleEntityUUIDKeyed.class).delete();
-		operations.indexOps(UseServerConfigurationEntity.class).delete();
-		operations.indexOps(SampleMappingEntity.class).delete();
-		operations.indexOps(Book.class).delete();
-		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).delete();
-		operations.indexOps(IndexCoordinates.of(INDEX_2_NAME)).delete();
-		operations.indexOps(IndexCoordinates.of(INDEX_3_NAME)).delete();
-		operations.indexOps(SearchHitsEntity.class).delete();
-		operations.indexOps(HighlightEntity.class).delete();
-		operations.indexOps(OptimisticEntity.class).delete();
-		operations.indexOps(OptimisticAndVersionedEntity.class).delete();
-		operations.indexOps(IndexCoordinates.of(INDEX_NAME_JOIN_SAMPLE_ENTITY)).delete();
 	}
 
 	@Test // DATAES-106
@@ -1126,7 +1103,8 @@ public abstract class ElasticsearchTemplateTests {
 		Collection<String> ids = IntStream.rangeClosed(1, 10).mapToObj(i -> nextIdAsString()).collect(Collectors.toList());
 		ids.add(referenceId);
 		ids.stream()
-				.map(id -> getIndexQuery(SampleEntity.builder().id(id).message(sampleMessage).version(System.currentTimeMillis()).build()))
+				.map(id -> getIndexQuery(
+						SampleEntity.builder().id(id).message(sampleMessage).version(System.currentTimeMillis()).build()))
 				.forEach(indexQuery -> operations.index(indexQuery, index));
 		indexOperations.refresh();
 
@@ -1141,7 +1119,8 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(10);
 		assertThat(searchHits.getSearchHits()).hasSize(5);
 
-		Collection<String> returnedIds = searchHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
+		Collection<String> returnedIds = searchHits.getSearchHits().stream().map(SearchHit::getId)
+				.collect(Collectors.toList());
 
 		moreLikeThisQuery.setPageable(PageRequest.of(1, 5));
 
@@ -3588,6 +3567,24 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(explanation).isNotNull();
 	}
 
+	@Test // #1800
+	@DisplayName("should work with immutable classes")
+	void shouldWorkWithImmutableClasses() {
+
+		ImmutableEntity entity = new ImmutableEntity(null, "some text", null);
+
+		ImmutableEntity saved = operations.save(entity);
+
+		assertThat(saved).isNotNull();
+		assertThat(saved.getId()).isNotEmpty();
+		SeqNoPrimaryTerm seqNoPrimaryTerm = saved.getSeqNoPrimaryTerm();
+		assertThat(seqNoPrimaryTerm).isNotNull();
+
+		ImmutableEntity retrieved = operations.get(saved.getId(), ImmutableEntity.class);
+
+		assertThat(retrieved).isEqualTo(saved);
+	}
+
 	// region entities
 	@Document(indexName = INDEX_NAME_SAMPLE_ENTITY)
 	@Setting(shards = 1, replicas = 0, refreshInterval = "-1")
@@ -4366,5 +4363,61 @@ public abstract class ElasticsearchTemplateTests {
 			this.text = text;
 		}
 	}
-	//endregion
+
+	@Document(indexName = "immutable-class")
+	private static final class ImmutableEntity {
+		@Id private final String id;
+		@Field(type = FieldType.Text) private final String text;
+		@Nullable private final SeqNoPrimaryTerm seqNoPrimaryTerm;
+
+		public ImmutableEntity(@Nullable String id, String text, @Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.id = id;
+			this.text = text;
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		@Nullable
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			ImmutableEntity that = (ImmutableEntity) o;
+
+			if (!id.equals(that.id))
+				return false;
+			if (!text.equals(that.text))
+				return false;
+			return seqNoPrimaryTerm != null ? seqNoPrimaryTerm.equals(that.seqNoPrimaryTerm) : that.seqNoPrimaryTerm == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id.hashCode();
+			result = 31 * result + text.hashCode();
+			result = 31 * result + (seqNoPrimaryTerm != null ? seqNoPrimaryTerm.hashCode() : 0);
+			return result;
+		}
+
+		@Override
+		public String toString() {
+			return "ImmutableEntity{" + "id='" + id + '\'' + ", text='" + text + '\'' + ", seqNoPrimaryTerm="
+					+ seqNoPrimaryTerm + '}';
+		}
+	}
+	// endregion
 }

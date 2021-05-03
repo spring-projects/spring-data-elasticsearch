@@ -177,8 +177,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Object queryObject = query.getObject();
 		if (queryObject != null) {
-			updateIndexedObject(queryObject, IndexedObjectInformation.of(documentId, response.getSeqNo(),
-					response.getPrimaryTerm(), response.getVersion()));
+			query.setObject(updateIndexedObject(queryObject, IndexedObjectInformation.of(documentId, response.getSeqNo(),
+					response.getPrimaryTerm(), response.getVersion())));
 		}
 
 		return documentId;

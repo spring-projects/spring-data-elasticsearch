@@ -25,12 +25,12 @@ import org.springframework.lang.Nullable;
  * @since 4.1
  */
 public class IndexedObjectInformation {
-	private final String id;
+	@Nullable private final String id;
 	@Nullable private final Long seqNo;
 	@Nullable private final Long primaryTerm;
 	@Nullable private final Long version;
 
-	private IndexedObjectInformation(String id, @Nullable Long seqNo, @Nullable Long primaryTerm,
+	private IndexedObjectInformation(@Nullable String id, @Nullable Long seqNo, @Nullable Long primaryTerm,
 			@Nullable Long version) {
 		this.id = id;
 		this.seqNo = seqNo;
@@ -38,11 +38,12 @@ public class IndexedObjectInformation {
 		this.version = version;
 	}
 
-	public static IndexedObjectInformation of(String id, @Nullable Long seqNo, @Nullable Long primaryTerm,
+	public static IndexedObjectInformation of(@Nullable String id, @Nullable Long seqNo, @Nullable Long primaryTerm,
 			@Nullable Long version) {
 		return new IndexedObjectInformation(id, seqNo, primaryTerm, version);
 	}
 
+	@Nullable
 	public String getId() {
 		return id;
 	}

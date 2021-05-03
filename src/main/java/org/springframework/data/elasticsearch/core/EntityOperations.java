@@ -477,7 +477,6 @@ class EntityOperations {
 	 */
 	private static class AdaptibleMappedEntity<T> extends MappedEntity<T> implements AdaptibleEntity<T> {
 
-		private final T bean;
 		private final ElasticsearchPersistentEntity<?> entity;
 		private final ConvertingPropertyAccessor<T> propertyAccessor;
 		private final IdentifierAccessor identifierAccessor;
@@ -490,7 +489,6 @@ class EntityOperations {
 
 			super(entity, identifierAccessor, propertyAccessor);
 
-			this.bean = bean;
 			this.entity = entity;
 			this.propertyAccessor = propertyAccessor;
 			this.identifierAccessor = identifierAccessor;
@@ -508,6 +506,11 @@ class EntityOperations {
 
 			return new AdaptibleMappedEntity<>(bean, entity, identifierAccessor,
 					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), conversionService, routingResolver);
+		}
+
+		@Override
+		public T getBean() {
+			return propertyAccessor.getBean();
 		}
 
 		@Nullable
@@ -584,7 +587,7 @@ class EntityOperations {
 		@Override
 		public String getRouting() {
 
-			String routing = routingResolver.getRouting(bean);
+			String routing = routingResolver.getRouting(propertyAccessor.getBean());
 
 			if (routing != null) {
 				return routing;

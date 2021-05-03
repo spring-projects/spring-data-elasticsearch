@@ -280,11 +280,6 @@ public class SimpleElasticsearchPersistentProperty extends
 	}
 
 	@Override
-	public boolean isImmutable() {
-		return false;
-	}
-
-	@Override
 	public boolean isSeqNoPrimaryTermProperty() {
 		return isSeqNoPrimaryTerm;
 	}

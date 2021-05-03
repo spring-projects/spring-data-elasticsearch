@@ -188,7 +188,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		IndexQuery query = getIndexQuery(entityAfterBeforeConvert);
 		doIndex(query, index);
 
-		T entityAfterAfterSave = maybeCallbackAfterSave(entityAfterBeforeConvert, index);
+		T entityAfterAfterSave = (T) maybeCallbackAfterSave(query.getObject(), index);
 
 		return entityAfterAfterSave;
 	}
@@ -215,13 +215,18 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		List<IndexQuery> indexQueries = Streamable.of(entities).stream().map(this::getIndexQuery)
 				.collect(Collectors.toList());
 
-		if (!indexQueries.isEmpty()) {
-			List<IndexedObjectInformation> indexedObjectInformations = bulkIndex(indexQueries, index);
-			Iterator<IndexedObjectInformation> iterator = indexedObjectInformations.iterator();
-			entities.forEach(entity -> updateIndexedObject(entity, iterator.next()));
+		if (indexQueries.isEmpty()) {
+			return Collections.emptyList();
 		}
 
-		return indexQueries.stream().map(IndexQuery::getObject).map(entity -> (T) entity).collect(Collectors.toList());
+		List<IndexedObjectInformation> indexedObjectInformations = bulkIndex(indexQueries, index);
+		Iterator<IndexedObjectInformation> iterator = indexedObjectInformations.iterator();
+
+		// noinspection unchecked
+		return indexQueries.stream() //
+				.map(IndexQuery::getObject) //
+				.map(entity -> (T) updateIndexedObject(entity, iterator.next())) //
+				.collect(Collectors.toList()); //
 	}
 
 	@Override
@@ -419,7 +424,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
 		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = requestFactory.moreLikeThisQueryBuilder(query, index);
-		return search(new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).withPageable(query.getPageable()).build(), clazz, index);
+		return search(
+				new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).withPageable(query.getPageable()).build(),
+				clazz, index);
 	}
 
 	@Override
@@ -611,7 +618,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		}).collect(Collectors.toList());
 	}
 
-	protected void updateIndexedObject(Object entity, IndexedObjectInformation indexedObjectInformation) {
+	protected <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
 
 		ElasticsearchPersistentEntity<?> persistentEntity = elasticsearchConverter.getMappingContext()
 				.getPersistentEntity(entity.getClass());
@@ -621,22 +628,30 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
 			// Only deal with text because ES generated Ids are strings!
-			if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
+			if (indexedObjectInformation.getId() != null && idProperty != null
+					&& idProperty.getType().isAssignableFrom(String.class)) {
 				propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
 			}
 
 			if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
 					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
 				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
+				// noinspection ConstantConditions
 				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
 						new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
 			}
 
 			if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
 				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+				// noinspection ConstantConditions
 				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
 			}
+
+			// noinspection unchecked
+			T updatedEntity = (T) propertyAccessor.getBean();
+			return updatedEntity;
 		}
+		return entity;
 	}
 
 	ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
@@ -807,13 +822,16 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	protected void updateIndexedObjectsWithQueries(List<?> queries,
 			List<IndexedObjectInformation> indexedObjectInformations) {
+
 		for (int i = 0; i < queries.size(); i++) {
 			Object query = queries.get(i);
+
 			if (query instanceof IndexQuery) {
 				IndexQuery indexQuery = (IndexQuery) query;
 				Object queryObject = indexQuery.getObject();
+
 				if (queryObject != null) {
-					updateIndexedObject(queryObject, indexedObjectInformations.get(i));
+					indexQuery.setObject(updateIndexedObject(queryObject, indexedObjectInformations.get(i)));
 				}
 			}
 		}
@@ -848,6 +866,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			}
 
 			T entity = reader.read(type, document);
+			IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of(
+					document.hasId() ? document.getId() : null, document.getSeqNo(), document.getPrimaryTerm(),
+					document.getVersion());
+			entity = updateIndexedObject(entity, indexedObjectInformation);
 			return maybeCallbackAfterConvert(entity, document, index);
 		}
 	}
