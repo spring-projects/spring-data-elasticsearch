@@ -124,6 +124,16 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 				.isEqualTo("name:(zero, eleven, one, two, three, four, five, six, seven, eight, nine, ten, eleven, zero, one)");
 	}
 
+	@Test // #1790
+	public void shouldEscapeStringsInQueryParameters() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByPrefix", "hello \"Stranger\"");
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"hello \\\"Stranger\\\"\"}}]}}");
+	}
+
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, String... args)
 			throws NoSuchMethodException {
 
@@ -168,6 +178,9 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 		@Query(value = "name:(?0, ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?0, ?1)")
 		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
 				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
+
+		@Query("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"?0\"}}]}}")
+		Flux<Book> findByPrefix(String prefix);
 	}
 
 	/**
