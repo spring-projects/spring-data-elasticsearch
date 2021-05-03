@@ -36,6 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -64,6 +65,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
@@ -1149,6 +1151,26 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}).verifyComplete();
 	}
 
+	@Test // #1800
+	@DisplayName("should work with immutable classes")
+	void shouldWorkWithImmutableClasses() {
+
+		ImmutableEntity entity = new ImmutableEntity(null, "some text", null);
+		AtomicReference<ImmutableEntity> savedEntity = new AtomicReference<>();
+
+		template.save(entity).as(StepVerifier::create).consumeNextWith(saved -> {
+			assertThat(saved).isNotNull();
+			savedEntity.set(saved);
+			assertThat(saved.getId()).isNotEmpty();
+			SeqNoPrimaryTerm seqNoPrimaryTerm = saved.getSeqNoPrimaryTerm();
+			assertThat(seqNoPrimaryTerm).isNotNull();
+		}).verifyComplete();
+
+		template.get(savedEntity.get().getId(), ImmutableEntity.class).as(StepVerifier::create)
+				.consumeNextWith(retrieved -> {
+					assertThat(retrieved).isEqualTo(savedEntity.get());
+				}).verifyComplete();
+	}
 	// endregion
 
 	// region Helper functions
@@ -1243,8 +1265,10 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
 
 			Message message1 = (Message) o;
 
@@ -1301,14 +1325,19 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
 
 			SampleEntity that = (SampleEntity) o;
 
-			if (rate != that.rate) return false;
-			if (id != null ? !id.equals(that.id) : that.id != null) return false;
-			if (message != null ? !message.equals(that.message) : that.message != null) return false;
+			if (rate != that.rate)
+				return false;
+			if (id != null ? !id.equals(that.id) : that.id != null)
+				return false;
+			if (message != null ? !message.equals(that.message) : that.message != null)
+				return false;
 			return version != null ? version.equals(that.version) : that.version == null;
 		}
 
@@ -1440,5 +1469,60 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}
 	}
 
+	@Document(indexName = "immutable-class")
+	private static final class ImmutableEntity {
+		@Id private final String id;
+		@Field(type = FieldType.Text) private final String text;
+		@Nullable private final SeqNoPrimaryTerm seqNoPrimaryTerm;
+
+		public ImmutableEntity(@Nullable String id, String text, @Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.id = id;
+			this.text = text;
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		@Nullable
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			ImmutableEntity that = (ImmutableEntity) o;
+
+			if (!id.equals(that.id))
+				return false;
+			if (!text.equals(that.text))
+				return false;
+			return seqNoPrimaryTerm != null ? seqNoPrimaryTerm.equals(that.seqNoPrimaryTerm) : that.seqNoPrimaryTerm == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id.hashCode();
+			result = 31 * result + text.hashCode();
+			result = 31 * result + (seqNoPrimaryTerm != null ? seqNoPrimaryTerm.hashCode() : 0);
+			return result;
+		}
+
+		@Override
+		public String toString() {
+			return "ImmutableEntity{" + "id='" + id + '\'' + ", text='" + text + '\'' + ", seqNoPrimaryTerm="
+					+ seqNoPrimaryTerm + '}';
+		}
+	}
 	// endregion
 }

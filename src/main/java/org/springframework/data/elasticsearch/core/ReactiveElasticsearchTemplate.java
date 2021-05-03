@@ -275,27 +275,42 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	private <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
-		AdaptibleEntity<T> adaptibleEntity = operations.forEntity(entity, converter.getConversionService(),
-				routingResolver);
-		adaptibleEntity.populateIdIfNecessary(indexedObjectInformation.getId());
 
-		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntityFor(entity.getClass());
+		ElasticsearchPersistentEntity<?> persistentEntity = converter.getMappingContext()
+				.getPersistentEntity(entity.getClass());
+
 		if (persistentEntity != null) {
 			PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
+			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
+
+			// Only deal with text because ES generated Ids are strings!
+			if (indexedObjectInformation.getId() != null && idProperty != null
+					&& idProperty.getType().isAssignableFrom(String.class)) {
+				propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
+			}
 
 			if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
 					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
 				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
+				// noinspection ConstantConditions
 				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
 						new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
 			}
 
 			if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
 				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+				// noinspection ConstantConditions
 				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
 			}
-		}
 
+			// noinspection unchecked
+			T updatedEntity = (T) propertyAccessor.getBean();
+			return updatedEntity;
+		} else {
+			AdaptibleEntity<T> adaptibleEntity = operations.forEntity(entity, converter.getConversionService(),
+					routingResolver);
+			adaptibleEntity.populateIdIfNecessary(indexedObjectInformation.getId());
+		}
 		return entity;
 	}
 
@@ -457,7 +472,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(converter, entityType, index);
 
-		return doGet(id, index).flatMap(it -> callback.toEntity(DocumentAdapters.from(it)));
+		return doGet(id, index).flatMap(response -> callback.toEntity(DocumentAdapters.from(response)));
 	}
 
 	private Mono<GetResult> doGet(String id, IndexCoordinates index) {
@@ -1097,6 +1112,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			}
 
 			T entity = reader.read(type, document);
+			IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of(
+					document.hasId() ? document.getId() : null, document.getSeqNo(), document.getPrimaryTerm(),
+					document.getVersion());
+			entity = updateIndexedObject(entity, indexedObjectInformation);
 			return maybeCallAfterConvert(entity, document, index);
 		}
 	}

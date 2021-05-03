@@ -157,9 +157,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		IndexResponse indexResponse = execute(client -> client.index(request, RequestOptions.DEFAULT));
 
 		Object queryObject = query.getObject();
+
 		if (queryObject != null) {
-			updateIndexedObject(queryObject, IndexedObjectInformation.of(indexResponse.getId(), indexResponse.getSeqNo(),
-					indexResponse.getPrimaryTerm(), indexResponse.getVersion()));
+			query.setObject(updateIndexedObject(queryObject, IndexedObjectInformation.of(indexResponse.getId(),
+					indexResponse.getSeqNo(), indexResponse.getPrimaryTerm(), indexResponse.getVersion())));
 		}
 
 		return indexResponse.getId();
@@ -168,6 +169,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	@Nullable
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
+
 		GetRequest request = requestFactory.getRequest(id, routingResolver.getRouting(), index);
 		GetResponse response = execute(client -> client.get(request, RequestOptions.DEFAULT));
 

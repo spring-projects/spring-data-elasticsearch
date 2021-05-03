@@ -35,7 +35,6 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.data.mapping.model.PersistentPropertyAccessorFactory;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
@@ -236,19 +235,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		LOGGER.warn(
 				"Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!",
 				getType());
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mapping.model.BasicPersistentEntity#setPersistentPropertyAccessorFactory(org.springframework.data.mapping.model.PersistentPropertyAccessorFactory)
-	 */
-	@SuppressWarnings("SpellCheckingInspection")
-	@Override
-	public void setPersistentPropertyAccessorFactory(PersistentPropertyAccessorFactory factory) {
-
-		// Do nothing to avoid the usage of ClassGeneratingPropertyAccessorFactory for now
-		// DATACMNS-1322 switches to proper immutability behavior which Spring Data Elasticsearch
-		// cannot yet implement
 	}
 
 	@Nullable

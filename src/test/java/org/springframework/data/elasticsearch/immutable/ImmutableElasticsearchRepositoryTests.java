@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -95,9 +96,14 @@ public class ImmutableElasticsearchRepositoryTests {
 	static class ImmutableEntity {
 		private final String id, name;
 
-		public ImmutableEntity(String name) {
-			this.id = null;
+		@PersistenceConstructor
+		public ImmutableEntity(String id, String name) {
+			this.id = id;
 			this.name = name;
+		}
+
+		public ImmutableEntity(String name) {
+			this(null, name);
 		}
 
 		public String getId() {
