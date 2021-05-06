@@ -19,6 +19,7 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 import static org.springframework.data.elasticsearch.core.document.Document.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
@@ -3585,6 +3586,31 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(retrieved).isEqualTo(saved);
 	}
 
+	@Test // #1488
+	@DisplayName("should set scripted fields on immutable objects")
+	void shouldSetScriptedFieldsOnImmutableObjects() {
+
+		ImmutableWithScriptedEntity entity = new ImmutableWithScriptedEntity("42", 42, null);
+		operations.save(entity);
+
+		Map<String, Object> params = new HashMap<>();
+		params.put("factor", 2);
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withSourceFilter(new FetchSourceFilter(new String[] { "*" }, new String[] {}))
+				.withScriptField(
+				new ScriptField("scriptedRate", new Script(ScriptType.INLINE, "expression", "doc['rate'] * factor", params)))
+				.build();
+
+		SearchHits<ImmutableWithScriptedEntity> searchHits = operations.search(searchQuery,
+				ImmutableWithScriptedEntity.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		ImmutableWithScriptedEntity foundEntity = searchHits.getSearchHit(0).getContent();
+		assertThat(foundEntity.getId()).isEqualTo("42");
+		assertThat(foundEntity.getRate()).isEqualTo(42);
+		assertThat(foundEntity.getScriptedRate()).isEqualTo(84.0);
+	}
+
 	// region entities
 	@Document(indexName = INDEX_NAME_SAMPLE_ENTITY)
 	@Setting(shards = 1, replicas = 0, refreshInterval = "-1")
@@ -4366,7 +4392,7 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "immutable-class")
 	private static final class ImmutableEntity {
-		@Id private final String id;
+		@Id @Nullable private final String id;
 		@Field(type = FieldType.Text) private final String text;
 		@Nullable private final SeqNoPrimaryTerm seqNoPrimaryTerm;
 
@@ -4376,6 +4402,7 @@ public abstract class ElasticsearchTemplateTests {
 			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
 		}
 
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -4417,6 +4444,62 @@ public abstract class ElasticsearchTemplateTests {
 		public String toString() {
 			return "ImmutableEntity{" + "id='" + id + '\'' + ", text='" + text + '\'' + ", seqNoPrimaryTerm="
 					+ seqNoPrimaryTerm + '}';
+		}
+	}
+
+	@Document(indexName = "immutable-scripted")
+	public static final class ImmutableWithScriptedEntity {
+		@Id private final String id;
+		@Field(type = Integer) @Nullable private final int rate;
+		@Nullable @ScriptedField private final Double scriptedRate;
+
+		public ImmutableWithScriptedEntity(String id, int rate, @Nullable java.lang.Double scriptedRate) {
+			this.id = id;
+			this.rate = rate;
+			this.scriptedRate = scriptedRate;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		@Nullable
+		public Double getScriptedRate() {
+			return scriptedRate;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			ImmutableWithScriptedEntity that = (ImmutableWithScriptedEntity) o;
+
+			if (rate != that.rate)
+				return false;
+			if (!id.equals(that.id))
+				return false;
+			return scriptedRate != null ? scriptedRate.equals(that.scriptedRate) : that.scriptedRate == null;
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id.hashCode();
+			result = 31 * result + rate;
+			result = 31 * result + (scriptedRate != null ? scriptedRate.hashCode() : 0);
+			return result;
+		}
+
+		@Override
+		public String toString() {
+			return "ImmutableWithScriptedEntity{" + "id='" + id + '\'' + ", rate=" + rate + ", scriptedRate=" + scriptedRate
+					+ '}';
 		}
 	}
 	// endregion
