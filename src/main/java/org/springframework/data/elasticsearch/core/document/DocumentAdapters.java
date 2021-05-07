@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -63,36 +62,38 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Matt Gilene
  * @since 4.0
  */
-public class DocumentAdapters {
+public final class DocumentAdapters {
+
+	private DocumentAdapters() {}
 
 	/**
 	 * Create a {@link Document} from {@link GetResponse}.
 	 * <p>
-	 * Returns a {@link Document} using the source if available.
+	 * Returns a {@link Document} using the getResponse if available.
 	 *
-	 * @param source the source {@link GetResponse}.
-	 * @return the adapted {@link Document}, null if source.isExists() returns false.
+	 * @param getResponse the getResponse {@link GetResponse}.
+	 * @return the adapted {@link Document}, null if getResponse.isExists() returns false.
 	 */
 	@Nullable
-	public static Document from(GetResponse source) {
+	public static Document from(GetResponse getResponse) {
 
-		Assert.notNull(source, "GetResponse must not be null");
+		Assert.notNull(getResponse, "GetResponse must not be null");
 
-		if (!source.isExists()) {
+		if (!getResponse.isExists()) {
 			return null;
 		}
 
-		if (source.isSourceEmpty()) {
-			return fromDocumentFields(source, source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(),
-					source.getPrimaryTerm());
+		if (getResponse.isSourceEmpty()) {
+			return fromDocumentFields(getResponse, getResponse.getIndex(), getResponse.getId(), getResponse.getVersion(),
+					getResponse.getSeqNo(), getResponse.getPrimaryTerm());
 		}
 
-		Document document = Document.from(source.getSourceAsMap());
-		document.setIndex(source.getIndex());
-		document.setId(source.getId());
-		document.setVersion(source.getVersion());
-		document.setSeqNo(source.getSeqNo());
-		document.setPrimaryTerm(source.getPrimaryTerm());
+		Document document = Document.from(getResponse.getSourceAsMap());
+		document.setIndex(getResponse.getIndex());
+		document.setId(getResponse.getId());
+		document.setVersion(getResponse.getVersion());
+		document.setSeqNo(getResponse.getSeqNo());
+		document.setPrimaryTerm(getResponse.getPrimaryTerm());
 
 		return document;
 	}
@@ -188,9 +189,10 @@ public class DocumentAdapters {
 
 		if (sourceRef == null || sourceRef.length() == 0) {
 			return new SearchDocumentAdapter(
-					source.getScore(), source.getSortValues(), source.getFields(), highlightFields, fromDocumentFields(source,
-							source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(), source.getPrimaryTerm()),
-					innerHits, nestedMetaData, explanation, matchedQueries);
+					fromDocumentFields(source, source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(),
+							source.getPrimaryTerm()),
+					source.getScore(), source.getSortValues(), source.getFields(), highlightFields, innerHits, nestedMetaData,
+					explanation, matchedQueries);
 		}
 
 		Document document = Document.from(source.getSourceAsMap());
@@ -203,8 +205,8 @@ public class DocumentAdapters {
 		document.setSeqNo(source.getSeqNo());
 		document.setPrimaryTerm(source.getPrimaryTerm());
 
-		return new SearchDocumentAdapter(source.getScore(), source.getSortValues(), source.getFields(), highlightFields,
-				document, innerHits, nestedMetaData, explanation, matchedQueries);
+		return new SearchDocumentAdapter(document, source.getScore(), source.getSortValues(), source.getFields(),
+				highlightFields, innerHits, nestedMetaData, explanation, matchedQueries);
 	}
 
 	@Nullable
@@ -243,6 +245,10 @@ public class DocumentAdapters {
 	 *
 	 * @param documentFields the {@link DocumentField}s backing the {@link Document}.
 	 * @param index the index where the Document was found
+	 * @param id the document id
+	 * @param version the document version
+	 * @param seqNo the seqNo if the document
+	 * @param primaryTerm the primaryTerm of the document
 	 * @return the adapted {@link Document}.
 	 */
 	public static Document fromDocumentFields(Iterable<DocumentField> documentFields, String index, String id,
@@ -261,10 +267,13 @@ public class DocumentAdapters {
 		return new DocumentFieldAdapter(fields, index, id, version, seqNo, primaryTerm);
 	}
 
-	// TODO: Performance regarding keys/values/entry-set
+	/**
+	 * Adapter for a collection of {@link DocumentField}s.
+	 */
 	static class DocumentFieldAdapter implements Document {
 
 		private final Collection<DocumentField> documentFields;
+		private final Map<String, DocumentField> documentFieldMap;
 		private final String index;
 		private final String id;
 		private final long version;
@@ -274,6 +283,8 @@ public class DocumentAdapters {
 		DocumentFieldAdapter(Collection<DocumentField> documentFields, String index, String id, long version, long seqNo,
 				long primaryTerm) {
 			this.documentFields = documentFields;
+			this.documentFieldMap = new LinkedHashMap<>(documentFields.size());
+			documentFields.forEach(documentField -> documentFieldMap.put(documentField.getName(), documentField));
 			this.index = index;
 			this.id = id;
 			this.version = version;
@@ -353,14 +364,7 @@ public class DocumentAdapters {
 
 		@Override
 		public boolean containsKey(Object key) {
-
-			for (DocumentField documentField : documentFields) {
-				if (documentField.getName().equals(key)) {
-					return true;
-				}
-			}
-
-			return false;
+			return documentFieldMap.containsKey(key);
 		}
 
 		@Override
@@ -380,11 +384,9 @@ public class DocumentAdapters {
 		@Override
 		@Nullable
 		public Object get(Object key) {
-			return documentFields.stream() //
-					.filter(documentField -> documentField.getName().equals(key)) //
-					.map(DocumentField::getValue).findFirst() //
-					.orElse(null); //
 
+			DocumentField documentField = documentFieldMap.get(key);
+			return documentField != null ? documentField.getValue() : null;
 		}
 
 		@Override
@@ -409,17 +411,18 @@ public class DocumentAdapters {
 
 		@Override
 		public Set<String> keySet() {
-			return documentFields.stream().map(DocumentField::getName).collect(Collectors.toCollection(LinkedHashSet::new));
+			return documentFieldMap.keySet();
 		}
 
 		@Override
 		public Collection<Object> values() {
-			return documentFields.stream().map(DocumentFieldAdapter::getValue).collect(Collectors.toList());
+			return documentFieldMap.values().stream().map(DocumentFieldAdapter::getValue).collect(Collectors.toList());
 		}
 
 		@Override
 		public Set<Entry<String, Object>> entrySet() {
-			return documentFields.stream().collect(Collectors.toMap(DocumentField::getName, DocumentFieldAdapter::getValue))
+			return documentFieldMap.entrySet().stream()
+					.collect(Collectors.toMap(Entry::getKey, entry -> DocumentFieldAdapter.getValue(entry.getValue())))
 					.entrySet();
 		}
 
@@ -458,7 +461,6 @@ public class DocumentAdapters {
 			}
 		}
 
-
 		@Override
 		public String toString() {
 			return getClass().getSimpleName() + '@' + this.id + '#' + this.version + ' ' + toJson();
@@ -494,14 +496,14 @@ public class DocumentAdapters {
 		@Nullable private final Explanation explanation;
 		@Nullable private final List<String> matchedQueries;
 
-		SearchDocumentAdapter(float score, Object[] sortValues, Map<String, DocumentField> fields,
-				Map<String, List<String>> highlightFields, Document delegate, Map<String, SearchDocumentResponse> innerHits,
+		SearchDocumentAdapter(Document delegate, float score, Object[] sortValues, Map<String, DocumentField> fields,
+				Map<String, List<String>> highlightFields, Map<String, SearchDocumentResponse> innerHits,
 				@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation,
 				@Nullable List<String> matchedQueries) {
 
+			this.delegate = delegate;
 			this.score = score;
 			this.sortValues = sortValues;
-			this.delegate = delegate;
 			fields.forEach((name, documentField) -> this.fields.put(name, documentField.getValues()));
 			this.highlightFields.putAll(highlightFields);
 			this.innerHits.putAll(innerHits);
@@ -646,7 +648,13 @@ public class DocumentAdapters {
 
 		@Override
 		public Object get(Object key) {
-			return delegate.get(key);
+
+			if (delegate.containsKey(key)) {
+				return delegate.get(key);
+			}
+
+			// fallback to fields
+			return fields.get(key);
 		}
 
 		@Override
