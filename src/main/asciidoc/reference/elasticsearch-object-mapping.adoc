@@ -47,7 +47,8 @@ Constructor arguments are mapped by name to the key values in the retrieved Docu
 * `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions (the following list is not complete, check the annotation Javadoc for a complete reference):
 ** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
 ** `type`: The field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_.
-See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]
+See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]. If the field type is not specified, it defaults to `FieldType.Auto`. This means, that no mapping entry is written for the property and that Elasticsearch will add a mapping entry dynamically when the first data for this property is stored
+(check the Elasticsearch documentation for dynamic mapping rules).
 ** `format`: One or more built-in date formats, see the next section <<elasticsearch.mapping.meta-model.date-formats>>.
 ** `pattern`: One or more custom date formats, see the next section <<elasticsearch.mapping.meta-model.date-formats>>.
 ** `store`: Flag whether the original field value should be store in Elasticsearch, default value is _false_.
