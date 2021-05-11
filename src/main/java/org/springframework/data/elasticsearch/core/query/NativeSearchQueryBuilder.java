@@ -27,6 +27,7 @@ import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.script.mustache.SearchTemplateRequestBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
+import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
@@ -55,6 +56,7 @@ public class NativeSearchQueryBuilder {
 	private final List<ScriptField> scriptFields = new ArrayList<>();
 	private final List<SortBuilder<?>> sortBuilders = new ArrayList<>();
 	private final List<AbstractAggregationBuilder<?>> aggregationBuilders = new ArrayList<>();
+	private final List<PipelineAggregationBuilder> pipelineAggregationBuilders = new ArrayList<>();
 	@Nullable private HighlightBuilder highlightBuilder;
 	@Nullable private HighlightBuilder.Field[] highlightFields;
 	private Pageable pageable = Pageable.unpaged();
@@ -102,6 +104,14 @@ public class NativeSearchQueryBuilder {
 
 	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder<?> aggregationBuilder) {
 		this.aggregationBuilders.add(aggregationBuilder);
+		return this;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder addAggregation(PipelineAggregationBuilder pipelineAggregationBuilder) {
+		this.pipelineAggregationBuilders.add(pipelineAggregationBuilder);
 		return this;
 	}
 
@@ -237,6 +247,10 @@ public class NativeSearchQueryBuilder {
 
 		if (!isEmpty(aggregationBuilders)) {
 			nativeSearchQuery.setAggregations(aggregationBuilders);
+		}
+
+		if (!isEmpty(pipelineAggregationBuilders)) {
+			nativeSearchQuery.setPipelineAggregations(pipelineAggregationBuilders);
 		}
 
 		if (minScore > 0) {
