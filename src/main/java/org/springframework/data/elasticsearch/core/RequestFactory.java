@@ -77,7 +77,6 @@ import org.elasticsearch.index.reindex.UpdateByQueryAction;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
 import org.elasticsearch.script.Script;
-import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
@@ -1119,9 +1118,11 @@ class RequestFactory {
 		}
 
 		if (!isEmpty(query.getAggregations())) {
-			for (AbstractAggregationBuilder<?> aggregationBuilder : query.getAggregations()) {
-				sourceBuilder.aggregation(aggregationBuilder);
-			}
+			query.getAggregations().forEach(sourceBuilder::aggregation);
+		}
+
+		if (!isEmpty(query.getPipelineAggregations())) {
+			query.getPipelineAggregations().forEach(sourceBuilder::aggregation);
 		}
 
 	}
@@ -1144,9 +1145,11 @@ class RequestFactory {
 		}
 
 		if (!isEmpty(nativeSearchQuery.getAggregations())) {
-			for (AbstractAggregationBuilder<?> aggregationBuilder : nativeSearchQuery.getAggregations()) {
-				searchRequestBuilder.addAggregation(aggregationBuilder);
-			}
+			nativeSearchQuery.getAggregations().forEach(searchRequestBuilder::addAggregation);
+		}
+
+		if (!isEmpty(nativeSearchQuery.getPipelineAggregations())) {
+			nativeSearchQuery.getPipelineAggregations().forEach(searchRequestBuilder::addAggregation);
 		}
 	}
 

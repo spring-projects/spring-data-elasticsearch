@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.aggregation;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.elasticsearch.search.aggregations.AggregationBuilders.*;
+import static org.elasticsearch.search.aggregations.PipelineAggregatorBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 
@@ -26,9 +27,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.pipeline.InternalStatsBucket;
+import org.elasticsearch.search.aggregations.pipeline.ParsedStatsBucket;
+import org.elasticsearch.search.aggregations.pipeline.StatsBucket;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -109,7 +115,7 @@ public class ElasticsearchTemplateAggregationTests {
 		indexOperations.delete();
 	}
 
-	@Test
+	@Test // DATAES-96
 	public void shouldReturnAggregatedResponseForGivenSearchQuery() {
 
 		// given
@@ -130,6 +136,56 @@ public class ElasticsearchTemplateAggregationTests {
 		assertThat(searchHits.hasSearchHits()).isFalse();
 	}
 
+	@Test // #1255
+	@DisplayName("should work with pipeline aggregations")
+	void shouldWorkWithPipelineAggregations() {
+
+		IndexInitializer.init(operations.indexOps(PipelineAggsEntity.class));
+		operations.save( //
+				new PipelineAggsEntity("1-1", "one"), //
+				new PipelineAggsEntity("2-1", "two"), //
+				new PipelineAggsEntity("2-2", "two"), //
+				new PipelineAggsEntity("3-1", "three"), //
+				new PipelineAggsEntity("3-2", "three"), //
+				new PipelineAggsEntity("3-3", "three") //
+		); //
+
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
+				.withQuery(matchAllQuery()) //
+				.withSearchType(SearchType.DEFAULT) //
+				.addAggregation(terms("keyword_aggs").field("keyword")) //
+				.addAggregation(statsBucket("keyword_bucket_stats", "keyword_aggs._count")) //
+				.withMaxResults(0) //
+				.build();
+
+		SearchHits<PipelineAggsEntity> searchHits = operations.search(searchQuery, PipelineAggsEntity.class);
+
+		Aggregations aggregations = searchHits.getAggregations();
+		assertThat(aggregations).isNotNull();
+		assertThat(aggregations.asMap().get("keyword_aggs")).isNotNull();
+		Aggregation keyword_bucket_stats = aggregations.asMap().get("keyword_bucket_stats");
+		assertThat(keyword_bucket_stats).isInstanceOf(StatsBucket.class);
+		if (keyword_bucket_stats instanceof ParsedStatsBucket) {
+			// Rest client
+			ParsedStatsBucket statsBucket = (ParsedStatsBucket) keyword_bucket_stats;
+			assertThat(statsBucket.getMin()).isEqualTo(1.0);
+			assertThat(statsBucket.getMax()).isEqualTo(3.0);
+			assertThat(statsBucket.getAvg()).isEqualTo(2.0);
+			assertThat(statsBucket.getSum()).isEqualTo(6.0);
+			assertThat(statsBucket.getCount()).isEqualTo(3L);
+		}
+		if (keyword_bucket_stats instanceof InternalStatsBucket) {
+			// transport client
+			InternalStatsBucket statsBucket = (InternalStatsBucket) keyword_bucket_stats;
+			assertThat(statsBucket.getMin()).isEqualTo(1.0);
+			assertThat(statsBucket.getMax()).isEqualTo(3.0);
+			assertThat(statsBucket.getAvg()).isEqualTo(2.0);
+			assertThat(statsBucket.getSum()).isEqualTo(6.0);
+			assertThat(statsBucket.getCount()).isEqualTo(3L);
+		}
+	}
+
+	// region entities
 	@Document(indexName = "test-index-articles-core-aggregation")
 	static class ArticleEntity {
 
@@ -255,5 +311,35 @@ public class ElasticsearchTemplateAggregationTests {
 			return indexQuery;
 		}
 	}
+
+	@Document(indexName = "pipeline-aggs")
+	static class PipelineAggsEntity {
+		@Id private String id;
+		@Field(type = Keyword) private String keyword;
+
+		public PipelineAggsEntity() {}
+
+		public PipelineAggsEntity(String id, String keyword) {
+			this.id = id;
+			this.keyword = keyword;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		public String getKeyword() {
+			return keyword;
+		}
+
+		public void setKeyword(String keyword) {
+			this.keyword = keyword;
+		}
+	}
+	// endregion
 
 }
