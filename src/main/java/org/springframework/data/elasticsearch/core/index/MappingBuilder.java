@@ -92,6 +92,9 @@ public class MappingBuilder {
 	private static final String JOIN_TYPE_RELATIONS = "relations";
 
 	private static final String MAPPING_ENABLED = "enabled";
+	private static final String DATE_DETECTION = "date_detection";
+	private static final String NUMERIC_DETECTION = "numeric_detection";
+	private static final String DYNAMIC_DATE_FORMATS = "dynamic_date_formats";
 
 	private final ElasticsearchConverter elasticsearchConverter;
 
@@ -147,10 +150,23 @@ public class MappingBuilder {
 			@Nullable Field parentFieldAnnotation, @Nullable DynamicMapping dynamicMapping) throws IOException {
 
 		if (entity != null && entity.isAnnotationPresent(Mapping.class)) {
+			Mapping mappingAnnotation = entity.getRequiredAnnotation(Mapping.class);
 
-			if (!entity.getRequiredAnnotation(Mapping.class).enabled()) {
+			if (!mappingAnnotation.enabled()) {
 				builder.field(MAPPING_ENABLED, false);
 				return;
+			}
+
+			if (mappingAnnotation.dateDetection() != Mapping.Detection.DEFAULT) {
+				builder.field(DATE_DETECTION, Boolean.parseBoolean(mappingAnnotation.dateDetection().name()));
+			}
+
+			if (mappingAnnotation.numericDetection() != Mapping.Detection.DEFAULT) {
+				builder.field(NUMERIC_DETECTION, Boolean.parseBoolean(mappingAnnotation.numericDetection().name()));
+			}
+
+			if (mappingAnnotation.dynamicDateFormats().length > 0) {
+				builder.field(DYNAMIC_DATE_FORMATS, mappingAnnotation.dynamicDateFormats());
 			}
 		}
 

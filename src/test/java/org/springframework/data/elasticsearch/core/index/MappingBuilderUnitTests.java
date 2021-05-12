@@ -774,6 +774,87 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
+	@Test // #638
+	@DisplayName("should not write dynamic detection mapping entries in default setting")
+	void shouldNotWriteDynamicDetectionMappingEntriesInDefaultSetting() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DynamicDetectionMappingDefault.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	@Test // #638
+	@DisplayName("should write dynamic detection mapping entries when set to false")
+	void shouldWriteDynamicDetectionMappingEntriesWhenSetToFalse() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"date_detection\": false," + //
+				"  \"numeric_detection\": false," + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DynamicDetectionMappingFalse.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	@Test // #638
+	@DisplayName("should write dynamic detection mapping entries when set to true")
+	void shouldWriteDynamicDetectionMappingEntriesWhenSetToTrue() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"date_detection\": true," + //
+				"  \"numeric_detection\": true," + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DynamicDetectionMappingTrue.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	@Test // #638
+	@DisplayName("should write dynamic date formats")
+	void shouldWriteDynamicDateFormats() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"dynamic_date_formats\": [\"date1\",\"date2\"]," + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DynamicDateFormatsMapping.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
 	// region entities
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
@@ -1689,6 +1770,29 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Id @Nullable private String id;
 		@Field(type = Text) @Nullable private String title;
 		@Field(type = Nested) @Nullable private List<Author> authors;
+	}
+
+	@Document(indexName = "dynamic-field-mapping-default")
+	private static class DynamicDetectionMappingDefault {
+		@Id @Nullable private String id;
+	}
+
+	@Document(indexName = "dynamic-dateformats-mapping")
+	@Mapping(dynamicDateFormats = {"date1", "date2"})
+	private static class DynamicDateFormatsMapping {
+		@Id @Nullable private String id;
+	}
+
+	@Document(indexName = "dynamic-detection-mapping-true")
+	@Mapping(dateDetection = Mapping.Detection.TRUE, numericDetection = Mapping.Detection.TRUE)
+	private static class DynamicDetectionMappingTrue {
+		@Id @Nullable private String id;
+	}
+
+	@Document(indexName = "dynamic-detection-mapping-false")
+	@Mapping(dateDetection = Mapping.Detection.FALSE, numericDetection = Mapping.Detection.FALSE)
+	private static class DynamicDetectionMappingFalse {
+		@Id @Nullable private String id;
 	}
 	// endregion
 }
