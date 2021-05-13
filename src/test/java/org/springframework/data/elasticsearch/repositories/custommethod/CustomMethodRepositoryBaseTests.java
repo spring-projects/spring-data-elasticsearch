@@ -1593,11 +1593,27 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat((nextPageable.getPageNumber())).isEqualTo(1);
 	}
 
+	@Test // #1811
+	@DisplayName("should return SearchPage with query")
+	void shouldReturnSearchPageWithQuery() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		SearchPage<SampleEntity> searchPage = repository.searchWithQueryByMessage("Message", PageRequest.of(0, 10));
+
+		assertThat(searchPage).isNotNull();
+		SearchHits<SampleEntity> searchHits = searchPage.getSearchHits();
+		assertThat(searchHits).isNotNull();
+		assertThat((searchHits.getTotalHits())).isEqualTo(20);
+		assertThat(searchHits.getSearchHits()).hasSize(10);
+		Pageable nextPageable = searchPage.nextPageable();
+		assertThat((nextPageable.getPageNumber())).isEqualTo(1);
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
 		for (int i = 0; i < numberOfEntities; i++) {
-
 			SampleEntity entity = new SampleEntity();
 			entity.setId(UUID.randomUUID().toString());
 			entity.setAvailable(true);
@@ -1633,8 +1649,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 	@Document(indexName = "test-index-sample-repositories-custom-method")
 	static class SampleEntity {
-		@Nullable
-		@Id private String id;
+		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
 		@Nullable @Field(type = Keyword) private String keyword;
@@ -1835,6 +1850,9 @@ public abstract class CustomMethodRepositoryBaseTests {
 		SearchHits<SampleEntity> searchBy(Sort sort);
 
 		SearchPage<SampleEntity> searchByMessage(String message, Pageable pageable);
+
+		@Query("{\"match\": {\"message\": \"?0\"}}")
+		SearchPage<SampleEntity> searchWithQueryByMessage(String message, Pageable pageable);
 
 		@CountQuery("{\"bool\" : {\"must\" : {\"term\" : {\"type\" : \"?0\"}}}}")
 		long countWithQueryByType(String type);
