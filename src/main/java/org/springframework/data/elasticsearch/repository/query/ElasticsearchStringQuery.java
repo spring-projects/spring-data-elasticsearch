@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,16 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
-import org.springframework.util.ClassUtils;
 
 /**
  * ElasticsearchStringQuery
@@ -69,7 +66,12 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
 			SearchHits<?> searchHits = elasticsearchOperations.search(stringQuery, clazz, index);
-			result = SearchHitSupport.page(searchHits, stringQuery.getPageable());
+			if (queryMethod.isSearchPageMethod()) {
+				result = SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable());
+			} else {
+				result = SearchHitSupport
+						.unwrapSearchHits(SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable()));
+			}
 		} else if (queryMethod.isStreamQuery()) {
 			if (accessor.getPageable().isUnpaged()) {
 				stringQuery.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
@@ -86,7 +88,9 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			result = elasticsearchOperations.searchOne(stringQuery, clazz, index);
 		}
 
-		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
+		return (queryMethod.isNotSearchHitMethod() && !queryMethod.isSearchPageMethod())
+				? SearchHitSupport.unwrapSearchHits(result)
+				: result;
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
