@@ -1570,6 +1570,22 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat((nextPageable.getPageNumber())).isEqualTo(1);
 	}
 
+	@Test // #1811
+	void shouldReturnSearchPageWithQuery() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		SearchPage<SampleEntity> searchPage = repository.searchWithQueryByMessage("Message", PageRequest.of(0, 10));
+
+		assertThat(searchPage).isNotNull();
+		SearchHits<SampleEntity> searchHits = searchPage.getSearchHits();
+		assertThat(searchHits).isNotNull();
+		assertThat((searchHits.getTotalHits())).isEqualTo(20);
+		assertThat(searchHits.getSearchHits()).hasSize(10);
+		Pageable nextPageable = searchPage.nextPageable();
+		assertThat((nextPageable.getPageNumber())).isEqualTo(1);
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
@@ -1746,6 +1762,9 @@ public abstract class CustomMethodRepositoryBaseTests {
 		SearchHits<SampleEntity> searchBy(Sort sort);
 
 		SearchPage<SampleEntity> searchByMessage(String message, Pageable pageable);
+
+		@Query("{\"match\": {\"message\": \"?0\"}}")
+		SearchPage<SampleEntity> searchWithQueryByMessage(String message, Pageable pageable);
 	}
 
 	/**
