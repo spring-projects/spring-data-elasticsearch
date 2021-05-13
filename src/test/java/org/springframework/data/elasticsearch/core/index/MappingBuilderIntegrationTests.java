@@ -306,6 +306,17 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		indexOps.delete();
 	}
 
+	@Test // #638
+	@DisplayName("should write dynamic detection values")
+	void shouldWriteDynamicDetectionValues() {
+
+		IndexOperations indexOps = operations.indexOps(DynamicDetectionMapping.class);
+		indexOps.create();
+		indexOps.putMapping();
+		indexOps.delete();
+	}
+
+	// region entities
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
 		@Nullable @Id private String id;
@@ -1112,5 +1123,13 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 			this.author = author;
 		}
 	}
+
+	@Document(indexName = "dynamic-detection-mapping-true")
+	@Mapping(dateDetection = Mapping.Detection.TRUE, numericDetection = Mapping.Detection.TRUE,
+			dynamicDateFormats = { "MM/dd/yyyy" })
+	private static class DynamicDetectionMapping {
+		@Id @Nullable private String id;
+	}
+	// endregion
 
 }

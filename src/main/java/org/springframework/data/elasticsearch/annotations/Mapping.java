@@ -38,8 +38,31 @@ public @interface Mapping {
 
 	/**
 	 * whether mappings are enabled
-	 * 
+	 *
 	 * @since 4.2
 	 */
 	boolean enabled() default true;
+	/**
+	 * whether date_detection is enabled
+	 *
+	 * @since 4.3
+	 */
+	Detection dateDetection() default Detection.DEFAULT;
+
+	/**
+	 * whether numeric_detection is enabled
+	 *
+	 * @since 4.3
+	 */
+	Detection numericDetection() default Detection.DEFAULT;
+
+	/**
+	 * custom dynamic date formats
+	 * @since 4.3
+	 */
+	String[] dynamicDateFormats() default {};
+
+	enum Detection {
+		DEFAULT, TRUE, FALSE;
+	}
 }
