@@ -77,7 +77,12 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		} else if (queryMethod.isPageQuery()) {
 			stringQuery.setPageable(accessor.getPageable());
 			SearchHits<?> searchHits = elasticsearchOperations.search(stringQuery, clazz, index);
-			result = SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable());
+			if (queryMethod.isSearchPageMethod()) {
+				result = SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable());
+			} else {
+				result = SearchHitSupport
+						.unwrapSearchHits(SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable()));
+			}
 		} else if (queryMethod.isStreamQuery()) {
 			if (accessor.getPageable().isUnpaged()) {
 				stringQuery.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
@@ -94,7 +99,9 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			result = elasticsearchOperations.searchOne(stringQuery, clazz, index);
 		}
 
-		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
+		return (queryMethod.isNotSearchHitMethod() && queryMethod.isNotSearchPageMethod())
+				? SearchHitSupport.unwrapSearchHits(result)
+				: result;
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
