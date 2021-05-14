@@ -1,6 +1,18 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.2.1 (2021-05-14)
+-------------------------------------
+* #1811 - StringQuery execution crashes on return type `SearchPage<T>`.
+* #1805 - Upgrade to Elasticsearch 7.12.1.
+* #1794 - Refactor `DefaultReactiveElasticsearchClient` to do request customization with the `WebClient`.
+* #1790 - Custom Query with string parameter which contains double quotes.
+* #1787 - Search with MoreLikeThisQuery should use Pageable.
+* #1785 - Fix documentation about auditing.
+* #1778 - Custom property names must be used in SourceFilter and source fields.
+* #1767 - DynamicMapping annotation should be applicable to any object field.
+
+
 Changes in version 4.1.9 (2021-05-14)
 -------------------------------------
 * #1811 - StringQuery execution crashes on return type `SearchPage<T>`.
@@ -1558,6 +1570,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
