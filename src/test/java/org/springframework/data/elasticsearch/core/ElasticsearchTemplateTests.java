@@ -49,6 +49,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
@@ -56,6 +57,7 @@ import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
 import org.elasticsearch.join.query.ParentIdQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
+import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -2811,6 +2813,39 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(searchHits.getSearchHit(1).getContent().getMessage()).isEqualTo("message 2");
 	}
 
+	@Test // #1493
+	@DisplayName("should return document with collapse field and inner hits")
+	public void shouldReturnDocumentWithCollapsedFieldAndInnerHits() {
+
+		// given
+		SampleEntity sampleEntity = SampleEntity.builder().id(nextIdAsString()).message("message 1").rate(1)
+				.version(System.currentTimeMillis()).build();
+		SampleEntity sampleEntity2 = SampleEntity.builder().id(nextIdAsString()).message("message 2").rate(2)
+				.version(System.currentTimeMillis()).build();
+		SampleEntity sampleEntity3 = SampleEntity.builder().id(nextIdAsString()).message("message 1").rate(1)
+				.version(System.currentTimeMillis()).build();
+
+		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity, sampleEntity2, sampleEntity3));
+
+		operations.bulkIndex(indexQueries, index);
+		indexOperations.refresh();
+
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withCollapseBuilder(new CollapseBuilder("rate").setInnerHits(new InnerHitBuilder("innerHits"))).build();
+
+		// when
+		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class, index);
+
+		// then
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isEqualTo(3);
+		assertThat(searchHits.getSearchHits()).hasSize(2);
+		assertThat(searchHits.getSearchHit(0).getContent().getMessage()).isEqualTo("message 1");
+		assertThat(searchHits.getSearchHit(0).getInnerHits("innerHits").getTotalHits()).isEqualTo(2);
+		assertThat(searchHits.getSearchHit(1).getContent().getMessage()).isEqualTo("message 2");
+		assertThat(searchHits.getSearchHit(1).getInnerHits("innerHits").getTotalHits()).isEqualTo(1);
+	}
+
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity)
 				.withVersion(sampleEntity.getVersion()).build();
@@ -3597,8 +3632,8 @@ public abstract class ElasticsearchTemplateTests {
 		params.put("factor", 2);
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withSourceFilter(new FetchSourceFilter(new String[] { "*" }, new String[] {}))
-				.withScriptField(
-				new ScriptField("scriptedRate", new Script(ScriptType.INLINE, "expression", "doc['rate'] * factor", params)))
+				.withScriptField(new ScriptField("scriptedRate",
+						new Script(ScriptType.INLINE, "expression", "doc['rate'] * factor", params)))
 				.build();
 
 		SearchHits<ImmutableWithScriptedEntity> searchHits = operations.search(searchQuery,

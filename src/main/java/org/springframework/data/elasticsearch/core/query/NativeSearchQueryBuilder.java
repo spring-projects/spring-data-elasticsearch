@@ -102,6 +102,14 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withCollapseBuilder(@Nullable CollapseBuilder collapseBuilder) {
+		this.collapseBuilder = collapseBuilder;
+		return this;
+	}
+
 	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder<?> aggregationBuilder) {
 		this.aggregationBuilders.add(aggregationBuilder);
 		return this;
