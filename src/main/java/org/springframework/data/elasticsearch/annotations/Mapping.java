@@ -27,6 +27,7 @@ import org.springframework.data.annotation.Persistent;
  * Elasticsearch Mapping
  *
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 @Persistent
 @Inherited
@@ -42,6 +43,7 @@ public @interface Mapping {
 	 * @since 4.2
 	 */
 	boolean enabled() default true;
+
 	/**
 	 * whether date_detection is enabled
 	 *
@@ -58,9 +60,19 @@ public @interface Mapping {
 
 	/**
 	 * custom dynamic date formats
+	 *
 	 * @since 4.3
 	 */
 	String[] dynamicDateFormats() default {};
+
+	/**
+	 * classpath to a JSON file containing the values for a runtime mapping definition. The file must contain the JSON
+	 * object that is written as the value of the runtime property. {@see <a href=
+	 * "https://www.elastic.co/guide/en/elasticsearch/reference/7.12/runtime-mapping-fields.html">elasticsearch doc</a>}
+	 *
+	 * @since 4.3
+	 */
+	String runtimeFieldsPath() default "";
 
 	enum Detection {
 		DEFAULT, TRUE, FALSE;

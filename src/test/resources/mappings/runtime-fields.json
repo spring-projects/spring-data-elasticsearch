@@ -1,0 +1,8 @@
+{
+  "day_of_week": {
+    "type": "keyword",
+    "script": {
+      "source": "emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))"
+    }
+  }
+}

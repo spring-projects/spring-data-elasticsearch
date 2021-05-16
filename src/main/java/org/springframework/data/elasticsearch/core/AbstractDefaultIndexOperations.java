@@ -219,8 +219,6 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 				if (hasText(mappings)) {
 					return Document.parse(mappings);
 				}
-			} else {
-				LOGGER.info("mappingPath in @Mapping has to be defined. Building mappings using @Field");
 			}
 		}
 

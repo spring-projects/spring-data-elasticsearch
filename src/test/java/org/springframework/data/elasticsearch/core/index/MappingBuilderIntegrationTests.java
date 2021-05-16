@@ -25,6 +25,7 @@ import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 import java.lang.Integer;
 import java.lang.Object;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -311,6 +312,16 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	void shouldWriteDynamicDetectionValues() {
 
 		IndexOperations indexOps = operations.indexOps(DynamicDetectionMapping.class);
+		indexOps.create();
+		indexOps.putMapping();
+		indexOps.delete();
+	}
+
+	@Test // #1816
+	@DisplayName("should write runtime fields")
+	void shouldWriteRuntimeFields() {
+
+		IndexOperations indexOps = operations.indexOps(RuntimeFieldEntity.class);
 		indexOps.create();
 		indexOps.putMapping();
 		indexOps.delete();
@@ -1130,6 +1141,14 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	private static class DynamicDetectionMapping {
 		@Id @Nullable private String id;
 	}
+
+	@Document(indexName = "runtime-fields")
+	@Mapping(runtimeFieldsPath = "/mappings/runtime-fields.json")
+	private static class RuntimeFieldEntity {
+		@Id @Nullable private String id;
+		@Field(type = Date, format = DateFormat.epoch_millis, name = "@timestamp") @Nullable private Instant timestamp;
+	}
+
 	// endregion
 
 }
