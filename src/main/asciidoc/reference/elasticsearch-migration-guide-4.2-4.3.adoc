@@ -1,0 +1,15 @@
+[[elasticsearch-migration-guide-4.2-4.3]]
+= Upgrading from 4.2.x to 4.3.x
+
+This section describes breaking changes from version 4.2.x to 4.3.x and how removed features can be replaced by new introduced features.
+
+[[elasticsearch-migration-guide-4.2-4.3.deprecations]]
+== Deprecations
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes]]
+== Breaking Changes
+
+=== Handling of field and sourceFilter properties of Query
+
+Up to version 4.2 the `fields` property of a `Query` was interpreted and added to the include list of the `sourceFilter`. This was not correct, as these are different things for Elasticsearch. This has been corrected. As a consequence code might not work anymore that relies on using `fields` to specify which fields should be returned from the document's
+`_source' and should be changed to use the `sourceFilter`.

@@ -995,35 +995,6 @@ public abstract class ElasticsearchTemplateTests {
 	}
 
 	@Test
-	public void shouldReturnSpecifiedFields() {
-
-		// given
-		String documentId = nextIdAsString();
-		String message = "some test message";
-		String type = "some type";
-		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(message).type(type)
-				.version(System.currentTimeMillis()).location(new GeoPoint(1.2, 3.4)).build();
-
-		IndexQuery indexQuery = getIndexQuery(sampleEntity);
-
-		operations.index(indexQuery, index);
-		indexOperations.refresh();
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFields("message")
-				.build();
-
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class, index);
-
-		// then
-		assertThat(searchHits).isNotNull();
-		assertThat(searchHits.getTotalHits()).isEqualTo(1);
-		final SampleEntity actual = searchHits.getSearchHit(0).getContent();
-		assertThat(actual.message).isEqualTo(message);
-		assertThat(actual.getType()).isNull();
-		assertThat(actual.getLocation()).isNull();
-	}
-
-	@Test
 	public void shouldReturnFieldsBasedOnSourceFilter() {
 
 		// given
@@ -2666,7 +2637,7 @@ public abstract class ElasticsearchTemplateTests {
 		indexOperations.refresh();
 
 		// then
-		SourceFilter sourceFilter = new FetchSourceFilter(new String[] { "id" }, new String[] {});
+		SourceFilter sourceFilter = new FetchSourceFilterBuilder().withIncludes("id").build();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.withPageable(PageRequest.of(0, 10)).withSourceFilter(sourceFilter).build();
@@ -3631,7 +3602,7 @@ public abstract class ElasticsearchTemplateTests {
 		Map<String, Object> params = new HashMap<>();
 		params.put("factor", 2);
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withSourceFilter(new FetchSourceFilter(new String[] { "*" }, new String[] {}))
+				.withSourceFilter(new FetchSourceFilterBuilder().withIncludes("*").build())
 				.withScriptField(new ScriptField("scriptedRate",
 						new Script(ScriptType.INLINE, "expression", "doc['rate'] * factor", params)))
 				.build();
