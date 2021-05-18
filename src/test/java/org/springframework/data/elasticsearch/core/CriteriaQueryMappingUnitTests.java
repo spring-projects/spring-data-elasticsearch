@@ -44,7 +44,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoJsonPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.lang.Nullable;
@@ -430,7 +430,7 @@ public class CriteriaQueryMappingUnitTests {
 		Query query = Query.findAll();
 		// Note: we don't care if these filters make sense here, this test is only about name mapping
 		query.addFields("firstName", "lastName");
-		query.addSourceFilter(new FetchSourceFilter(new String[] { "firstName" }, new String[] { "lastName" }));
+		query.addSourceFilter(new FetchSourceFilterBuilder().withIncludes("firstName").withExcludes("lastName").build());
 
 		mappingElasticsearchConverter.updateQuery(query, Person.class);
 

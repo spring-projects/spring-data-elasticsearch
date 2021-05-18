@@ -29,6 +29,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
@@ -66,28 +67,15 @@ public class SourceFilterIntegrationTests {
 		indexOps.delete();
 	}
 
-	@Test // #1659
-	@DisplayName("should only return requested fields on search")
-	void shouldOnlyReturnRequestedFieldsOnSearch() {
-
-		Query query = Query.findAll();
-		query.addFields("field2");
-
-		SearchHits<Entity> searchHits = operations.search(query, Entity.class);
-
-		assertThat(searchHits).hasSize(1);
-		Entity entity = searchHits.getSearchHit(0).getContent();
-		assertThat(entity.getField1()).isNull();
-		assertThat(entity.getField2()).isEqualTo("two");
-		assertThat(entity.getField3()).isNull();
-	}
-
 	@Test // #1659, #1678
 	@DisplayName("should only return requested fields on multiget")
 	void shouldOnlyReturnRequestedFieldsOnGMultiGet() {
 
-		Query query = new NativeSearchQueryBuilder().withIds(Collections.singleton("42")).build();
-		query.addFields("field2");
+		// multiget has no fields, need sourcefilter here
+		Query query = new NativeSearchQueryBuilder() //
+				.withIds(Collections.singleton("42")) //
+				.withSourceFilter(new FetchSourceFilterBuilder().withIncludes("field2").build()) //
+				.build(); //
 
 		List<MultiGetItem<Entity>> entities = operations.multiGet(query, Entity.class);
 

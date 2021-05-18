@@ -681,6 +681,7 @@ class RequestFactory {
 					item = item.routing(searchQuery.getRoute());
 				}
 
+				// note: multiGet does not have fields, need to set sourceContext to filter
 				if (fetchSourceContext != null) {
 					item.fetchSourceContext(fetchSourceContext);
 				}
@@ -929,11 +930,6 @@ class RequestFactory {
 			sourceBuilder.seqNoAndPrimaryTerm(true);
 		}
 
-		if (query.getSourceFilter() != null) {
-			SourceFilter sourceFilter = query.getSourceFilter();
-			sourceBuilder.fetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
-		}
-
 		if (query.getPageable().isPaged()) {
 			sourceBuilder.from((int) query.getPageable().getOffset());
 			sourceBuilder.size(query.getPageable().getPageSize());
@@ -942,8 +938,14 @@ class RequestFactory {
 			sourceBuilder.size(INDEX_MAX_RESULT_WINDOW);
 		}
 
+		if (query.getSourceFilter() != null) {
+			sourceBuilder.fetchSource(getFetchSourceContext(query));
+			SourceFilter sourceFilter = query.getSourceFilter();
+			sourceBuilder.fetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
+		}
+
 		if (!query.getFields().isEmpty()) {
-			sourceBuilder.fetchSource(query.getFields().toArray(new String[0]), null);
+			query.getFields().forEach(sourceBuilder::fetchField);
 		}
 
 		if (query.getIndicesOptions() != null) {
@@ -1023,11 +1025,6 @@ class RequestFactory {
 			searchRequestBuilder.seqNoAndPrimaryTerm(true);
 		}
 
-		if (query.getSourceFilter() != null) {
-			SourceFilter sourceFilter = query.getSourceFilter();
-			searchRequestBuilder.setFetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
-		}
-
 		if (query.getPageable().isPaged()) {
 			searchRequestBuilder.setFrom((int) query.getPageable().getOffset());
 			searchRequestBuilder.setSize(query.getPageable().getPageSize());
@@ -1036,8 +1033,13 @@ class RequestFactory {
 			searchRequestBuilder.setSize(INDEX_MAX_RESULT_WINDOW);
 		}
 
+		if (query.getSourceFilter() != null) {
+			SourceFilter sourceFilter = query.getSourceFilter();
+			searchRequestBuilder.setFetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
+		}
+
 		if (!query.getFields().isEmpty()) {
-			searchRequestBuilder.setFetchSource(query.getFields().toArray(new String[0]), null);
+			query.getFields().forEach(searchRequestBuilder::addFetchField);
 		}
 
 		if (query.getIndicesOptions() != null) {
@@ -1599,24 +1601,16 @@ class RequestFactory {
 		}
 	}
 
+	@Nullable
 	private FetchSourceContext getFetchSourceContext(Query searchQuery) {
-		FetchSourceContext fetchSourceContext = null;
+
 		SourceFilter sourceFilter = searchQuery.getSourceFilter();
 
-		if (!isEmpty(searchQuery.getFields())) {
-			if (sourceFilter == null) {
-				sourceFilter = new FetchSourceFilter(toArray(searchQuery.getFields()), null);
-			} else {
-				ArrayList<String> arrayList = new ArrayList<>();
-				Collections.addAll(arrayList, sourceFilter.getIncludes());
-				sourceFilter = new FetchSourceFilter(toArray(arrayList), null);
-			}
-
-			fetchSourceContext = new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
-		} else if (sourceFilter != null) {
-			fetchSourceContext = new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
+		if (sourceFilter != null) {
+			return new FetchSourceContext(true, sourceFilter.getIncludes(), sourceFilter.getExcludes());
 		}
-		return fetchSourceContext;
+
+		return null;
 	}
 
 	// endregion

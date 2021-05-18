@@ -99,7 +99,7 @@ public interface Query {
 	/**
 	 * Get fields to be returned as part of search request
 	 *
-	 * @return
+	 * @return maybe empty, never null
 	 */
 	List<String> getFields();
 
