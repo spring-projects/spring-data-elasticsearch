@@ -210,6 +210,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 
 		// load mapping specified in Mapping annotation if present
 		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
+
 		if (mappingAnnotation != null) {
 			String mappingPath = mappingAnnotation.mappingPath();
 
