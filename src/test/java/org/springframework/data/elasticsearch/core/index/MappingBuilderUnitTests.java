@@ -26,6 +26,7 @@ import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Object;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -855,7 +856,38 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
+	@Test // #1816
+	@DisplayName("should write runtime fields")
+	void shouldWriteRuntimeFields() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"runtime\": {\n" + //
+				"    \"day_of_week\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"script\": {\n" + //
+				"        \"source\": \"emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))\"\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  },\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"@timestamp\": {\n" + //
+				"      \"type\": \"date\",\n" + //
+				"      \"format\": \"epoch_millis\"\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(RuntimeFieldEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
 	// region entities
+
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
 		@Nullable @Id private String id;
@@ -1778,7 +1810,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	}
 
 	@Document(indexName = "dynamic-dateformats-mapping")
-	@Mapping(dynamicDateFormats = {"date1", "date2"})
+	@Mapping(dynamicDateFormats = { "date1", "date2" })
 	private static class DynamicDateFormatsMapping {
 		@Id @Nullable private String id;
 	}
@@ -1793,6 +1825,13 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Mapping(dateDetection = Mapping.Detection.FALSE, numericDetection = Mapping.Detection.FALSE)
 	private static class DynamicDetectionMappingFalse {
 		@Id @Nullable private String id;
+	}
+
+	@Document(indexName = "runtime-fields")
+	@Mapping(runtimeFieldsPath = "/mappings/runtime-fields.json")
+	private static class RuntimeFieldEntity {
+		@Id @Nullable private String id;
+		@Field(type = Date, format = DateFormat.epoch_millis, name = "@timestamp") @Nullable private Instant timestamp;
 	}
 	// endregion
 }

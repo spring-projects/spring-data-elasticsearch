@@ -51,10 +51,24 @@ class Entity {
 
 When Spring Data Elasticsearch creates the index mapping with the `IndexOperations.createMapping()` methods, it uses the annotations described in <<elasticsearch.mapping.meta-model.annotations>>, especially the `@Field` annotation. In addition to that it is possible to add the `@Mapping` annotation to a class. This annotation has the following properties:
 
-* `mappingPath` a classpath resource in JSON format which is used as the mapping, no other mapping processing is done.
+* `mappingPath` a classpath resource in JSON format; if this is not empty it is used as the mapping, no other mapping processing is done.
 * `enabled`  when set to false, this flag is written to the mapping and no further processing is done.
 * `dateDetection` and `numericDetection` set the corresponding properties in the mapping when not set to `DEFAULT`.
 * `dynamicDateFormats` when this String array is not empty, it defines the date formats used for automatic date detection.
+* `runtimeFieldsPath` a classpath resource in JSON format containing the definition of runtime fields which is written to the index mappings, for example:
+====
+[source,json]
+----
+{
+  "day_of_week": {
+    "type": "keyword",
+    "script": {
+      "source": "emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))"
+    }
+  }
+}
+----
+====
 
 [[elasticsearch.misc.filter]]
 == Filter Builder

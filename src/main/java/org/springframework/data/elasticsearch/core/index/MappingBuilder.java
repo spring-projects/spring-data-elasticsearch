@@ -95,6 +95,7 @@ public class MappingBuilder {
 	private static final String DATE_DETECTION = "date_detection";
 	private static final String NUMERIC_DETECTION = "numeric_detection";
 	private static final String DYNAMIC_DATE_FORMATS = "dynamic_date_formats";
+	private static final String RUNTIME = "runtime";
 
 	private final ElasticsearchConverter elasticsearchConverter;
 
@@ -168,6 +169,10 @@ public class MappingBuilder {
 			if (mappingAnnotation.dynamicDateFormats().length > 0) {
 				builder.field(DYNAMIC_DATE_FORMATS, mappingAnnotation.dynamicDateFormats());
 			}
+
+			if (StringUtils.hasText(mappingAnnotation.runtimeFieldsPath())) {
+				addRuntimeFields(builder, mappingAnnotation.runtimeFieldsPath());
+			}
 		}
 
 		boolean writeNestedProperties = !isRootObject && (isAnyPropertyAnnotatedWithField(entity) || nestedOrObjectField);
@@ -220,6 +225,15 @@ public class MappingBuilder {
 			builder.endObject();
 		}
 
+	}
+
+	private void addRuntimeFields(XContentBuilder builder, String runtimeFieldsPath) throws IOException {
+
+		ClassPathResource runtimeFields = new ClassPathResource(runtimeFieldsPath);
+
+		if (runtimeFields.exists()) {
+			builder.rawField(RUNTIME, runtimeFields.getInputStream(), XContentType.JSON);
+		}
 	}
 
 	private void buildPropertyMapping(XContentBuilder builder, boolean isRootObject,
