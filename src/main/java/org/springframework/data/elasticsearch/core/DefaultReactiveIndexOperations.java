@@ -183,7 +183,11 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
 
 		if (mappingAnnotation != null) {
-			return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
+			String mappingPath = mappingAnnotation.mappingPath();
+
+			if (hasText(mappingPath)) {
+				return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
+			}
 		}
 
 		String mapping = new MappingBuilder(converter).buildPropertyMapping(clazz);
