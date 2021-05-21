@@ -15,43 +15,67 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
+import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
 
+import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
-import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
-import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  */
-@SpringIntegrationTest
-@ContextConfiguration(classes = { ReactiveElasticsearchRestTemplateConfiguration.class })
-public class ReactiveMappingBuilderIntegrationTests {
+public class ReactiveMappingBuilderTests extends MappingContextBaseTests {
 
-	@Autowired private ReactiveElasticsearchOperations operations;
+	ReactiveMappingBuilder getReactiveMappingBuilder() {
+		return new ReactiveMappingBuilder(elasticsearchConverter.get());
+	}
 
-	@Test // #1822
+	@Test // #1822, #1824
 	@DisplayName("should write runtime fields")
-	void shouldWriteRuntimeFields() {
+	void shouldWriteRuntimeFields() throws JSONException {
 
-		ReactiveIndexOperations indexOps = operations.indexOps(RuntimeFieldEntity.class);
+		ReactiveMappingBuilder mappingBuilder = getReactiveMappingBuilder();
 
-		indexOps.create().block();
-		indexOps.putMapping().block();
-		indexOps.delete().block();
+		String expected = "{\n" + //
+				"  \"runtime\": {\n" + //
+				"    \"day_of_week\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"script\": {\n" + //
+				"        \"source\": \"emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))\"\n"
+				+ //
+				"      }\n" + //
+				"    }\n" + //
+				"  },\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"@timestamp\": {\n" + //
+				"      \"type\": \"date\",\n" + //
+				"      \"format\": \"epoch_millis\"\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = Mono.defer(() -> mappingBuilder.buildReactivePropertyMapping(RuntimeFieldEntity.class))
+				.subscribeOn(Schedulers.parallel()).block();
+
+		assertEquals(expected, mapping, true);
 	}
 
 	// region entities

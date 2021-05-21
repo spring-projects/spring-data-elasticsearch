@@ -97,7 +97,7 @@ public class MappingBuilder {
 	private static final String DYNAMIC_DATE_FORMATS = "dynamic_date_formats";
 	private static final String RUNTIME = "runtime";
 
-	private final ElasticsearchConverter elasticsearchConverter;
+	protected final ElasticsearchConverter elasticsearchConverter;
 
 	private boolean writeTypeHints = true;
 
@@ -113,9 +113,16 @@ public class MappingBuilder {
 	 */
 	public String buildPropertyMapping(Class<?> clazz) throws MappingException {
 
+		ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
+				.getRequiredPersistentEntity(clazz);
+
+		return buildPropertyMapping(entity, getRuntimeFields(entity));
+	}
+
+	protected String buildPropertyMapping(ElasticsearchPersistentEntity<?> entity,
+			@Nullable org.springframework.data.elasticsearch.core.document.Document runtimeFields) {
+
 		try {
-			ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.getMappingContext()
-					.getRequiredPersistentEntity(clazz);
 
 			writeTypeHints = entity.writeTypeHints();
 
@@ -124,7 +131,8 @@ public class MappingBuilder {
 			// Dynamic templates
 			addDynamicTemplatesMapping(builder, entity);
 
-			mapEntity(builder, entity, true, "", false, FieldType.Auto, null, entity.findAnnotation(DynamicMapping.class));
+			mapEntity(builder, entity, true, "", false, FieldType.Auto, null, entity.findAnnotation(DynamicMapping.class),
+					runtimeFields);
 
 			builder.endObject() // root object
 					.close();
@@ -148,7 +156,8 @@ public class MappingBuilder {
 
 	private void mapEntity(XContentBuilder builder, @Nullable ElasticsearchPersistentEntity<?> entity,
 			boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType,
-			@Nullable Field parentFieldAnnotation, @Nullable DynamicMapping dynamicMapping) throws IOException {
+			@Nullable Field parentFieldAnnotation, @Nullable DynamicMapping dynamicMapping,
+			@Nullable org.springframework.data.elasticsearch.core.document.Document runtimeFields) throws IOException {
 
 		if (entity != null && entity.isAnnotationPresent(Mapping.class)) {
 			Mapping mappingAnnotation = entity.getRequiredAnnotation(Mapping.class);
@@ -170,8 +179,8 @@ public class MappingBuilder {
 				builder.field(DYNAMIC_DATE_FORMATS, mappingAnnotation.dynamicDateFormats());
 			}
 
-			if (StringUtils.hasText(mappingAnnotation.runtimeFieldsPath())) {
-				addRuntimeFields(builder, mappingAnnotation.runtimeFieldsPath());
+			if (runtimeFields != null) {
+				builder.field(RUNTIME, runtimeFields);
 			}
 		}
 
@@ -227,13 +236,22 @@ public class MappingBuilder {
 
 	}
 
-	private void addRuntimeFields(XContentBuilder builder, String runtimeFieldsPath) throws IOException {
+	@Nullable
+	private org.springframework.data.elasticsearch.core.document.Document getRuntimeFields(
+			@Nullable ElasticsearchPersistentEntity<?> entity) {
 
-		ClassPathResource runtimeFields = new ClassPathResource(runtimeFieldsPath);
+		if (entity != null) {
+			Mapping mappingAnnotation = entity.findAnnotation(Mapping.class);
+			if (mappingAnnotation != null) {
+				String runtimeFieldsPath = mappingAnnotation.runtimeFieldsPath();
 
-		if (runtimeFields.exists()) {
-			builder.rawField(RUNTIME, runtimeFields.getInputStream(), XContentType.JSON);
+				if (hasText(runtimeFieldsPath)) {
+					String jsonString = ResourceUtil.readFileFromClasspath(runtimeFieldsPath);
+					return org.springframework.data.elasticsearch.core.document.Document.parse(jsonString);
+				}
+			}
 		}
+		return null;
 	}
 
 	private void buildPropertyMapping(XContentBuilder builder, boolean isRootObject,
@@ -291,7 +309,7 @@ public class MappingBuilder {
 						: null;
 
 				mapEntity(builder, persistentEntity, false, property.getFieldName(), true, fieldAnnotation.type(),
-						fieldAnnotation, dynamicMapping);
+						fieldAnnotation, dynamicMapping, null);
 				return;
 			}
 		}

@@ -49,8 +49,8 @@ import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ReactiveMappingBuilder;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -190,8 +190,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 			}
 		}
 
-		String mapping = new MappingBuilder(converter).buildPropertyMapping(clazz);
-		return Mono.just(Document.parse(mapping));
+		return new ReactiveMappingBuilder(converter).buildReactivePropertyMapping(clazz).map(Document::parse);
 	}
 
 	@Override

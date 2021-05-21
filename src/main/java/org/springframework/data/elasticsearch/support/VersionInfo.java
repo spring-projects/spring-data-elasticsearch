@@ -15,9 +15,9 @@
  */
 package org.springframework.data.elasticsearch.support;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.elasticsearch.Version;
 import org.slf4j.Logger;
@@ -35,70 +35,76 @@ import org.springframework.lang.Nullable;
 public final class VersionInfo {
 
 	private static final Logger LOG = LoggerFactory.getLogger(VersionInfo.class);
-	private static final AtomicBoolean initialized = new AtomicBoolean(false);
 
-	private static final String VERSION_PROPERTIES = "versions.properties";
+	protected static final String VERSION_PROPERTIES = "versions.properties";
 	public static final String VERSION_SPRING_DATA_ELASTICSEARCH = "version.spring-data-elasticsearch";
 	public static final String VERSION_ELASTICSEARCH_CLIENT = "version.elasticsearch-client";
 
-	/**
-	 * logs the relevant version info the first time it is called. Does nothing after the first call
-	 * 
-	 * @param clusterVersion the version of the cluster
-	 */
-	public static void logVersions(@Nullable String clusterVersion) {
-		if (!initialized.getAndSet(true)) {
-			try {
-				InputStream resource = VersionInfo.class.getClassLoader().getResourceAsStream(VERSION_PROPERTIES);
-				if (resource != null) {
-					Properties properties = new Properties();
-					properties.load(resource);
+	private static Properties versionProperties;
 
-					String versionSpringDataElasticsearch = properties.getProperty(VERSION_SPRING_DATA_ELASTICSEARCH);
-					Version versionESBuilt = Version.fromString(properties.getProperty(VERSION_ELASTICSEARCH_CLIENT));
-					Version versionESUsed = Version.CURRENT;
-					Version versionESCluster = clusterVersion != null ? Version.fromString(clusterVersion) : null;
+	public static Properties versionProperties() {
+		return versionProperties;
+	}
 
-					LOG.info("Version Spring Data Elasticsearch: {}", versionSpringDataElasticsearch.toString());
-					LOG.info("Version Elasticsearch Client in build: {}", versionESBuilt.toString());
-					LOG.info("Version Elasticsearch Client used: {}", versionESUsed.toString());
-
-					if (differInMajorOrMinor(versionESBuilt, versionESUsed)) {
-						LOG.warn("Version mismatch in between Elasticsearch Clients build/use: {} - {}", versionESBuilt,
-								versionESUsed);
-					}
-
-					if (versionESCluster != null) {
-						LOG.info("Version Elasticsearch cluster: {}", versionESCluster.toString());
-
-						if (differInMajorOrMinor(versionESUsed, versionESCluster)) {
-							LOG.warn("Version mismatch in between Elasticsearch Client and Cluster: {} - {}", versionESUsed,
-									versionESCluster);
-						}
-					}
-				} else {
-					LOG.warn("cannot load {}", VERSION_PROPERTIES);
-				}
-			} catch (Exception e) {
-				LOG.warn("Could not log version info: {} - {}", e.getClass().getSimpleName(), e.getMessage());
-			}
-
+	static {
+		try {
+			versionProperties = loadVersionProperties();
+		} catch (IOException e) {
+			LOG.error("Could not load {}", VERSION_PROPERTIES, e);
+			versionProperties = new Properties();
+			versionProperties.put(VERSION_SPRING_DATA_ELASTICSEARCH, "0.0.0");
+			versionProperties.put(VERSION_ELASTICSEARCH_CLIENT, "0.0.0");
 		}
 	}
 
-	public static Properties versionProperties() throws Exception {
+	/**
+	 * logs the relevant version info.
+	 *
+	 * @param clusterVersion the version of the cluster
+	 */
+	public static void logVersions(@Nullable String clusterVersion) {
 		try {
-			InputStream resource = VersionInfo.class.getClassLoader().getResourceAsStream(VERSION_PROPERTIES);
-			if (resource != null) {
-				Properties properties = new Properties();
-				properties.load(resource);
-				return properties;
-			} else {
-				throw new IllegalStateException("Resource not found");
+
+			String versionSpringDataElasticsearch = versionProperties.getProperty(VERSION_SPRING_DATA_ELASTICSEARCH);
+			Version versionESBuilt = Version.fromString(versionProperties.getProperty(VERSION_ELASTICSEARCH_CLIENT));
+			Version versionESUsed = Version.CURRENT;
+			Version versionESCluster = clusterVersion != null ? Version.fromString(clusterVersion) : null;
+
+			LOG.info("Version Spring Data Elasticsearch: {}", versionSpringDataElasticsearch.toString());
+			LOG.info("Version Elasticsearch Client in build: {}", versionESBuilt.toString());
+			LOG.info("Version Elasticsearch Client used: {}", versionESUsed.toString());
+
+			if (differInMajorOrMinor(versionESBuilt, versionESUsed)) {
+				LOG.warn("Version mismatch in between Elasticsearch Clients build/use: {} - {}", versionESBuilt, versionESUsed);
+			}
+
+			if (versionESCluster != null) {
+				LOG.info("Version Elasticsearch cluster: {}", versionESCluster.toString());
+
+				if (differInMajorOrMinor(versionESUsed, versionESCluster)) {
+					LOG.warn("Version mismatch in between Elasticsearch Client and Cluster: {} - {}", versionESUsed,
+							versionESCluster);
+				}
 			}
 		} catch (Exception e) {
-			LOG.error("Could not load {}", VERSION_PROPERTIES, e);
-			throw e;
+			LOG.warn("Could not log version info: {} - {}", e.getClass().getSimpleName(), e.getMessage());
+		}
+	}
+
+	/**
+	 * gets the version properties from the classpath resource.
+	 *
+	 * @return version properties
+	 * @throws IOException when an error occurs
+	 */
+	private static Properties loadVersionProperties() throws IOException {
+		InputStream resource = VersionInfo.class.getClassLoader().getResourceAsStream(VERSION_PROPERTIES);
+		if (resource != null) {
+			Properties properties = new Properties();
+			properties.load(resource);
+			return properties;
+		} else {
+			throw new IllegalStateException("Resource not found");
 		}
 	}
 

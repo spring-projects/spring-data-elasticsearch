@@ -142,7 +142,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		this.operations = new EntityOperations(this.mappingContext);
 		this.requestFactory = new RequestFactory(converter);
 
-		logVersions();
+		// initialize the VersionInfo class in the initialization phase
+		// noinspection ResultOfMethodCallIgnored
+		VersionInfo.versionProperties();
 	}
 
 	private ReactiveElasticsearchTemplate copy() {
@@ -155,11 +157,14 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return copy;
 	}
 
-	private void logVersions() {
-		getClusterVersion() //
-				.doOnSuccess(VersionInfo::logVersions) //
-				.doOnError(e -> VersionInfo.logVersions(null)) //
-				.subscribe();
+	/**
+	 * logs the versions of the different Elasticsearch components.
+	 *
+	 * @return a Mono signalling finished execution
+	 * @since 4.3
+	 */
+	public Mono<Void> logVersions() {
+		return getClusterVersion().doOnNext(VersionInfo::logVersions).then();
 	}
 
 	@Override
