@@ -20,12 +20,16 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
- * Combines the {@link SpringDataElasticsearchExtension} and the {@link SpringExtension}.
+ * Combines the {@link SpringDataElasticsearchExtension} and the {@link SpringExtension}. Tests are executed in
+ * accordance to the {@link org.junit.jupiter.api.Order} annotation, to be able to have an explicit last test method for
+ * cleanup (since 4.3)
  *
  * @author Peter-Josef Meisch
  */
@@ -34,5 +38,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringDataElasticsearchExtension.class)
 @ExtendWith(SpringExtension.class)
 @Tag(Tags.INTEGRATION_TEST)
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public @interface SpringIntegrationTest {
 }

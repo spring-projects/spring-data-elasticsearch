@@ -18,10 +18,8 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import java.lang.Object;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
@@ -37,16 +35,16 @@ import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.annotation.Id;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
-import org.springframework.lang.Nullable;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -64,9 +62,18 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  * @author Farid Faoudi
  */
-@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
+@ContextConfiguration(classes = { ElasticsearchRestTemplateTests.Config.class })
 @DisplayName("ElasticsearchRestTemplate")
 public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
+
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider("rest-template");
+		}
+	}
 
 	@Test
 	public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
@@ -75,33 +82,8 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
 		UpdateQuery updateQuery = UpdateQuery.builder(nextIdAsString()).withDocument(document).build();
-		assertThatThrownBy(() -> operations.update(updateQuery, index))
+		assertThatThrownBy(() -> operations.update(updateQuery, IndexCoordinates.of(indexNameProvider.indexName())))
 				.isInstanceOf(UncategorizedElasticsearchException.class);
-	}
-
-	@Document(indexName = "test-index-sample-core-rest-template")
-	static class SampleEntity {
-		@Nullable @Id private String id;
-		@Nullable
-		@Field(type = Text, store = true, fielddata = true) private String type;
-
-		@Nullable
-		public String getId() {
-			return id;
-		}
-
-		public void setId(@Nullable String id) {
-			this.id = id;
-		}
-
-		@Nullable
-		public String getType() {
-			return type;
-		}
-
-		public void setType(@Nullable String type) {
-			this.type = type;
-		}
 	}
 
 	@Test // DATAES-768

@@ -153,10 +153,6 @@ public class CdiRepositoryTests {
 		assertThat(personRepository.returnOne()).isEqualTo(1);
 	}
 
-	/**
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
 	@Document(indexName = "test-index-product-cdi-repository")
 	static class Product {
 		@Nullable @Id private String id;
@@ -372,7 +368,7 @@ public class CdiRepositoryTests {
 		}
 	}
 
-	static class Author {
+	private static class Author {
 		@Nullable private String id;
 		@Nullable private String name;
 

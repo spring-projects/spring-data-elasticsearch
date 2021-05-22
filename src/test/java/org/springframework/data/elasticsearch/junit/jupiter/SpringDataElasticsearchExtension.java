@@ -46,7 +46,6 @@ import org.springframework.test.context.MergedContextConfiguration;
 public class SpringDataElasticsearchExtension
 		implements BeforeAllCallback, ParameterResolver, ContextCustomizerFactory {
 
-	public static final String SPRING_DATA_ELASTICSEARCH_TEST_CLUSTER_URL = "SPRING_DATA_ELASTICSEARCH_TEST_CLUSTER_URL";
 	private static final Logger LOGGER = LoggerFactory.getLogger(SpringDataElasticsearchExtension.class);
 
 	private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace
@@ -77,7 +76,7 @@ public class SpringDataElasticsearchExtension
 	}
 
 	private ClusterConnection createClusterConnection() {
-		return new ClusterConnection(System.getenv(SPRING_DATA_ELASTICSEARCH_TEST_CLUSTER_URL));
+		return new ClusterConnection();
 	}
 
 	@Override
@@ -89,7 +88,7 @@ public class SpringDataElasticsearchExtension
 
 	/*
 	 * (non javadoc)
-	 * no need to check the paramaterContext and extensionContext here, this was done before in supportsParameter.
+	 * no need to check the parameterContext and extensionContext here, this was done before in supportsParameter.
 	 */
 	@Override
 	public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)

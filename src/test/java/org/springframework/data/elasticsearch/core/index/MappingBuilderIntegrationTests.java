@@ -38,9 +38,8 @@ import java.util.Set;
 
 import org.assertj.core.data.Percentage;
 import org.elasticsearch.search.suggest.completion.context.ContextMapping;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -84,27 +83,18 @@ import org.springframework.test.context.ContextConfiguration;
 public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
 
-	@AfterEach
-	@BeforeEach
-	public void deleteIndices() {
-		indexOperations = operations.indexOps(SimpleRecursiveEntity.class);
-		indexOperations.delete();
-		operations.indexOps(StockPrice.class).delete();
-		operations.indexOps(SampleInheritedEntity.class).delete();
-		operations.indexOps(User.class).delete();
-		operations.indexOps(Group.class).delete();
-		operations.indexOps(Book.class).delete();
-		operations.indexOps(NormalizerEntity.class).delete();
-		operations.indexOps(CopyToEntity.class).delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*")).delete();
 	}
 
 	@Test
 	public void shouldNotFailOnCircularReference() {
 
-		operations.indexOps(SimpleRecursiveEntity.class).create();
-		indexOperations.putMapping(SimpleRecursiveEntity.class);
+		IndexOperations indexOperations = operations.indexOps(SimpleRecursiveEntity.class);
+		indexOperations.createWithMapping();
 		indexOperations.refresh();
 	}
 
@@ -274,7 +264,6 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		IndexOperations indexOps = operations.indexOps(DenseVectorEntity.class);
 		indexOps.create();
 		indexOps.putMapping();
-		indexOps.delete();
 	}
 
 	@Test // #1370
@@ -284,7 +273,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		IndexOperations indexOps = operations.indexOps(DisabledMappingEntity.class);
 		indexOps.create();
 		indexOps.putMapping();
-		indexOps.delete();
+
 	}
 
 	@Test // #1370
@@ -294,7 +283,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		IndexOperations indexOps = operations.indexOps(DisabledMappingProperty.class);
 		indexOps.create();
 		indexOps.putMapping();
-		indexOps.delete();
+
 	}
 
 	@Test // #1767
@@ -304,7 +293,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		IndexOperations indexOps = operations.indexOps(DynamicMappingEntity.class);
 		indexOps.create();
 		indexOps.putMapping();
-		indexOps.delete();
+
 	}
 
 	@Test // #638
@@ -314,7 +303,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		IndexOperations indexOps = operations.indexOps(DynamicDetectionMapping.class);
 		indexOps.create();
 		indexOps.putMapping();
-		indexOps.delete();
+
 	}
 
 	@Test // #1816
@@ -324,7 +313,7 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		IndexOperations indexOps = operations.indexOps(RuntimeFieldEntity.class);
 		indexOps.create();
 		indexOps.putMapping();
-		indexOps.delete();
+
 	}
 
 	// region entities

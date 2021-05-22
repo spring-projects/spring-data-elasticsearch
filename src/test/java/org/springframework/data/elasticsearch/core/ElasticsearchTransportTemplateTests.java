@@ -41,6 +41,9 @@ import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -52,6 +55,7 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -60,9 +64,18 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Sascha Woo
  * @author Farid Faoudi
  */
-@ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
+@ContextConfiguration(classes = { ElasticsearchTransportTemplateTests.Config.class })
 @DisplayName("ElasticsearchTransportTemplate")
 public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTests {
+
+	@Configuration
+	@Import({ ElasticsearchTemplateConfiguration.class })
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider("transport-template");
+		}
+	}
 
 	@Autowired private Client client;
 
@@ -72,7 +85,8 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
 		UpdateQuery updateQuery = UpdateQuery.builder(nextIdAsString()).withDocument(document).build();
-		assertThatThrownBy(() -> operations.update(updateQuery, index)).isInstanceOf(DocumentMissingException.class);
+		assertThatThrownBy(() -> operations.update(updateQuery, IndexCoordinates.of(indexNameProvider.indexName())))
+				.isInstanceOf(DocumentMissingException.class);
 	}
 
 	@Override

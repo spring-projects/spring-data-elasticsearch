@@ -22,10 +22,11 @@ import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import java.util.Map;
 
 import org.elasticsearch.index.query.QueryBuilders;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
@@ -42,7 +43,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTem
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -59,31 +60,34 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {}
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider();
+		}
+	}
 
 	@Autowired private ElasticsearchOperations operations;
 	private IndexOperations indexOperations;
-
+	@Autowired IndexNameProvider indexNameProvider;
 	@Autowired private DynamicSettingAndMappingEntityRepository repository;
 
 	@BeforeEach
 	public void before() {
+		indexNameProvider.increment();
 		indexOperations = operations.indexOps(DynamicSettingAndMappingEntity.class);
-		IndexInitializer.init(indexOperations);
+		indexOperations.createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@Order(Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*")).delete();
 	}
 
 	@Test // DATAES-64
 	public void shouldCreateGivenDynamicSettingsForGivenIndex() {
 
-		// given
-		// delete , create and apply mapping in before method
-
-		// then
 		assertThat(indexOperations.exists()).isTrue();
 		Map<String, Object> map = indexOperations.getSettings();
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
@@ -97,7 +101,6 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	@Test // DATAES-64
 	public void shouldSearchOnGivenTokenizerUsingGivenDynamicSettingsForGivenIndex() {
 
-		// given
 		DynamicSettingAndMappingEntity dynamicSettingAndMappingEntity1 = new DynamicSettingAndMappingEntity();
 		dynamicSettingAndMappingEntity1.setId(nextIdAsString());
 		dynamicSettingAndMappingEntity1.setName("test-setting1");
@@ -112,16 +115,14 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 
 		repository.save(dynamicSettingAndMappingEntity2);
 
-		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
 				.withQuery(QueryBuilders.termQuery("email", dynamicSettingAndMappingEntity1.getEmail())).build();
 
-		IndexCoordinates index = IndexCoordinates.of("test-index-dynamic-setting-and-mapping");
+		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.indexName());
 		long count = operations.count(searchQuery, DynamicSettingAndMappingEntity.class, index);
 		SearchHits<DynamicSettingAndMappingEntity> entityList = operations.search(searchQuery,
 				DynamicSettingAndMappingEntity.class, index);
 
-		// then
 		assertThat(count).isEqualTo(1L);
 		assertThat(entityList).isNotNull().hasSize(1);
 		assertThat(entityList.getSearchHit(0).getContent().getEmail())
@@ -131,13 +132,8 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	@Test
 	public void shouldGetMappingForGivenIndexAndType() {
 
-		// given
-		// delete , create and apply mapping in before method
-
-		// when
 		Map<String, Object> mapping = indexOperations.getMapping();
 
-		// then
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 		assertThat(mapping).isNotNull();
 		assertThat(properties).isNotNull();
@@ -176,9 +172,6 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 	@Test // DATAES-86
 	public void shouldCreateMappingWithUsingMappingAnnotation() {
 
-		// given
-
-		// then
 		Map<String, Object> mapping = indexOperations.getMapping();
 		Map<String, Object> properties = (Map<String, Object>) mapping.get("properties");
 		assertThat(mapping).isNotNull();
@@ -188,10 +181,7 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		assertThat(emailProperties.get("analyzer")).isEqualTo("emailAnalyzer");
 	}
 
-	/**
-	 * @author Mohsin Husen
-	 */
-	@Document(indexName = "test-index-dynamic-setting-and-mapping")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(settingPath = "/settings/test-settings.json")
 	@Mapping(mappingPath = "/mappings/test-mappings.json")
 	static class DynamicSettingAndMappingEntity {
@@ -225,9 +215,6 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 		}
 	}
 
-	/**
-	 * @author Mohsin Husen
-	 */
 	public interface DynamicSettingAndMappingEntityRepository
 			extends ElasticsearchRepository<DynamicSettingAndMappingEntity, String> {}
 

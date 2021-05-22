@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repositories.complex.custommethod.autowiring;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -29,5 +31,10 @@ public class ComplexCustomMethodRepositoryTransportTests extends ComplexCustomMe
 	@Configuration
 	@Import({ ElasticsearchTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {}
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider("complex-custom-method");
+		}
+	}
 }

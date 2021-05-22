@@ -21,22 +21,23 @@ import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -53,22 +54,28 @@ public class DoubleIDRepositoryTests {
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {}
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider();
+		}
+	}
 
 	@Autowired private DoubleIDRepository repository;
 
 	@Autowired ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.indexOps(DoubleIDEntity.class);
-		IndexInitializer.init(indexOperations);
+		indexNameProvider.increment();
+		operations.indexOps(DoubleIDEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	public void after() {
-		indexOperations.delete();
+	@Test
+	@Order(Integer.MAX_VALUE)
+	public void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*")).delete();
 	}
 
 	@Test
@@ -116,12 +123,7 @@ public class DoubleIDRepositoryTests {
 		assertThat(entityFromElasticSearch).isPresent();
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
-
-	@Document(indexName = "test-index-double-keyed-entity")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class DoubleIDEntity {
 
 		@Id private Double id;
@@ -162,9 +164,5 @@ public class DoubleIDRepositoryTests {
 		}
 	}
 
-	/**
-	 * @author Ryan Henszey
-	 * @author Mohsin Husen
-	 */
 	interface DoubleIDRepository extends ElasticsearchRepository<DoubleIDEntity, Double> {}
 }

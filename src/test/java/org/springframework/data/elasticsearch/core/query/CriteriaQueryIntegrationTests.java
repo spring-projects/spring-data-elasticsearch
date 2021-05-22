@@ -24,10 +24,11 @@ import java.lang.Long;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
@@ -35,12 +36,12 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -56,31 +57,31 @@ public class CriteriaQueryIntegrationTests {
 
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	static class Config {}
-
-	private final IndexCoordinates index = IndexCoordinates.of("test-index-sample-core-query");
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider();
+		}
+	}
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.indexOps(SampleEntity.class);
-		indexOperations.delete();
-		indexOperations.create();
-		indexOperations.putMapping(SampleEntity.class);
-		indexOperations.refresh();
+		indexNameProvider.increment();
+		operations.indexOps(SampleEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*")).delete();
 	}
 
-	@Test // ,DATAES-706
+	@Test // DATAES-706
 	public void shouldPerformAndOperationOnCriteriaEntries() {
 
-		// given
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(nextIdAsString());
 		sampleEntity1.setMessage("some test message");
@@ -89,22 +90,18 @@ public class CriteriaQueryIntegrationTests {
 		sampleEntity2.setId(nextIdAsString());
 		sampleEntity2.setMessage("some other message");
 		operations.save(sampleEntity2);
-		indexOperations.refresh();
 
-		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("test").and("message").contains("some"));
-		SearchHit<SampleEntity> searchHit = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> searchHit = operations.searchOne(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHit).isNotNull();
 		assertThat(searchHit.getId()).isEqualTo(sampleEntity1.id);
 	}
 
-	@Test // ,DATAES-706
+	@Test // DATAES-706
 	public void shouldPerformOrOperationOnCriteriaEntries() {
 
-		// given
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(nextIdAsString());
 		sampleEntity1.setMessage("some test message");
@@ -113,23 +110,19 @@ public class CriteriaQueryIntegrationTests {
 		sampleEntity2.setId(nextIdAsString());
 		sampleEntity2.setMessage("some other message");
 		operations.save(sampleEntity2);
-		indexOperations.refresh();
 
-		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("test").or("message").contains("other"));
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHits).isNotNull();
 		assertThat(searchHits.getSearchHits().stream().map(SearchHit::getId)).containsExactlyInAnyOrder(sampleEntity1.id,
 				sampleEntity2.id);
 	}
 
-	@Test // ,DATAES-706
+	@Test // DATAES-706
 	public void shouldPerformAndOperationWithinCriteria() {
 
-		// given
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(nextIdAsString());
 		sampleEntity1.setMessage("some test message");
@@ -138,22 +131,18 @@ public class CriteriaQueryIntegrationTests {
 		sampleEntity2.setId(nextIdAsString());
 		sampleEntity2.setMessage("some other message");
 		operations.save(sampleEntity2);
-		indexOperations.refresh();
 
-		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("test").and(new Criteria("message").contains("some")));
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHits).isNotNull();
 		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
-	@Test // ,DATAES-706
+	@Test // DATAES-706
 	public void shouldPerformOrOperationWithinCriteria() {
 
-		// given
 		SampleEntity sampleEntity1 = new SampleEntity();
 		sampleEntity1.setId(nextIdAsString());
 		sampleEntity1.setMessage("some test message");
@@ -162,14 +151,11 @@ public class CriteriaQueryIntegrationTests {
 		sampleEntity2.setId(nextIdAsString());
 		sampleEntity2.setMessage("some other message");
 		operations.save(sampleEntity2);
-		indexOperations.refresh();
 
-		// when
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("test").or(new Criteria("message").contains("other")));
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHits).isNotNull();
 		assertThat(searchHits.getSearchHits().stream().map(SearchHit::getId)).containsExactlyInAnyOrder(sampleEntity1.id,
 				sampleEntity2.id);
@@ -178,9 +164,8 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformIsOperation() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
-		// first document
+
 		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
@@ -192,12 +177,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery.setObject(sampleEntity);
 		indexQueries.add(indexQuery);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 
 		// when
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -207,7 +192,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformMultipleIsOperations() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		// first document
@@ -234,14 +218,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("some message"));
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 	}
@@ -249,7 +231,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformEndsWithOperation() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 
 		// first document
@@ -276,15 +257,13 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		Criteria criteria = new Criteria("message").endsWith("end");
 		CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
 
-		// when
-		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
 		assertThat(sampleEntity).isNotNull();
 	}
@@ -292,7 +271,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformStartsWithOperation() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -318,15 +296,13 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		Criteria criteria = new Criteria("message").startsWith("start");
 		CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
 
-		// when
-		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
 		assertThat(sampleEntity).isNotNull();
 	}
@@ -334,7 +310,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformContainsOperation() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -360,14 +335,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("contains"));
 
-		// when
-		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
 		assertThat(sampleEntity).isNotNull();
 	}
@@ -401,12 +374,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").expression("+elasticsearch || test"));
 
 		// when
-		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class);
 
 		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
@@ -416,7 +389,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldExecuteCriteriaChain() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -442,15 +414,13 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").startsWith("some").endsWith("search").contains("message").is("some message search"));
 
-		// when
-		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
 		assertThat(sampleEntity).isNotNull();
 	}
@@ -458,7 +428,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformIsNotOperation() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -484,14 +453,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("foo").not());
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(criteriaQuery.getCriteria().isNegating()).isTrue();
 		assertThat(searchHits).isNotNull();
 		assertThat(searchHits.iterator().next().getContent().getMessage()).doesNotContain("foo");
@@ -500,7 +467,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformBetweenOperation() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -528,21 +494,18 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(100, 150));
 
-		// when
-		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity = operations.searchOne(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(sampleEntity).isNotNull();
 	}
 
 	@Test
 	public void shouldPerformBetweenOperationWithoutUpperBound() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -570,14 +533,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(350, null));
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHits).isNotNull();
 		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
@@ -585,7 +546,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformBetweenOperationWithoutLowerBound() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -613,14 +573,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").between(null, 550));
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHits).isNotNull();
 		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
@@ -628,7 +586,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformLessThanEqualOperation() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -656,14 +613,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").lessThanEqual(750));
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHits).isNotNull();
 		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
@@ -671,7 +626,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformGreaterThanEquals() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -699,14 +653,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("rate").greaterThanEqual(950));
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHits).isNotNull();
 		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
@@ -714,7 +666,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformBoostOperation() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
 		// first document
 		String documentId = nextIdAsString();
@@ -742,14 +693,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQuery2.setObject(sampleEntity2);
 		indexQueries.add(indexQuery2);
 
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
+
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("foo").boost(1));
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
 	}
 
@@ -760,13 +709,12 @@ public class CriteriaQueryIntegrationTests {
 		indexQueries.add(buildIndex(new SampleEntity("1", "ab")));
 		indexQueries.add(buildIndex(new SampleEntity("2", "bc")));
 		indexQueries.add(buildIndex(new SampleEntity("3", "ac")));
-		operations.bulkIndex(indexQueries, index);
-		indexOperations.refresh();
+		operations.bulkIndex(indexQueries, SampleEntity.class);
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("a").or(new Criteria("message").contains("b")));
 		criteriaQuery.setMinScore(2.0F);
-		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class, index);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 		assertThat(searchHits.getSearchHit(0).getContent().getMessage()).isEqualTo("ab");
@@ -775,7 +723,6 @@ public class CriteriaQueryIntegrationTests {
 	@Test // DATAES-213
 	public void shouldEscapeValue() {
 
-		// given
 		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setId(documentId);
@@ -785,19 +732,16 @@ public class CriteriaQueryIntegrationTests {
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId(documentId);
 		indexQuery.setObject(sampleEntity);
-		operations.index(indexQuery, index);
-		indexOperations.refresh();
+		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").is("Hello World!"));
 
-		// when
-		SearchHit<SampleEntity> sampleEntity1 = operations.searchOne(criteriaQuery, SampleEntity.class, index);
+		SearchHit<SampleEntity> sampleEntity1 = operations.searchOne(criteriaQuery, SampleEntity.class);
 
-		// then
 		assertThat(sampleEntity1).isNotNull();
 	}
 
-	@Document(indexName = "test-index-sample-core-query")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;

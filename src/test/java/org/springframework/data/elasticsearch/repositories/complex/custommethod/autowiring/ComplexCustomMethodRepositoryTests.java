@@ -18,21 +18,22 @@ package org.springframework.data.elasticsearch.repositories.complex.custommethod
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -48,38 +49,37 @@ public class ComplexCustomMethodRepositoryTests {
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {}
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider("complex-custom-method");
+		}
+	}
 
 	@Autowired private ComplexElasticsearchRepository complexRepository;
-
 	@Autowired ElasticsearchOperations operations;
-
-	private IndexOperations indexOperations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.indexOps(SampleEntity.class);
-		IndexInitializer.init(indexOperations);
+		indexNameProvider.increment();
+		operations.indexOps(SampleEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*")).delete();
 	}
 
 	@Test
 	public void shouldExecuteComplexCustomMethod() {
 
-		// given
-
-		// when
 		String result = complexRepository.doSomethingSpecial();
-
-		// then
 		assertThat(result).isEqualTo("2+2=4");
 	}
 
-	@Document(indexName = "test-index-sample-repositories-complex-custommethod-autowiring")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;

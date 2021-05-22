@@ -28,7 +28,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,16 +46,16 @@ import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
@@ -76,22 +75,23 @@ import org.springframework.lang.Nullable;
 @SpringIntegrationTest
 public abstract class CustomMethodRepositoryBaseTests {
 
+	@Autowired private IndexNameProvider indexNameProvider;
 	@Autowired private SampleCustomMethodRepository repository;
-
 	@Autowired private SampleStreamingCustomMethodRepository streamingRepository;
 
 	@Autowired ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.indexOps(SampleEntity.class);
-		IndexInitializer.init(indexOperations);
+
+		indexNameProvider.increment();
+		operations.indexOps(SampleEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@org.junit.jupiter.api.Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*")).delete();
 	}
 
 	@Test
@@ -1431,13 +1431,15 @@ public abstract class CustomMethodRepositoryBaseTests {
 		// given
 		List<SampleEntity> entities = createSampleEntities("abc", 10001);
 		repository.saveAll(entities);
+		operations.indexOps(SampleEntity.class).refresh();
 
 		// when
 		Stream<SampleEntity> stream = streamingRepository.findByType("abc");
 
 		// then
 		assertThat(stream).isNotNull();
-		assertThat(stream.count()).isEqualTo(10001L);
+		long count = stream.count();
+		assertThat(count).isEqualTo(10001L);
 	}
 
 	@Test // DATAES-605
@@ -1647,7 +1649,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat(count).isEqualTo(20);
 	}
 
-	@Document(indexName = "test-index-sample-repositories-custom-method")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
@@ -1734,6 +1736,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 	 * @author Mohsin Husen
 	 * @author Kevin Leturc
 	 */
+	@SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
 	public interface SampleCustomMethodRepository extends ElasticsearchRepository<SampleEntity, String> {
 
 		Page<SampleEntity> findByType(String type, Pageable pageable);

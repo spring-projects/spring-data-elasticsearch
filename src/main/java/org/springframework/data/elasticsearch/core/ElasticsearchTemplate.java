@@ -15,7 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.ActionFuture;
@@ -290,12 +293,21 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index) {
-		BulkRequestBuilder bulkRequestBuilder = requestFactory.bulkRequestBuilder(client, queries, bulkOptions, index);
-		bulkRequestBuilder = prepareWriteRequestBuilder(bulkRequestBuilder);
-		final List<IndexedObjectInformation> indexedObjectInformations = checkForBulkOperationFailure(
-				bulkRequestBuilder.execute().actionGet());
-		updateIndexedObjectsWithQueries(queries, indexedObjectInformations);
-		return indexedObjectInformations;
+
+		// do it in batches; test code on some machines kills the transport node when the size gets too much
+		Collection<? extends List<?>> queryLists = partitionBasedOnSize(queries, 2500);
+		List<IndexedObjectInformation> allIndexedObjectInformations = new ArrayList<>(queries.size());
+
+		queryLists.forEach(queryList -> {
+			BulkRequestBuilder bulkRequestBuilder = requestFactory.bulkRequestBuilder(client, queryList, bulkOptions, index);
+			bulkRequestBuilder = prepareWriteRequestBuilder(bulkRequestBuilder);
+			final List<IndexedObjectInformation> indexedObjectInformations = checkForBulkOperationFailure(
+					bulkRequestBuilder.execute().actionGet());
+			updateIndexedObjectsWithQueries(queryList, indexedObjectInformations);
+			allIndexedObjectInformations.addAll(indexedObjectInformations);
+		});
+
+		return allIndexedObjectInformations;
 	}
 	// endregion
 
@@ -410,6 +422,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	public Client getClient() {
 		return client;
+	}
+
+	<T> Collection<List<T>> partitionBasedOnSize(List<T> inputList, int size) {
+		final AtomicInteger counter = new AtomicInteger(0);
+		return inputList.stream().collect(Collectors.groupingBy(s -> counter.getAndIncrement() / size)).values();
 	}
 	// endregion
 
