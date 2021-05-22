@@ -101,7 +101,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		this.routingResolver = new DefaultRoutingResolver((SimpleElasticsearchMappingContext) mappingContext);
 
 		requestFactory = new RequestFactory(elasticsearchConverter);
-		VersionInfo.logVersions(getClusterVersion());
+
+		// initialize the VersionInfo class in the initialization phase
+		// noinspection ResultOfMethodCallIgnored
+		VersionInfo.versionProperties();
 	}
 
 	/**
@@ -166,6 +169,16 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	public RefreshPolicy getRefreshPolicy() {
 		return refreshPolicy;
 	}
+
+	/**
+	 * logs the versions of the different Elasticsearch components.
+	 *
+	 * @since 4.3
+	 */
+	public void logVersions() {
+		VersionInfo.logVersions(getClusterVersion());
+	}
+
 	// endregion
 
 	// region DocumentOperations

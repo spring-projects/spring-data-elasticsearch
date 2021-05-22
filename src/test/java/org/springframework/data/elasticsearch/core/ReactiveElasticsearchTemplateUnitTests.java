@@ -74,10 +74,6 @@ public class ReactiveElasticsearchTemplateUnitTests {
 
 	@BeforeEach
 	public void setUp() {
-
-		when(client.info()).thenReturn(Mono.just(new MainResponse("mockNodename", org.elasticsearch.Version.CURRENT,
-				new ClusterName("mockCluster"), "mockUuid", null)));
-
 		template = new ReactiveElasticsearchTemplate(client);
 	}
 
