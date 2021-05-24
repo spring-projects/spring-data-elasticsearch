@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repositories.custommethod;
 
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -34,5 +36,10 @@ public class CustomMethodRepositoryRestTests extends CustomMethodRepositoryBaseT
 	@EnableElasticsearchRepositories(
 			basePackages = { "org.springframework.data.elasticsearch.repositories.custommethod" },
 			considerNestedRepositories = true)
-	static class Config {}
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider("custom-method-repository");
+		}
+	}
 }

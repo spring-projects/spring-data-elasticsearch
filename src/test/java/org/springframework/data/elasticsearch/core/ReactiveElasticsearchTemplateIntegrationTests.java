@@ -47,12 +47,13 @@ import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.SortOrder;
 import org.json.JSONException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -78,6 +79,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -99,40 +101,29 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Configuration
 	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
-	static class Config {}
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider("reactive-template");
+		}
+	}
 
-	static final String DEFAULT_INDEX = "reactive-template-test-index";
-	static final String ALTERNATE_INDEX = "reactive-template-tests-alternate-index";
+	@Autowired private ReactiveElasticsearchOperations operations;
 
-	@Autowired private ReactiveElasticsearchTemplate template;
-	private ReactiveIndexOperations indexOperations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	// region Setup
 	@BeforeEach
-	public void setUp() {
-		indexOperations = template.indexOps(SampleEntity.class);
+	public void beforeEach() {
 
-		deleteIndices();
-
-		indexOperations.create() //
-				.then(indexOperations.putMapping(SampleEntity.class)) //
-				.then(indexOperations.refresh()) //
-				.block(); //
+		indexNameProvider.increment();
+		operations.indexOps(SampleEntity.class).createWithMapping().block();
 	}
 
-	@AfterEach
-	public void after() {
-		deleteIndices();
-	}
-
-	private void deleteIndices() {
-		template.indexOps(IndexCoordinates.of(DEFAULT_INDEX)).delete().block();
-		template.indexOps(IndexCoordinates.of(ALTERNATE_INDEX)).delete().block();
-		template.indexOps(IndexCoordinates.of("rx-template-test-index-this")).delete().block();
-		template.indexOps(IndexCoordinates.of("rx-template-test-index-that")).delete().block();
-		template.indexOps(IndexCoordinates.of("test-index-reactive-optimistic-entity-template")).delete().block();
-		template.indexOps(IndexCoordinates.of("test-index-reactive-optimistic-and-versioned-entity-template")).delete()
-				.block();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*")).delete().block();
 	}
 	// endregion
 
@@ -140,7 +131,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-504
 	public void executeShouldProvideResource() {
 
-		Mono.from(template.execute(ReactiveElasticsearchClient::ping)) //
+		Mono.from(operations.execute(ReactiveElasticsearchClient::ping)) //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
@@ -149,7 +140,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-504
 	public void executeShouldConvertExceptions() {
 
-		Mono.from(template.execute(client -> {
+		Mono.from(operations.execute(client -> {
 			throw new RuntimeException(new ConnectException("we're doomed"));
 		})) //
 				.as(StepVerifier::create) //
@@ -162,13 +153,12 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		SampleEntity sampleEntity = randomEntity("foo bar");
 
-		template.save(sampleEntity) //
-				.then(indexOperations.refresh()) //
+		operations.save(sampleEntity) //
 				.block();
 
-		template
+		operations
 				.search(new CriteriaQuery(Criteria.where("message").is(sampleEntity.getMessage())), SampleEntity.class,
-						IndexCoordinates.of(DEFAULT_INDEX)) //
+						IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create) //
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -180,34 +170,33 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity sampleEntity = new SampleEntity();
 		sampleEntity.setMessage("wohoo");
 
-		template.save(sampleEntity) //
+		operations.save(sampleEntity) //
 				.map(SampleEntity::getId) //
-				.flatMap(id -> indexOperations.refresh().thenReturn(id)) //
-				.flatMap(id -> documentWithIdExistsInIndex(id, DEFAULT_INDEX)).as(StepVerifier::create) //
+				.flatMap(id -> documentWithIdExistsInIndex(id, indexNameProvider.indexName())).as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
 	}
 
 	private Mono<Boolean> documentWithIdExistsInIndex(String id, String index) {
-		return template.exists(id, IndexCoordinates.of(index));
+		return operations.exists(id, IndexCoordinates.of(index));
 	}
 
 	@Test // DATAES-504
 	public void insertWithExplicitIndexNameShouldOverwriteMetadata() {
 
-		SampleEntity sampleEntity = randomEntity("in another index");
-		IndexCoordinates alternateIndex = IndexCoordinates.of(ALTERNATE_INDEX);
+		String defaultIndexName = indexNameProvider.indexName();
+		String alternateIndexName = defaultIndexName + "-alt";
 
-		template.save(sampleEntity, alternateIndex) //
+		SampleEntity sampleEntity = randomEntity("in another index");
+		IndexCoordinates alternateIndex = IndexCoordinates.of(alternateIndexName);
+
+		operations.save(sampleEntity, alternateIndex) //
 				.as(StepVerifier::create)//
 				.expectNextCount(1)//
 				.verifyComplete();
 
-		template.indexOps(IndexCoordinates.of(DEFAULT_INDEX)).refresh().block();
-		template.indexOps(alternateIndex).refresh().block();
-
-		assertThat(documentWithIdExistsInIndex(sampleEntity.getId(), DEFAULT_INDEX).block()).isFalse();
-		assertThat(documentWithIdExistsInIndex(sampleEntity.getId(), ALTERNATE_INDEX).block()).isTrue();
+		assertThat(documentWithIdExistsInIndex(sampleEntity.getId(), defaultIndexName).block()).isFalse();
+		assertThat(documentWithIdExistsInIndex(sampleEntity.getId(), alternateIndexName).block()).isTrue();
 	}
 
 	@Test // DATAES-504
@@ -215,7 +204,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		Map<String, Object> map = new LinkedHashMap<>(Collections.singletonMap("foo", "bar"));
 
-		template.save(map, IndexCoordinates.of(ALTERNATE_INDEX)) //
+		operations.save(map, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(actual -> {
 					assertThat(map).containsKey("id");
@@ -225,14 +214,14 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-504
 	public void insertShouldErrorOnNullEntity() {
 		assertThatThrownBy(() -> {
-			template.save(null);
+			operations.save(null);
 		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-519, DATAES-767, DATAES-822
 	public void getByIdShouldErrorWhenIndexDoesNotExist() {
 
-		template.get("foo", SampleEntity.class, IndexCoordinates.of("no-such-index")) //
+		operations.get("foo", SampleEntity.class, IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.expectError(ElasticsearchStatusException.class);
 	}
@@ -243,7 +232,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity sampleEntity = randomEntity("some message");
 		index(sampleEntity);
 
-		template.get(sampleEntity.getId(), SampleEntity.class) //
+		operations.get(sampleEntity.getId(), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity) //
 				.verifyComplete();
@@ -259,7 +248,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		assertThat(sampleEntity.getId()).isNotNull();
 
-		template.get(sampleEntity.getId(), SampleEntity.class) //
+		operations.get(sampleEntity.getId(), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo(sampleEntity.getId())) //
 				.verifyComplete();
@@ -271,7 +260,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity sampleEntity = randomEntity("some message");
 		index(sampleEntity);
 
-		template.get("foo", SampleEntity.class) //
+		operations.get("foo", SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -279,7 +268,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-504
 	public void getByIdShouldErrorForNullId() {
 		assertThatThrownBy(() -> {
-			template.get(null, SampleEntity.class);
+			operations.get(null, SampleEntity.class);
 		}).isInstanceOf(IllegalArgumentException.class);
 	}
 
@@ -288,20 +277,19 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		SampleEntity sampleEntity = randomEntity("some message");
 
-		IndexCoordinates defaultIndex = IndexCoordinates.of(DEFAULT_INDEX);
-		IndexCoordinates alternateIndex = IndexCoordinates.of(ALTERNATE_INDEX);
+		IndexCoordinates defaultIndex = IndexCoordinates.of(indexNameProvider.indexName());
+		IndexCoordinates alternateIndex = IndexCoordinates.of(indexNameProvider.indexName() + "-alt");
 
-		template.save(sampleEntity, alternateIndex) //
-				.then(indexOperations.refresh()) //
-				.then(template.indexOps(defaultIndex).refresh()) //
-				.then(template.indexOps(alternateIndex).refresh()) //
+		operations.save(sampleEntity, alternateIndex) //
+				.then(operations.indexOps(defaultIndex).refresh()) //
+				.then(operations.indexOps(alternateIndex).refresh()) //
 				.block();
 
-		template.get(sampleEntity.getId(), SampleEntity.class, defaultIndex) //
+		operations.get(sampleEntity.getId(), SampleEntity.class, defaultIndex) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		template.get(sampleEntity.getId(), SampleEntity.class, alternateIndex) //
+		operations.get(sampleEntity.getId(), SampleEntity.class, alternateIndex) //
 				.as(StepVerifier::create)//
 				.expectNextCount(1) //
 				.verifyComplete();
@@ -310,7 +298,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-519
 	public void existsShouldReturnFalseWhenIndexDoesNotExist() {
 
-		template.exists("foo", IndexCoordinates.of("no-such-index")) //
+		operations.exists("foo", IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
 				.verifyComplete();
@@ -322,7 +310,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity sampleEntity = randomEntity("some message");
 		index(sampleEntity);
 
-		template.exists(sampleEntity.getId(), SampleEntity.class) //
+		operations.exists(sampleEntity.getId(), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
@@ -334,7 +322,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity sampleEntity = randomEntity("some message");
 		index(sampleEntity);
 
-		template.exists("foo", SampleEntity.class) //
+		operations.exists("foo", SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(false) //
 				.verifyComplete();
@@ -343,7 +331,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-519, DATAES-767
 	public void searchShouldCompleteWhenIndexDoesNotExist() {
 
-		template
+		operations
 				.search(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
@@ -358,7 +346,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(Criteria.where("message").is("some message"));
 
-		template.search(criteriaQuery, SampleEntity.class) //
+		operations.search(criteriaQuery, SampleEntity.class) //
 				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity) //
@@ -373,7 +361,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(Criteria.where("message").is("foo"));
 
-		template.search(criteriaQuery, SampleEntity.class) //
+		operations.search(criteriaQuery, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -383,7 +371,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
 
-		template.search(new StringQuery(matchAllQuery().toString()), SampleEntity.class) //
+		operations.search(new StringQuery(matchAllQuery().toString()), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
@@ -398,7 +386,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		template.search(query, SampleEntity.class) //
+		operations.search(query, SampleEntity.class) //
 				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.assertNext(next -> {
@@ -419,7 +407,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		CriteriaQuery query = new CriteriaQuery(
 				new Criteria("message").contains("some").and("message").contains("message"));
 
-		template.search(query, SampleEntity.class) //
+		operations.search(query, SampleEntity.class) //
 				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity3) //
@@ -439,7 +427,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				new Criteria("message").contains("some").and("message").contains("message"));
 		queryWithValidPreference.setPreference("_local");
 
-		template.search(queryWithValidPreference, SampleEntity.class) //
+		operations.search(queryWithValidPreference, SampleEntity.class) //
 				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(sampleEntity3) //
@@ -459,7 +447,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				new Criteria("message").contains("some").and("message").contains("message"));
 		queryWithInvalidPreference.setPreference("_only_nodes:oops");
 
-		template.search(queryWithInvalidPreference, SampleEntity.class) //
+		operations.search(queryWithInvalidPreference, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectError(UncategorizedElasticsearchException.class).verify();
 	}
@@ -476,7 +464,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		CriteriaQuery query = new CriteriaQuery(
 				new Criteria("message").contains("some").and("message").contains("message"));
 
-		template.search(query, SampleEntity.class, Message.class) //
+		operations.search(query, SampleEntity.class, Message.class) //
 				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
 				.expectNext(new Message(sampleEntity3.getMessage())) //
@@ -492,7 +480,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.addSort(Sort.by("message"))//
 				.setPageable(PageRequest.of(0, 20));
 
-		template.search(query, SampleEntity.class).as(StepVerifier::create) //
+		operations.search(query, SampleEntity.class).as(StepVerifier::create) //
 				.expectNextCount(20) //
 				.verifyComplete();
 	}
@@ -506,7 +494,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.addSort(Sort.by("message"))//
 				.setPageable(Pageable.unpaged());
 
-		template.search(query, SampleEntity.class).as(StepVerifier::create) //
+		operations.search(query, SampleEntity.class).as(StepVerifier::create) //
 				.expectNextCount(100) //
 				.verifyComplete();
 	}
@@ -523,7 +511,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
 				.addAggregation(AggregationBuilders.terms("messages").field("message")).build();
 
-		template.aggregate(query, SampleEntity.class) //
+		operations.aggregate(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(aggregation -> {
 					assertThat(aggregation.getName()).isEqualTo("messages");
@@ -538,7 +526,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Test // DATAES-567, DATAES-767
 	public void aggregateShouldErrorWhenIndexDoesNotExist() {
-		template
+		operations
 				.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
@@ -548,7 +536,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-519, DATAES-767
 	public void countShouldReturnZeroWhenIndexDoesNotExist() {
 
-		template.count(SampleEntity.class) //
+		operations.count(SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectError(ElasticsearchStatusException.class);
 	}
@@ -558,7 +546,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
 
-		template.count(SampleEntity.class) //
+		operations.count(SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(3L) //
 				.verifyComplete();
@@ -571,7 +559,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		template.count(query, SampleEntity.class) //
+		operations.count(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
@@ -580,7 +568,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // DATAES-519, DATAES-767
 	public void deleteShouldErrorWhenIndexDoesNotExist() {
 
-		template.delete("does-not-exists", IndexCoordinates.of("no-such-index")) //
+		operations.delete("does-not-exists", IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create)//
 				.expectError(ElasticsearchStatusException.class);
 	}
@@ -591,7 +579,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity sampleEntity = randomEntity("test message");
 		index(sampleEntity);
 
-		template.delete(sampleEntity.getId(), SampleEntity.class) //
+		operations.delete(sampleEntity.getId(), SampleEntity.class) //
 				.as(StepVerifier::create)//
 				.expectNext(sampleEntity.getId()) //
 				.verifyComplete();
@@ -603,7 +591,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity sampleEntity = randomEntity("test message");
 		index(sampleEntity);
 
-		template.delete(sampleEntity.getId(), IndexCoordinates.of(DEFAULT_INDEX)) //
+		operations.delete(sampleEntity.getId(), IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create)//
 				.expectNext(sampleEntity.getId()) //
 				.verifyComplete();
@@ -615,7 +603,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity sampleEntity = randomEntity("test message");
 		index(sampleEntity);
 
-		template.delete(sampleEntity) //
+		operations.delete(sampleEntity) //
 				.as(StepVerifier::create)//
 				.expectNext(sampleEntity.getId()) //
 				.verifyComplete();
@@ -626,7 +614,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		SampleEntity sampleEntity = randomEntity("test message");
 
-		template.delete(sampleEntity) //
+		operations.delete(sampleEntity) //
 				.as(StepVerifier::create)//
 				.verifyComplete();
 	}
@@ -636,7 +624,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		template.delete(query, SampleEntity.class) //
+		operations.delete(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(byQueryResponse -> {
 					assertThat(byQueryResponse.getDeleted()).isEqualTo(0L);
@@ -650,25 +638,25 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		IndexCoordinates thisIndex = IndexCoordinates.of(indexPrefix + "-this");
 		IndexCoordinates thatIndex = IndexCoordinates.of(indexPrefix + "-that");
 
-		template.save(randomEntity("test"), thisIndex) //
-				.then(template.save(randomEntity("test"), thatIndex)) //
+		operations.save(randomEntity("test"), thisIndex) //
+				.then(operations.save(randomEntity("test"), thatIndex)) //
 				.then() //
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		template.indexOps(thisIndex).refresh().then(template.indexOps(thatIndex).refresh()).block();
+		operations.indexOps(thisIndex).refresh().then(operations.indexOps(thatIndex).refresh()).block();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "test")) //
 				.build();
 
-		template.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+		operations.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
 				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
 				.verifyComplete();
 
-		template.indexOps(thisIndex).delete().then(template.indexOps(thatIndex).delete()).block();
+		operations.indexOps(thisIndex).delete().then(operations.indexOps(thatIndex).delete()).block();
 	}
 
 	@Test // DATAES-547
@@ -678,25 +666,25 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		IndexCoordinates thisIndex = IndexCoordinates.of(indexPrefix + "-this");
 		IndexCoordinates thatIndex = IndexCoordinates.of(indexPrefix + "-that");
 
-		template.save(randomEntity("positive"), thisIndex) //
-				.then(template.save(randomEntity("positive"), thatIndex)) //
+		operations.save(randomEntity("positive"), thisIndex) //
+				.then(operations.save(randomEntity("positive"), thatIndex)) //
 				.then() //
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		template.indexOps(thisIndex).refresh().then(template.indexOps(thatIndex).refresh()).block();
+		operations.indexOps(thisIndex).refresh().then(operations.indexOps(thatIndex).refresh()).block();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder() //
 				.withQuery(termQuery("message", "negative")) //
 				.build();
 
-		template.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+		operations.delete(searchQuery, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
 				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
 				.verifyComplete();
 
-		template.indexOps(thisIndex).delete().then(template.indexOps(thatIndex).delete()).block();
+		operations.indexOps(thisIndex).delete().then(operations.indexOps(thatIndex).delete()).block();
 	}
 
 	@Test // DATAES-504
@@ -706,7 +694,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		template.delete(query, SampleEntity.class) //
+		operations.delete(query, SampleEntity.class) //
 				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
@@ -720,7 +708,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("luke"));
 
-		template.delete(query, SampleEntity.class) //
+		operations.delete(query, SampleEntity.class) //
 				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
@@ -744,7 +732,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.withPageable(PageRequest.of(0, 25)) //
 				.build();
 
-		template.search(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+		operations.search(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
@@ -761,7 +749,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.withSort(new FieldSortBuilder("rate").order(SortOrder.DESC)) //
 				.build();
 
-		template.search(query, SampleEntity.class) //
+		operations.search(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(it -> {
 					List<Object> sortValues = it.getSortValues();
@@ -784,7 +772,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
 				.build();
 
-		template.multiGet(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+		operations.multiGet(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.map(MultiGetItem::getItem).as(StepVerifier::create) //
 				.expectNext(entity1, entity2) //
 				.verifyComplete();
@@ -804,7 +792,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.withFields("message") //
 				.build();
 
-		template.multiGet(query, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+		operations.multiGet(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create) //
 				.expectNextCount(2) //
 				.verifyComplete();
@@ -834,12 +822,12 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.build();
 
 		List<UpdateQuery> queries = Arrays.asList(updateQuery1, updateQuery2);
-		template.bulkUpdate(queries, IndexCoordinates.of(DEFAULT_INDEX)).block();
+		operations.bulkUpdate(queries, IndexCoordinates.of(indexNameProvider.indexName())).block();
 
 		NativeSearchQuery getQuery = new NativeSearchQueryBuilder() //
 				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
 				.build();
-		template.multiGet(getQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+		operations.multiGet(getQuery, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.map(MultiGetItem::getItem) //
 				.as(StepVerifier::create) //
 				.expectNextMatches(entity -> entity.getMessage().equals("updated 1")) //
@@ -854,12 +842,11 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		SampleEntity entity2 = randomEntity("test message 2");
 		entity2.rate = 2;
 
-		template.saveAll(Mono.just(Arrays.asList(entity1, entity2)), IndexCoordinates.of(DEFAULT_INDEX)) //
-				.then(indexOperations.refresh()) //
-				.block();
+		operations.saveAll(Mono.just(Arrays.asList(entity1, entity2)), IndexCoordinates.of(indexNameProvider.indexName())) //
+				.then().block();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		template.search(searchQuery, SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+		operations.search(searchQuery, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create) //
 				.expectNextMatches(hit -> entity1.equals(hit.getContent()) || entity2.equals(hit.getContent())) //
 				.expectNextMatches(hit -> entity1.equals(hit.getContent()) || entity2.equals(hit.getContent())) //
@@ -868,7 +855,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Test // DATAES-753
 	void shouldReturnEmptyFluxOnSaveAllWithEmptyInput() {
-		template.saveAll(Collections.emptyList(), IndexCoordinates.of(DEFAULT_INDEX)) //
+		operations.saveAll(Collections.emptyList(), IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 	}
@@ -877,9 +864,9 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	void getShouldReturnSeqNoPrimaryTerm() {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
-		OptimisticEntity saved = template.save(original).block();
+		OptimisticEntity saved = operations.save(original).block();
 
-		template.get(saved.getId(), OptimisticEntity.class).as(StepVerifier::create)
+		operations.get(saved.getId(), OptimisticEntity.class).as(StepVerifier::create)
 				.assertNext(this::assertThatSeqNoPrimaryTermIsFilled).verifyComplete();
 	}
 
@@ -895,11 +882,11 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	void multiGetShouldReturnSeqNoPrimaryTerm() {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
-		OptimisticEntity saved = template.save(original).block();
+		OptimisticEntity saved = operations.save(original).block();
 
-		template
+		operations
 				.multiGet(multiGetQueryForOne(saved.getId()), OptimisticEntity.class,
-						template.getIndexCoordinatesFor(OptimisticEntity.class)) //
+						operations.getIndexCoordinatesFor(OptimisticEntity.class)) //
 				.map(MultiGetItem::getItem) //
 				.as(StepVerifier::create) //
 				.assertNext(this::assertThatSeqNoPrimaryTermIsFilled).verifyComplete();
@@ -913,13 +900,13 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	void searchShouldReturnSeqNoPrimaryTerm() {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
-		OptimisticEntity saved = template.save(original).block();
+		OptimisticEntity saved = operations.save(original).block();
 
-		template.indexOps(OptimisticEntity.class).refresh().block();
+		operations.indexOps(OptimisticEntity.class).refresh().block();
 
-		template
+		operations
 				.search(searchQueryForOne(saved.getId()), OptimisticEntity.class,
-						template.getIndexCoordinatesFor(OptimisticEntity.class))
+						operations.getIndexCoordinatesFor(OptimisticEntity.class))
 				.map(SearchHit::getContent).as(StepVerifier::create).assertNext(this::assertThatSeqNoPrimaryTermIsFilled)
 				.verifyComplete();
 	}
@@ -932,16 +919,16 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnEntityWithSeqNoPrimaryTermProperty() {
 		OptimisticEntity original = new OptimisticEntity();
 		original.setMessage("It's fine");
-		OptimisticEntity saved = template.save(original).block();
+		OptimisticEntity saved = operations.save(original).block();
 
-		OptimisticEntity forEdit1 = template.get(saved.getId(), OptimisticEntity.class).block();
-		OptimisticEntity forEdit2 = template.get(saved.getId(), OptimisticEntity.class).block();
+		OptimisticEntity forEdit1 = operations.get(saved.getId(), OptimisticEntity.class).block();
+		OptimisticEntity forEdit2 = operations.get(saved.getId(), OptimisticEntity.class).block();
 
 		forEdit1.setMessage("It'll be ok");
-		template.save(forEdit1).block();
+		operations.save(forEdit1).block();
 
 		forEdit2.setMessage("It'll be great");
-		template.save(forEdit2) //
+		operations.save(forEdit2) //
 				.as(StepVerifier::create) //
 				.expectError(OptimisticLockingFailureException.class) //
 				.verify();
@@ -951,28 +938,28 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnVersionedEntityWithSeqNoPrimaryTermProperty() {
 		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
 		original.setMessage("It's fine");
-		OptimisticAndVersionedEntity saved = template.save(original).block();
+		OptimisticAndVersionedEntity saved = operations.save(original).block();
 
-		OptimisticAndVersionedEntity forEdit1 = template.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
-		OptimisticAndVersionedEntity forEdit2 = template.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
+		OptimisticAndVersionedEntity forEdit1 = operations.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
+		OptimisticAndVersionedEntity forEdit2 = operations.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
 
 		forEdit1.setMessage("It'll be ok");
-		template.save(forEdit1).block();
+		operations.save(forEdit1).block();
 
 		forEdit2.setMessage("It'll be great");
-		template.save(forEdit2).as(StepVerifier::create).expectError(OptimisticLockingFailureException.class).verify();
+		operations.save(forEdit2).as(StepVerifier::create).expectError(OptimisticLockingFailureException.class).verify();
 	}
 
 	@Test // DATAES-799
 	void shouldAllowFullReplaceOfEntityWithBothSeqNoPrimaryTermAndVersion() {
 		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
 		original.setMessage("It's fine");
-		OptimisticAndVersionedEntity saved = template.save(original).block();
+		OptimisticAndVersionedEntity saved = operations.save(original).block();
 
-		OptimisticAndVersionedEntity forEdit = template.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
+		OptimisticAndVersionedEntity forEdit = operations.get(saved.getId(), OptimisticAndVersionedEntity.class).block();
 
 		forEdit.setMessage("It'll be ok");
-		template.save(forEdit).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		operations.save(forEdit).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
 	@Test // DATAES-909
@@ -988,11 +975,12 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.withDocument(document) //
 				.build();
 
-		UpdateResponse updateResponse = template.update(updateQuery, IndexCoordinates.of(DEFAULT_INDEX)).block();
+		UpdateResponse updateResponse = operations.update(updateQuery, IndexCoordinates.of(indexNameProvider.indexName()))
+				.block();
 		assertThat(updateResponse).isNotNull();
 		assertThat(updateResponse.getResult()).isEqualTo(UpdateResponse.Result.UPDATED);
 
-		template.get(entity.getId(), SampleEntity.class, IndexCoordinates.of(DEFAULT_INDEX)) //
+		operations.get(entity.getId(), SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create) //
 				.expectNextMatches(foundEntity -> foundEntity.getMessage().equals("updated")) //
 				.verifyComplete();
@@ -1000,28 +988,28 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Test // DATAES-908
 	void shouldFillVersionOnSaveOne() {
-		VersionedEntity saved = template.save(new VersionedEntity()).block();
+		VersionedEntity saved = operations.save(new VersionedEntity()).block();
 
 		assertThat(saved.getVersion()).isNotNull();
 	}
 
 	@Test // DATAES-908
 	void shouldFillVersionOnSaveAll() {
-		VersionedEntity saved = template.saveAll(singletonList(new VersionedEntity()), VersionedEntity.class).blockLast();
+		VersionedEntity saved = operations.saveAll(singletonList(new VersionedEntity()), VersionedEntity.class).blockLast();
 
 		assertThat(saved.getVersion()).isNotNull();
 	}
 
 	@Test // DATAES-908
 	void shouldFillSeqNoPrimaryTermOnSaveOne() {
-		OptimisticEntity saved = template.save(new OptimisticEntity()).block();
+		OptimisticEntity saved = operations.save(new OptimisticEntity()).block();
 
 		assertThatSeqNoPrimaryTermIsFilled(saved);
 	}
 
 	@Test // DATAES-908
 	void shouldFillSeqNoPrimaryTermOnSaveAll() {
-		OptimisticEntity saved = template.saveAll(singletonList(new OptimisticEntity()), OptimisticEntity.class)
+		OptimisticEntity saved = operations.saveAll(singletonList(new OptimisticEntity()), OptimisticEntity.class)
 				.blockLast();
 
 		assertThatSeqNoPrimaryTermIsFilled(saved);
@@ -1037,9 +1025,9 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		Query query = Query.findAll().setPageable(PageRequest.of(0, 5));
 
-		template.saveAll(Mono.just(entities), SampleEntity.class).then(indexOperations.refresh()).block();
+		operations.saveAll(Mono.just(entities), SampleEntity.class).then().block();
 
-		Mono<SearchPage<SampleEntity>> searchPageMono = template.searchForPage(query, SampleEntity.class);
+		Mono<SearchPage<SampleEntity>> searchPageMono = operations.searchForPage(query, SampleEntity.class);
 
 		searchPageMono.as(StepVerifier::create) //
 				.consumeNextWith(searchPage -> {
@@ -1057,19 +1045,19 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		String indexName = "foo-" + LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy.MM"));
 		String dateMathIndexName = "<foo-{now/M{yyyy.MM}}>";
 
-		template.indexOps(IndexCoordinates.of(dateMathIndexName)) //
+		operations.indexOps(IndexCoordinates.of(dateMathIndexName)) //
 				.create() //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete(); //
 
-		template.indexOps(IndexCoordinates.of(indexName)) //
+		operations.indexOps(IndexCoordinates.of(indexName)) //
 				.exists() //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete(); //
 
-		template.indexOps(IndexCoordinates.of(dateMathIndexName)) //
+		operations.indexOps(IndexCoordinates.of(dateMathIndexName)) //
 				.delete() //
 				.as(StepVerifier::create) //
 				.expectNext(true) //
@@ -1082,12 +1070,12 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42")
 				.message("a message with text").build();
-		template.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		operations.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		Criteria criteria = new Criteria("message").contains("with");
 		CriteriaQuery query = new CriteriaQuery(criteria);
 
-		template.search(query, ElasticsearchTemplateTests.SampleEntity.class).as(StepVerifier::create)
+		operations.search(query, ElasticsearchTemplateTests.SampleEntity.class).as(StepVerifier::create)
 				.consumeNextWith(searchHit -> {
 					Explanation explanation = searchHit.getExplanation();
 					assertThat(explanation).isNull();
@@ -1100,13 +1088,13 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		ElasticsearchTemplateTests.SampleEntity entity = ElasticsearchTemplateTests.SampleEntity.builder().id("42")
 				.message("a message with text").build();
-		template.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
+		operations.save(entity).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 
 		Criteria criteria = new Criteria("message").contains("with");
 		CriteriaQuery query = new CriteriaQuery(criteria);
 		query.setExplain(true);
 
-		template.search(query, ElasticsearchTemplateTests.SampleEntity.class).as(StepVerifier::create)
+		operations.search(query, ElasticsearchTemplateTests.SampleEntity.class).as(StepVerifier::create)
 				.consumeNextWith(searchHit -> {
 					Explanation explanation = searchHit.getExplanation();
 					assertThat(explanation).isNotNull();
@@ -1116,11 +1104,12 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // #1646, #1718
 	@DisplayName("should return a list of info for specific index")
 	void shouldReturnInformationListOfAllIndices() {
-		String indexName = "test-index-reactive-information-list";
-		String aliasName = "testindexinformationindex";
-		ReactiveIndexOperations indexOps = template.indexOps(EntityWithSettingsAndMappingsReactive.class);
+		String indexName = indexNameProvider.indexName();
+		String aliasName = indexName + "-alias";
+		ReactiveIndexOperations indexOps = operations.indexOps(EntityWithSettingsAndMappingsReactive.class);
 
-		indexOps.createWithMapping().block();
+		// beforeEach uses SampleEntity, so recreate the index here
+		indexOps.delete().then(indexOps.createWithMapping()).block();
 
 		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(indexName)
 				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")
@@ -1158,7 +1147,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		ImmutableEntity entity = new ImmutableEntity(null, "some text", null);
 		AtomicReference<ImmutableEntity> savedEntity = new AtomicReference<>();
 
-		template.save(entity).as(StepVerifier::create).consumeNextWith(saved -> {
+		operations.save(entity).as(StepVerifier::create).consumeNextWith(saved -> {
 			assertThat(saved).isNotNull();
 			savedEntity.set(saved);
 			assertThat(saved.getId()).isNotEmpty();
@@ -1166,7 +1155,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 			assertThat(seqNoPrimaryTerm).isNotNull();
 		}).verifyComplete();
 
-		template.get(savedEntity.get().getId(), ImmutableEntity.class).as(StepVerifier::create)
+		operations.get(savedEntity.get().getId(), ImmutableEntity.class).as(StepVerifier::create)
 				.consumeNextWith(retrieved -> {
 					assertThat(retrieved).isEqualTo(savedEntity.get());
 				}).verifyComplete();
@@ -1195,58 +1184,18 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	private void index(SampleEntity... entities) {
 
-		IndexCoordinates indexCoordinates = IndexCoordinates.of(DEFAULT_INDEX);
+		IndexCoordinates indexCoordinates = IndexCoordinates.of(indexNameProvider.indexName());
 
 		if (entities.length == 1) {
-			template.save(entities[0], indexCoordinates).then(indexOperations.refresh()).block();
+			operations.save(entities[0], indexCoordinates).block();
 		} else {
-			template.saveAll(Mono.just(Arrays.asList(entities)), indexCoordinates).then(indexOperations.refresh()).block();
+			operations.saveAll(Mono.just(Arrays.asList(entities)), indexCoordinates).then().block();
 		}
 	}
 
 	// endregion
 
 	// region Entities
-	@Document(indexName = "marvel")
-	static class Person {
-		@Nullable private @Id String id;
-		@Nullable private String name;
-		@Nullable private int age;
-
-		public Person() {}
-
-		public Person(String name, int age) {
-			this.name = name;
-			this.age = age;
-		}
-
-		@Nullable
-		public String getId() {
-			return id;
-		}
-
-		public void setId(@Nullable String id) {
-			this.id = id;
-		}
-
-		@Nullable
-		public String getName() {
-			return name;
-		}
-
-		public void setName(@Nullable String name) {
-			this.name = name;
-		}
-
-		public int getAge() {
-			return age;
-		}
-
-		public void setAge(int age) {
-			this.age = age;
-		}
-	}
-
 	static class Message {
 		@Nullable String message;
 
@@ -1281,7 +1230,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}
 	}
 
-	@Document(indexName = DEFAULT_INDEX)
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
 		@Nullable @Id private String id;
 		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
@@ -1351,7 +1300,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}
 	}
 
-	@Document(indexName = "test-index-reactive-optimistic-entity-template")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class OptimisticEntity {
 		@Nullable @Id private String id;
 		@Nullable private String message;
@@ -1385,7 +1334,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}
 	}
 
-	@Document(indexName = "test-index-reactive-optimistic-and-versioned-entity-template")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class OptimisticAndVersionedEntity {
 		@Nullable @Id private String id;
 		@Nullable private String message;
@@ -1429,7 +1378,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}
 	}
 
-	@Document(indexName = "test-index-reactive-versioned-entity-template")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class VersionedEntity {
 		@Nullable @Id private String id;
 		@Nullable @Version private Long version;
@@ -1453,7 +1402,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}
 	}
 
-	@Document(indexName = "test-index-reactive-information-list", createIndex = false)
+	@Document(indexName = "#{@indexNameProvider.indexName()}", createIndex = false)
 	@Setting(settingPath = "settings/test-settings.json")
 	@Mapping(mappingPath = "mappings/test-mappings.json")
 	private static class EntityWithSettingsAndMappingsReactive {
@@ -1469,7 +1418,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		}
 	}
 
-	@Document(indexName = "immutable-class")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	private static final class ImmutableEntity {
 		@Id private final String id;
 		@Field(type = FieldType.Text) private final String text;

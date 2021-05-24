@@ -15,15 +15,11 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.lang.Nullable;
-import org.springframework.util.StringUtils;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 /**
@@ -47,12 +43,10 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 	@Nullable private final ClusterConnectionInfo clusterConnectionInfo;
 
 	/**
-	 * creates the ClusterConnection, starting a container if necessary.
-	 *
-	 * @param clusterUrl if null or empty a local cluster is tarted
+	 * creates the ClusterConnection, starting a container
 	 */
-	public ClusterConnection(@Nullable String clusterUrl) {
-		clusterConnectionInfo = StringUtils.isEmpty(clusterUrl) ? startElasticsearchContainer() : parseUrl(clusterUrl);
+	public ClusterConnection() {
+		clusterConnectionInfo = startElasticsearchContainer();
 
 		if (clusterConnectionInfo != null) {
 			LOGGER.debug(clusterConnectionInfo.toString());
@@ -73,28 +67,6 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 	@Nullable
 	public ClusterConnectionInfo getClusterConnectionInfo() {
 		return clusterConnectionInfo;
-	}
-
-	/**
-	 * @param clusterUrl the URL to parse
-	 * @return the connection information
-	 */
-	private ClusterConnectionInfo parseUrl(String clusterUrl) {
-		try {
-			URL url = new URL(clusterUrl);
-
-			if (!url.getProtocol().startsWith("http") || url.getPort() <= 0) {
-				throw new ClusterConnectionException("invalid url " + clusterUrl);
-			}
-
-			return ClusterConnectionInfo.builder() //
-					.withHostAndPort(url.getHost(), url.getPort()) //
-					.useSsl(url.getProtocol().equals("https")) //
-					.build();
-		} catch (MalformedURLException e) {
-			throw new ClusterConnectionException(e);
-		}
-
 	}
 
 	@Nullable
