@@ -18,10 +18,9 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<commonslang>2.6</commonslang>
 		<elasticsearch>7.12.1</elasticsearch>
-		<log4j>2.13.3</log4j>
-		<netty>4.1.52.Final</netty>
+		<log4j>2.14.1</log4j>
+		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.6.0-SNAPSHOT</springdata.commons>
 		<testcontainers>1.15.3</testcontainers>
 		<blockhound-junit>1.0.6.RELEASE</blockhound-junit>
@@ -130,22 +129,6 @@
 			<groupId>io.projectreactor</groupId>
 			<artifactId>reactor-test</artifactId>
 			<scope>test</scope>
-		</dependency>
-
-		<!-- APACHE -->
-		<dependency>
-			<groupId>commons-lang</groupId>
-			<artifactId>commons-lang</artifactId>
-			<version>${commonslang}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<!-- JODA Time -->
-		<dependency>
-			<groupId>joda-time</groupId>
-			<artifactId>joda-time</artifactId>
-			<version>${jodatime}</version>
-			<optional>true</optional>
 		</dependency>
 
 		<!-- Elasticsearch -->
