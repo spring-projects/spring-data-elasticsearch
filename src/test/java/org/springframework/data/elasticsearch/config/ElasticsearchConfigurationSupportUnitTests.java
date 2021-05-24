@@ -18,19 +18,18 @@ package org.springframework.data.elasticsearch.config;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.springframework.context.annotation.Bean;
 import reactor.core.publisher.Mono;
 
 import java.util.Collection;
 import java.util.Collections;
 
-import org.apache.commons.lang.ClassUtils;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.cluster.ClusterName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -52,7 +51,7 @@ public class ElasticsearchConfigurationSupportUnitTests {
 	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
 
 		ElasticsearchConfigurationSupport configuration = new StubConfig();
-		assertThat(configuration.getMappingBasePackages()).contains(ClassUtils.getPackageName(StubConfig.class));
+		assertThat(configuration.getMappingBasePackages()).contains(StubConfig.class.getPackage().getName());
 		assertThat(configuration.getInitialEntitySet()).contains(Entity.class);
 	}
 
