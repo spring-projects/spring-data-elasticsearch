@@ -18,7 +18,7 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<elasticsearch>7.12.1</elasticsearch>
+		<elasticsearch>7.13.0</elasticsearch>
 		<log4j>2.14.1</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.6.0-SNAPSHOT</springdata.commons>
