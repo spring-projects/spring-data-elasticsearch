@@ -33,6 +33,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Peter-Josef Meisch
  * @author Farid Faoudi
+ * @author Stojan Koncar
  * @since 4.0
  */
 public interface DocumentOperations {

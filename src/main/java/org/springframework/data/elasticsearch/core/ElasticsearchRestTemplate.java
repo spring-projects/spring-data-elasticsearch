@@ -91,6 +91,7 @@ import org.springframework.util.Assert;
  * @author Gyula Attila Csorogi
  * @author Massimiliano Poggi
  * @author Farid Faoudi
+ * @author Stojan Koncar
  */
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 

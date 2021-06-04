@@ -87,6 +87,7 @@ import org.springframework.util.Assert;
  * @author Gyula Attila Csorogi
  * @author Roman Puchkovskiy
  * @author Farid Faoudi
+ * @author Stojan Koncar
  * @deprecated as of 4.0
  */
 @Deprecated
