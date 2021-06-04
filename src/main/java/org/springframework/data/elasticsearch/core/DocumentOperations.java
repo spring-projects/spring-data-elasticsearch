@@ -305,6 +305,16 @@ public interface DocumentOperations {
 	 * Update document(s) by query
 	 *
 	 * @param updateQuery query defining the update, must not be {@literal null}
+	 * @param clazz The entity class, must be annotated with
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
+	 * @return the update response
+	 */
+	ByQueryResponse updateByQuery(UpdateQuery updateQuery, Class<?> clazz);
+
+	/**
+	 * Update document(s) by query
+	 *
+	 * @param updateQuery query defining the update, must not be {@literal null}
 	 * @param index the index where to update the records , must not be {@literal null}
 	 * @return the update response
 	 * @since 4.2

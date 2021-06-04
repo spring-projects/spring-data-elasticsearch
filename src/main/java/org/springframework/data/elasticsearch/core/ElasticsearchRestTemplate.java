@@ -244,6 +244,15 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
+	public ByQueryResponse updateByQuery(UpdateQuery query, Class<?> clazz) {
+
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(clazz, "clazz must not be null");
+
+		return updateByQuery(query, getIndexCoordinatesFor(clazz));
+	}
+
+	@Override
 	public ByQueryResponse updateByQuery(UpdateQuery query, IndexCoordinates index) {
 
 		Assert.notNull(query, "query must not be null");
