@@ -23,13 +23,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Based on the reference doc - https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters-completion.html
+ * Based on the reference doc -
+ * https://www.elastic.co/guide/en/elasticsearch/reference/current/search-suggesters-completion.html
  *
  * @author Mewes Kochheim
  * @author Robert Gruendler
+ * @author Peter-Josef Meisch
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.FIELD)
+@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
 @Documented
 @Inherited
 public @interface CompletionField {
