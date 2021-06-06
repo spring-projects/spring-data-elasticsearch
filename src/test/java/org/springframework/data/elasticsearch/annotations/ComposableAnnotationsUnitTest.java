@@ -32,6 +32,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -73,12 +74,17 @@ public class ComposableAnnotationsUnitTest {
 		assertThat(property.storeNullValue()).isTrue();
 	}
 
-	@Test // DATAES-362
+	@Test // DATAES-362, #1836
 	@DisplayName("should use composed Field annotations in MappingBuilder")
 	void shouldUseComposedFieldAnnotationsInMappingBuilder() throws JSONException {
 
 		String expected = "{\n" + //
-				"  \"properties\":{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
 				"    \"null-value\": {\n" + //
 				"      \"null_value\": \"NULL\"\n" + //
 				"    },\n" + //
@@ -93,13 +99,21 @@ public class ComposableAnnotationsUnitTest {
 				"          \"type\": \"keyword\"\n" + //
 				"        }\n" + //
 				"      }\n" + //
+				"    },\n" + //
+				"    \"suggest\": {\n" + //
+				"      \"type\": \"completion\",\n" + //
+				"      \"max_input_length\": 50,\n" + //
+				"      \"preserve_position_increments\": true,\n" + //
+				"      \"preserve_separators\": true,\n" + //
+				"      \"search_analyzer\": \"myAnalyzer\",\n" + //
+				"      \"analyzer\": \"myAnalyzer\"\n" + //
 				"    }\n" + //
 				"  }\n" + //
 				"}\n"; //
 
 		String mapping = mappingBuilder.buildPropertyMapping(ComposedAnnotationEntity.class);
 
-		assertEquals(expected, mapping, false);
+		assertEquals(expected, mapping, true);
 	}
 
 	@Inherited
@@ -142,12 +156,21 @@ public class ComposableAnnotationsUnitTest {
 	public @interface TextKeywordField {
 	}
 
+	@Inherited
+	@Documented
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target(ElementType.FIELD)
+	@CompletionField(analyzer = "myAnalyzer", searchAnalyzer = "myAnalyzer")
+	public @interface MyAnalyzerCompletionField {
+	}
+
 	@DocumentNoCreate(indexName = "test-no-create")
 	static class ComposedAnnotationEntity {
 		@Nullable @Id private String id;
 		@Nullable @NullValueField(name = "null-value") private String nullValue;
 		@Nullable @LocalDateField private LocalDate theDate;
 		@Nullable @TextKeywordField private String multiField;
+		@Nullable @MyAnalyzerCompletionField private Completion suggest;
 
 		@Nullable
 		public String getId() {
@@ -183,6 +206,15 @@ public class ComposableAnnotationsUnitTest {
 
 		public void setMultiField(@Nullable String multiField) {
 			this.multiField = multiField;
+		}
+
+		@Nullable
+		public Completion getSuggest() {
+			return suggest;
+		}
+
+		public void setSuggest(@Nullable Completion suggest) {
+			this.suggest = suggest;
 		}
 	}
 }
