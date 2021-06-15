@@ -31,7 +31,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * Utility class with helper methods for working with {@link SearchHit}.
- * 
+ *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @author Roman Puchkovskiy
@@ -43,7 +43,7 @@ public final class SearchHitSupport {
 
 	/**
 	 * unwraps the data contained in a SearchHit for different types containing SearchHits if possible
-	 * 
+	 *
 	 * @param result the object, list, page or whatever containing SearchHit objects
 	 * @return a corresponding object where the SearchHits are replaced by their content if possible, otherwise the
 	 *         original object
@@ -86,6 +86,12 @@ public final class SearchHitSupport {
 			return unwrapSearchHitsIterator((SearchHitsIterator<?>) result);
 		}
 
+		if (result instanceof SearchPage<?>) {
+			SearchPage<?> searchPage = (SearchPage<?>) result;
+			List<?> content = (List<?>) SearchHitSupport.unwrapSearchHits(searchPage.getSearchHits());
+			return new PageImpl<>(content, searchPage.getPageable(), searchPage.getTotalElements());
+		}
+
 		if (ReactiveWrappers.isAvailable(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR)) {
 
 			if (result instanceof Flux) {
@@ -119,7 +125,7 @@ public final class SearchHitSupport {
 
 	/**
 	 * Builds an {@link AggregatedPage} with the {@link SearchHit} objects from a {@link SearchHits} object.
-	 * 
+	 *
 	 * @param searchHits, must not be {@literal null}.
 	 * @param pageable, must not be {@literal null}.
 	 * @return the created Page
@@ -142,7 +148,7 @@ public final class SearchHitSupport {
 
 	/**
 	 * SearchPage implementation.
-	 * 
+	 *
 	 * @param <T>
 	 */
 	static class SearchPageImpl<T> extends PageImpl<SearchHit<T>> implements SearchPage<T> {

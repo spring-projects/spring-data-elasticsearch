@@ -151,6 +151,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 		// then
 		assertThat(page).isNotNull();
 		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1L);
+		assertThat(page.getContent().get(0)).isInstanceOf(SampleEntity.class);
 	}
 
 	@Test

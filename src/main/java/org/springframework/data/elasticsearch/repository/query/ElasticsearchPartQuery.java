@@ -126,7 +126,9 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 			result = elasticsearchOperations.searchOne(query, clazz, index);
 		}
 
-		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
+		return (queryMethod.isNotSearchHitMethod() && !queryMethod.isSearchPageMethod())
+				? SearchHitSupport.unwrapSearchHits(result)
+				: result;
 	}
 
 	@Nullable
