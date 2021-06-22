@@ -15,11 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.join;
 
+import java.util.Objects;
+
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Subhobrata Dey
+ * @author Sascha Woo
  * @since 4.1
  */
 public class JoinField<ID> {
@@ -53,5 +56,22 @@ public class JoinField<ID> {
 
 	public String getName() {
 		return name;
+	}
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(name, parent);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) {
+			return true;
+		}
+		if (!(obj instanceof JoinField)) {
+			return false;
+		}
+		JoinField other = (JoinField) obj;
+		return Objects.equals(name, other.name) && Objects.equals(parent, other.parent);
 	}
 }
