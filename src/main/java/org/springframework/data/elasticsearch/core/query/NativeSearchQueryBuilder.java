@@ -19,6 +19,7 @@ import static org.springframework.util.CollectionUtils.*;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.elasticsearch.action.search.SearchType;
@@ -58,16 +59,16 @@ public class NativeSearchQueryBuilder {
 	private final List<AbstractAggregationBuilder<?>> aggregationBuilders = new ArrayList<>();
 	private final List<PipelineAggregationBuilder> pipelineAggregationBuilders = new ArrayList<>();
 	@Nullable private HighlightBuilder highlightBuilder;
-	@Nullable private HighlightBuilder.Field[] highlightFields;
+	@Nullable private List<HighlightBuilder.Field> highlightFields = new ArrayList<>();
 	private Pageable pageable = Pageable.unpaged();
-	@Nullable private String[] fields;
+	@Nullable private List<String> fields = new ArrayList<>();
 	@Nullable private SourceFilter sourceFilter;
 	@Nullable private CollapseBuilder collapseBuilder;
-	@Nullable private List<IndexBoost> indicesBoost;
+	@Nullable private List<IndexBoost> indicesBoost = new ArrayList<>();
 	@Nullable private SearchTemplateRequestBuilder searchTemplateBuilder;
 	private float minScore;
 	private boolean trackScores;
-	@Nullable private Collection<String> ids;
+	@Nullable private List<String> ids = new ArrayList<>();
 	@Nullable private String route;
 	@Nullable private SearchType searchType;
 	@Nullable private IndicesOptions indicesOptions;
@@ -87,8 +88,28 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @deprecated use {@link #withSorts(SortBuilder...)} instead.
+	 */
+	@Deprecated
 	public NativeSearchQueryBuilder withSort(SortBuilder<?> sortBuilder) {
 		this.sortBuilders.add(sortBuilder);
+		return this;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withSorts(Collection<SortBuilder<?>> sortBuilders) {
+		this.sortBuilders.addAll(sortBuilders);
+		return this;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withSorts(SortBuilder<?>... sortBuilders) {
+		Collections.addAll(this.sortBuilders, sortBuilders);
 		return this;
 	}
 
@@ -110,6 +131,10 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @deprecated use {@link #withAggregations(AbstractAggregationBuilder...)} instead.
+	 */
+	@Deprecated
 	public NativeSearchQueryBuilder addAggregation(AbstractAggregationBuilder<?> aggregationBuilder) {
 		this.aggregationBuilders.add(aggregationBuilder);
 		return this;
@@ -118,8 +143,42 @@ public class NativeSearchQueryBuilder {
 	/**
 	 * @since 4.3
 	 */
+	public NativeSearchQueryBuilder withAggregations(Collection<AbstractAggregationBuilder<?>> aggregationBuilders) {
+		this.aggregationBuilders.addAll(aggregationBuilders);
+		return this;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withAggregations(AbstractAggregationBuilder<?>... aggregationBuilders) {
+		Collections.addAll(this.aggregationBuilders, aggregationBuilders);
+		return this;
+	}
+
+	/**
+	 * @deprecated use {@link #withPipelineAggregations(PipelineAggregationBuilder...)} instead.
+	 */
+	@Deprecated
 	public NativeSearchQueryBuilder addAggregation(PipelineAggregationBuilder pipelineAggregationBuilder) {
 		this.pipelineAggregationBuilders.add(pipelineAggregationBuilder);
+		return this;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withPipelineAggregations(
+			Collection<PipelineAggregationBuilder> pipelineAggregationBuilders) {
+		this.pipelineAggregationBuilders.addAll(pipelineAggregationBuilders);
+		return this;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withPipelineAggregations(PipelineAggregationBuilder... pipelineAggregationBuilders) {
+		Collections.addAll(this.pipelineAggregationBuilders, pipelineAggregationBuilders);
 		return this;
 	}
 
@@ -129,12 +188,28 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQueryBuilder withHighlightFields(HighlightBuilder.Field... highlightFields) {
-		this.highlightFields = highlightFields;
+		Collections.addAll(this.highlightFields, highlightFields);
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withIndicesBoost(List<IndexBoost> indicesBoost) {
-		this.indicesBoost = indicesBoost;
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withHighlightFields(Collection<HighlightBuilder.Field> highlightFields) {
+		this.highlightFields.addAll(highlightFields);
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withIndicesBoost(Collection<IndexBoost> indicesBoost) {
+		this.indicesBoost.addAll(indicesBoost);
+		return this;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withIndicesBoost(IndexBoost... indicesBoost) {
+		Collections.addAll(this.indicesBoost, indicesBoost);
 		return this;
 	}
 
@@ -148,8 +223,16 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withFields(Collection<String> fields) {
+		this.fields.addAll(fields);
+		return this;
+	}
+
 	public NativeSearchQueryBuilder withFields(String... fields) {
-		this.fields = fields;
+		Collections.addAll(this.fields, fields);
 		return this;
 	}
 
@@ -174,7 +257,15 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQueryBuilder withIds(Collection<String> ids) {
-		this.ids = ids;
+		this.ids.addAll(ids);
+		return this;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withIds(String... ids) {
+		Collections.addAll(this.ids, ids);
 		return this;
 	}
 
@@ -223,14 +314,18 @@ public class NativeSearchQueryBuilder {
 
 	public NativeSearchQuery build() {
 
-		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(queryBuilder, filterBuilder, sortBuilders,
-				highlightBuilder, highlightFields);
+		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery( //
+				queryBuilder, //
+				filterBuilder, //
+				sortBuilders, //
+				highlightBuilder, //
+				highlightFields.toArray(new HighlightBuilder.Field[highlightFields.size()]));
 
 		nativeSearchQuery.setPageable(pageable);
 		nativeSearchQuery.setTrackScores(trackScores);
 
 		if (fields != null) {
-			nativeSearchQuery.addFields(fields);
+			nativeSearchQuery.setFields(fields);
 		}
 
 		if (sourceFilter != null) {
