@@ -15,8 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
@@ -27,6 +29,7 @@ import org.springframework.util.NumberUtils;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Niklas Herder
  */
 final public class StringQueryUtil {
 
@@ -70,6 +73,28 @@ final public class StringQueryUtil {
 		// noinspection ConstantConditions
 		if (parameter != null) {
 
+			parameterValue = convert(parameter);
+		}
+
+		return parameterValue;
+
+	}
+
+	private static String convert(Object parameter) {
+		if (Collection.class.isAssignableFrom(parameter.getClass())) {
+			Collection<?> collectionParam = (Collection<?>) parameter;
+			StringBuilder sb = new StringBuilder("[");
+			sb.append(collectionParam.stream().map(o -> {
+				if (o instanceof String) {
+					return "\"" + convert(o) + "\"";
+				} else {
+					return convert(o);
+				}
+			}).collect(Collectors.joining(",")));
+			sb.append("]");
+			return sb.toString();
+		} else {
+			String parameterValue = "null";
 			if (conversionService.canConvert(parameter.getClass(), String.class)) {
 				String converted = conversionService.convert(parameter, String.class);
 
@@ -79,11 +104,10 @@ final public class StringQueryUtil {
 			} else {
 				parameterValue = parameter.toString();
 			}
+
+			parameterValue = parameterValue.replaceAll("\"", Matcher.quoteReplacement("\\\""));
+			return parameterValue;
 		}
-
-		parameterValue = parameterValue.replaceAll("\"", Matcher.quoteReplacement("\\\""));
-		return parameterValue;
-
 	}
 
 }
