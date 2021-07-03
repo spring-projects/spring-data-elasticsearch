@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.query;
 import static org.assertj.core.api.Assertions.*;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -51,6 +52,7 @@ import org.springframework.lang.Nullable;
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Niklas Herder
  */
 @ExtendWith(MockitoExtension.class)
 public class ElasticsearchStringQueryUnitTests {
@@ -95,7 +97,42 @@ public class ElasticsearchStringQueryUnitTests {
 				.isEqualTo("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"hello \\\"Stranger\\\"\"}}]}}");
 	}
 
-	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, String... args)
+	@Test // #1858
+	@DisplayName("should only quote String query parameters")
+	void shouldOnlyEscapeStringQueryParameters() throws Exception {
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAge", Integer.valueOf(30));
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource()).isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : 30 } } } }");
+
+	}
+
+	@Test // #1858
+	@DisplayName("should only quote String collection query parameters")
+	void shouldOnlyEscapeStringCollectionQueryParameters() throws Exception {
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAgeIn",
+				new ArrayList<>(Arrays.asList(30, 35, 40)));
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : [30,35,40] } } } }");
+
+	}
+
+	@Test // #1858
+	@DisplayName("should escape Strings in collection query parameters")
+	void shouldEscapeStringsInCollectionsQueryParameters() throws Exception {
+
+		final List<String> another_string = Arrays.asList("hello \"Stranger\"", "Another string");
+		List<String> params = new ArrayList<>(another_string);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameIn", params);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource()).isEqualTo(
+				"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"hello \\\"Stranger\\\"\",\"Another string\"] } } } }");
+	}
+
+	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
 			throws NoSuchMethodException {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
@@ -103,6 +140,7 @@ public class ElasticsearchStringQueryUnitTests {
 		ElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
 		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
 	}
+
 	private ElasticsearchStringQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {
 		return new ElasticsearchStringQuery(queryMethod, operations, queryMethod.getAnnotatedQuery());
 	}
@@ -116,8 +154,17 @@ public class ElasticsearchStringQueryUnitTests {
 
 	private interface SampleRepository extends Repository<Person, String> {
 
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'age' : ?0 } } } }")
+		List<Person> findByAge(Integer age);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'age' : ?0 } } } }")
+		List<Person> findByAgeIn(ArrayList<Integer> age);
+
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
 		Person findByName(String name);
+
+		@Query("{ 'bool' : { 'must' : { 'terms' : { 'name' : ?0 } } } }")
+		Person findByNameIn(ArrayList<String> names);
 
 		@Query(value = "name:(?0, ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?0, ?1)")
 		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
@@ -131,15 +178,26 @@ public class ElasticsearchStringQueryUnitTests {
 	 * @author Rizwan Idrees
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
+   * @author Niklas Herder
 	 */
 
 	@Document(indexName = "test-index-person-query-unittest")
 	static class Person {
 
+		@Nullable public int age;
 		@Nullable @Id private String id;
 		@Nullable private String name;
 		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
 		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+
+		@Nullable
+		public int getAge() {
+			return age;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
 
 		@Nullable
 		public String getId() {
