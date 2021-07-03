@@ -24,6 +24,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -50,10 +51,12 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Niklas Herder
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ElasticsearchStringQueryUnitTests {
@@ -97,7 +100,39 @@ public class ElasticsearchStringQueryUnitTests {
 				.isEqualTo("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"hello \\\"Stranger\\\"\"}}]}}");
 	}
 
-	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, String... args)
+	@Test // #1858
+	public void shouldOnlyEscapeStringQueryParameters() throws Exception {
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAge", Integer.valueOf(30));
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource()).isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : 30 } } } }");
+
+	}
+
+	@Test // #1858
+	public void shouldOnlyEscapeStringCollectionQueryParameters() throws Exception {
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAgeIn",
+				new ArrayList<>(Arrays.asList(30, 35, 40)));
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : [30,35,40] } } } }");
+
+	}
+
+	@Test // #1858
+	public void shouldEscapeStringsInCollectionsQueryParameters() throws Exception {
+
+		final List<String> another_string = Arrays.asList("hello \"Stranger\"", "Another string");
+		List<String> params = new ArrayList<>(another_string);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameIn", params);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource()).isEqualTo(
+				"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"hello \\\"Stranger\\\"\",\"Another string\"] } } } }");
+	}
+
+	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
 			throws NoSuchMethodException {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(size -> new Class[size]);
@@ -117,24 +152,55 @@ public class ElasticsearchStringQueryUnitTests {
 				new SpelAwareProxyProjectionFactory(), converter.getMappingContext());
 	}
 
+	private interface SampleRepository extends Repository<Person, String> {
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'age' : ?0 } } } }")
+		List<Person> findByAge(Integer age);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'age' : ?0 } } } }")
+		List<Person> findByAgeIn(ArrayList<Integer> age);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
+		Person findByName(String name);
+
+		@Query("{ 'bool' : { 'must' : { 'terms' : { 'name' : ?0 } } } }")
+		Person findByNameIn(ArrayList<String> names);
+
+		@Query(value = "name:(?0, ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?0, ?1)")
+		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
+				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
+
+		@Query("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"?0\"}}]}}")
+		List<Book> findByPrefix(String prefix);
+	}
+
 	/**
 	 * @author Rizwan Idrees
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
+   * @author Niklas Herder
 	 */
 
 	@Document(indexName = "test-index-person-query-unittest", type = "user", shards = 1, replicas = 0,
 			refreshInterval = "-1")
 	static class Person {
 
-		@Id private String id;
+		@Nullable public int age;
+		@Nullable @Id private String id;
+		@Nullable private String name;
+		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
+		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
 
-		private String name;
+		@Nullable
+		public int getAge() {
+			return age;
+		}
 
-		@Field(type = FieldType.Nested) private List<Car> car;
+		public void setAge(int age) {
+			this.age = age;
+		}
 
-		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
-
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -166,19 +232,6 @@ public class ElasticsearchStringQueryUnitTests {
 		public void setBooks(List<Book> books) {
 			this.books = books;
 		}
-	}
-
-	private interface SampleRepository extends Repository<Person, String> {
-
-		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
-		Person findByName(String name);
-
-		@Query(value = "name:(?0, ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?0, ?1)")
-		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
-				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
-
-		@Query("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"?0\"}}]}}")
-		List<Book> findByPrefix(String prefix);
 	}
 
 	/**
