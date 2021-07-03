@@ -67,7 +67,13 @@ final public class StringQueryUtil {
 		if (Collection.class.isAssignableFrom(parameter.getClass())) {
 			Collection<?> collectionParam = (Collection<?>) parameter;
 			StringBuilder sb = new StringBuilder("[");
-			sb.append(collectionParam.stream().map(o -> "\"" + convert(o) + "\"").collect(Collectors.joining(",")));
+			sb.append(collectionParam.stream().map(o -> {
+				if (o instanceof String) {
+					return "\"" + convert(o) + "\"";
+				} else {
+					return convert(o);
+				}
+			}).collect(Collectors.joining(",")));
 			sb.append("]");
 			return sb.toString();
 		} else {

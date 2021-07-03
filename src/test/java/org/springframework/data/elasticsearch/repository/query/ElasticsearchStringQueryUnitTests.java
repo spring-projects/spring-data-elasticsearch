@@ -98,6 +98,28 @@ public class ElasticsearchStringQueryUnitTests {
 	}
 
 	@Test // #1858
+	@DisplayName("should only quote String query parameters")
+	void shouldOnlyEscapeStringQueryParameters() throws Exception {
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAge", Integer.valueOf(30));
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource()).isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : 30 } } } }");
+
+	}
+
+	@Test // #1858
+	@DisplayName("should only quote String collection query parameters")
+	void shouldOnlyEscapeStringCollectionQueryParameters() throws Exception {
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAgeIn",
+				new ArrayList<>(Arrays.asList(30, 35, 40)));
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : [30,35,40] } } } }");
+
+	}
+
+	@Test // #1858
 	@DisplayName("should escape Strings in collection query parameters")
 	void shouldEscapeStringsInCollectionsQueryParameters() throws Exception {
 
@@ -132,6 +154,12 @@ public class ElasticsearchStringQueryUnitTests {
 
 	private interface SampleRepository extends Repository<Person, String> {
 
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'age' : ?0 } } } }")
+		List<Person> findByAge(Integer age);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'age' : ?0 } } } }")
+		List<Person> findByAgeIn(ArrayList<Integer> age);
+
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
 		Person findByName(String name);
 
@@ -150,15 +178,26 @@ public class ElasticsearchStringQueryUnitTests {
 	 * @author Rizwan Idrees
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
+   * @author Niklas Herder
 	 */
 
 	@Document(indexName = "test-index-person-query-unittest")
 	static class Person {
 
+		@Nullable public int age;
 		@Nullable @Id private String id;
 		@Nullable private String name;
 		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
 		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+
+		@Nullable
+		public int getAge() {
+			return age;
+		}
+
+		public void setAge(int age) {
+			this.age = age;
+		}
 
 		@Nullable
 		public String getId() {
