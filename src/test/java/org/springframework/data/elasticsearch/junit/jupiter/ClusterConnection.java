@@ -15,6 +15,12 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
+import java.io.InputStream;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Properties;
+
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -77,10 +83,13 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 		try {
 			String elasticsearchVersion = VersionInfo.versionProperties()
 					.getProperty(VersionInfo.VERSION_ELASTICSEARCH_CLIENT);
+			Map<String, String> elasticsearchProperties = elasticsearchProperties();
 
 			String dockerImageName = ELASTICSEARCH_DEFAULT_IMAGE + ':' + elasticsearchVersion;
 			LOGGER.debug("Docker image: {}", dockerImageName);
+
 			ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer(dockerImageName);
+			elasticsearchContainer.withEnv(elasticsearchProperties);
 			elasticsearchContainer.start();
 			return ClusterConnectionInfo.builder() //
 					.withHostAndPort(elasticsearchContainer.getHost(),
@@ -93,6 +102,24 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 		}
 
 		return null;
+	}
+
+	private Map<String, String> elasticsearchProperties() {
+
+		String propertiesFile = "testcontainers-elasticsearch.properties";
+		try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(propertiesFile)) {
+			Properties props = new Properties();
+
+			if (inputStream != null) {
+				props.load(inputStream);
+			}
+			Map<String, String> elasticsearchProperties = new LinkedHashMap<>();
+			props.forEach((key, value) -> elasticsearchProperties.put(key.toString(), value.toString()));
+			return elasticsearchProperties;
+		} catch (Exception e) {
+			LOGGER.error("Cannot load " + propertiesFile);
+		}
+		return Collections.emptyMap();
 	}
 
 	@Override
