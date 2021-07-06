@@ -46,9 +46,9 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @since 4.0
  */
-abstract class AbstractDefaultIndexOperations implements IndexOperations {
+abstract class AbstractIndexTemplate implements IndexOperations {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDefaultIndexOperations.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractIndexTemplate.class);
 
 	protected final ElasticsearchConverter elasticsearchConverter;
 	protected final RequestFactory requestFactory;
@@ -56,7 +56,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 	@Nullable protected final Class<?> boundClass;
 	@Nullable private final IndexCoordinates boundIndex;
 
-	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, Class<?> boundClass) {
+	public AbstractIndexTemplate(ElasticsearchConverter elasticsearchConverter, Class<?> boundClass) {
 
 		Assert.notNull(boundClass, "boundClass may not be null");
 
@@ -66,7 +66,7 @@ abstract class AbstractDefaultIndexOperations implements IndexOperations {
 		this.boundIndex = null;
 	}
 
-	public AbstractDefaultIndexOperations(ElasticsearchConverter elasticsearchConverter, IndexCoordinates boundIndex) {
+	public AbstractIndexTemplate(ElasticsearchConverter elasticsearchConverter, IndexCoordinates boundIndex) {
 
 		Assert.notNull(boundIndex, "boundIndex may not be null");
 

@@ -134,7 +134,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(clazz, "clazz must not be null");
 
-		return new DefaultTransportIndexOperations(client, elasticsearchConverter, clazz);
+		return new TransportIndexTemplate(client, elasticsearchConverter, clazz);
 	}
 
 	@Override
@@ -142,7 +142,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(index, "index must not be null");
 
-		return new DefaultTransportIndexOperations(client, elasticsearchConverter, index);
+		return new TransportIndexTemplate(client, elasticsearchConverter, index);
 	}
 	// endregion
 

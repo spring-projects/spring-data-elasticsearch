@@ -63,9 +63,9 @@ import org.springframework.util.Assert;
  * @author George Popides
  * @since 4.1
  */
-class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
+class ReactiveIndexTemplate implements ReactiveIndexOperations {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultReactiveIndexOperations.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveIndexTemplate.class);
 
 	@Nullable private final Class<?> boundClass;
 	private final IndexCoordinates boundIndex;
@@ -73,7 +73,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 	private final ReactiveElasticsearchOperations operations;
 	private final ElasticsearchConverter converter;
 
-	public DefaultReactiveIndexOperations(ReactiveElasticsearchOperations operations, IndexCoordinates index) {
+	public ReactiveIndexTemplate(ReactiveElasticsearchOperations operations, IndexCoordinates index) {
 
 		Assert.notNull(operations, "operations must not be null");
 		Assert.notNull(index, "index must not be null");
@@ -85,7 +85,7 @@ class DefaultReactiveIndexOperations implements ReactiveIndexOperations {
 		this.boundIndex = index;
 	}
 
-	public DefaultReactiveIndexOperations(ReactiveElasticsearchOperations operations, Class<?> clazz) {
+	public ReactiveIndexTemplate(ReactiveElasticsearchOperations operations, Class<?> clazz) {
 
 		Assert.notNull(operations, "operations must not be null");
 		Assert.notNull(clazz, "clazz must not be null");

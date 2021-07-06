@@ -64,18 +64,18 @@ import org.springframework.util.Assert;
  * @author George Popides
  * @since 4.0
  */
-class DefaultIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
+class RestIndexTemplate extends AbstractIndexTemplate implements IndexOperations {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultIndexOperations.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(RestIndexTemplate.class);
 
 	private final ElasticsearchRestTemplate restTemplate;
 
-	public DefaultIndexOperations(ElasticsearchRestTemplate restTemplate, Class<?> boundClass) {
+	public RestIndexTemplate(ElasticsearchRestTemplate restTemplate, Class<?> boundClass) {
 		super(restTemplate.getElasticsearchConverter(), boundClass);
 		this.restTemplate = restTemplate;
 	}
 
-	public DefaultIndexOperations(ElasticsearchRestTemplate restTemplate, IndexCoordinates boundIndex) {
+	public RestIndexTemplate(ElasticsearchRestTemplate restTemplate, IndexCoordinates boundIndex) {
 		super(restTemplate.getElasticsearchConverter(), boundIndex);
 		this.restTemplate = restTemplate;
 	}

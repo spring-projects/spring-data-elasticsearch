@@ -131,7 +131,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(clazz, "clazz must not be null");
 
-		return new DefaultIndexOperations(this, clazz);
+		return new RestIndexTemplate(this, clazz);
 	}
 
 	@Override
@@ -139,7 +139,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(index, "index must not be null");
 
-		return new DefaultIndexOperations(this, index);
+		return new RestIndexTemplate(this, index);
 	}
 	// endregion
 
