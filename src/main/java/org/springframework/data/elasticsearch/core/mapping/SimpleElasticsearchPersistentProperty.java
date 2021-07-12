@@ -29,10 +29,14 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.core.Range;
 import org.springframework.data.elasticsearch.core.completion.Completion;
 import org.springframework.data.elasticsearch.core.convert.DatePersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.convert.DateRangePersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
+import org.springframework.data.elasticsearch.core.convert.NumberRangePersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.convert.TemporalPersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.convert.TemporalRangePersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoJson;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.join.JoinField;
@@ -140,15 +144,14 @@ public class SimpleElasticsearchPersistentProperty extends
 		}
 
 		Field field = findAnnotation(Field.class);
-		if (field == null || field.type() == null) {
+		if (field == null) {
 			return;
 		}
 
 		switch (field.type()) {
 			case Date:
-			case Date_Nanos:
+			case Date_Nanos: {
 				List<ElasticsearchDateConverter> dateConverters = getDateConverters(field, actualType);
-
 				if (dateConverters.isEmpty()) {
 					LOGGER.warn("No date formatters configured for property '{}'.", getName());
 					return;
@@ -162,6 +165,52 @@ public class SimpleElasticsearchPersistentProperty extends
 					LOGGER.warn("Unsupported type '{}' for date property '{}'.", actualType, getName());
 				}
 				break;
+			}
+			case Date_Range: {
+				if (!Range.class.isAssignableFrom(actualType)) {
+					return;
+				}
+
+				List<ElasticsearchDateConverter> dateConverters = getDateConverters(field, actualType);
+				if (dateConverters.isEmpty()) {
+					LOGGER.warn("No date formatters configured for property '{}'.", getName());
+					return;
+				}
+
+				Class<?> genericType = getTypeInformation().getTypeArguments().get(0).getType();
+				if (TemporalAccessor.class.isAssignableFrom(genericType)) {
+					propertyConverter = new TemporalRangePersistentPropertyConverter(this, dateConverters);
+				} else if (Date.class.isAssignableFrom(genericType)) {
+					propertyConverter = new DateRangePersistentPropertyConverter(this, dateConverters);
+				} else {
+					LOGGER.warn("Unsupported generic type '{}' for date range property '{}'.", genericType, getName());
+				}
+				break;
+			}
+			case Integer_Range:
+			case Float_Range:
+			case Long_Range:
+			case Double_Range: {
+				if (!Range.class.isAssignableFrom(actualType)) {
+					return;
+				}
+
+				Class<?> genericType = getTypeInformation().getTypeArguments().get(0).getType();
+				if ((field.type() == FieldType.Integer_Range && !Integer.class.isAssignableFrom(genericType))
+						|| (field.type() == FieldType.Float_Range && !Float.class.isAssignableFrom(genericType))
+						|| (field.type() == FieldType.Long_Range && !Long.class.isAssignableFrom(genericType))
+						|| (field.type() == FieldType.Double_Range && !Double.class.isAssignableFrom(genericType))) {
+					LOGGER.warn("Unsupported generic type '{}' for range field type '{}' of property '{}'.", genericType,
+							field.type(), getName());
+					return;
+				}
+
+				propertyConverter = new NumberRangePersistentPropertyConverter(this);
+				break;
+			}
+			case Ip_Range: {
+				// TODO currently unsupported, needs a library like https://seancfoley.github.io/IPAddress/
+			}
 			default:
 				break;
 		}

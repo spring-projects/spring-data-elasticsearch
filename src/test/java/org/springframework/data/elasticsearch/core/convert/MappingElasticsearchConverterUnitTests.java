@@ -20,9 +20,15 @@ import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -46,6 +52,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.core.Range;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonEntity;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonGeometryCollection;
@@ -880,6 +887,200 @@ public class MappingElasticsearchConverterUnitTests {
 		mappingElasticsearchConverter.write(entity, document);
 
 		assertEquals(expected, document.toJson(), false);
+	}
+
+	@Nested
+	class RangeTests {
+
+		static final String JSON = "{"
+				+ "\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$RangeTests$RangeEntity\","
+				+ "\"integerRange\":{\"gt\":\"1\",\"lt\":\"10\"}," //
+				+ "\"floatRange\":{\"gte\":\"1.2\",\"lte\":\"2.5\"}," //
+				+ "\"longRange\":{\"gt\":\"2\",\"lte\":\"5\"}," //
+				+ "\"doubleRange\":{\"gte\":\"3.2\",\"lt\":\"7.4\"}," //
+				+ "\"dateRange\":{\"gte\":\"1970-01-01T00:00:00.000Z\",\"lte\":\"1970-01-01T01:00:00.000Z\"}," //
+				+ "\"localDateRange\":{\"gte\":\"2021-07-06\"}," //
+				+ "\"localTimeRange\":{\"gte\":\"00:30:00.000\",\"lt\":\"02:30:00.000\"}," //
+				+ "\"localDateTimeRange\":{\"gt\":\"2021-01-01T00:30:00.000\",\"lt\":\"2021-01-01T02:30:00.000\"}," //
+				+ "\"offsetTimeRange\":{\"gte\":\"00:30:00.000+02:00\",\"lt\":\"02:30:00.000+02:00\"}," //
+				+ "\"zonedDateTimeRange\":{\"gte\":\"2021-01-01T00:30:00.000+02:00\",\"lte\":\"2021-01-01T00:30:00.000+02:00\"}," //
+				+ "\"nullRange\":null}";
+
+		@Test
+		public void shouldReadRanges() throws JSONException {
+
+			// given
+			Document source = Document.parse(JSON);
+
+			// when
+			RangeEntity entity = mappingElasticsearchConverter.read(RangeEntity.class, source);
+
+			// then
+			assertThat(entity) //
+					.isNotNull() //
+					.satisfies(e -> {
+						assertThat(e.getIntegerRange()).isEqualTo(Range.open(1, 10));
+						assertThat(e.getFloatRange()).isEqualTo(Range.closed(1.2f, 2.5f));
+						assertThat(e.getLongRange()).isEqualTo(Range.leftOpen(2l, 5l));
+						assertThat(e.getDoubleRange()).isEqualTo(Range.rightOpen(3.2d, 7.4d));
+						assertThat(e.getDateRange()).isEqualTo(Range.closed(new Date(0), new Date(60 * 60 * 1000)));
+						assertThat(e.getLocalDateRange())
+								.isEqualTo(Range.rightUnbounded(Range.Bound.inclusive(LocalDate.of(2021, 7, 6))));
+						assertThat(e.getLocalTimeRange()).isEqualTo(Range.rightOpen(LocalTime.of(0, 30), LocalTime.of(2, 30)));
+						assertThat(e.getLocalDateTimeRange())
+								.isEqualTo(Range.open(LocalDateTime.of(2021, 1, 1, 0, 30), LocalDateTime.of(2021, 1, 1, 2, 30)));
+						assertThat(e.getOffsetTimeRange())
+								.isEqualTo(Range.rightOpen(OffsetTime.of(LocalTime.of(0, 30), ZoneOffset.ofHours(2)),
+										OffsetTime.of(LocalTime.of(2, 30), ZoneOffset.ofHours(2))));
+						assertThat(e.getZonedDateTimeRange()).isEqualTo(
+								Range.just(ZonedDateTime.of(LocalDate.of(2021, 1, 1), LocalTime.of(0, 30), ZoneOffset.ofHours(2))));
+						assertThat(e.getNullRange()).isNull();
+					});
+		}
+
+		@Test
+		public void shouldWriteRanges() throws JSONException {
+
+			// given
+			Document source = Document.parse(JSON);
+			RangeEntity entity = new RangeEntity();
+			entity.setIntegerRange(Range.open(1, 10));
+			entity.setFloatRange(Range.closed(1.2f, 2.5f));
+			entity.setLongRange(Range.leftOpen(2l, 5l));
+			entity.setDoubleRange(Range.rightOpen(3.2d, 7.4d));
+			entity.setDateRange(Range.closed(new Date(0), new Date(60 * 60 * 1000)));
+			entity.setLocalDateRange(Range.rightUnbounded(Range.Bound.inclusive(LocalDate.of(2021, 7, 6))));
+			entity.setLocalTimeRange(Range.rightOpen(LocalTime.of(0, 30), LocalTime.of(2, 30)));
+			entity
+					.setLocalDateTimeRange(Range.open(LocalDateTime.of(2021, 1, 1, 0, 30), LocalDateTime.of(2021, 1, 1, 2, 30)));
+			entity.setOffsetTimeRange(Range.rightOpen(OffsetTime.of(LocalTime.of(0, 30), ZoneOffset.ofHours(2)),
+					OffsetTime.of(LocalTime.of(2, 30), ZoneOffset.ofHours(2))));
+			entity.setZonedDateTimeRange(
+					Range.just(ZonedDateTime.of(LocalDate.of(2021, 1, 1), LocalTime.of(0, 30), ZoneOffset.ofHours(2))));
+			entity.setNullRange(null);
+
+			// when
+			Document document = mappingElasticsearchConverter.mapObject(entity);
+
+			// then
+			assertThat(document).isEqualTo(source);
+		}
+
+		@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-range-entity-mapper")
+		class RangeEntity {
+
+			@Id private String id;
+			@Field(type = FieldType.Integer_Range) private Range<Integer> integerRange;
+			@Field(type = FieldType.Float_Range) private Range<Float> floatRange;
+			@Field(type = FieldType.Long_Range) private Range<Long> longRange;
+			@Field(type = FieldType.Double_Range) private Range<Double> doubleRange;
+			@Field(type = FieldType.Date_Range) private Range<Date> dateRange;
+			@Field(type = FieldType.Date_Range, format = DateFormat.year_month_day) private Range<LocalDate> localDateRange;
+			@Field(type = FieldType.Date_Range,
+					format = DateFormat.hour_minute_second_millis) private Range<LocalTime> localTimeRange;
+			@Field(type = FieldType.Date_Range,
+					format = DateFormat.date_hour_minute_second_millis) private Range<LocalDateTime> localDateTimeRange;
+			@Field(type = FieldType.Date_Range, format = DateFormat.time) private Range<OffsetTime> offsetTimeRange;
+			@Field(type = FieldType.Date_Range) private Range<ZonedDateTime> zonedDateTimeRange;
+			@Field(type = FieldType.Date_Range, storeNullValue = true) private Range<ZonedDateTime> nullRange;
+
+			public String getId() {
+				return id;
+			}
+
+			public Range<Integer> getIntegerRange() {
+				return integerRange;
+			}
+
+			public Range<Float> getFloatRange() {
+				return floatRange;
+			}
+
+			public Range<Long> getLongRange() {
+				return longRange;
+			}
+
+			public Range<Double> getDoubleRange() {
+				return doubleRange;
+			}
+
+			public Range<Date> getDateRange() {
+				return dateRange;
+			}
+
+			public Range<LocalDate> getLocalDateRange() {
+				return localDateRange;
+			}
+
+			public Range<LocalTime> getLocalTimeRange() {
+				return localTimeRange;
+			}
+
+			public Range<LocalDateTime> getLocalDateTimeRange() {
+				return localDateTimeRange;
+			}
+
+			public Range<OffsetTime> getOffsetTimeRange() {
+				return offsetTimeRange;
+			}
+
+			public Range<ZonedDateTime> getZonedDateTimeRange() {
+				return zonedDateTimeRange;
+			}
+
+			public Range<ZonedDateTime> getNullRange() {
+				return nullRange;
+			}
+
+			public void setId(String id) {
+				this.id = id;
+			}
+
+			public void setIntegerRange(Range<Integer> integerRange) {
+				this.integerRange = integerRange;
+			}
+
+			public void setFloatRange(Range<Float> floatRange) {
+				this.floatRange = floatRange;
+			}
+
+			public void setLongRange(Range<Long> longRange) {
+				this.longRange = longRange;
+			}
+
+			public void setDoubleRange(Range<Double> doubleRange) {
+				this.doubleRange = doubleRange;
+			}
+
+			public void setDateRange(Range<Date> dateRange) {
+				this.dateRange = dateRange;
+			}
+
+			public void setLocalDateRange(Range<LocalDate> localDateRange) {
+				this.localDateRange = localDateRange;
+			}
+
+			public void setLocalTimeRange(Range<LocalTime> localTimeRange) {
+				this.localTimeRange = localTimeRange;
+			}
+
+			public void setLocalDateTimeRange(Range<LocalDateTime> localDateTimeRange) {
+				this.localDateTimeRange = localDateTimeRange;
+			}
+
+			public void setOffsetTimeRange(Range<OffsetTime> offsetTimeRange) {
+				this.offsetTimeRange = offsetTimeRange;
+			}
+
+			public void setZonedDateTimeRange(Range<ZonedDateTime> zonedDateTimeRange) {
+				this.zonedDateTimeRange = zonedDateTimeRange;
+			}
+
+			public void setNullRange(Range<ZonedDateTime> nullRange) {
+				this.nullRange = nullRange;
+			}
+
+		}
 	}
 
 	@Nested
@@ -2074,7 +2275,8 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 	}
 
-	private static class ElectricCar extends Car {}
+	private static class ElectricCar extends Car {
+	}
 
 	private static class PersonWithCars {
 		@Id @Nullable String id;

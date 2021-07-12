@@ -41,24 +41,25 @@ public class TemporalPersistentPropertyConverter extends AbstractPersistentPrope
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Object read(String value) {
+	public Object read(Object value) {
 
+		String s = value.toString();
 		Class<?> actualType = getProperty().getActualType();
 
 		for (ElasticsearchDateConverter dateConverter : dateConverters) {
 			try {
-				return dateConverter.parse(value, (Class<? extends TemporalAccessor>) actualType);
+				return dateConverter.parse(s, (Class<? extends TemporalAccessor>) actualType);
 			} catch (Exception e) {
 				LOGGER.trace(e.getMessage(), e);
 			}
 		}
 
-		throw new ConversionException(String.format("Unable to convert value '%s' to %s for property '%s'", value,
+		throw new ConversionException(String.format("Unable to convert value '%s' to %s for property '%s'", s,
 				getProperty().getActualType().getTypeName(), getProperty().getName()));
 	}
 
 	@Override
-	public String write(Object value) {
+	public Object write(Object value) {
 
 		try {
 			return dateConverters.get(0).format((TemporalAccessor) value);

@@ -26,13 +26,13 @@ import org.springframework.data.mapping.PersistentProperty;
  * @author Sascha Woo
  * @since 4.3
  */
-public class DatePersistentPropertyConverter extends AbstractPersistentPropertyConverter {
+public class DateRangePersistentPropertyConverter extends AbstractRangePersistentPropertyConverter<Date> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DatePersistentPropertyConverter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DateRangePersistentPropertyConverter.class);
 
 	private final List<ElasticsearchDateConverter> dateConverters;
 
-	public DatePersistentPropertyConverter(PersistentProperty<?> property,
+	public DateRangePersistentPropertyConverter(PersistentProperty<?> property,
 			List<ElasticsearchDateConverter> dateConverters) {
 
 		super(property);
@@ -40,31 +40,23 @@ public class DatePersistentPropertyConverter extends AbstractPersistentPropertyC
 	}
 
 	@Override
-	public Object read(Object value) {
+	protected String format(Date value) {
+		return dateConverters.get(0).format(value);
+	}
 
-		String s = value.toString();
+	@Override
+	protected Date parse(String value) {
 
-		for (ElasticsearchDateConverter dateConverter : dateConverters) {
+		for (ElasticsearchDateConverter converters : dateConverters) {
 			try {
-				return dateConverter.parse(s);
+				return converters.parse(value);
 			} catch (Exception e) {
 				LOGGER.trace(e.getMessage(), e);
 			}
 		}
 
-		throw new ConversionException(String.format("Unable to convert value '%s' to %s for property '%s'", s,
-				getProperty().getActualType().getTypeName(), getProperty().getName()));
-	}
-
-	@Override
-	public Object write(Object value) {
-
-		try {
-			return dateConverters.get(0).format((Date) value);
-		} catch (Exception e) {
-			throw new ConversionException(
-					String.format("Unable to convert value '%s' of property '%s'", value, getProperty().getName()), e);
-		}
+		throw new ConversionException(String.format("Unable to convert value '%s' to %s for property '%s'", value,
+				getGenericType().getTypeName(), getProperty().getName()));
 	}
 
 }

@@ -482,10 +482,7 @@ public class MappingElasticsearchConverter
 		}
 
 		private Object convertOnRead(ElasticsearchPersistentPropertyConverter propertyConverter, Object source) {
-			if (String.class.isAssignableFrom(source.getClass())) {
-				source = propertyConverter.read((String) source);
-			}
-			return source;
+			return propertyConverter.read(source);
 		}
 
 		/**

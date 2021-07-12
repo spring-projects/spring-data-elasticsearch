@@ -15,56 +15,53 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.util.Date;
+import java.time.temporal.TemporalAccessor;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.mapping.PersistentProperty;
+import org.springframework.util.Assert;
 
 /**
  * @author Sascha Woo
  * @since 4.3
  */
-public class DatePersistentPropertyConverter extends AbstractPersistentPropertyConverter {
+public class TemporalRangePersistentPropertyConverter
+		extends AbstractRangePersistentPropertyConverter<TemporalAccessor> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DatePersistentPropertyConverter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(TemporalRangePersistentPropertyConverter.class);
 
 	private final List<ElasticsearchDateConverter> dateConverters;
 
-	public DatePersistentPropertyConverter(PersistentProperty<?> property,
+	public TemporalRangePersistentPropertyConverter(PersistentProperty<?> property,
 			List<ElasticsearchDateConverter> dateConverters) {
 
 		super(property);
+
+		Assert.notEmpty(dateConverters, "dateConverters must not be empty.");
 		this.dateConverters = dateConverters;
 	}
 
 	@Override
-	public Object read(Object value) {
+	protected String format(TemporalAccessor temporal) {
+		return dateConverters.get(0).format(temporal);
+	}
 
-		String s = value.toString();
+	@Override
+	protected TemporalAccessor parse(String value) {
 
-		for (ElasticsearchDateConverter dateConverter : dateConverters) {
+		Class<?> type = getGenericType();
+		for (ElasticsearchDateConverter converters : dateConverters) {
 			try {
-				return dateConverter.parse(s);
+				return converters.parse(value, (Class<? extends TemporalAccessor>) type);
 			} catch (Exception e) {
 				LOGGER.trace(e.getMessage(), e);
 			}
 		}
 
-		throw new ConversionException(String.format("Unable to convert value '%s' to %s for property '%s'", s,
-				getProperty().getActualType().getTypeName(), getProperty().getName()));
-	}
-
-	@Override
-	public Object write(Object value) {
-
-		try {
-			return dateConverters.get(0).format((Date) value);
-		} catch (Exception e) {
-			throw new ConversionException(
-					String.format("Unable to convert value '%s' of property '%s'", value, getProperty().getName()), e);
-		}
+		throw new ConversionException(String.format("Unable to convert value '%s' to %s for property '%s'", value,
+				type.getTypeName(), getProperty().getName()));
 	}
 
 }
