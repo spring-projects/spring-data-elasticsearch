@@ -47,8 +47,9 @@ Constructor arguments are mapped by name to the key values in the retrieved Docu
 * `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions (the following list is not complete, check the annotation Javadoc for a complete reference):
 ** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
 ** `type`: The field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_.
-See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types]. If the field type is not specified, it defaults to `FieldType.Auto`. This means, that no mapping entry is written for the property and that Elasticsearch will add a mapping entry dynamically when the first data for this property is stored
-(check the Elasticsearch documentation for dynamic mapping rules).
+See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types].
+If the field type is not specified, it defaults to `FieldType.Auto`.
+This means, that no mapping entry is written for the property and that Elasticsearch will add a mapping entry dynamically when the first data for this property is stored (check the Elasticsearch documentation for dynamic mapping rules).
 ** `format`: One or more built-in date formats, see the next section <<elasticsearch.mapping.meta-model.date-formats>>.
 ** `pattern`: One or more custom date formats, see the next section <<elasticsearch.mapping.meta-model.date-formats>>.
 ** `store`: Flag whether the original field value should be store in Elasticsearch, default value is _false_.
@@ -61,20 +62,19 @@ The mapping metadata infrastructure is defined in a separate spring-data-commons
 [[elasticsearch.mapping.meta-model.date-formats]]
 ==== Date format mapping
 
-Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation
-of type `FieldType.Date` or a custom converter must be registered for this type. This paragraph describes the use of
+Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation of type `FieldType.Date` or a custom converter must be registered for this type.
+This paragraph describes the use of
 `FieldType.Date`.
 
-There are two attributes of the `@Field` annotation that define which date format information is written to the
-mapping (also see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats[Elasticsearch Built In Formats] and https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#custom-date-formats[Elasticsearch Custom Date Formats])
+There are two attributes of the `@Field` annotation that define which date format information is written to the mapping (also see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats[Elasticsearch Built In Formats] and https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#custom-date-formats[Elasticsearch Custom Date Formats])
 
-The `format` attributes is used to define at least one of the predefined formats. If it is not defined, then a
-default value of  __date_optional_time_ and _epoch_millis_ is used.
+The `format` attributes is used to define at least one of the predefined formats.
+If it is not defined, then a default value of __date_optional_time_ and _epoch_millis_ is used.
 
-The `pattern` attribute can be used to add additional custom format strings. If you want to use only custom date formats, you must set the `format` property to empty `{}`.
+The `pattern` attribute can be used to add additional custom format strings.
+If you want to use only custom date formats, you must set the `format` property to empty `{}`.
 
 The following table shows the different attributes and the mapping created from their values:
-
 
 [cols=2*,options=header]
 |===
@@ -101,12 +101,59 @@ The following table shows the different attributes and the mapping created from 
 NOTE: If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_.
 This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
 
+==== Range types
+
+When a field is annotated with a type of one of _Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range,_ or _Ip_Range_ the field must be an instance of a class that will be mapped to an Elasticsearch range, for example:
+
+====
+[source,java]
+----
+class SomePersonData {
+
+    @Field(type = FieldType.Integer_Range)
+    private ValidAge validAge;
+
+    // getter and setter
+}
+
+class ValidAge {
+    @Field(name="gte")
+    private Integer from;
+
+    @Field(name="lte")
+    private Integer to;
+
+    // getter and setter
+}
+----
+====
+
+As an alternative Spring Data Elasticsearch provides a `Range<T>` class so that the previous example can be written as:
+
+====
+[source,java]
+----
+class SomePersonData {
+
+    @Field(type = FieldType.Integer_Range)
+    private Range<Integer> validAge;
+
+    // getter and setter
+}
+----
+====
+
+Supported classes for the type `<T>` are `Integer`, `Long`, `Float`, `Double`, `Date` and classes that implement the
+`TemporalAccessor` interface.
+
 ==== Mapped field names
 
-Without further configuration, Spring Data Elasticsearch will use the property name of an object as field name in Elasticsearch. This can be changed for individual field by using the `@Field` annotation on that property.
+Without further configuration, Spring Data Elasticsearch will use the property name of an object as field name in Elasticsearch.
+This can be changed for individual field by using the `@Field` annotation on that property.
 
-It is also possible to define a `FieldNamingStrategy` in the configuration of the client (<<elasticsearch.clients>>). If for example a `SnakeCaseFieldNamingStrategy` is configured, the property _sampleProperty_ of the object would be mapped to _sample_property_ in Elasticsearch. A `FieldNamingStrategy` applies to all entities; it can be overwritten by
-setting a specific name with `@Field` on a property.
+It is also possible to define a `FieldNamingStrategy` in the configuration of the client (<<elasticsearch.clients>>).
+If for example a `SnakeCaseFieldNamingStrategy` is configured, the property _sampleProperty_ of the object would be mapped to _sample_property_ in Elasticsearch.
+A `FieldNamingStrategy` applies to all entities; it can be overwritten by setting a specific name with `@Field` on a property.
 
 [[elasticsearch.mapping.meta-model.rules]]
 === Mapping Rules
@@ -171,11 +218,13 @@ NOTE: Type hints will not be written for nested Objects unless the properties ty
 
 ===== Disabling Type Hints
 
-It may be necessary to disable writing of type hints when the index that should be used already exists without having the type hints defined in its mapping and with the mapping mode set to strict. In this case, writing the type hint will produce an error, as the field cannot be added automatically.
+It may be necessary to disable writing of type hints when the index that should be used already exists without having the type hints defined in its mapping and with the mapping mode set to strict.
+In this case, writing the type hint will produce an error, as the field cannot be added automatically.
 
 Type hints can be disabled for the whole application by overriding the method `writeTypeHints()` in a configuration class derived from `AbstractElasticsearchConfiguration` (see <<elasticsearch.clients>>).
 
 As an alternativ they can be disabled for a single index with the `@Document` annotation:
+
 ====
 [source,java]
 ----
@@ -183,7 +232,9 @@ As an alternativ they can be disabled for a single index with the `@Document` an
 ----
 ====
 
-WARNING: We strongly advise against disabling Type Hints. Only do this if you are forced to. Disabling type hints can lead to documents not being retrieved correctly from Elasticsearch in case of polymorphic data or document retrieval may fail completely.
+WARNING: We strongly advise against disabling Type Hints.
+Only do this if you are forced to.
+Disabling type hints can lead to documents not being retrieved correctly from Elasticsearch in case of polymorphic data or document retrieval may fail completely.
 
 ==== Geospatial Types
 

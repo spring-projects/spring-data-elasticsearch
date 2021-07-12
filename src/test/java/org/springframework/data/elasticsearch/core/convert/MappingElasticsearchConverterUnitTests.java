@@ -2275,8 +2275,7 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 	}
 
-	private static class ElectricCar extends Car {
-	}
+	private static class ElectricCar extends Car {}
 
 	private static class PersonWithCars {
 		@Id @Nullable String id;

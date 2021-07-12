@@ -22,7 +22,7 @@ import org.springframework.util.ObjectUtils;
 
 /**
  * Simple value object to work with ranges and boundaries.
- * 
+ *
  * @author Sascha Woo
  * @since 4.3
  */
@@ -33,12 +33,12 @@ public class Range<T> {
 	/**
 	 * The lower bound of the range.
 	 */
-	private Bound<T> lowerBound;
+	private final Bound<T> lowerBound;
 
 	/**
 	 * The upper bound of the range.
 	 */
-	private Bound<T> upperBound;
+	private final Bound<T> upperBound;
 
 	/**
 	 * Creates a new {@link Range} with inclusive bounds for both values.
@@ -89,12 +89,10 @@ public class Range<T> {
 	}
 
 	/**
-	 * Creates a new {@link Range} with the given lower and upper bound. Prefer {@link #from(Bound)} for a more builder
-	 * style API.
+	 * Creates a new {@link Range} with the given lower and upper bound.
 	 *
 	 * @param lowerBound must not be {@literal null}.
 	 * @param upperBound must not be {@literal null}.
-	 * @see #from(Bound)
 	 */
 	public static <T> Range<T> of(Bound<T> lowerBound, Bound<T> upperBound) {
 		return new Range<>(lowerBound, upperBound);
@@ -146,10 +144,7 @@ public class Range<T> {
 		return (Range<T>) UNBOUNDED;
 	}
 
-	private Range() {
-	}
-
-	private Range(Bound<T> lowerBound, Bound<T> upperBound) {
+    private Range(Bound<T> lowerBound, Bound<T> upperBound) {
 
 		Assert.notNull(lowerBound, "Lower bound must not be null!");
 		Assert.notNull(upperBound, "Upper bound must not be null!");
@@ -164,7 +159,8 @@ public class Range<T> {
 	 * @param value must not be {@literal null}.
 	 * @return
 	 */
-	public boolean contains(T value) {
+	@SuppressWarnings("unchecked")
+    public boolean contains(T value) {
 
 		Assert.notNull(value, "Reference value must not be null!");
 		Assert.isInstanceOf(Comparable.class, value, "value must implements Comparable!");
@@ -243,7 +239,8 @@ public class Range<T> {
 		@SuppressWarnings({ "rawtypes", "unchecked" }) //
 		private static final Bound<?> UNBOUNDED = new Bound(Optional.empty(), true);
 
-		private final Optional<T> value;
+		@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+        private final Optional<T> value;
 		private final boolean inclusive;
 
 		/**
@@ -360,7 +357,8 @@ public class Range<T> {
 			return (Bound<T>) UNBOUNDED;
 		}
 
-		private Bound(Optional<T> value, boolean inclusive) {
+		@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+        private Bound(Optional<T> value, boolean inclusive) {
 			this.value = value;
 			this.inclusive = inclusive;
 		}

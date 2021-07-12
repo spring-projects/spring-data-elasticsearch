@@ -18,7 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
-import java.util.Arrays;
+import java.util.Collections;
 
 import org.junit.jupiter.api.Test;
 
@@ -166,9 +166,7 @@ public class RangeTests {
 
 		// given
 		// when
-		Throwable thrown = catchThrowable(() -> {
-			Range.just(Arrays.asList("test"));
-		});
+		Throwable thrown = catchThrowable(() -> Range.just(Collections.singletonList("test")));
 		// then
 		assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("value must implements Comparable!");
