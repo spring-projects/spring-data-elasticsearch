@@ -196,7 +196,7 @@ public class CriteriaQueryMappingUnitTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery( //
 				Criteria.or().subCriteria(Criteria.where("birthDate") //
 						.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9))) //
-						.subCriteria(Criteria.where("createdDate").is(383745721653L)) //
+						.subCriteria(Criteria.where("createdDate").is(new Date(383745721653L))) //
 		);
 
 		// mapped field name and converted parameter

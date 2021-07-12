@@ -29,9 +29,14 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.core.Range;
 import org.springframework.data.elasticsearch.core.completion.Completion;
-import org.springframework.data.elasticsearch.core.convert.ConversionException;
+import org.springframework.data.elasticsearch.core.convert.DatePersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.convert.DateRangePersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
+import org.springframework.data.elasticsearch.core.convert.NumberRangePersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.convert.TemporalPersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.convert.TemporalRangePersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoJson;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.join.JoinField;
@@ -39,6 +44,7 @@ import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.AnnotationBasedPersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
@@ -92,7 +98,7 @@ public class SimpleElasticsearchPersistentProperty extends
 			throw new MappingException("@Field annotation must not be used on a @MultiField property.");
 		}
 
-		initDateConverter();
+		initPropertyConverter();
 
 		storeNullValue = isField && getRequiredAnnotation(Field.class).storeNullValue();
 	}
@@ -128,102 +134,127 @@ public class SimpleElasticsearchPersistentProperty extends
 	}
 
 	/**
-	 * Initializes an {@link ElasticsearchPersistentPropertyConverter} if this property is annotated as a Field with type
-	 * {@link FieldType#Date}, has a {@link DateFormat} set and if the type of the property is one of the Java8 temporal
-	 * classes or java.util.Date.
+	 * Initializes the property converter for this {@link PersistentProperty}, if any.
 	 */
-	private void initDateConverter() {
-		Field field = findAnnotation(Field.class);
+	private void initPropertyConverter() {
 
 		Class<?> actualType = getActualTypeOrNull();
-
 		if (actualType == null) {
 			return;
 		}
 
-		boolean isTemporalAccessor = TemporalAccessor.class.isAssignableFrom(actualType);
-		boolean isDate = Date.class.isAssignableFrom(actualType);
+		Field field = findAnnotation(Field.class);
+		if (field == null) {
+			return;
+		}
 
-		if (field != null && (field.type() == FieldType.Date || field.type() == FieldType.Date_Nanos)
-				&& (isTemporalAccessor || isDate)) {
-
-			DateFormat[] dateFormats = field.format();
-			String[] dateFormatPatterns = field.pattern();
-
-			String property = getOwner().getType().getSimpleName() + "." + getName();
-
-			if (dateFormats.length == 0 && dateFormatPatterns.length == 0) {
-				LOGGER.warn(
-						"Property '{}' has @Field type '{}' but has no built-in format or custom date pattern defined. Make sure you have a converter registered for type {}.",
-						property, field.type().name(), actualType.getSimpleName());
-				return;
-			}
-
-			List<ElasticsearchDateConverter> converters = new ArrayList<>();
-
-			// register converters for built-in formats
-			for (DateFormat dateFormat : dateFormats) {
-				switch (dateFormat) {
-					case none:
-					case custom:
-						break;
-					case weekyear:
-					case weekyear_week:
-					case weekyear_week_day:
-						LOGGER.warn("No default converter available for '{}' and date format '{}'. Use a custom converter instead.",
-								actualType.getName(), dateFormat.name());
-						break;
-					default:
-						converters.add(ElasticsearchDateConverter.of(dateFormat));
-						break;
+		switch (field.type()) {
+			case Date:
+			case Date_Nanos: {
+				List<ElasticsearchDateConverter> dateConverters = getDateConverters(field, actualType);
+				if (dateConverters.isEmpty()) {
+					LOGGER.warn("No date formatters configured for property '{}'.", getName());
+					return;
 				}
-			}
 
-			// register converters for custom formats
-			for (String dateFormatPattern : dateFormatPatterns) {
-				if (!StringUtils.hasText(dateFormatPattern)) {
-					throw new MappingException(String.format("Date pattern of property '%s' must not be empty", property));
+				if (TemporalAccessor.class.isAssignableFrom(actualType)) {
+					propertyConverter = new TemporalPersistentPropertyConverter(this, dateConverters);
+				} else if (Date.class.isAssignableFrom(actualType)) {
+					propertyConverter = new DatePersistentPropertyConverter(this, dateConverters);
+				} else {
+					LOGGER.warn("Unsupported type '{}' for date property '{}'.", actualType, getName());
 				}
-				converters.add(ElasticsearchDateConverter.of(dateFormatPattern));
+				break;
 			}
+			case Date_Range: {
+				if (!Range.class.isAssignableFrom(actualType)) {
+					return;
+				}
 
-			if (!converters.isEmpty()) {
-				propertyConverter = new ElasticsearchPersistentPropertyConverter() {
-					final List<ElasticsearchDateConverter> dateConverters = converters;
+				List<ElasticsearchDateConverter> dateConverters = getDateConverters(field, actualType);
+				if (dateConverters.isEmpty()) {
+					LOGGER.warn("No date formatters configured for property '{}'.", getName());
+					return;
+				}
 
-					@SuppressWarnings("unchecked")
-					@Override
-					public Object read(String s) {
-						for (ElasticsearchDateConverter dateConverter : dateConverters) {
-							try {
-								if (isTemporalAccessor) {
-									return dateConverter.parse(s, (Class<? extends TemporalAccessor>) actualType);
-								} else { // must be date
-									return dateConverter.parse(s);
-								}
-							} catch (Exception e) {
-								LOGGER.trace(e.getMessage(), e);
-							}
-						}
+				Class<?> genericType = getTypeInformation().getTypeArguments().get(0).getType();
+				if (TemporalAccessor.class.isAssignableFrom(genericType)) {
+					propertyConverter = new TemporalRangePersistentPropertyConverter(this, dateConverters);
+				} else if (Date.class.isAssignableFrom(genericType)) {
+					propertyConverter = new DateRangePersistentPropertyConverter(this, dateConverters);
+				} else {
+					LOGGER.warn("Unsupported generic type '{}' for date range property '{}'.", genericType, getName());
+				}
+				break;
+			}
+			case Integer_Range:
+			case Float_Range:
+			case Long_Range:
+			case Double_Range: {
+				if (!Range.class.isAssignableFrom(actualType)) {
+					return;
+				}
 
-						throw new ConversionException(String
-								.format("Unable to parse date value '%s' of property '%s' with configured converters", s, property));
-					}
+				Class<?> genericType = getTypeInformation().getTypeArguments().get(0).getType();
+				if ((field.type() == FieldType.Integer_Range && !Integer.class.isAssignableFrom(genericType))
+						|| (field.type() == FieldType.Float_Range && !Float.class.isAssignableFrom(genericType))
+						|| (field.type() == FieldType.Long_Range && !Long.class.isAssignableFrom(genericType))
+						|| (field.type() == FieldType.Double_Range && !Double.class.isAssignableFrom(genericType))) {
+					LOGGER.warn("Unsupported generic type '{}' for range field type '{}' of property '{}'.", genericType,
+							field.type(), getName());
+					return;
+				}
 
-					@Override
-					public String write(Object property) {
-						ElasticsearchDateConverter dateConverter = dateConverters.get(0);
-						if (isTemporalAccessor && TemporalAccessor.class.isAssignableFrom(property.getClass())) {
-							return dateConverter.format((TemporalAccessor) property);
-						} else if (isDate && Date.class.isAssignableFrom(property.getClass())) {
-							return dateConverter.format((Date) property);
-						} else {
-							return property.toString();
-						}
-					}
-				};
+				propertyConverter = new NumberRangePersistentPropertyConverter(this);
+				break;
+			}
+			case Ip_Range: {
+				// TODO currently unsupported, needs a library like https://seancfoley.github.io/IPAddress/
+			}
+			default:
+				break;
+		}
+	}
+
+	private List<ElasticsearchDateConverter> getDateConverters(Field field, Class<?> actualType) {
+
+		DateFormat[] dateFormats = field.format();
+		String[] dateFormatPatterns = field.pattern();
+		List<ElasticsearchDateConverter> converters = new ArrayList<>();
+
+		if (dateFormats.length == 0 && dateFormatPatterns.length == 0) {
+			LOGGER.warn(
+					"Property '{}' has @Field type '{}' but has no built-in format or custom date pattern defined. Make sure you have a converter registered for type {}.",
+					getName(), field.type().name(), actualType.getSimpleName());
+			return converters;
+		}
+
+		// register converters for built-in formats
+		for (DateFormat dateFormat : dateFormats) {
+			switch (dateFormat) {
+				case none:
+				case custom:
+					break;
+				case weekyear:
+				case weekyear_week:
+				case weekyear_week_day:
+					LOGGER.warn("No default converter available for '{}' and date format '{}'. Use a custom converter instead.",
+							actualType.getName(), dateFormat.name());
+					break;
+				default:
+					converters.add(ElasticsearchDateConverter.of(dateFormat));
+					break;
 			}
 		}
+
+		for (String dateFormatPattern : dateFormatPatterns) {
+			if (!StringUtils.hasText(dateFormatPattern)) {
+				throw new MappingException(String.format("Date pattern of property '%s' must not be empty", getName()));
+			}
+			converters.add(ElasticsearchDateConverter.of(dateFormatPattern));
+		}
+
+		return converters;
 	}
 
 	@SuppressWarnings("ConstantConditions")
@@ -303,4 +334,5 @@ public class SimpleElasticsearchPersistentProperty extends
 	public boolean isCompletionProperty() {
 		return getActualType() == Completion.class;
 	}
+
 }

@@ -16,25 +16,26 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 /**
- * Interface defining methods to convert a property value to a String and back.
+ * Interface defining methods to convert a persistent property value to an elasticsearch property value and back.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  */
 public interface ElasticsearchPersistentPropertyConverter {
 
 	/**
-	 * converts the property value to a String.
+	 * Converts a persistent property value to an elasticsearch property value.
 	 *
-	 * @param property the property value to convert, must not be {@literal null}
-	 * @return String representation.
+	 * @param value the persistent property value to convert, must not be {@literal null}
+	 * @return The elasticsearch property value.
 	 */
-	String write(Object property);
+	Object write(Object value);
 
 	/**
-	 * converts a property value from a String.
+	 * Converts an elasticsearch property value to a persistent property value.
 	 *
-	 * @param s the property to convert, must not be {@literal null}
-	 * @return property value
+	 * @param value the elasticsearch property value to convert, must not be {@literal null}
+	 * @return The persistent property value.
 	 */
-	Object read(String s);
+	Object read(Object value);
 }

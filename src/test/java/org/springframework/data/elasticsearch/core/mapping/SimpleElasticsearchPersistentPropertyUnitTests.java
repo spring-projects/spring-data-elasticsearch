@@ -114,7 +114,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
 		LocalDate localDate = LocalDate.of(2019, 12, 27);
 
-		String converted = persistentProperty.getPropertyConverter().write(localDate);
+		String converted = persistentProperty.getPropertyConverter().write(localDate).toString();
 
 		assertThat(converted).isEqualTo("27.12.2019");
 	}
@@ -138,7 +138,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 				.from(ZonedDateTime.of(LocalDateTime.of(2020, 4, 19, 19, 44), ZoneId.of("UTC")));
 		Date legacyDate = calendar.getTime();
 
-		String converted = persistentProperty.getPropertyConverter().write(legacyDate);
+		String converted = persistentProperty.getPropertyConverter().write(legacyDate).toString();
 
 		assertThat(converted).isEqualTo("20200419T194400.000Z");
 	}
