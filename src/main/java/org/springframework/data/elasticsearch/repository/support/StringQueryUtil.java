@@ -20,7 +20,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import org.springframework.core.convert.support.GenericConversionService;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.util.NumberUtils;
 
@@ -31,11 +31,14 @@ import org.springframework.util.NumberUtils;
 final public class StringQueryUtil {
 
 	private static final Pattern PARAMETER_PLACEHOLDER = Pattern.compile("\\?(\\d+)");
-	private static final GenericConversionService conversionService = new GenericConversionService();
 
-	private StringQueryUtil() {}
+	private final ConversionService conversionService;
 
-	public static String replacePlaceholders(String input, ParameterAccessor accessor) {
+	public StringQueryUtil(ConversionService conversionService) {
+		this.conversionService = conversionService;
+	}
+
+	public String replacePlaceholders(String input, ParameterAccessor accessor) {
 
 		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
 		String result = input;
@@ -48,7 +51,7 @@ final public class StringQueryUtil {
 		return result;
 	}
 
-	private static String getParameterWithIndex(ParameterAccessor accessor, int index) {
+	private String getParameterWithIndex(ParameterAccessor accessor, int index) {
 
 		Object parameter = accessor.getBindableValue(index);
 		String parameterValue = "null";
@@ -63,7 +66,7 @@ final public class StringQueryUtil {
 
 	}
 
-	private static String convert(Object parameter) {
+	private String convert(Object parameter) {
 		if (Collection.class.isAssignableFrom(parameter.getClass())) {
 			Collection<?> collectionParam = (Collection<?>) parameter;
 			StringBuilder sb = new StringBuilder("[");

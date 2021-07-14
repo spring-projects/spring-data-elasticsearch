@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,9 +44,6 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -59,16 +57,15 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @ExtendWith(MockitoExtension.class)
-public class ReactiveElasticsearchStringQueryUnitTests {
+public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryUnitTestBase {
 
 	SpelExpressionParser PARSER = new SpelExpressionParser();
-	ElasticsearchConverter converter;
 
 	@Mock ReactiveElasticsearchOperations operations;
 
 	@BeforeEach
 	public void setUp() {
-		converter = new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
+		when(operations.getElasticsearchConverter()).thenReturn(setupConverter());
 	}
 
 	@Test // DATAES-519
@@ -132,7 +129,22 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 				.isEqualTo("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"hello \\\"Stranger\\\"\"}}]}}");
 	}
 
-	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, String... args)
+	@Test // #1866
+	@DisplayName("should use converter on parameters")
+	void shouldUseConverterOnParameters() throws Exception {
+
+		Car car = new Car();
+		car.setName("Toyota");
+		car.setModel("Prius");
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByCar", car);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota-Prius' } } } }");
+	}
+
+	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
 			throws NoSuchMethodException {
 
 		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
@@ -152,7 +164,7 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		return new ReactiveElasticsearchQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
-				new SpelAwareProxyProjectionFactory(), converter.getMappingContext());
+				new SpelAwareProxyProjectionFactory(), operations.getElasticsearchConverter().getMappingContext());
 	}
 
 	private ReactiveElasticsearchStringQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
@@ -179,6 +191,9 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 
 		@Query("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"?0\"}}]}}")
 		Flux<SearchHit<Book>> findByPrefix(String prefix);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'car' : '?0' } } } }")
+		Mono<Person> findByCar(Car car);
 
 	}
 
@@ -289,29 +304,6 @@ public class ReactiveElasticsearchStringQueryUnitTests {
 
 		public void setDescription(@Nullable String description) {
 			this.description = description;
-		}
-	}
-
-	static class Car {
-		@Nullable private String name;
-		@Nullable private String model;
-
-		@Nullable
-		public String getName() {
-			return name;
-		}
-
-		public void setName(@Nullable String name) {
-			this.name = name;
-		}
-
-		@Nullable
-		public String getModel() {
-			return model;
-		}
-
-		public void setModel(@Nullable String model) {
-			this.model = model;
 		}
 	}
 
