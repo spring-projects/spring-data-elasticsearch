@@ -20,10 +20,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.elasticsearch.core.convert.DateTimeConverters;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchStringQuery;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.NumberUtils;
 
@@ -34,25 +36,38 @@ import org.springframework.util.NumberUtils;
 final public class StringQueryUtil {
 
 	private static final Pattern PARAMETER_PLACEHOLDER = Pattern.compile("\\?(\\d+)");
-	private static final GenericConversionService conversionService = new GenericConversionService();
 
-    {
-        if (!conversionService.canConvert(java.util.Date.class, String.class)) {
-            conversionService.addConverter(DateTimeConverters.JavaDateConverter.INSTANCE);
-        }
-        if (ClassUtils.isPresent("org.joda.time.DateTimeZone", ElasticsearchStringQuery.class.getClassLoader())) {
-            if (!conversionService.canConvert(org.joda.time.ReadableInstant.class, String.class)) {
-                conversionService.addConverter(DateTimeConverters.JodaDateTimeConverter.INSTANCE);
-            }
-            if (!conversionService.canConvert(org.joda.time.LocalDateTime.class, String.class)) {
-                conversionService.addConverter(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE);
-            }
-        }
-    }
+	private final ConversionService conversionService;
+	private final GenericConversionService genericConversionService;
 
-    private StringQueryUtil() {}
+	public StringQueryUtil(ConversionService conversionService) {
 
-	public static String replacePlaceholders(String input, ParameterAccessor accessor) {
+		Assert.notNull(conversionService, "conversionService must not be null");
+
+		this.conversionService = conversionService;
+		genericConversionService = setupGenericConversionService();
+	}
+
+	private GenericConversionService setupGenericConversionService() {
+
+		GenericConversionService genericConversionService = new GenericConversionService();
+
+		if (!genericConversionService.canConvert(java.util.Date.class, String.class)) {
+			genericConversionService.addConverter(DateTimeConverters.JavaDateConverter.INSTANCE);
+		}
+
+		if (ClassUtils.isPresent("org.joda.time.DateTimeZone", ElasticsearchStringQuery.class.getClassLoader())) {
+			if (!genericConversionService.canConvert(org.joda.time.ReadableInstant.class, String.class)) {
+				genericConversionService.addConverter(DateTimeConverters.JodaDateTimeConverter.INSTANCE);
+			}
+			if (!genericConversionService.canConvert(org.joda.time.LocalDateTime.class, String.class)) {
+				genericConversionService.addConverter(DateTimeConverters.JodaLocalDateTimeConverter.INSTANCE);
+			}
+		}
+		return genericConversionService;
+	}
+
+	public String replacePlaceholders(String input, ParameterAccessor accessor) {
 
 		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
 		String result = input;
@@ -65,7 +80,7 @@ final public class StringQueryUtil {
 		return result;
 	}
 
-	private static String getParameterWithIndex(ParameterAccessor accessor, int index) {
+	private String getParameterWithIndex(ParameterAccessor accessor, int index) {
 
 		Object parameter = accessor.getBindableValue(index);
 		String parameterValue = "null";
@@ -80,7 +95,7 @@ final public class StringQueryUtil {
 
 	}
 
-	private static String convert(Object parameter) {
+	private String convert(Object parameter) {
 		if (Collection.class.isAssignableFrom(parameter.getClass())) {
 			Collection<?> collectionParam = (Collection<?>) parameter;
 			StringBuilder sb = new StringBuilder("[");
@@ -100,6 +115,13 @@ final public class StringQueryUtil {
 
 				if (converted != null) {
 					parameterValue = converted;
+				}
+			} else if (genericConversionService.canConvert(parameter.getClass(), String.class)) {
+				String converted = genericConversionService.convert(parameter, String.class);
+
+				if (converted != null) {
+					parameterValue = converted;
+
 				}
 			} else {
 				parameterValue = parameter.toString();
