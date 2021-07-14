@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,9 +47,6 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
-import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
@@ -61,14 +59,13 @@ import org.springframework.lang.Nullable;
  * @author Niklas Herder
  */
 @ExtendWith(MockitoExtension.class)
-public class ElasticsearchStringQueryUnitTests {
+public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryUnitTestBase {
 
 	@Mock ElasticsearchOperations operations;
-	ElasticsearchConverter converter;
 
 	@BeforeEach
 	public void setUp() {
-		converter = new MappingElasticsearchConverter(new SimpleElasticsearchMappingContext());
+		when(operations.getElasticsearchConverter()).thenReturn(setupConverter());
 	}
 
 	@Test // DATAES-552
@@ -147,6 +144,21 @@ public class ElasticsearchStringQueryUnitTests {
 		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
 	}
 
+	@Test // #1866
+	@DisplayName("should use converter on parameters")
+	void shouldUseConverterOnParameters() throws NoSuchMethodException {
+
+		Car car = new Car();
+		car.setName("Toyota");
+		car.setModel("Prius");
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByCar", car);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota-Prius' } } } }");
+	}
+
 	private ElasticsearchStringQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {
 		return new ElasticsearchStringQuery(queryMethod, operations, queryMethod.getAnnotatedQuery());
 	}
@@ -155,7 +167,7 @@ public class ElasticsearchStringQueryUnitTests {
 
 		Method method = SampleRepository.class.getMethod(name, parameters);
 		return new ElasticsearchQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
-				new SpelAwareProxyProjectionFactory(), converter.getMappingContext());
+				new SpelAwareProxyProjectionFactory(), operations.getElasticsearchConverter().getMappingContext());
 	}
 
 	private interface SampleRepository extends Repository<Person, String> {
@@ -178,13 +190,16 @@ public class ElasticsearchStringQueryUnitTests {
 
 		@Query("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"?0\"}}]}}")
 		SearchHits<Book> findByPrefix(String prefix);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'car' : '?0' } } } }")
+		Person findByCar(Car car);
 	}
 
 	/**
 	 * @author Rizwan Idrees
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
-   * @author Niklas Herder
+	 * @author Niklas Herder
 	 */
 
 	@Document(indexName = "test-index-person-query-unittest", replicas = 0, refreshInterval = "-1")
@@ -262,38 +277,6 @@ public class ElasticsearchStringQueryUnitTests {
 		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
-	}
-
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 * @author Artur Konczak
-	 */
-	@Setter
-	@Getter
-	@NoArgsConstructor
-	@AllArgsConstructor
-	@Builder
-	static class Car {
-
-		private String name;
-		private String model;
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getModel() {
-			return model;
-		}
-
-		public void setModel(String model) {
-			this.model = model;
-		}
 	}
 
 	/**
