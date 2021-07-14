@@ -963,12 +963,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	@Override
 	public ReactiveIndexOperations indexOps(IndexCoordinates index) {
-		return new DefaultReactiveIndexOperations(this, index);
+		return new ReactiveIndexTemplate(this, index);
 	}
 
 	@Override
 	public ReactiveIndexOperations indexOps(Class<?> clazz) {
-		return new DefaultReactiveIndexOperations(this, clazz);
+		return new ReactiveIndexTemplate(this, clazz);
 	}
 
 	@Override

@@ -69,20 +69,20 @@ import org.springframework.util.Assert;
  * @author George Popides
  * @since 4.0
  */
-class DefaultTransportIndexOperations extends AbstractDefaultIndexOperations implements IndexOperations {
+class TransportIndexTemplate extends AbstractIndexTemplate implements IndexOperations {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DefaultTransportIndexOperations.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(TransportIndexTemplate.class);
 
 	private final Client client;
 
-	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
-			Class<?> boundClass) {
+	public TransportIndexTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
+								  Class<?> boundClass) {
 		super(elasticsearchConverter, boundClass);
 		this.client = client;
 	}
 
-	public DefaultTransportIndexOperations(Client client, ElasticsearchConverter elasticsearchConverter,
-			IndexCoordinates boundIndex) {
+	public TransportIndexTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
+								  IndexCoordinates boundIndex) {
 		super(elasticsearchConverter, boundIndex);
 		this.client = client;
 	}
