@@ -195,4 +195,12 @@ public @interface Field {
 	 * @since 4.2
 	 */
 	int dims() default -1;
+
+	/**
+	 * Controls how Elasticsearch dynamically adds fields to the inner object within the document.<br>
+	 * To be used in combination with {@link FieldType#Object} or {@link FieldType#Nested}
+	 * 
+	 * @since 4.3
+	 */
+	Dynamic dynamic() default Dynamic.INHERIT;
 }

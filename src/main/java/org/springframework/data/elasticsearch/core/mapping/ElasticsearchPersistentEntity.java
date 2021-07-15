@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import org.elasticsearch.index.VersionType;
+import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
@@ -160,4 +161,10 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 * @since 4.3
 	 */
 	boolean writeTypeHints();
+
+	/**
+	 * @return the {@code dynamic} mapping parameter value.
+	 * @since 4.3
+	 */
+	Dynamic dynamic();
 }

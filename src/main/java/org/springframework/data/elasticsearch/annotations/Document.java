@@ -33,6 +33,7 @@ import org.springframework.data.annotation.Persistent;
  * @author Ivan Greene
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  */
 @Persistent
 @Inherited
@@ -112,4 +113,12 @@ public @interface Document {
 	 * @since 4.3
 	 */
 	WriteTypeHint writeTypeHint() default WriteTypeHint.DEFAULT;
+
+	/**
+	 * Controls how Elasticsearch dynamically adds fields to the document.
+	 * 
+	 * @since 4.3
+	 */
+	Dynamic dynamic() default Dynamic.INHERIT;
+
 }
