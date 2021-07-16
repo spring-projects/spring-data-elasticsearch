@@ -1,6 +1,13 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.2.3 (2021-07-16)
+-------------------------------------
+* #1866 - Queries defined with `@Query` are not using registered converters for parameter conversion.
+* #1858 - Collection parameters for @Query-annotated methods get escaped wrongly.
+* #1846 - Missing hashCode and equals methods in JoinField.
+
+
 Changes in version 4.2.2 (2021-06-22)
 -------------------------------------
 * #1834 - TopMetricsAggregation NamedObjectNotFoundException: unknown field [top_metrics].
@@ -1581,6 +1588,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
