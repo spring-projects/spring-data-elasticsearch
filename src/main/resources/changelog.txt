@@ -1,6 +1,45 @@
 Spring Data Elasticsearch Changelog
 ===================================
 
+Changes in version 4.3.0-M1 (2021-07-16)
+----------------------------------------
+* #1868 - Internal refactoring.
+* #1866 - Queries defined with `@Query` are not using registered converters for parameter conversion.
+* #1864 - Upgrade to Elasticsearch 7.13.3.
+* #1862 - Add native support for range field types by using a range object.
+* #1860 - Make the TestContainers Elasticsearch container configurable.
+* #1858 - Collection parameters for @Query-annotated methods get escaped wrongly.
+* #1854 - Improve NativeSearchQueryBuilder by adding convenience methods and modifying existing ones.
+* #1846 - Missing hashCode and equals methods in JoinField.
+* #1839 - Upgrade to Elasticsearch 7.13.1.
+* #1836 - Make CompletionField annotation composable.
+* #1834 - TopMetricsAggregation NamedObjectNotFoundException: unknown field [top_metrics].
+* #1831 - Upgrade to Elasticsearch 7.13.0.
+* #1828 - Dependency cleanup.
+* #1826 - Improve integration test time.
+* #1824 - Fix reactive blocking calls.
+* #1822 - Add Blockhound to test setup.
+* #1821 - Fix reactive mapping creation.
+* #1817 - Fix fields and source_filter setup.
+* #1816 - Allow runtime_fields to be defined in the index mapping.
+* #1811 - StringQuery execution crashes on return type `SearchPage<T>`.
+* #1803 - Default FieldType.Auto on Arrays of Objects.
+* #1800 - Improve handling of immutable classes.
+* #1794 - Refactor `DefaultReactiveElasticsearchClient` to do request customization with the `WebClient`.
+* #1792 - Upgrade to Elasticsearch 7.12.1.
+* #1790 - Custom Query with string parameter which contains double quotes.
+* #1788 - Allow disabling TypeHints.
+* #1787 - Search with MoreLikeThisQuery should use Pageable.
+* #1785 - Fix documentation about auditing.
+* #1781 - Remove deprecated code.
+* #1778 - Custom property names must be used in SourceFilter and source fields.
+* #1767 - DynamicMapping annotation should be applicable to any object field.
+* #1564 - (Reactive)ElasticsearchOperations does not have option to include request_cache path param in search request [DATAES-992].
+* #1488 - @ScriptedFields & Kotlin data classes [DATAES-915].
+* #1255 - Add pipeline aggregations to NativeSearchQuery.
+* #638 - datatype detection support in mapping ( i.e. numeric_detection, date_detection etc..)  [DATAES-62].
+
+
 Changes in version 4.1.11 (2021-07-16)
 --------------------------------------
 * #1866 - Queries defined with `@Query` are not using registered converters for parameter conversion.
@@ -1588,6 +1627,7 @@ Release Notes - Spring Data Elasticsearch - Version 1.0 M1 (2014-02-07)
 * #8 - java.lang.NoSuchMethodError: org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty.isVersionProperty()Z
 * #7 - Missing core types in org.springframework.data.elasticsearch.annotations.FieldType
 * #6 - spirng-data-elasticsearch with elasticsearch-river-mongodb
+
 
 
 
