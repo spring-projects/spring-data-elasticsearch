@@ -1435,7 +1435,7 @@ public class RequestConverters {
 				// encode each part (e.g. index, type and id) separately before merging them into the path
 				// we prepend "/" to the path part to make this path absolute, otherwise there can be issues with
 				// paths that start with `-` or contain `:`
-				URI uri = new URI(null, null, null, -1, '/' + pathPart, null, null);
+				URI uri = new URI((String)null, "", "/" + pathPart, (String)null, (String)null);
 				// manually encode any slash that each part may contain
 				return uri.getRawPath().substring(1).replaceAll("/", "%2F");
 			} catch (URISyntaxException e) {
