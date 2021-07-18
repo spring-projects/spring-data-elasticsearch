@@ -49,48 +49,50 @@ pipeline {
 					not { triggeredBy 'UpstreamCause' }
 				}
 			}
-			stage("test: baseline (jdk11)") {
-				agent {
-					label 'data'
-				}
-				options { timeout(time: 30, unit: 'MINUTES') }
+			parallel {
+				stage("test: baseline (jdk11)") {
+					agent {
+						label 'data'
+					}
+					options { timeout(time: 30, unit: 'MINUTES') }
 
-				environment {
-					DOCKER_HUB = credentials('hub.docker.com-springbuildmaster')
-					ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
-				}
+					environment {
+						DOCKER_HUB = credentials('hub.docker.com-springbuildmaster')
+						ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
+					}
 
-				steps {
-					script {
-						docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-							docker.image('adoptopenjdk/openjdk11:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
-								sh "docker login --username ${DOCKER_HUB_USR} --password ${DOCKER_HUB_PSW}"
-								sh 'PROFILE=java11 ci/verify.sh'
-								sh "ci/clean.sh"
+					steps {
+						script {
+							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+								docker.image('adoptopenjdk/openjdk11:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
+									sh "docker login --username ${DOCKER_HUB_USR} --password ${DOCKER_HUB_PSW}"
+									sh 'PROFILE=java11 ci/verify.sh'
+									sh "ci/clean.sh"
+								}
 							}
 						}
 					}
 				}
-			}
 
-			stage("test: baseline (jdk16)") {
-				agent {
-					label 'data'
-				}
-				options { timeout(time: 30, unit: 'MINUTES') }
+				stage("test: baseline (jdk16)") {
+					agent {
+						label 'data'
+					}
+					options { timeout(time: 30, unit: 'MINUTES') }
 
-				environment {
-					DOCKER_HUB = credentials('hub.docker.com-springbuildmaster')
-					ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
-				}
+					environment {
+						DOCKER_HUB = credentials('hub.docker.com-springbuildmaster')
+						ARTIFACTORY = credentials('02bd1690-b54f-4c9f-819d-a77cb7a9822c')
+					}
 
-				steps {
-					script {
-						docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-							docker.image('adoptopenjdk/openjdk16:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
-								sh "docker login --username ${DOCKER_HUB_USR} --password ${DOCKER_HUB_PSW}"
-								sh 'PROFILE=java11 ci/verify.sh'
-								sh "ci/clean.sh"
+					steps {
+						script {
+							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
+								docker.image('adoptopenjdk/openjdk16:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
+									sh "docker login --username ${DOCKER_HUB_USR} --password ${DOCKER_HUB_PSW}"
+									sh 'PROFILE=java11 ci/verify.sh'
+									sh "ci/clean.sh"
+								}
 							}
 						}
 					}
