@@ -419,7 +419,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	}
 
 	@Test // DATAES-148, #1767
-	void shouldWriteDynamicMappingSettings() throws JSONException {
+	void shouldWriteDynamicMappingFromAnnotation() throws JSONException {
 
 		String expected = "{\n" + //
 				"  \"dynamic\": \"false\",\n" + //
@@ -451,7 +451,65 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"  }\n" + //
 				"}"; //
 
-		String mapping = getMappingBuilder().buildPropertyMapping(ConfigureDynamicMappingEntity.class);
+		String mapping = getMappingBuilder().buildPropertyMapping(DynamicMappingAnnotationEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	@Test // #1871
+	void shouldWriteDynamicMapping() throws JSONException {
+
+		String expected = "{\n" //
+				+ "  \"dynamic\": \"false\",\n" //
+				+ "  \"properties\": {\n" //
+				+ "    \"_class\": {\n" //
+				+ "      \"type\": \"keyword\",\n" //
+				+ "      \"index\": false,\n" //
+				+ "      \"doc_values\": false\n" //
+				+ "    },\n" //
+				+ "    \"objectInherit\": {\n" //
+				+ "      \"type\": \"object\"\n" //
+				+ "    },\n" //
+				+ "    \"objectFalse\": {\n" //
+				+ "      \"dynamic\": \"false\",\n" //
+				+ "      \"type\": \"object\"\n" //
+				+ "    },\n" //
+				+ "    \"objectTrue\": {\n" //
+				+ "      \"dynamic\": \"true\",\n" //
+				+ "      \"type\": \"object\"\n" //
+				+ "    },\n" //
+				+ "    \"objectStrict\": {\n" //
+				+ "      \"dynamic\": \"strict\",\n" //
+				+ "      \"type\": \"object\"\n" //
+				+ "    },\n" //
+				+ "    \"objectRuntime\": {\n" //
+				+ "      \"dynamic\": \"runtime\",\n" //
+				+ "      \"type\": \"object\"\n" //
+				+ "    },\n" //
+				+ "    \"nestedObjectInherit\": {\n" //
+				+ "      \"type\": \"nested\"\n" //
+				+ "    },\n" //
+				+ "    \"nestedObjectFalse\": {\n" //
+				+ "      \"dynamic\": \"false\",\n" //
+				+ "      \"type\": \"nested\"\n" //
+				+ "    },\n" //
+				+ "    \"nestedObjectTrue\": {\n" //
+				+ "      \"dynamic\": \"true\",\n" //
+				+ "      \"type\": \"nested\"\n" //
+				+ "    },\n" //
+				+ "    \"nestedObjectStrict\": {\n" //
+				+ "      \"dynamic\": \"strict\",\n" //
+				+ "      \"type\": \"nested\"\n" //
+				+ "    },\n" //
+				+ "    \"nestedObjectRuntime\": {\n" //
+				+ "      \"dynamic\": \"runtime\",\n" //
+				+ "      \"type\": \"nested\"\n" //
+				+ "    }\n" //
+				+ "  }\n" //
+				+ "}\n" //
+				+ "";
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DynamicMappingEntity.class);
 
 		assertEquals(expected, mapping, true);
 	}
@@ -865,7 +923,8 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"    \"day_of_week\": {\n" + //
 				"      \"type\": \"keyword\",\n" + //
 				"      \"script\": {\n" + //
-				"        \"source\": \"emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))\"\n" + //
+				"        \"source\": \"emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))\"\n"
+				+ //
 				"      }\n" + //
 				"    }\n" + //
 				"  },\n" + //
@@ -1441,7 +1500,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 	@Document(indexName = "test-index-configure-dynamic-mapping")
 	@DynamicMapping(DynamicMappingValue.False)
-	static class ConfigureDynamicMappingEntity {
+	static class DynamicMappingAnnotationEntity {
 
 		@Nullable @DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
 		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
@@ -1457,6 +1516,32 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		public void setAuthor(Author author) {
 			this.author = author;
 		}
+	}
+
+	@Document(indexName = "test-index-configure-dynamic-mapping", dynamic = Dynamic.FALSE)
+	static class DynamicMappingEntity {
+
+		@Nullable @Field(type = FieldType.Object) //
+		private Map<String, Object> objectInherit;
+		@Nullable @Field(type = FieldType.Object, dynamic = Dynamic.FALSE) //
+		private Map<String, Object> objectFalse;
+		@Nullable @Field(type = FieldType.Object, dynamic = Dynamic.TRUE) //
+		private Map<String, Object> objectTrue;
+		@Nullable @Field(type = FieldType.Object, dynamic = Dynamic.STRICT) //
+		private Map<String, Object> objectStrict;
+		@Nullable @Field(type = FieldType.Object, dynamic = Dynamic.RUNTIME) //
+		private Map<String, Object> objectRuntime;
+		@Nullable @Field(type = FieldType.Nested) //
+		private List<Map<String, Object>> nestedObjectInherit;
+		@Nullable @Field(type = FieldType.Nested, dynamic = Dynamic.FALSE) //
+		private List<Map<String, Object>> nestedObjectFalse;
+		@Nullable @Field(type = FieldType.Nested, dynamic = Dynamic.TRUE) //
+		private List<Map<String, Object>> nestedObjectTrue;
+		@Nullable @Field(type = FieldType.Nested, dynamic = Dynamic.STRICT) //
+		private List<Map<String, Object>> nestedObjectStrict;
+		@Nullable @Field(type = FieldType.Nested, dynamic = Dynamic.RUNTIME) //
+		private List<Map<String, Object>> nestedObjectRuntime;
+
 	}
 
 	static class ValueObject {

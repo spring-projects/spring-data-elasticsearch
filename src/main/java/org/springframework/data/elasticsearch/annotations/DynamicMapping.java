@@ -26,11 +26,14 @@ import java.lang.annotation.Target;
  * {@see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/dynamic.html">elasticsearch doc</a>}
  * 
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.0
+ * @deprecated since 4.3, use {@link Document#dynamic()} or {@link Field#dynamic()} instead.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.TYPE, ElementType.FIELD })
 @Documented
+@Deprecated
 public @interface DynamicMapping {
 
 	DynamicMappingValue value() default DynamicMappingValue.True;

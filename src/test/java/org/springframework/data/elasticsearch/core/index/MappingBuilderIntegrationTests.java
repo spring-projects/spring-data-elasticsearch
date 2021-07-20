@@ -287,8 +287,18 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	}
 
 	@Test // #1767
-	@DisplayName("should write dynamic mapping entries")
-	void shouldWriteDynamicMappingEntries() {
+	@DisplayName("should write dynamic mapping annotations")
+	void shouldWriteDynamicMappingAnnotations() {
+
+		IndexOperations indexOps = operations.indexOps(DynamicMappingAnnotationEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
+
+	}
+
+	@Test // #1871
+	@DisplayName("should write dynamic mapping")
+	void shouldWriteDynamicMapping() {
 
 		IndexOperations indexOps = operations.indexOps(DynamicMappingEntity.class);
 		indexOps.create();
@@ -1104,9 +1114,9 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
-	@Document(indexName = "dynamic-mapping")
+	@Document(indexName = "dynamic-mapping-annotation")
 	@DynamicMapping(DynamicMappingValue.False)
-	static class DynamicMappingEntity {
+	static class DynamicMappingAnnotationEntity {
 
 		@Nullable @DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
 		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
@@ -1122,6 +1132,31 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		public void setAuthor(Author author) {
 			this.author = author;
 		}
+	}
+
+	@Document(indexName = "dynamic-mapping", dynamic = Dynamic.FALSE)
+	static class DynamicMappingEntity {
+
+		@Nullable @Field(type = FieldType.Object) //
+		private Map<String, Object> objectInherit;
+		@Nullable @Field(type = FieldType.Object, dynamic = Dynamic.FALSE) //
+		private Map<String, Object> objectFalse;
+		@Nullable @Field(type = FieldType.Object, dynamic = Dynamic.TRUE) //
+		private Map<String, Object> objectTrue;
+		@Nullable @Field(type = FieldType.Object, dynamic = Dynamic.STRICT) //
+		private Map<String, Object> objectStrict;
+		@Nullable @Field(type = FieldType.Object, dynamic = Dynamic.RUNTIME) //
+		private Map<String, Object> objectRuntime;
+		@Nullable @Field(type = FieldType.Nested) //
+		private List<Map<String, Object>> nestedObjectInherit;
+		@Nullable @Field(type = FieldType.Nested, dynamic = Dynamic.FALSE) //
+		private List<Map<String, Object>> nestedObjectFalse;
+		@Nullable @Field(type = FieldType.Nested, dynamic = Dynamic.TRUE) //
+		private List<Map<String, Object>> nestedObjectTrue;
+		@Nullable @Field(type = FieldType.Nested, dynamic = Dynamic.STRICT) //
+		private List<Map<String, Object>> nestedObjectStrict;
+		@Nullable @Field(type = FieldType.Nested, dynamic = Dynamic.RUNTIME) //
+		private List<Map<String, Object>> nestedObjectRuntime;
 	}
 
 	@Document(indexName = "dynamic-detection-mapping-true")
