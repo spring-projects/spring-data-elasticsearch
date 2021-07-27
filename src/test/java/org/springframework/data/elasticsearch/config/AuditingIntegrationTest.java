@@ -73,7 +73,7 @@ public abstract class AuditingIntegrationTest {
 		assertThat(entity.getCreatedBy()).isEqualTo("Auditor 1");
 		assertThat(entity.getModifiedBy()).isEqualTo("Auditor 1");
 
-		Thread.sleep(10);
+		Thread.sleep(50);
 
 		entity = callbacks.callback(BeforeConvertCallback.class, entity, IndexCoordinates.of("index"));
 

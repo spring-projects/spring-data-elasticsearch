@@ -24,9 +24,9 @@ import java.util.Properties;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.lang.Nullable;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
+import org.testcontainers.utility.DockerImageName;
 
 /**
  * This class manages the connection to an Elasticsearch Cluster, starting a containerized one if necessary. The
@@ -40,9 +40,10 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ClusterConnection.class);
 
+	private static final String SDE_TESTCONTAINER_IMAGE_NAME = "sde.testcontainers.image-name";
+	private static final String SDE_TESTCONTAINER_IMAGE_VERSION = "sde.testcontainers.image-version";
 	private static final int ELASTICSEARCH_DEFAULT_PORT = 9200;
 	private static final int ELASTICSEARCH_DEFAULT_TRANSPORT_PORT = 9300;
-	private static final String ELASTICSEARCH_DEFAULT_IMAGE = "docker.elastic.co/elasticsearch/elasticsearch";
 
 	private static final ThreadLocal<ClusterConnectionInfo> clusterConnectionInfoThreadLocal = new ThreadLocal<>();
 
@@ -78,20 +79,27 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 	@Nullable
 	private ClusterConnectionInfo startElasticsearchContainer() {
 
-		LOGGER.debug("Starting Elasticsearch Container");
+		LOGGER.info("Starting Elasticsearch Container...");
 
 		try {
-			String elasticsearchVersion = VersionInfo.versionProperties()
-					.getProperty(VersionInfo.VERSION_ELASTICSEARCH_CLIENT);
-			Map<String, String> elasticsearchProperties = elasticsearchProperties();
+			IntegrationtestEnvironment integrationtestEnvironment = IntegrationtestEnvironment.get();
+			LOGGER.info("Integration test environment: {}", integrationtestEnvironment);
+			if (integrationtestEnvironment == IntegrationtestEnvironment.UNDEFINED) {
+				throw new IllegalArgumentException(IntegrationtestEnvironment.SYSTEM_PROPERTY + " property not set");
+			}
 
-			String dockerImageName = ELASTICSEARCH_DEFAULT_IMAGE + ':' + elasticsearchVersion;
-			LOGGER.debug("Docker image: {}", dockerImageName);
+			String testcontainersConfiguration = integrationtestEnvironment.name().toLowerCase();
+			Map<String, String> testcontainersProperties = testcontainersProperties(
+					"testcontainers-" + testcontainersConfiguration + ".properties");
 
-			ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer(dockerImageName);
-			elasticsearchContainer.withEnv(elasticsearchProperties);
+			DockerImageName dockerImageName = getDockerImageName(testcontainersProperties);
+
+			ElasticsearchContainer elasticsearchContainer = new ElasticsearchContainer(dockerImageName)
+					.withEnv(testcontainersProperties);
 			elasticsearchContainer.start();
+
 			return ClusterConnectionInfo.builder() //
+					.withIntegrationtestEnvironment(integrationtestEnvironment)
 					.withHostAndPort(elasticsearchContainer.getHost(),
 							elasticsearchContainer.getMappedPort(ELASTICSEARCH_DEFAULT_PORT)) //
 					.withTransportPort(elasticsearchContainer.getMappedPort(ELASTICSEARCH_DEFAULT_TRANSPORT_PORT)) //
@@ -104,9 +112,32 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 		return null;
 	}
 
-	private Map<String, String> elasticsearchProperties() {
+	private DockerImageName getDockerImageName(Map<String, String> testcontainersProperties) {
 
-		String propertiesFile = "testcontainers-elasticsearch.properties";
+		String imageName = testcontainersProperties.get(SDE_TESTCONTAINER_IMAGE_NAME);
+		String imageVersion = testcontainersProperties.get(SDE_TESTCONTAINER_IMAGE_VERSION);
+
+		if (imageName == null) {
+			throw new IllegalArgumentException("property " + SDE_TESTCONTAINER_IMAGE_NAME + " not configured");
+		}
+		testcontainersProperties.remove(SDE_TESTCONTAINER_IMAGE_NAME);
+
+		if (imageVersion == null) {
+			throw new IllegalArgumentException("property " + SDE_TESTCONTAINER_IMAGE_VERSION + " not configured");
+		}
+		testcontainersProperties.remove(SDE_TESTCONTAINER_IMAGE_VERSION);
+
+		String configuredImageName = imageName + ':' + imageVersion;
+		DockerImageName dockerImageName = DockerImageName.parse(configuredImageName)
+				.asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch");
+		LOGGER.info("Docker image: {}", dockerImageName);
+		return dockerImageName;
+	}
+
+	private Map<String, String> testcontainersProperties(String propertiesFile) {
+
+		LOGGER.info("load configuration from {}", propertiesFile);
+
 		try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(propertiesFile)) {
 			Properties props = new Properties();
 
