@@ -25,10 +25,11 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
  * with a rest client for both a local started cluster and for one defined by the cluster URL when creating the
  * {@link ClusterConnection}.<br/>
  * The object must be created by using a {@link ClusterConnectionInfo.Builder}.
- * 
+ *
  * @author Peter-Josef Meisch
  */
 public final class ClusterConnectionInfo {
+	private final IntegrationtestEnvironment integrationtestEnvironment;
 	private final boolean useSsl;
 	private final String host;
 	private final int httpPort;
@@ -40,8 +41,9 @@ public final class ClusterConnectionInfo {
 		return new Builder();
 	}
 
-	private ClusterConnectionInfo(String host, int httpPort, boolean useSsl, int transportPort,
-			@Nullable ElasticsearchContainer elasticsearchContainer) {
+	private ClusterConnectionInfo(IntegrationtestEnvironment integrationtestEnvironment, String host, int httpPort,
+			boolean useSsl, int transportPort, @Nullable ElasticsearchContainer elasticsearchContainer) {
+		this.integrationtestEnvironment = integrationtestEnvironment;
 		this.host = host;
 		this.httpPort = httpPort;
 		this.useSsl = useSsl;
@@ -53,7 +55,8 @@ public final class ClusterConnectionInfo {
 	@Override
 	public String toString() {
 		return "ClusterConnectionInfo{" + //
-				"useSsl=" + useSsl + //
+				"configuration: " + integrationtestEnvironment + //
+				", useSsl=" + useSsl + //
 				", host='" + host + '\'' + //
 				", httpPort=" + httpPort + //
 				", transportPort=" + transportPort + //
@@ -86,14 +89,22 @@ public final class ClusterConnectionInfo {
 	}
 
 	public static class Builder {
-		boolean useSsl = false;
+		private IntegrationtestEnvironment integrationtestEnvironment;
+		private boolean useSsl = false;
 		private String host;
 		private int httpPort;
 		private int transportPort;
 		@Nullable private ElasticsearchContainer elasticsearchContainer;
 
+		public Builder withIntegrationtestEnvironment(IntegrationtestEnvironment integrationtestEnvironment) {
+			this.integrationtestEnvironment = integrationtestEnvironment;
+			return this;
+		}
+
 		public Builder withHostAndPort(String host, int httpPort) {
+
 			Assert.hasLength(host, "host must not be empty");
+
 			this.host = host;
 			this.httpPort = httpPort;
 			return this;
@@ -115,7 +126,8 @@ public final class ClusterConnectionInfo {
 		}
 
 		public ClusterConnectionInfo build() {
-			return new ClusterConnectionInfo(host, httpPort, useSsl, transportPort, elasticsearchContainer);
+			return new ClusterConnectionInfo(integrationtestEnvironment, host, httpPort, useSsl, transportPort,
+					elasticsearchContainer);
 		}
 	}
 }

@@ -25,6 +25,15 @@
 		<testcontainers>1.15.3</testcontainers>
 		<blockhound-junit>1.0.6.RELEASE</blockhound-junit>
 		<java-module-name>spring.data.elasticsearch</java-module-name>
+
+		<!--
+			properties defining the maven phase for the tests and integration tests
+			set to "none" to disable the corresponding test execution (-Dmvn.unit-test.goal=none)
+			default execution for unit-test: "test", for the integration tests: "integration-test"
+		-->
+		<mvn.unit-test.goal>test</mvn.unit-test.goal>
+		<mvn.integration-test-elasticsearch.goal>integration-test</mvn.integration-test-elasticsearch.goal>
+		<mvn.integration-test-opensearch.goal>none</mvn.integration-test-opensearch.goal>
 	</properties>
 
 	<developers>
@@ -264,25 +273,6 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!--
-				<dependency>
-					<groupId>org.apache.openwebbeans.test</groupId>
-					<artifactId>cditest-owb</artifactId>
-					<version>1.2.8</version>
-					<scope>test</scope>
-					<exclusions>
-						<exclusion>
-							<groupId>org.apache.geronimo.specs</groupId>
-							<artifactId>geronimo-jcdi_1.0_spec</artifactId>
-						</exclusion>
-						<exclusion>
-							<groupId>org.apache.geronimo.specs</groupId>
-							<artifactId>geronimo-atinject_1.0_spec</artifactId>
-						</exclusion>
-					</exclusions>
-				</dependency>
-		-->
-
 		<dependency>
 			<groupId>org.skyscreamer</groupId>
 			<artifactId>jsonassert</artifactId>
@@ -365,9 +355,6 @@
 		</resources>
 
 		<plugins>
-			<!--
-			please do not remove this configuration for surefire - we need that to avoid issue with jar hell
-			-->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -386,7 +373,7 @@
 					<!-- the default-test execution runs only the unit tests -->
 					<execution>
 						<id>default-test</id>
-						<phase>test</phase>
+						<phase>${mvn.unit-test.goal}</phase>
 						<goals>
 							<goal>test</goal>
 						</goals>
@@ -394,15 +381,32 @@
 							<excludedGroups>integration-test</excludedGroups>
 						</configuration>
 					</execution>
-					<!-- execution to run the integration tests -->
+					<!-- execution to run the integration tests against Elasticsearch -->
 					<execution>
-						<id>integration-test</id>
-						<phase>integration-test</phase>
+						<id>integration-test-elasticsearch</id>
+						<phase>${mvn.integration-test-elasticsearch.goal}</phase>
 						<goals>
 							<goal>test</goal>
 						</goals>
 						<configuration>
 							<groups>integration-test</groups>
+							<systemPropertyVariables>
+								<sde.integration-test.environment>elasticsearch</sde.integration-test.environment>
+							</systemPropertyVariables>
+						</configuration>
+					</execution>
+					<!-- execution to run the integration tests against Opensearch -->
+					<execution>
+						<id>integration-test-opensearch</id>
+						<phase>${mvn.integration-test-opensearch.goal}</phase>
+						<goals>
+							<goal>test</goal>
+						</goals>
+						<configuration>
+							<groups>integration-test</groups>
+							<systemPropertyVariables>
+								<sde.integration-test.environment>opensearch</sde.integration-test.environment>
+							</systemPropertyVariables>
 						</configuration>
 					</execution>
 				</executions>
