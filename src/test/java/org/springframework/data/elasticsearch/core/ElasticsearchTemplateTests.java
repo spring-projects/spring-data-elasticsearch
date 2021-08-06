@@ -1108,7 +1108,8 @@ public abstract class ElasticsearchTemplateTests {
 		Collection<String> ids = IntStream.rangeClosed(1, 10).mapToObj(i -> nextIdAsString()).collect(Collectors.toList());
 		ids.add(referenceId);
 		ids.stream()
-				.map(id -> getIndexQuery(SampleEntity.builder().id(id).message(sampleMessage).version(System.currentTimeMillis()).build()))
+				.map(id -> getIndexQuery(
+						SampleEntity.builder().id(id).message(sampleMessage).version(System.currentTimeMillis()).build()))
 				.forEach(indexQuery -> operations.index(indexQuery, index));
 		indexOperations.refresh();
 
@@ -1123,7 +1124,8 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(10);
 		assertThat(searchHits.getSearchHits()).hasSize(5);
 
-		Collection<String> returnedIds = searchHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
+		Collection<String> returnedIds = searchHits.getSearchHits().stream().map(SearchHit::getId)
+				.collect(Collectors.toList());
 
 		moreLikeThisQuery.setPageable(PageRequest.of(1, 5));
 
@@ -3669,6 +3671,21 @@ public abstract class ElasticsearchTemplateTests {
 		softly.assertThat(searchHits.getTotalHitsRelation()).isEqualTo(TotalHitsRelation.OFF);
 		softly.assertAll();
 	}
+	@Test // #1893
+	@DisplayName("should index document from source with version")
+	void shouldIndexDocumentFromSourceWithVersion() {
+
+		String source = "{\n" + //
+			"  \"answer\": 42\n" + //
+			"}";
+		IndexQuery query = new IndexQueryBuilder() //
+			.withId("42") //
+			.withSource(source) //
+			.withVersion(42L) //
+			.build();
+
+		operations.index(query, IndexCoordinates.of(INDEX_NAME_SAMPLE_ENTITY));
+	}
 
 	@Data
 	@NoArgsConstructor
@@ -3865,5 +3882,5 @@ public abstract class ElasticsearchTemplateTests {
 				@JoinTypeRelation(parent = "question", children = { "answer" }) }) private JoinField<String> myJoinField;
 		@Field(type = Text) private String text;
 	}
-	//endregion
+	// endregion
 }
