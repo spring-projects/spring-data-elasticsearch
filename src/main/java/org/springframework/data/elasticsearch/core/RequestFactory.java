@@ -700,15 +700,17 @@ class RequestFactory {
 		String indexName = index.getIndexName();
 		IndexRequest indexRequest;
 
-		if (query.getObject() != null) {
-			String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
+		Object queryObject = query.getObject();
+
+		if (queryObject != null) {
+			String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(queryObject) : query.getId();
 			// If we have a query id and a document id, do not ask ES to generate one.
 			if (id != null) {
 				indexRequest = new IndexRequest(indexName).id(id);
 			} else {
 				indexRequest = new IndexRequest(indexName);
 			}
-			indexRequest.source(elasticsearchConverter.mapObject(query.getObject()).toJson(), Requests.INDEX_CONTENT_TYPE);
+			indexRequest.source(elasticsearchConverter.mapObject(queryObject).toJson(), Requests.INDEX_CONTENT_TYPE);
 		} else if (query.getSource() != null) {
 			indexRequest = new IndexRequest(indexName).id(query.getId()).source(query.getSource(),
 					Requests.INDEX_CONTENT_TYPE);
@@ -719,7 +721,8 @@ class RequestFactory {
 
 		if (query.getVersion() != null) {
 			indexRequest.version(query.getVersion());
-			VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
+			VersionType versionType = retrieveVersionTypeFromPersistentEntity(
+					queryObject != null ? queryObject.getClass() : null);
 			indexRequest.versionType(versionType);
 		}
 
@@ -754,15 +757,16 @@ class RequestFactory {
 
 		IndexRequestBuilder indexRequestBuilder;
 
-		if (query.getObject() != null) {
-			String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(query.getObject()) : query.getId();
+		Object queryObject = query.getObject();
+		if (queryObject != null) {
+			String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(queryObject) : query.getId();
 			// If we have a query id and a document id, do not ask ES to generate one.
 			if (id != null) {
 				indexRequestBuilder = client.prepareIndex(indexName, type, id);
 			} else {
 				indexRequestBuilder = client.prepareIndex(indexName, type);
 			}
-			indexRequestBuilder.setSource(elasticsearchConverter.mapObject(query.getObject()).toJson(),
+			indexRequestBuilder.setSource(elasticsearchConverter.mapObject(queryObject).toJson(),
 					Requests.INDEX_CONTENT_TYPE);
 		} else if (query.getSource() != null) {
 			indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
@@ -774,7 +778,8 @@ class RequestFactory {
 
 		if (query.getVersion() != null) {
 			indexRequestBuilder.setVersion(query.getVersion());
-			VersionType versionType = retrieveVersionTypeFromPersistentEntity(query.getObject().getClass());
+			VersionType versionType = retrieveVersionTypeFromPersistentEntity(
+					queryObject != null ? queryObject.getClass() : null);
 			indexRequestBuilder.setVersionType(versionType);
 		}
 
@@ -1640,12 +1645,13 @@ class RequestFactory {
 		return null;
 	}
 
-	private VersionType retrieveVersionTypeFromPersistentEntity(Class<?> clazz) {
+	private VersionType retrieveVersionTypeFromPersistentEntity(@Nullable Class<?> clazz) {
 
 		MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext = elasticsearchConverter
 				.getMappingContext();
 
-		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(clazz);
+		ElasticsearchPersistentEntity<?> persistentEntity = clazz != null ? mappingContext.getPersistentEntity(clazz)
+				: null;
 
 		VersionType versionType = null;
 

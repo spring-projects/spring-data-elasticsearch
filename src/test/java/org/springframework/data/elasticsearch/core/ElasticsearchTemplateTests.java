@@ -3576,6 +3576,22 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(foundEntity.getScriptedRate()).isEqualTo(84.0);
 	}
 
+	@Test // #1893
+	@DisplayName("should index document from source with version")
+	void shouldIndexDocumentFromSourceWithVersion() {
+
+		String source = "{\n" + //
+				"  \"answer\": 42\n" + //
+				"}";
+		IndexQuery query = new IndexQueryBuilder() //
+				.withId("42") //
+				.withSource(source) //
+				.withVersion(42L) //
+				.build();
+
+		operations.index(query, IndexCoordinates.of(indexNameProvider.indexName()));
+	}
+
 	// region entities
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(shards = 1, replicas = 0, refreshInterval = "-1")
