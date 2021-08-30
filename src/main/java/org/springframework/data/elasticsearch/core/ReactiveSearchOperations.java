@@ -18,14 +18,14 @@ package org.springframework.data.elasticsearch.core;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.elasticsearch.index.query.QueryBuilders;
+import java.util.List;
+
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
 
 /**
  * The reactive operations for the
@@ -45,7 +45,7 @@ public interface ReactiveSearchOperations {
 	 * @return a {@link Mono} emitting the nr of matching documents.
 	 */
 	default Mono<Long> count(Class<?> entityType) {
-		return count(new StringQuery(QueryBuilders.matchAllQuery().toString()), entityType);
+		return count(matchAllQuery(), entityType);
 	}
 
 	/**
@@ -215,4 +215,25 @@ public interface ReactiveSearchOperations {
 	 * @return the suggest response
 	 */
 	Flux<Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index);
+
+	// region helper
+	/**
+	 * Creates a {@link Query} to find all documents. Must be implemented by the concrete implementations to provide an
+	 * appropriate query using the respective client.
+	 *
+	 * @return a query to find all documents
+	 * @since 4.3
+	 */
+	Query matchAllQuery();
+
+	/**
+	 * Creates a {@link Query} to find get all documents with given ids. Must be implemented by the concrete
+	 * implementations to provide an appropriate query using the respective client.
+	 *
+	 * @param ids the list of ids must not be {@literal null}
+	 * @return query returning the documents with the given ids
+	 * @since 4.3
+	 */
+	Query idsQuery(List<String> ids);
+	// endregion
 }

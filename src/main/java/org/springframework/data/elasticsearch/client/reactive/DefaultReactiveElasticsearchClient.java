@@ -111,6 +111,7 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsea
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices;
 import org.springframework.data.elasticsearch.client.util.NamedXContents;
 import org.springframework.data.elasticsearch.client.util.ScrollState;
+import org.springframework.data.elasticsearch.core.ResponseConverter;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.util.Lazy;
 import org.springframework.http.HttpHeaders;
@@ -289,7 +290,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		provider = provider //
 				.withDefaultHeaders(clientConfiguration.getDefaultHeaders()) //
-				.withWebClientConfigurer(clientConfiguration.getWebClientConfigurer()) //
+				.withWebClientConfigurer(clientConfiguration.<WebClient> getClientConfigurer()::configure) //
 				.withRequestConfigurer(requestHeadersSpec -> requestHeadersSpec.headers(httpHeaders -> {
 					HttpHeaders suppliedHeaders = clientConfiguration.getHeadersSupplier().get();
 
@@ -485,7 +486,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<ByQueryResponse> updateBy(HttpHeaders headers, UpdateByQueryRequest updateRequest) {
 		return sendRequest(updateRequest, requestCreator.updateByQuery(), BulkByScrollResponse.class, headers) //
 				.next() //
-				.map(ByQueryResponse::of);
+				.map(ResponseConverter::byQueryResponseOf);
 	}
 
 	@Override

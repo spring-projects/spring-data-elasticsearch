@@ -19,7 +19,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.elasticsearch.Version;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
@@ -36,7 +35,8 @@ public final class VersionInfo {
 
 	private static final Logger LOG = LoggerFactory.getLogger(VersionInfo.class);
 
-	protected static final String VERSION_PROPERTIES = "versions.properties";
+	private static final String VERSION_PROPERTIES = "versions.properties";
+
 	public static final String VERSION_SPRING_DATA_ELASTICSEARCH = "version.spring-data-elasticsearch";
 	public static final String VERSION_ELASTICSEARCH_CLIENT = "version.elasticsearch-client";
 
@@ -62,28 +62,29 @@ public final class VersionInfo {
 	 *
 	 * @param clusterVersion the version of the cluster
 	 */
-	public static void logVersions(@Nullable String clusterVersion) {
+	public static void logVersions(String vendor, String runtimeLibraryVersion, @Nullable String clusterVersion) {
 		try {
 
 			String versionSpringDataElasticsearch = versionProperties.getProperty(VERSION_SPRING_DATA_ELASTICSEARCH);
-			Version versionESBuilt = Version.fromString(versionProperties.getProperty(VERSION_ELASTICSEARCH_CLIENT));
-			Version versionESUsed = Version.CURRENT;
-			Version versionESCluster = clusterVersion != null ? Version.fromString(clusterVersion) : null;
+			Version versionBuiltLibraryES = Version.fromString(versionProperties.getProperty(VERSION_ELASTICSEARCH_CLIENT));
+			Version versionRuntimeLibrary = Version.fromString(runtimeLibraryVersion);
+			Version versionCluster = clusterVersion != null ? Version.fromString(clusterVersion) : null;
 
 			LOG.info("Version Spring Data Elasticsearch: {}", versionSpringDataElasticsearch.toString());
-			LOG.info("Version Elasticsearch Client in build: {}", versionESBuilt.toString());
-			LOG.info("Version Elasticsearch Client used: {}", versionESUsed.toString());
+			LOG.info("Version Elasticsearch client in build: {}", versionBuiltLibraryES.toString());
+			LOG.info("Version runtime client used: {} - {}", vendor, versionRuntimeLibrary.toString());
 
-			if (differInMajorOrMinor(versionESBuilt, versionESUsed)) {
-				LOG.warn("Version mismatch in between Elasticsearch Clients build/use: {} - {}", versionESBuilt, versionESUsed);
+			if (differInMajorOrMinor(versionBuiltLibraryES, versionRuntimeLibrary)) {
+				LOG.warn("Version mismatch in between Elasticsearch Clients build/use: {} - {}", versionBuiltLibraryES,
+						versionRuntimeLibrary);
 			}
 
-			if (versionESCluster != null) {
-				LOG.info("Version Elasticsearch cluster: {}", versionESCluster.toString());
+			if (versionCluster != null) {
+				LOG.info("Version cluster: {} - {}", vendor, versionCluster.toString());
 
-				if (differInMajorOrMinor(versionESUsed, versionESCluster)) {
-					LOG.warn("Version mismatch in between Elasticsearch Client and Cluster: {} - {}", versionESUsed,
-							versionESCluster);
+				if (differInMajorOrMinor(versionRuntimeLibrary, versionCluster)) {
+					LOG.warn("Version mismatch in between  Client and Cluster: {} - {} - {}", vendor, versionRuntimeLibrary,
+							versionCluster);
 				}
 			}
 		} catch (Exception e) {
@@ -109,7 +110,7 @@ public final class VersionInfo {
 	}
 
 	private static boolean differInMajorOrMinor(Version version1, Version version2) {
-		return version1.major != version2.major || version1.minor != version2.minor;
+		return version1.getMajor() != version2.getMajor() || version1.getMinor() != version2.getMinor();
 	}
 
 	private VersionInfo() {}

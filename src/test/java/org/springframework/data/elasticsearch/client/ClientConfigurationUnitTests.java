@@ -20,12 +20,14 @@ import static org.mockito.Mockito.*;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.elasticsearch.client.RestClientBuilder;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
@@ -156,35 +158,73 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getWebClientConfigurer()).isEqualTo(Function.identity());
 	}
 
-	@Test // DATAES-719
-	void shouldUseConfiguredWebClientConfigurer() {
-		Function<WebClient, WebClient> webClientConfigurer = webClient -> webClient;
+	@Test // #1885
+	@DisplayName("should use configured httpClientConfigurer as client configurer")
+	void shouldUseConfiguredHttpClientConfigurerAsClientConfigurer() {
+
+		AtomicInteger callCounter = new AtomicInteger();
+
 		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
 				.connectedTo("foo", "bar") //
-				.withWebClientConfigurer(webClientConfigurer) //
+				.withHttpClientConfigurer(httpClientBuilder -> {
+					callCounter.incrementAndGet();
+					return httpClientBuilder;
+				}) //
 				.build();
 
-		assertThat(clientConfiguration.getWebClientConfigurer()).isEqualTo(webClientConfigurer);
+		ClientConfiguration.ClientConfigurationCallback<HttpAsyncClientBuilder> clientConfigurer = clientConfiguration
+				.getClientConfigurer();
+
+		clientConfigurer.configure(HttpAsyncClientBuilder.create());
+		assertThat(callCounter.get()).isEqualTo(1);
 	}
 
-	@Test // DATAES-588
-	@DisplayName("should use configured httpClientConfigurer")
-	void shouldUseConfiguredHttpClientConfigurer() {
+	@Test // #1885
+	@DisplayName("should use configured webClientConfigurer as client configurer")
+	void shouldUseConfiguredWebClientConfigurerAsClientConfigurer() {
 
-		RestClientBuilder.HttpClientConfigCallback callback = httpClientBuilder -> httpClientBuilder;
+		AtomicInteger callCounter = new AtomicInteger();
 
 		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
 				.connectedTo("foo", "bar") //
-				.withHttpClientConfigurer(callback) //
+				.withWebClientConfigurer(webClientConfigurer -> {
+					callCounter.incrementAndGet();
+					return webClientConfigurer;
+				}) //
 				.build();
 
-		assertThat(clientConfiguration.getHttpClientConfigurer()).isEqualTo(callback);
+		ClientConfiguration.ClientConfigurationCallback<WebClient> clientConfigurer = clientConfiguration
+				.getClientConfigurer();
+
+		clientConfigurer.configure(WebClient.builder().build());
+		assertThat(callCounter.get()).isEqualTo(1);
+	}
+
+	@Test // #1885
+	@DisplayName("should use configured client configurer")
+	void shouldUseConfiguredClientConfigurer() {
+
+		AtomicInteger callCounter = new AtomicInteger();
+
+		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
+				.connectedTo("foo", "bar") //
+				.withClientConfigurer(clientConfigurer -> {
+					callCounter.incrementAndGet();
+					return clientConfigurer;
+				}) //
+				.build();
+
+		ClientConfiguration.ClientConfigurationCallback<Object> clientConfigurer = clientConfiguration
+				.getClientConfigurer();
+
+		clientConfigurer.configure(new Object());
+		assertThat(callCounter.get()).isEqualTo(1);
 	}
 
 	private static String buildBasicAuth(String username, String password) {
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setBasicAuth(username, password);
-		return headers.getFirst(HttpHeaders.AUTHORIZATION);
+		return Objects.requireNonNull(headers.getFirst(HttpHeaders.AUTHORIZATION));
 	}
 }

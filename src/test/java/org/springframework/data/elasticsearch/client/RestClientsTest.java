@@ -1,3 +1,18 @@
+/*
+ * Copyright 2019-2021 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springframework.data.elasticsearch.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -18,7 +33,6 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -91,13 +105,8 @@ public class RestClientsTest {
 			AtomicInteger supplierCount = new AtomicInteger(1);
 			AtomicInteger clientConfigurerCount = new AtomicInteger(0);
 
-			RestClientBuilder.HttpClientConfigCallback configCallback = httpClientBuilder -> {
-				clientConfigurerCount.incrementAndGet();
-				return httpClientBuilder;
-			};
-
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
-			ClientConfiguration clientConfiguration = configurationBuilder //
+			configurationBuilder //
 					.connectedTo("localhost:" + server.port()) //
 					.withBasicAuth("user", "password") //
 					.withDefaultHeaders(defaultHeaders) //
@@ -106,8 +115,21 @@ public class RestClientsTest {
 						httpHeaders.add("supplied", "val0");
 						httpHeaders.add("supplied", "val" + supplierCount.getAndIncrement());
 						return httpHeaders;
-					}) //
-					.withHttpClientConfigurer(configCallback).build();
+					});
+
+			if (clientUnderTestFactory instanceof RestClientUnderTestFactory) {
+				configurationBuilder.withClientConfigurer((RestClients.RestClientConfigurationCallback) httpClientBuilder -> {
+					clientConfigurerCount.incrementAndGet();
+					return httpClientBuilder;
+				});
+			} else if (clientUnderTestFactory instanceof ReactiveElasticsearchClientUnderTestFactory) {
+				configurationBuilder.withClientConfigurer((ReactiveRestClients.WebClientConfigurationCallback) webClient -> {
+					clientConfigurerCount.incrementAndGet();
+					return webClient;
+				});
+			}
+
+			ClientConfiguration clientConfiguration = configurationBuilder.build();
 
 			ClientUnderTest clientUnderTest = clientUnderTestFactory.create(clientConfiguration);
 
@@ -125,10 +147,7 @@ public class RestClientsTest {
 				);
 			}
 
-			// clientConfigurer is only used in non-reactive setup
-			if (!(clientUnderTestFactory instanceof ReactiveElasticsearchClientUnderTestFactory)) {
-				assertThat(clientConfigurerCount).hasValue(1);
-			}
+			assertThat(clientConfigurerCount).hasValue(1);
 		});
 	}
 

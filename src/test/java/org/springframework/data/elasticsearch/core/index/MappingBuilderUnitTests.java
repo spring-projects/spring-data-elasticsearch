@@ -35,7 +35,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -250,9 +249,10 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	public void shouldUseFieldNameOnCompletion() throws JSONException {
 
 		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"completion-property\":{\"type\":\"completion\",\"max_input_length\":100,\"preserve_position_increments\":true,\"preserve_separators\":true,\"search_analyzer\":\"simple\",\"analyzer\":\"simple\"},\"completion-property\":{}"
-				+ "}}";
+		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true}," + //
+				"\"completion-property\":{\"type\":\"completion\",\"max_input_length\":100,\"preserve_position_increments\":true,\"preserve_separators\":true,\"search_analyzer\":\"simple\",\"analyzer\":\"simple\"},\"completion-property\":{}"
+				+ //
+				"}}";
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.CompletionEntity.class);
@@ -1564,8 +1564,8 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Document(indexName = "completion")
 	static class CompletionDocument {
 		@Nullable @Id private String id;
-		@Nullable @CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
-				path = "proppath") }) private Completion suggest;
+		@Nullable @CompletionField(contexts = { @CompletionContext(name = "location",
+				type = CompletionContext.ContextMappingType.GEO, path = "proppath") }) private Completion suggest;
 
 		@Nullable
 		public String getId() {

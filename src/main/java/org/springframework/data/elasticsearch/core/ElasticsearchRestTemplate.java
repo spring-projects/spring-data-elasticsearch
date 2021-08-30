@@ -33,6 +33,7 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -92,7 +93,7 @@ import org.springframework.util.Assert;
  * @author Massimiliano Poggi
  * @author Farid Faoudi
  */
-public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
+public class ElasticsearchRestTemplate extends AbstractElasticsearchRestTransportTemplate {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
 
@@ -223,7 +224,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index) {
 		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(query, clazz, index);
-		return ByQueryResponse.of(execute(client -> client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT)));
+		return ResponseConverter
+				.byQueryResponseOf(execute(client -> client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT)));
 	}
 
 	@Override
@@ -261,7 +263,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		final BulkByScrollResponse bulkByScrollResponse = execute(
 				client -> client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT));
-		return ByQueryResponse.of(bulkByScrollResponse);
+		return ResponseConverter.byQueryResponseOf(bulkByScrollResponse);
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
@@ -272,6 +274,24 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		updateIndexedObjectsWithQueries(queries, indexedObjectInformationList);
 		return indexedObjectInformationList;
 	}
+
+	/**
+	 * Pre process the write request before it is sent to the server, eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param request must not be {@literal null}.
+	 * @param <R>
+	 * @return the processed {@link WriteRequest}.
+	 */
+	protected <R extends WriteRequest<R>> R prepareWriteRequest(R request) {
+
+		if (refreshPolicy == null) {
+			return request;
+		}
+
+		return request.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(refreshPolicy));
+	}
+
 	// endregion
 
 	// region SearchOperations

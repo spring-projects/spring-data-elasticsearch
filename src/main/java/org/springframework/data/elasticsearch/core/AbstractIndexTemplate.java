@@ -17,14 +17,10 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.springframework.util.StringUtils.*;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.elasticsearch.cluster.metadata.AliasMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
@@ -47,8 +43,6 @@ import org.springframework.util.Assert;
  * @since 4.0
  */
 abstract class AbstractIndexTemplate implements IndexOperations {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(AbstractIndexTemplate.class);
 
 	protected final ElasticsearchConverter elasticsearchConverter;
 	protected final RequestFactory requestFactory;
@@ -174,8 +168,6 @@ abstract class AbstractIndexTemplate implements IndexOperations {
 	}
 
 	protected abstract void doRefresh(IndexCoordinates indexCoordinates);
-
-	protected abstract List<AliasMetadata> doQueryForAlias(IndexCoordinates index);
 
 	@Override
 	public Map<String, Set<AliasData>> getAliases(String... aliasNames) {

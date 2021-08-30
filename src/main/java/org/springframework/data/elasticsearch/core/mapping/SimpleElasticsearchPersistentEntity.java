@@ -19,7 +19,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.elasticsearch.index.VersionType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -72,7 +71,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final Lazy<SettingsParameter> settingsParameter;
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
-	private @Nullable VersionType versionType;
+	private @Nullable Document.VersionType versionType;
 	private boolean createIndexAndMapping;
 	private final Dynamic dynamic;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
@@ -156,7 +155,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Nullable
 	@Override
-	public VersionType getVersionType() {
+	public Document.VersionType getVersionType() {
 		return versionType;
 	}
 

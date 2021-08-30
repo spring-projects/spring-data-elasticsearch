@@ -75,14 +75,13 @@ class TransportIndexTemplate extends AbstractIndexTemplate implements IndexOpera
 
 	private final Client client;
 
-	public TransportIndexTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
-								  Class<?> boundClass) {
+	public TransportIndexTemplate(Client client, ElasticsearchConverter elasticsearchConverter, Class<?> boundClass) {
 		super(elasticsearchConverter, boundClass);
 		this.client = client;
 	}
 
 	public TransportIndexTemplate(Client client, ElasticsearchConverter elasticsearchConverter,
-								  IndexCoordinates boundIndex) {
+			IndexCoordinates boundIndex) {
 		super(elasticsearchConverter, boundIndex);
 		this.client = client;
 	}
@@ -142,13 +141,6 @@ class TransportIndexTemplate extends AbstractIndexTemplate implements IndexOpera
 		}
 		// we have at least one, take the first from the iterator
 		return mappings.iterator().next().value.get(IndexCoordinates.TYPE).getSourceAsMap();
-	}
-
-	@Override
-	protected List<AliasMetadata> doQueryForAlias(IndexCoordinates index) {
-
-		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(index);
-		return client.admin().indices().getAliases(getAliasesRequest).actionGet().getAliases().get(index.getIndexName());
 	}
 
 	@Override

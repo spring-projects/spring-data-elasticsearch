@@ -15,18 +15,20 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.time.Duration;
 import java.util.List;
 
-import org.elasticsearch.action.support.ActiveShardCount;
-import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.common.unit.TimeValue;
+import org.springframework.data.elasticsearch.core.ActiveShardCount;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
 
 /**
  * Options that may be passed to an
- * {@link org.springframework.data.elasticsearch.core.DocumentOperations#bulkIndex(List, BulkOptions, IndexCoordinates)} or
- * {@link org.springframework.data.elasticsearch.core.DocumentOperations#bulkUpdate(List, BulkOptions, IndexCoordinates)} call. <br/>
+ * {@link org.springframework.data.elasticsearch.core.DocumentOperations#bulkIndex(List, BulkOptions, IndexCoordinates)}
+ * or
+ * {@link org.springframework.data.elasticsearch.core.DocumentOperations#bulkUpdate(List, BulkOptions, IndexCoordinates)}
+ * call. <br/>
  * Use {@link BulkOptions#builder()} to obtain a builder, then set the desired properties and call
  * {@link BulkOptionsBuilder#build()} to get the BulkOptions object.
  *
@@ -38,13 +40,13 @@ public class BulkOptions {
 
 	private static final BulkOptions defaultOptions = builder().build();
 
-	private final @Nullable TimeValue timeout;
-	private final @Nullable WriteRequest.RefreshPolicy refreshPolicy;
+	private final @Nullable Duration timeout;
+	private final @Nullable RefreshPolicy refreshPolicy;
 	private final @Nullable ActiveShardCount waitForActiveShards;
 	private final @Nullable String pipeline;
 	private final @Nullable String routingId;
 
-	private BulkOptions(@Nullable TimeValue timeout, @Nullable WriteRequest.RefreshPolicy refreshPolicy,
+	private BulkOptions(@Nullable Duration timeout, @Nullable RefreshPolicy refreshPolicy,
 			@Nullable ActiveShardCount waitForActiveShards, @Nullable String pipeline, @Nullable String routingId) {
 		this.timeout = timeout;
 		this.refreshPolicy = refreshPolicy;
@@ -54,12 +56,12 @@ public class BulkOptions {
 	}
 
 	@Nullable
-	public TimeValue getTimeout() {
+	public Duration getTimeout() {
 		return timeout;
 	}
 
 	@Nullable
-	public WriteRequest.RefreshPolicy getRefreshPolicy() {
+	public RefreshPolicy getRefreshPolicy() {
 		return refreshPolicy;
 	}
 
@@ -101,20 +103,20 @@ public class BulkOptions {
 	 */
 	public static class BulkOptionsBuilder {
 
-		private @Nullable TimeValue timeout;
-		private @Nullable WriteRequest.RefreshPolicy refreshPolicy;
+		private @Nullable Duration timeout;
+		private @Nullable RefreshPolicy refreshPolicy;
 		private @Nullable ActiveShardCount waitForActiveShards;
 		private @Nullable String pipeline;
 		private @Nullable String routingId;
 
 		private BulkOptionsBuilder() {}
 
-		public BulkOptionsBuilder withTimeout(TimeValue timeout) {
+		public BulkOptionsBuilder withTimeout(Duration timeout) {
 			this.timeout = timeout;
 			return this;
 		}
 
-		public BulkOptionsBuilder withRefreshPolicy(WriteRequest.RefreshPolicy refreshPolicy) {
+		public BulkOptionsBuilder withRefreshPolicy(RefreshPolicy refreshPolicy) {
 			this.refreshPolicy = refreshPolicy;
 			return this;
 		}

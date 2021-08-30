@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import org.elasticsearch.index.VersionType;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -70,7 +70,7 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	}
 
 	@Override
-	public VersionType getVersionType() {
+	public Document.VersionType getVersionType() {
 		return persistentEntity.getVersionType();
 	}
 

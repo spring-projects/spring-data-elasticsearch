@@ -41,15 +41,15 @@ class HighlightQueryBuilderTests {
 
 	private final SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
 
-	private HighlightQueryBuilder highlightQueryBuilder = new HighlightQueryBuilder(context);
+	private final HighlightQueryBuilder highlightQueryBuilder = new HighlightQueryBuilder(context);
 
 	@Test
 	void shouldProcessAnnotationWithNoParameters() throws NoSuchMethodException, JSONException {
 		Highlight highlight = getAnnotation("annotatedMethod");
 		String expected = ResourceUtil.readFileFromClasspath("/highlights/highlights.json");
 
-		HighlightBuilder highlightBuilder = highlightQueryBuilder.getHighlightQuery(highlight, HighlightEntity.class)
-				.getHighlightBuilder();
+		HighlightBuilder highlightBuilder = highlightQueryBuilder.getHighlightBuilder(
+				org.springframework.data.elasticsearch.core.query.highlight.Highlight.of(highlight), HighlightEntity.class);
 		String actualStr = highlightBuilder.toString();
 		assertEquals(expected, actualStr, false);
 
@@ -60,8 +60,8 @@ class HighlightQueryBuilderTests {
 		Highlight highlight = getAnnotation("annotatedMethodWithManyValue");
 		String expected = ResourceUtil.readFileFromClasspath("/highlights/highlights-with-parameters.json");
 
-		HighlightBuilder highlightBuilder = highlightQueryBuilder.getHighlightQuery(highlight, HighlightEntity.class)
-				.getHighlightBuilder();
+		HighlightBuilder highlightBuilder = highlightQueryBuilder.getHighlightBuilder(
+				org.springframework.data.elasticsearch.core.query.highlight.Highlight.of(highlight), HighlightEntity.class);
 		String actualStr = highlightBuilder.toString();
 
 		assertEquals(expected, actualStr, true);
@@ -77,8 +77,8 @@ class HighlightQueryBuilderTests {
 
 	/**
 	 * The annotation values on this method are just random values. The field has just one common parameters and the field
-	 * specific, the whole bunch pf parameters is tested on the top level. tagsSchema cannot be tested together with
-	 * preTags and postTags, ist it sets it's own values for these.
+	 * specific, the bunch of parameters is tested on the top level. tagsSchema cannot be tested together with preTags and
+	 * postTags, ist it sets its own values for these.
 	 */
 	// region test data
 	@Highlight(fields = { @HighlightField(name = "someField") })

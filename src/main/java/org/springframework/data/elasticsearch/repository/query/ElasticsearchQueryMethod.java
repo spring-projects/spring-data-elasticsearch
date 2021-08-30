@@ -30,7 +30,6 @@ import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
-import org.springframework.data.elasticsearch.core.query.HighlightQueryBuilder;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -119,7 +118,9 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	private HighlightQuery createAnnotatedHighlightQuery() {
-		return new HighlightQueryBuilder(mappingContext).getHighlightQuery(highlightAnnotation, getDomainClass());
+		return new HighlightQuery(
+				org.springframework.data.elasticsearch.core.query.highlight.Highlight.of(highlightAnnotation),
+				getDomainClass());
 	}
 
 	/**
@@ -165,7 +166,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * checks whether the return type of the underlying method is a
 	 * {@link org.springframework.data.elasticsearch.core.SearchHits} or a collection of
 	 * {@link org.springframework.data.elasticsearch.core.SearchHit}.
-	 * 
+	 *
 	 * @return true if the method has a {@link org.springframework.data.elasticsearch.core.SearchHit}t related return type
 	 * @since 4.0
 	 */
@@ -193,7 +194,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	/**
 	 * checks if the return type is {@link SearchPage}.
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	public boolean isSearchPageMethod() {
@@ -202,7 +203,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	/**
 	 * returns the declared return type for this method.
-	 * 
+	 *
 	 * @return the return type
 	 * @since 4.0
 	 */

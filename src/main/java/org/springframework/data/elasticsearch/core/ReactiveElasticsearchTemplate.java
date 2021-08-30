@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.Version;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
@@ -39,6 +40,7 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.index.get.GetResult;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
@@ -75,6 +77,7 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMa
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
@@ -164,7 +167,11 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @since 4.3
 	 */
 	public Mono<Void> logVersions() {
-		return getClusterVersion().doOnNext(VersionInfo::logVersions).then();
+		return getVendor() //
+				.doOnNext(vendor -> getRuntimeLibraryVersion() //
+						.doOnNext(runtimeLibraryVersion -> getClusterVersion() //
+								.doOnNext(clusterVersion -> VersionInfo.logVersions(vendor, runtimeLibraryVersion, clusterVersion)))) //
+				.then(); //
 	}
 
 	@Override
@@ -557,7 +564,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		Assert.notNull(query, "Query must not be null!");
 
-		return doDeleteBy(query, entityType, index).map(ByQueryResponse::of);
+		return doDeleteBy(query, entityType, index).map(ResponseConverter::byQueryResponseOf);
 	}
 
 	@Override
@@ -939,6 +946,35 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Mono.empty();
 	}
 
+	/**
+	 * @return the vendor name of the used cluster and client library
+	 * @since 4.3
+	 */
+	protected Mono<String> getVendor() {
+		return Mono.just("Elasticsearch");
+	}
+
+	/**
+	 * @return the version of the used client runtime library.
+	 * @since 4.3
+	 */
+	protected Mono<String> getRuntimeLibraryVersion() {
+		return Mono.just(Version.CURRENT.toString());
+	}
+
+	@Override
+	public Query matchAllQuery() {
+		return new NativeSearchQueryBuilder().withQuery(QueryBuilders.matchAllQuery()).build();
+	}
+
+	@Override
+	public Query idsQuery(List<String> ids) {
+
+		Assert.notNull(ids, "ids must not be null");
+
+		return new NativeSearchQueryBuilder().withQuery(QueryBuilders.idsQuery().addIds(ids.toArray(new String[] {})))
+				.build();
+	}
 	// endregion
 
 	@Override

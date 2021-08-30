@@ -36,6 +36,7 @@ import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.protocol.HttpContext;
 import org.elasticsearch.client.RestClient;
@@ -119,7 +120,7 @@ public final class RestClients {
 
 			clientConfiguration.getProxy().map(HttpHost::create).ifPresent(clientBuilder::setProxy);
 
-			clientBuilder = clientConfiguration.getHttpClientConfigurer().customizeHttpClient(clientBuilder);
+			clientBuilder = clientConfiguration.<HttpAsyncClientBuilder> getClientConfigurer().configure(clientBuilder);
 
 			return clientBuilder;
 		});
@@ -198,7 +199,7 @@ public final class RestClients {
 				}
 
 				ClientLogger.logRequest(logId, request.getRequestLine().getMethod(), request.getRequestLine().getUri(), "",
-						() -> new String(buffer.toByteArray()));
+						buffer::toString);
 			} else {
 				ClientLogger.logRequest(logId, request.getRequestLine().getMethod(), request.getRequestLine().getUri(), "");
 			}
@@ -213,7 +214,7 @@ public final class RestClients {
 
 	/**
 	 * Interceptor to inject custom supplied headers.
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	private static class CustomHeaderInjector implements HttpRequestInterceptor {
@@ -233,4 +234,13 @@ public final class RestClients {
 			}
 		}
 	}
+
+	/**
+	 * {@link org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationCallback} to configure
+	 * the RestClient with a {@link HttpAsyncClientBuilder}
+	 *
+	 * @since 4.3
+	 */
+	public interface RestClientConfigurationCallback
+			extends ClientConfiguration.ClientConfigurationCallback<HttpAsyncClientBuilder> {}
 }

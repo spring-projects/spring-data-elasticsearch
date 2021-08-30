@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +27,6 @@ import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsResponse;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
-import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
@@ -39,7 +37,6 @@ import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
-import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,19 +134,6 @@ class RestIndexTemplate extends AbstractIndexTemplate implements IndexOperations
 			}
 			// we have at least one, take the first from the iterator
 			return mappings.entrySet().iterator().next().getValue().getSourceAsMap();
-		});
-	}
-
-	@Override
-	protected List<AliasMetadata> doQueryForAlias(IndexCoordinates index) {
-
-		GetAliasesRequest getAliasesRequest = requestFactory.getAliasesRequest(index);
-
-		return restTemplate.execute(client -> {
-			GetAliasesResponse alias = client.indices().getAlias(getAliasesRequest, RequestOptions.DEFAULT);
-			// we only return data for the first index name that was requested (always have done so)
-			String index1 = getAliasesRequest.indices()[0];
-			return new ArrayList<>(alias.getAliases().get(index1));
 		});
 	}
 

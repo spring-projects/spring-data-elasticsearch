@@ -17,14 +17,13 @@ package org.springframework.data.elasticsearch.core.query;
 
 import static org.springframework.util.CollectionUtils.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.script.mustache.SearchTemplateRequestBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
@@ -75,7 +74,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private String preference;
 	@Nullable private Integer maxResults;
 	@Nullable private Boolean trackTotalHits;
-	@Nullable private TimeValue timeout;
+	@Nullable private Duration timeout;
 	private final List<RescorerQuery> rescorerQueries = new ArrayList<>();
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
@@ -302,7 +301,7 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withTimeout(TimeValue timeout) {
+	public NativeSearchQueryBuilder withTimeout(Duration timeout) {
 		this.timeout = timeout;
 		return this;
 	}
@@ -369,7 +368,7 @@ public class NativeSearchQueryBuilder {
 		}
 
 		if (searchType != null) {
-			nativeSearchQuery.setSearchType(searchType);
+			nativeSearchQuery.setSearchType(Query.SearchType.valueOf(searchType.name()));
 		}
 
 		if (indicesOptions != null) {

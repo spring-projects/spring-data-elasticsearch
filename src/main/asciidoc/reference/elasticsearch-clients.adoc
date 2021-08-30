@@ -3,13 +3,14 @@
 
 This chapter illustrates configuration and usage of supported Elasticsearch client implementations.
 
-Spring Data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster. Although the Elasticsearch Client can be used to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
+Spring Data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster.
+Although the Elasticsearch Client can be used to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
 
 [[elasticsearch.clients.transport]]
 == Transport Client
 
-WARNING: The `TransportClient` is deprecated as of Elasticsearch 7 and will be removed in Elasticsearch 8. (https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html[see the Elasticsearch documentation]). Spring Data Elasticsearch will support the `TransportClient` as long as it is available in the used
-Elasticsearch <<elasticsearch.versions,version>> but has deprecated the classes using it since version 4.0.
+WARNING: The `TransportClient` is deprecated as of Elasticsearch 7 and will be removed in Elasticsearch 8. (https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html[see the Elasticsearch documentation]).
+Spring Data Elasticsearch will support the `TransportClient` as long as it is available in the used Elasticsearch <<elasticsearch.versions,version>> but has deprecated the classes using it since version 4.0.
 
 We strongly recommend to use the <<elasticsearch.clients.rest>> instead of the `TransportClient`.
 
@@ -46,6 +47,7 @@ IndexRequest request = new IndexRequest("spring-data")
 
 IndexResponse response = client.index(request);
 ----
+
 <.> The `TransportClient` must be configured with the cluster name.
 <.> The host and port to connect the client to.
 <.> the RefreshPolicy must be set in the `ElasticsearchTemplate` (override `refreshPolicy()` to not use the default)
@@ -54,8 +56,7 @@ IndexResponse response = client.index(request);
 [[elasticsearch.clients.rest]]
 == High Level REST Client
 
-The Java High Level REST Client is the default client of Elasticsearch, it provides a straight forward replacement for the `TransportClient` as it accepts and returns
-the very same request/response objects and therefore depends on the Elasticsearch core project.
+The Java High Level REST Client is the default client of Elasticsearch, it provides a straight forward replacement for the `TransportClient` as it accepts and returns the very same request/response objects and therefore depends on the Elasticsearch core project.
 Asynchronous calls are operated upon a client managed thread pool and require a callback to be notified when the request is done.
 
 .High Level REST Client
@@ -93,6 +94,7 @@ IndexRequest request = new IndexRequest("spring-data")
 
 IndexResponse response = highLevelClient.index(request,RequestOptions.DEFAULT);
 ----
+
 <1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
 <2> Create the RestHighLevelClient.
 <3> It is also possible to obtain the `lowLevelRest()` client.
@@ -131,6 +133,7 @@ Mono<IndexResponse> response = client.index(request ->
     .source(singletonMap("feature", "reactive-client"));
 );
 ----
+
 <.> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
 ====
 
@@ -162,25 +165,30 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
     headers.add("currentTime", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
     return headers;
   })
-  .withWebClientConfigurer(webClient -> {                               <.>
-    //...
-    return webClient;
-  })
-  .withHttpClientConfigurer(clientBuilder -> {                          <.>
-      //...
+  .withClientConfigurer(                                                <.>
+    (ReactiveRestClients.WebClientConfigurationCallback) webClient -> {
+  	  // ...
+      return webClient;
+  	})
+  .withClientConfigurer(                                                <.>
+    (RestClients.RestClientConfigurationCallback) clientBuilder -> {
+  	  // ...
       return clientBuilder;
-  })
+  	})
   . // ... other options
   .build();
 
 ----
+
 <.> Define default headers, if they need to be customized
 <.> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
 <.> Optionally enable SSL.
 <.> Optionally set a proxy.
 <.> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
-<.> Set the connection timeout. Default is 10 sec.
-<.> Set the socket timeout. Default is 5 sec.
+<.> Set the connection timeout.
+Default is 10 sec.
+<.> Set the socket timeout.
+Default is 5 sec.
 <.> Optionally set headers.
 <.> Add basic authentication.
 <.> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
@@ -188,13 +196,13 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
 <.> for non-reactive setup a function configuring the REST client
 ====
 
-IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens. If this is used in the reactive setup, the supplier function *must not* block!
+IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens.
+If this is used in the reactive setup, the supplier function *must not* block!
 
 [[elasticsearch.clients.logging]]
 == Client Logging
 
-To see what is actually sent to and received from the server `Request` / `Response` logging on the transport level needs
-to be turned on as outlined in the snippet below.
+To see what is actually sent to and received from the server `Request` / `Response` logging on the transport level needs to be turned on as outlined in the snippet below.
 
 .Enable transport layer logging
 [source,xml]

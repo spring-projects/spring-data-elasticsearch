@@ -27,6 +27,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -120,16 +121,16 @@ public interface ClientConfiguration {
 	boolean useSsl();
 
 	/**
-	 * Returns the {@link SSLContext} to use. Can be {@link Optional#empty()} if unconfigured.
+	 * Returns the {@link SSLContext} to use. Can be {@link Optional#empty()} if not configured.
 	 *
-	 * @return the {@link SSLContext} to use. Can be {@link Optional#empty()} if unconfigured.
+	 * @return the {@link SSLContext} to use. Can be {@link Optional#empty()} if not configured.
 	 */
 	Optional<SSLContext> getSslContext();
 
 	/**
-	 * Returns the {@link HostnameVerifier} to use. Can be {@link Optional#empty()} if unconfigured.
+	 * Returns the {@link HostnameVerifier} to use. Can be {@link Optional#empty()} if not configured.
 	 *
-	 * @return the {@link HostnameVerifier} to use. Can be {@link Optional#empty()} if unconfigured.
+	 * @return the {@link HostnameVerifier} to use. Can be {@link Optional#empty()} if not configured.
 	 */
 	Optional<HostnameVerifier> getHostNameVerifier();
 
@@ -152,7 +153,7 @@ public interface ClientConfiguration {
 
 	/**
 	 * Returns the path prefix that should be prepended to HTTP(s) requests for Elasticsearch behind a proxy.
-	 * 
+	 *
 	 * @return the path prefix.
 	 * @since 4.0
 	 */
@@ -161,7 +162,7 @@ public interface ClientConfiguration {
 
 	/**
 	 * returns an optionally set proxy in the form host:port
-	 * 
+	 *
 	 * @return the optional proxy
 	 * @since 4.0
 	 */
@@ -173,10 +174,18 @@ public interface ClientConfiguration {
 	Function<WebClient, WebClient> getWebClientConfigurer();
 
 	/**
-	 * @return the client configuration callback.
+	 * @return the Rest Client configuration callback.
 	 * @since 4.2
+	 * @deprecated since 4.3 use {@link #getClientConfigurer()}
 	 */
+	@Deprecated
 	HttpClientConfigCallback getHttpClientConfigurer();
+
+	/**
+	 * @return the client configuration callback
+	 * @since 4.3
+	 */
+	<T> ClientConfigurationCallback<T> getClientConfigurer();
 
 	/**
 	 * @return the supplier for custom headers.
@@ -274,7 +283,7 @@ public interface ClientConfiguration {
 		TerminalClientConfigurationBuilder withDefaultHeaders(HttpHeaders defaultHeaders);
 
 		/**
-		 * Configure the {@literal milliseconds} for the connect timeout.
+		 * Configure the {@literal milliseconds} for the connect-timeout.
 		 *
 		 * @param millis the timeout to use.
 		 * @return the {@link TerminalClientConfigurationBuilder}
@@ -327,7 +336,7 @@ public interface ClientConfiguration {
 
 		/**
 		 * Configure the path prefix that will be prepended to any HTTP(s) requests
-		 * 
+		 *
 		 * @param pathPrefix the pathPrefix.
 		 * @return the {@link TerminalClientConfigurationBuilder}
 		 * @since 4.0
@@ -342,20 +351,35 @@ public interface ClientConfiguration {
 
 		/**
 		 * set customization hook in case of a reactive configuration
-		 * 
+		 *
 		 * @param webClientConfigurer function to configure the WebClient
 		 * @return the {@link TerminalClientConfigurationBuilder}.
+		 * @deprecated since 4.3, use {@link #withClientConfigurer(ClientConfigurationCallback)} with
+		 *             {@link ReactiveRestClients.WebClientConfigurationCallback}
 		 */
+		@Deprecated
 		TerminalClientConfigurationBuilder withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer);
 
 		/**
 		 * Register a {HttpClientConfigCallback} to configure the non-reactive REST client.
-		 * 
+		 *
 		 * @param httpClientConfigurer configuration callback, must not be null.
 		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 * @since 4.2
+		 * @deprecated since 4.3, use {@link #withClientConfigurer(ClientConfigurationCallback)} with
+		 *             {@link RestClients.RestClientConfigurationCallback}
 		 */
+		@Deprecated
 		TerminalClientConfigurationBuilder withHttpClientConfigurer(HttpClientConfigCallback httpClientConfigurer);
+
+		/**
+		 * Register a {@link ClientConfigurationCallback} to configure the client.
+		 *
+		 * @param clientConfigurer configuration callback, must not be {@literal null}.
+		 * @return the {@link TerminalClientConfigurationBuilder}.
+		 * @since 4.3
+		 */
+		TerminalClientConfigurationBuilder withClientConfigurer(ClientConfigurationCallback<?> clientConfigurer);
 
 		/**
 		 * set a supplier for custom headers. This is invoked for every HTTP request to Elasticsearch to retrieve headers
@@ -376,5 +400,16 @@ public interface ClientConfiguration {
 		 * @return the {@link ClientConfiguration} object.
 		 */
 		ClientConfiguration build();
+	}
+
+	/**
+	 * Callback to be executed to configure a client.
+	 *
+	 * @param <T> the type of the client configuration class.
+	 * @since 4.3
+	 */
+	@FunctionalInterface
+	interface ClientConfigurationCallback<T> {
+		T configure(T clientConfigurer);
 	}
 }

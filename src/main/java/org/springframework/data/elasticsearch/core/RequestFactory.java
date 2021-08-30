@@ -18,13 +18,17 @@ package org.springframework.data.elasticsearch.core;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.Alias;
@@ -50,6 +54,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
@@ -223,15 +228,15 @@ class RequestFactory {
 		BulkRequest bulkRequest = new BulkRequest();
 
 		if (bulkOptions.getTimeout() != null) {
-			bulkRequest.timeout(bulkOptions.getTimeout());
+			bulkRequest.timeout(TimeValue.timeValueMillis(bulkOptions.getTimeout().toMillis()));
 		}
 
 		if (bulkOptions.getRefreshPolicy() != null) {
-			bulkRequest.setRefreshPolicy(bulkOptions.getRefreshPolicy());
+			bulkRequest.setRefreshPolicy(toElasticsearchRefreshPolicy(bulkOptions.getRefreshPolicy()));
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
-			bulkRequest.waitForActiveShards(bulkOptions.getWaitForActiveShards());
+			bulkRequest.waitForActiveShards(ActiveShardCount.from(bulkOptions.getWaitForActiveShards().getValue()));
 		}
 
 		if (bulkOptions.getPipeline() != null) {
@@ -258,15 +263,15 @@ class RequestFactory {
 		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
 
 		if (bulkOptions.getTimeout() != null) {
-			bulkRequestBuilder.setTimeout(bulkOptions.getTimeout());
+			bulkRequestBuilder.setTimeout(TimeValue.timeValueMillis(bulkOptions.getTimeout().toMillis()));
 		}
 
 		if (bulkOptions.getRefreshPolicy() != null) {
-			bulkRequestBuilder.setRefreshPolicy(bulkOptions.getRefreshPolicy());
+			bulkRequestBuilder.setRefreshPolicy(toElasticsearchRefreshPolicy(bulkOptions.getRefreshPolicy()));
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
-			bulkRequestBuilder.setWaitForActiveShards(bulkOptions.getWaitForActiveShards());
+			bulkRequestBuilder.setWaitForActiveShards(ActiveShardCount.from(bulkOptions.getWaitForActiveShards().getValue()));
 		}
 
 		if (bulkOptions.getPipeline() != null) {
@@ -802,7 +807,10 @@ class RequestFactory {
 	// region search
 	@Nullable
 	public HighlightBuilder highlightBuilder(Query query) {
-		HighlightBuilder highlightBuilder = query.getHighlightQuery().map(HighlightQuery::getHighlightBuilder).orElse(null);
+		HighlightBuilder highlightBuilder = query.getHighlightQuery()
+				.map(highlightQuery -> new HighlightQueryBuilder(elasticsearchConverter.getMappingContext())
+						.getHighlightBuilder(highlightQuery.getHighlight(), highlightQuery.getType()))
+				.orElse(null);
 
 		if (highlightBuilder == null) {
 
@@ -954,7 +962,7 @@ class RequestFactory {
 		}
 
 		if (query.getIndicesOptions() != null) {
-			request.indicesOptions(query.getIndicesOptions());
+			request.indicesOptions(toElasticsearchIndicesOptions(query.getIndicesOptions()));
 		}
 
 		if (query.isLimiting()) {
@@ -970,7 +978,7 @@ class RequestFactory {
 			request.preference(query.getPreference());
 		}
 
-		request.searchType(query.getSearchType());
+		request.searchType(SearchType.fromString(query.getSearchType().name().toLowerCase()));
 
 		prepareSort(query, sourceBuilder, getPersistentEntity(clazz));
 
@@ -994,9 +1002,9 @@ class RequestFactory {
 			request.routing(query.getRoute());
 		}
 
-		TimeValue timeout = query.getTimeout();
+		Duration timeout = query.getTimeout();
 		if (timeout != null) {
-			sourceBuilder.timeout(timeout);
+			sourceBuilder.timeout(new TimeValue(timeout.toMillis()));
 		}
 
 		sourceBuilder.explain(query.getExplain());
@@ -1023,7 +1031,7 @@ class RequestFactory {
 		Assert.notEmpty(indexNames, "No index defined for Query");
 
 		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(indexNames) //
-				.setSearchType(query.getSearchType()) //
+				.setSearchType(SearchType.fromString(query.getSearchType().name().toLowerCase())) //
 				.setVersion(true) //
 				.setTrackScores(query.getTrackScores());
 		if (hasSeqNoPrimaryTermProperty(clazz)) {
@@ -1048,7 +1056,7 @@ class RequestFactory {
 		}
 
 		if (query.getIndicesOptions() != null) {
-			searchRequestBuilder.setIndicesOptions(query.getIndicesOptions());
+			searchRequestBuilder.setIndicesOptions(toElasticsearchIndicesOptions(query.getIndicesOptions()));
 		}
 
 		if (query.isLimiting()) {
@@ -1086,9 +1094,9 @@ class RequestFactory {
 			searchRequestBuilder.setRouting(query.getRoute());
 		}
 
-		TimeValue timeout = query.getTimeout();
+		Duration timeout = query.getTimeout();
 		if (timeout != null) {
-			searchRequestBuilder.setTimeout(timeout);
+			searchRequestBuilder.setTimeout(new TimeValue(timeout.toMillis()));
 		}
 
 		searchRequestBuilder.setExplain(query.getExplain());
@@ -1429,7 +1437,7 @@ class RequestFactory {
 			updateByQueryRequest.setQuery(getQuery(queryQuery));
 
 			if (queryQuery.getIndicesOptions() != null) {
-				updateByQueryRequest.setIndicesOptions(queryQuery.getIndicesOptions());
+				updateByQueryRequest.setIndicesOptions(toElasticsearchIndicesOptions(queryQuery.getIndicesOptions()));
 			}
 
 			if (queryQuery.getScrollTime() != null) {
@@ -1504,7 +1512,8 @@ class RequestFactory {
 			updateByQueryRequestBuilder.filter(getQuery(queryQuery));
 
 			if (queryQuery.getIndicesOptions() != null) {
-				updateByQueryRequestBuilder.source().setIndicesOptions(queryQuery.getIndicesOptions());
+				updateByQueryRequestBuilder.source()
+						.setIndicesOptions(toElasticsearchIndicesOptions(queryQuery.getIndicesOptions()));
 			}
 
 			if (queryQuery.getScrollTime() != null) {
@@ -1618,6 +1627,21 @@ class RequestFactory {
 		return null;
 	}
 
+	public org.elasticsearch.action.support.IndicesOptions toElasticsearchIndicesOptions(IndicesOptions indicesOptions) {
+
+		Assert.notNull(indicesOptions, "indicesOptions must not be null");
+
+		Set<org.elasticsearch.action.support.IndicesOptions.Option> options = indicesOptions.getOptions().stream()
+				.map(it -> org.elasticsearch.action.support.IndicesOptions.Option.valueOf(it.name().toUpperCase()))
+				.collect(Collectors.toSet());
+
+		Set<org.elasticsearch.action.support.IndicesOptions.WildcardStates> wildcardStates = indicesOptions
+				.getExpandWildcards().stream()
+				.map(it -> org.elasticsearch.action.support.IndicesOptions.WildcardStates.valueOf(it.name().toUpperCase()))
+				.collect(Collectors.toSet());
+
+		return new org.elasticsearch.action.support.IndicesOptions(EnumSet.copyOf(options), EnumSet.copyOf(wildcardStates));
+	}
 	// endregion
 
 	@Nullable
@@ -1656,7 +1680,12 @@ class RequestFactory {
 		VersionType versionType = null;
 
 		if (persistentEntity != null) {
-			versionType = persistentEntity.getVersionType();
+			org.springframework.data.elasticsearch.annotations.Document.VersionType entityVersionType = persistentEntity
+					.getVersionType();
+
+			if (entityVersionType != null) {
+				versionType = VersionType.fromString(entityVersionType.name().toLowerCase());
+			}
 		}
 
 		return versionType != null ? versionType : VersionType.EXTERNAL;

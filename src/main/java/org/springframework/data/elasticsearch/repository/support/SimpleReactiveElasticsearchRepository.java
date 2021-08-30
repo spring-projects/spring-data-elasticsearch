@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.repository.support;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -205,9 +204,9 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 		return Flux.fromIterable(ids) //
 				.map(this::convertId) //
 				.collectList() //
-				.map(it -> new NativeSearchQueryBuilder().withQuery(new IdsQueryBuilder().addIds(it.toArray(new String[0])))
-						.build())
-				.flatMap(it -> operations.delete(it, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
+				.map(idList -> operations.idsQuery(idList)) //
+				.flatMap(
+						query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());
 	}
 
@@ -226,8 +225,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				.map(entityInformation::getRequiredId) //
 				.map(this::convertId) //
 				.collectList() //
-				.map(it -> new NativeSearchQueryBuilder().withQuery(new IdsQueryBuilder().addIds(it.toArray(new String[0])))
-						.build())
+				.map(idList -> operations.idsQuery(idList))
 				.flatMap(
 						query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());

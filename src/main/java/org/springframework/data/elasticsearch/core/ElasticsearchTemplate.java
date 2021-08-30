@@ -36,6 +36,8 @@ import org.elasticsearch.action.search.MultiSearchRequest;
 import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.action.support.WriteRequest;
+import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.unit.TimeValue;
@@ -90,7 +92,7 @@ import org.springframework.util.Assert;
  * @deprecated as of 4.0
  */
 @Deprecated
-public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
+public class ElasticsearchTemplate extends AbstractElasticsearchRestTransportTemplate {
 	private static final Logger QUERY_LOGGER = LoggerFactory
 			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
 	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchTemplate.class);
@@ -246,7 +248,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index) {
-		return ByQueryResponse.of(requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get());
+		return ResponseConverter
+				.byQueryResponseOf(requestFactory.deleteByQueryRequestBuilder(client, query, clazz, index).get());
 	}
 
 	@Override
@@ -288,7 +291,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		// UpdateByQueryRequestBuilder has not parameters to set a routing value
 
 		final BulkByScrollResponse bulkByScrollResponse = updateByQueryRequestBuilder.execute().actionGet();
-		return ByQueryResponse.of(bulkByScrollResponse);
+		return ResponseConverter.byQueryResponseOf(bulkByScrollResponse);
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
@@ -309,6 +312,24 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		return allIndexedObjectInformations;
 	}
+
+	/**
+	 * Pre process the write request before it is sent to the server, eg. by setting the
+	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
+	 *
+	 * @param requestBuilder must not be {@literal null}.
+	 * @param <R>
+	 * @return the processed {@link WriteRequest}.
+	 */
+	protected <R extends WriteRequestBuilder<R>> R prepareWriteRequestBuilder(R requestBuilder) {
+
+		if (refreshPolicy == null) {
+			return requestBuilder;
+		}
+
+		return requestBuilder.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(refreshPolicy));
+	}
+
 	// endregion
 
 	// region SearchOperations
