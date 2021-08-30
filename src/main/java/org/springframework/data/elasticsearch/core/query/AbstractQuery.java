@@ -23,9 +23,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.common.unit.TimeValue;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
@@ -52,7 +49,7 @@ abstract class AbstractQuery implements Query {
 	protected float minScore;
 	@Nullable protected Collection<String> ids;
 	@Nullable protected String route;
-	protected SearchType searchType = SearchType.DFS_QUERY_THEN_FETCH;
+	protected SearchType searchType = SearchType.QUERY_THEN_FETCH;
 	@Nullable protected IndicesOptions indicesOptions;
 	protected boolean trackScores;
 	@Nullable protected String preference;
@@ -61,7 +58,7 @@ abstract class AbstractQuery implements Query {
 	@Nullable private Boolean trackTotalHits;
 	@Nullable private Integer trackTotalHitsUpTo;
 	@Nullable private Duration scrollTime;
-	@Nullable private TimeValue timeout;
+	@Nullable private Duration timeout;
 	private boolean explain = false;
 	@Nullable private List<Object> searchAfter;
 	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
@@ -271,7 +268,7 @@ abstract class AbstractQuery implements Query {
 
 	@Nullable
 	@Override
-	public TimeValue getTimeout() {
+	public Duration getTimeout() {
 		return timeout;
 	}
 
@@ -281,7 +278,7 @@ abstract class AbstractQuery implements Query {
 	 * @param timeout
 	 * @since 4.2
 	 */
-	public void setTimeout(@Nullable TimeValue timeout) {
+	public void setTimeout(@Nullable Duration timeout) {
 		this.timeout = timeout;
 	}
 

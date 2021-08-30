@@ -18,11 +18,11 @@ package org.springframework.data.elasticsearch.core.index;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.elasticsearch.common.Nullable;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -32,8 +32,12 @@ import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.NullValueType;
 import org.springframework.data.elasticsearch.annotations.Similarity;
 import org.springframework.data.elasticsearch.annotations.TermVector;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 
 /**
  * A class to hold the mapping parameters that might be set on
@@ -58,6 +62,7 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_FORMAT = "format";
 	static final String FIELD_PARAM_IGNORE_ABOVE = "ignore_above";
 	static final String FIELD_PARAM_IGNORE_MALFORMED = "ignore_malformed";
+	static final String FIELD_PARAM_IGNORE_Z_VALUE = "ignore_z_value";
 	static final String FIELD_PARAM_INDEX = "index";
 	static final String FIELD_PARAM_INDEX_OPTIONS = "index_options";
 	static final String FIELD_PARAM_INDEX_PHRASES = "index_phrases";
@@ -70,8 +75,9 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_NORMS = "norms";
 	static final String FIELD_PARAM_NULL_VALUE = "null_value";
 	static final String FIELD_PARAM_POSITION_INCREMENT_GAP = "position_increment_gap";
+	static final String FIELD_PARAM_ORIENTATION = "orientation";
 	static final String FIELD_PARAM_POSITIVE_SCORE_IMPACT = "positive_score_impact";
-  	static final String FIELD_PARAM_DIMS = "dims";
+	static final String FIELD_PARAM_DIMS = "dims";
 	static final String FIELD_PARAM_SCALING_FACTOR = "scaling_factor";
 	static final String FIELD_PARAM_SEARCH_ANALYZER = "search_analyzer";
 	static final String FIELD_PARAM_STORE = "store";
@@ -101,7 +107,7 @@ public final class MappingParameters {
 	private final NullValueType nullValueType;
 	private final Integer positionIncrementGap;
 	private final boolean positiveScoreImpact;
-  	private final Integer dims;
+	private final Integer dims;
 	private final String searchAnalyzer;
 	private final double scalingFactor;
 	private final Similarity similarity;
@@ -163,7 +169,8 @@ public final class MappingParameters {
 		positiveScoreImpact = field.positiveScoreImpact();
 		dims = field.dims();
 		if (type == FieldType.Dense_Vector) {
-			Assert.isTrue(dims >= 1 && dims <= 2048, "Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
+			Assert.isTrue(dims >= 1 && dims <= 2048,
+					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
 		}
 		Assert.isTrue(field.enabled() || type == FieldType.Object, "enabled false is only allowed for field type object");
 		enabled = field.enabled();
@@ -205,7 +212,8 @@ public final class MappingParameters {
 		positiveScoreImpact = field.positiveScoreImpact();
 		dims = field.dims();
 		if (type == FieldType.Dense_Vector) {
-			Assert.isTrue(dims >= 1 && dims <= 2048, "Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
+			Assert.isTrue(dims >= 1 && dims <= 2048,
+					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
 		}
 		enabled = true;
 		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
@@ -216,20 +224,20 @@ public final class MappingParameters {
 	}
 
 	/**
-	 * writes the different fields to the builder.
+	 * writes the different fields to an {@link ObjectNode}.
 	 *
-	 * @param builder must not be {@literal null}.
+	 * @param objectNode must not be {@literal null}
 	 */
-	public void writeTypeAndParametersTo(XContentBuilder builder) throws IOException {
+	public void writeTypeAndParametersTo(ObjectNode objectNode) throws IOException {
 
-		Assert.notNull(builder, "builder must ot be null");
+		Assert.notNull(objectNode, "objectNode must not be null");
 
 		if (fielddata) {
-			builder.field(FIELD_PARAM_DATA, fielddata);
+			objectNode.put(FIELD_PARAM_DATA, fielddata);
 		}
 
 		if (type != FieldType.Auto) {
-			builder.field(FIELD_PARAM_TYPE, type.name().toLowerCase());
+			objectNode.put(FIELD_PARAM_TYPE, type.toString().toLowerCase());
 
 			if (type == FieldType.Date) {
 				List<String> formats = new ArrayList<>();
@@ -246,125 +254,123 @@ public final class MappingParameters {
 				Collections.addAll(formats, dateFormatPatterns);
 
 				if (!formats.isEmpty()) {
-					builder.field(FIELD_PARAM_FORMAT, String.join("||", formats));
+					objectNode.put(FIELD_PARAM_FORMAT, String.join("||", formats));
 				}
 			}
 		}
 
 		if (!index) {
-			builder.field(FIELD_PARAM_INDEX, index);
+			objectNode.put(FIELD_PARAM_INDEX, index);
 		}
 
-		if (!StringUtils.isEmpty(analyzer)) {
-			builder.field(FIELD_PARAM_INDEX_ANALYZER, analyzer);
+		if (StringUtils.hasLength(analyzer)) {
+			objectNode.put(FIELD_PARAM_INDEX_ANALYZER, analyzer);
 		}
 
-		if (!StringUtils.isEmpty(searchAnalyzer)) {
-			builder.field(FIELD_PARAM_SEARCH_ANALYZER, searchAnalyzer);
+		if (StringUtils.hasLength(searchAnalyzer)) {
+			objectNode.put(FIELD_PARAM_SEARCH_ANALYZER, searchAnalyzer);
 		}
 
-		if (!StringUtils.isEmpty(normalizer)) {
-			builder.field(FIELD_PARAM_NORMALIZER, normalizer);
+		if (StringUtils.hasLength(normalizer)) {
+			objectNode.put(FIELD_PARAM_NORMALIZER, normalizer);
 		}
 
 		if (copyTo != null && copyTo.length > 0) {
-			builder.field(FIELD_PARAM_COPY_TO, copyTo);
+			objectNode.putArray(FIELD_PARAM_COPY_TO)
+					.addAll(Arrays.stream(copyTo).map(TextNode::valueOf).collect(Collectors.toList()));
 		}
 
 		if (ignoreAbove != null) {
 			Assert.isTrue(ignoreAbove >= 0, "ignore_above must be a positive value");
-			builder.field(FIELD_PARAM_IGNORE_ABOVE, ignoreAbove);
+			objectNode.put(FIELD_PARAM_IGNORE_ABOVE, ignoreAbove);
 		}
 
 		if (!coerce) {
-			builder.field(FIELD_PARAM_COERCE, coerce);
+			objectNode.put(FIELD_PARAM_COERCE, coerce);
 		}
 
 		if (!docValues) {
-			builder.field(FIELD_PARAM_DOC_VALUES, docValues);
+			objectNode.put(FIELD_PARAM_DOC_VALUES, docValues);
 		}
 
 		if (ignoreMalformed) {
-			builder.field(FIELD_PARAM_IGNORE_MALFORMED, ignoreMalformed);
+			objectNode.put(FIELD_PARAM_IGNORE_MALFORMED, ignoreMalformed);
 		}
 
 		if (indexOptions != IndexOptions.none) {
-			builder.field(FIELD_PARAM_INDEX_OPTIONS, indexOptions);
+			objectNode.put(FIELD_PARAM_INDEX_OPTIONS, indexOptions.toString());
 		}
 
 		if (indexPhrases) {
-			builder.field(FIELD_PARAM_INDEX_PHRASES, indexPhrases);
+			objectNode.put(FIELD_PARAM_INDEX_PHRASES, indexPhrases);
 		}
 
 		if (indexPrefixes != null) {
-			builder.startObject(FIELD_PARAM_INDEX_PREFIXES);
+			ObjectNode prefixNode = objectNode.putObject(FIELD_PARAM_INDEX_PREFIXES);
 			if (indexPrefixes.minChars() != IndexPrefixes.MIN_DEFAULT) {
-				builder.field(FIELD_PARAM_INDEX_PREFIXES_MIN_CHARS, indexPrefixes.minChars());
+				prefixNode.put(FIELD_PARAM_INDEX_PREFIXES_MIN_CHARS, indexPrefixes.minChars());
 			}
 			if (indexPrefixes.maxChars() != IndexPrefixes.MAX_DEFAULT) {
-				builder.field(FIELD_PARAM_INDEX_PREFIXES_MAX_CHARS, indexPrefixes.maxChars());
+				prefixNode.put(FIELD_PARAM_INDEX_PREFIXES_MAX_CHARS, indexPrefixes.maxChars());
 			}
-			builder.endObject();
 		}
 
 		if (!norms) {
-			builder.field(FIELD_PARAM_NORMS, norms);
+			objectNode.put(FIELD_PARAM_NORMS, norms);
 		}
 
-		if (!StringUtils.isEmpty(nullValue)) {
-			Object value;
+		if (StringUtils.hasLength(nullValue)) {
 			switch (nullValueType) {
 				case Integer:
-					value = Integer.valueOf(nullValue);
+					objectNode.put(FIELD_PARAM_NULL_VALUE, Integer.valueOf(nullValue));
 					break;
 				case Long:
-					value = Long.valueOf(nullValue);
+					objectNode.put(FIELD_PARAM_NULL_VALUE, Long.valueOf(nullValue));
 					break;
 				case Double:
-					value = Double.valueOf(nullValue);
+					objectNode.put(FIELD_PARAM_NULL_VALUE, Double.valueOf(nullValue));
 					break;
 				case String:
 				default:
-					value = nullValue;
+					objectNode.put(FIELD_PARAM_NULL_VALUE, nullValue);
 					break;
 			}
-			builder.field(FIELD_PARAM_NULL_VALUE, value);
 		}
 
 		if (positionIncrementGap != null && positionIncrementGap >= 0) {
-			builder.field(FIELD_PARAM_POSITION_INCREMENT_GAP, positionIncrementGap);
+			objectNode.put(FIELD_PARAM_POSITION_INCREMENT_GAP, positionIncrementGap);
 		}
 
 		if (similarity != Similarity.Default) {
-			builder.field(FIELD_PARAM_SIMILARITY, similarity);
+			objectNode.put(FIELD_PARAM_SIMILARITY, similarity.toString());
 		}
 
 		if (termVector != TermVector.none) {
-			builder.field(FIELD_PARAM_TERM_VECTOR, termVector);
+			objectNode.put(FIELD_PARAM_TERM_VECTOR, termVector.toString());
 		}
 
 		if (type == FieldType.Scaled_Float) {
-			builder.field(FIELD_PARAM_SCALING_FACTOR, scalingFactor);
+			objectNode.put(FIELD_PARAM_SCALING_FACTOR, scalingFactor);
 		}
 
 		if (maxShingleSize != null) {
-			builder.field(FIELD_PARAM_MAX_SHINGLE_SIZE, maxShingleSize);
+			objectNode.put(FIELD_PARAM_MAX_SHINGLE_SIZE, maxShingleSize);
 		}
 
 		if (!positiveScoreImpact) {
-			builder.field(FIELD_PARAM_POSITIVE_SCORE_IMPACT, positiveScoreImpact);
+			objectNode.put(FIELD_PARAM_POSITIVE_SCORE_IMPACT, positiveScoreImpact);
 		}
 
 		if (type == FieldType.Dense_Vector) {
-			builder.field(FIELD_PARAM_DIMS, dims);
+			objectNode.put(FIELD_PARAM_DIMS, dims);
 		}
 
 		if (!enabled) {
-			builder.field(FIELD_PARAM_ENABLED, enabled);
+			objectNode.put(FIELD_PARAM_ENABLED, enabled);
 		}
 
 		if (eagerGlobalOrdinals) {
-			builder.field(FIELD_PARAM_EAGER_GLOBAL_ORDINALS, eagerGlobalOrdinals);
+			objectNode.put(FIELD_PARAM_EAGER_GLOBAL_ORDINALS, eagerGlobalOrdinals);
 		}
 	}
 }

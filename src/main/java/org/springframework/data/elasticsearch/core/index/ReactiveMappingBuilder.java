@@ -28,7 +28,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.lang.Nullable;
 
 /**
- * Subclass of {@link MappingBuilder} with specialized methods TO inhibit blocking CALLS
+ * Subclass of {@link MappingBuilder} with specialized methods To inhibit blocking calls
  *
  * @author Peter-Josef Meisch
  * @since 4.3

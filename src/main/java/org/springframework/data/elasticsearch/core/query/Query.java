@@ -21,10 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.action.support.IndicesOptions;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -54,10 +50,9 @@ public interface Query {
 	 *
 	 * @return new instance of {@link Query}.
 	 * @since 3.2
-	 * @see QueryBuilders#matchAllQuery()
 	 */
 	static Query findAll() {
-		return new StringQuery(QueryBuilders.matchAllQuery().toString());
+		return new StringQuery("{\"match_all\":{}}");
 	}
 
 	/**
@@ -295,7 +290,7 @@ public interface Query {
 	 * @since 4.2
 	 */
 	@Nullable
-	TimeValue getTimeout();
+	Duration getTimeout();
 
 	/**
 	 * @return {@literal true} when the query has the explain parameter set, defaults to {@literal false}
@@ -360,4 +355,11 @@ public interface Query {
 	 */
 	@Nullable
 	Boolean getRequestCache();
+
+	/**
+	 * @since 4.3
+	 */
+	enum SearchType {
+		QUERY_THEN_FETCH, DFS_QUERY_THEN_FETCH
+	}
 }

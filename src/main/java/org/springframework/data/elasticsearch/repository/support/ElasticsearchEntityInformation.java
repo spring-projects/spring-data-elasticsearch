@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import org.elasticsearch.index.VersionType;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.repository.core.EntityInformation;
 import org.springframework.lang.Nullable;
@@ -40,5 +40,5 @@ public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation
 	Long getVersion(T entity);
 
 	@Nullable
-	VersionType getVersionType();
+	Document.VersionType getVersionType();
 }

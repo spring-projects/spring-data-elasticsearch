@@ -21,7 +21,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import org.elasticsearch.index.VersionType;
 import org.springframework.data.annotation.Persistent;
 
 /**
@@ -116,9 +115,15 @@ public @interface Document {
 
 	/**
 	 * Controls how Elasticsearch dynamically adds fields to the document.
-	 * 
+	 *
 	 * @since 4.3
 	 */
 	Dynamic dynamic() default Dynamic.INHERIT;
 
+	/**
+	 * @since 4.3
+	 */
+	enum VersionType {
+		INTERNAL, EXTERNAL, EXTERNAL_GTE
+	}
 }

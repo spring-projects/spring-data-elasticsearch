@@ -17,10 +17,11 @@ package org.springframework.data.elasticsearch.core.index;
 
 import java.io.IOException;
 
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @author Peter-Josef Meisch
@@ -41,7 +42,7 @@ final class GeoShapeMappingParameters {
 
 	/**
 	 * Creates a GeoShapeMappingParameters from the given annotation.
-	 * 
+	 *
 	 * @param annotation if null, default values are set in the returned object
 	 * @return a parameters object
 	 */
@@ -63,27 +64,42 @@ final class GeoShapeMappingParameters {
 		this.orientation = orientation;
 	}
 
-	public void writeTypeAndParametersTo(XContentBuilder builder) throws IOException {
+	public boolean isCoerce() {
+		return coerce;
+	}
 
-		Assert.notNull(builder, "builder must ot be null");
+	public boolean isIgnoreMalformed() {
+		return ignoreMalformed;
+	}
+
+	public boolean isIgnoreZValue() {
+		return ignoreZValue;
+	}
+
+	public GeoShapeField.Orientation getOrientation() {
+		return orientation;
+	}
+
+	public void writeTypeAndParametersTo(ObjectNode objectNode) throws IOException {
+
+		Assert.notNull(objectNode, "objectNode must not be null");
 
 		if (coerce) {
-			builder.field(FIELD_PARAM_COERCE, coerce);
+			objectNode.put(FIELD_PARAM_COERCE, coerce);
 		}
 
 		if (ignoreMalformed) {
-			builder.field(FIELD_PARAM_IGNORE_MALFORMED, ignoreMalformed);
+			objectNode.put(FIELD_PARAM_IGNORE_MALFORMED, ignoreMalformed);
 		}
 
 		if (!ignoreZValue) {
-			builder.field(FIELD_PARAM_IGNORE_Z_VALUE, ignoreZValue);
+			objectNode.put(FIELD_PARAM_IGNORE_Z_VALUE, ignoreZValue);
 		}
 
 		if (orientation != GeoShapeField.Orientation.ccw) {
-			builder.field(FIELD_PARAM_ORIENTATION, orientation.name());
+			objectNode.put(FIELD_PARAM_ORIENTATION, orientation.name());
 		}
 
-		builder.field(FIELD_PARAM_TYPE, TYPE_VALUE_GEO_SHAPE);
-
+		objectNode.put(FIELD_PARAM_TYPE, TYPE_VALUE_GEO_SHAPE);
 	}
 }

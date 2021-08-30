@@ -29,7 +29,6 @@ import java.util.Map;
 
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.support.ActiveShardCount;
-import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.Client;
@@ -51,6 +50,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.IndicesOptions;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
@@ -162,7 +162,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 	void shouldUseAllOptionsFromUpdateByQuery() throws JSONException {
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()) //
-				.withIndicesOptions(IndicesOptions.lenientExpandOpen()) //
+				.withIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN) //
 				.build(); //
 		searchQuery.setScrollTime(Duration.ofMillis(1000));
 
@@ -195,7 +195,7 @@ public class ElasticsearchTransportTemplateTests extends ElasticsearchTemplateTe
 		// then
 		assertThat(request).isNotNull();
 		assertThat(request.request().getSearchRequest().indicesOptions()).usingRecursiveComparison()
-				.isEqualTo(IndicesOptions.lenientExpandOpen());
+				.isEqualTo(IndicesOptions.LENIENT_EXPAND_OPEN);
 		assertThat(request.request().getScrollTime().getMillis()).isEqualTo(1000);
 		assertEquals(request.request().getSearchRequest().source().toString(), expectedSearchRequest, false);
 		assertThat(request.request().isAbortOnVersionConflict()).isTrue();

@@ -220,4 +220,23 @@ public interface SearchOperations {
 	 *         are completed.
 	 */
 	<T> SearchHitsIterator<T> searchForStream(Query query, Class<T> clazz, IndexCoordinates index);
+
+	/**
+	 * Creates a {@link Query} to get all documents. Must be implemented by the concrete implementations to provide an
+	 * appropriate query using the respective client.
+	 *
+	 * @return a query to find all documents
+	 * @since 4.3
+	 */
+	Query matchAllQuery();
+
+	/**
+	 * Creates a {@link Query} to find get all documents with given ids. Must be implemented by the concrete
+	 * implementations to provide an appropriate query using the respective client.
+	 *
+	 * @param ids the list of ids must not be {@literal null}
+	 * @return query returning the documents with the given ids
+	 * @since 4.3
+	 */
+	Query idsQuery(List<String> ids);
 }

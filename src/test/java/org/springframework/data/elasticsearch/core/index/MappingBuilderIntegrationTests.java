@@ -37,7 +37,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import org.assertj.core.data.Percentage;
-import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -841,8 +840,8 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	@Document(indexName = "completion")
 	static class CompletionDocument {
 		@Nullable @Id private String id;
-		@Nullable @CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
-				path = "proppath") }) private Completion suggest;
+		@Nullable @CompletionField(contexts = { @CompletionContext(name = "location",
+				type = CompletionContext.ContextMappingType.GEO, path = "proppath") }) private Completion suggest;
 
 		@Nullable
 		public String getId() {

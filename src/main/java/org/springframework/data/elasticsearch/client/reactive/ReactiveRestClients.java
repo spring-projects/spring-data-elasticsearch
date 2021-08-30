@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.util.Assert;
+import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Utility class for common access to reactive Elasticsearch clients. {@link ReactiveRestClients} consolidates set up
@@ -61,4 +62,12 @@ public final class ReactiveRestClients {
 
 		return DefaultReactiveElasticsearchClient.create(clientConfiguration, requestCreator);
 	}
+
+	/**
+	 * {@link org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationCallback} to configure
+	 * the ReactiveElasticsearchClient with a {@link WebClient}
+	 *
+	 * @since 4.3
+	 */
+	public interface WebClientConfigurationCallback extends ClientConfiguration.ClientConfigurationCallback<WebClient> {}
 }

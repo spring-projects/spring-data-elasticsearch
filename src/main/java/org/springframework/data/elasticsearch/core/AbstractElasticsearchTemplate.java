@@ -15,32 +15,19 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.util.ArrayList;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.elasticsearch.action.DocWriteResponse;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.search.MultiSearchRequest;
-import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.support.WriteRequestBuilder;
-import org.elasticsearch.common.unit.TimeValue;
-import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.convert.EntityReader;
-import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -57,7 +44,6 @@ import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
@@ -73,7 +59,13 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * AbstractElasticsearchTemplate
+ * This class contains methods that are common to different implementations of the {@link ElasticsearchOperations}
+ * interface that use different clients, like TransportClient, RestHighLevelClient and the next Java client from
+ * Elasticsearch or some future implementation that might use an Opensearch client. This class must not contain imports
+ * or use classes that are specific to one of these implementations.
+ * <p>
+ * <strong>Note:</strong> Although this class is public, it is not considered to be part of the official Spring Data
+ * Elasticsearch API and so might change at any time.
  *
  * @author Sascha Woo
  * @author Peter-Josef Meisch
@@ -84,9 +76,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Nullable protected ElasticsearchConverter elasticsearchConverter;
 	@Nullable protected RequestFactory requestFactory;
-	@Nullable private EntityOperations entityOperations;
-	@Nullable private EntityCallbacks entityCallbacks;
-	@Nullable private RefreshPolicy refreshPolicy;
+	@Nullable protected EntityOperations entityOperations;
+	@Nullable protected EntityCallbacks entityCallbacks;
+	@Nullable protected RefreshPolicy refreshPolicy;
 	@Nullable protected RoutingResolver routingResolver;
 
 	// region Initialization
@@ -176,7 +168,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 * @since 4.3
 	 */
 	public void logVersions() {
-		VersionInfo.logVersions(getClusterVersion());
+		VersionInfo.logVersions(getVendor(), getRuntimeLibraryVersion(), getClusterVersion());
 	}
 
 	// endregion
@@ -364,40 +356,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	public abstract List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index);
 
-	/**
-	 * Pre process the write request before it is sent to the server, eg. by setting the
-	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
-	 *
-	 * @param request must not be {@literal null}.
-	 * @param <R>
-	 * @return the processed {@link WriteRequest}.
-	 */
-	protected <R extends WriteRequest<R>> R prepareWriteRequest(R request) {
-
-		if (refreshPolicy == null) {
-			return request;
-		}
-
-		return request.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(refreshPolicy));
-	}
-
-	/**
-	 * Pre process the write request before it is sent to the server, eg. by setting the
-	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
-	 *
-	 * @param requestBuilder must not be {@literal null}.
-	 * @param <R>
-	 * @return the processed {@link WriteRequest}.
-	 */
-	protected <R extends WriteRequestBuilder<R>> R prepareWriteRequestBuilder(R requestBuilder) {
-
-		if (refreshPolicy == null) {
-			return requestBuilder;
-		}
-
-		return requestBuilder.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(refreshPolicy));
-	}
-
 	// endregion
 
 	// region SearchOperations
@@ -414,8 +372,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public <T> SearchHitsIterator<T> searchForStream(Query query, Class<T> clazz, IndexCoordinates index) {
 
-		long scrollTimeInMillis = TimeValue.timeValueMinutes(1).millis();
-
+		long scrollTimeInMillis = Duration.ofMinutes(1).toMillis();
 		// noinspection ConstantConditions
 		int maxCount = query.isLimiting() ? query.getMaxResults() : 0;
 
@@ -436,96 +393,14 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		Assert.notNull(query.getId(), "No document id defined for MoreLikeThisQuery");
 
-		MoreLikeThisQueryBuilder moreLikeThisQueryBuilder = requestFactory.moreLikeThisQueryBuilder(query, index);
-		return search(
-				new NativeSearchQueryBuilder().withQuery(moreLikeThisQueryBuilder).withPageable(query.getPageable()).build(),
-				clazz, index);
+		return doSearch(query, clazz, index);
 	}
+
+	protected abstract <T> SearchHits<T> doSearch(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index);
 
 	@Override
 	public <T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz) {
 		return multiSearch(queries, clazz, getIndexCoordinatesFor(clazz));
-	}
-
-	@Override
-	public <T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index) {
-		MultiSearchRequest request = new MultiSearchRequest();
-		for (Query query : queries) {
-			request.add(requestFactory.searchRequest(query, clazz, index));
-		}
-
-		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
-
-		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
-		List<SearchHits<T>> res = new ArrayList<>(queries.size());
-		int c = 0;
-		for (Query query : queries) {
-			res.add(callback.doWith(SearchDocumentResponse.from(items[c++].getResponse())));
-		}
-		return res;
-	}
-
-	@Override
-	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes) {
-
-		Assert.notNull(queries, "queries must not be null");
-		Assert.notNull(classes, "classes must not be null");
-		Assert.isTrue(queries.size() == classes.size(), "queries and classes must have the same size");
-
-		MultiSearchRequest request = new MultiSearchRequest();
-		Iterator<Class<?>> it = classes.iterator();
-		for (Query query : queries) {
-			Class<?> clazz = it.next();
-			request.add(requestFactory.searchRequest(query, clazz, getIndexCoordinatesFor(clazz)));
-		}
-
-		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
-
-		List<SearchHits<?>> res = new ArrayList<>(queries.size());
-		int c = 0;
-		Iterator<Class<?>> it1 = classes.iterator();
-		for (Query query : queries) {
-			Class entityClass = it1.next();
-
-			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(entityClass,
-					getIndexCoordinatesFor(entityClass));
-
-			SearchResponse response = items[c++].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response)));
-		}
-		return res;
-	}
-
-	@Override
-	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
-			IndexCoordinates index) {
-
-		Assert.notNull(queries, "queries must not be null");
-		Assert.notNull(classes, "classes must not be null");
-		Assert.notNull(index, "index must not be null");
-		Assert.isTrue(queries.size() == classes.size(), "queries and classes must have the same size");
-
-		MultiSearchRequest request = new MultiSearchRequest();
-		Iterator<Class<?>> it = classes.iterator();
-		for (Query query : queries) {
-			request.add(requestFactory.searchRequest(query, it.next(), index));
-		}
-
-		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
-
-		List<SearchHits<?>> res = new ArrayList<>(queries.size());
-		int c = 0;
-		Iterator<Class<?>> it1 = classes.iterator();
-		for (Query query : queries) {
-			Class entityClass = it1.next();
-
-			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(entityClass,
-					index);
-
-			SearchResponse response = items[c++].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response)));
-		}
-		return res;
 	}
 
 	@Override
@@ -556,8 +431,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 * internal use only, not for public API
 	 */
 	abstract protected void searchScrollClear(List<String> scrollIds);
-
-	abstract protected MultiSearchResponse.Item[] getMultiSearchResult(MultiSearchRequest request);
 
 	@Override
 	public SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz) {
@@ -598,37 +471,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
 		return getRequiredPersistentEntity(clazz).getIndexCoordinates();
-	}
-
-	/**
-	 * @param bulkResponse
-	 * @return the list of the item id's
-	 */
-	protected List<IndexedObjectInformation> checkForBulkOperationFailure(BulkResponse bulkResponse) {
-
-		if (bulkResponse.hasFailures()) {
-			Map<String, String> failedDocuments = new HashMap<>();
-			for (BulkItemResponse item : bulkResponse.getItems()) {
-
-				if (item.isFailed())
-					failedDocuments.put(item.getId(), item.getFailureMessage());
-			}
-			throw new BulkFailureException(
-					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
-							+ failedDocuments + ']',
-					failedDocuments);
-		}
-
-		return Stream.of(bulkResponse.getItems()).map(bulkItemResponse -> {
-			DocWriteResponse response = bulkItemResponse.getResponse();
-			if (response != null) {
-				return IndexedObjectInformation.of(response.getId(), response.getSeqNo(), response.getPrimaryTerm(),
-						response.getVersion());
-			} else {
-				return IndexedObjectInformation.of(bulkItemResponse.getId(), null, null, null);
-			}
-
-		}).collect(Collectors.toList());
 	}
 
 	protected <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
@@ -748,6 +590,18 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 */
 	@Nullable
 	abstract protected String getClusterVersion();
+
+	/**
+	 * @return the vendor name of the used cluster and client library
+	 * @since 4.3
+	 */
+	abstract protected String getVendor();
+
+	/**
+	 * @return the version of the used client runtime library.
+	 * @since 4.3
+	 */
+	abstract protected String getRuntimeLibraryVersion();
 
 	// endregion
 

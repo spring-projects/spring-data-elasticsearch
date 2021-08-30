@@ -32,7 +32,6 @@ import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
-import org.elasticsearch.search.suggest.completion.context.ContextMapping;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -251,8 +250,8 @@ public class ElasticsearchTemplateCompletionWithContextsTests {
 		@Nullable @Id private String id;
 		@Nullable private String name;
 
-		@Nullable @CompletionField(maxInputLength = 100, contexts = {
-				@CompletionContext(name = LANGUAGE_CATEGORY, type = ContextMapping.Type.CATEGORY) }) private Completion suggest;
+		@Nullable @CompletionField(maxInputLength = 100, contexts = { @CompletionContext(name = LANGUAGE_CATEGORY,
+				type = CompletionContext.ContextMappingType.CATEGORY) }) private Completion suggest;
 
 		private ContextCompletionEntity() {}
 

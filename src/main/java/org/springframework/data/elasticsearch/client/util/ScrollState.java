@@ -21,13 +21,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.elasticsearch.action.search.SearchScrollRequest;
-import org.elasticsearch.search.Scroll;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
- * Mutable state object holding scrollId to be used for {@link SearchScrollRequest#scroll(Scroll)}
+ * Mutable state object holding scrollId to be used for scroll requests.
  *
  * @author Christoph Strobl
  * @author Peter-Josef Meisch

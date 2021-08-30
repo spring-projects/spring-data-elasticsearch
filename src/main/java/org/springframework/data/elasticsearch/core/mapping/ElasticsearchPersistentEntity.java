@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import org.elasticsearch.index.VersionType;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.index.Settings;
@@ -61,7 +61,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	String settingPath();
 
 	@Nullable
-	VersionType getVersionType();
+	Document.VersionType getVersionType();
 
 	boolean isCreateIndexAndMapping();
 

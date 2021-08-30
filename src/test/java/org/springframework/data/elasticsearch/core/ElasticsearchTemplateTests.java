@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.annotations.Document.VersionType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 import static org.springframework.data.elasticsearch.core.document.Document.*;
@@ -44,11 +45,9 @@ import java.util.stream.IntStream;
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.util.Lists;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
-import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.InnerHitBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
@@ -398,7 +397,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.indexOps(IndexCoordinates.of(INDEX_1_NAME)).refresh();
 
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndicesOptions(IndicesOptions.lenientExpandOpen()).build();
+				.withIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN).build();
 
 		// when
 		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
@@ -1651,7 +1650,7 @@ public abstract class ElasticsearchTemplateTests {
 
 		// when
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withIndicesOptions(IndicesOptions.lenientExpandOpen()).build();
+				.withIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN).build();
 
 		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations)
 				.searchScrollStart(scrollTimeInMillis, searchQuery, SampleEntity.class, index);
@@ -2450,7 +2449,7 @@ public abstract class ElasticsearchTemplateTests {
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// when
-		Query query = new NativeSearchQueryBuilder().withQuery(idsQuery().addIds(documentIdToDelete)).build();
+		Query query = operations.idsQuery(Arrays.asList(documentIdToDelete));
 		operations.delete(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// then
@@ -3983,7 +3982,7 @@ public abstract class ElasticsearchTemplateTests {
 		}
 	}
 
-	@Document(indexName = "#{@indexNameProvider.indexName()}", versionType = VersionType.EXTERNAL_GTE)
+	@Document(indexName = "#{@indexNameProvider.indexName()}", versionType = EXTERNAL_GTE)
 	private static class GTEVersionEntity {
 		@Nullable @Version private Long version;
 		@Nullable @Id private String id;

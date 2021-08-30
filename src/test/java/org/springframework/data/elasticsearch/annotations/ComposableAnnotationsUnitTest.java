@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.annotations;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
+import static org.springframework.data.elasticsearch.annotations.Document.VersionType.*;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -26,7 +27,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.time.LocalDate;
 
-import org.elasticsearch.index.VersionType;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -59,7 +59,7 @@ public class ComposableAnnotationsUnitTest {
 
 		assertThat(entity.getIndexCoordinates()).isEqualTo(IndexCoordinates.of("test-no-create"));
 		assertThat(entity.isCreateIndexAndMapping()).isFalse();
-		assertThat(entity.getVersionType()).isEqualTo(VersionType.INTERNAL);
+		assertThat(entity.getVersionType()).isEqualTo(Document.VersionType.INTERNAL);
 	}
 
 	@Test // DATAES-362
@@ -120,7 +120,7 @@ public class ComposableAnnotationsUnitTest {
 	@Documented
 	@Retention(RetentionPolicy.RUNTIME)
 	@Target({ ElementType.TYPE })
-	@Document(indexName = "", createIndex = false, versionType = VersionType.INTERNAL)
+	@Document(indexName = "", createIndex = false, versionType = INTERNAL)
 	public @interface DocumentNoCreate {
 
 		@AliasFor(value = "indexName", annotation = Document.class)

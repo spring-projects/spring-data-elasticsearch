@@ -31,6 +31,7 @@ import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -49,7 +50,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 class ClientConfigurationBuilder
 		implements ClientConfigurationBuilderWithRequiredEndpoint, MaybeSecureClientConfigurationBuilder {
 
-	private List<InetSocketAddress> hosts = new ArrayList<>();
+	private final List<InetSocketAddress> hosts = new ArrayList<>();
 	private HttpHeaders headers = HttpHeaders.EMPTY;
 	private boolean useSsl;
 	private @Nullable SSLContext sslContext;
@@ -62,7 +63,8 @@ class ClientConfigurationBuilder
 	private @Nullable String proxy;
 	private Function<WebClient, WebClient> webClientConfigurer = Function.identity();
 	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
-	private HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
+	@Deprecated private HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
+	private ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = t -> t;
 
 	/*
 	 * (non-Javadoc)
@@ -206,6 +208,9 @@ class ClientConfigurationBuilder
 		Assert.notNull(webClientConfigurer, "webClientConfigurer must not be null");
 
 		this.webClientConfigurer = webClientConfigurer;
+		// noinspection NullableProblems
+		this.clientConfigurer = (ReactiveRestClients.WebClientConfigurationCallback) webClientConfigurer::apply;
+
 		return this;
 	}
 
@@ -215,6 +220,19 @@ class ClientConfigurationBuilder
 		Assert.notNull(httpClientConfigurer, "httpClientConfigurer must not be null");
 
 		this.httpClientConfigurer = httpClientConfigurer;
+		// noinspection NullableProblems
+		this.clientConfigurer = (RestClients.RestClientConfigurationCallback) httpClientConfigurer::customizeHttpClient;
+
+		return this;
+	}
+
+	@Override
+	public TerminalClientConfigurationBuilder withClientConfigurer(
+			ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer) {
+
+		Assert.notNull(clientConfigurer, "clientConfigurer must not be null");
+
+		this.clientConfigurer = clientConfigurer;
 		return this;
 	}
 
@@ -242,7 +260,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
-				hostnameVerifier, proxy, webClientConfigurer, httpClientConfigurer, headersSupplier);
+				hostnameVerifier, proxy, webClientConfigurer, httpClientConfigurer, clientConfigurer, headersSupplier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

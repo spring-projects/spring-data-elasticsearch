@@ -20,19 +20,20 @@ import java.util.stream.Collectors;
 
 import org.elasticsearch.search.fetch.subphase.highlight.AbstractHighlighterBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.springframework.data.elasticsearch.annotations.Highlight;
-import org.springframework.data.elasticsearch.annotations.HighlightField;
-import org.springframework.data.elasticsearch.annotations.HighlightParameters;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightCommonParameters;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightFieldParameters;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 /**
  * Converts the {@link Highlight} annotation from a method to an Elasticsearch {@link HighlightBuilder}.
- * 
+ *
  * @author Peter-Josef Meisch
  */
 public class HighlightQueryBuilder {
@@ -45,115 +46,114 @@ public class HighlightQueryBuilder {
 	}
 
 	/**
-	 * creates a HighlightBuilder from an annotation
-	 * 
+	 * creates an Elasticsearch HighlightBuilder from an annotation.
+	 *
 	 * @param highlight, must not be {@literal null}
 	 * @param type the entity type, used to map field names. If null, field names are not mapped.
 	 * @return the builder for the highlight
 	 */
-	public HighlightQuery getHighlightQuery(Highlight highlight, @Nullable Class<?> type) {
-
-		Assert.notNull(highlight, "highlight must not be null");
-
+	public HighlightBuilder getHighlightBuilder(Highlight highlight, @Nullable Class<?> type) {
 		HighlightBuilder highlightBuilder = new HighlightBuilder();
 
-		addParameters(highlight.parameters(), highlightBuilder, type);
+		addParameters(highlight.getParameters(), highlightBuilder, type);
 
-		for (HighlightField highlightField : highlight.fields()) {
-			String mappedName = mapFieldName(highlightField.name(), type);
+		for (HighlightField highlightField : highlight.getFields()) {
+			String mappedName = mapFieldName(highlightField.getName(), type);
 			HighlightBuilder.Field field = new HighlightBuilder.Field(mappedName);
 
-			addParameters(highlightField.parameters(), field, type);
+			addParameters(highlightField.getParameters(), field, type);
 
 			highlightBuilder.field(field);
 		}
-
-		return new HighlightQuery(highlightBuilder);
+		return highlightBuilder;
 	}
 
-	private void addParameters(HighlightParameters parameters, AbstractHighlighterBuilder<?> builder, Class<?> type) {
+	private <P extends HighlightCommonParameters> void addParameters(P parameters, AbstractHighlighterBuilder<?> builder,
+			@Nullable Class<?> type) {
 
-		if (StringUtils.hasLength(parameters.boundaryChars())) {
-			builder.boundaryChars(parameters.boundaryChars().toCharArray());
+		if (StringUtils.hasLength(parameters.getBoundaryChars())) {
+			builder.boundaryChars(parameters.getBoundaryChars().toCharArray());
 		}
 
-		if (parameters.boundaryMaxScan() > -1) {
-			builder.boundaryMaxScan(parameters.boundaryMaxScan());
+		if (parameters.getBoundaryMaxScan() > -1) {
+			builder.boundaryMaxScan(parameters.getBoundaryMaxScan());
 		}
 
-		if (StringUtils.hasLength(parameters.boundaryScanner())) {
-			builder.boundaryScannerType(parameters.boundaryScanner());
+		if (StringUtils.hasLength(parameters.getBoundaryScanner())) {
+			builder.boundaryScannerType(parameters.getBoundaryScanner());
 		}
 
-		if (StringUtils.hasLength(parameters.boundaryScannerLocale())) {
-			builder.boundaryScannerLocale(parameters.boundaryScannerLocale());
+		if (StringUtils.hasLength(parameters.getBoundaryScannerLocale())) {
+			builder.boundaryScannerLocale(parameters.getBoundaryScannerLocale());
 		}
 
-		if (parameters.forceSource()) { // default is false
-			builder.forceSource(parameters.forceSource());
+		if (parameters.getForceSource()) { // default is false
+			builder.forceSource(true);
 		}
 
-		if (StringUtils.hasLength(parameters.fragmenter())) {
-			builder.fragmenter(parameters.fragmenter());
+		if (StringUtils.hasLength(parameters.getFragmenter())) {
+			builder.fragmenter(parameters.getFragmenter());
 		}
 
-		if (parameters.fragmentSize() > -1) {
-			builder.fragmentSize(parameters.fragmentSize());
+		if (parameters.getFragmentSize() > -1) {
+			builder.fragmentSize(parameters.getFragmentSize());
 		}
 
-		if (parameters.noMatchSize() > -1) {
-			builder.noMatchSize(parameters.noMatchSize());
+		if (parameters.getNoMatchSize() > -1) {
+			builder.noMatchSize(parameters.getNoMatchSize());
 		}
 
-		if (parameters.numberOfFragments() > -1) {
-			builder.numOfFragments(parameters.numberOfFragments());
+		if (parameters.getNumberOfFragments() > -1) {
+			builder.numOfFragments(parameters.getNumberOfFragments());
 		}
 
-		if (StringUtils.hasLength(parameters.order())) {
-			builder.order(parameters.order());
+		if (StringUtils.hasLength(parameters.getOrder())) {
+			builder.order(parameters.getOrder());
 		}
 
-		if (parameters.phraseLimit() > -1) {
-			builder.phraseLimit(parameters.phraseLimit());
+		if (parameters.getPhraseLimit() > -1) {
+			builder.phraseLimit(parameters.getPhraseLimit());
 		}
 
-		if (parameters.preTags().length > 0) {
-			builder.preTags(parameters.preTags());
+		if (parameters.getPreTags().length > 0) {
+			builder.preTags(parameters.getPreTags());
 		}
 
-		if (parameters.postTags().length > 0) {
-			builder.postTags(parameters.postTags());
+		if (parameters.getPostTags().length > 0) {
+			builder.postTags(parameters.getPostTags());
 		}
 
-		if (!parameters.requireFieldMatch()) { // default is true
-			builder.requireFieldMatch(parameters.requireFieldMatch());
+		if (!parameters.getRequireFieldMatch()) { // default is true
+			builder.requireFieldMatch(false);
 		}
 
-		if (StringUtils.hasLength(parameters.type())) {
-			builder.highlighterType(parameters.type());
+		if (StringUtils.hasLength(parameters.getType())) {
+			builder.highlighterType(parameters.getType());
 		}
 
-		if (builder instanceof HighlightBuilder) {
+		if (builder instanceof HighlightBuilder && parameters instanceof HighlightParameters) {
 			HighlightBuilder highlightBuilder = (HighlightBuilder) builder;
+			HighlightParameters highlightParameters = (HighlightParameters) parameters;
 
-			if (StringUtils.hasLength(parameters.encoder())) {
-				highlightBuilder.encoder(parameters.encoder());
+			if (StringUtils.hasLength(highlightParameters.getEncoder())) {
+				highlightBuilder.encoder(highlightParameters.getEncoder());
 			}
 
-			if (StringUtils.hasLength(parameters.tagsSchema())) {
-				highlightBuilder.tagsSchema(parameters.tagsSchema());
+			if (StringUtils.hasLength(highlightParameters.getTagsSchema())) {
+				highlightBuilder.tagsSchema(highlightParameters.getTagsSchema());
 			}
 		}
 
-		if (builder instanceof HighlightBuilder.Field) {
+		if (builder instanceof HighlightBuilder.Field && parameters instanceof HighlightFieldParameters) {
 			HighlightBuilder.Field field = (HighlightBuilder.Field) builder;
+			HighlightFieldParameters fieldParameters = (HighlightFieldParameters) parameters;
 
-			if (parameters.fragmentOffset() > -1) {
-				field.fragmentOffset(parameters.fragmentOffset());
+			if ((fieldParameters).getFragmentOffset() > -1) {
+				field.fragmentOffset(fieldParameters.getFragmentOffset());
 			}
 
-			if (parameters.matchedFields().length > 0) {
-				field.matchedFields(Arrays.stream(parameters.matchedFields()) //
+			if (fieldParameters.getMatchedFields().length > 0) {
+				field.matchedFields(Arrays.stream(fieldParameters.getMatchedFields()) //
 						.map(fieldName -> mapFieldName(fieldName, type)) //
 						.collect(Collectors.toList()) //
 						.toArray(new String[] {})); //

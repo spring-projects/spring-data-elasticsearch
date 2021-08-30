@@ -55,12 +55,13 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final Function<WebClient, WebClient> webClientConfigurer;
 	private final HttpClientConfigCallback httpClientConfigurer;
 	private final Supplier<HttpHeaders> headersSupplier;
+	private final ClientConfigurationCallback<?> clientConfigurer;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
 			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
 			@Nullable HostnameVerifier hostnameVerifier, @Nullable String proxy,
 			Function<WebClient, WebClient> webClientConfigurer, HttpClientConfigCallback httpClientConfigurer,
-			Supplier<HttpHeaders> headersSupplier) {
+			ClientConfigurationCallback<?> clientConfigurer, Supplier<HttpHeaders> headersSupplier) {
 
 		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
 		this.headers = new HttpHeaders(headers);
@@ -73,6 +74,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.proxy = proxy;
 		this.webClientConfigurer = webClientConfigurer;
 		this.httpClientConfigurer = httpClientConfigurer;
+		this.clientConfigurer = clientConfigurer;
 		this.headersSupplier = headersSupplier;
 	}
 
@@ -130,6 +132,12 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	@Override
 	public HttpClientConfigCallback getHttpClientConfigurer() {
 		return httpClientConfigurer;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <T> ClientConfigurationCallback<T> getClientConfigurer() {
+		return (ClientConfigurationCallback<T>) clientConfigurer;
 	}
 
 	@Override

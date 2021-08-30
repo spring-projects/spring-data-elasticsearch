@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
@@ -250,19 +249,18 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(ids, "Cannot delete 'null' list.");
 
-		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		IdsQueryBuilder idsQueryBuilder = idsQuery();
+		List<String> idStrings = new ArrayList<>();
 		for (ID id : ids) {
-			idsQueryBuilder.addIds(stringIdRepresentation(id));
+			idStrings.add(stringIdRepresentation(id));
 		}
 
-		if (idsQueryBuilder.ids().isEmpty()) {
+		if (idStrings.isEmpty()) {
 			return;
 		}
 
+		Query query = operations.idsQuery(idStrings);
 		executeAndRefresh((OperationsCallback<Void>) operations -> {
-			operations.delete(new NativeSearchQueryBuilder().withQuery(idsQueryBuilder).build(), entityClass,
-					indexCoordinates);
+			operations.delete(query, entityClass, getIndexCoordinates());
 			return null;
 		});
 	}

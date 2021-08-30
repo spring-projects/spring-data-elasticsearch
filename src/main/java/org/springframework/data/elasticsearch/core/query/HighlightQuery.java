@@ -15,23 +15,35 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
- * Encapsulates an Elasticsearch {@link org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder} to prevent
- * leaking of Elasticsearch classes into the query API.
- * 
+ * Combines a {@link Highlight} definition with the type of the entity where it's present on a method.
+ *
  * @author Peter-Josef Meisch
  * @since 4.0
  */
 public class HighlightQuery {
-	private final HighlightBuilder highlightBuilder;
 
-	public HighlightQuery(HighlightBuilder highlightBuilder) {
-		this.highlightBuilder = highlightBuilder;
+	private final Highlight highlight;
+	@Nullable private final Class<?> type;
+
+	public HighlightQuery(Highlight highlight, @Nullable Class<?> type) {
+
+		Assert.notNull(highlight, "highlight must not be null");
+
+		this.highlight = highlight;
+		this.type = type;
 	}
 
-	public HighlightBuilder getHighlightBuilder() {
-		return highlightBuilder;
+	public Highlight getHighlight() {
+		return highlight;
+	}
+
+	@Nullable
+	public Class<?> getType() {
+		return type;
 	}
 }

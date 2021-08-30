@@ -32,7 +32,10 @@ import org.springframework.util.StringUtils;
  *
  * @author Oliver Gierke
  * @since 3.1
+ * @deprecated only used in {@link TransportClientFactoryBean}.
  */
+@SuppressWarnings("DeprecatedIsStillUsed")
+@Deprecated
 class ClusterNodes implements Streamable<TransportAddress> {
 
 	public static ClusterNodes DEFAULT = ClusterNodes.of("127.0.0.1:9300");
@@ -44,7 +47,7 @@ class ClusterNodes implements Streamable<TransportAddress> {
 
 	/**
 	 * Creates a new {@link ClusterNodes} by parsing the given source.
-	 * 
+	 *
 	 * @param source must not be {@literal null} or empty.
 	 */
 	private ClusterNodes(String source) {
@@ -74,15 +77,14 @@ class ClusterNodes implements Streamable<TransportAddress> {
 	/**
 	 * Creates a new {@link ClusterNodes} by parsing the given source. The expected format is a comma separated list of
 	 * host-port-combinations separated by a colon: {@code host:port,host:port,…}.
-	 * 
+	 *
 	 * @param source must not be {@literal null} or empty.
-	 * @return
 	 */
 	public static ClusterNodes of(String source) {
 		return new ClusterNodes(source);
 	}
 
-	/* 
+	/*
 	 * (non-Javadoc)
 	 * @see java.lang.Iterable#iterator()
 	 */
