@@ -1612,19 +1612,18 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat((nextPageable.getPageNumber())).isEqualTo(1);
 	}
 
-	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
+	@Test // #1917
+	@DisplayName("shouldReturnAllDocumentsWithUnpagedQuery")
+	void shouldReturnAllDocumentsWithUnpagedQuery() {
 
-		List<SampleEntity> entities = new ArrayList<>();
-		for (int i = 0; i < numberOfEntities; i++) {
-			SampleEntity entity = new SampleEntity();
-			entity.setId(UUID.randomUUID().toString());
-			entity.setAvailable(true);
-			entity.setMessage("Message");
-			entity.setType(type);
-			entities.add(entity);
-		}
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
 
-		return entities;
+		SearchHits<SampleEntity> searchHits = repository.searchWithQueryByMessageUnpaged("Message");
+
+		assertThat(searchHits).isNotNull();
+		assertThat((searchHits.getTotalHits())).isEqualTo(20);
+		assertThat(searchHits.getSearchHits()).hasSize(20);
 	}
 
 	@Test // DATAES-891
@@ -1647,6 +1646,21 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		long count = stream.peek(sampleEntity -> assertThat(sampleEntity).isInstanceOf(SearchHit.class)).count();
 		assertThat(count).isEqualTo(20);
+	}
+
+	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
+
+		List<SampleEntity> entities = new ArrayList<>();
+		for (int i = 0; i < numberOfEntities; i++) {
+			SampleEntity entity = new SampleEntity();
+			entity.setId(UUID.randomUUID().toString());
+			entity.setAvailable(true);
+			entity.setMessage("Message");
+			entity.setType(type);
+			entities.add(entity);
+		}
+
+		return entities;
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
@@ -1856,6 +1870,9 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		@Query("{\"match\": {\"message\": \"?0\"}}")
 		SearchPage<SampleEntity> searchWithQueryByMessage(String message, Pageable pageable);
+
+		@Query("{\"match\": {\"message\": \"?0\"}}")
+		SearchHits<SampleEntity> searchWithQueryByMessageUnpaged(String message);
 
 		@CountQuery("{\"bool\" : {\"must\" : {\"term\" : {\"type\" : \"?0\"}}}}")
 		long countWithQueryByType(String type);
