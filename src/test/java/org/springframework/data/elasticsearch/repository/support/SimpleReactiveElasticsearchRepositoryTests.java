@@ -31,6 +31,7 @@ import java.lang.Boolean;
 import java.lang.Long;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
@@ -515,16 +516,38 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 	}
 
 	@Test // DATAES-519
-	public void annotatedFinderMethodShouldBeExecutedCorrectly() {
+	void annotatedFinderMethodShouldBeExecutedCorrectly() {
 
-		bulkIndex(SampleEntity.builder().id("id-one").message("message").build(), //
-				SampleEntity.builder().id("id-two").message("test message").build(), //
-				SampleEntity.builder().id("id-three").message("test test").build()) //
-						.block();
+		int count = 30;
+		SampleEntity[] sampleEntities = IntStream.range(1, count + 1)
+				.mapToObj(i -> SampleEntity.builder().id("id-" + i).message("test " + i).build()).collect(Collectors.toList())
+				.toArray(new SampleEntity[count]);
+
+		bulkIndex(sampleEntities).block();
 
 		repository.findAllViaAnnotatedQueryByMessageLike("test") //
 				.as(StepVerifier::create) //
-				.expectNextCount(2) //
+				.expectNextCount(count) //
+				.verifyComplete();
+	}
+
+	@Test // #1917
+	void annotatedFinderMethodPagedShouldBeExecutedCorrectly() {
+
+		int count = 30;
+		SampleEntity[] sampleEntities = IntStream.range(1, count + 1)
+				.mapToObj(i -> SampleEntity.builder().id("id-" + i).message("test " + i).build()).collect(Collectors.toList())
+				.toArray(new SampleEntity[count]);
+
+		bulkIndex(sampleEntities).block();
+
+		repository.findAllViaAnnotatedQueryByMessageLikePaged("test", PageRequest.of(0, 20)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(20) //
+				.verifyComplete();
+		repository.findAllViaAnnotatedQueryByMessageLikePaged("test", PageRequest.of(1, 20)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(10) //
 				.verifyComplete();
 	}
 
@@ -571,6 +594,9 @@ public class SimpleReactiveElasticsearchRepositoryTests {
 
 		@Query("{ \"bool\" : { \"must\" : { \"term\" : { \"message\" : \"?0\" } } } }")
 		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageLike(String message);
+
+		@Query("{ \"bool\" : { \"must\" : { \"term\" : { \"message\" : \"?0\" } } } }")
+		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageLikePaged(String message, Pageable pageable);
 
 		Mono<SampleEntity> findFirstByMessageLike(String message);
 

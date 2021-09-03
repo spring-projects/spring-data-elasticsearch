@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -73,16 +74,11 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 						.unwrapSearchHits(SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable()));
 			}
 		} else if (queryMethod.isStreamQuery()) {
-			if (accessor.getPageable().isUnpaged()) {
-				stringQuery.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
-			} else {
-				stringQuery.setPageable(accessor.getPageable());
-			}
+			stringQuery.setPageable(
+					accessor.getPageable().isPaged() ? accessor.getPageable() : PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
 			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.searchForStream(stringQuery, clazz, index));
 		} else if (queryMethod.isCollectionQuery()) {
-			if (accessor.getPageable().isPaged()) {
-				stringQuery.setPageable(accessor.getPageable());
-			}
+			stringQuery.setPageable(accessor.getPageable().isPaged() ? accessor.getPageable() : Pageable.unpaged());
 			result = elasticsearchOperations.search(stringQuery, clazz, index);
 		} else {
 			result = elasticsearchOperations.searchOne(stringQuery, clazz, index);

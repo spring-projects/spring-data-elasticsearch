@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1587,6 +1587,19 @@ public abstract class CustomMethodRepositoryBaseTests {
 		assertThat((nextPageable.getPageNumber())).isEqualTo(1);
 	}
 
+	@Test // #1917
+	void shouldReturnAllDocumentsWithUnpagedQuery() {
+
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		SearchHits<SampleEntity> searchHits = repository.searchWithQueryByMessageUnpaged("Message");
+
+		assertThat(searchHits).isNotNull();
+		assertThat((searchHits.getTotalHits())).isEqualTo(20);
+		assertThat(searchHits.getSearchHits()).hasSize(20);
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
@@ -1766,6 +1779,9 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		@Query("{\"match\": {\"message\": \"?0\"}}")
 		SearchPage<SampleEntity> searchWithQueryByMessage(String message, Pageable pageable);
+
+		@Query("{\"match\": {\"message\": \"?0\"}}")
+		SearchHits<SampleEntity> searchWithQueryByMessageUnpaged(String message);
 	}
 
 	/**
