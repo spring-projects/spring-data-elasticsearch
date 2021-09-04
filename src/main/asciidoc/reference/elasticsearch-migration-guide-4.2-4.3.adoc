@@ -30,6 +30,12 @@ Check the sections on <<elasticsearch-migration-guide-4.2-4.3.deprecations>> and
 * In the `org.springframework.data.elasticsearch.annotations.Document` annotation the `versionType()` property has changed to `org.springframework.data.elasticsearch.annotations.Document.VersionType`, the available enum values are the same.
 * In the `org.springframework.data.elasticsearch.core.query.Query` interface the `searchType()` property has changed to `org.springframework.data.elasticsearch.core.query.Query.SearchType`, the available enum values are the same.
 * In the `org.springframework.data.elasticsearch.core.query.Query` interface the return value of  `timeout()` was changed to `java.time.Duration`.
+* The `SearchHits<T>`class does not contain the `org.elasticsearch.search.aggregations.Aggregations` anymore.
+Instead it now contains an instance of the `org.springframework.data.elasticsearch.core.AggregationsContainer<T>` class where `T` is the concrete aggregations type from the underlying client that is used.
+Currently this will be a `org
+.springframework.data.elasticsearch.core.clients.elasticsearch7.ElasticsearchAggregations` object; later different implementations will be available.
+The same change has been done to the `ReactiveSearchOperations.aggregate()` functions, the now return a `Flux<AggregationContainer<?>>`.
+Programs using the aggregations need to be changed to cast the returned value to the appropriate class to further proces it.
 
 === Handling of field and sourceFilter properties of Query
 

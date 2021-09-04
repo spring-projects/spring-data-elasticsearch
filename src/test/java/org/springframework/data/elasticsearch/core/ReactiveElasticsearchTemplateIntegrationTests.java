@@ -42,6 +42,7 @@ import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.index.query.IdsQueryBuilder;
+import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
 import org.elasticsearch.search.sort.FieldSortBuilder;
@@ -70,6 +71,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.clients.elasticsearch7.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
@@ -513,7 +515,8 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		operations.aggregate(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(aggregation -> {
+				.consumeNextWith(aggregationContainer -> {
+					Aggregation aggregation = ((ElasticsearchAggregation) aggregationContainer).aggregation();
 					assertThat(aggregation.getName()).isEqualTo("messages");
 					assertThat(aggregation instanceof ParsedStringTerms);
 					ParsedStringTerms parsedStringTerms = (ParsedStringTerms) aggregation;
@@ -1214,10 +1217,12 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (o == null || getClass() != o.getClass())
+			}
+			if (o == null || getClass() != o.getClass()) {
 				return false;
+			}
 
 			Message message1 = (Message) o;
 
@@ -1274,19 +1279,24 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (o == null || getClass() != o.getClass())
+			}
+			if (o == null || getClass() != o.getClass()) {
 				return false;
+			}
 
 			SampleEntity that = (SampleEntity) o;
 
-			if (rate != that.rate)
+			if (rate != that.rate) {
 				return false;
-			if (id != null ? !id.equals(that.id) : that.id != null)
+			}
+			if (id != null ? !id.equals(that.id) : that.id != null) {
 				return false;
-			if (message != null ? !message.equals(that.message) : that.message != null)
+			}
+			if (message != null ? !message.equals(that.message) : that.message != null) {
 				return false;
+			}
 			return version != null ? version.equals(that.version) : that.version == null;
 		}
 
@@ -1445,17 +1455,21 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (o == null || getClass() != o.getClass())
+			}
+			if (o == null || getClass() != o.getClass()) {
 				return false;
+			}
 
 			ImmutableEntity that = (ImmutableEntity) o;
 
-			if (!id.equals(that.id))
+			if (!id.equals(that.id)) {
 				return false;
-			if (!text.equals(that.text))
+			}
+			if (!text.equals(that.text)) {
 				return false;
+			}
 			return seqNoPrimaryTerm != null ? seqNoPrimaryTerm.equals(that.seqNoPrimaryTerm) : that.seqNoPrimaryTerm == null;
 		}
 

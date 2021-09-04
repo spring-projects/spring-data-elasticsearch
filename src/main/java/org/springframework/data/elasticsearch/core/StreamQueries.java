@@ -22,7 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.elasticsearch.client.util.ScrollState;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -55,7 +54,7 @@ abstract class StreamQueries {
 		Assert.notNull(continueScrollFunction, "continueScrollFunction must not be null.");
 		Assert.notNull(clearScrollConsumer, "clearScrollConsumer must not be null.");
 
-		Aggregations aggregations = searchHits.getAggregations();
+		AggregationsContainer<?> aggregations = searchHits.getAggregations();
 		float maxScore = searchHits.getMaxScore();
 		long totalHits = searchHits.getTotalHits();
 		TotalHitsRelation totalHitsRelation = searchHits.getTotalHitsRelation();
@@ -78,7 +77,7 @@ abstract class StreamQueries {
 
 			@Override
 			@Nullable
-			public Aggregations getAggregations() {
+			public AggregationsContainer<?> getAggregations() {
 				return aggregations;
 			}
 

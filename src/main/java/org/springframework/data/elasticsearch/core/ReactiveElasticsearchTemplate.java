@@ -44,7 +44,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.reactivestreams.Publisher;
@@ -59,6 +58,7 @@ import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity;
+import org.springframework.data.elasticsearch.core.clients.elasticsearch7.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.core.cluster.DefaultReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -782,12 +782,12 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Flux<Aggregation> aggregate(Query query, Class<?> entityType) {
+	public Flux<AggregationContainer<?>> aggregate(Query query, Class<?> entityType) {
 		return aggregate(query, entityType, getIndexCoordinatesFor(entityType));
 	}
 
 	@Override
-	public Flux<Aggregation> aggregate(Query query, Class<?> entityType, IndexCoordinates index) {
+	public Flux<AggregationContainer<?>> aggregate(Query query, Class<?> entityType, IndexCoordinates index) {
 		return doAggregate(query, entityType, index);
 	}
 
@@ -808,7 +808,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		});
 	}
 
-	private Flux<Aggregation> doAggregate(Query query, Class<?> entityType, IndexCoordinates index) {
+	private Flux<AggregationContainer<?>> doAggregate(Query query, Class<?> entityType, IndexCoordinates index) {
 		return Flux.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
 			request = prepareSearchRequest(request, false);
@@ -872,14 +872,14 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @param request the already prepared {@link SearchRequest} ready to be executed.
 	 * @return a {@link Flux} emitting the result of the operation.
 	 */
-	protected Flux<Aggregation> doAggregate(SearchRequest request) {
+	protected Flux<AggregationContainer<?>> doAggregate(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug("Executing doCount: {}", request);
 		}
 
 		return Flux.from(execute(client -> client.aggregate(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Flux.empty());
+				.onErrorResume(NoSuchIndexException.class, it -> Flux.empty()).map(ElasticsearchAggregation::new);
 	}
 
 	/**

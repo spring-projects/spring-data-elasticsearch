@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -95,7 +94,7 @@ class SearchHitMapping<T> {
 			SearchHit<T> hit = mapHit(document, content);
 			searchHits.add(hit);
 		}
-		Aggregations aggregations = searchDocumentResponse.getAggregations();
+		AggregationsContainer<?> aggregations = searchDocumentResponse.getAggregations();
 		TotalHitsRelation totalHitsRelation = TotalHitsRelation.valueOf(searchDocumentResponse.getTotalHitsRelation());
 
 		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, scrollId, searchHits, aggregations);
@@ -225,7 +224,7 @@ class SearchHitMapping<T> {
 
 	/**
 	 * find a {@link ElasticsearchPersistentEntity} following the property chain defined by the nested metadata
-	 * 
+	 *
 	 * @param persistentEntity base entity
 	 * @param nestedMetaData nested metadata
 	 * @return A {@link ElasticsearchPersistentEntityWithNestedMetaData} containing the found entity or null together with
