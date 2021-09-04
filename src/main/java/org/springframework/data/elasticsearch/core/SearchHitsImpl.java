@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Collections;
 import java.util.List;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -39,7 +38,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	@Nullable private final String scrollId;
 	private final List<? extends SearchHit<T>> searchHits;
 	private final Lazy<List<SearchHit<T>>> unmodifiableSearchHits;
-	@Nullable private final Aggregations aggregations;
+	@Nullable private final AggregationsContainer<?> aggregations;
 
 	/**
 	 * @param totalHits the number of total hits for the search
@@ -50,7 +49,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	 * @param aggregations the aggregations if available
 	 */
 	public SearchHitsImpl(long totalHits, TotalHitsRelation totalHitsRelation, float maxScore, @Nullable String scrollId,
-			List<? extends SearchHit<T>> searchHits, @Nullable Aggregations aggregations) {
+			List<? extends SearchHit<T>> searchHits, @Nullable AggregationsContainer<?> aggregations) {
 
 		Assert.notNull(searchHits, "searchHits must not be null");
 
@@ -113,7 +112,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	// region aggregations
 	@Override
 	@Nullable
-	public Aggregations getAggregations() {
+	public AggregationsContainer<?> getAggregations() {
 		return aggregations;
 	}
 	// endregion

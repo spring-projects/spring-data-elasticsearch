@@ -18,13 +18,12 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Iterator;
 import java.util.List;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 
 /**
  * Encapsulates a list of {@link SearchHit}s with additional information from the search.
- * 
+ *
  * @param <T> the result data class.
  * @author Sascha Woo
  * @since 4.0
@@ -35,7 +34,7 @@ public interface SearchHits<T> extends Streamable<SearchHit<T>> {
 	 * @return the aggregations.
 	 */
 	@Nullable
-	Aggregations getAggregations();
+	AggregationsContainer<?> getAggregations();
 
 	/**
 	 * @return the maximum score

@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.domain.PageRequest;
@@ -80,8 +79,8 @@ class SearchHitSupportTest {
 		private boolean closed = false;
 
 		@Override
-		public Aggregations getAggregations() {
-			return mock(Aggregations.class);
+		public AggregationsContainer<?> getAggregations() {
+			return mock(AggregationsContainer.class);
 		}
 
 		@Override

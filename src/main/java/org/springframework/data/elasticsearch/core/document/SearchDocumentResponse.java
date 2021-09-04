@@ -23,13 +23,15 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregations;
+import org.springframework.data.elasticsearch.core.AggregationsContainer;
+import org.springframework.data.elasticsearch.core.clients.elasticsearch7.ElasticsearchAggregations;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * This represents the complete search response from Elasticsearch, including the returned documents. Instances must be
  * created with the {@link #from(SearchResponse)} method.
- * 
+ *
  * @author Peter-Josef Meisch
  * @since 4.0
  */
@@ -40,7 +42,7 @@ public class SearchDocumentResponse {
 	private final float maxScore;
 	private final String scrollId;
 	private final List<SearchDocument> searchDocuments;
-	private final Aggregations aggregations;
+	private final AggregationsContainer<?> aggregations;
 
 	private SearchDocumentResponse(long totalHits, String totalHitsRelation, float maxScore, String scrollId,
 			List<SearchDocument> searchDocuments, Aggregations aggregations) {
@@ -49,7 +51,7 @@ public class SearchDocumentResponse {
 		this.maxScore = maxScore;
 		this.scrollId = scrollId;
 		this.searchDocuments = searchDocuments;
-		this.aggregations = aggregations;
+		this.aggregations = new ElasticsearchAggregations(aggregations);
 	}
 
 	public long getTotalHits() {
@@ -72,7 +74,7 @@ public class SearchDocumentResponse {
 		return searchDocuments;
 	}
 
-	public Aggregations getAggregations() {
+	public AggregationsContainer<?> getAggregations() {
 		return aggregations;
 	}
 
@@ -97,7 +99,7 @@ public class SearchDocumentResponse {
 
 	/**
 	 * creates a {@link SearchDocumentResponse} from {@link SearchHits} with the given scrollId and aggregations
-	 * 
+	 *
 	 * @param searchHits the {@link SearchHits} to process
 	 * @param scrollId scrollId
 	 * @param aggregations aggregations

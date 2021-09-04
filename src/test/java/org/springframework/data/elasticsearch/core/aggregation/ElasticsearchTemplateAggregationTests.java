@@ -44,9 +44,11 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.core.AggregationsContainer;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.clients.elasticsearch7.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
@@ -128,10 +130,11 @@ public class ElasticsearchTemplateAggregationTests {
 		// when
 		SearchHits<ArticleEntity> searchHits = operations.search(searchQuery, ArticleEntity.class,
 				IndexCoordinates.of(INDEX_NAME));
-		Aggregations aggregations = searchHits.getAggregations();
+		AggregationsContainer<?> aggregationsContainer = searchHits.getAggregations();
 
 		// then
-		assertThat(aggregations).isNotNull();
+		assertThat(aggregationsContainer).isNotNull();
+		Aggregations aggregations = ((ElasticsearchAggregations) aggregationsContainer).aggregations();
 		assertThat(aggregations.asMap().get("subjects")).isNotNull();
 		assertThat(searchHits.hasSearchHits()).isFalse();
 	}
@@ -160,8 +163,10 @@ public class ElasticsearchTemplateAggregationTests {
 
 		SearchHits<PipelineAggsEntity> searchHits = operations.search(searchQuery, PipelineAggsEntity.class);
 
-		Aggregations aggregations = searchHits.getAggregations();
-		assertThat(aggregations).isNotNull();
+		AggregationsContainer<?> aggregationsContainer = searchHits.getAggregations();
+		assertThat(aggregationsContainer).isNotNull();
+		Aggregations aggregations = ((ElasticsearchAggregations) aggregationsContainer).aggregations();
+
 		assertThat(aggregations.asMap().get("keyword_aggs")).isNotNull();
 		Aggregation keyword_bucket_stats = aggregations.asMap().get("keyword_bucket_stats");
 		assertThat(keyword_bucket_stats).isInstanceOf(StatsBucket.class);

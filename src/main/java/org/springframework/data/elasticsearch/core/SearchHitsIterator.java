@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 
@@ -33,7 +32,7 @@ public interface SearchHitsIterator<T> extends CloseableIterator<SearchHit<T>> {
 	 * @return the aggregations.
 	 */
 	@Nullable
-	Aggregations getAggregations();
+	AggregationsContainer<?> getAggregations();
 
 	/**
 	 * @return the maximum score

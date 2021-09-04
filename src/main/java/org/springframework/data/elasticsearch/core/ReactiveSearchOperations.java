@@ -20,7 +20,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
@@ -185,7 +184,7 @@ public interface ReactiveSearchOperations {
 	 * @return a {@link Flux} emitting matching aggregations one by one.
 	 * @since 4.0
 	 */
-	Flux<Aggregation> aggregate(Query query, Class<?> entityType);
+	Flux<AggregationContainer<?>> aggregate(Query query, Class<?> entityType);
 
 	/**
 	 * Perform an aggregation specified by the given {@link Query query}. <br />
@@ -196,7 +195,7 @@ public interface ReactiveSearchOperations {
 	 * @return a {@link Flux} emitting matching aggregations one by one.
 	 * @since 4.0
 	 */
-	Flux<Aggregation> aggregate(Query query, Class<?> entityType, IndexCoordinates index);
+	Flux<AggregationContainer<?>> aggregate(Query query, Class<?> entityType, IndexCoordinates index);
 
 	/**
 	 * Does a suggest query
