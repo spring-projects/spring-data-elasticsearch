@@ -166,15 +166,15 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
     return headers;
   })
   .withClientConfigurer(                                                <.>
-    (ReactiveRestClients.WebClientConfigurationCallback) webClient -> {
+    ReactiveRestClients.WebClientConfigurationCallback.from(webClient -> {
   	  // ...
       return webClient;
-  	})
+  	}))
   .withClientConfigurer(                                                <.>
-    (RestClients.RestClientConfigurationCallback) clientBuilder -> {
+    RestClients.RestClientConfigurationCallback.from(clientBuilder -> {
   	  // ...
       return clientBuilder;
-  	})
+  	}))
   . // ... other options
   .build();
 

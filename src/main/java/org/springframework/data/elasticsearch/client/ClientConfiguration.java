@@ -176,16 +176,16 @@ public interface ClientConfiguration {
 	/**
 	 * @return the Rest Client configuration callback.
 	 * @since 4.2
-	 * @deprecated since 4.3 use {@link #getClientConfigurer()}
+	 * @deprecated since 4.3 use {@link #getClientConfigurers()}
 	 */
 	@Deprecated
 	HttpClientConfigCallback getHttpClientConfigurer();
 
 	/**
-	 * @return the client configuration callback
+	 * @return the client configuration callbacks
 	 * @since 4.3
 	 */
-	<T> ClientConfigurationCallback<T> getClientConfigurer();
+	<T> List<ClientConfigurationCallback<?>> getClientConfigurers();
 
 	/**
 	 * @return the supplier for custom headers.

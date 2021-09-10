@@ -64,7 +64,7 @@ class ClientConfigurationBuilder
 	private Function<WebClient, WebClient> webClientConfigurer = Function.identity();
 	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
 	@Deprecated private HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
-	private ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = t -> t;
+	private List<ClientConfiguration.ClientConfigurationCallback<?>> clientConfigurers = new ArrayList<>();
 
 	/*
 	 * (non-Javadoc)
@@ -208,9 +208,7 @@ class ClientConfigurationBuilder
 		Assert.notNull(webClientConfigurer, "webClientConfigurer must not be null");
 
 		this.webClientConfigurer = webClientConfigurer;
-		// noinspection NullableProblems
-		this.clientConfigurer = (ReactiveRestClients.WebClientConfigurationCallback) webClientConfigurer::apply;
-
+		this.clientConfigurers.add(ReactiveRestClients.WebClientConfigurationCallback.from(webClientConfigurer));
 		return this;
 	}
 
@@ -220,9 +218,8 @@ class ClientConfigurationBuilder
 		Assert.notNull(httpClientConfigurer, "httpClientConfigurer must not be null");
 
 		this.httpClientConfigurer = httpClientConfigurer;
-		// noinspection NullableProblems
-		this.clientConfigurer = (RestClients.RestClientConfigurationCallback) httpClientConfigurer::customizeHttpClient;
-
+		this.clientConfigurers
+				.add(RestClients.RestClientConfigurationCallback.from(httpClientConfigurer::customizeHttpClient));
 		return this;
 	}
 
@@ -232,7 +229,7 @@ class ClientConfigurationBuilder
 
 		Assert.notNull(clientConfigurer, "clientConfigurer must not be null");
 
-		this.clientConfigurer = clientConfigurer;
+		this.clientConfigurers.add(clientConfigurer);
 		return this;
 	}
 
@@ -260,7 +257,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
-				hostnameVerifier, proxy, webClientConfigurer, httpClientConfigurer, clientConfigurer, headersSupplier);
+				hostnameVerifier, proxy, webClientConfigurer, httpClientConfigurer, clientConfigurers, headersSupplier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

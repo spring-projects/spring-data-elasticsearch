@@ -118,15 +118,16 @@ public class RestClientsTest {
 					});
 
 			if (clientUnderTestFactory instanceof RestClientUnderTestFactory) {
-				configurationBuilder.withClientConfigurer((RestClients.RestClientConfigurationCallback) httpClientBuilder -> {
-					clientConfigurerCount.incrementAndGet();
-					return httpClientBuilder;
-				});
+				configurationBuilder
+						.withClientConfigurer(RestClients.RestClientConfigurationCallback.from(httpClientBuilder -> {
+							clientConfigurerCount.incrementAndGet();
+							return httpClientBuilder;
+						}));
 			} else if (clientUnderTestFactory instanceof ReactiveElasticsearchClientUnderTestFactory) {
-				configurationBuilder.withClientConfigurer((ReactiveRestClients.WebClientConfigurationCallback) webClient -> {
+				configurationBuilder.withClientConfigurer(ReactiveRestClients.WebClientConfigurationCallback.from(webClient -> {
 					clientConfigurerCount.incrementAndGet();
 					return webClient;
-				});
+				}));
 			}
 
 			ClientConfiguration clientConfiguration = configurationBuilder.build();
