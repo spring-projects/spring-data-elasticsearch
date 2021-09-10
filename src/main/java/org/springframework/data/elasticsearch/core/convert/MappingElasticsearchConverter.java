@@ -97,6 +97,8 @@ public class MappingElasticsearchConverter
 	private final GenericConversionService conversionService;
 	// don't access directly, use getConversions(). to prevent null access
 	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
+	private final SpELContext spELContext = new SpELContext(new MapAccessor());
+	private final EntityInstantiators instantiators = new EntityInstantiators();
 
 	public MappingElasticsearchConverter(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
@@ -159,7 +161,7 @@ public class MappingElasticsearchConverter
 	@Override
 	public <R> R read(Class<R> type, Document source) {
 
-		Reader reader = new Reader(mappingContext, conversionService, getConversions());
+		Reader reader = new Reader(mappingContext, conversionService, getConversions(), spELContext, instantiators);
 		return reader.read(type, source);
 	}
 
@@ -200,14 +202,16 @@ public class MappingElasticsearchConverter
 	private static class Reader extends Base {
 
 		private final SpELContext spELContext;
-		private final EntityInstantiators instantiators = new EntityInstantiators();
+		private final EntityInstantiators instantiators;
 
 		public Reader(
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
-				GenericConversionService conversionService, CustomConversions conversions) {
+				GenericConversionService conversionService, CustomConversions conversions, SpELContext spELContext,
+				EntityInstantiators instantiators) {
 
 			super(mappingContext, conversionService, conversions);
-			this.spELContext = new SpELContext(new MapAccessor());
+			this.spELContext = spELContext;
+			this.instantiators = instantiators;
 		}
 
 		@SuppressWarnings("unchecked")
