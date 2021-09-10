@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import java.util.function.Function;
+
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -69,5 +71,14 @@ public final class ReactiveRestClients {
 	 *
 	 * @since 4.3
 	 */
-	public interface WebClientConfigurationCallback extends ClientConfiguration.ClientConfigurationCallback<WebClient> {}
+	public interface WebClientConfigurationCallback extends ClientConfiguration.ClientConfigurationCallback<WebClient> {
+
+		static WebClientConfigurationCallback from(Function<WebClient, WebClient> webClientCallback) {
+
+			Assert.notNull(webClientCallback, "webClientCallback must not be null");
+
+			// noinspection NullableProblems
+			return webClientCallback::apply;
+		}
+	}
 }

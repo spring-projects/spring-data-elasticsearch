@@ -208,9 +208,7 @@ class ClientConfigurationBuilder
 		Assert.notNull(webClientConfigurer, "webClientConfigurer must not be null");
 
 		this.webClientConfigurer = webClientConfigurer;
-		// noinspection NullableProblems
-		this.clientConfigurer = (ReactiveRestClients.WebClientConfigurationCallback) webClientConfigurer::apply;
-
+		this.clientConfigurer = ReactiveRestClients.WebClientConfigurationCallback.from(webClientConfigurer);
 		return this;
 	}
 
@@ -220,9 +218,7 @@ class ClientConfigurationBuilder
 		Assert.notNull(httpClientConfigurer, "httpClientConfigurer must not be null");
 
 		this.httpClientConfigurer = httpClientConfigurer;
-		// noinspection NullableProblems
-		this.clientConfigurer = (RestClients.RestClientConfigurationCallback) httpClientConfigurer::customizeHttpClient;
-
+		this.clientConfigurer = RestClients.RestClientConfigurationCallback.from(httpClientConfigurer::customizeHttpClient);
 		return this;
 	}
 
