@@ -55,6 +55,7 @@ import org.springframework.util.Assert;
  * @author Huw Ayling-Miller
  * @author Henrique Amaral
  * @author Peter-Josef Meisch
+ * @author Nic Hines
  * @since 3.2
  */
 public final class RestClients {
@@ -105,15 +106,14 @@ public final class RestClients {
 			Duration connectTimeout = clientConfiguration.getConnectTimeout();
 
 			if (!connectTimeout.isNegative()) {
-
 				requestConfigBuilder.setConnectTimeout(Math.toIntExact(connectTimeout.toMillis()));
-				requestConfigBuilder.setConnectionRequestTimeout(Math.toIntExact(connectTimeout.toMillis()));
 			}
 
 			Duration timeout = clientConfiguration.getSocketTimeout();
 
 			if (!timeout.isNegative()) {
 				requestConfigBuilder.setSocketTimeout(Math.toIntExact(timeout.toMillis()));
+				requestConfigBuilder.setConnectionRequestTimeout(Math.toIntExact(connectTimeout.toMillis()));
 			}
 
 			clientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
