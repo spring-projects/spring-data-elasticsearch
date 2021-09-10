@@ -109,11 +109,11 @@ public final class RestClients {
 				requestConfigBuilder.setConnectTimeout(Math.toIntExact(connectTimeout.toMillis()));
 			}
 
-			Duration timeout = clientConfiguration.getSocketTimeout();
+			Duration socketTimeout = clientConfiguration.getSocketTimeout();
 
-			if (!timeout.isNegative()) {
-				requestConfigBuilder.setSocketTimeout(Math.toIntExact(timeout.toMillis()));
-				requestConfigBuilder.setConnectionRequestTimeout(Math.toIntExact(connectTimeout.toMillis()));
+			if (!socketTimeout.isNegative()) {
+				requestConfigBuilder.setSocketTimeout(Math.toIntExact(socketTimeout.toMillis()));
+				requestConfigBuilder.setConnectionRequestTimeout(Math.toIntExact(socketTimeout.toMillis()));
 			}
 
 			clientBuilder.setDefaultRequestConfig(requestConfigBuilder.build());
