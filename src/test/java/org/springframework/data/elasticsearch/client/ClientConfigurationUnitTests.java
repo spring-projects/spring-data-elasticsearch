@@ -30,6 +30,7 @@ import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -172,10 +173,10 @@ public class ClientConfigurationUnitTests {
 				}) //
 				.build();
 
-		ClientConfiguration.ClientConfigurationCallback<HttpAsyncClientBuilder> clientConfigurer = clientConfiguration
-				.getClientConfigurer();
+		ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = clientConfiguration.getClientConfigurers()
+				.get(0);
 
-		clientConfigurer.configure(HttpAsyncClientBuilder.create());
+		((RestClients.RestClientConfigurationCallback) clientConfigurer).configure(HttpAsyncClientBuilder.create());
 		assertThat(callCounter.get()).isEqualTo(1);
 	}
 
@@ -193,10 +194,10 @@ public class ClientConfigurationUnitTests {
 				}) //
 				.build();
 
-		ClientConfiguration.ClientConfigurationCallback<WebClient> clientConfigurer = clientConfiguration
-				.getClientConfigurer();
+		ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = clientConfiguration.getClientConfigurers()
+				.get(0);
 
-		clientConfigurer.configure(WebClient.builder().build());
+		((ReactiveRestClients.WebClientConfigurationCallback) clientConfigurer).configure(WebClient.builder().build());
 		assertThat(callCounter.get()).isEqualTo(1);
 	}
 
@@ -214,10 +215,10 @@ public class ClientConfigurationUnitTests {
 				}) //
 				.build();
 
-		ClientConfiguration.ClientConfigurationCallback<Object> clientConfigurer = clientConfiguration
-				.getClientConfigurer();
+		ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = clientConfiguration.getClientConfigurers()
+				.get(0);
 
-		clientConfigurer.configure(new Object());
+		((ClientConfiguration.ClientConfigurationCallback<Object>) clientConfigurer).configure(new Object());
 		assertThat(callCounter.get()).isEqualTo(1);
 	}
 

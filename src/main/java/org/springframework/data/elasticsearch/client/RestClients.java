@@ -121,7 +121,13 @@ public final class RestClients {
 
 			clientConfiguration.getProxy().map(HttpHost::create).ifPresent(clientBuilder::setProxy);
 
-			clientBuilder = clientConfiguration.<HttpAsyncClientBuilder> getClientConfigurer().configure(clientBuilder);
+			for (ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer : clientConfiguration
+					.getClientConfigurers()) {
+				if (clientConfigurer instanceof RestClientConfigurationCallback) {
+					RestClientConfigurationCallback restClientConfigurationCallback = (RestClientConfigurationCallback) clientConfigurer;
+					clientBuilder = restClientConfigurationCallback.configure(clientBuilder);
+				}
+			}
 
 			return clientBuilder;
 		});
