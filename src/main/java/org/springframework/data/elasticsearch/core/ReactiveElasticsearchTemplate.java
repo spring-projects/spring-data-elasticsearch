@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.Version;
@@ -44,7 +45,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -84,6 +84,7 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
+import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
@@ -375,8 +376,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	protected Flux<BulkItemResponse> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 		BulkRequest bulkRequest = prepareWriteRequest(requestFactory.bulkRequest(queries, bulkOptions, index));
 		return client.bulk(bulkRequest) //
-				.onErrorMap(
-						e -> new UncategorizedElasticsearchException("Error while bulk for request: " + bulkRequest.toString(), e)) //
+				.onErrorMap(e -> new UncategorizedElasticsearchException("Error while bulk for request: " + bulkRequest, e)) //
 				.flatMap(this::checkForBulkOperationFailure) //
 				.flatMapMany(response -> Flux.fromArray(response.getItems()));
 	}
@@ -658,7 +658,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	/**
-	 * Customization hook to modify a generated {@link DeleteRequest} prior to its execution. Eg. by setting the
+	 * Customization hook to modify a generated {@link DeleteRequest} prior to its execution. E.g. by setting the
 	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
 	 *
 	 * @param request the generated {@link DeleteRequest}.
@@ -669,7 +669,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	/**
-	 * Customization hook to modify a generated {@link DeleteByQueryRequest} prior to its execution. Eg. by setting the
+	 * Customization hook to modify a generated {@link DeleteByQueryRequest} prior to its execution. E.g. by setting the
 	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
 	 *
 	 * @param request the generated {@link DeleteByQueryRequest}.
@@ -694,7 +694,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	/**
-	 * Customization hook to modify a generated {@link IndexRequest} prior to its execution. Eg. by setting the
+	 * Customization hook to modify a generated {@link IndexRequest} prior to its execution. E.g. by setting the
 	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
 	 *
 	 * @param source the source object the {@link IndexRequest} was derived from.
@@ -706,7 +706,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	/**
-	 * Pre process the write request before it is sent to the server, eg. by setting the
+	 * Preprocess the write request before it is sent to the server, e.g. by setting the
 	 * {@link WriteRequest#setRefreshPolicy(String) refresh policy} if applicable.
 	 *
 	 * @param request must not be {@literal null}.
@@ -777,7 +777,10 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		return Mono.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
 			request = prepareSearchRequest(request, false);
-			return doFindForResponse(request);
+
+			SearchDocumentCallback<?> documentCallback = new ReadSearchDocumentCallback<>(clazz, index);
+
+			return doFindForResponse(request, searchDocument -> documentCallback.toEntity(searchDocument).block());
 		});
 	}
 
@@ -788,31 +791,70 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	@Override
 	public Flux<AggregationContainer<?>> aggregate(Query query, Class<?> entityType, IndexCoordinates index) {
-		return doAggregate(query, entityType, index);
-	}
 
-	@Override
-	public Flux<Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType) {
-		return doSuggest(suggestion, getIndexCoordinatesFor(entityType));
-	}
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(entityType, "entityType must not be null");
+		Assert.notNull(index, "index must not be null");
 
-	@Override
-	public Flux<Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index) {
-		return doSuggest(suggestion, index);
-	}
-
-	private Flux<Suggest> doSuggest(SuggestBuilder suggestion, IndexCoordinates index) {
-		return Flux.defer(() -> {
-			SearchRequest request = requestFactory.searchRequest(suggestion, index);
-			return Flux.from(execute(client -> client.suggest(request)));
-		});
-	}
-
-	private Flux<AggregationContainer<?>> doAggregate(Query query, Class<?> entityType, IndexCoordinates index) {
 		return Flux.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
 			request = prepareSearchRequest(request, false);
 			return doAggregate(request);
+		});
+	}
+
+	/**
+	 * Customization hook on the actual execution result {@link Publisher}. <br />
+	 *
+	 * @param request the already prepared {@link SearchRequest} ready to be executed.
+	 * @return a {@link Flux} emitting the result of the operation.
+	 */
+	protected Flux<AggregationContainer<?>> doAggregate(SearchRequest request) {
+
+		if (QUERY_LOGGER.isDebugEnabled()) {
+			QUERY_LOGGER.debug("Executing doCount: {}", request);
+		}
+
+		return Flux.from(execute(client -> client.aggregate(request))) //
+				.onErrorResume(NoSuchIndexException.class, it -> Flux.empty()).map(ElasticsearchAggregation::new);
+	}
+
+	@Override
+	public Mono<Suggest> suggest(Query query, Class<?> entityType) {
+		return suggest(query, entityType, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public Mono<Suggest> suggest(Query query, Class<?> entityType, IndexCoordinates index) {
+
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(entityType, "entityType must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		return doFindForResponse(query, entityType, index).mapNotNull(searchDocumentResponse -> {
+			Suggest suggest = searchDocumentResponse.getSuggest();
+			SearchHitMapping.mappingFor(entityType, converter).mapHitsInCompletionSuggestion(suggest);
+			return suggest;
+		});
+	}
+
+	@Override
+	@Deprecated
+	public Flux<org.elasticsearch.search.suggest.Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType) {
+		return doSuggest(suggestion, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	@Deprecated
+	public Flux<org.elasticsearch.search.suggest.Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index) {
+		return doSuggest(suggestion, index);
+	}
+
+	@Deprecated
+	private Flux<org.elasticsearch.search.suggest.Suggest> doSuggest(SuggestBuilder suggestion, IndexCoordinates index) {
+		return Flux.defer(() -> {
+			SearchRequest request = requestFactory.searchRequest(suggestion, index);
+			return Flux.from(execute(client -> client.suggest(request)));
 		});
 	}
 
@@ -855,31 +897,19 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook on the actual execution result {@link Mono}. <br />
 	 *
 	 * @param request the already prepared {@link SearchRequest} ready to be executed.
+	 * @param suggestEntityCreator
 	 * @return a {@link Mono} emitting the result of the operation converted to s {@link SearchDocumentResponse}.
 	 */
-	protected Mono<SearchDocumentResponse> doFindForResponse(SearchRequest request) {
+	protected Mono<SearchDocumentResponse> doFindForResponse(SearchRequest request,
+			Function<SearchDocument, ? extends Object> suggestEntityCreator) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug("Executing doFindForResponse: {}", request);
 		}
 
-		return Mono.from(execute(client1 -> client1.searchForResponse(request))).map(SearchDocumentResponse::from);
-	}
-
-	/**
-	 * Customization hook on the actual execution result {@link Publisher}. <br />
-	 *
-	 * @param request the already prepared {@link SearchRequest} ready to be executed.
-	 * @return a {@link Flux} emitting the result of the operation.
-	 */
-	protected Flux<AggregationContainer<?>> doAggregate(SearchRequest request) {
-
-		if (QUERY_LOGGER.isDebugEnabled()) {
-			QUERY_LOGGER.debug("Executing doCount: {}", request);
-		}
-
-		return Flux.from(execute(client -> client.aggregate(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Flux.empty()).map(ElasticsearchAggregation::new);
+		return Mono.from(execute(client1 -> client1.searchForResponse(request))).map(searchResponse -> {
+			return SearchDocumentResponse.from(searchResponse, suggestEntityCreator);
+		});
 	}
 
 	/**
@@ -915,7 +945,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	/**
-	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. Eg. by setting the
+	 * Customization hook to modify a generated {@link SearchRequest} prior to its execution. E.g. by setting the
 	 * {@link SearchRequest#indicesOptions(IndicesOptions) indices options} if applicable.
 	 *
 	 * @param request the generated {@link SearchRequest}.
@@ -941,7 +971,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	// region Helper methods
 	protected Mono<String> getClusterVersion() {
 		try {
-			return Mono.from(execute(client -> client.info())).map(mainResponse -> mainResponse.getVersion().toString());
+			return Mono.from(execute(ReactiveElasticsearchClient::info))
+					.map(mainResponse -> mainResponse.getVersion().toString());
 		} catch (Exception ignored) {}
 		return Mono.empty();
 	}
@@ -1163,11 +1194,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 	protected interface SearchDocumentCallback<T> {
 
-		@NonNull
-		Mono<T> toEntity(@NonNull SearchDocument response);
+		Mono<T> toEntity(SearchDocument response);
 
-		@NonNull
-		Mono<SearchHit<T>> toSearchHit(@NonNull SearchDocument response);
+		Mono<SearchHit<T>> toSearchHit(SearchDocument response);
 	}
 
 	protected class ReadSearchDocumentCallback<T> implements SearchDocumentCallback<T> {
@@ -1210,7 +1239,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		}
 
 		private T entityAt(long index) {
-			// it's safe to cast to int because the original indexed colleciton was fitting in memory
+			// it's safe to cast to int because the original indexed collection was fitting in memory
 			int intIndex = (int) index;
 			return entities.get(intIndex);
 		}

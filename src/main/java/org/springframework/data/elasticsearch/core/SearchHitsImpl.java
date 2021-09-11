@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.util.Lazy;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -39,6 +40,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	private final List<? extends SearchHit<T>> searchHits;
 	private final Lazy<List<SearchHit<T>>> unmodifiableSearchHits;
 	@Nullable private final AggregationsContainer<?> aggregations;
+	@Nullable private final Suggest suggest;
 
 	/**
 	 * @param totalHits the number of total hits for the search
@@ -49,7 +51,8 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	 * @param aggregations the aggregations if available
 	 */
 	public SearchHitsImpl(long totalHits, TotalHitsRelation totalHitsRelation, float maxScore, @Nullable String scrollId,
-			List<? extends SearchHit<T>> searchHits, @Nullable AggregationsContainer<?> aggregations) {
+			List<? extends SearchHit<T>> searchHits, @Nullable AggregationsContainer<?> aggregations,
+			@Nullable Suggest suggest) {
 
 		Assert.notNull(searchHits, "searchHits must not be null");
 
@@ -59,6 +62,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 		this.scrollId = scrollId;
 		this.searchHits = searchHits;
 		this.aggregations = aggregations;
+		this.suggest = suggest;
 		this.unmodifiableSearchHits = Lazy.of(() -> Collections.unmodifiableList(searchHits));
 	}
 
@@ -88,14 +92,23 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	public List<SearchHit<T>> getSearchHits() {
 		return unmodifiableSearchHits.get();
 	}
-	// endregion
 
-	// region SearchHit access
 	@Override
 	public SearchHit<T> getSearchHit(int index) {
 		return searchHits.get(index);
 	}
-	// endregion
+
+	@Override
+	@Nullable
+	public AggregationsContainer<?> getAggregations() {
+		return aggregations;
+	}
+
+	@Override
+	@Nullable
+	public Suggest getSuggest() {
+		return suggest;
+	}
 
 	@Override
 	public String toString() {
@@ -108,12 +121,4 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 				", aggregations=" + aggregations + //
 				'}';
 	}
-
-	// region aggregations
-	@Override
-	@Nullable
-	public AggregationsContainer<?> getAggregations() {
-		return aggregations;
-	}
-	// endregion
 }

@@ -31,6 +31,7 @@ import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 
@@ -76,6 +77,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private Boolean trackTotalHits;
 	@Nullable private Duration timeout;
 	private final List<RescorerQuery> rescorerQueries = new ArrayList<>();
+	@Nullable private SuggestBuilder suggestBuilder;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -311,6 +313,14 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @since 4.3
+	 */
+	public NativeSearchQueryBuilder withSuggestBuilder(SuggestBuilder suggestBuilder) {
+		this.suggestBuilder = suggestBuilder;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery( //
@@ -393,6 +403,9 @@ public class NativeSearchQueryBuilder {
 			nativeSearchQuery.setRescorerQueries(rescorerQueries);
 		}
 
+		if (suggestBuilder != null) {
+			nativeSearchQuery.setSuggestBuilder(suggestBuilder);
+		}
 		return nativeSearchQuery;
 	}
 }

@@ -817,7 +817,8 @@ class RequestFactory {
 			if (query instanceof NativeSearchQuery) {
 				NativeSearchQuery searchQuery = (NativeSearchQuery) query;
 
-				if (searchQuery.getHighlightFields() != null || searchQuery.getHighlightBuilder() != null) {
+				if ((searchQuery.getHighlightFields() != null && searchQuery.getHighlightFields().length > 0)
+						|| searchQuery.getHighlightBuilder() != null) {
 					highlightBuilder = searchQuery.getHighlightBuilder();
 
 					if (highlightBuilder == null) {
@@ -1140,6 +1141,9 @@ class RequestFactory {
 			query.getPipelineAggregations().forEach(sourceBuilder::aggregation);
 		}
 
+		if (query.getSuggestBuilder() != null) {
+			sourceBuilder.suggest(query.getSuggestBuilder());
+		}
 	}
 
 	private void prepareNativeSearch(SearchRequestBuilder searchRequestBuilder, NativeSearchQuery nativeSearchQuery) {
@@ -1165,6 +1169,10 @@ class RequestFactory {
 
 		if (!isEmpty(nativeSearchQuery.getPipelineAggregations())) {
 			nativeSearchQuery.getPipelineAggregations().forEach(searchRequestBuilder::addAggregation);
+		}
+
+		if (nativeSearchQuery.getSuggestBuilder() != null) {
+			searchRequestBuilder.suggest(nativeSearchQuery.getSuggestBuilder());
 		}
 	}
 

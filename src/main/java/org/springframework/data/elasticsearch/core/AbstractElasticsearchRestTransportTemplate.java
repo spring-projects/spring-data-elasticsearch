@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2021 the original author or authors.
+ * Copyright 2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ import org.elasticsearch.action.search.MultiSearchResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -103,11 +104,12 @@ public abstract class AbstractElasticsearchRestTransportTemplate extends Abstrac
 
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
 
+		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
 		List<SearchHits<T>> res = new ArrayList<>(queries.size());
 		int c = 0;
 		for (Query query : queries) {
-			res.add(callback.doWith(SearchDocumentResponse.from(items[c++].getResponse())));
+			res.add(callback.doWith(SearchDocumentResponse.from(items[c++].getResponse(), documentCallback::doWith)));
 		}
 		return res;
 	}
@@ -134,11 +136,13 @@ public abstract class AbstractElasticsearchRestTransportTemplate extends Abstrac
 		for (Query query : queries) {
 			Class entityClass = it1.next();
 
+			IndexCoordinates index = getIndexCoordinatesFor(entityClass);
+			ReadDocumentCallback<?> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, entityClass, index);
 			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(entityClass,
-					getIndexCoordinatesFor(entityClass));
+					index);
 
 			SearchResponse response = items[c++].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response)));
+			res.add(callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith)));
 		}
 		return res;
 	}
@@ -166,11 +170,12 @@ public abstract class AbstractElasticsearchRestTransportTemplate extends Abstrac
 		for (Query query : queries) {
 			Class entityClass = it1.next();
 
+			ReadDocumentCallback<?> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, entityClass, index);
 			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(entityClass,
 					index);
 
 			SearchResponse response = items[c++].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response)));
+			res.add(callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith)));
 		}
 		return res;
 	}
@@ -202,6 +207,12 @@ public abstract class AbstractElasticsearchRestTransportTemplate extends Abstrac
 	@Override
 	protected String getRuntimeLibraryVersion() {
 		return Version.CURRENT.toString();
+	}
+
+	@Override
+	@Deprecated
+	public SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz) {
+		return suggest(suggestion, getIndexCoordinatesFor(clazz));
 	}
 
 	// endregion

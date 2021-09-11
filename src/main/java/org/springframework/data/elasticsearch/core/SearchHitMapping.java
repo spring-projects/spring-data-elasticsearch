@@ -31,6 +31,8 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;
+import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -97,7 +99,27 @@ class SearchHitMapping<T> {
 		AggregationsContainer<?> aggregations = searchDocumentResponse.getAggregations();
 		TotalHitsRelation totalHitsRelation = TotalHitsRelation.valueOf(searchDocumentResponse.getTotalHitsRelation());
 
-		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, scrollId, searchHits, aggregations);
+		Suggest suggest = searchDocumentResponse.getSuggest();
+		mapHitsInCompletionSuggestion(suggest);
+
+		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, scrollId, searchHits, aggregations, suggest);
+	}
+
+	@SuppressWarnings("unchecked")
+	public void mapHitsInCompletionSuggestion(@Nullable Suggest suggest) {
+		if (suggest != null) {
+			for (Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion : suggest
+					.getSuggestions()) {
+				if (suggestion instanceof CompletionSuggestion) {
+					CompletionSuggestion<T> completionSuggestion = (CompletionSuggestion<T>) suggestion;
+					for (CompletionSuggestion.Entry<T> entry : completionSuggestion.getEntries()) {
+						for (CompletionSuggestion.Entry.Option<T> option : entry.getOptions()) {
+							option.updateSearchHit(this::mapHit);
+						}
+					}
+				}
+			}
+		}
 	}
 
 	SearchHit<T> mapHit(SearchDocument searchDocument, T content) {
@@ -213,7 +235,8 @@ class SearchHitMapping<T> {
 						searchHits.getMaxScore(), //
 						scrollId, //
 						convertedSearchHits, //
-						searchHits.getAggregations());
+						searchHits.getAggregations(), //
+						searchHits.getSuggest());
 			}
 		} catch (Exception e) {
 			LOGGER.warn("Could not map inner_hits", e);

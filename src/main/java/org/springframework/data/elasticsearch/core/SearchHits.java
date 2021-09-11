@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Iterator;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 
@@ -75,6 +76,21 @@ public interface SearchHits<T> extends Streamable<SearchHit<T>> {
 	 */
 	default boolean hasSearchHits() {
 		return !getSearchHits().isEmpty();
+	}
+
+	/**
+	 * @return the suggest response
+	 * @since 4.3
+	 */
+	@Nullable
+	Suggest getSuggest();
+
+	/**
+	 * @return wether the {@link SearchHits} has a suggest response.
+	 * @since 4.3
+	 */
+	default boolean hasSuggest() {
+		return getSuggest() != null;
 	}
 
 	/**

@@ -353,8 +353,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchRestTransportTem
 		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, clazz, index);
 		SearchResponse response = getSearchResponse(searchRequestBuilder);
 
+		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
-		return callback.doWith(SearchDocumentResponse.from(response));
+		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
 	}
 
 	@Override
@@ -369,9 +370,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchRestTransportTem
 
 		SearchResponse response = getSearchResponseWithTimeout(action);
 
+		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response));
+		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
 	}
 
 	@Override
@@ -385,9 +387,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchRestTransportTem
 
 		SearchResponse response = getSearchResponseWithTimeout(action);
 
+		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response));
+		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
 	}
 
 	@Override
