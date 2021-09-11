@@ -1108,34 +1108,6 @@ public class MappingElasticsearchConverter
 		}
 
 		/**
-		 * @deprecated since 4.2, use {@link #getPotentiallyConvertedSimpleWrite(Object, Class)} instead.
-		 */
-		@Nullable
-		@Deprecated
-		protected Object getWriteSimpleValue(Object value) {
-			Optional<Class<?>> customTarget = conversions.getCustomWriteTarget(value.getClass());
-
-			if (customTarget.isPresent()) {
-				return conversionService.convert(value, customTarget.get());
-			}
-
-			return Enum.class.isAssignableFrom(value.getClass()) ? ((Enum<?>) value).name() : value;
-		}
-
-		/**
-		 * @deprecated since 4.2, use {@link #writeInternal(Object, Map, TypeInformation)} instead.
-		 */
-		@Deprecated
-		protected Object getWriteComplexValue(ElasticsearchPersistentProperty property,
-				@SuppressWarnings("unused") TypeInformation<?> typeHint, Object value) {
-
-			Document document = Document.create();
-			writeInternal(value, document, property.getTypeInformation());
-
-			return document;
-		}
-
-		/**
 		 * Returns given object as {@link Collection}. Will return the {@link Collection} as is if the source is a
 		 * {@link Collection} already, will convert an array into a {@link Collection} or simply create a single element
 		 * collection for everything else.
