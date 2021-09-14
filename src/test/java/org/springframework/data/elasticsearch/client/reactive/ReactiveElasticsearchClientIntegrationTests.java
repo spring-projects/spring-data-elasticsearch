@@ -31,7 +31,6 @@ import java.util.UUID;
 import java.util.stream.IntStream;
 
 import org.elasticsearch.ElasticsearchStatusException;
-import org.elasticsearch.Version;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -43,7 +42,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.common.unit.TimeValue;
+import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -157,7 +156,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 	public void infoShouldReturnClusterInformation() {
 
 		client.info().as(StepVerifier::create) //
-				.consumeNextWith(it -> assertThat(it.getVersion()).isGreaterThanOrEqualTo(Version.CURRENT)) //
+				.consumeNextWith(it -> assertThat(it.getVersion()).isNotNull()) //
 				.verifyComplete();
 	}
 
