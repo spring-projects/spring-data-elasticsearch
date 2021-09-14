@@ -46,6 +46,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
+import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 /**
  * We need hoverfly for testing the reactive code to use a proxy. Wiremock cannot intercept the proxy calls as WebClient
@@ -66,6 +67,7 @@ public class RestClientsTest {
 
 			// wiremock is the dummy server, hoverfly the proxy
 			WireMock.configureFor(server.port());
+			stubForElasticsearchVersionCheck();
 			stubFor(head(urlEqualTo("/")).willReturn(aResponse() //
 					.withHeader("Content-Type", "application/json; charset=UTF-8")));
 
@@ -95,6 +97,7 @@ public class RestClientsTest {
 
 			WireMock.configureFor(server.port());
 
+			stubForElasticsearchVersionCheck();
 			stubFor(head(urlEqualTo("/")).willReturn(aResponse() //
 					.withHeader("Content-Type", "application/json; charset=UTF-8")));
 
@@ -144,12 +147,36 @@ public class RestClientsTest {
 						.withHeader("def1", new EqualToPattern("def1-2")) //
 						.withHeader("def2", new EqualToPattern("def2-1")) //
 						.withHeader("supplied", new EqualToPattern("val0")) //
-						.withHeader("supplied", new EqualToPattern("val" + i)) //
+						// on the first call Elasticsearch does the version check and thus already increments the counter
+						.withHeader("supplied", new EqualToPattern("val" + (i + 1))) //
 				);
 			}
 
 			assertThat(clientConfigurerCount).hasValue(1);
 		});
+	}
+
+	private StubMapping stubForElasticsearchVersionCheck() {
+		return stubFor(get(urlEqualTo("/")) //
+				.willReturn(okJson("{\n" + //
+						"    \"cluster_name\": \"docker-cluster\",\n" + //
+						"    \"cluster_uuid\": \"nKasrfHjRo6ge0eBmMUuAQ\",\n" + //
+						"    \"name\": \"c1a6e517d001\",\n" + //
+						"    \"tagline\": \"You Know, for Search\",\n" + //
+						"    \"version\": {\n" + //
+						"        \"build_date\": \"2021-08-26T09:01:05.390870785Z\",\n" + //
+						"        \"build_flavor\": \"default\",\n" + //
+						"        \"build_hash\": \"66b55ebfa59c92c15db3f69a335d500018b3331e\",\n" + //
+						"        \"build_snapshot\": false,\n" + //
+						"        \"build_type\": \"docker\",\n" + //
+						"        \"lucene_version\": \"8.9.0\",\n" + //
+						"        \"minimum_index_compatibility_version\": \"6.0.0-beta1\",\n" + //
+						"        \"minimum_wire_compatibility_version\": \"6.8.0\",\n" + //
+						"        \"number\": \"7.14.1\"\n" + //
+						"    }\n" + //
+						"}") //
+								.withHeader("Content-Type", "application/json; charset=UTF-8") //
+								.withHeader("X-Elastic-Product", "Elasticsearch")));
 	}
 
 	/**

@@ -36,8 +36,8 @@ import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.VersionType;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.search.aggregations.bucket.terms.ParsedStringTerms;
@@ -304,13 +304,13 @@ public class ReactiveElasticsearchClientUnitTests {
 				.consumeNextWith(result -> {
 
 					assertThat(result.isFailed()).isFalse();
-					 assertThat(result.getIndex()).isEqualTo("twitter");
-					 assertThat(result.getId()).isEqualTo("3");
+					assertThat(result.getIndex()).isEqualTo("twitter");
+					assertThat(result.getId()).isEqualTo("3");
 					assertThat(result.getResponse().isExists()).isTrue();
-					 assertThat(result.getResponse().getSource()) //
-					 .containsEntry("user", "elastic") //
-					 .containsEntry("message", "Building the site, should be kewl") //
-					 .containsKey("post_date");
+					assertThat(result.getResponse().getSource()) //
+							.containsEntry("user", "elastic") //
+							.containsEntry("message", "Building the site, should be kewl") //
+							.containsKey("post_date");
 				}) //
 				.verifyComplete();
 	}
