@@ -29,7 +29,7 @@ import org.springframework.data.mapping.context.PersistentEntities;
  * @author Peter-Josef Meisch
  * @since 4.1
  */
-class PersistentEntitiesFactoryBean implements FactoryBean<PersistentEntities> {
+public class PersistentEntitiesFactoryBean implements FactoryBean<PersistentEntities> {
 
 	private final MappingElasticsearchConverter converter;
 
