@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
+import org.springframework.data.annotation.QueryAnnotation;
 import java.lang.annotation.*;
 
 /**
@@ -23,11 +24,13 @@ import java.lang.annotation.*;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @author Steven Pearce
  */
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
 @Documented
+@QueryAnnotation
 public @interface Query {
 
 	/**
