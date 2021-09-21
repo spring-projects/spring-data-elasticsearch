@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core.completion;
+package org.springframework.data.elasticsearch.core.suggest;
 
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.Fuzziness;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
-import org.elasticsearch.search.suggest.SuggestionBuilder;
-import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,10 +32,14 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;
+import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
@@ -131,23 +132,26 @@ public class ElasticsearchTemplateCompletionTests {
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingCompletionEntity() {
 
-		// given
 		loadCompletionObjectEntities();
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
+				.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
+				.build();
 
-		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m",
-				Fuzziness.AUTO);
+		SearchHits<CompletionEntity> searchHits = operations.search(query, CompletionEntity.class);
 
-		// when
-		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
-				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-core-completion"));
-		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
-		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
-
-		// then
+		assertThat(searchHits.hasSuggest()).isTrue();
+		Suggest suggest = searchHits.getSuggest();
+		// noinspection ConstantConditions
+		Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
+				.getSuggestion("test-suggest");
+		assertThat(suggestion).isNotNull();
+		assertThat(suggestion).isInstanceOf(CompletionSuggestion.class);
+		// noinspection unchecked
+		List<CompletionSuggestion.Entry.Option<AnnotatedCompletionEntity>> options = ((CompletionSuggestion<AnnotatedCompletionEntity>) suggestion)
+				.getEntries().get(0).getOptions();
 		assertThat(options).hasSize(2);
-		assertThat(options.get(0).getText().string()).isIn("Marchand", "Mohsin");
-		assertThat(options.get(1).getText().string()).isIn("Marchand", "Mohsin");
+		assertThat(options.get(0).getText()).isIn("Marchand", "Mohsin");
+		assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
 	}
 
 	@Test // DATAES-754
@@ -160,43 +164,52 @@ public class ElasticsearchTemplateCompletionTests {
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 
-		// given
 		loadAnnotatedCompletionObjectEntities();
-		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m",
-				Fuzziness.AUTO);
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
+				.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
+				.build();
 
-		// when
-		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
-				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-annotated-completion"));
-		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
-		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
+		SearchHits<AnnotatedCompletionEntity> searchHits = operations.search(query, AnnotatedCompletionEntity.class);
 
-		// then
+		assertThat(searchHits.hasSuggest()).isTrue();
+		Suggest suggest = searchHits.getSuggest();
+		// noinspection ConstantConditions
+		Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
+				.getSuggestion("test-suggest");
+		assertThat(suggestion).isNotNull();
+		assertThat(suggestion).isInstanceOf(CompletionSuggestion.class);
+		// noinspection unchecked
+		List<CompletionSuggestion.Entry.Option<AnnotatedCompletionEntity>> options = ((CompletionSuggestion<AnnotatedCompletionEntity>) suggestion)
+				.getEntries().get(0).getOptions();
 		assertThat(options).hasSize(2);
-		assertThat(options.get(0).getText().string()).isIn("Marchand", "Mohsin");
-		assertThat(options.get(1).getText().string()).isIn("Marchand", "Mohsin");
+		assertThat(options.get(0).getText()).isIn("Marchand", "Mohsin");
+		assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
 	}
 
 	@Test
 	public void shouldFindSuggestionsWithWeightsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 
-		// given
 		loadAnnotatedCompletionObjectEntitiesWithWeights();
-		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m",
-				Fuzziness.AUTO);
+		NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
+				.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
+				.build();
 
-		// when
-		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
-				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-annotated-completion"));
-		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
-		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
+		SearchHits<AnnotatedCompletionEntity> searchHits = operations.search(query, AnnotatedCompletionEntity.class);
 
-		// then
+		assertThat(searchHits.hasSuggest()).isTrue();
+		Suggest suggest = searchHits.getSuggest();
+		// noinspection ConstantConditions
+		Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
+				.getSuggestion("test-suggest");
+		assertThat(suggestion).isNotNull();
+		assertThat(suggestion).isInstanceOf(CompletionSuggestion.class);
+		// noinspection unchecked
+		List<CompletionSuggestion.Entry.Option<AnnotatedCompletionEntity>> options = ((CompletionSuggestion<AnnotatedCompletionEntity>) suggestion)
+				.getEntries().get(0).getOptions();
+
 		assertThat(options).hasSize(4);
-		for (CompletionSuggestion.Entry.Option option : options) {
-			switch (option.getText().string()) {
+		for (CompletionSuggestion.Entry.Option<AnnotatedCompletionEntity> option : options) {
+			switch (option.getText()) {
 				case "Mewes Kochheim1":
 					assertThat(option.getScore()).isEqualTo(4);
 					break;
@@ -216,10 +229,6 @@ public class ElasticsearchTemplateCompletionTests {
 		}
 	}
 
-	/**
-	 * @author Rizwan Idrees
-	 * @author Mohsin Husen
-	 */
 	static class NonDocumentEntity {
 
 		@Nullable @Id private String someId;
@@ -245,9 +254,6 @@ public class ElasticsearchTemplateCompletionTests {
 		}
 	}
 
-	/**
-	 * @author Mewes Kochheim
-	 */
 	@Document(indexName = "test-index-core-completion")
 	static class CompletionEntity {
 
@@ -291,9 +297,6 @@ public class ElasticsearchTemplateCompletionTests {
 		}
 	}
 
-	/**
-	 * @author Mewes Kochheim
-	 */
 	static class CompletionEntityBuilder {
 
 		private CompletionEntity result;

@@ -177,8 +177,8 @@ public final class DocumentAdapters {
 		Map<String, SearchHits> sourceInnerHits = source.getInnerHits();
 
 		if (sourceInnerHits != null) {
-			sourceInnerHits
-					.forEach((name, searchHits) -> innerHits.put(name, SearchDocumentResponse.from(searchHits, null, null)));
+			sourceInnerHits.forEach((name, searchHits) -> innerHits.put(name,
+					SearchDocumentResponse.from(searchHits, null, null, null, searchDocument -> null)));
 		}
 
 		NestedMetaData nestedMetaData = from(source.getNestedIdentity());
@@ -186,12 +186,13 @@ public final class DocumentAdapters {
 		List<String> matchedQueries = from(source.getMatchedQueries());
 
 		BytesReference sourceRef = source.getSourceRef();
+		Map<String, DocumentField> sourceFields = source.getFields();
 
 		if (sourceRef == null || sourceRef.length() == 0) {
 			return new SearchDocumentAdapter(
 					fromDocumentFields(source, source.getIndex(), source.getId(), source.getVersion(), source.getSeqNo(),
 							source.getPrimaryTerm()),
-					source.getScore(), source.getSortValues(), source.getFields(), highlightFields, innerHits, nestedMetaData,
+					source.getScore(), source.getSortValues(), sourceFields, highlightFields, innerHits, nestedMetaData,
 					explanation, matchedQueries);
 		}
 
@@ -205,8 +206,8 @@ public final class DocumentAdapters {
 		document.setSeqNo(source.getSeqNo());
 		document.setPrimaryTerm(source.getPrimaryTerm());
 
-		return new SearchDocumentAdapter(document, source.getScore(), source.getSortValues(), source.getFields(),
-				highlightFields, innerHits, nestedMetaData, explanation, matchedQueries);
+		return new SearchDocumentAdapter(document, source.getScore(), source.getSortValues(), sourceFields, highlightFields,
+				innerHits, nestedMetaData, explanation, matchedQueries);
 	}
 
 	@Nullable

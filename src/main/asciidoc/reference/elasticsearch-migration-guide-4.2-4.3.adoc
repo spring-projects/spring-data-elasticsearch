@@ -21,6 +21,14 @@ Check the sections on <<elasticsearch-migration-guide-4.2-4.3.deprecations>> and
 [[elasticsearch-migration-guide-4.2-4.3.deprecations]]
 == Deprecations
 
+=== suggest methods
+
+In `SearchOperations`, and so in `ElasticsearchOperations` as well, the `suggest` methods taking a `org.elasticsearch.search.suggest.SuggestBuilder` as argument and returning a `org.elasticsearch.action.search.SearchResponse` have been deprecated.
+Use `SearchHits<T> search(Query query, Class<T> clazz)` instead, passing in a `NativeSearchQuery` which can contain a `SuggestBuilder` and read the suggest results from the returned `SearchHit<T>`.
+
+In `ReactiveSearchOperations` the new `suggest` methods return a `Mono<org.springframework.data.elasticsearch.core.suggest.response.Suggest>` now.
+Here as well the old methods are deprecated.
+
 [[elasticsearch-migration-guide-4.2-4.3.breaking-changes]]
 == Breaking Changes
 
@@ -59,3 +67,7 @@ Some properties of the `org.springframework.data.elasticsearch.core.query.BulkOp
 === IndicesOptions change
 
 Spring Data Elasticsearch now uses `org.springframework.data.elasticsearch.core.query.IndicesOptions` instead of `org.elasticsearch.action.support.IndicesOptions`.
+
+=== Completion classes
+
+The classes from the package `org.springframework.data.elasticsearch.core.completion` have been moved to `org.springframework.data.elasticsearch.core.suggest`.

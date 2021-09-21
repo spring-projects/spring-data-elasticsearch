@@ -26,6 +26,7 @@ import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
+import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.lang.Nullable;
 
 /**
@@ -54,6 +55,7 @@ public class NativeSearchQuery extends AbstractQuery {
 	@Nullable private HighlightBuilder.Field[] highlightFields;
 	@Nullable private List<IndexBoost> indicesBoost;
 	@Nullable private SearchTemplateRequestBuilder searchTemplate;
+	@Nullable private SuggestBuilder suggestBuilder;
 
 	public NativeSearchQuery(@Nullable QueryBuilder query) {
 
@@ -183,5 +185,20 @@ public class NativeSearchQuery extends AbstractQuery {
 
 	public void setSearchTemplate(@Nullable SearchTemplateRequestBuilder searchTemplate) {
 		this.searchTemplate = searchTemplate;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	public void setSuggestBuilder(SuggestBuilder suggestBuilder) {
+		this.suggestBuilder = suggestBuilder;
+	}
+
+	/**
+	 * @since 4.3
+	 */
+	@Nullable
+	public SuggestBuilder getSuggestBuilder() {
+		return suggestBuilder;
 	}
 }

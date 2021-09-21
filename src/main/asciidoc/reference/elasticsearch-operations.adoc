@@ -20,11 +20,11 @@ The default implementations of the interfaces offer:
 [NOTE]
 ====
 .Index management and automatic creation of indices and mappings.
+The `IndexOperations` interface and the provided implementation which can be obtained from an `ElasticsearchOperations` instance - for example with a call to `operations.indexOps(clazz)`- give the user the ability to create indices, put mappings or store template and alias information in the Elasticsearch cluster.
+Details of the index that will be created can be set by using the `@Setting` annotation, refer to <<elasticsearc.misc.index.settings>> for further information.
 
-The `IndexOperations` interface and the provided implementation which can be obtained from an `ElasticsearchOperations` instance - for example with a call to `operations.indexOps(clazz)`- give the user the ability to create indices, put mappings or store template and alias information in the Elasticsearch cluster. Details of the index that will be created
-can be set by using the `@Setting` annotation, refer to <<elasticsearc.misc.index.settings>> for further information.
-
-**None of these operations are done automatically** by the implementations of `IndexOperations` or `ElasticsearchOperations`. It is the user's responsibility to call the methods.
+**None of these operations are done automatically** by the implementations of `IndexOperations` or `ElasticsearchOperations`.
+It is the user's responsibility to call the methods.
 
 There is support for automatic creation of indices and writing the mappings when using Spring Data Elasticsearch repositories, see <<elasticsearch.repositories.autocreation>>
 
@@ -58,6 +58,7 @@ public class TransportClientConfig extends ElasticsearchConfigurationSupport {
   }
 }
 ----
+
 <1> Setting up the <<elasticsearch.clients.transport>>.
 Deprecated as of version 4.0.
 <2> Creating the `ElasticsearchTemplate` bean, offering both names, _elasticsearchOperations_ and _elasticsearchTemplate_.
@@ -82,6 +83,7 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
   // no special bean creation needed                       <2>
 }
 ----
+
 <1> Setting up the <<elasticsearch.clients.rest>>.
 <2> The base class `AbstractElasticsearchConfiguration` already provides the `elasticsearchTemplate` bean.
 ====
@@ -127,6 +129,7 @@ public class TestController {
 }
 
 ----
+
 <1> Let Spring inject the provided `ElasticsearchOperations` bean in the constructor.
 <2> Store some entity in the Elasticsearch cluster.
 <3> Retrieve the entity with a query by id.
@@ -164,6 +167,7 @@ Contains the following information:
 * Maximum score
 * A list of `SearchHit<T>` objects
 * Returned aggregations
+* Returned suggest results
 
 .SearchPage<T>
 Defines a Spring Data `Page` that contains a `SearchHits<T>` element and can be used for paging access using repository methods.
@@ -182,12 +186,12 @@ Almost all of the methods defined in the `SearchOperations` and `ReactiveSearchO
 [[elasticsearch.operations.criteriaquery]]
 === CriteriaQuery
 
-`CriteriaQuery` based queries allow the creation of queries to search for data without knowing the syntax or basics of Elasticsearch queries. They allow the user to build queries by simply chaining and combining `Criteria` objects that specifiy the criteria the searched documents must fulfill.
+`CriteriaQuery` based queries allow the creation of queries to search for data without knowing the syntax or basics of Elasticsearch queries.
+They allow the user to build queries by simply chaining and combining `Criteria` objects that specifiy the criteria the searched documents must fulfill.
 
 NOTE: when talking about AND or OR when combining criteria keep in mind, that in Elasticsearch AND are converted to a **must** condition and OR to a **should**
 
-`Criteria` and their usage are best explained by example
-(let's assume we have a `Book` entity with a `price` property):
+`Criteria` and their usage are best explained by example (let's assume we have a `Book` entity with a `price` property):
 
 .Get books with a given price
 ====
@@ -211,7 +215,7 @@ Query query = new CriteriaQuery(criteria);
 
 When chaining `Criteria`, by default a AND logic is used:
 
-.Get all persons with first name _James_  and last name _Miller_:
+.Get all persons with first name _James_ and last name _Miller_:
 ====
 [source,java]
 ----
@@ -219,11 +223,13 @@ Criteria criteria = new Criteria("lastname").is("Miller") <1>
   .and("firstname").is("James")                           <2>
 Query query = new CriteriaQuery(criteria);
 ----
+
 <1> the first `Criteria`
 <2> the and() creates a new `Criteria` and chaines it to the first one.
 ====
 
-If you want to create nested queries, you need to use subqueries for this. Let's assume we want to find all persons with a last name of _Miller_ and a first name of either _Jack_ or _John_:
+If you want to create nested queries, you need to use subqueries for this.
+Let's assume we want to find all persons with a last name of _Miller_ and a first name of either _Jack_ or _John_:
 
 .Nested subqueries
 ====
@@ -236,6 +242,7 @@ Criteria miller = new Criteria("lastName").is("Miller")  <.>
   );
 Query query = new CriteriaQuery(criteria);
 ----
+
 <.> create a first `Criteria` for the last name
 <.> this is combined with AND to a subCriteria
 <.> This sub Criteria is an OR combination for the first name _John_
@@ -281,5 +288,3 @@ Query query = new NativeSearchQueryBuilder()
 SearchHits<Person> searchHits = operations.search(query, Person.class);
 ----
 ====
-
-

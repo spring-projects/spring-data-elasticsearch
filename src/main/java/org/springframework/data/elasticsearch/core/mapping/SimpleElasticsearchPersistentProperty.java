@@ -30,7 +30,7 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.Range;
-import org.springframework.data.elasticsearch.core.completion.Completion;
+import org.springframework.data.elasticsearch.core.suggest.Completion;
 import org.springframework.data.elasticsearch.core.convert.DatePersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.convert.DateRangePersistentPropertyConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;

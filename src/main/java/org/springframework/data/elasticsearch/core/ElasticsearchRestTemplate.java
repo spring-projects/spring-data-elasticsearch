@@ -317,8 +317,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchRestTranspor
 		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
 		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
 
+		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
-		return callback.doWith(SearchDocumentResponse.from(response));
+
+		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
 	}
 
 	@Override
@@ -332,9 +334,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchRestTranspor
 
 		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
 
+		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response));
+		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
 	}
 
 	@Override
@@ -346,9 +349,10 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchRestTranspor
 
 		SearchResponse response = execute(client -> client.scroll(request, RequestOptions.DEFAULT));
 
-		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = //
-				new ReadSearchScrollDocumentResponseCallback<>(clazz, index);
-		return callback.doWith(SearchDocumentResponse.from(response));
+		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
+		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
+				index);
+		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
 	}
 
 	@Override

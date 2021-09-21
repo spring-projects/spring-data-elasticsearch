@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core.completion;
+package org.springframework.data.elasticsearch.core.suggest;
 
 import static org.assertj.core.api.Assertions.*;
 

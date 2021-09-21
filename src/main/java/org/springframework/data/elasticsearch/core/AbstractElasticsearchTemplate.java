@@ -22,8 +22,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -432,11 +430,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 */
 	abstract protected void searchScrollClear(List<String> scrollIds);
 
-	@Override
-	public SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz) {
-		return suggest(suggestion, getIndexCoordinatesFor(clazz));
-	}
-
 	// endregion
 
 	// region Helper methods
@@ -758,6 +751,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			this.type = type;
 		}
 
+		@NonNull
 		@Override
 		public SearchHits<T> doWith(SearchDocumentResponse response) {
 			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
@@ -778,6 +772,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			this.type = type;
 		}
 
+		@NonNull
 		@Override
 		public SearchScrollHits<T> doWith(SearchDocumentResponse response) {
 			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());

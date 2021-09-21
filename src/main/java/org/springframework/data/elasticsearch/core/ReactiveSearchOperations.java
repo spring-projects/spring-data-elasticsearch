@@ -20,11 +20,11 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import org.elasticsearch.search.suggest.Suggest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 
 /**
  * The reactive operations for the
@@ -202,18 +202,47 @@ public interface ReactiveSearchOperations {
 	 *
 	 * @param suggestion the query
 	 * @param entityType must not be {@literal null}.
-	 * @return the suggest response
+	 * @return the suggest response (Elasticsearch library classes)
+	 * @deprecated since 4.3, use {@link #suggest(Query, Class)}
 	 */
-	Flux<Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType);
+	@Deprecated
+	Flux<org.elasticsearch.search.suggest.Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType);
 
 	/**
 	 * Does a suggest query
 	 *
 	 * @param suggestion the query
 	 * @param index the index to run the query against
-	 * @return the suggest response
+	 * @return the suggest response (Elasticsearch library classes)
+	 * @deprecated since 4.3, use {@link #suggest(Query, Class, IndexCoordinates)}
 	 */
-	Flux<Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index);
+	@Deprecated
+	Flux<org.elasticsearch.search.suggest.Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index);
+
+	/**
+	 * Does a suggest query.
+	 *
+	 * @param query the Query containing the suggest definition. Must be currently a
+	 *          {@link org.springframework.data.elasticsearch.core.query.NativeSearchQuery}, must not be {@literal null}.
+	 * @param entityType the type of the entities that might be returned for a completion suggestion, must not be
+	 *          {@literal null}.
+	 * @return suggest data
+	 * @since 4.3
+	 */
+	Mono<Suggest> suggest(Query query, Class<?> entityType);
+
+	/**
+	 * Does a suggest query.
+	 *
+	 * @param query the Query containing the suggest definition. Must be currently a
+	 *          {@link org.springframework.data.elasticsearch.core.query.NativeSearchQuery}, must not be {@literal null}.
+	 * @param entityType the type of the entities that might be returned for a completion suggestion, must not be
+	 *          {@literal null}.
+	 * @param index the index to run the query against, must not be {@literal null}.
+	 * @return suggest data
+	 * @since 4.3
+	 */
+	Mono<Suggest> suggest(Query query, Class<?> entityType, IndexCoordinates index);
 
 	// region helper
 	/**
