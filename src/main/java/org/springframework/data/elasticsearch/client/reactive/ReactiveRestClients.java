@@ -17,6 +17,9 @@ package org.springframework.data.elasticsearch.client.reactive;
 
 import java.util.function.Function;
 
+import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.DefaultReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.RequestCreator;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;

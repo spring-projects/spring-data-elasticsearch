@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repositories.spel;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -78,8 +76,7 @@ public class SpELEntityTests {
 		// when
 
 		// then
-		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
-		long count = operations.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
+		long count = operations.count(operations.matchAllQuery(), IndexCoordinates.of("test-index-abz-entity"));
 		assertThat(count).isEqualTo(2);
 	}
 
@@ -93,16 +90,10 @@ public class SpELEntityTests {
 		// when
 
 		// then
-		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery(QueryBuilders.matchAllQuery());
-		long count = operations.count(nativeSearchQuery, IndexCoordinates.of("test-index-abz-entity"));
+		long count = operations.count(operations.matchAllQuery(), IndexCoordinates.of("test-index-abz-entity"));
 		assertThat(count).isEqualTo(1);
 	}
 
-	/**
-	 * SpELEntity
-	 *
-	 * @author Artur Konczak
-	 */
 	@Document(indexName = "#{'test-index-abz'+'-'+'entity'}")
 	static class SpELEntity {
 

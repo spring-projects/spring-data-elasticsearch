@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repositories.synonym;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,8 +30,9 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -75,22 +75,15 @@ public class SynonymRepositoryTests {
 	@Test
 	public void shouldDo() {
 
-		// given
 		SynonymEntity entry1 = new SynonymEntity();
 		entry1.setText("Elizabeth is the english queen");
 		SynonymEntity entry2 = new SynonymEntity();
 		entry2.setText("Other text");
-
 		repository.save(entry1);
 		repository.save(entry2);
 
-		// whe
-		// then
-		assertThat(repository.count()).isEqualTo(2L);
-
-		SearchHits<SynonymEntity> synonymEntities = operations.search(
-				new NativeSearchQueryBuilder().withQuery(QueryBuilders.termQuery("text", "british")).build(),
-				SynonymEntity.class, IndexCoordinates.of("test-index-synonym"));
+		Query query = new CriteriaQuery(new Criteria("text").is("british"));
+		SearchHits<SynonymEntity> synonymEntities = operations.search(query, SynonymEntity.class);
 		assertThat(synonymEntities).hasSize(1);
 	}
 

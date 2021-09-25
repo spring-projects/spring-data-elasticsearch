@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;

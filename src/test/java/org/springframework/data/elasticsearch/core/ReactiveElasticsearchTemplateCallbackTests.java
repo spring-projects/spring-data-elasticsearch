@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.elasticsearch.action.get.GetResponse;
-import org.elasticsearch.action.get.MultiGetItemResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -37,6 +35,8 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.get.GetRequest;
+import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -55,13 +55,14 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.lang.Nullable;
@@ -238,8 +239,8 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		template.setEntityCallbacks(ReactiveEntityCallbacks.create(afterConvertCallback));
 
-		List<MultiGetItem<Person>> results = template.multiGet(pagedQueryForTwo(), Person.class, index).timeout(Duration.ofSeconds(1))
-				.toStream().collect(Collectors.toList());
+		List<MultiGetItem<Person>> results = template.multiGet(pagedQueryForTwo(), Person.class, index)
+				.timeout(Duration.ofSeconds(1)).toStream().collect(Collectors.toList());
 
 		verify(afterConvertCallback, times(2)).onAfterConvert(eq(new Person("init", "luke")), eq(lukeDocument()),
 				eq(index));
@@ -379,8 +380,7 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 		@Nullable @Id String id;
 		@Nullable String firstname;
 
-		public Person() {
-		}
+		public Person() {}
 
 		public Person(@Nullable String id, @Nullable String firstname) {
 			this.id = id;
@@ -407,12 +407,15 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
 
 			Person person = (Person) o;
 
-			if (id != null ? !id.equals(person.id) : person.id != null) return false;
+			if (id != null ? !id.equals(person.id) : person.id != null)
+				return false;
 			return firstname != null ? firstname.equals(person.firstname) : person.firstname == null;
 		}
 

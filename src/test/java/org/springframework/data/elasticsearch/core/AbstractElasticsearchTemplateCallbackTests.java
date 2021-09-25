@@ -38,7 +38,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.util.CloseableIterator;
@@ -441,15 +441,14 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 	static class Person {
 		@Nullable @Id String id;
-		@Nullable  String firstname;
+		@Nullable String firstname;
 
 		public Person(@Nullable String id, @Nullable String firstname) {
 			this.id = id;
 			this.firstname = firstname;
 		}
 
-		public Person() {
-		}
+		public Person() {}
 
 		@Nullable
 		public String getId() {
@@ -471,12 +470,15 @@ abstract class AbstractElasticsearchTemplateCallbackTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
 
 			Person person = (Person) o;
 
-			if (id != null ? !id.equals(person.id) : person.id != null) return false;
+			if (id != null ? !id.equals(person.id) : person.id != null)
+				return false;
 			return firstname != null ? firstname.equals(person.firstname) : person.firstname == null;
 		}
 

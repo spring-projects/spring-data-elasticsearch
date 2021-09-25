@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.document;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.data.elasticsearch.backend.elasticsearch7.document.SearchDocumentResponse;
 import org.springframework.lang.Nullable;
 
 /**
@@ -45,7 +46,7 @@ public interface SearchDocument extends Document {
 
 	/**
 	 * The first value of the given field.
-	 * 
+	 *
 	 * @param name the field name
 	 */
 	@Nullable

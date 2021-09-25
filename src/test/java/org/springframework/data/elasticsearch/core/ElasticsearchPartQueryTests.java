@@ -33,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.clients.elasticsearch7.RequestFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -50,7 +51,7 @@ import org.springframework.lang.Nullable;
  * Tests for {@link ElasticsearchPartQuery}. Resides in the core package, as we need an instance of the
  * {@link RequestFactory} class for the tests. The tests make sure that queries are built according to the method
  * naming.
- * 
+ *
  * @author Peter-Josef Meisch
  */
 @ExtendWith(MockitoExtension.class)

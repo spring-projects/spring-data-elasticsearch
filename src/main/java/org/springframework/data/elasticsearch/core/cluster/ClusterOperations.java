@@ -15,10 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.cluster;
 
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
-import org.springframework.util.Assert;
-
 /**
  * Elasticsearch operations on cluster level.
  *
@@ -26,32 +22,6 @@ import org.springframework.util.Assert;
  * @since 4.2
  */
 public interface ClusterOperations {
-
-	/**
-	 * Creates a ClusterOperations for a {@link ElasticsearchRestTemplate}.
-	 *
-	 * @param template the template, must not be {@literal null}
-	 * @return ClusterOperations
-	 */
-	static ClusterOperations forTemplate(ElasticsearchRestTemplate template) {
-
-		Assert.notNull(template, "template must not be null");
-
-		return new DefaultClusterOperations(template);
-	}
-
-	/**
-	 * Creates a ClusterOperations for a {@link ElasticsearchTemplate}.
-	 *
-	 * @param template the template, must not be {@literal null}
-	 * @return ClusterOperations
-	 */
-	static ClusterOperations forTemplate(ElasticsearchTemplate template) {
-
-		Assert.notNull(template, "template must not be null");
-
-		return new DefaultTransportClusterOperations(template);
-	}
 
 	/**
 	 * get the cluster's health status.
