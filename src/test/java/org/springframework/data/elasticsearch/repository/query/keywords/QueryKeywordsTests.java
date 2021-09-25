@@ -35,6 +35,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -75,9 +76,10 @@ class QueryKeywordsTests {
 		Product product3 = new Product("3", "Sugar", "Beet sugar", 1.1f, true, "sort3");
 		Product product4 = new Product("4", "Salt", "Rock salt", 1.9f, true, "sort2");
 		Product product5 = new Product("5", "Salt", "Sea salt", 2.1f, false, "sort1");
-		Product product6 = new Product("6", null, "no name", 3.4f, false, "sort0");
+		Product product6 = new Product("6", null, "no name", 3.4f, false, "sort6");
+		Product product7 = new Product("7", "", "empty name", 3.4f, false, "sort7");
 
-		repository.saveAll(Arrays.asList(product1, product2, product3, product4, product5, product6));
+		repository.saveAll(Arrays.asList(product1, product2, product3, product4, product5, product6, product7));
 	}
 
 	@AfterEach
@@ -118,7 +120,7 @@ class QueryKeywordsTests {
 
 		// then
 		assertThat(repository.findByAvailableTrue()).hasSize(3);
-		assertThat(repository.findByAvailableFalse()).hasSize(3);
+		assertThat(repository.findByAvailableFalse()).hasSize(4);
 	}
 
 	@Test
@@ -130,8 +132,8 @@ class QueryKeywordsTests {
 
 		// then
 		assertThat(repository.findByPriceIn(Arrays.asList(1.2f, 1.1f))).hasSize(2);
-		assertThat(repository.findByPriceNotIn(Arrays.asList(1.2f, 1.1f))).hasSize(4);
-		assertThat(repository.findByPriceNot(1.2f)).hasSize(5);
+		assertThat(repository.findByPriceNotIn(Arrays.asList(1.2f, 1.1f))).hasSize(5);
+		assertThat(repository.findByPriceNot(1.2f)).hasSize(6);
 	}
 
 	@Test // DATAES-171
@@ -142,7 +144,7 @@ class QueryKeywordsTests {
 		// when
 
 		// then
-		assertThat(repository.findByIdNotIn(Arrays.asList("2", "3"))).hasSize(4);
+		assertThat(repository.findByIdNotIn(Arrays.asList("2", "3"))).hasSize(5);
 	}
 
 	@Test
@@ -167,8 +169,8 @@ class QueryKeywordsTests {
 		assertThat(repository.findByPriceLessThan(1.1f)).hasSize(1);
 		assertThat(repository.findByPriceLessThanEqual(1.1f)).hasSize(2);
 
-		assertThat(repository.findByPriceGreaterThan(1.9f)).hasSize(2);
-		assertThat(repository.findByPriceGreaterThanEqual(1.9f)).hasSize(3);
+		assertThat(repository.findByPriceGreaterThan(1.9f)).hasSize(3);
+		assertThat(repository.findByPriceGreaterThanEqual(1.9f)).hasSize(4);
 	}
 
 	@Test // DATAES-615
@@ -193,7 +195,8 @@ class QueryKeywordsTests {
 		List<String> sortedIds = repository.findAllByOrderByText().stream() //
 				.map(it -> it.text).collect(Collectors.toList());
 
-		assertThat(sortedIds).containsExactly("Beet sugar", "Cane sugar", "Cane sugar", "Rock salt", "Sea salt", "no name");
+		assertThat(sortedIds).containsExactly("Beet sugar", "Cane sugar", "Cane sugar", "Rock salt", "Sea salt",
+				"empty name", "no name");
 	}
 
 	@Test // DATAES-615
@@ -202,7 +205,7 @@ class QueryKeywordsTests {
 		List<String> sortedIds = repository.findAllByOrderBySortName().stream() //
 				.map(it -> it.id).collect(Collectors.toList());
 
-		assertThat(sortedIds).containsExactly("6", "5", "4", "3", "2", "1");
+		assertThat(sortedIds).containsExactly("5", "4", "3", "2", "1", "6", "7");
 	}
 
 	@Test // DATAES-178
@@ -252,7 +255,7 @@ class QueryKeywordsTests {
 		repository.deleteByName(null);
 
 		long count = repository.count();
-		assertThat(count).isEqualTo(5);
+		assertThat(count).isEqualTo(6);
 	}
 
 	@Test // DATAES-937
@@ -273,6 +276,52 @@ class QueryKeywordsTests {
 		assertThat(products).isEmpty();
 	}
 
+	@Test // #1909
+	@DisplayName("should find by property exists")
+	void shouldFindByPropertyExists() {
+
+		SearchHits<Product> searchHits = repository.findByNameExists();
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(6);
+	}
+
+	@Test // #1909
+	@DisplayName("should find by property is not null")
+	void shouldFindByPropertyIsNotNull() {
+
+		SearchHits<Product> searchHits = repository.findByNameIsNotNull();
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(6);
+	}
+
+	@Test // #1909
+	@DisplayName("should find by property is null")
+	void shouldFindByPropertyIsNull() {
+
+		SearchHits<Product> searchHits = repository.findByNameIsNull();
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+	}
+
+	@Test // #1909
+	@DisplayName("should find by empty property")
+	void shouldFindByEmptyProperty() {
+
+		SearchHits<Product> searchHits = repository.findByNameEmpty();
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+	}
+
+	@Test // #1909
+	@DisplayName("should find by non-empty property")
+	void shouldFindByNonEmptyProperty() {
+
+		SearchHits<Product> searchHits = repository.findByNameNotEmpty();
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(5);
+	}
+
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-product-query-keywords")
 	static class Product {
 		@Nullable @Id private String id;
@@ -346,6 +395,7 @@ class QueryKeywordsTests {
 		}
 	}
 
+	@SuppressWarnings({ "SpringDataRepositoryMethodParametersInspection", "SpringDataMethodInconsistencyInspection" })
 	interface ProductRepository extends ElasticsearchRepository<Product, String> {
 
 		List<Product> findByName(@Nullable String name);
@@ -399,6 +449,16 @@ class QueryKeywordsTests {
 		void deleteByName(@Nullable String name);
 
 		List<Product> findAllByNameIn(List<String> names);
+
+		SearchHits<Product> findByNameExists();
+
+		SearchHits<Product> findByNameIsNull();
+
+		SearchHits<Product> findByNameIsNotNull();
+
+		SearchHits<Product> findByNameEmpty();
+
+		SearchHits<Product> findByNameNotEmpty();
 	}
 
 }

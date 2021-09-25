@@ -165,19 +165,34 @@ class CriteriaQueryProcessor {
 	@Nullable
 	private QueryBuilder queryFor(Criteria.CriteriaEntry entry, Field field) {
 
+		QueryBuilder query = null;
 		String fieldName = field.getName();
 		boolean isKeywordField = FieldType.Keyword == field.getFieldType();
 
 		OperationKey key = entry.getKey();
 
-		if (key == OperationKey.EXISTS) {
-			return existsQuery(fieldName);
+		// operations without a value
+		switch (key) {
+			case EXISTS:
+				query = existsQuery(fieldName);
+				break;
+			case EMPTY:
+				query = boolQuery().must(existsQuery(fieldName)).mustNot(wildcardQuery(fieldName, "*"));
+				break;
+			case NOT_EMPTY:
+				query = wildcardQuery(fieldName, "*");
+				break;
+			default:
+				break;
 		}
 
+		if (query != null) {
+			return query;
+		}
+
+		// now operation keys with a value
 		Object value = entry.getValue();
 		String searchText = QueryParserUtil.escape(value.toString());
-
-		QueryBuilder query = null;
 
 		switch (key) {
 			case EQUALS:

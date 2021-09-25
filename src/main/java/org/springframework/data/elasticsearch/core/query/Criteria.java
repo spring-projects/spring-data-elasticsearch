@@ -586,6 +586,31 @@ public class Criteria {
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.MATCHES_ALL, value));
 		return this;
 	}
+
+	/**
+	 * Add a {@link OperationKey#EMPTY} entry to the {@link #queryCriteriaEntries}.
+	 *
+	 * @return this object
+	 * @since 4.3
+	 */
+	public Criteria empty() {
+
+		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.EMPTY));
+		return this;
+	}
+
+	/**
+	 * Add a {@link OperationKey#NOT_EMPTY} entry to the {@link #queryCriteriaEntries}.
+	 *
+	 * @return this object
+	 * @since 4.3
+	 */
+	public Criteria notEmpty() {
+
+		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.NOT_EMPTY));
+		return this;
+	}
+
 	// endregion
 
 	// region criteria entries - filter
@@ -921,7 +946,15 @@ public class Criteria {
 		/**
 		 * @since 4.1
 		 */
-		GEO_CONTAINS
+		GEO_CONTAINS, //
+		/**
+		 * @since 4.3
+		 */
+		EMPTY, //
+		/**
+		 * @since 4.3
+		 */
+		NOT_EMPTY
 	}
 
 	/**
@@ -934,7 +967,9 @@ public class Criteria {
 
 		protected CriteriaEntry(OperationKey key) {
 
-			Assert.isTrue(key == OperationKey.EXISTS, "key must be OperationKey.EXISTS for this call");
+			boolean keyIsValid = key == OperationKey.EXISTS || key == OperationKey.EMPTY || key == OperationKey.NOT_EMPTY;
+			Assert.isTrue(keyIsValid,
+					"key must be OperationKey.EXISTS, OperationKey.EMPTY or OperationKey.EMPTY for this call");
 
 			this.key = key;
 		}

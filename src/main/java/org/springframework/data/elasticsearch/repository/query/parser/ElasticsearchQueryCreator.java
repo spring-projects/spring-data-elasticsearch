@@ -186,7 +186,15 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				if (firstParameter instanceof String && secondParameter instanceof String)
 					return criteria.within((String) firstParameter, (String) secondParameter);
 			}
-
+			case EXISTS:
+			case IS_NOT_NULL:
+				return criteria.exists();
+			case IS_NULL:
+				return criteria.not().exists();
+			case IS_EMPTY:
+				return criteria.empty();
+			case IS_NOT_EMPTY:
+				return criteria.notEmpty();
 			default:
 				throw new InvalidDataAccessApiUsageException("Illegal criteria found '" + type + "'.");
 		}

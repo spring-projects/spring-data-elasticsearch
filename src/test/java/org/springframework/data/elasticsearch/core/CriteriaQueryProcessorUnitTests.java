@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 /**
  * @author Peter-Josef Meisch
  */
+@SuppressWarnings("ConstantConditions")
 class CriteriaQueryProcessorUnitTests {
 
 	private final CriteriaQueryProcessor queryProcessor = new CriteriaQueryProcessor();
@@ -366,6 +367,69 @@ class CriteriaQueryProcessorUnitTests {
 
 		Criteria criteria = new Criteria("houses.inhabitants.lastName").is("murphy");
 		criteria.getField().setPath("houses.inhabitants");
+
+		String query = queryProcessor.createQuery(criteria).toString();
+
+		assertEquals(expected, query, false);
+	}
+
+	@Test // #1909
+	@DisplayName("should build query for empty property")
+	void shouldBuildQueryForEmptyProperty() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"bool\" : {\n" + //
+				"    \"must\" : [\n" + //
+				"      {\n" + //
+				"        \"bool\" : {\n" + //
+				"          \"must\" : [\n" + //
+				"            {\n" + //
+				"              \"exists\" : {\n" + //
+				"                \"field\" : \"lastName\"" + //
+				"              }\n" + //
+				"            }\n" + //
+				"          ],\n" + //
+				"          \"must_not\" : [\n" + //
+				"            {\n" + //
+				"              \"wildcard\" : {\n" + //
+				"                \"lastName\" : {\n" + //
+				"                  \"wildcard\" : \"*\"" + //
+				"                }\n" + //
+				"              }\n" + //
+				"            }\n" + //
+				"          ]\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    ]\n" + //
+				"  }\n" + //
+				"}"; //
+
+		Criteria criteria = new Criteria("lastName").empty();
+
+		String query = queryProcessor.createQuery(criteria).toString();
+
+		assertEquals(expected, query, false);
+	}
+
+	@Test // #1909
+	@DisplayName("should build query for non-empty property")
+	void shouldBuildQueryForNonEmptyProperty() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"bool\" : {\n" + //
+				"    \"must\" : [\n" + //
+				"      {\n" + //
+				"        \"wildcard\" : {\n" + //
+				"          \"lastName\" : {\n" + //
+				"            \"wildcard\" : \"*\"\n" + //
+				"          }\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    ]\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		Criteria criteria = new Criteria("lastName").notEmpty();
 
 		String query = queryProcessor.createQuery(criteria).toString();
 
