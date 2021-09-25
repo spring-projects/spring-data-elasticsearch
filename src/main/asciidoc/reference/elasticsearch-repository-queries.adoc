@@ -242,10 +242,6 @@ A list of supported keywords for Elasticsearch is shown below.
 | `findByNameNotIn(Collection<String>names)`
 | `{"query": {"bool": {"must": [{"query_string": {"query": "NOT(\"?\" \"?\")", "fields": ["name"]}}]}}}`
 
-| `Near`
-| `findByStoreNear`
-| `Not Supported Yet !`
-
 | `True`
 | `findByAvailableTrue`
 | `{ "query" : {
@@ -276,6 +272,26 @@ A list of supported keywords for Elasticsearch is shown below.
 }
 }, "sort":[{"name":{"order":"desc"}}]
 }`
+
+| `Exists`
+| `findByNameExists`
+| `{"query":{"bool":{"must":[{"exists":{"field":"name"}}]}}}`
+
+| `IsNull`
+| `findByNameIsNull`
+| `{"query":{"bool":{"must_not":[{"exists":{"field":"name"}}]}}}`
+
+| `IsNotNull`
+| `findByNameIsNotNull`
+| `{"query":{"bool":{"must":[{"exists":{"field":"name"}}]}}}`
+
+| `IsEmpty`
+| `findByNameIsEmpty`
+| `{"query":{"bool":{"must":[{"bool":{"must":[{"exists":{"field":"name"}}],"must_not":[{"wildcard":{"name":{"wildcard":"*"}}}]}}]}}}`
+
+| `IsNotEmpty`
+| `findByNameIsNotEmpty`
+| `{"query":{"bool":{"must":[{"wildcard":{"name":{"wildcard":"*"}}}]}}}`
 
 |===
 
