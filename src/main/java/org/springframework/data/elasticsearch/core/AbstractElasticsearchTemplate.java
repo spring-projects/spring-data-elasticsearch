@@ -69,6 +69,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
+ * @author Steven Pearce
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -370,7 +371,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public <T> SearchHitsIterator<T> searchForStream(Query query, Class<T> clazz, IndexCoordinates index) {
 
-		long scrollTimeInMillis = Duration.ofMinutes(1).toMillis();
+		Duration scrollTime = query.getScrollTime() != null ? query.getScrollTime() : Duration.ofMinutes(1);
+		long scrollTimeInMillis = scrollTime.toMillis();
 		// noinspection ConstantConditions
 		int maxCount = query.isLimiting() ? query.getMaxResults() : 0;
 
