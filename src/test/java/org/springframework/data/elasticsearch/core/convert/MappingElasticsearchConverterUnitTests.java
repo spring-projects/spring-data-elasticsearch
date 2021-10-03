@@ -893,7 +893,7 @@ public class MappingElasticsearchConverterUnitTests {
 	class RangeTests {
 
 		static final String JSON = "{"
-				+ "\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$RangeTests$RangeEntity\","
+				+ "\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$RangeUnitTests$RangeEntity\","
 				+ "\"integerRange\":{\"gt\":\"1\",\"lt\":\"10\"}," //
 				+ "\"floatRange\":{\"gte\":\"1.2\",\"lte\":\"2.5\"}," //
 				+ "\"longRange\":{\"gt\":\"2\",\"lte\":\"5\"}," //
