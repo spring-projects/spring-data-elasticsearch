@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.util.Assert;
 
@@ -23,11 +23,11 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @since 4.3
  */
-public abstract class AbstractPersistentPropertyConverter implements ElasticsearchPersistentPropertyConverter {
+public abstract class AbstractPropertyValueConverter implements PropertyValueConverter {
 
 	private final PersistentProperty<?> property;
 
-	public AbstractPersistentPropertyConverter(PersistentProperty<?> property) {
+	public AbstractPropertyValueConverter(PersistentProperty<?> property) {
 
 		Assert.notNull(property, "property must not be null.");
 		this.property = property;

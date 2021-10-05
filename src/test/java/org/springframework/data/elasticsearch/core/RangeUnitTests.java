@@ -26,14 +26,11 @@ import org.junit.jupiter.api.Test;
  * @author Sascha Woo
  * @since 4.3
  */
-public class RangeTests {
+public class RangeUnitTests {
 
 	@Test
 	public void shouldContainsLocalDate() {
 
-		// given
-		// when
-		// then
 		assertThat(Range.open(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1)).contains(LocalDate.of(2021, 1, 10)))
 				.isTrue();
 	}
@@ -41,21 +38,17 @@ public class RangeTests {
 	@Test
 	public void shouldEqualToSameRange() {
 
-		// given
 		Range<LocalDate> range1 = Range.open(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1));
 		Range<LocalDate> range2 = Range.open(LocalDate.of(2021, 1, 1), LocalDate.of(2021, 2, 1));
-		// when
-		// then
+
 		assertThat(range1).isEqualTo(range2);
 	}
 
 	@Test
 	public void shouldHaveClosedBoundaries() {
 
-		// given
 		Range<Integer> range = Range.closed(1, 3);
-		// when
-		// then
+
 		assertThat(range.contains(1)).isTrue();
 		assertThat(range.contains(2)).isTrue();
 		assertThat(range.contains(3)).isTrue();
@@ -64,10 +57,8 @@ public class RangeTests {
 	@Test
 	public void shouldHaveJustOneValue() {
 
-		// given
 		Range<Integer> range = Range.just(2);
-		// when
-		// then
+
 		assertThat(range.contains(1)).isFalse();
 		assertThat(range.contains(2)).isTrue();
 		assertThat(range.contains(3)).isFalse();
@@ -76,10 +67,8 @@ public class RangeTests {
 	@Test
 	public void shouldHaveLeftOpenBoundary() {
 
-		// given
 		Range<Integer> range = Range.leftOpen(1, 3);
-		// when
-		// then
+
 		assertThat(range.contains(1)).isFalse();
 		assertThat(range.contains(2)).isTrue();
 		assertThat(range.contains(3)).isTrue();
@@ -88,10 +77,8 @@ public class RangeTests {
 	@Test
 	public void shouldHaveLeftUnboundedAndRightExclusive() {
 
-		// given
 		Range<Integer> range = Range.leftUnbounded(Range.Bound.exclusive(3));
-		// when
-		// then
+
 		assertThat(range.contains(0)).isTrue();
 		assertThat(range.contains(1)).isTrue();
 		assertThat(range.contains(2)).isTrue();
@@ -101,10 +88,8 @@ public class RangeTests {
 	@Test
 	public void shouldHaveLeftUnboundedAndRightInclusive() {
 
-		// given
 		Range<Integer> range = Range.leftUnbounded(Range.Bound.inclusive(3));
-		// when
-		// then
+
 		assertThat(range.contains(0)).isTrue();
 		assertThat(range.contains(1)).isTrue();
 		assertThat(range.contains(2)).isTrue();
@@ -114,10 +99,8 @@ public class RangeTests {
 	@Test
 	public void shouldHaveOpenBoundaries() {
 
-		// given
 		Range<Integer> range = Range.open(1, 3);
-		// when
-		// then
+
 		assertThat(range.contains(1)).isFalse();
 		assertThat(range.contains(2)).isTrue();
 		assertThat(range.contains(3)).isFalse();
@@ -126,10 +109,8 @@ public class RangeTests {
 	@Test
 	public void shouldHaveRightOpenBoundary() {
 
-		// given
 		Range<Integer> range = Range.rightOpen(1, 3);
-		// when
-		// then
+
 		assertThat(range.contains(1)).isTrue();
 		assertThat(range.contains(2)).isTrue();
 		assertThat(range.contains(3)).isFalse();
@@ -138,10 +119,8 @@ public class RangeTests {
 	@Test
 	public void shouldHaveRightUnboundedAndLeftExclusive() {
 
-		// given
 		Range<Integer> range = Range.rightUnbounded(Range.Bound.exclusive(1));
-		// when
-		// then
+
 		assertThat(range.contains(1)).isFalse();
 		assertThat(range.contains(2)).isTrue();
 		assertThat(range.contains(3)).isTrue();
@@ -151,10 +130,8 @@ public class RangeTests {
 	@Test
 	public void shouldHaveRightUnboundedAndLeftInclusive() {
 
-		// given
 		Range<Integer> range = Range.rightUnbounded(Range.Bound.inclusive(1));
-		// when
-		// then
+
 		assertThat(range.contains(1)).isTrue();
 		assertThat(range.contains(2)).isTrue();
 		assertThat(range.contains(3)).isTrue();
@@ -164,12 +141,7 @@ public class RangeTests {
 	@Test
 	public void shouldThrowExceptionIfNotComparable() {
 
-		// given
-		// when
-		Throwable thrown = catchThrowable(() -> Range.just(Collections.singletonList("test")));
-		// then
-		assertThat(thrown).isInstanceOf(IllegalArgumentException.class)
+		assertThatThrownBy(() -> Range.just(Collections.singletonList("test"))).isInstanceOf(IllegalArgumentException.class)
 				.hasMessageContaining("value must implements Comparable!");
 	}
-
 }

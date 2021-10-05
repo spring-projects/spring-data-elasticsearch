@@ -71,3 +71,8 @@ Spring Data Elasticsearch now uses `org.springframework.data.elasticsearch.core.
 === Completion classes
 
 The classes from the package `org.springframework.data.elasticsearch.core.completion` have been moved to `org.springframework.data.elasticsearch.core.suggest`.
+
+=== Other renamings
+
+The `org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter` interface has been renamed to `org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter`.
+Likewise the implementations classes named _XXPersistentPropertyConverter_ have been renamed to _XXPropertyValueConverter_.

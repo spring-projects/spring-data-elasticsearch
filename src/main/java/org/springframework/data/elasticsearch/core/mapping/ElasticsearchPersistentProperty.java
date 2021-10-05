@@ -48,17 +48,17 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	boolean isSeqNoPrimaryTermProperty();
 
 	/**
-	 * @return true if an {@link ElasticsearchPersistentPropertyConverter} is available for this instance.
+	 * @return true if an {@link PropertyValueConverter} is available for this instance.
 	 * @since 4.0
 	 */
-	boolean hasPropertyConverter();
+	boolean hasPropertyValueConverter();
 
 	/**
-	 * @return the {@link ElasticsearchPersistentPropertyConverter} for this instance.
+	 * @return the {@link PropertyValueConverter} for this instance.
 	 * @since 4.0
 	 */
 	@Nullable
-	ElasticsearchPersistentPropertyConverter getPropertyConverter();
+	PropertyValueConverter getPropertyValueConverter();
 
 	/**
 	 * Returns true if the property may be read.

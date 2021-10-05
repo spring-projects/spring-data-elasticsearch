@@ -27,14 +27,13 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @since 4.3
  */
-public class TemporalRangePersistentPropertyConverter
-		extends AbstractRangePersistentPropertyConverter<TemporalAccessor> {
+public class TemporalRangePropertyValueConverter extends AbstractRangePropertyValueConverter<TemporalAccessor> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(TemporalRangePersistentPropertyConverter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(TemporalRangePropertyValueConverter.class);
 
 	private final List<ElasticsearchDateConverter> dateConverters;
 
-	public TemporalRangePersistentPropertyConverter(PersistentProperty<?> property,
+	public TemporalRangePropertyValueConverter(PersistentProperty<?> property,
 			List<ElasticsearchDateConverter> dateConverters) {
 
 		super(property);

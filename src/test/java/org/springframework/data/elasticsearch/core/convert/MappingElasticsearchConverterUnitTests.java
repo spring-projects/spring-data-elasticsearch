@@ -52,6 +52,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.ValueConverter;
 import org.springframework.data.elasticsearch.core.Range;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonEntity;
@@ -63,6 +64,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoJsonMultiPolygon;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonPoint;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonPolygon;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.geo.Box;
@@ -71,6 +73,7 @@ import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Unit tests for {@link MappingElasticsearchConverter}.
@@ -1446,6 +1449,53 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, document.toJson(), true);
 	}
 
+	@Test // #1945
+	@DisplayName("should write using ValueConverters")
+	void shouldWriteUsingValueConverters() throws JSONException {
+
+		EntityWithCustomValueConverters entity = new EntityWithCustomValueConverters();
+		entity.setId("42");
+		entity.setFieldWithClassBasedConverter("classbased");
+		entity.setFieldWithEnumBasedConverter("enumbased");
+		entity.setDontConvert("Monty Python's Flying Circus");
+
+		String expected = "{\n" + //
+				"  \"id\": \"42\",\n" + //
+				"  \"fieldWithClassBasedConverter\": \"desabssalc\",\n" + //
+				"  \"fieldWithEnumBasedConverter\": \"desabmune\",\n" + //
+				"  \"dontConvert\": \"Monty Python's Flying Circus\"\n" + //
+				"}\n"; //
+
+		Document document = Document.create();
+
+		mappingElasticsearchConverter.write(entity, document);
+
+		assertEquals(expected, document.toJson(), false);
+	}
+
+	@Test // #1945
+	@DisplayName("should read using ValueConverters")
+	void shouldReadUsingValueConverters() throws JSONException {
+
+		String json = "{\n" + //
+				"  \"id\": \"42\",\n" + //
+				"  \"fieldWithClassBasedConverter\": \"desabssalc\",\n" + //
+				"  \"fieldWithEnumBasedConverter\": \"desabmune\",\n" + //
+				"  \"dontConvert\": \"Monty Python's Flying Circus\"\n" + //
+				"}\n"; //
+
+		Document source = Document.parse(json);
+
+		// when
+		EntityWithCustomValueConverters entity = mappingElasticsearchConverter.read(EntityWithCustomValueConverters.class,
+				source);
+
+		assertThat(entity.getId()).isEqualTo("42");
+		assertThat(entity.getFieldWithClassBasedConverter()).isEqualTo("classbased");
+		assertThat(entity.getFieldWithEnumBasedConverter()).isEqualTo("enumbased");
+		assertThat(entity.getDontConvert()).isEqualTo("Monty Python's Flying Circus");
+	}
+
 	private Map<String, Object> writeToMap(Object source) {
 
 		Document sink = Document.create();
@@ -2308,6 +2358,83 @@ public class MappingElasticsearchConverterUnitTests {
 		public void setCars(@Nullable List<Car> cars) {
 			this.cars = cars;
 		}
+	}
+
+	private static class EntityWithCustomValueConverters {
+		@Nullable @Id private String id;
+		@Nullable @ValueConverter(ClassBasedValueConverter.class) private String fieldWithClassBasedConverter;
+		@Nullable @ValueConverter(EnumBasedValueConverter.class) private String fieldWithEnumBasedConverter;
+		@Nullable private String dontConvert;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getFieldWithClassBasedConverter() {
+			return fieldWithClassBasedConverter;
+		}
+
+		public void setFieldWithClassBasedConverter(@Nullable String fieldWithClassBasedConverter) {
+			this.fieldWithClassBasedConverter = fieldWithClassBasedConverter;
+		}
+
+		@Nullable
+		public String getFieldWithEnumBasedConverter() {
+			return fieldWithEnumBasedConverter;
+		}
+
+		public void setFieldWithEnumBasedConverter(@Nullable String fieldWithEnumBasedConverter) {
+			this.fieldWithEnumBasedConverter = fieldWithEnumBasedConverter;
+		}
+
+		@Nullable
+		public String getDontConvert() {
+			return dontConvert;
+		}
+
+		public void setDontConvert(@Nullable String dontConvert) {
+			this.dontConvert = dontConvert;
+		}
+	}
+
+	private static class ClassBasedValueConverter implements PropertyValueConverter {
+
+		@Override
+		public Object write(Object value) {
+			return reverse(value);
+		}
+
+		@Override
+		public Object read(Object value) {
+			return reverse(value);
+		}
+	}
+
+	private enum EnumBasedValueConverter implements PropertyValueConverter {
+		INSTANCE;
+
+		@Override
+		public Object write(Object value) {
+			return reverse(value);
+		}
+
+		@Override
+		public Object read(Object value) {
+			return reverse(value);
+		}
+	}
+
+	private static String reverse(Object o) {
+
+		Assert.notNull(o, "o must not be null");
+
+		return new StringBuilder().append(o.toString()).reverse().toString();
 	}
 	// endregion
 }
