@@ -26,14 +26,13 @@ import org.springframework.data.mapping.PersistentProperty;
  * @author Sascha Woo
  * @since 4.3
  */
-public class DatePersistentPropertyConverter extends AbstractPersistentPropertyConverter {
+public class DatePropertyValueConverter extends AbstractPropertyValueConverter {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DatePersistentPropertyConverter.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(DatePropertyValueConverter.class);
 
 	private final List<ElasticsearchDateConverter> dateConverters;
 
-	public DatePersistentPropertyConverter(PersistentProperty<?> property,
-			List<ElasticsearchDateConverter> dateConverters) {
+	public DatePropertyValueConverter(PersistentProperty<?> property, List<ElasticsearchDateConverter> dateConverters) {
 
 		super(property);
 		this.dateConverters = dateConverters;

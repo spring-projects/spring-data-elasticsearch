@@ -26,14 +26,14 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @since 4.3
  */
-public abstract class AbstractRangePersistentPropertyConverter<T> extends AbstractPersistentPropertyConverter {
+public abstract class AbstractRangePropertyValueConverter<T> extends AbstractPropertyValueConverter {
 
 	protected static final String LT_FIELD = "lt";
 	protected static final String LTE_FIELD = "lte";
 	protected static final String GT_FIELD = "gt";
 	protected static final String GTE_FIELD = "gte";
 
-	public AbstractRangePersistentPropertyConverter(PersistentProperty<?> property) {
+	public AbstractRangePropertyValueConverter(PersistentProperty<?> property) {
 		super(property);
 	}
 

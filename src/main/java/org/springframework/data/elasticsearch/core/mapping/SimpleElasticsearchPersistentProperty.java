@@ -30,17 +30,17 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.Range;
-import org.springframework.data.elasticsearch.core.suggest.Completion;
-import org.springframework.data.elasticsearch.core.convert.DatePersistentPropertyConverter;
-import org.springframework.data.elasticsearch.core.convert.DateRangePersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.convert.DatePropertyValueConverter;
+import org.springframework.data.elasticsearch.core.convert.DateRangePropertyValueConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
-import org.springframework.data.elasticsearch.core.convert.NumberRangePersistentPropertyConverter;
-import org.springframework.data.elasticsearch.core.convert.TemporalPersistentPropertyConverter;
-import org.springframework.data.elasticsearch.core.convert.TemporalRangePersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.convert.NumberRangePropertyValueConverter;
+import org.springframework.data.elasticsearch.core.convert.TemporalPropertyValueConverter;
+import org.springframework.data.elasticsearch.core.convert.TemporalRangePropertyValueConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoJson;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.elasticsearch.core.suggest.Completion;
 import org.springframework.data.mapping.Association;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentEntity;
@@ -75,7 +75,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isId;
 	private final boolean isSeqNoPrimaryTerm;
 	private final @Nullable String annotatedFieldName;
-	@Nullable private ElasticsearchPersistentPropertyConverter propertyConverter;
+	@Nullable private PropertyValueConverter propertyConverter;
 	private final boolean storeNullValue;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
@@ -110,7 +110,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	@Nullable
 	@Override
-	public ElasticsearchPersistentPropertyConverter getPropertyConverter() {
+	public PropertyValueConverter getPropertyValueConverter() {
 		return propertyConverter;
 	}
 
@@ -158,9 +158,9 @@ public class SimpleElasticsearchPersistentProperty extends
 				}
 
 				if (TemporalAccessor.class.isAssignableFrom(actualType)) {
-					propertyConverter = new TemporalPersistentPropertyConverter(this, dateConverters);
+					propertyConverter = new TemporalPropertyValueConverter(this, dateConverters);
 				} else if (Date.class.isAssignableFrom(actualType)) {
-					propertyConverter = new DatePersistentPropertyConverter(this, dateConverters);
+					propertyConverter = new DatePropertyValueConverter(this, dateConverters);
 				} else {
 					LOGGER.warn("Unsupported type '{}' for date property '{}'.", actualType, getName());
 				}
@@ -179,9 +179,9 @@ public class SimpleElasticsearchPersistentProperty extends
 
 				Class<?> genericType = getTypeInformation().getTypeArguments().get(0).getType();
 				if (TemporalAccessor.class.isAssignableFrom(genericType)) {
-					propertyConverter = new TemporalRangePersistentPropertyConverter(this, dateConverters);
+					propertyConverter = new TemporalRangePropertyValueConverter(this, dateConverters);
 				} else if (Date.class.isAssignableFrom(genericType)) {
-					propertyConverter = new DateRangePersistentPropertyConverter(this, dateConverters);
+					propertyConverter = new DateRangePropertyValueConverter(this, dateConverters);
 				} else {
 					LOGGER.warn("Unsupported generic type '{}' for date range property '{}'.", genericType, getName());
 				}
@@ -205,7 +205,7 @@ public class SimpleElasticsearchPersistentProperty extends
 					return;
 				}
 
-				propertyConverter = new NumberRangePersistentPropertyConverter(this);
+				propertyConverter = new NumberRangePropertyValueConverter(this);
 				break;
 			}
 			case Ip_Range: {

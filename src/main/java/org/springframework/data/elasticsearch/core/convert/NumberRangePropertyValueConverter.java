@@ -21,9 +21,9 @@ import org.springframework.data.mapping.PersistentProperty;
  * @author Sascha Woo
  * @since 4.3
  */
-public class NumberRangePersistentPropertyConverter extends AbstractRangePersistentPropertyConverter<Number> {
+public class NumberRangePropertyValueConverter extends AbstractRangePropertyValueConverter<Number> {
 
-	public NumberRangePersistentPropertyConverter(PersistentProperty<?> property) {
+	public NumberRangePropertyValueConverter(PersistentProperty<?> property) {
 		super(property);
 	}
 

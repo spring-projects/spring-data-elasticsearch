@@ -39,7 +39,7 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter;
+import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
@@ -426,7 +426,8 @@ public class MappingElasticsearchConverter
 			Class<?> rawType = type.getType();
 
 			if (property.hasPropertyConverter()) {
-				value = propertyConverterRead(property, value);
+				// noinspection unchecked
+				return (R) propertyConverterRead(property, value);
 			} else if (TemporalAccessor.class.isAssignableFrom(property.getType())
 					&& !conversions.hasCustomReadTarget(value.getClass(), rawType)) {
 
@@ -466,8 +467,7 @@ public class MappingElasticsearchConverter
 		}
 
 		private Object propertyConverterRead(ElasticsearchPersistentProperty property, Object source) {
-			ElasticsearchPersistentPropertyConverter propertyConverter = Objects
-					.requireNonNull(property.getPropertyConverter());
+			PropertyValueConverter propertyValueConverter = Objects.requireNonNull(property.getPropertyValueConverter());
 
 			if (source instanceof String[]) {
 				// convert to a List
@@ -475,18 +475,19 @@ public class MappingElasticsearchConverter
 			}
 
 			if (source instanceof List) {
-				source = ((List<?>) source).stream().map(it -> convertOnRead(propertyConverter, it))
+				source = ((List<?>) source).stream().map(it -> convertOnRead(propertyValueConverter, it))
 						.collect(Collectors.toList());
 			} else if (source instanceof Set) {
-				source = ((Set<?>) source).stream().map(it -> convertOnRead(propertyConverter, it)).collect(Collectors.toSet());
+				source = ((Set<?>) source).stream().map(it -> convertOnRead(propertyValueConverter, it))
+						.collect(Collectors.toSet());
 			} else {
-				source = convertOnRead(propertyConverter, source);
+				source = convertOnRead(propertyValueConverter, source);
 			}
 			return source;
 		}
 
-		private Object convertOnRead(ElasticsearchPersistentPropertyConverter propertyConverter, Object source) {
-			return propertyConverter.read(source);
+		private Object convertOnRead(PropertyValueConverter propertyValueConverter, Object source) {
+			return propertyValueConverter.read(source);
 		}
 
 		/**
@@ -1070,15 +1071,14 @@ public class MappingElasticsearchConverter
 		}
 
 		private Object propertyConverterWrite(ElasticsearchPersistentProperty property, Object value) {
-			ElasticsearchPersistentPropertyConverter propertyConverter = Objects
-					.requireNonNull(property.getPropertyConverter());
+			PropertyValueConverter propertyValueConverter = Objects.requireNonNull(property.getPropertyValueConverter());
 
 			if (value instanceof List) {
-				value = ((List<?>) value).stream().map(propertyConverter::write).collect(Collectors.toList());
+				value = ((List<?>) value).stream().map(propertyValueConverter::write).collect(Collectors.toList());
 			} else if (value instanceof Set) {
-				value = ((Set<?>) value).stream().map(propertyConverter::write).collect(Collectors.toSet());
+				value = ((Set<?>) value).stream().map(propertyValueConverter::write).collect(Collectors.toSet());
 			} else {
-				value = propertyConverter.write(value);
+				value = propertyValueConverter.write(value);
 			}
 			return value;
 		}
@@ -1253,17 +1253,17 @@ public class MappingElasticsearchConverter
 		if (persistentProperty != null) {
 
 			if (persistentProperty.hasPropertyConverter()) {
-				ElasticsearchPersistentPropertyConverter propertyConverter = Objects
-						.requireNonNull(persistentProperty.getPropertyConverter());
+				PropertyValueConverter propertyValueConverter = Objects
+						.requireNonNull(persistentProperty.getPropertyValueConverter());
 				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
 					Object value = criteriaEntry.getValue();
 					if (value.getClass().isArray()) {
 						Object[] objects = (Object[]) value;
 						for (int i = 0; i < objects.length; i++) {
-							objects[i] = propertyConverter.write(objects[i]);
+							objects[i] = propertyValueConverter.write(objects[i]);
 						}
 					} else {
-						criteriaEntry.setValue(propertyConverter.write(value));
+						criteriaEntry.setValue(propertyValueConverter.write(value));
 					}
 				});
 			}
