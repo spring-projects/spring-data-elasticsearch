@@ -23,12 +23,14 @@ import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.ValueConverter;
 import org.springframework.data.elasticsearch.core.Range;
 import org.springframework.data.elasticsearch.core.convert.DatePropertyValueConverter;
 import org.springframework.data.elasticsearch.core.convert.DateRangePropertyValueConverter;
@@ -75,7 +77,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final boolean isId;
 	private final boolean isSeqNoPrimaryTerm;
 	private final @Nullable String annotatedFieldName;
-	@Nullable private PropertyValueConverter propertyConverter;
+	@Nullable private PropertyValueConverter propertyValueConverter;
 	private final boolean storeNullValue;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
@@ -98,20 +100,20 @@ public class SimpleElasticsearchPersistentProperty extends
 			throw new MappingException("@Field annotation must not be used on a @MultiField property.");
 		}
 
-		initPropertyConverter();
+		initPropertyValueConverter();
 
 		storeNullValue = isField && getRequiredAnnotation(Field.class).storeNullValue();
 	}
 
 	@Override
-	public boolean hasPropertyConverter() {
-		return propertyConverter != null;
+	public boolean hasPropertyValueConverter() {
+		return propertyValueConverter != null;
 	}
 
 	@Nullable
 	@Override
 	public PropertyValueConverter getPropertyValueConverter() {
-		return propertyConverter;
+		return propertyValueConverter;
 	}
 
 	@Override
@@ -136,7 +138,13 @@ public class SimpleElasticsearchPersistentProperty extends
 	/**
 	 * Initializes the property converter for this {@link PersistentProperty}, if any.
 	 */
-	private void initPropertyConverter() {
+	private void initPropertyValueConverter() {
+
+		initPropertyValueConverterFromAnnotation();
+
+		if (hasPropertyValueConverter()) {
+			return;
+		}
 
 		Class<?> actualType = getActualTypeOrNull();
 		if (actualType == null) {
@@ -158,9 +166,9 @@ public class SimpleElasticsearchPersistentProperty extends
 				}
 
 				if (TemporalAccessor.class.isAssignableFrom(actualType)) {
-					propertyConverter = new TemporalPropertyValueConverter(this, dateConverters);
+					propertyValueConverter = new TemporalPropertyValueConverter(this, dateConverters);
 				} else if (Date.class.isAssignableFrom(actualType)) {
-					propertyConverter = new DatePropertyValueConverter(this, dateConverters);
+					propertyValueConverter = new DatePropertyValueConverter(this, dateConverters);
 				} else {
 					LOGGER.warn("Unsupported type '{}' for date property '{}'.", actualType, getName());
 				}
@@ -179,9 +187,9 @@ public class SimpleElasticsearchPersistentProperty extends
 
 				Class<?> genericType = getTypeInformation().getTypeArguments().get(0).getType();
 				if (TemporalAccessor.class.isAssignableFrom(genericType)) {
-					propertyConverter = new TemporalRangePropertyValueConverter(this, dateConverters);
+					propertyValueConverter = new TemporalRangePropertyValueConverter(this, dateConverters);
 				} else if (Date.class.isAssignableFrom(genericType)) {
-					propertyConverter = new DateRangePropertyValueConverter(this, dateConverters);
+					propertyValueConverter = new DateRangePropertyValueConverter(this, dateConverters);
 				} else {
 					LOGGER.warn("Unsupported generic type '{}' for date range property '{}'.", genericType, getName());
 				}
@@ -205,7 +213,7 @@ public class SimpleElasticsearchPersistentProperty extends
 					return;
 				}
 
-				propertyConverter = new NumberRangePropertyValueConverter(this);
+				propertyValueConverter = new NumberRangePropertyValueConverter(this);
 				break;
 			}
 			case Ip_Range: {
@@ -213,6 +221,26 @@ public class SimpleElasticsearchPersistentProperty extends
 			}
 			default:
 				break;
+		}
+	}
+
+	private void initPropertyValueConverterFromAnnotation() {
+
+		ValueConverter annotation = findAnnotation(ValueConverter.class);
+
+		if (annotation != null) {
+			Class<? extends PropertyValueConverter> clazz = annotation.value();
+
+			if (Enum.class.isAssignableFrom(clazz)) {
+				PropertyValueConverter[] enumConstants = clazz.getEnumConstants();
+
+				if (enumConstants == null || enumConstants.length != 1) {
+					throw new IllegalArgumentException(clazz + " is an enum with more than 1 constant and cannot be used here");
+				}
+				propertyValueConverter = enumConstants[0];
+			} else {
+				propertyValueConverter = BeanUtils.instantiateClass(clazz);
+			}
 		}
 	}
 

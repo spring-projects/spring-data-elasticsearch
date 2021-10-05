@@ -27,11 +27,13 @@ import java.util.List;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.ValueConverter;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -92,19 +94,19 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		SimpleElasticsearchPersistentEntity<?> persistentEntity = context.getRequiredPersistentEntity(DatesProperty.class);
 
 		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getRequiredPersistentProperty("localDate");
-		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
+		assertThat(persistentProperty.hasPropertyValueConverter()).isTrue();
 		assertThat(persistentProperty.getPropertyValueConverter()).isNotNull();
 
 		persistentProperty = persistentEntity.getRequiredPersistentProperty("localDateTime");
-		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
+		assertThat(persistentProperty.hasPropertyValueConverter()).isTrue();
 		assertThat(persistentProperty.getPropertyValueConverter()).isNotNull();
 
 		persistentProperty = persistentEntity.getRequiredPersistentProperty("legacyDate");
-		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
+		assertThat(persistentProperty.hasPropertyValueConverter()).isTrue();
 		assertThat(persistentProperty.getPropertyValueConverter()).isNotNull();
 
 		persistentProperty = persistentEntity.getRequiredPersistentProperty("localDateList");
-		assertThat(persistentProperty.hasPropertyConverter()).isTrue();
+		assertThat(persistentProperty.hasPropertyValueConverter()).isTrue();
 		assertThat(persistentProperty.getPropertyValueConverter()).isNotNull();
 	}
 
@@ -246,6 +248,21 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(property.getFieldName()).isEqualTo("CUStomFIEldnAME");
 	}
 
+	@Test // #1945
+	@DisplayName("should use ValueConverter annotation")
+	void shouldUseValueConverterAnnotation() {
+
+		SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+				.getRequiredPersistentEntity(EntityWithCustomValueConverters.class);
+
+		assertThat(
+				persistentEntity.getRequiredPersistentProperty("fieldWithClassBasedConverter").getPropertyValueConverter())
+						.isInstanceOf(ClassBasedValueConverter.class);
+		assertThat(
+				persistentEntity.getRequiredPersistentProperty("fieldWithEnumBasedConverter").getPropertyValueConverter())
+						.isInstanceOf(EnumBasedValueConverter.class);
+	}
+
 	// region entities
 	static class FieldNameProperty {
 		@Nullable @Field(name = "by-name") String fieldProperty;
@@ -322,6 +339,39 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 		public void setWithCustomFieldName(String withCustomFieldName) {
 			this.withCustomFieldName = withCustomFieldName;
+		}
+	}
+
+	private static class EntityWithCustomValueConverters {
+		@Id private String id;
+		@Nullable @ValueConverter(ClassBasedValueConverter.class) private String fieldWithClassBasedConverter;
+		@Nullable @ValueConverter(EnumBasedValueConverter.class) private String fieldWithEnumBasedConverter;
+	}
+
+	private static class ClassBasedValueConverter implements PropertyValueConverter {
+
+		@Override
+		public Object write(Object value) {
+			return value;
+		}
+
+		@Override
+		public Object read(Object value) {
+			return value;
+		}
+	}
+
+	private enum EnumBasedValueConverter implements PropertyValueConverter {
+		INSTANCE;
+
+		@Override
+		public Object write(Object value) {
+			return value;
+		}
+
+		@Override
+		public Object read(Object value) {
+			return value;
 		}
 	}
 	// endregion

@@ -56,6 +56,8 @@ This means, that no mapping entry is written for the property and that Elasticse
 ** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom analyzers and normalizer.
 * `@GeoPoint`: Marks a field as _geo_point_ datatype.
 Can be omitted if the field is an instance of the `GeoPoint` class.
+* `@ValueConverter` defines a class to be used to convert the given property.
+In difference to a registered Spring `Converter` this only converts the annotated property and not every property of the given type.
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
 
@@ -184,6 +186,7 @@ public class Person {              <1>
   "lastname" : "Connor"
 }
 ----
+
 <1> By default the domain types class name is used for the type hint.
 ====
 
@@ -211,6 +214,7 @@ public class Person {
   "id" : ...
 }
 ----
+
 <1> The configured alias is used when writing the entity.
 ====
 
@@ -421,6 +425,7 @@ public class Config extends AbstractElasticsearchConfiguration {
   "localidad" : { "lat" : 34.118347, "lon" : -118.3026284 }
 }
 ----
+
 <1> Add `Converter` implementations.
 <2> Set up the `Converter` used for writing `DomainType` to Elasticsearch.
 <3> Set up the `Converter` used for reading `DomainType` from search result.

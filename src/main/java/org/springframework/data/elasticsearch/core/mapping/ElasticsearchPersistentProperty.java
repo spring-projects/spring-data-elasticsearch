@@ -51,7 +51,7 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	 * @return true if an {@link PropertyValueConverter} is available for this instance.
 	 * @since 4.0
 	 */
-	boolean hasPropertyConverter();
+	boolean hasPropertyValueConverter();
 
 	/**
 	 * @return the {@link PropertyValueConverter} for this instance.

@@ -425,7 +425,7 @@ public class MappingElasticsearchConverter
 
 			Class<?> rawType = type.getType();
 
-			if (property.hasPropertyConverter()) {
+			if (property.hasPropertyValueConverter()) {
 				// noinspection unchecked
 				return (R) propertyConverterRead(property, value);
 			} else if (TemporalAccessor.class.isAssignableFrom(property.getType())
@@ -898,7 +898,7 @@ public class MappingElasticsearchConverter
 					continue;
 				}
 
-				if (property.hasPropertyConverter()) {
+				if (property.hasPropertyValueConverter()) {
 					value = propertyConverterWrite(property, value);
 					sink.set(property, value);
 				} else if (TemporalAccessor.class.isAssignableFrom(property.getActualType())
@@ -1252,7 +1252,7 @@ public class MappingElasticsearchConverter
 
 		if (persistentProperty != null) {
 
-			if (persistentProperty.hasPropertyConverter()) {
+			if (persistentProperty.hasPropertyValueConverter()) {
 				PropertyValueConverter propertyValueConverter = Objects
 						.requireNonNull(persistentProperty.getPropertyValueConverter());
 				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
