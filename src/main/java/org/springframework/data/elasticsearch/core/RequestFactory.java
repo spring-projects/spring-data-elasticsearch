@@ -1212,6 +1212,15 @@ class RequestFactory {
 	private SortBuilder<?> getSortBuilder(Sort.Order order, @Nullable ElasticsearchPersistentEntity<?> entity) {
 		SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.DESC : SortOrder.ASC;
 
+		Order.Mode mode = Order.DEFAULT_MODE;
+		String unmappedType = null;
+
+		if (order instanceof Order) {
+			Order o = (Order) order;
+			mode = o.getMode();
+			unmappedType = o.getUnmappedType();
+		}
+
 		if (ScoreSortBuilder.NAME.equals(order.getProperty())) {
 			return SortBuilders //
 					.scoreSort() //
@@ -1229,14 +1238,23 @@ class RequestFactory {
 						geoDistanceOrder.getGeoPoint().getLon());
 
 				sort.geoDistance(GeoDistance.fromString(geoDistanceOrder.getDistanceType().name()));
-				sort.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped());
-				sort.sortMode(SortMode.fromString(geoDistanceOrder.getMode().name()));
+				sort.sortMode(SortMode.fromString(mode.name()));
 				sort.unit(DistanceUnit.fromString(geoDistanceOrder.getUnit()));
+
+				if (geoDistanceOrder.getIgnoreUnmapped() != GeoDistanceOrder.DEFAULT_IGNORE_UNMAPPED) {
+					sort.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped());
+				}
+
 				return sort;
 			} else {
 				FieldSortBuilder sort = SortBuilders //
 						.fieldSort(fieldName) //
-						.order(sortOrder);
+						.order(sortOrder) //
+						.sortMode(SortMode.fromString(mode.name()));
+
+				if (unmappedType != null) {
+					sort.unmappedType(unmappedType);
+				}
 
 				if (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) {
 					sort.missing("_first");

@@ -7,7 +7,8 @@ It is recommended to add those operations as custom implementation as described 
 [[elasticsearc.misc.index.settings]]
 == Index settings
 
-When creating Elasticsearch indices with Spring Data Elasticsearch different index settings can be defined by using the `@Setting` annotation. The following arguments are available:
+When creating Elasticsearch indices with Spring Data Elasticsearch different index settings can be defined by using the `@Setting` annotation.
+The following arguments are available:
 
 * `useServerConfiguration` does not send any settings parameters, so the Elasticsearch server configuration determines them.
 * `settingPath` refers to a JSON file defining the settings that must be resolvable in the classpath
@@ -42,6 +43,7 @@ class Entity {
     // getter and setter...
 }
 ----
+
 <.> when defining sort fields, use the name of the Java property (_firstField_), not the name that might be defined for Elasticsearch (_first_field_)
 <.> `sortModes`, `sortOrders` and `sortMissingValues` are optional, but if they are set, the number of entries must match the number of `sortFields` elements
 ====
@@ -49,13 +51,16 @@ class Entity {
 [[elasticsearch.misc.mappings]]
 == Index Mapping
 
-When Spring Data Elasticsearch creates the index mapping with the `IndexOperations.createMapping()` methods, it uses the annotations described in <<elasticsearch.mapping.meta-model.annotations>>, especially the `@Field` annotation. In addition to that it is possible to add the `@Mapping` annotation to a class. This annotation has the following properties:
+When Spring Data Elasticsearch creates the index mapping with the `IndexOperations.createMapping()` methods, it uses the annotations described in <<elasticsearch.mapping.meta-model.annotations>>, especially the `@Field` annotation.
+In addition to that it is possible to add the `@Mapping` annotation to a class.
+This annotation has the following properties:
 
 * `mappingPath` a classpath resource in JSON format; if this is not empty it is used as the mapping, no other mapping processing is done.
 * `enabled`  when set to false, this flag is written to the mapping and no further processing is done.
 * `dateDetection` and `numericDetection` set the corresponding properties in the mapping when not set to `DEFAULT`.
 * `dynamicDateFormats` when this String array is not empty, it defines the date formats used for automatic date detection.
 * `runtimeFieldsPath` a classpath resource in JSON format containing the definition of runtime fields which is written to the index mappings, for example:
+
 ====
 [source,json]
 ----
@@ -165,7 +170,10 @@ interface SampleEntityRepository extends Repository<SampleEntity, String> {
 [[elasticsearch.misc.sorts]]
 == Sort options
 
-In addition to the default sort options described <<repositories.paging-and-sorting>> Spring Data Elasticsearch has a `GeoDistanceOrder` class which can be used to have the result of a search operation ordered by geographical distance.
+In addition to the default sort options described in <<repositories.paging-and-sorting>>, Spring Data Elasticsearch provides the class `org.springframework.data.elasticsearch.core.query.Order` which derives from `org.springframework.data.domain.Sort.Order`.
+It offers additional parameters that can be sent to Elasticsearch when specifying the sorting of the result (see https://www.elastic.co/guide/en/elasticsearch/reference/7.15/sort-search-results.html).
+
+There also is the  `org.springframework.data.elasticsearch.core.query.GeoDistanceOrder` class which can be used to have the result of a search operation ordered by geographical distance.
 
 If the class to be retrieved has a `GeoPoint` property named _location_, the following `Sort` would sort the results by distance to the given point:
 

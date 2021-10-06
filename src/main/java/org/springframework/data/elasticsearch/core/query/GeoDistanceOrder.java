@@ -21,20 +21,18 @@ import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 /**
  * {@link org.springframework.data.domain.Sort.Order} derived class to be able to define a _geo_distance order for a
  * search.
- * 
+ *
  * @author Peter-Josef Meisch
  * @since 4.0
  */
-public class GeoDistanceOrder extends Sort.Order {
+public class GeoDistanceOrder extends Order {
 
-	private static final DistanceType DEFAULT_DISTANCE_TYPE = DistanceType.arc;
-	private static final Mode DEFAULT_MODE = Mode.min;
-	private static final String DEFAULT_UNIT = "m";
-	private static final Boolean DEFAULT_IGNORE_UNMAPPED = false;
+	public static final DistanceType DEFAULT_DISTANCE_TYPE = DistanceType.arc;
+	public static final String DEFAULT_UNIT = "m";
+	public static final Boolean DEFAULT_IGNORE_UNMAPPED = false;
 
 	private final GeoPoint geoPoint;
 	private final DistanceType distanceType;
-	private final Mode mode;
 	private final String unit;
 	private final Boolean ignoreUnmapped;
 
@@ -45,10 +43,9 @@ public class GeoDistanceOrder extends Sort.Order {
 
 	private GeoDistanceOrder(String property, GeoPoint geoPoint, Sort.Direction direction, DistanceType distanceType,
 			Mode mode, String unit, Boolean ignoreUnmapped) {
-		super(direction, property);
+		super(direction, property, mode);
 		this.geoPoint = geoPoint;
 		this.distanceType = distanceType;
-		this.mode = mode;
 		this.unit = unit;
 		this.ignoreUnmapped = ignoreUnmapped;
 	}
@@ -118,9 +115,5 @@ public class GeoDistanceOrder extends Sort.Order {
 
 	public enum DistanceType {
 		arc, plane
-	}
-
-	public enum Mode {
-		min, max, median, avg
 	}
 }
