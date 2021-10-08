@@ -686,9 +686,11 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withSort(new FieldSortBuilder("rate").order(SortOrder.ASC))
-				.withSort(new FieldSortBuilder("message").order(SortOrder.ASC)).build();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()) //
+				.withSorts( //
+						new FieldSortBuilder("rate").order(SortOrder.ASC), //
+						new FieldSortBuilder("message").order(SortOrder.ASC)) //
+				.build();
 
 		// when
 		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
@@ -725,8 +727,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("message").nullsFirst()))).build();
+		Query searchQuery = operations.matchAllQuery();
+		searchQuery.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("message").nullsFirst())));
 
 		// when
 		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
@@ -763,8 +765,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("message").nullsLast()))).build();
+		Query searchQuery = operations.matchAllQuery();
+		searchQuery.setPageable(PageRequest.of(0, 10, Sort.by(Sort.Order.asc("message").nullsLast())));
 
 		// when
 		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
@@ -1139,8 +1141,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		// then
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withPageable(PageRequest.of(0, 10)).build();
+		Query searchQuery = operations.matchAllQuery();
+		searchQuery.setPageable(PageRequest.of(0, 10));
 
 		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
 				searchQuery, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
@@ -3589,6 +3591,29 @@ public abstract class ElasticsearchTemplateTests {
 				.build();
 
 		operations.index(query, IndexCoordinates.of(indexNameProvider.indexName()));
+	}
+
+	@Test // #1945
+	@DisplayName("should error on sort with unmapped field and default settings")
+	void shouldErrorOnSortWithUnmappedFieldAndDefaultSettings() {
+
+		Sort.Order order = new Sort.Order(Sort.Direction.ASC, "unmappedField");
+		Query query = operations.matchAllQuery().addSort(Sort.by(order));
+
+		assertThatThrownBy(() -> {
+			operations.search(query, SampleEntity.class);
+		});
+	}
+
+	@Test // #1945
+	@DisplayName("should not error on sort with unmapped field and unmapped_type settings")
+	void shouldNotErrorOnSortWithUnmappedFieldAndUnmappedTypeSettings() {
+
+		org.springframework.data.elasticsearch.core.query.Order order = new org.springframework.data.elasticsearch.core.query.Order(
+				Sort.Direction.ASC, "unmappedField").withUnmappedType("long");
+		Query query = operations.matchAllQuery().addSort(Sort.by(order));
+
+		operations.search(query, SampleEntity.class);
 	}
 
 	// region entities
