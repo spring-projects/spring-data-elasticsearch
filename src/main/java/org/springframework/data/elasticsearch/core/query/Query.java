@@ -26,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Query
@@ -76,7 +77,7 @@ public interface Query {
 	 * @param sort
 	 * @return
 	 */
-	<T extends Query> T addSort(Sort sort);
+	<T extends Query> T addSort(@Nullable Sort sort);
 
 	/**
 	 * @return null if not set
@@ -137,12 +138,47 @@ public interface Query {
 	boolean getTrackScores();
 
 	/**
-	 * Get Ids
-	 *
-	 * @return
+	 * @return Get ids set on this query.
 	 */
 	@Nullable
 	Collection<String> getIds();
+
+	/**
+	 * @return Ids with routing values used in a multi-get request.
+	 * @see #multiGetQueryWithRouting(List)
+	 * @since 4.3
+	 */
+	List<IdWithRouting> getIdsWithRouting();
+
+	/**
+	 * Utility method to get a query for a multiget request
+	 *
+	 * @param idsWithRouting Ids with routing values used in a multi-get request.
+	 * @return Query instance
+	 */
+	static Query multiGetQueryWithRouting(List<IdWithRouting> idsWithRouting) {
+
+		Assert.notNull(idsWithRouting, "idsWithRouting must not be null");
+
+		BaseQuery query = new BaseQuery();
+		query.setIdsWithRouting(idsWithRouting);
+		return query;
+	}
+
+	/**
+	 * Utility method to get a query for a multiget request
+	 *
+	 * @param ids Ids used in a multi-get request.
+	 * @return Query instance
+	 */
+	static Query multiGetQuery(Collection<String> ids) {
+
+		Assert.notNull(ids, "ids must not be null");
+
+		BaseQuery query = new BaseQuery();
+		query.setIds(ids);
+		return query;
+	}
 
 	/**
 	 * Get route
@@ -361,5 +397,32 @@ public interface Query {
 	 */
 	enum SearchType {
 		QUERY_THEN_FETCH, DFS_QUERY_THEN_FETCH
+	}
+
+	/**
+	 * Value class combining an id with a routing value. Used in multi-get requests.
+	 *
+	 * @since 4.3
+	 */
+	final class IdWithRouting {
+		private final String id;
+		@Nullable private final String routing;
+
+		public IdWithRouting(String id, @Nullable String routing) {
+
+			Assert.notNull(id, "id must not be null");
+
+			this.id = id;
+			this.routing = routing;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		@Nullable
+		public String getRouting() {
+			return routing;
+		}
 	}
 }

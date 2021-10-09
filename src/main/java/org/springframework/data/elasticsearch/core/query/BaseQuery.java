@@ -16,12 +16,15 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import static java.util.Collections.*;
+import static org.springframework.util.CollectionUtils.*;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,7 +32,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * AbstractQuery
+ * BaseQuery
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -40,7 +43,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Peer Mueller
  */
-abstract class AbstractQuery implements Query {
+public class BaseQuery implements Query {
 
 	protected Pageable pageable = DEFAULT_PAGE;
 	@Nullable protected Sort sort;
@@ -63,6 +66,7 @@ abstract class AbstractQuery implements Query {
 	@Nullable private List<Object> searchAfter;
 	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
 	@Nullable protected Boolean requestCache;
+	private List<IdWithRouting> idsWithRouting = Collections.emptyList();
 
 	@Override
 	@Nullable
@@ -81,7 +85,7 @@ abstract class AbstractQuery implements Query {
 		Assert.notNull(pageable, "Pageable must not be null!");
 
 		this.pageable = pageable;
-		return (T) this.addSort(pageable.getSort());
+		return this.addSort(pageable.getSort());
 	}
 
 	@Override
@@ -116,7 +120,7 @@ abstract class AbstractQuery implements Query {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final <T extends Query> T addSort(Sort sort) {
+	public final <T extends Query> T addSort(@Nullable Sort sort) {
 		if (sort == null) {
 			return (T) this;
 		}
@@ -139,14 +143,46 @@ abstract class AbstractQuery implements Query {
 		this.minScore = minScore;
 	}
 
-	@Nullable
+	/**
+	 * Set Ids for a multi-get request with on this query.
+	 *
+	 * @param ids list of id values
+	 */
+	public void setIds(@Nullable Collection<String> ids) {
+		this.ids = ids;
+	}
+
 	@Override
+	@Nullable
 	public Collection<String> getIds() {
 		return ids;
 	}
 
-	public void setIds(Collection<String> ids) {
-		this.ids = ids;
+	@Override
+	public List<IdWithRouting> getIdsWithRouting() {
+
+		if (!isEmpty(idsWithRouting)) {
+			return Collections.unmodifiableList(idsWithRouting);
+		}
+
+		if (!isEmpty(ids)) {
+			return ids.stream().map(id -> new IdWithRouting(id, route)).collect(Collectors.toList());
+		}
+
+		return Collections.emptyList();
+	}
+
+	/**
+	 * Set Ids with routing values for a multi-get request set on this query.
+	 *
+	 * @param idsWithRouting list of id values, must not be {@literal null}
+	 * @since 4.3
+	 */
+	public void setIdsWithRouting(List<IdWithRouting> idsWithRouting) {
+
+		Assert.notNull(idsWithRouting, "idsWithRouting must not be null");
+
+		this.idsWithRouting = idsWithRouting;
 	}
 
 	@Nullable
@@ -337,4 +373,5 @@ abstract class AbstractQuery implements Query {
 	public Boolean getRequestCache() {
 		return this.requestCache;
 	}
+
 }

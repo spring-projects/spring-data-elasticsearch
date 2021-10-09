@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.util.CollectionUtils.*;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -50,7 +51,6 @@ import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.util.CollectionUtils;
 
 /**
  * Elasticsearch specific repository implementation. Likely to be used as target within
@@ -149,7 +149,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		List<T> result = new ArrayList<>();
 		Query idQuery = getIdQuery(ids);
-		if (CollectionUtils.isEmpty(idQuery.getIds())) {
+		if (isEmpty(idQuery.getIds())) {
 			return result;
 		}
 

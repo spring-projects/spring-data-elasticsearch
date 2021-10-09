@@ -148,6 +148,8 @@ public interface ReactiveDocumentOperations {
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned, used to determine the index
 	 * @return flux with list of {@link MultiGetItem}s that contain the entities
+	 * @see Query#multiGetQuery(Collection)
+	 * @see Query#multiGetQueryWithRouting(List)
 	 * @since 4.1
 	 */
 	<T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz);
@@ -159,6 +161,8 @@ public interface ReactiveDocumentOperations {
 	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
 	 * @return flux with list of {@link MultiGetItem}s that contain the entities
+	 * @see Query#multiGetQuery(Collection)
+	 * @see Query#multiGetQueryWithRouting(List)
 	 * @since 4.0
 	 */
 	<T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index);

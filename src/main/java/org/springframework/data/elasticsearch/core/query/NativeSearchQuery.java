@@ -42,7 +42,7 @@ import org.springframework.lang.Nullable;
  * @author Martin Choraine
  * @author Peter-Josef Meisch
  */
-public class NativeSearchQuery extends AbstractQuery {
+public class NativeSearchQuery extends BaseQuery {
 
 	@Nullable private final QueryBuilder query;
 	@Nullable private QueryBuilder filter;

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -121,6 +122,8 @@ public interface DocumentOperations {
 	 * @param query the query defining the ids of the objects to get
 	 * @param clazz the type of the object to be returned
 	 * @return list of {@link MultiGetItem}s
+	 * @see Query#multiGetQuery(Collection)
+	 * @see Query#multiGetQueryWithRouting(List)
 	 * @since 4.1
 	 */
 	<T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz);
@@ -132,6 +135,8 @@ public interface DocumentOperations {
 	 * @param clazz the type of the object to be returned
 	 * @param index the index(es) from which the objects are read.
 	 * @return list of {@link MultiGetItem}s
+	 * @see Query#multiGetQuery(Collection)
+	 * @see Query#multiGetQueryWithRouting(List)
 	 */
 	<T> List<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
@@ -283,7 +288,7 @@ public interface DocumentOperations {
 
 	/**
 	 * Delete all records matching the query.
-	 * 
+	 *
 	 * @param query query defining the objects
 	 * @param clazz The entity class, must be annotated with
 	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
