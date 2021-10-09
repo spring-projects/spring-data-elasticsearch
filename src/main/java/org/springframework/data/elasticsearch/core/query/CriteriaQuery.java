@@ -26,7 +26,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Peter-Josef Meisch
  */
-public class CriteriaQuery extends AbstractQuery {
+public class CriteriaQuery extends BaseQuery {
 
 	private Criteria criteria;
 

@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.core.query;
 
 import static java.util.Collections.*;
-import static org.springframework.data.elasticsearch.core.query.AbstractQuery.*;
+import static org.springframework.data.elasticsearch.core.query.BaseQuery.*;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -30,7 +30,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
@@ -72,10 +71,8 @@ public class SourceFilterIntegrationTests {
 	void shouldOnlyReturnRequestedFieldsOnGMultiGet() {
 
 		// multiget has no fields, need sourcefilter here
-		Query query = new NativeSearchQueryBuilder() //
-				.withIds(Collections.singleton("42")) //
-				.withSourceFilter(new FetchSourceFilterBuilder().withIncludes("field2").build()) //
-				.build(); //
+		Query query = Query.multiGetQuery(Collections.singleton("42"));
+		query.addSourceFilter(new FetchSourceFilterBuilder().withIncludes("field2").build()); //
 
 		List<MultiGetItem<Entity>> entities = operations.multiGet(query, Entity.class);
 
@@ -116,7 +113,7 @@ public class SourceFilterIntegrationTests {
 	@DisplayName("should not return excluded fields from SourceFilter on multiget")
 	void shouldNotReturnExcludedFieldsFromSourceFilterOnMultiGet() {
 
-		Query query = new NativeSearchQueryBuilder().withIds(Collections.singleton("42")).build();
+		Query query = Query.multiGetQuery(Collections.singleton("42"));
 		query.addSourceFilter(new SourceFilter() {
 			@Override
 			public String[] getIncludes() {
@@ -168,7 +165,7 @@ public class SourceFilterIntegrationTests {
 	@DisplayName("should only return included fields from SourceFilter on multiget")
 	void shouldOnlyReturnIncludedFieldsFromSourceFilterOnMultiGet() {
 
-		Query query = new NativeSearchQueryBuilder().withIds(Collections.singleton("42")).build();
+		Query query = Query.multiGetQuery(Collections.singleton("42"));
 		query.addSourceFilter(new SourceFilter() {
 			@Override
 			public String[] getIncludes() {

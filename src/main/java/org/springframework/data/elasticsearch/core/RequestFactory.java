@@ -677,13 +677,13 @@ class RequestFactory {
 
 		FetchSourceContext fetchSourceContext = getFetchSourceContext(searchQuery);
 
-		if (!isEmpty(searchQuery.getIds())) {
+		if (!isEmpty(searchQuery.getIdsWithRouting())) {
 			String indexName = index.getIndexName();
-			for (String id : searchQuery.getIds()) {
-				MultiGetRequest.Item item = new MultiGetRequest.Item(indexName, id);
 
-				if (searchQuery.getRoute() != null) {
-					item = item.routing(searchQuery.getRoute());
+			for (Query.IdWithRouting idWithRouting : searchQuery.getIdsWithRouting()) {
+				MultiGetRequest.Item item = new MultiGetRequest.Item(indexName, idWithRouting.getId());
+				if (idWithRouting.getRouting() != null) {
+					item = item.routing(idWithRouting.getRouting());
 				}
 
 				// note: multiGet does not have fields, need to set sourceContext to filter

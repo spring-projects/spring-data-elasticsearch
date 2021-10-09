@@ -338,7 +338,6 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(index, "Index must not be null");
 		Assert.notNull(clazz, "Class must not be null");
 		Assert.notNull(query, "Query must not be null");
-		Assert.notEmpty(query.getIds(), "No Id define for Query");
 
 		DocumentCallback<T> callback = new ReadDocumentCallback<>(converter, clazz, index);
 
