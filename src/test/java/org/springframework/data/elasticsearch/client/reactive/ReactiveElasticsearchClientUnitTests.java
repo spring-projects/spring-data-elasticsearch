@@ -27,7 +27,6 @@ import java.net.URI;
 import java.time.Instant;
 import java.util.Collections;
 
-import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -46,6 +45,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.reactivestreams.Publisher;
+import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockDelegatingElasticsearchHostProvider;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveMockClientTestsUtils.MockWebClientProvider.Receive;
 import org.springframework.http.HttpMethod;
@@ -476,9 +476,9 @@ public class ReactiveElasticsearchClientUnitTests {
 		hostProvider.when(HOST) //
 				.updateFail();
 
-		client.update(new UpdateRequest("twitter", "doc", "1").doc(Collections.singletonMap("user", "cstrobl")))
+		client.update(new UpdateRequest("twitter", "1").doc(Collections.singletonMap("user", "cstrobl")))
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class) //
+				.expectError(RestStatusException.class) //
 				.verify();
 	}
 

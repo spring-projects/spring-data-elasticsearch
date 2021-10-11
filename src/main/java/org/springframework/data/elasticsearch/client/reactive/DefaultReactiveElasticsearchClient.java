@@ -101,6 +101,7 @@ import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.suggest.Suggest;
 import org.reactivestreams.Publisher;
+import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
@@ -836,8 +837,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 				return Mono.error(BytesRestResponse.errorFromXContent(createParser(mediaType, content)));
 			} catch (Exception e) {
 
-				return Mono
-						.error(new ElasticsearchStatusException(content, RestStatus.fromCode(response.statusCode().value())));
+				return Mono.error(new RestStatusException(response.statusCode().value(), content));
 			}
 		}
 	}
@@ -870,14 +870,14 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		String mediaType = response.headers().contentType().map(MediaType::toString).orElse(XContentType.JSON.mediaType());
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
-				.switchIfEmpty(Mono.error(
-						new ElasticsearchStatusException(String.format("%s request to %s returned error code %s and no body.",
-								request.getMethod(), request.getEndpoint(), statusCode), status)))
+				.switchIfEmpty(Mono.error(new RestStatusException(status.getStatus(),
+						String.format("%s request to %s returned error code %s and no body.", request.getMethod(),
+								request.getEndpoint(), statusCode))))
 				.map(bytes -> new String(bytes, StandardCharsets.UTF_8)) //
 				.flatMap(content -> contentOrError(content, mediaType, status))
 				.flatMap(unused -> Mono
-						.error(new ElasticsearchStatusException(String.format("%s request to %s returned error code %s.",
-								request.getMethod(), request.getEndpoint(), statusCode), status)));
+						.error(new RestStatusException(status.getStatus(), String.format("%s request to %s returned error code %s.",
+								request.getMethod(), request.getEndpoint(), statusCode))));
 	}
 
 	private <T> Publisher<? extends T> handleClientError(String logId, ClientResponse response, Class<T> responseType) {
@@ -909,7 +909,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		if (exception != null) {
 			StringBuilder sb = new StringBuilder();
 			buildExceptionMessages(sb, exception);
-			return Mono.error(new ElasticsearchStatusException(sb.toString(), status, exception));
+			return Mono.error(new RestStatusException(status.getStatus(), sb.toString(), exception));
 		}
 
 		return Mono.just(content);

@@ -40,7 +40,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.search.aggregations.Aggregation;
 import org.elasticsearch.search.aggregations.AggregationBuilders;
@@ -57,6 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.Id;
@@ -64,7 +64,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
+import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -225,7 +225,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		operations.get("foo", SampleEntity.class, IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class);
+				.expectError(RestStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -337,7 +337,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.search(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class);
+				.expectError(RestStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -437,7 +437,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	}
 
 	@Test // DATAES-595, DATAES-767
-	public void shouldThrowElasticsearchStatusExceptionWhenInvalidPreferenceForGivenCriteria() {
+	public void shouldThrowDataAccessExceptionWhenInvalidPreferenceForGivenCriteria() {
 
 		SampleEntity sampleEntity1 = randomEntity("test message");
 		SampleEntity sampleEntity2 = randomEntity("test test");
@@ -451,7 +451,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		operations.search(queryWithInvalidPreference, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(UncategorizedElasticsearchException.class).verify();
+				.expectError(DataAccessException.class).verify();
 	}
 
 	@Test // DATAES-504
@@ -533,7 +533,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.aggregate(new CriteriaQuery(Criteria.where("message").is("some message")), SampleEntity.class,
 						IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class);
+				.expectError(RestStatusException.class);
 	}
 
 	@Test // DATAES-519, DATAES-767
@@ -541,7 +541,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		operations.count(SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class);
+				.expectError(RestStatusException.class);
 	}
 
 	@Test // DATAES-504
@@ -573,7 +573,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 		operations.delete("does-not-exists", IndexCoordinates.of("no-such-index")) //
 				.as(StepVerifier::create)//
-				.expectError(ElasticsearchStatusException.class);
+				.expectError(RestStatusException.class);
 	}
 
 	@Test // DATAES-504

@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndicesOptions;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
@@ -76,14 +76,14 @@ public class ElasticsearchRestTemplateTests extends ElasticsearchTemplateTests {
 	}
 
 	@Test
-	public void shouldThrowExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
+	public void shouldThrowDataAccessExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
 
 		// when
 		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
 				.create();
 		UpdateQuery updateQuery = UpdateQuery.builder(nextIdAsString()).withDocument(document).build();
 		assertThatThrownBy(() -> operations.update(updateQuery, IndexCoordinates.of(indexNameProvider.indexName())))
-				.isInstanceOf(UncategorizedElasticsearchException.class);
+				.isInstanceOf(DataAccessException.class);
 	}
 
 	@Test // DATAES-768
