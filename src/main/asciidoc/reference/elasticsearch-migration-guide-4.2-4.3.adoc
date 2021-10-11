@@ -44,6 +44,7 @@ Currently this will be a `org
 .springframework.data.elasticsearch.core.clients.elasticsearch7.ElasticsearchAggregations` object; later different implementations will be available.
 The same change has been done to the `ReactiveSearchOperations.aggregate()` functions, the now return a `Flux<AggregationContainer<?>>`.
 Programs using the aggregations need to be changed to cast the returned value to the appropriate class to further proces it.
+* methods that might have thrown a `org.elasticsearch.ElasticsearchStatusException` now will throw `org.springframework.data.elasticsearch.RestStatusException` instead.
 
 === Handling of field and sourceFilter properties of Query
 

@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.elasticsearch.ElasticsearchStatusException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +45,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.annotations.CountQuery;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -122,7 +122,7 @@ class SimpleReactiveElasticsearchRepositoryTests {
 	void findByIdShouldErrorIfIndexDoesNotExist() {
 		repository.findById("id-two") //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class);
+				.expectError(RestStatusException.class);
 	}
 
 	@Test // DATAES-519
@@ -268,7 +268,7 @@ class SimpleReactiveElasticsearchRepositoryTests {
 	void countShouldErrorWhenIndexDoesNotExist() {
 		repository.count() //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class);
+				.expectError(RestStatusException.class);
 	}
 
 	@Test // DATAES-519

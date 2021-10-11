@@ -26,7 +26,6 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.Request;
@@ -40,6 +39,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -84,8 +84,8 @@ class DefaultReactiveElasticsearchClientTest {
 	}
 
 	@Test // #1712
-	@DisplayName("should throw ElasticsearchStatusException on server 5xx with empty body")
-	void shouldThrowElasticsearchStatusExceptionOnServer5xxWithEmptyBody() {
+	@DisplayName("should throw RestStatusException on server 5xx with empty body")
+	void shouldThrowRestStatusExceptionOnServer5xxWithEmptyBody() {
 
 		when(hostProvider.getActive(any())).thenReturn(Mono.just(webClient));
 		WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
@@ -108,7 +108,7 @@ class DefaultReactiveElasticsearchClientTest {
 
 		client.get(new GetRequest("42")) //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class) //
+				.expectError(RestStatusException.class) //
 				.verify(); //
 	}
 }

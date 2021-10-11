@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.IntStream;
 
-import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
@@ -63,6 +62,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
@@ -165,7 +165,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.get(new GetRequest(INDEX_I, "nonono")) //
 				.as(StepVerifier::create) //
-				.expectError(ElasticsearchStatusException.class) //
+				.expectError(RestStatusException.class) //
 				.verify();
 	}
 
@@ -356,7 +356,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.index(request) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-488
@@ -405,7 +405,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.update(request) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-488
@@ -715,7 +715,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().createIndex(request -> request.index(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // #1658
@@ -737,7 +737,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().createIndex(new CreateIndexRequest(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // #1658
@@ -757,7 +757,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		operations.indexOps(IndexCoordinates.of(INDEX_I)).create().block();
 
 		client.indices().getIndex(new GetIndexRequest(INDEX_II)).as(StepVerifier::create)
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-569, DATAES-678
@@ -782,7 +782,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().deleteIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -800,7 +800,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().openIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -818,7 +818,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().closeIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -836,7 +836,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().refreshIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // #1640
@@ -869,7 +869,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().putMapping(putMappingRequest) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // #1640
@@ -911,7 +911,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().getMapping(getMappingsRequest) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -936,7 +936,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().putMapping(request -> request.indices(INDEX_I).source(jsonMap)) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-569
@@ -954,7 +954,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().flushIndex(request -> request.indices(INDEX_I)) //
 				.as(StepVerifier::create) //
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-684
@@ -1076,7 +1076,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 	void getFieldMappingNonExistingIndex() {
 
 		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1")).as(StepVerifier::create)
-				.verifyError(ElasticsearchStatusException.class);
+				.verifyError(RestStatusException.class);
 	}
 
 	@Test // DATAES-796

@@ -22,13 +22,13 @@ import org.elasticsearch.ElasticsearchException;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.common.ValidationException;
 import org.elasticsearch.index.engine.VersionConflictEngineException;
-import org.elasticsearch.rest.RestStatus;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
+import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
@@ -38,7 +38,7 @@ import org.springframework.util.StringUtils;
  * Simple {@link PersistenceExceptionTranslator} for Elasticsearch. Convert the given runtime exception to an
  * appropriate exception from the {@code org.springframework.dao} hierarchy. Return {@literal null} if no translation is
  * appropriate: any other exception may have resulted from user code, and should not be translated.
- * 
+ *
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
@@ -63,7 +63,26 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 						ex);
 			}
 
+			if (elasticsearchException instanceof ElasticsearchStatusException) {
+				ElasticsearchStatusException restStatusException = (ElasticsearchStatusException) elasticsearchException;
+				return new RestStatusException(restStatusException.status().getStatus(), restStatusException.getMessage(),
+						restStatusException.getCause());
+			}
+
 			return new UncategorizedElasticsearchException(ex.getMessage(), ex);
+		}
+
+		if (ex instanceof RestStatusException) {
+			RestStatusException restStatusException = (RestStatusException) ex;
+			Throwable cause = restStatusException.getCause();
+			if (cause instanceof ElasticsearchException) {
+				ElasticsearchException elasticsearchException = (ElasticsearchException) cause;
+
+				if (!indexAvailable(elasticsearchException)) {
+					return new NoSuchIndexException(ObjectUtils.nullSafeToString(elasticsearchException.getMetadata("es.index")),
+							ex);
+				}
+			}
 		}
 
 		if (ex instanceof ValidationException) {
@@ -80,13 +99,26 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 
 	private boolean isSeqNoConflict(Exception exception) {
 
+		Integer status = null;
+		String message = null;
+
 		if (exception instanceof ElasticsearchStatusException) {
 
 			ElasticsearchStatusException statusException = (ElasticsearchStatusException) exception;
+			status = statusException.status().getStatus();
+			message = statusException.getMessage();
+		}
 
-			return statusException.status() == RestStatus.CONFLICT && statusException.getMessage() != null
-					&& statusException.getMessage().contains("type=version_conflict_engine_exception")
-					&& statusException.getMessage().contains("version conflict, required seqNo");
+		if (exception instanceof RestStatusException) {
+
+			RestStatusException statusException = (RestStatusException) exception;
+			status = statusException.getStatus();
+			message = statusException.getMessage();
+		}
+
+		if (status != null && message != null) {
+			return status == 409 && message.contains("type=version_conflict_engine_exception")
+					&& message.contains("version conflict, required seqNo");
 		}
 
 		if (exception instanceof VersionConflictEngineException) {
