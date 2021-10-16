@@ -199,8 +199,16 @@ public @interface Field {
 	/**
 	 * Controls how Elasticsearch dynamically adds fields to the inner object within the document.<br>
 	 * To be used in combination with {@link FieldType#Object} or {@link FieldType#Nested}
-	 * 
+	 *
 	 * @since 4.3
 	 */
 	Dynamic dynamic() default Dynamic.INHERIT;
+
+	/**
+	 * marks this field to be excluded from the _source in Elasticsearch
+	 * (https://www.elastic.co/guide/en/elasticsearch/reference/7.15.0/mapping-source-field.html#include-exclude)
+	 *
+	 * @since 4.3
+	 */
+	boolean excludeFromSource() default false;
 }

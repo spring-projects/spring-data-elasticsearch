@@ -42,10 +42,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
-import org.springframework.data.elasticsearch.core.suggest.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.elasticsearch.core.suggest.Completion;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
@@ -945,6 +945,49 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		assertEquals(expected, mapping, true);
 	}
+
+	@Test // #796
+	@DisplayName("should add fields that are excluded from source")
+	void shouldAddFieldsThatAreExcludedFromSource() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"excluded-date\": {\n" + //
+				"      \"type\": \"date\",\n" + //
+				"      \"format\": \"date\"\n" + //
+				"    },\n" + //
+				"    \"nestedEntity\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        },\n" + //
+				"        \"excluded-text\": {\n" + //
+				"          \"type\": \"text\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  },\n" + //
+				"  \"_source\": {\n" + //
+				"    \"excludes\": [\n" + //
+				"      \"excluded-date\",\n" + //
+				"      \"nestedEntity.excluded-text\"\n" + //
+				"    ]\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(ExcludedFieldEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
 	// region entities
 
 	@Document(indexName = "ignore-above-index")
@@ -1917,6 +1960,18 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	private static class RuntimeFieldEntity {
 		@Id @Nullable private String id;
 		@Field(type = Date, format = DateFormat.epoch_millis, name = "@timestamp") @Nullable private Instant timestamp;
+	}
+
+	@Document(indexName = "fields-excluded-from-source")
+	private static class ExcludedFieldEntity {
+		@Id @Nullable private String id;
+		@Nullable @Field(name = "excluded-date", type = Date, format = DateFormat.date,
+				excludeFromSource = true) private LocalDate excludedDate;
+		@Nullable @Field(type = Nested) private NestedExcludedFieldEntity nestedEntity;
+	}
+
+	private static class NestedExcludedFieldEntity {
+		@Nullable @Field(name = "excluded-text", type = Text, excludeFromSource = true) private String excludedText;
 	}
 	// endregion
 }
