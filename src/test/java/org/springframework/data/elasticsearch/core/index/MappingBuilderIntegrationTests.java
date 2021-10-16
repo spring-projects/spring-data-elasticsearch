@@ -26,6 +26,7 @@ import java.lang.Integer;
 import java.lang.Object;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -47,13 +48,13 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.suggest.Completion;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.elasticsearch.core.suggest.Completion;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.geo.Box;
@@ -320,6 +321,16 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	void shouldWriteRuntimeFields() {
 
 		IndexOperations indexOps = operations.indexOps(RuntimeFieldEntity.class);
+		indexOps.create();
+		indexOps.putMapping();
+
+	}
+
+	@Test // #796
+	@DisplayName("should write source excludes")
+	void shouldWriteSourceExcludes() {
+
+		IndexOperations indexOps = operations.indexOps(ExcludedFieldEntity.class);
 		indexOps.create();
 		indexOps.putMapping();
 
@@ -1170,6 +1181,18 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	private static class RuntimeFieldEntity {
 		@Id @Nullable private String id;
 		@Field(type = Date, format = DateFormat.epoch_millis, name = "@timestamp") @Nullable private Instant timestamp;
+	}
+
+	@Document(indexName = "fields-excluded-from-source")
+	private static class ExcludedFieldEntity {
+		@Id @Nullable private String id;
+		@Nullable @Field(name = "excluded-date", type = Date, format = DateFormat.date,
+				excludeFromSource = true) private LocalDate excludedDate;
+		@Nullable @Field(type = Nested) private NestedExcludedFieldEntity nestedEntity;
+	}
+
+	private static class NestedExcludedFieldEntity {
+		@Nullable @Field(name = "excluded-text", type = Text, excludeFromSource = true) private String excludedText;
 	}
 
 	// endregion
