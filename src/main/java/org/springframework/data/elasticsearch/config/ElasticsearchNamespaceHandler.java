@@ -35,7 +35,6 @@ public class ElasticsearchNamespaceHandler extends NamespaceHandlerSupport {
 		RepositoryBeanDefinitionParser parser = new RepositoryBeanDefinitionParser(extension);
 
 		registerBeanDefinitionParser("repositories", parser);
-		registerBeanDefinitionParser("transport-client", new TransportClientBeanDefinitionParser());
 		registerBeanDefinitionParser("rest-client", new RestClientBeanDefinitionParser());
 	}
 }

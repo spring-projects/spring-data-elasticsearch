@@ -61,9 +61,6 @@ import org.springframework.data.elasticsearch.backend.elasticsearch7.cluster.Def
 import org.springframework.data.elasticsearch.backend.elasticsearch7.document.DocumentAdapters;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.ElasticsearchAggregation;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.RequestFactory;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.ResponseConverter;
 import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;

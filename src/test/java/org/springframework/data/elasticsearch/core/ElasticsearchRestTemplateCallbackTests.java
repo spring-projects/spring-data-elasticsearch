@@ -49,7 +49,7 @@ import org.springframework.data.elasticsearch.backend.elasticsearch7.Elasticsear
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-class ElasticsearchRestTemplateCallbackTests extends AbstractElasticsearchTemplateCallbackTests {
+class ElasticsearchRestTemplateCallbackTests extends ElasticsearchTemplateCallbackTests {
 
 	@Mock private RestHighLevelClient client;
 
@@ -103,6 +103,7 @@ class ElasticsearchRestTemplateCallbackTests extends AbstractElasticsearchTempla
 		MultiSearchResponse multiSearchResponse = new MultiSearchResponse(
 				new MultiSearchResponse.Item[] { multiSearchResponseItem }, 1L);
 		doReturn(multiSearchResponse).when(client).multiSearch(any(MultiSearchRequest.class), any());
+		doReturn(multiSearchResponse).when(client).msearch(any(MultiSearchRequest.class), any());
 		doReturn(searchResponse).when(multiSearchResponseItem).getResponse();
 
 		doReturn(searchResponse).when(client).scroll(any(SearchScrollRequest.class), any(RequestOptions.class));

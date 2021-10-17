@@ -25,7 +25,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.client.RestClientFactoryBean;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.client.TransportClientFactoryBean;
 import org.springframework.data.elasticsearch.junit.jupiter.Tags;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -46,16 +45,7 @@ public class ElasticsearchNamespaceHandlerTests {
 	@Autowired private ApplicationContext context;
 
 	@Test
-	public void shouldCreateTransportClient() {
-
-		assertThat(context.getBean(TransportClientFactoryBean.class)).isNotNull();
-		assertThat(context.getBean(TransportClientFactoryBean.class)).isInstanceOf(TransportClientFactoryBean.class);
-	}
-
-	@Test
 	public void shouldCreateRepository() {
-
-		assertThat(context.getBean(TransportClientFactoryBean.class)).isNotNull();
 		assertThat(context.getBean(CreateIndexFalseRepository.class)).isInstanceOf(CreateIndexFalseRepository.class);
 	}
 

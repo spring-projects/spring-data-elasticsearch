@@ -6,11 +6,9 @@
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 
 	<bean name="elasticsearchTemplate"
-		  class="org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchTemplate">
-		<constructor-arg name="client" ref="transportClient"/>
+		  class="org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate">
+		<constructor-arg name="client" ref="restClient"/>
 	</bean>
-
-	<elasticsearch:transport-client id="transportClient"/>
 
 	<elasticsearch:repositories
 			base-package="org.springframework.data.elasticsearch.config.namespace"

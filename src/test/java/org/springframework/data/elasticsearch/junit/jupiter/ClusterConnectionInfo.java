@@ -33,7 +33,6 @@ public final class ClusterConnectionInfo {
 	private final boolean useSsl;
 	private final String host;
 	private final int httpPort;
-	private final int transportPort;
 	private final String clusterName;
 	@Nullable private final ElasticsearchContainer elasticsearchContainer;
 
@@ -42,12 +41,11 @@ public final class ClusterConnectionInfo {
 	}
 
 	private ClusterConnectionInfo(IntegrationtestEnvironment integrationtestEnvironment, String host, int httpPort,
-			boolean useSsl, int transportPort, @Nullable ElasticsearchContainer elasticsearchContainer) {
+			boolean useSsl, @Nullable ElasticsearchContainer elasticsearchContainer) {
 		this.integrationtestEnvironment = integrationtestEnvironment;
 		this.host = host;
 		this.httpPort = httpPort;
 		this.useSsl = useSsl;
-		this.transportPort = transportPort;
 		this.elasticsearchContainer = elasticsearchContainer;
 		this.clusterName = "docker-cluster";
 	}
@@ -59,7 +57,6 @@ public final class ClusterConnectionInfo {
 				", useSsl=" + useSsl + //
 				", host='" + host + '\'' + //
 				", httpPort=" + httpPort + //
-				", transportPort=" + transportPort + //
 				'}'; //
 	}
 
@@ -69,10 +66,6 @@ public final class ClusterConnectionInfo {
 
 	public int getHttpPort() {
 		return httpPort;
-	}
-
-	public int getTransportPort() {
-		return transportPort;
 	}
 
 	public String getClusterName() {
@@ -93,7 +86,6 @@ public final class ClusterConnectionInfo {
 		private boolean useSsl = false;
 		private String host;
 		private int httpPort;
-		private int transportPort;
 		@Nullable private ElasticsearchContainer elasticsearchContainer;
 
 		public Builder withIntegrationtestEnvironment(IntegrationtestEnvironment integrationtestEnvironment) {
@@ -115,19 +107,13 @@ public final class ClusterConnectionInfo {
 			return this;
 		}
 
-		public Builder withTransportPort(int transportPort) {
-			this.transportPort = transportPort;
-			return this;
-		}
-
 		public Builder withElasticsearchContainer(ElasticsearchContainer elasticsearchContainer) {
 			this.elasticsearchContainer = elasticsearchContainer;
 			return this;
 		}
 
 		public ClusterConnectionInfo build() {
-			return new ClusterConnectionInfo(integrationtestEnvironment, host, httpPort, useSsl, transportPort,
-					elasticsearchContainer);
+			return new ClusterConnectionInfo(integrationtestEnvironment, host, httpPort, useSsl, elasticsearchContainer);
 		}
 	}
 }

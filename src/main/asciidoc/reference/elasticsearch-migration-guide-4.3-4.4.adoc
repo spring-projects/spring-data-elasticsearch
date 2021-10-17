@@ -12,3 +12,12 @@ This section describes breaking changes from version 4.3.x to 4.4.x and how remo
 === Package changes
 
 * The package `org.springframework.data.elasticsearch.core.clients.elasticsearch7` has been renamed to `org.springframework.data.elasticsearch.core.backend.elasticsearch7`.
+
+=== Removal of deprecated classes
+
+==== `ElasticsearchTemplate` has been removed
+
+As of version 4.4 Spring Data Elasticsearch does not use the `TransportClient` from Elasticsearch anymore (which itself is deprecated since Elasticsearch 7.0).
+This means that the `ElasticsearchTemplate` class which was deprecated since Spring Data Elasticsearch 4.0 has been removed.
+This was the implementation of the `ElasticsearchOperations` interface that was using the `TransportClient`.
+Connections to Elasticsearch must be made using either the imperative `ElasticsearchRestTemplate` or the reactive `ReactiveElasticsearchTemplate`.

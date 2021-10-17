@@ -19,7 +19,7 @@ import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.ResponseConverter;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ResponseConverter;
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
 import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 

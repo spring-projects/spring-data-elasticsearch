@@ -25,7 +25,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.RequestFactory;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.RequestFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;

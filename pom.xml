@@ -101,12 +101,6 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-context</artifactId>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 
 		<dependency>
@@ -141,19 +135,6 @@
 		</dependency>
 
 		<!-- Elasticsearch -->
-		<dependency>
-			<groupId>org.elasticsearch.client</groupId>
-			<artifactId>transport</artifactId>
-			<version>${elasticsearch}</version>
-		</dependency>
-
-		<dependency>
-			<!-- required by elasticsearch -->
-			<groupId>org.elasticsearch.plugin</groupId>
-			<artifactId>transport-netty4-client</artifactId>
-			<version>${elasticsearch}</version>
-		</dependency>
-
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>

@@ -59,7 +59,7 @@ public class ReactiveElasticsearchOperationsRoutingTests {
 		// check that the used id values go to different shards of the index which is configured to have 5 shards.
 		// Elasticsearch uses the following function:
 		Function<String, Integer> calcShard = routing -> Math
-				.floorMod(ElasticsearchOperationsRoutingTests.Murmur3HashFunction.hash(routing), 5);
+				.floorMod(RoutingIntegrationTests.Murmur3HashFunction.hash(routing), 5);
 
 		Integer shard1 = calcShard.apply(ID_1);
 		Integer shard2 = calcShard.apply(ID_2);

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.clients.elasticsearch7;
+package org.springframework.data.elasticsearch.backend.elasticsearch7;
 
 import org.elasticsearch.search.aggregations.Aggregations;
 import org.springframework.data.elasticsearch.core.AggregationsContainer;

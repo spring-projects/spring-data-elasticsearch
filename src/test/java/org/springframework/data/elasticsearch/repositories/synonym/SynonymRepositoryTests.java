@@ -21,8 +21,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -33,13 +31,10 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * SynonymRepositoryTests
@@ -48,13 +43,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { SynonymRepositoryTests.Config.class })
-public class SynonymRepositoryTests {
-
-	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {}
+public abstract class SynonymRepositoryTests {
 
 	@Autowired private SynonymRepository repository;
 

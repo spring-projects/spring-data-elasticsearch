@@ -40,7 +40,6 @@ import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.ResponseConverter;
 import org.springframework.data.elasticsearch.core.AbstractIndexTemplate;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;

@@ -6,58 +6,10 @@ This chapter illustrates configuration and usage of supported Elasticsearch clie
 Spring Data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster.
 Although the Elasticsearch Client can be used to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
 
-[[elasticsearch.clients.transport]]
-== Transport Client
-
-WARNING: The `TransportClient` is deprecated as of Elasticsearch 7 and will be removed in Elasticsearch 8. (https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/transport-client.html[see the Elasticsearch documentation]).
-Spring Data Elasticsearch will support the `TransportClient` as long as it is available in the used Elasticsearch <<elasticsearch.versions,version>> but has deprecated the classes using it since version 4.0.
-
-We strongly recommend to use the <<elasticsearch.clients.rest>> instead of the `TransportClient`.
-
-.Transport Client
-====
-[source,java]
-----
-@Configuration
-public class TransportClientConfig extends ElasticsearchConfigurationSupport {
-
-    @Bean
-    public Client elasticsearchClient() throws UnknownHostException {
-        Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();        <.>
-        TransportClient client = new PreBuiltTransportClient(settings);
-        client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1"), 9300)); <.>
-        return client;
-    }
-
-    @Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
-    public ElasticsearchTemplate elasticsearchTemplate() throws UnknownHostException {
-
-		ElasticsearchTemplate template = new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
-		template.setRefreshPolicy(refreshPolicy());                                                 <.>
-
-		return template;
-    }
-}
-
-// ...
-
-IndexRequest request = new IndexRequest("spring-data")
- .id(randomID())
- .source(someObject);
-
-IndexResponse response = client.index(request);
-----
-
-<.> The `TransportClient` must be configured with the cluster name.
-<.> The host and port to connect the client to.
-<.> the RefreshPolicy must be set in the `ElasticsearchTemplate` (override `refreshPolicy()` to not use the default)
-====
-
 [[elasticsearch.clients.rest]]
 == High Level REST Client
 
-The Java High Level REST Client is the default client of Elasticsearch, it provides a straight forward replacement for the `TransportClient` as it accepts and returns the very same request/response objects and therefore depends on the Elasticsearch core project.
-Asynchronous calls are operated upon a client managed thread pool and require a callback to be notified when the request is done.
+The Java High Level REST Client is the default client of Elasticsearch, it is configured like shown:
 
 .High Level REST Client
 ====
@@ -210,4 +162,4 @@ To see what is actually sent to and received from the server `Request` / `Respon
 <logger name="org.springframework.data.elasticsearch.client.WIRE" level="trace"/>
 ----
 
-NOTE: The above applies to both the `RestHighLevelClient` and `ReactiveElasticsearchClient` when obtained via `RestClients` respectively `ReactiveRestClients`, is not available for the `TransportClient`.
+NOTE: The above applies to both the `RestHighLevelClient` and `ReactiveElasticsearchClient` when obtained via `RestClients` respectively `ReactiveRestClients`.

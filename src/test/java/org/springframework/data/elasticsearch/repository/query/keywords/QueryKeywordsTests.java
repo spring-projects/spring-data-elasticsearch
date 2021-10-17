@@ -27,8 +27,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -36,13 +34,10 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * base class for query keyword tests. Implemented by subclasses using ElasticsearchClient and ElasticsearchRestClient
@@ -53,13 +48,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { QueryKeywordsTests.Config.class })
-class QueryKeywordsTests {
-
-	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {}
+abstract class QueryKeywordsTests {
 
 	@Autowired private ProductRepository repository;
 

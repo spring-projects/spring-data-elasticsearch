@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.data.elasticsearch.clients.elasticsearch7;
+package org.springframework.data.elasticsearch.backend.elasticsearch7;
 
 import java.util.ArrayList;
 import java.util.Collections;
