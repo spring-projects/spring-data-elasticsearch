@@ -22,7 +22,7 @@
 		<log4j>2.14.1</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.6.0-SNAPSHOT</springdata.commons>
-		<testcontainers>1.16.1</testcontainers>
+		<testcontainers>1.15.3</testcontainers>
 		<blockhound-junit>1.0.6.RELEASE</blockhound-junit>
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 
