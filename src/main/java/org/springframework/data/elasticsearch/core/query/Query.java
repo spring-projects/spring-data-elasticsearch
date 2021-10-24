@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.RuntimeField;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -391,6 +392,20 @@ public interface Query {
 	 */
 	@Nullable
 	Boolean getRequestCache();
+
+	/**
+	 * Adds a runtime field to the query.
+	 *
+	 * @param runtimeField the runtime field definition, must not be {@literal null}
+	 * @since 4.3
+	 */
+	void addRuntimeField(RuntimeField runtimeField);
+
+	/**
+	 * @return the runtime fields for this query. May be empty but not null
+	 * @since 4.3
+	 */
+	List<RuntimeField> getRuntimeFields();
 
 	/**
 	 * @since 4.3

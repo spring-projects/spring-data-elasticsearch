@@ -1020,7 +1020,17 @@ class RequestFactory {
 			request.requestCache(query.getRequestCache());
 		}
 
+		if (!query.getRuntimeFields().isEmpty()) {
+
+			Map<String, Object> runtimeMappings = new HashMap<>();
+			query.getRuntimeFields().forEach(runtimeField -> {
+				runtimeMappings.put(runtimeField.getName(), runtimeField.getMapping());
+			});
+			sourceBuilder.runtimeMappings(runtimeMappings);
+		}
+
 		request.source(sourceBuilder);
+
 		return request;
 	}
 
@@ -1110,6 +1120,15 @@ class RequestFactory {
 
 		if (query.getRequestCache() != null) {
 			searchRequestBuilder.setRequestCache(query.getRequestCache());
+		}
+
+		if (!query.getRuntimeFields().isEmpty()) {
+
+			Map<String, Object> runtimeMappings = new HashMap<>();
+			query.getRuntimeFields().forEach(runtimeField -> {
+				runtimeMappings.put(runtimeField.getName(), runtimeField.getMapping());
+			});
+			searchRequestBuilder.setRuntimeMappings(runtimeMappings);
 		}
 
 		return searchRequestBuilder;
