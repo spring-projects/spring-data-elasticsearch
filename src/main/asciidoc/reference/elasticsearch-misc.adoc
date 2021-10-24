@@ -183,3 +183,81 @@ If the class to be retrieved has a `GeoPoint` property named _location_, the fol
 Sort.by(new GeoDistanceOrder("location", new GeoPoint(48.137154, 11.5761247)))
 ----
 ====
+
+[[elasticsearch.misc.runtime-fields]]
+== Runtime Fields
+
+From version 7.12 on Elasticsearch has added the feature of runtime fields (https://www.elastic.co/guide/en/elasticsearch/reference/7.12/runtime.html).
+Spring Data Elasticsearch supports this in two ways:
+
+=== Runtime field definitions in the index mappings
+
+The first way to define runtime fields is by adding the definitions to the index mappings (see https://www.elastic.co/guide/en/elasticsearch/reference/7.12/runtime-mapping-fields.html).
+To use this approach in Spring Data Elasticsearch the user must provide a JSON file that contains the corresponding definition, for example:
+
+.runtime-fields.json
+====
+[source,json]
+----
+{
+  "day_of_week": {
+    "type": "keyword",
+    "script": {
+      "source": "emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))"
+    }
+  }
+}
+----
+====
+
+The path to this JSON file, which must be present on the classpath, must then be set in the `@Mapping` annotation of the entity:
+
+====
+[source,java]
+----
+@Document(indexName = "runtime-fields")
+@Mapping(runtimeFieldsPath = "/runtime-fields.json")
+public class RuntimeFieldEntity {
+	// properties, getter, setter,...
+}
+
+----
+====
+
+=== Runtime fields definitions set on a Query
+
+The second way to define runtime fields is by adding the definitions to a search query (see https://www.elastic.co/guide/en/elasticsearch/reference/7.12/runtime-search-request.html).
+The following code example shows how to do this with Spring Data Elasticsearch :
+
+The entity used is a simple object that has a `price` property:
+
+====
+[source,java]
+----
+@Document(indexName = "some_index_name")
+public class SomethingToBuy {
+
+	private @Id @Nullable String id;
+	@Nullable @Field(type = FieldType.Text) private String description;
+	@Nullable @Field(type = FieldType.Double) private Double price;
+
+	// getter and setter
+}
+
+----
+====
+
+The following query uses a runtime field that calculates a `priceWithTax` value by adding 19% to the price and uses this value in the search query to find all entities where `priceWithTax` is higher or equal than a given value:
+
+====
+[source,java]
+----
+RuntimeField runtimeField = new RuntimeField("priceWithTax", "double", "emit(doc['price'].value * 1.19)");
+Query query = new CriteriaQuery(new Criteria("priceWithTax").greaterThanEqual(16.5));
+query.addRuntimeField(runtimeField);
+
+SearchHits<SomethingToBuy> searchHits = operations.search(query, SomethingToBuy.class);
+----
+====
+
+This works with every implementation of the `Query` interface.

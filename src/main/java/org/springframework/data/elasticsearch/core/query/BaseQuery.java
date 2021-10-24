@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.RuntimeField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -67,6 +68,7 @@ public class BaseQuery implements Query {
 	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
 	@Nullable protected Boolean requestCache;
 	private List<IdWithRouting> idsWithRouting = Collections.emptyList();
+	private final List<RuntimeField> runtimeFields = new ArrayList<>();
 
 	@Override
 	@Nullable
@@ -374,4 +376,16 @@ public class BaseQuery implements Query {
 		return this.requestCache;
 	}
 
+	@Override
+	public void addRuntimeField(RuntimeField runtimeField) {
+
+		Assert.notNull(runtimeField, "runtimeField must not be null");
+
+		this.runtimeFields.add(runtimeField);
+	}
+
+	@Override
+	public List<RuntimeField> getRuntimeFields() {
+		return runtimeFields;
+	}
 }
