@@ -1029,6 +1029,10 @@ class RequestFactory {
 			sourceBuilder.runtimeMappings(runtimeMappings);
 		}
 
+		if (query.getScrollTime() != null) {
+			request.scroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
+		}
+
 		request.source(sourceBuilder);
 
 		return request;
@@ -1129,6 +1133,10 @@ class RequestFactory {
 				runtimeMappings.put(runtimeField.getName(), runtimeField.getMapping());
 			});
 			searchRequestBuilder.setRuntimeMappings(runtimeMappings);
+		}
+
+		if (query.getScrollTime() != null) {
+			searchRequestBuilder.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
 		}
 
 		return searchRequestBuilder;
