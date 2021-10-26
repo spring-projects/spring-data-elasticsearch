@@ -29,10 +29,12 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -121,16 +123,16 @@ public class ElasticsearchOperationsRoutingTests {
 
 	@Test
 	void shouldCreateACopyOfTheClientWithRefreshPolicy() {
-		//given
+		// given
 		AbstractElasticsearchTemplate sourceTemplate = (AbstractElasticsearchTemplate) operations;
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		DefaultRoutingResolver defaultRoutingResolver = new DefaultRoutingResolver(mappingContext);
 
-		//when
+		// when
 		ElasticsearchOperations operationsCopy = this.operations.withRouting(defaultRoutingResolver);
 		AbstractElasticsearchTemplate copyTemplate = (AbstractElasticsearchTemplate) operationsCopy;
 
-		//then
+		// then
 		assertThat(sourceTemplate.getRefreshPolicy()).isEqualTo(copyTemplate.getRefreshPolicy());
 	}
 
