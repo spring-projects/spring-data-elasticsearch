@@ -41,6 +41,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Anton Naydenov
  */
 @SuppressWarnings("ConstantConditions")
 @SpringIntegrationTest
@@ -116,6 +117,21 @@ public class ElasticsearchOperationsRoutingTests {
 
 		assertThat(searchHits.getSearchHits()).hasSize(1);
 		assertThat(searchHits.getSearchHit(0).getRouting()).isEqualTo(ID_2);
+	}
+
+	@Test
+	void shouldCreateACopyOfTheClientWithRefreshPolicy() {
+		//given
+		AbstractElasticsearchTemplate sourceTemplate = (AbstractElasticsearchTemplate) operations;
+		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
+		DefaultRoutingResolver defaultRoutingResolver = new DefaultRoutingResolver(mappingContext);
+
+		//when
+		ElasticsearchOperations operationsCopy = this.operations.withRouting(defaultRoutingResolver);
+		AbstractElasticsearchTemplate copyTemplate = (AbstractElasticsearchTemplate) operationsCopy;
+
+		//then
+		assertThat(sourceTemplate.getRefreshPolicy()).isEqualTo(copyTemplate.getRefreshPolicy());
 	}
 
 	@Document(indexName = INDEX)
