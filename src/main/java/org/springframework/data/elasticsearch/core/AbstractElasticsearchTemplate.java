@@ -70,6 +70,7 @@ import org.springframework.util.Assert;
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
  * @author Steven Pearce
+ * @author Anton Naydenov
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -110,6 +111,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		}
 
 		copy.setRoutingResolver(routingResolver);
+		copy.setRefreshPolicy(refreshPolicy);
 
 		return copy;
 	}
