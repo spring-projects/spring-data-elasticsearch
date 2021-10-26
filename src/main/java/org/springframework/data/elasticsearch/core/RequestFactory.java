@@ -1173,6 +1173,10 @@ class RequestFactory {
 			request.routing(query.getRoute());
 		}
 
+		if (query.getScrollTime() != null) {
+			request.scroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
+		}
+
 		request.source(sourceBuilder);
 		return request;
 	}
@@ -1246,6 +1250,10 @@ class RequestFactory {
 
 		if (StringUtils.hasLength(query.getRoute())) {
 			searchRequestBuilder.setRouting(query.getRoute());
+		}
+
+		if (query.getScrollTime() != null) {
+			searchRequestBuilder.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
 		}
 
 		return searchRequestBuilder;
