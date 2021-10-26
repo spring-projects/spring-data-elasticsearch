@@ -1066,6 +1066,10 @@ class RequestFactory {
 
 		query.getRescorerQueries().forEach(rescorer -> sourceBuilder.addRescorer(getQueryRescorerBuilder(rescorer)));
 
+		if (query.getScrollTime() != null) {
+			request.scroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
+		}
+
 		request.source(sourceBuilder);
 		return request;
 	}
@@ -1153,6 +1157,10 @@ class RequestFactory {
 		}
 
 		query.getRescorerQueries().forEach(rescorer -> searchRequestBuilder.addRescorer(getQueryRescorerBuilder(rescorer)));
+
+		if (query.getScrollTime() != null) {
+			searchRequestBuilder.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
+		}
 
 		return searchRequestBuilder;
 	}
