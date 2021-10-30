@@ -206,7 +206,7 @@ public @interface Field {
 
 	/**
 	 * marks this field to be excluded from the _source in Elasticsearch
-	 * (https://www.elastic.co/guide/en/elasticsearch/reference/7.15.0/mapping-source-field.html#include-exclude)
+	 * (https://www.elastic.co/guide/en/elasticsearch/reference/7.15/mapping-source-field.html#include-exclude)
 	 *
 	 * @since 4.3
 	 */
