@@ -47,7 +47,7 @@ final public class ElasticsearchDateConverter {
 
 	/**
 	 * Creates an ElasticsearchDateConverter for the given {@link DateFormat}.
-	 * 
+	 *
 	 * @param dateFormat must not be @{literal null}
 	 * @return converter
 	 */
@@ -135,7 +135,7 @@ final public class ElasticsearchDateConverter {
 	/**
 	 * Creates a {@link DateFormatter} for a given pattern. The pattern can be the name of a {@link DateFormat} enum value
 	 * or a literal pattern.
-	 * 
+	 *
 	 * @param pattern the pattern to use
 	 * @return DateFormatter
 	 */
@@ -172,8 +172,73 @@ final public class ElasticsearchDateConverter {
 		return new PatternDateFormatter(dateTimeFormatter);
 	}
 
+	@SuppressWarnings("unchecked")
 	private static <T extends TemporalAccessor> TemporalQuery<T> getTemporalQuery(Class<T> type) {
 		return temporal -> {
+			// no reflection for java.time classes (GraalVM native)
+			if (type == java.time.chrono.HijrahDate.class) {
+				return (T) java.time.chrono.HijrahDate.from(temporal);
+			}
+			if (type == java.time.chrono.JapaneseDate.class) {
+				return (T) java.time.chrono.JapaneseDate.from(temporal);
+			}
+			if (type == java.time.ZonedDateTime.class) {
+				return (T) java.time.ZonedDateTime.from(temporal);
+			}
+			if (type == java.time.LocalDateTime.class) {
+				return (T) java.time.LocalDateTime.from(temporal);
+			}
+			if (type == java.time.chrono.ThaiBuddhistDate.class) {
+				return (T) java.time.chrono.ThaiBuddhistDate.from(temporal);
+			}
+			if (type == java.time.LocalTime.class) {
+				return (T) java.time.LocalTime.from(temporal);
+			}
+			if (type == java.time.ZoneOffset.class) {
+				return (T) java.time.ZoneOffset.from(temporal);
+			}
+			if (type == java.time.OffsetTime.class) {
+				return (T) java.time.OffsetTime.from(temporal);
+			}
+			if (type == java.time.chrono.ChronoLocalDate.class) {
+				return (T) java.time.chrono.ChronoLocalDate.from(temporal);
+			}
+			if (type == java.time.Month.class) {
+				return (T) java.time.Month.from(temporal);
+			}
+			if (type == java.time.chrono.ChronoLocalDateTime.class) {
+				return (T) java.time.chrono.ChronoLocalDateTime.from(temporal);
+			}
+			if (type == java.time.MonthDay.class) {
+				return (T) java.time.MonthDay.from(temporal);
+			}
+			if (type == java.time.Instant.class) {
+				return (T) java.time.Instant.from(temporal);
+			}
+			if (type == java.time.OffsetDateTime.class) {
+				return (T) java.time.OffsetDateTime.from(temporal);
+			}
+			if (type == java.time.chrono.ChronoZonedDateTime.class) {
+				return (T) java.time.chrono.ChronoZonedDateTime.from(temporal);
+			}
+			if (type == java.time.chrono.MinguoDate.class) {
+				return (T) java.time.chrono.MinguoDate.from(temporal);
+			}
+			if (type == java.time.Year.class) {
+				return (T) java.time.Year.from(temporal);
+			}
+			if (type == java.time.DayOfWeek.class) {
+				return (T) java.time.DayOfWeek.from(temporal);
+			}
+			if (type == java.time.LocalDate.class) {
+				return (T) java.time.LocalDate.from(temporal);
+			}
+			if (type == java.time.YearMonth.class) {
+				return (T) java.time.YearMonth.from(temporal);
+			}
+
+			// for implementations not covered until here use reflection to check for the existence of a static
+			// from(TemporalAccessor) method
 			try {
 				Method method = type.getMethod("from", TemporalAccessor.class);
 				Object o = method.invoke(null, temporal);
@@ -184,7 +249,8 @@ final public class ElasticsearchDateConverter {
 				throw new ConversionException("could not create object of class " + type.getName(), e);
 			}
 		};
-	} // endregion
+	}
+	// endregion
 
 	/**
 	 * a DateFormatter to convert epoch milliseconds
