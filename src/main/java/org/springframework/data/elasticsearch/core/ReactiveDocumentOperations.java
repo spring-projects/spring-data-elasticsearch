@@ -106,7 +106,8 @@ public interface ReactiveDocumentOperations {
 
 	/**
 	 * Index entities in the given {@literal index}. If the {@literal index} is {@literal null} or empty the index name
-	 * provided via entity metadata is used.
+	 * provided via entity metadata is used. On errors returns with
+	 * {@link org.springframework.data.elasticsearch.BulkFailureException} with information about the failed operation
 	 *
 	 * @param entities must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
@@ -168,7 +169,8 @@ public interface ReactiveDocumentOperations {
 	<T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index);
 
 	/**
-	 * Bulk update all objects. Will do update.
+	 * Bulk update all objects. Will do update. On errors returns with
+	 * {@link org.springframework.data.elasticsearch.BulkFailureException} with information about the failed operation
 	 *
 	 * @param queries the queries to execute in bulk
 	 * @since 4.0
@@ -182,6 +184,7 @@ public interface ReactiveDocumentOperations {
 	 *
 	 * @param queries the queries to execute in bulk
 	 * @param bulkOptions options to be added to the bulk request
+	 * @throws org.springframework.data.elasticsearch.BulkFailureException with information about the failed operation
 	 * @since 4.0
 	 */
 	Mono<Void> bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);

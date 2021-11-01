@@ -164,6 +164,7 @@ public interface DocumentOperations {
 	 * @param queries the queries to execute in bulk
 	 * @param clazz the entity class
 	 * @return the information about the indexed objects
+	 * @throws org.springframework.data.elasticsearch.BulkFailureException with information about the failed operation
 	 * @since 4.1
 	 */
 	default List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, Class<?> clazz) {
@@ -175,6 +176,7 @@ public interface DocumentOperations {
 	 *
 	 * @param queries the queries to execute in bulk
 	 * @return the information about of the indexed objects
+	 * @throws org.springframework.data.elasticsearch.BulkFailureException with information about the failed operation
 	 */
 	default List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, IndexCoordinates index) {
 		return bulkIndex(queries, BulkOptions.defaultOptions(), index);
@@ -187,6 +189,7 @@ public interface DocumentOperations {
 	 * @param bulkOptions options to be added to the bulk request
 	 * @param clazz the entity class
 	 * @return the information about of the indexed objects
+	 * @throws org.springframework.data.elasticsearch.BulkFailureException with information about the failed operation
 	 * @since 4.1
 	 */
 	List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, Class<?> clazz);
@@ -197,6 +200,7 @@ public interface DocumentOperations {
 	 * @param queries the queries to execute in bulk
 	 * @param bulkOptions options to be added to the bulk request
 	 * @return the information about of the indexed objects
+	 * @throws org.springframework.data.elasticsearch.BulkFailureException with information about the failed operation
 	 */
 	List<IndexedObjectInformation> bulkIndex(List<IndexQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
@@ -204,6 +208,7 @@ public interface DocumentOperations {
 	 * Bulk update all objects. Will do update.
 	 *
 	 * @param queries the queries to execute in bulk
+	 * @throws org.springframework.data.elasticsearch.BulkFailureException with information about the failed operation
 	 */
 	default void bulkUpdate(List<UpdateQuery> queries, IndexCoordinates index) {
 		bulkUpdate(queries, BulkOptions.defaultOptions(), index);
@@ -214,6 +219,7 @@ public interface DocumentOperations {
 	 *
 	 * @param clazz the entity class
 	 * @param queries the queries to execute in bulk
+	 * @throws org.springframework.data.elasticsearch.BulkFailureException with information about the failed operation
 	 * @since 4.1
 	 */
 	void bulkUpdate(List<UpdateQuery> queries, Class<?> clazz);
@@ -223,6 +229,7 @@ public interface DocumentOperations {
 	 *
 	 * @param queries the queries to execute in bulk
 	 * @param bulkOptions options to be added to the bulk request
+	 * @throws org.springframework.data.elasticsearch.BulkFailureException with information about the failed operation
 	 */
 	void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions, IndexCoordinates index);
 
