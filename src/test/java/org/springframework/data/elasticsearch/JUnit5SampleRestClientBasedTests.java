@@ -20,8 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.test.context.ContextConfiguration;
@@ -33,7 +33,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class})
+@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
 @DisplayName("a sample JUnit 5 test with rest client")
 public class JUnit5SampleRestClientBasedTests {
 

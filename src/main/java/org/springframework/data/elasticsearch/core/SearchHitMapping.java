@@ -24,11 +24,11 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.NestedMetaData;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
-import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;
@@ -47,7 +47,7 @@ import org.springframework.util.Assert;
  * @author Matt Gilene
  * @since 4.0
  */
-class SearchHitMapping<T> {
+public class SearchHitMapping<T> {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(SearchHitMapping.class);
 
@@ -64,11 +64,11 @@ class SearchHitMapping<T> {
 		this.mappingContext = converter.getMappingContext();
 	}
 
-	static <T> SearchHitMapping<T> mappingFor(Class<T> entityClass, ElasticsearchConverter converter) {
+	public static <T> SearchHitMapping<T> mappingFor(Class<T> entityClass, ElasticsearchConverter converter) {
 		return new SearchHitMapping<>(entityClass, converter);
 	}
 
-	SearchHits<T> mapHits(SearchDocumentResponse searchDocumentResponse, List<T> contents) {
+	public SearchHits<T> mapHits(SearchDocumentResponse searchDocumentResponse, List<T> contents) {
 		return mapHitsFromResponse(searchDocumentResponse, contents);
 	}
 
@@ -122,7 +122,7 @@ class SearchHitMapping<T> {
 		}
 	}
 
-	SearchHit<T> mapHit(SearchDocument searchDocument, T content) {
+	public SearchHit<T> mapHit(SearchDocument searchDocument, T content) {
 
 		Assert.notNull(searchDocument, "searchDocument is null");
 		Assert.notNull(content, "content is null");

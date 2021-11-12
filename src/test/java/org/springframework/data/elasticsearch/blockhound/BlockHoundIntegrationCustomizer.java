@@ -19,9 +19,6 @@ import reactor.blockhound.BlockHound;
 import reactor.blockhound.BlockingOperationError;
 import reactor.blockhound.integration.BlockHoundIntegration;
 
-import org.elasticsearch.Build;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-
 /**
  * @author Peter-Josef Meisch
  */
@@ -30,8 +27,8 @@ public class BlockHoundIntegrationCustomizer implements BlockHoundIntegration {
 	@Override
 	public void applyTo(BlockHound.Builder builder) {
 		// Elasticsearch classes reading from the classpath on initialization, needed for parsing Elasticsearch responses
-		builder.allowBlockingCallsInside(XContentBuilder.class.getName(), "<clinit>")
-				.allowBlockingCallsInside(Build.class.getName(), "<clinit>");
+		builder.allowBlockingCallsInside("org.elasticsearch.common.xcontent.XContentBuilder", "<clinit>")
+				.allowBlockingCallsInside("org.elasticsearch.Build", "<clinit>");
 
 		builder.blockingMethodCallback(it -> {
 			throw new BlockingOperationError(it);

@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -71,9 +72,9 @@ public interface SearchOperations {
 	 * @param clazz the entity class
 	 * @return the suggest response
 	 * @since 4.1
-	 * @deprecated since 4.3 use a {@link org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder} with
-	 *             {@link org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder#withSuggestBuilder(SuggestBuilder)},
-	 *             call {@link #search(Query, Class)} and get the suggest from {@link SearchHits#getSuggest()}
+	 * @deprecated since 4.3 use a {@link NativeSearchQueryBuilder} with
+	 *             {@link NativeSearchQueryBuilder#withSuggestBuilder(SuggestBuilder)}, call {@link #search(Query, Class)}
+	 *             and get the suggest from {@link SearchHits#getSuggest()}
 	 */
 	@Deprecated
 	SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz);
@@ -84,9 +85,9 @@ public interface SearchOperations {
 	 * @param suggestion the query
 	 * @param index the index to run the query against
 	 * @return the suggest response
-	 * @deprecated since 4.3 use a {@link org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder} with
-	 *             {@link org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder#withSuggestBuilder(SuggestBuilder)},
-	 *             call {@link #search(Query, Class)} and get the suggest from {@link SearchHits#getSuggest()}
+	 * @deprecated since 4.3 use a {@link NativeSearchQueryBuilder} with
+	 *             {@link NativeSearchQueryBuilder#withSuggestBuilder(SuggestBuilder)}, call {@link #search(Query, Class)}
+	 *             and get the suggest from {@link SearchHits#getSuggest()}
 	 */
 	@Deprecated
 	SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);

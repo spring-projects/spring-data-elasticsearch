@@ -18,24 +18,21 @@ package org.springframework.data.elasticsearch.config;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import reactor.core.publisher.Mono;
-
 import java.util.Collection;
 import java.util.Collections;
 
-import org.elasticsearch.Version;
-import org.elasticsearch.action.main.MainResponse;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.cluster.ClusterName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.config.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.config.AbstractReactiveElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 
@@ -116,10 +113,7 @@ public class ElasticsearchConfigurationSupportUnitTests {
 		@Override
 		@Bean
 		public ReactiveElasticsearchClient reactiveElasticsearchClient() {
-			ReactiveElasticsearchClient client = mock(ReactiveElasticsearchClient.class);
-			when(client.info()).thenReturn(Mono
-					.just(new MainResponse("mockNodename", Version.CURRENT, new ClusterName("mockCluster"), "mockUuid", null)));
-			return client;
+			return mock(ReactiveElasticsearchClient.class);
 		}
 	}
 

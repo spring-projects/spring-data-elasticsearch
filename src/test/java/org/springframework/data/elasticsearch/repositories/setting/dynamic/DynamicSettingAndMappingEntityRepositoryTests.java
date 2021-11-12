@@ -21,7 +21,6 @@ import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import java.util.Map;
 
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -37,8 +36,8 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
@@ -115,15 +114,15 @@ public class DynamicSettingAndMappingEntityRepositoryTests {
 
 		repository.save(dynamicSettingAndMappingEntity2);
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
-				.withQuery(QueryBuilders.termQuery("email", dynamicSettingAndMappingEntity1.getEmail())).build();
+		// use a term query to prevent the input from being analysed
+		Query searchQuery = new StringQuery(
+				"{\"term\": {\"email\": \"" + dynamicSettingAndMappingEntity1.getEmail() + "\"}}\n");
 
 		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.indexName());
-		long count = operations.count(searchQuery, DynamicSettingAndMappingEntity.class, index);
 		SearchHits<DynamicSettingAndMappingEntity> entityList = operations.search(searchQuery,
 				DynamicSettingAndMappingEntity.class, index);
 
-		assertThat(count).isEqualTo(1L);
+		assertThat(entityList).hasSize(1);
 		assertThat(entityList).isNotNull().hasSize(1);
 		assertThat(entityList.getSearchHit(0).getContent().getEmail())
 				.isEqualTo(dynamicSettingAndMappingEntity1.getEmail());

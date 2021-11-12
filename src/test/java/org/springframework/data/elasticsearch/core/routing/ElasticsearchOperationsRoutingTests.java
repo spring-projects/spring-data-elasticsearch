@@ -228,7 +228,7 @@ public class ElasticsearchOperationsRoutingTests {
 	/**
 	 * Copied from org.elasticsearch.cluster.routing.Murmur3HashFunction from Elasticsearch 7.9.3
 	 */
-	static class Murmur3HashFunction {
+	public static class Murmur3HashFunction {
 
 		private Murmur3HashFunction() {
 			// no instance

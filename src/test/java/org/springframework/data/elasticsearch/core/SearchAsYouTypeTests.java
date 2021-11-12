@@ -37,12 +37,11 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -162,8 +161,7 @@ public class SearchAsYouTypeTests {
 		@Nullable private String name;
 		@Nullable @Field(type = FieldType.Search_As_You_Type, maxShingleSize = 4) private String suggest;
 
-		public SearchAsYouTypeEntity() {
-		}
+		public SearchAsYouTypeEntity() {}
 
 		public SearchAsYouTypeEntity(String id, @Nullable String name, @Nullable String suggest) {
 			this.id = id;
@@ -207,13 +205,17 @@ public class SearchAsYouTypeTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o) return true;
-			if (o == null || getClass() != o.getClass()) return false;
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
 
 			SearchAsYouTypeEntity that = (SearchAsYouTypeEntity) o;
 
-			if (id != null ? !id.equals(that.id) : that.id != null) return false;
-			if (name != null ? !name.equals(that.name) : that.name != null) return false;
+			if (id != null ? !id.equals(that.id) : that.id != null)
+				return false;
+			if (name != null ? !name.equals(that.name) : that.name != null)
+				return false;
 			return suggest != null ? suggest.equals(that.suggest) : that.suggest == null;
 		}
 
