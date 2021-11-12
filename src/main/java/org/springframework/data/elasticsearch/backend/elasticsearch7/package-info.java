@@ -19,4 +19,4 @@
  */
 @org.springframework.lang.NonNullApi
 @org.springframework.lang.NonNullFields
-package org.springframework.data.elasticsearch.clients.elasticsearch7;
+package org.springframework.data.elasticsearch.backend.elasticsearch7;
