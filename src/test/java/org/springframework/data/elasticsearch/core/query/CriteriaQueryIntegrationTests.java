@@ -28,9 +28,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -39,11 +36,9 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Rizwan Idrees
@@ -52,17 +47,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author James Bodkin
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { CriteriaQueryIntegrationTests.Config.class })
-public class CriteriaQueryIntegrationTests {
-
-	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	static class Config {
-		@Bean
-		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider();
-		}
-	}
+public abstract class CriteriaQueryIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;

@@ -18,7 +18,7 @@ package org.springframework.data.elasticsearch.backend.elasticsearch7.cluster;
 import reactor.core.publisher.Mono;
 
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.ResponseConverter;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ResponseConverter;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;

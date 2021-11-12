@@ -25,7 +25,7 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.ElasticsearchAggregations;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.core.AggregationsContainer;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;

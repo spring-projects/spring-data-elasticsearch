@@ -103,6 +103,7 @@ import org.elasticsearch.search.suggest.Suggest;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ResponseConverter;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.ReactiveElasticsearchClient.Cluster;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.ReactiveElasticsearchClient.Indices;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.client.util.NamedXContents;
@@ -116,7 +117,6 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClient
 import org.springframework.data.elasticsearch.client.reactive.RequestBodyEncodingException;
 import org.springframework.data.elasticsearch.client.reactive.WebClientProvider;
 import org.springframework.data.elasticsearch.client.util.ScrollState;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.ResponseConverter;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.util.Lazy;
 import org.springframework.http.HttpHeaders;

@@ -43,7 +43,6 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 	private static final String SDE_TESTCONTAINER_IMAGE_NAME = "sde.testcontainers.image-name";
 	private static final String SDE_TESTCONTAINER_IMAGE_VERSION = "sde.testcontainers.image-version";
 	private static final int ELASTICSEARCH_DEFAULT_PORT = 9200;
-	private static final int ELASTICSEARCH_DEFAULT_TRANSPORT_PORT = 9300;
 
 	private static final ThreadLocal<ClusterConnectionInfo> clusterConnectionInfoThreadLocal = new ThreadLocal<>();
 
@@ -102,7 +101,6 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 					.withIntegrationtestEnvironment(integrationtestEnvironment)
 					.withHostAndPort(elasticsearchContainer.getHost(),
 							elasticsearchContainer.getMappedPort(ELASTICSEARCH_DEFAULT_PORT)) //
-					.withTransportPort(elasticsearchContainer.getMappedPort(ELASTICSEARCH_DEFAULT_TRANSPORT_PORT)) //
 					.withElasticsearchContainer(elasticsearchContainer) //
 					.build();
 		} catch (Exception e) {

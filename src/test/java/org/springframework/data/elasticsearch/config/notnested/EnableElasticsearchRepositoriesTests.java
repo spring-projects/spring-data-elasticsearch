@@ -29,8 +29,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -41,14 +39,11 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.data.repository.Repository;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Rizwan Idrees
@@ -58,8 +53,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { EnableElasticsearchRepositoriesTests.Config.class })
-public class EnableElasticsearchRepositoriesTests implements ApplicationContextAware {
+public abstract class EnableElasticsearchRepositoriesTests implements ApplicationContextAware {
 
 	@Nullable ApplicationContext context;
 
@@ -68,11 +62,6 @@ public class EnableElasticsearchRepositoriesTests implements ApplicationContextA
 
 		this.context = applicationContext;
 	}
-
-	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	@EnableElasticsearchRepositories
-	static class Config {}
 
 	@Autowired ElasticsearchOperations operations;
 	private IndexOperations indexOperations;

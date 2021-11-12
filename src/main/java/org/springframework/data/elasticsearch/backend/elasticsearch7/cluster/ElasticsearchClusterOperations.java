@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.backend.elasticsearch7.cluster;
 
 import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.util.Assert;
 
@@ -36,19 +35,6 @@ public class ElasticsearchClusterOperations {
 		Assert.notNull(template, "template must not be null");
 
 		return new DefaultClusterOperations(template);
-	}
-
-	/**
-	 * Creates a ClusterOperations for a {@link ElasticsearchTemplate}.
-	 *
-	 * @param template the template, must not be {@literal null}
-	 * @return ClusterOperations
-	 */
-	public static ClusterOperations forTemplate(ElasticsearchTemplate template) {
-
-		Assert.notNull(template, "template must not be null");
-
-		return new DefaultTransportClusterOperations(template);
 	}
 
 }

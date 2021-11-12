@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.clients.elasticsearch7;
+package org.springframework.data.elasticsearch.backend.elasticsearch7;
 
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
@@ -33,33 +33,23 @@ import java.util.stream.Collectors;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.Alias;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
-import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequestBuilder;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
-import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
-import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequestBuilder;
 import org.elasticsearch.action.admin.indices.refresh.RefreshRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.get.GetRequest;
-import org.elasticsearch.action.get.GetRequestBuilder;
 import org.elasticsearch.action.get.MultiGetRequest;
-import org.elasticsearch.action.get.MultiGetRequestBuilder;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.Requests;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.GetIndexRequest;
@@ -75,12 +65,8 @@ import org.elasticsearch.index.VersionType;
 import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.index.reindex.DeleteByQueryRequestBuilder;
-import org.elasticsearch.index.reindex.UpdateByQueryAction;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
@@ -221,12 +207,6 @@ public class RequestFactory {
 		return request;
 	}
 
-	public IndicesAliasesRequestBuilder indicesAliasesRequestBuilder(Client client, AliasActions aliasActions) {
-
-		IndicesAliasesRequestBuilder requestBuilder = client.admin().indices().prepareAliases();
-		indicesAliasesRequest(aliasActions).getAliasActions().forEach(requestBuilder::addAliasAction);
-		return requestBuilder;
-	}
 	// endregion
 
 	// region bulk
@@ -264,42 +244,6 @@ public class RequestFactory {
 		return bulkRequest;
 	}
 
-	public BulkRequestBuilder bulkRequestBuilder(Client client, List<?> queries, BulkOptions bulkOptions,
-			IndexCoordinates index) {
-		BulkRequestBuilder bulkRequestBuilder = client.prepareBulk();
-
-		if (bulkOptions.getTimeout() != null) {
-			bulkRequestBuilder.setTimeout(TimeValue.timeValueMillis(bulkOptions.getTimeout().toMillis()));
-		}
-
-		if (bulkOptions.getRefreshPolicy() != null) {
-			bulkRequestBuilder.setRefreshPolicy(toElasticsearchRefreshPolicy(bulkOptions.getRefreshPolicy()));
-		}
-
-		if (bulkOptions.getWaitForActiveShards() != null) {
-			bulkRequestBuilder.setWaitForActiveShards(ActiveShardCount.from(bulkOptions.getWaitForActiveShards().getValue()));
-		}
-
-		if (bulkOptions.getPipeline() != null) {
-			bulkRequestBuilder.pipeline(bulkOptions.getPipeline());
-		}
-
-		if (bulkOptions.getRoutingId() != null) {
-			bulkRequestBuilder.routing(bulkOptions.getRoutingId());
-		}
-
-		queries.forEach(query -> {
-
-			if (query instanceof IndexQuery) {
-				bulkRequestBuilder.add(indexRequestBuilder(client, (IndexQuery) query, index));
-			} else if (query instanceof UpdateQuery) {
-				bulkRequestBuilder.add(updateRequestBuilderFor(client, (UpdateQuery) query, index));
-			}
-		});
-
-		return bulkRequestBuilder;
-	}
-
 	// endregion
 
 	// region index management
@@ -321,26 +265,6 @@ public class RequestFactory {
 		}
 
 		return request;
-	}
-
-	public CreateIndexRequestBuilder createIndexRequestBuilder(Client client, IndexCoordinates index,
-			Map<String, Object> settings, @Nullable Document mapping) {
-
-		Assert.notNull(index, "index must not be null");
-		Assert.notNull(settings, "settings must not be null");
-
-		String indexName = index.getIndexName();
-		CreateIndexRequestBuilder createIndexRequestBuilder = client.admin().indices().prepareCreate(indexName);
-
-		if (!settings.isEmpty()) {
-			createIndexRequestBuilder.setSettings(settings);
-		}
-
-		if (mapping != null && !mapping.isEmpty()) {
-			createIndexRequestBuilder.addMapping(IndexCoordinates.TYPE, mapping);
-		}
-
-		return createIndexRequestBuilder;
 	}
 
 	public GetIndexRequest getIndexRequest(IndexCoordinates index) {
@@ -378,15 +302,6 @@ public class RequestFactory {
 		return request;
 	}
 
-	public PutMappingRequestBuilder putMappingRequestBuilder(Client client, IndexCoordinates index, Document mapping) {
-
-		String[] indexNames = index.getIndexNames();
-		PutMappingRequestBuilder requestBuilder = client.admin().indices().preparePutMapping(indexNames)
-				.setType(IndexCoordinates.TYPE);
-		requestBuilder.setSource(mapping);
-		return requestBuilder;
-	}
-
 	public GetSettingsRequest getSettingsRequest(String indexName, boolean includeDefaults) {
 		return new GetSettingsRequest().indices(indexName).includeDefaults(includeDefaults);
 	}
@@ -395,13 +310,6 @@ public class RequestFactory {
 
 		String[] indexNames = index.getIndexNames();
 		return new GetMappingsRequest().indices(indexNames);
-	}
-
-	public org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest getMappingsRequest(
-			@SuppressWarnings("unused") Client client, IndexCoordinates index) {
-
-		String[] indexNames = index.getIndexNames();
-		return new org.elasticsearch.action.admin.indices.mapping.get.GetMappingsRequest().indices(indexNames);
 	}
 
 	public PutIndexTemplateRequest putIndexTemplateRequest(PutTemplateRequest putTemplateRequest) {
@@ -472,85 +380,8 @@ public class RequestFactory {
 		return request;
 	}
 
-	/**
-	 * The version for the transport client needs a different PutIndexTemplateRequest class
-	 */
-	public org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest putIndexTemplateRequest(
-			@SuppressWarnings("unused") Client client, PutTemplateRequest putTemplateRequest) {
-		org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest request = new org.elasticsearch.action.admin.indices.template.put.PutIndexTemplateRequest(
-				putTemplateRequest.getName()).patterns(Arrays.asList(putTemplateRequest.getIndexPatterns()));
-
-		if (putTemplateRequest.getSettings() != null) {
-			request.settings(putTemplateRequest.getSettings());
-		}
-
-		if (putTemplateRequest.getMappings() != null) {
-			request.mapping("_doc", putTemplateRequest.getMappings());
-		}
-
-		request.order(putTemplateRequest.getOrder()).version(putTemplateRequest.getVersion());
-
-		AliasActions aliasActions = putTemplateRequest.getAliasActions();
-
-		if (aliasActions != null) {
-			aliasActions.getActions().forEach(aliasAction -> {
-				AliasActionParameters parameters = aliasAction.getParameters();
-				String[] parametersAliases = parameters.getAliases();
-				if (parametersAliases != null) {
-
-					for (String aliasName : parametersAliases) {
-						Alias alias = new Alias(aliasName);
-
-						if (parameters.getRouting() != null) {
-							alias.routing(parameters.getRouting());
-						}
-
-						if (parameters.getIndexRouting() != null) {
-							alias.indexRouting(parameters.getIndexRouting());
-						}
-
-						if (parameters.getSearchRouting() != null) {
-							alias.searchRouting(parameters.getSearchRouting());
-						}
-
-						if (parameters.getHidden() != null) {
-							alias.isHidden(parameters.getHidden());
-						}
-
-						if (parameters.getWriteIndex() != null) {
-							alias.writeIndex(parameters.getWriteIndex());
-						}
-
-						Query filterQuery = parameters.getFilterQuery();
-
-						if (filterQuery != null) {
-							elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
-							QueryBuilder queryBuilder = getFilter(filterQuery);
-
-							if (queryBuilder == null) {
-								queryBuilder = getQuery(filterQuery);
-							}
-
-							alias.filter(queryBuilder);
-						}
-
-						request.alias(alias);
-					}
-				}
-			});
-		}
-
-		return request;
-	}
-
 	public GetIndexTemplatesRequest getIndexTemplatesRequest(GetTemplateRequest getTemplateRequest) {
 		return new GetIndexTemplatesRequest(getTemplateRequest.getTemplateName());
-	}
-
-	public org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest getIndexTemplatesRequest(
-			Client client, GetTemplateRequest getTemplateRequest) {
-		return new org.elasticsearch.action.admin.indices.template.get.GetIndexTemplatesRequest(
-				getTemplateRequest.getTemplateName());
 	}
 
 	public IndexTemplatesExistRequest indexTemplatesExistsRequest(ExistsTemplateRequest existsTemplateRequest) {
@@ -561,11 +392,6 @@ public class RequestFactory {
 		return new DeleteIndexTemplateRequest(deleteTemplateRequest.getTemplateName());
 	}
 
-	public org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest deleteIndexTemplateRequest(
-			Client client, DeleteTemplateRequest deleteTemplateRequest) {
-		return new org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest(
-				deleteTemplateRequest.getTemplateName());
-	}
 	// endregion
 
 	// region delete
@@ -604,47 +430,6 @@ public class RequestFactory {
 		return deleteRequest;
 	}
 
-	public DeleteRequestBuilder deleteRequestBuilder(Client client, String id, @Nullable String routing,
-			IndexCoordinates index) {
-		String indexName = index.getIndexName();
-		DeleteRequestBuilder deleteRequestBuilder = client.prepareDelete();
-		deleteRequestBuilder.setIndex(indexName);
-		deleteRequestBuilder.setId(id);
-
-		if (routing != null) {
-			deleteRequestBuilder.setRouting(routing);
-		}
-
-		return deleteRequestBuilder;
-	}
-
-	public DeleteByQueryRequestBuilder deleteByQueryRequestBuilder(Client client, Query query, Class<?> clazz,
-			IndexCoordinates index) {
-		SearchRequest searchRequest = searchRequest(query, clazz, index);
-		DeleteByQueryRequestBuilder requestBuilder = new DeleteByQueryRequestBuilder(client, DeleteByQueryAction.INSTANCE) //
-				.source(index.getIndexNames()) //
-				.filter(searchRequest.source().query()) //
-				.abortOnVersionConflict(false) //
-				.refresh(true);
-
-		SearchRequestBuilder source = requestBuilder.source();
-
-		if (query.isLimiting()) {
-			// noinspection ConstantConditions
-			source.setSize(query.getMaxResults());
-		}
-
-		if (query.hasScrollTime()) {
-			// noinspection ConstantConditions
-			source.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
-		}
-
-		if (query.getRoute() != null) {
-			source.setRouting(query.getRoute());
-		}
-
-		return requestBuilder;
-	}
 	// endregion
 
 	// region get
@@ -654,26 +439,11 @@ public class RequestFactory {
 		return getRequest;
 	}
 
-	public GetRequestBuilder getRequestBuilder(Client client, String id, @Nullable String routing,
-			IndexCoordinates index) {
-		GetRequestBuilder getRequestBuilder = client.prepareGet(index.getIndexName(), null, id);
-		getRequestBuilder.setRouting(routing);
-		return getRequestBuilder;
-	}
-
 	public MultiGetRequest multiGetRequest(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		MultiGetRequest multiGetRequest = new MultiGetRequest();
 		getMultiRequestItems(query, clazz, index).forEach(multiGetRequest::add);
 		return multiGetRequest;
-	}
-
-	public MultiGetRequestBuilder multiGetRequestBuilder(Client client, Query searchQuery, Class<?> clazz,
-			IndexCoordinates index) {
-
-		MultiGetRequestBuilder multiGetRequestBuilder = client.prepareMultiGet();
-		getMultiRequestItems(searchQuery, clazz, index).forEach(multiGetRequestBuilder::add);
-		return multiGetRequestBuilder;
 	}
 
 	private List<MultiGetRequest.Item> getMultiRequestItems(Query searchQuery, Class<?> clazz, IndexCoordinates index) {
@@ -762,52 +532,6 @@ public class RequestFactory {
 		return indexRequest;
 	}
 
-	public IndexRequestBuilder indexRequestBuilder(Client client, IndexQuery query, IndexCoordinates index) {
-		String indexName = index.getIndexName();
-		String type = IndexCoordinates.TYPE;
-
-		IndexRequestBuilder indexRequestBuilder;
-
-		Object queryObject = query.getObject();
-		if (queryObject != null) {
-			String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(queryObject) : query.getId();
-			// If we have a query id and a document id, do not ask ES to generate one.
-			if (id != null) {
-				indexRequestBuilder = client.prepareIndex(indexName, type, id);
-			} else {
-				indexRequestBuilder = client.prepareIndex(indexName, type);
-			}
-			indexRequestBuilder.setSource(elasticsearchConverter.mapObject(queryObject).toJson(),
-					Requests.INDEX_CONTENT_TYPE);
-		} else if (query.getSource() != null) {
-			indexRequestBuilder = client.prepareIndex(indexName, type, query.getId()).setSource(query.getSource(),
-					Requests.INDEX_CONTENT_TYPE);
-		} else {
-			throw new InvalidDataAccessApiUsageException(
-					"object or source is null, failed to index the document [id: " + query.getId() + ']');
-		}
-
-		if (query.getVersion() != null) {
-			indexRequestBuilder.setVersion(query.getVersion());
-			VersionType versionType = retrieveVersionTypeFromPersistentEntity(
-					queryObject != null ? queryObject.getClass() : null);
-			indexRequestBuilder.setVersionType(versionType);
-		}
-
-		if (query.getSeqNo() != null) {
-			indexRequestBuilder.setIfSeqNo(query.getSeqNo());
-		}
-
-		if (query.getPrimaryTerm() != null) {
-			indexRequestBuilder.setIfPrimaryTerm(query.getPrimaryTerm());
-		}
-
-		if (query.getRouting() != null) {
-			indexRequestBuilder.setRouting(query.getRouting());
-		}
-
-		return indexRequestBuilder;
-	}
 	// endregion
 
 	// region search
@@ -897,11 +621,6 @@ public class RequestFactory {
 		return searchRequest;
 	}
 
-	public SearchRequestBuilder searchRequestBuilder(Client client, SuggestBuilder suggestion, IndexCoordinates index) {
-		String[] indexNames = index.getIndexNames();
-		return client.prepareSearch(indexNames).suggest(suggestion);
-	}
-
 	public SearchRequest searchRequest(Query query, @Nullable Class<?> clazz, IndexCoordinates index) {
 
 		elasticsearchConverter.updateQuery(query, clazz);
@@ -917,23 +636,6 @@ public class RequestFactory {
 
 		return searchRequest;
 
-	}
-
-	public SearchRequestBuilder searchRequestBuilder(Client client, Query query, @Nullable Class<?> clazz,
-			IndexCoordinates index) {
-
-		elasticsearchConverter.updateQuery(query, clazz);
-		SearchRequestBuilder searchRequestBuilder = prepareSearchRequestBuilder(query, client, clazz, index);
-		QueryBuilder elasticsearchQuery = getQuery(query);
-		QueryBuilder elasticsearchFilter = getFilter(query);
-
-		searchRequestBuilder.setQuery(elasticsearchQuery);
-
-		if (elasticsearchFilter != null) {
-			searchRequestBuilder.setPostFilter(elasticsearchFilter);
-		}
-
-		return searchRequestBuilder;
 	}
 
 	private SearchRequest prepareSearchRequest(Query query, @Nullable Class<?> clazz, IndexCoordinates indexCoordinates) {
@@ -1040,112 +742,7 @@ public class RequestFactory {
 		}
 
 		request.source(sourceBuilder);
-
 		return request;
-	}
-
-	private SearchRequestBuilder prepareSearchRequestBuilder(Query query, Client client, @Nullable Class<?> clazz,
-			IndexCoordinates index) {
-
-		String[] indexNames = index.getIndexNames();
-		Assert.notNull(indexNames, "No index defined for Query");
-		Assert.notEmpty(indexNames, "No index defined for Query");
-
-		SearchRequestBuilder searchRequestBuilder = client.prepareSearch(indexNames) //
-				.setSearchType(SearchType.fromString(query.getSearchType().name().toLowerCase())) //
-				.setVersion(true) //
-				.setTrackScores(query.getTrackScores());
-		if (hasSeqNoPrimaryTermProperty(clazz)) {
-			searchRequestBuilder.seqNoAndPrimaryTerm(true);
-		}
-
-		if (query.getPageable().isPaged()) {
-			searchRequestBuilder.setFrom((int) query.getPageable().getOffset());
-			searchRequestBuilder.setSize(query.getPageable().getPageSize());
-		} else {
-			searchRequestBuilder.setFrom(0);
-			searchRequestBuilder.setSize(INDEX_MAX_RESULT_WINDOW);
-		}
-
-		if (query.getSourceFilter() != null) {
-			SourceFilter sourceFilter = query.getSourceFilter();
-			searchRequestBuilder.setFetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
-		}
-
-		if (!query.getFields().isEmpty()) {
-			query.getFields().forEach(searchRequestBuilder::addFetchField);
-		}
-
-		if (query.getIndicesOptions() != null) {
-			searchRequestBuilder.setIndicesOptions(toElasticsearchIndicesOptions(query.getIndicesOptions()));
-		}
-
-		if (query.isLimiting()) {
-			// noinspection ConstantConditions
-			searchRequestBuilder.setSize(query.getMaxResults());
-		}
-
-		if (query.getMinScore() > 0) {
-			searchRequestBuilder.setMinScore(query.getMinScore());
-		}
-
-		if (query.getPreference() != null) {
-			searchRequestBuilder.setPreference(query.getPreference());
-		}
-
-		prepareSort(query, searchRequestBuilder, getPersistentEntity(clazz));
-
-		HighlightBuilder highlightBuilder = highlightBuilder(query);
-
-		if (highlightBuilder != null) {
-			searchRequestBuilder.highlighter(highlightBuilder);
-		}
-
-		if (query instanceof NativeSearchQuery) {
-			prepareNativeSearch(searchRequestBuilder, (NativeSearchQuery) query);
-		}
-
-		if (query.getTrackTotalHits() != null) {
-			searchRequestBuilder.setTrackTotalHits(query.getTrackTotalHits());
-		} else if (query.getTrackTotalHitsUpTo() != null) {
-			searchRequestBuilder.setTrackTotalHitsUpTo(query.getTrackTotalHitsUpTo());
-		}
-
-		if (StringUtils.hasLength(query.getRoute())) {
-			searchRequestBuilder.setRouting(query.getRoute());
-		}
-
-		Duration timeout = query.getTimeout();
-		if (timeout != null) {
-			searchRequestBuilder.setTimeout(new TimeValue(timeout.toMillis()));
-		}
-
-		searchRequestBuilder.setExplain(query.getExplain());
-
-		if (query.getSearchAfter() != null) {
-			searchRequestBuilder.searchAfter(query.getSearchAfter().toArray());
-		}
-
-		query.getRescorerQueries().forEach(rescorer -> searchRequestBuilder.addRescorer(getQueryRescorerBuilder(rescorer)));
-
-		if (query.getRequestCache() != null) {
-			searchRequestBuilder.setRequestCache(query.getRequestCache());
-		}
-
-		if (!query.getRuntimeFields().isEmpty()) {
-
-			Map<String, Object> runtimeMappings = new HashMap<>();
-			query.getRuntimeFields().forEach(runtimeField -> {
-				runtimeMappings.put(runtimeField.getName(), runtimeField.getMapping());
-			});
-			searchRequestBuilder.setRuntimeMappings(runtimeMappings);
-		}
-
-		if (query.getScrollTime() != null) {
-			searchRequestBuilder.setScroll(TimeValue.timeValueMillis(query.getScrollTime().toMillis()));
-		}
-
-		return searchRequestBuilder;
 	}
 
 	private void prepareNativeSearch(NativeSearchQuery query, SearchSourceBuilder sourceBuilder) {
@@ -1176,36 +773,6 @@ public class RequestFactory {
 
 		if (query.getSuggestBuilder() != null) {
 			sourceBuilder.suggest(query.getSuggestBuilder());
-		}
-	}
-
-	private void prepareNativeSearch(SearchRequestBuilder searchRequestBuilder, NativeSearchQuery nativeSearchQuery) {
-		if (!isEmpty(nativeSearchQuery.getScriptFields())) {
-			for (ScriptField scriptedField : nativeSearchQuery.getScriptFields()) {
-				searchRequestBuilder.addScriptField(scriptedField.fieldName(), scriptedField.script());
-			}
-		}
-
-		if (nativeSearchQuery.getCollapseBuilder() != null) {
-			searchRequestBuilder.setCollapse(nativeSearchQuery.getCollapseBuilder());
-		}
-
-		if (!isEmpty(nativeSearchQuery.getIndicesBoost())) {
-			for (IndexBoost indexBoost : nativeSearchQuery.getIndicesBoost()) {
-				searchRequestBuilder.addIndexBoost(indexBoost.getIndexName(), indexBoost.getBoost());
-			}
-		}
-
-		if (!isEmpty(nativeSearchQuery.getAggregations())) {
-			nativeSearchQuery.getAggregations().forEach(searchRequestBuilder::addAggregation);
-		}
-
-		if (!isEmpty(nativeSearchQuery.getPipelineAggregations())) {
-			nativeSearchQuery.getPipelineAggregations().forEach(searchRequestBuilder::addAggregation);
-		}
-
-		if (nativeSearchQuery.getSuggestBuilder() != null) {
-			searchRequestBuilder.suggest(nativeSearchQuery.getSuggestBuilder());
 		}
 	}
 
@@ -1402,80 +969,6 @@ public class RequestFactory {
 		return updateRequest;
 	}
 
-	public UpdateRequestBuilder updateRequestBuilderFor(Client client, UpdateQuery query, IndexCoordinates index) {
-
-		String indexName = index.getIndexName();
-		UpdateRequestBuilder updateRequestBuilder = client.prepareUpdate(indexName, IndexCoordinates.TYPE, query.getId());
-
-		if (query.getScript() != null) {
-			Map<String, Object> params = query.getParams();
-
-			if (params == null) {
-				params = new HashMap<>();
-			}
-			Script script = new Script(getScriptType(query.getScriptType()), query.getLang(), query.getScript(), params);
-			updateRequestBuilder.setScript(script);
-		}
-
-		if (query.getDocument() != null) {
-			updateRequestBuilder.setDoc(query.getDocument());
-		}
-
-		if (query.getUpsert() != null) {
-			updateRequestBuilder.setUpsert(query.getUpsert());
-		}
-
-		if (query.getRouting() != null) {
-			updateRequestBuilder.setRouting(query.getRouting());
-		}
-
-		if (query.getScriptedUpsert() != null) {
-			updateRequestBuilder.setScriptedUpsert(query.getScriptedUpsert());
-		}
-
-		if (query.getDocAsUpsert() != null) {
-			updateRequestBuilder.setDocAsUpsert(query.getDocAsUpsert());
-		}
-
-		if (query.getFetchSource() != null) {
-			updateRequestBuilder.setFetchSource(query.getFetchSource());
-		}
-
-		if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
-			List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
-					: Collections.emptyList();
-			List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
-					: Collections.emptyList();
-			updateRequestBuilder.setFetchSource(includes.toArray(new String[0]), excludes.toArray(new String[0]));
-		}
-
-		if (query.getIfSeqNo() != null) {
-			updateRequestBuilder.setIfSeqNo(query.getIfSeqNo());
-		}
-
-		if (query.getIfPrimaryTerm() != null) {
-			updateRequestBuilder.setIfPrimaryTerm(query.getIfPrimaryTerm());
-		}
-
-		if (query.getRefreshPolicy() != null) {
-			updateRequestBuilder.setRefreshPolicy(RequestFactory.toElasticsearchRefreshPolicy(query.getRefreshPolicy()));
-		}
-
-		if (query.getRetryOnConflict() != null) {
-			updateRequestBuilder.setRetryOnConflict(query.getRetryOnConflict());
-		}
-
-		if (query.getTimeout() != null) {
-			updateRequestBuilder.setTimeout(query.getTimeout());
-		}
-
-		if (query.getWaitForActiveShards() != null) {
-			updateRequestBuilder.setWaitForActiveShards(ActiveShardCount.parseString(query.getWaitForActiveShards()));
-		}
-
-		return updateRequestBuilder;
-	}
-
 	public UpdateByQueryRequest updateByQueryRequest(UpdateQuery query, IndexCoordinates index) {
 
 		String indexName = index.getIndexName();
@@ -1547,79 +1040,6 @@ public class RequestFactory {
 		return updateByQueryRequest;
 	}
 
-	public UpdateByQueryRequestBuilder updateByQueryRequestBuilder(Client client, UpdateQuery query,
-			IndexCoordinates index) {
-
-		String indexName = index.getIndexName();
-
-		final UpdateByQueryRequestBuilder updateByQueryRequestBuilder = new UpdateByQueryRequestBuilder(client,
-				UpdateByQueryAction.INSTANCE);
-
-		updateByQueryRequestBuilder.source(indexName);
-		updateByQueryRequestBuilder.script(getScript(query));
-
-		if (query.getAbortOnVersionConflict() != null) {
-			updateByQueryRequestBuilder.abortOnVersionConflict(query.getAbortOnVersionConflict());
-		}
-
-		if (query.getBatchSize() != null) {
-			updateByQueryRequestBuilder.source().setSize(query.getBatchSize());
-		}
-
-		if (query.getQuery() != null) {
-			final Query queryQuery = query.getQuery();
-			updateByQueryRequestBuilder.filter(getQuery(queryQuery));
-
-			if (queryQuery.getIndicesOptions() != null) {
-				updateByQueryRequestBuilder.source()
-						.setIndicesOptions(toElasticsearchIndicesOptions(queryQuery.getIndicesOptions()));
-			}
-
-			if (queryQuery.getScrollTime() != null) {
-				updateByQueryRequestBuilder.source()
-						.setScroll(TimeValue.timeValueMillis(queryQuery.getScrollTime().toMillis()));
-			}
-		}
-
-		if (query.getMaxDocs() != null) {
-			updateByQueryRequestBuilder.maxDocs(query.getMaxDocs());
-		}
-
-		if (query.getMaxRetries() != null) {
-			updateByQueryRequestBuilder.setMaxRetries(query.getMaxRetries());
-		}
-
-		if (query.getPipeline() != null) {
-			updateByQueryRequestBuilder.setPipeline(query.getPipeline());
-		}
-
-		if (query.getRefreshPolicy() != null) {
-			updateByQueryRequestBuilder.refresh(query.getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
-		}
-
-		if (query.getRequestsPerSecond() != null) {
-			updateByQueryRequestBuilder.setRequestsPerSecond(query.getRequestsPerSecond());
-		}
-
-		if (query.getRouting() != null) {
-			updateByQueryRequestBuilder.source().setRouting(query.getRouting());
-		}
-
-		if (query.getShouldStoreResult() != null) {
-			updateByQueryRequestBuilder.setShouldStoreResult(query.getShouldStoreResult());
-		}
-
-		if (query.getSlices() != null) {
-			updateByQueryRequestBuilder.setSlices(query.getSlices());
-		}
-
-		if (query.getTimeout() != null) {
-			updateByQueryRequestBuilder.source()
-					.setTimeout(TimeValue.parseTimeValue(query.getTimeout(), getClass().getSimpleName() + ".timeout"));
-		}
-
-		return updateByQueryRequestBuilder;
-	}
 	// endregion
 
 	// region helper functions

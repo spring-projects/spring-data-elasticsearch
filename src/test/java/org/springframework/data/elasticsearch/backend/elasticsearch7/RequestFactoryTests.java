@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.clients.elasticsearch7;
+package org.springframework.data.elasticsearch.backend.elasticsearch7;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.mockito.Mockito.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.io.IOException;
@@ -27,13 +26,8 @@ import java.util.HashSet;
 
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
-import org.elasticsearch.action.index.IndexAction;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.search.SearchAction;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
-import org.elasticsearch.client.Client;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
@@ -49,13 +43,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -69,7 +63,6 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery.ScoreMode;
@@ -87,8 +80,6 @@ class RequestFactoryTests {
 
 	@Nullable private static RequestFactory requestFactory;
 	@Nullable private static MappingElasticsearchConverter converter;
-
-	@Mock private Client client;
 
 	@BeforeAll
 	static void setUpAll() {
@@ -151,7 +142,7 @@ class RequestFactoryTests {
 	}
 
 	@Test // DATAES-449
-	void shouldAddRouting() throws JSONException {
+	void shouldAddRouting() {
 		String route = "route66";
 		CriteriaQuery query = new CriteriaQuery(new Criteria("lastName").is("Smith"));
 		query.setRoute(route);
@@ -172,18 +163,6 @@ class RequestFactoryTests {
 		assertThat(searchRequest.source().size()).isEqualTo(RequestFactory.INDEX_MAX_RESULT_WINDOW);
 	}
 
-	@Test // DATAES-765
-	void shouldAddMaxQueryWindowForUnpagedToRequestBuilder() {
-		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
-		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(Pageable.unpaged()).build();
-
-		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
-				IndexCoordinates.of("persons"));
-
-		assertThat(searchRequestBuilder.request().source().from()).isEqualTo(0);
-		assertThat(searchRequestBuilder.request().source().size()).isEqualTo(RequestFactory.INDEX_MAX_RESULT_WINDOW);
-	}
-
 	@Test // DATAES-799
 	void shouldIncludeSeqNoAndPrimaryTermFromIndexQueryToIndexRequest() {
 		IndexQuery query = new IndexQuery();
@@ -198,23 +177,7 @@ class RequestFactoryTests {
 	}
 
 	@Test // DATAES-799
-	void shouldIncludeSeqNoAndPrimaryTermFromIndexQueryToIndexRequestBuilder() {
-		when(client.prepareIndex(anyString(), anyString()))
-				.thenReturn(new IndexRequestBuilder(client, IndexAction.INSTANCE));
-
-		IndexQuery query = new IndexQuery();
-		query.setObject(new Person());
-		query.setSeqNo(1L);
-		query.setPrimaryTerm(2L);
-
-		IndexRequestBuilder builder = requestFactory.indexRequestBuilder(client, query, IndexCoordinates.of("persons"));
-
-		assertThat(builder.request().ifSeqNo()).isEqualTo(1L);
-		assertThat(builder.request().ifPrimaryTerm()).isEqualTo(2L);
-	}
-
-	@Test // DATAES-799
-	void shouldNotRequestSeqNoAndPrimaryTermViaSearchRequestWhenEntityClassDoesNotContainSeqNoPrimaryTermProperty() {
+	void shouldNotRequestSeqNoAndPrimaryTermWhenEntityClassDoesNotContainSeqNoPrimaryTermProperty() {
 		Query query = new NativeSearchQueryBuilder().build();
 
 		SearchRequest request = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
@@ -223,7 +186,7 @@ class RequestFactoryTests {
 	}
 
 	@Test // DATAES-799
-	void shouldRequestSeqNoAndPrimaryTermViaSearchRequestWhenEntityClassContainsSeqNoPrimaryTermProperty() {
+	void shouldRequestSeqNoAndPrimaryTermWhenEntityClassContainsSeqNoPrimaryTermProperty() {
 		Query query = new NativeSearchQueryBuilder().build();
 
 		SearchRequest request = requestFactory.searchRequest(query, EntityWithSeqNoPrimaryTerm.class,
@@ -233,45 +196,12 @@ class RequestFactoryTests {
 	}
 
 	@Test // DATAES-799
-	void shouldNotRequestSeqNoAndPrimaryTermViaSearchRequestWhenEntityClassIsNull() {
+	void shouldNotRequestSeqNoAndPrimaryTermWhenEntityClassIsNull() {
 		Query query = new NativeSearchQueryBuilder().build();
 
 		SearchRequest request = requestFactory.searchRequest(query, null, IndexCoordinates.of("persons"));
 
 		assertThat(request.source().seqNoAndPrimaryTerm()).isNull();
-	}
-
-	@Test // DATAES-799
-	void shouldNotRequestSeqNoAndPrimaryTermViaSearchRequestBuilderWhenEntityClassDoesNotContainSeqNoPrimaryTermProperty() {
-		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
-		Query query = new NativeSearchQueryBuilder().build();
-
-		SearchRequestBuilder builder = requestFactory.searchRequestBuilder(client, query, Person.class,
-				IndexCoordinates.of("persons"));
-
-		assertThat(builder.request().source().seqNoAndPrimaryTerm()).isNull();
-	}
-
-	@Test // DATAES-799
-	void shouldRequestSeqNoAndPrimaryTermViaSearchRequestBuilderWhenEntityClassContainsSeqNoPrimaryTermProperty() {
-		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
-		Query query = new NativeSearchQueryBuilder().build();
-
-		SearchRequestBuilder builder = requestFactory.searchRequestBuilder(client, query, EntityWithSeqNoPrimaryTerm.class,
-				IndexCoordinates.of("seqNoPrimaryTerm"));
-
-		assertThat(builder.request().source().seqNoAndPrimaryTerm()).isTrue();
-	}
-
-	@Test // DATAES-799
-	void shouldNotRequestSeqNoAndPrimaryTermViaSearchRequestBuilderWhenEntityClassIsNull() {
-		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
-		Query query = new NativeSearchQueryBuilder().build();
-
-		SearchRequestBuilder builder = requestFactory.searchRequestBuilder(client, query, null,
-				IndexCoordinates.of("persons"));
-
-		assertThat(builder.request().source().seqNoAndPrimaryTerm()).isNull();
 	}
 
 	@Test // DATAES-864
@@ -497,19 +427,6 @@ class RequestFactoryTests {
 		assertThat(searchRequest.source().timeout().getMillis()).isEqualTo(Duration.ofSeconds(1).toMillis());
 	}
 
-	@Test // DATAES-1003
-	@DisplayName("should set timeout to requestbuilder")
-	void shouldSetTimeoutToRequestBuilder() {
-		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
-		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withTimeout(Duration.ofSeconds(1)).build();
-
-		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
-				IndexCoordinates.of("persons"));
-
-		assertThat(searchRequestBuilder.request().source().timeout().getMillis())
-				.isEqualTo(Duration.ofSeconds(1).toMillis());
-	}
-
 	private String requestToString(ToXContent request) throws IOException {
 		return XContentHelper.toXContent(request, XContentType.JSON, true).utf8ToString();
 	}
@@ -599,47 +516,35 @@ class RequestFactoryTests {
 	@DisplayName("should not set request_cache on default SearchRequest")
 	void shouldNotSetRequestCacheOnDefaultSearchRequest() {
 
-		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
 		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
-		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
-				IndexCoordinates.of("persons"));
 
 		assertThat(searchRequest.requestCache()).isNull();
-		assertThat(searchRequestBuilder.request().requestCache()).isNull();
 	}
 
 	@Test // #1564
 	@DisplayName("should set request_cache true on SearchRequest")
 	void shouldSetRequestCacheTrueOnSearchRequest() {
 
-		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
 		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		query.setRequestCache(true);
 
 		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
-		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
-				IndexCoordinates.of("persons"));
 
 		assertThat(searchRequest.requestCache()).isTrue();
-		assertThat(searchRequestBuilder.request().requestCache()).isTrue();
 	}
 
 	@Test // #1564
 	@DisplayName("should set request_cache false on SearchRequest")
 	void shouldSetRequestCacheFalseOnSearchRequest() {
 
-		when(client.prepareSearch(any())).thenReturn(new SearchRequestBuilder(client, SearchAction.INSTANCE));
 		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		query.setRequestCache(false);
 
 		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
-		SearchRequestBuilder searchRequestBuilder = requestFactory.searchRequestBuilder(client, query, Person.class,
-				IndexCoordinates.of("persons"));
 
 		assertThat(searchRequest.requestCache()).isFalse();
-		assertThat(searchRequestBuilder.request().requestCache()).isFalse();
 	}
 
 	// region entities

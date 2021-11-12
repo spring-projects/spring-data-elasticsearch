@@ -39,7 +39,7 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
-import org.springframework.data.elasticsearch.clients.elasticsearch7.ResponseConverter;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ResponseConverter;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.Explanation;
