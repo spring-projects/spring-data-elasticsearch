@@ -64,9 +64,9 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			}
 
 			if (elasticsearchException instanceof ElasticsearchStatusException) {
-				ElasticsearchStatusException restStatusException = (ElasticsearchStatusException) elasticsearchException;
-				return new RestStatusException(restStatusException.status().getStatus(), restStatusException.getMessage(),
-						restStatusException.getCause());
+				ElasticsearchStatusException elasticsearchStatusException = (ElasticsearchStatusException) elasticsearchException;
+				return new RestStatusException(elasticsearchStatusException.status().getStatus(),
+						elasticsearchStatusException.getMessage(), elasticsearchStatusException);
 			}
 
 			return new UncategorizedElasticsearchException(ex.getMessage(), ex);
