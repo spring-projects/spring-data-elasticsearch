@@ -24,6 +24,8 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -36,8 +38,6 @@ import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
 import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -69,7 +69,7 @@ import org.springframework.util.Assert;
  */
 class ReactiveIndexTemplate implements ReactiveIndexOperations {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveIndexTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(ReactiveIndexTemplate.class);
 
 	@Nullable private final Class<?> boundClass;
 	private final IndexCoordinates boundIndex;
@@ -366,7 +366,7 @@ class ReactiveIndexTemplate implements ReactiveIndexOperations {
 				}
 			});
 		} else {
-			LOGGER.info("path in {} has to be defined. Using default instead.", annotation);
+			LOGGER.info(String.format("path in %s has to be defined. Using default empty Document instead.", annotation));
 		}
 
 		return Mono.just(Document.create());

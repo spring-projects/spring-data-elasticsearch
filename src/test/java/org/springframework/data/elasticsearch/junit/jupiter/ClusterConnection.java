@@ -21,9 +21,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.extension.ExtensionContext;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.lang.Nullable;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -38,7 +38,7 @@ import org.testcontainers.utility.DockerImageName;
  */
 public class ClusterConnection implements ExtensionContext.Store.CloseableResource {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ClusterConnection.class);
+	private static final Log LOGGER = LogFactory.getLog(ClusterConnection.class);
 
 	private static final String SDE_TESTCONTAINER_IMAGE_NAME = "sde.testcontainers.image-name";
 	private static final String SDE_TESTCONTAINER_IMAGE_VERSION = "sde.testcontainers.image-version";
@@ -55,10 +55,14 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 		clusterConnectionInfo = startElasticsearchContainer();
 
 		if (clusterConnectionInfo != null) {
-			LOGGER.debug(clusterConnectionInfo.toString());
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug(clusterConnectionInfo.toString());
+			}
 			clusterConnectionInfoThreadLocal.set(clusterConnectionInfo);
 		} else {
-			LOGGER.error("could not create ClusterConnectionInfo");
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.error("could not create ClusterConnectionInfo");
+			}
 		}
 	}
 
@@ -82,7 +86,7 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 
 		try {
 			IntegrationtestEnvironment integrationtestEnvironment = IntegrationtestEnvironment.get();
-			LOGGER.info("Integration test environment: {}", integrationtestEnvironment);
+			LOGGER.info("Integration test environment: " + integrationtestEnvironment);
 			if (integrationtestEnvironment == IntegrationtestEnvironment.UNDEFINED) {
 				throw new IllegalArgumentException(IntegrationtestEnvironment.SYSTEM_PROPERTY + " property not set");
 			}
@@ -128,13 +132,13 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 		String configuredImageName = imageName + ':' + imageVersion;
 		DockerImageName dockerImageName = DockerImageName.parse(configuredImageName)
 				.asCompatibleSubstituteFor("docker.elastic.co/elasticsearch/elasticsearch");
-		LOGGER.info("Docker image: {}", dockerImageName);
+		LOGGER.info("Docker image: " + dockerImageName);
 		return dockerImageName;
 	}
 
 	private Map<String, String> testcontainersProperties(String propertiesFile) {
 
-		LOGGER.info("load configuration from {}", propertiesFile);
+		LOGGER.info("load configuration from " + propertiesFile);
 
 		try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(propertiesFile)) {
 			Properties props = new Properties();
@@ -155,10 +159,14 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 	public void close() {
 
 		if (clusterConnectionInfo != null && clusterConnectionInfo.getElasticsearchContainer() != null) {
-			LOGGER.debug("Stopping container");
+			if (LOGGER.isDebugEnabled()) {
+				LOGGER.debug("Stopping container");
+			}
 			clusterConnectionInfo.getElasticsearchContainer().stop();
 		}
 
-		LOGGER.debug("closed");
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("closed");
+		}
 	}
 }

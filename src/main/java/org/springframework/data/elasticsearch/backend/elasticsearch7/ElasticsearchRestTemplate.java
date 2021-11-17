@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -54,8 +56,6 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.cluster.ElasticsearchClusterOperations;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.document.DocumentAdapters;
@@ -116,7 +116,7 @@ import org.springframework.util.Assert;
  */
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(ElasticsearchRestTemplate.class);
 
 	private final RestHighLevelClient client;
 	private final ElasticsearchExceptionTranslator exceptionTranslator = new ElasticsearchExceptionTranslator();
@@ -419,7 +419,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 			request.scrollIds(scrollIds);
 			execute(client -> client.clearScroll(request, RequestOptions.DEFAULT));
 		} catch (Exception e) {
-			LOGGER.warn("Could not clear scroll: {}", e.getMessage());
+			LOGGER.warn(String.format("Could not clear scroll: %s", e.getMessage()));
 		}
 	}
 

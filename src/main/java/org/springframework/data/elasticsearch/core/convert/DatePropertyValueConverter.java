@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.core.convert;
 import java.util.Date;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.mapping.PersistentProperty;
 
 /**
@@ -28,7 +28,7 @@ import org.springframework.data.mapping.PersistentProperty;
  */
 public class DatePropertyValueConverter extends AbstractPropertyValueConverter {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DatePropertyValueConverter.class);
+	private static final Log LOGGER = LogFactory.getLog(DatePropertyValueConverter.class);
 
 	private final List<ElasticsearchDateConverter> dateConverters;
 
@@ -47,7 +47,9 @@ public class DatePropertyValueConverter extends AbstractPropertyValueConverter {
 			try {
 				return dateConverter.parse(s);
 			} catch (Exception e) {
-				LOGGER.trace(e.getMessage(), e);
+				if (LOGGER.isTraceEnabled()) {
+					LOGGER.trace(e.getMessage(), e);
+				}
 			}
 		}
 

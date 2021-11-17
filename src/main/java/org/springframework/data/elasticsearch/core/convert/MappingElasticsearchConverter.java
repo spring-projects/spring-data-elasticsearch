@@ -21,8 +21,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -91,7 +91,7 @@ public class MappingElasticsearchConverter
 	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions.";
 	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MappingElasticsearchConverter.class);
+	private static final Log LOGGER = LogFactory.getLog(MappingElasticsearchConverter.class);
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
@@ -436,10 +436,10 @@ public class MappingElasticsearchConverter
 				String key = propertyName + "-read";
 				int count = propertyWarnings.computeIfAbsent(key, k -> 0);
 				if (count < 5) {
-					LOGGER.warn(
-							"Type {} of property {} is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for reading!"
+					LOGGER.warn(String.format(
+							"Type %s of property %s is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for reading!"
 									+ " It cannot be mapped from a complex object in Elasticsearch!",
-							property.getType().getSimpleName(), propertyName);
+							property.getType().getSimpleName(), propertyName));
 					propertyWarnings.put(key, count + 1);
 				}
 			}
@@ -909,10 +909,10 @@ public class MappingElasticsearchConverter
 					String key = propertyName + "-write";
 					int count = propertyWarnings.computeIfAbsent(key, k -> 0);
 					if (count < 5) {
-						LOGGER.warn(
-								"Type {} of property {} is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for writing!"
+						LOGGER.warn(String.format(
+								"Type %s of property %s is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for writing!"
 										+ " It will be mapped to a complex object in Elasticsearch!",
-								property.getType().getSimpleName(), propertyName);
+								property.getType().getSimpleName(), propertyName));
 						propertyWarnings.put(key, count + 1);
 					}
 				} else if (!isSimpleType(value)) {

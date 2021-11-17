@@ -26,6 +26,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.Version;
 import org.elasticsearch.action.DocWriteResponse;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -47,8 +49,6 @@ import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -109,8 +109,7 @@ import org.springframework.util.Assert;
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations, ApplicationContextAware {
 
-	private static final Logger QUERY_LOGGER = LoggerFactory
-			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
+	private static final Log QUERY_LOGGER = LogFactory.getLog("org.springframework.data.elasticsearch.core.QUERY");
 
 	private final ReactiveElasticsearchClient client;
 	private final ElasticsearchConverter converter;
@@ -811,7 +810,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	protected Flux<AggregationContainer<?>> doAggregate(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
-			QUERY_LOGGER.debug("Executing doCount: {}", request);
+			QUERY_LOGGER.debug(String.format("Executing doCount: %s", request));
 		}
 
 		return Flux.from(execute(client -> client.aggregate(request))) //
@@ -885,7 +884,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	protected Flux<SearchDocument> doFind(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
-			QUERY_LOGGER.debug("Executing doFind: {}", request);
+			QUERY_LOGGER.debug(String.format("Executing doFind: %s", request));
 		}
 
 		return Flux.from(execute(client -> client.search(request))).map(DocumentAdapters::from) //
@@ -903,7 +902,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			Function<SearchDocument, ? extends Object> suggestEntityCreator) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
-			QUERY_LOGGER.debug("Executing doFindForResponse: {}", request);
+			QUERY_LOGGER.debug(String.format("Executing doFindForResponse: %s", request));
 		}
 
 		return Mono.from(execute(client1 -> client1.searchForResponse(request))).map(searchResponse -> {
@@ -920,7 +919,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	protected Mono<Long> doCount(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
-			QUERY_LOGGER.debug("Executing doCount: {}", request);
+			QUERY_LOGGER.debug(String.format("Executing doCount: %s", request));
 		}
 
 		return Mono.from(execute(client -> client.count(request))) //
@@ -936,7 +935,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	protected Flux<SearchDocument> doScroll(SearchRequest request) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
-			QUERY_LOGGER.debug("Executing doScroll: {}", request);
+			QUERY_LOGGER.debug(String.format("Executing doScroll: %s", request));
 		}
 
 		return Flux.from(execute(client -> client.scroll(request))) //

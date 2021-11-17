@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.core.convert;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.util.Assert;
 
@@ -29,7 +29,7 @@ import org.springframework.util.Assert;
  */
 public class TemporalRangePropertyValueConverter extends AbstractRangePropertyValueConverter<TemporalAccessor> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(TemporalRangePropertyValueConverter.class);
+	private static final Log LOGGER = LogFactory.getLog(TemporalRangePropertyValueConverter.class);
 
 	private final List<ElasticsearchDateConverter> dateConverters;
 
@@ -55,7 +55,9 @@ public class TemporalRangePropertyValueConverter extends AbstractRangePropertyVa
 			try {
 				return converters.parse(value, (Class<? extends TemporalAccessor>) type);
 			} catch (Exception e) {
-				LOGGER.trace(e.getMessage(), e);
+				if (LOGGER.isTraceEnabled()) {
+					LOGGER.trace(e.getMessage(), e);
+				}
 			}
 		}
 

@@ -17,16 +17,15 @@ package org.springframework.data.elasticsearch.client;
 
 import java.util.function.Supplier;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
 /**
  * Logging Utility to log client requests and responses. Logs client requests and responses to Elasticsearch to a
- * dedicated logger: {@code org.springframework.data.elasticsearch.client.WIRE} on {@link org.slf4j.event.Level#TRACE}
- * level.
+ * dedicated logger: {@code org.springframework.data.elasticsearch.client.WIRE} on trace level.
  *
  * @author Mark Paluch
  * @author Christoph Strobl
@@ -35,8 +34,7 @@ import org.springframework.util.ObjectUtils;
 public abstract class ClientLogger {
 
 	private static final String lineSeparator = System.getProperty("line.separator");
-	private static final Logger WIRE_LOGGER = LoggerFactory
-			.getLogger("org.springframework.data.elasticsearch.client.WIRE");
+	private static final Log WIRE_LOGGER = LogFactory.getLog("org.springframework.data.elasticsearch.client.WIRE");
 
 	private ClientLogger() {}
 
@@ -52,7 +50,7 @@ public abstract class ClientLogger {
 	/**
 	 * Log an outgoing HTTP request.
 	 *
-	 * @param logId the correlation Id, see {@link #newLogId()}.
+	 * @param logId the correlation id, see {@link #newLogId()}.
 	 * @param method HTTP method
 	 * @param endpoint URI
 	 * @param parameters optional parameters.
@@ -60,16 +58,15 @@ public abstract class ClientLogger {
 	public static void logRequest(String logId, String method, String endpoint, Object parameters) {
 
 		if (isEnabled()) {
-
-			WIRE_LOGGER.trace("[{}] Sending request {} {} with parameters: {}", logId, method.toUpperCase(), endpoint,
-					parameters);
+			WIRE_LOGGER.trace(String.format("[%s] Sending request %s %s with parameters: %s", logId, method.toUpperCase(),
+					endpoint, parameters));
 		}
 	}
 
 	/**
 	 * Log an outgoing HTTP request with a request body.
 	 *
-	 * @param logId the correlation Id, see {@link #newLogId()}.
+	 * @param logId the correlation id, see {@link #newLogId()}.
 	 * @param method HTTP method
 	 * @param endpoint URI
 	 * @param parameters optional parameters.
@@ -79,43 +76,43 @@ public abstract class ClientLogger {
 			Supplier<Object> body) {
 
 		if (isEnabled()) {
-
-			WIRE_LOGGER.trace("[{}] Sending request {} {} with parameters: {}{}Request body: {}", logId, method.toUpperCase(),
-					endpoint, parameters, lineSeparator, body.get());
+			WIRE_LOGGER.trace(String.format("[%s] Sending request %s %s with parameters: %s%sRequest body: %s", logId,
+					method.toUpperCase(), endpoint, parameters, lineSeparator, body.get()));
 		}
 	}
 
 	/**
 	 * Log a raw HTTP response without logging the body.
 	 *
-	 * @param logId the correlation Id, see {@link #newLogId()}.
+	 * @param logId the correlation id, see {@link #newLogId()}.
 	 * @param statusCode the HTTP status code.
 	 */
 	public static void logRawResponse(String logId, @Nullable HttpStatus statusCode) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace("[{}] Received raw response: {}", logId, statusCode);
+			WIRE_LOGGER.trace(String.format("[%s] Received raw response: %s", logId, statusCode));
 		}
 	}
 
 	/**
 	 * Log a raw HTTP response along with the body.
 	 *
-	 * @param logId the correlation Id, see {@link #newLogId()}.
+	 * @param logId the correlation id, see {@link #newLogId()}.
 	 * @param statusCode the HTTP status code.
 	 * @param body body content.
 	 */
 	public static void logResponse(String logId, HttpStatus statusCode, String body) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace("[{}] Received response: {}{}Response body: {}", logId, statusCode, lineSeparator, body);
+			WIRE_LOGGER.trace(
+					String.format("[%s] Received response: %s%sResponse body: %s", logId, statusCode, lineSeparator, body));
 		}
 	}
 
 	/**
-	 * Creates a new, unique correlation Id to improve tracing across log events.
+	 * Creates a new, unique correlation id to improve tracing across log events.
 	 *
-	 * @return a new, unique correlation Id.
+	 * @return a new, unique correlation id.
 	 */
 	public static String newLogId() {
 

@@ -19,8 +19,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -63,7 +63,7 @@ import org.springframework.util.Assert;
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T> {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchPersistentEntity.class);
+	private static final Log LOGGER = LogFactory.getLog(SimpleElasticsearchPersistentEntity.class);
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private @Nullable final Document document;
@@ -235,9 +235,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	private void warnAboutBothSeqNoPrimaryTermAndVersionProperties() {
-		LOGGER.warn(
-				"Both SeqNoPrimaryTerm and @Version properties are defined on {}. Version will not be sent in index requests when seq_no is sent!",
-				getType());
+		LOGGER.warn(String.format(
+				"Both SeqNoPrimaryTerm and @Version properties are defined on %s. Version will not be sent in index requests when seq_no is sent!",
+				getType()));
 	}
 
 	@Nullable
