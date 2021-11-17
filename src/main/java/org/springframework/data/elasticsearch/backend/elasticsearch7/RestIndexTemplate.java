@@ -20,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.admin.indices.alias.get.GetAliasesRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
@@ -38,8 +40,6 @@ import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.cluster.metadata.MappingMetadata;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.core.AbstractIndexTemplate;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -66,7 +66,7 @@ import org.springframework.util.Assert;
  */
 class RestIndexTemplate extends AbstractIndexTemplate implements IndexOperations {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(RestIndexTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(RestIndexTemplate.class);
 
 	private final ElasticsearchRestTemplate restTemplate;
 

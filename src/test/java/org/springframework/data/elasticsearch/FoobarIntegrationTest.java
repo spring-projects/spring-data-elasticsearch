@@ -4,8 +4,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 
 /**
@@ -14,8 +12,6 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 @SpringIntegrationTest
 @Foobar
 public abstract class FoobarIntegrationTest {
-
-	private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
 	@Test
 	@DisplayName("should run test")
