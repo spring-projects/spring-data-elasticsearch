@@ -21,7 +21,7 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  * @author Artur Konczak
  */
 public interface ComplexElasticsearchRepository
-		extends ElasticsearchRepository<ComplexCustomMethodRepositoryTests.SampleEntity, String>,
+		extends ElasticsearchRepository<ComplexCustomMethodRepositoryIntegrationTests.SampleEntity, String>,
 		ComplexElasticsearchRepositoryCustom {
 
 }

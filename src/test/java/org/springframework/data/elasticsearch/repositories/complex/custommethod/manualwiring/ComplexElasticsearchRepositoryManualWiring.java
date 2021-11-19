@@ -22,7 +22,7 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  * @author Artur Konczak
  */
 public interface ComplexElasticsearchRepositoryManualWiring
-		extends ElasticsearchRepository<ComplexCustomMethodRepositoryManualWiringTests.SampleEntity, String>,
+		extends ElasticsearchRepository<ComplexCustomMethodRepositoryManualWiringIntegrationTests.SampleEntity, String>,
 		ComplexElasticsearchRepositoryCustom {
 
 }

@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 import java.util.function.Function;
 
-import org.elasticsearch.cluster.routing.Murmur3HashFunction;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -59,7 +58,8 @@ public class ReactiveElasticsearchOperationsRoutingTests {
 	static void beforeAll() {
 		// check that the used id values go to different shards of the index which is configured to have 5 shards.
 		// Elasticsearch uses the following function:
-		Function<String, Integer> calcShard = routing -> Math.floorMod(Murmur3HashFunction.hash(routing), 5);
+		Function<String, Integer> calcShard = routing -> Math
+				.floorMod(RoutingIntegrationTests.Murmur3HashFunction.hash(routing), 5);
 
 		Integer shard1 = calcShard.apply(ID_1);
 		Integer shard2 = calcShard.apply(ID_2);

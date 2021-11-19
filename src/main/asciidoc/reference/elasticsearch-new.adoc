@@ -4,7 +4,7 @@
 [[new-features.4-3-0]]
 == New in Spring Data Elasticsearch 4.3
 
-* Upgrade to Elasticsearch 7.15.1.
+* Upgrade to Elasticsearch 7.15.2.
 * Allow runtime_fields to be defined in the index mapping.
 * Add native support for range field types by using a range object.
 * Add repository search for nullable or empty properties.

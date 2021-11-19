@@ -32,17 +32,14 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
-public class SourceFilterIntegrationTests {
+public abstract class SourceFilterIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
 	private IndexOperations indexOps;

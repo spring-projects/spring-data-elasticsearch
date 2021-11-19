@@ -34,17 +34,14 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
-public class SearchAfterIntegrationTests {
+public abstract class SearchAfterIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
 

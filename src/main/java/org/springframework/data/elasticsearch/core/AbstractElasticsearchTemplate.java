@@ -20,16 +20,18 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.convert.EntityReader;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.RequestFactory;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
@@ -58,9 +60,9 @@ import org.springframework.util.Assert;
 
 /**
  * This class contains methods that are common to different implementations of the {@link ElasticsearchOperations}
- * interface that use different clients, like TransportClient, RestHighLevelClient and the next Java client from
- * Elasticsearch or some future implementation that might use an Opensearch client. This class must not contain imports
- * or use classes that are specific to one of these implementations.
+ * interface that use different clients, like RestHighLevelClient and the next Java client from Elasticsearch or some
+ * future implementation that might use an Opensearch client. This class must not contain imports or use classes that
+ * are specific to one of these implementations.
  * <p>
  * <strong>Note:</strong> Although this class is public, it is not considered to be part of the official Spring Data
  * Elasticsearch API and so might change at any time.
@@ -74,25 +76,27 @@ import org.springframework.util.Assert;
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
-	@Nullable protected ElasticsearchConverter elasticsearchConverter;
-	@Nullable protected RequestFactory requestFactory;
-	@Nullable protected EntityOperations entityOperations;
+	protected ElasticsearchConverter elasticsearchConverter;
+	protected RequestFactory requestFactory;
+	protected EntityOperations entityOperations;
 	@Nullable protected EntityCallbacks entityCallbacks;
 	@Nullable protected RefreshPolicy refreshPolicy;
-	@Nullable protected RoutingResolver routingResolver;
+	protected RoutingResolver routingResolver;
 
-	// region Initialization
-	protected void initialize(ElasticsearchConverter elasticsearchConverter) {
+	public AbstractElasticsearchTemplate() {
+		this(null);
+	}
 
-		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null.");
+	public AbstractElasticsearchTemplate(@Nullable ElasticsearchConverter elasticsearchConverter) {
 
-		this.elasticsearchConverter = elasticsearchConverter;
+		this.elasticsearchConverter = elasticsearchConverter != null ? elasticsearchConverter
+				: createElasticsearchConverter();
 		MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext = this.elasticsearchConverter
 				.getMappingContext();
 		this.entityOperations = new EntityOperations(mappingContext);
-		this.routingResolver = new DefaultRoutingResolver((SimpleElasticsearchMappingContext) mappingContext);
+		this.routingResolver = new DefaultRoutingResolver(mappingContext);
 
-		requestFactory = new RequestFactory(elasticsearchConverter);
+		requestFactory = new RequestFactory(this.elasticsearchConverter);
 
 		// initialize the VersionInfo class in the initialization phase
 		// noinspection ResultOfMethodCallIgnored
@@ -116,9 +120,13 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return copy;
 	}
 
+	/**
+	 * must return a copy of this instance that will for example be used to set a custom routing resolver without
+	 * modifying the original object.
+	 */
 	protected abstract AbstractElasticsearchTemplate doCopy();
 
-	protected ElasticsearchConverter createElasticsearchConverter() {
+	private ElasticsearchConverter createElasticsearchConverter() {
 		MappingElasticsearchConverter mappingElasticsearchConverter = new MappingElasticsearchConverter(
 				new SimpleElasticsearchMappingContext());
 		mappingElasticsearchConverter.afterPropertiesSet();
@@ -194,9 +202,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		IndexQuery query = getIndexQuery(entityAfterBeforeConvert);
 		doIndex(query, index);
 
-		T entityAfterAfterSave = (T) maybeCallbackAfterSave(query.getObject(), index);
-
-		return entityAfterAfterSave;
+		// noinspection unchecked
+		return (T) maybeCallbackAfterSave(Objects.requireNonNull(query.getObject()), index);
 	}
 
 	@Override
@@ -225,8 +232,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			return Collections.emptyList();
 		}
 
-		List<IndexedObjectInformation> indexedObjectInformations = bulkIndex(indexQueries, index);
-		Iterator<IndexedObjectInformation> iterator = indexedObjectInformations.iterator();
+		List<IndexedObjectInformation> indexedObjectInformationList = bulkIndex(indexQueries, index);
+		Iterator<IndexedObjectInformation> iterator = indexedObjectInformationList.iterator();
 
 		// noinspection unchecked
 		return indexQueries.stream() //
@@ -235,8 +242,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				.collect(Collectors.toList()); //
 	}
 
+	@SafeVarargs
 	@Override
-	public <T> Iterable<T> save(T... entities) {
+	public final <T> Iterable<T> save(T... entities) {
 		return save(Arrays.asList(entities));
 	}
 
@@ -298,7 +306,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Override
 	public String delete(Object entity, IndexCoordinates index) {
-		return this.delete(getEntityId(entity), index);
+		String entityId = getEntityId(entity);
+		Assert.notNull(entityId, "entity must have an if that is notnull");
+		return this.delete(entityId, index);
 	}
 
 	@Override
@@ -347,11 +357,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		maybeCallbackBeforeConvertWithQueries(queries, index);
 
-		List<IndexedObjectInformation> indexedObjectInformations = doBulkOperation(queries, bulkOptions, index);
+		List<IndexedObjectInformation> indexedObjectInformationList = doBulkOperation(queries, bulkOptions, index);
 
 		maybeCallbackAfterSaveWithQueries(queries, index);
 
-		return indexedObjectInformations;
+		return indexedObjectInformationList;
 	}
 
 	public abstract List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
@@ -449,9 +459,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 * @since 4.0
 	 */
 	public RequestFactory getRequestFactory() {
-
-		Assert.notNull(requestFactory, "requestfactory not initialized");
-
 		return requestFactory;
 	}
 
@@ -500,8 +507,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			}
 
 			// noinspection unchecked
-			T updatedEntity = (T) propertyAccessor.getBean();
-			return updatedEntity;
+			return (T) propertyAccessor.getBean();
 		}
 		return entity;
 	}
@@ -558,6 +564,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			id = elasticsearchConverter.convertId(id);
 		}
 
+		// noinspection ConstantConditions
 		IndexQueryBuilder builder = new IndexQueryBuilder() //
 				.withId(id) //
 				.withObject(entity);
@@ -568,6 +575,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			builder.withSeqNoPrimaryTerm(seqNoPrimaryTerm);
 		} else {
 			// version cannot be used together with seq_no and primary_term
+			// noinspection ConstantConditions
 			builder.withVersion(getEntityVersion(entity));
 		}
 
@@ -685,7 +693,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	// endregion
 
 	protected void updateIndexedObjectsWithQueries(List<?> queries,
-			List<IndexedObjectInformation> indexedObjectInformations) {
+			List<IndexedObjectInformation> indexedObjectInformationList) {
 
 		for (int i = 0; i < queries.size(); i++) {
 			Object query = queries.get(i);
@@ -695,7 +703,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				Object queryObject = indexQuery.getObject();
 
 				if (queryObject != null) {
-					indexQuery.setObject(updateIndexedObject(queryObject, indexedObjectInformations.get(i)));
+					indexQuery.setObject(updateIndexedObject(queryObject, indexedObjectInformationList.get(i)));
 				}
 			}
 		}

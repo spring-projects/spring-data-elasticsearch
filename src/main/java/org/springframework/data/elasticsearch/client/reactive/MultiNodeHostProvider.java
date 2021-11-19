@@ -29,8 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost.State;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
@@ -48,7 +48,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  */
 class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 
-	private final static Logger LOG = LoggerFactory.getLogger(MultiNodeHostProvider.class);
+	private final static Log LOGGER = LogFactory.getLog(MultiNodeHostProvider.class);
 
 	private final WebClientProvider clientProvider;
 	private final Map<InetSocketAddress, ElasticsearchHost> hosts;
@@ -61,7 +61,9 @@ class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 			this.hosts.put(endpoint, new ElasticsearchHost(endpoint, State.UNKNOWN));
 		}
 
-		LOG.debug("initialized with " + hosts);
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug("initialized with " + hosts);
+		}
 	}
 
 	/*
@@ -90,19 +92,27 @@ class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 	@Override
 	public Mono<InetSocketAddress> lookupActiveHost(Verification verification) {
 
-		LOG.trace("lookupActiveHost " + verification + " from " + hosts());
+		if (LOGGER.isTraceEnabled()) {
+			LOGGER.trace("lookupActiveHost " + verification + " from " + hosts());
+		}
 
 		if (Verification.LAZY.equals(verification)) {
 			for (ElasticsearchHost entry : hosts()) {
 				if (entry.isOnline()) {
-					LOG.trace("lookupActiveHost returning " + entry);
+					if (LOGGER.isTraceEnabled()) {
+						LOGGER.trace("lookupActiveHost returning " + entry);
+					}
 					return Mono.just(entry.getEndpoint());
 				}
 			}
-			LOG.trace("no online host found with LAZY");
+			if (LOGGER.isTraceEnabled()) {
+				LOGGER.trace("no online host found with LAZY");
+			}
 		}
 
-		LOG.trace("searching for active host");
+		if (LOGGER.isTraceEnabled()) {
+			LOGGER.trace("searching for active host");
+		}
 		return findActiveHostInKnownActives() //
 				.switchIfEmpty(findActiveHostInUnresolved()) //
 				.switchIfEmpty(findActiveHostInDead()) //
@@ -127,13 +137,17 @@ class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 
 	private Mono<InetSocketAddress> findActiveForState(State state) {
 
-		LOG.trace("findActiveForState state " + state + ", current hosts: " + hosts);
+		if (LOGGER.isTraceEnabled()) {
+			LOGGER.trace("findActiveForState state " + state + ", current hosts: " + hosts);
+		}
 
 		return checkNodes(state) //
 				.map(this::updateNodeState) //
 				.filter(ElasticsearchHost::isOnline) //
 				.map(elasticsearchHost -> {
-					LOG.trace("findActiveForState returning host " + elasticsearchHost);
+					if (LOGGER.isTraceEnabled()) {
+						LOGGER.trace("findActiveForState returning host " + elasticsearchHost);
+					}
 					return elasticsearchHost;
 				}).map(ElasticsearchHost::getEndpoint) //
 				.takeLast(1) //
@@ -150,21 +164,27 @@ class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 
 	private Flux<Tuple2<InetSocketAddress, State>> checkNodes(@Nullable State state) {
 
-		LOG.trace("checkNodes() with state " + state);
+		if (LOGGER.isTraceEnabled()) {
+			LOGGER.trace("checkNodes() with state " + state);
+		}
 
 		return Flux.fromIterable(hosts()) //
 				.filter(entry -> state == null || entry.getState().equals(state)) //
 				.map(ElasticsearchHost::getEndpoint) //
 				.concatMap(host -> {
 
-					LOG.trace("checking host " + host);
+					if (LOGGER.isTraceEnabled()) {
+						LOGGER.trace("checking host " + host);
+					}
 
 					Mono<ClientResponse> clientResponseMono = createWebClient(host) //
 							.head().uri("/") //
 							.exchangeToMono(Mono::just) //
 							.timeout(Duration.ofSeconds(1)) //
 							.doOnError(throwable -> {
-								LOG.trace("error checking host " + host + ", " + throwable.getMessage());
+								if (LOGGER.isTraceEnabled()) {
+									LOGGER.trace("error checking host " + host + ", " + throwable.getMessage());
+								}
 								hosts.put(host, new ElasticsearchHost(host, State.OFFLINE));
 								clientProvider.getErrorListener().accept(throwable);
 							});
@@ -174,7 +194,9 @@ class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 									.thenReturn(it.statusCode().isError() ? State.OFFLINE : State.ONLINE)));
 				}) //
 				.map(tuple -> {
-					LOG.trace("check result " + tuple);
+					if (LOGGER.isTraceEnabled()) {
+						LOGGER.trace("check result " + tuple);
+					}
 					return tuple;
 				}).onErrorContinue((throwable, o) -> clientProvider.getErrorListener().accept(throwable));
 	}

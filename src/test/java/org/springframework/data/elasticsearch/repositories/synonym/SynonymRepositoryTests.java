@@ -17,13 +17,10 @@ package org.springframework.data.elasticsearch.repositories.synonym;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.elasticsearch.index.query.QueryBuilders;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Mapping;
@@ -31,15 +28,13 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexInitializer;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * SynonymRepositoryTests
@@ -48,13 +43,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { SynonymRepositoryTests.Config.class })
-public class SynonymRepositoryTests {
-
-	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {}
+public abstract class SynonymRepositoryTests {
 
 	@Autowired private SynonymRepository repository;
 
@@ -75,22 +64,15 @@ public class SynonymRepositoryTests {
 	@Test
 	public void shouldDo() {
 
-		// given
 		SynonymEntity entry1 = new SynonymEntity();
 		entry1.setText("Elizabeth is the english queen");
 		SynonymEntity entry2 = new SynonymEntity();
 		entry2.setText("Other text");
-
 		repository.save(entry1);
 		repository.save(entry2);
 
-		// whe
-		// then
-		assertThat(repository.count()).isEqualTo(2L);
-
-		SearchHits<SynonymEntity> synonymEntities = operations.search(
-				new NativeSearchQueryBuilder().withQuery(QueryBuilders.termQuery("text", "british")).build(),
-				SynonymEntity.class, IndexCoordinates.of("test-index-synonym"));
+		Query query = new CriteriaQuery(new Criteria("text").is("british"));
+		SearchHits<SynonymEntity> synonymEntities = operations.search(query, SynonymEntity.class);
 		assertThat(synonymEntities).hasSize(1);
 	}
 

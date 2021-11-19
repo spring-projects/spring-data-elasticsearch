@@ -22,8 +22,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
@@ -38,7 +36,6 @@ import org.springframework.util.Assert;
  */
 public abstract class ReactiveResourceUtil {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveResourceUtil.class);
 	private static final int BUFFER_SIZE = 8_192;
 
 	/**

@@ -19,13 +19,13 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.context.ContextConfigurationAttributes;
 import org.springframework.test.context.ContextCustomizer;
@@ -46,7 +46,7 @@ import org.springframework.test.context.MergedContextConfiguration;
 public class SpringDataElasticsearchExtension
 		implements BeforeAllCallback, ParameterResolver, ContextCustomizerFactory {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SpringDataElasticsearchExtension.class);
+	private static final Log LOGGER = LogFactory.getLog(SpringDataElasticsearchExtension.class);
 
 	private static final ExtensionContext.Namespace NAMESPACE = ExtensionContext.Namespace
 			.create(SpringDataElasticsearchExtension.class.getName());
@@ -61,7 +61,9 @@ public class SpringDataElasticsearchExtension
 		try {
 			ExtensionContext.Store store = getStore(extensionContext);
 			ClusterConnection clusterConnection = store.getOrComputeIfAbsent(STORE_KEY_CLUSTER_CONNECTION, key -> {
-				LOGGER.debug("creating ClusterConnection");
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug("creating ClusterConnection");
+				}
 				return createClusterConnection();
 			}, ClusterConnection.class);
 			store.getOrComputeIfAbsent(STORE_KEY_CLUSTER_CONNECTION_INFO,

@@ -21,7 +21,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.3
  */
-abstract public class HighlightCommonParameters {
+public abstract class HighlightCommonParameters {
 	private final String boundaryChars;
 	private final int boundaryMaxScan;
 	private final String boundaryScanner;

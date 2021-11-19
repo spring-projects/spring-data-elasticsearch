@@ -21,8 +21,8 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -69,7 +69,7 @@ import org.springframework.util.StringUtils;
 public class SimpleElasticsearchPersistentProperty extends
 		AnnotationBasedPersistentProperty<ElasticsearchPersistentProperty> implements ElasticsearchPersistentProperty {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(SimpleElasticsearchPersistentProperty.class);
+	private static final Log LOGGER = LogFactory.getLog(SimpleElasticsearchPersistentProperty.class);
 
 	private static final List<String> SUPPORTED_ID_PROPERTY_NAMES = Arrays.asList("id", "document");
 	private static final PropertyNameFieldNamingStrategy DEFAULT_FIELD_NAMING_STRATEGY = PropertyNameFieldNamingStrategy.INSTANCE;
@@ -161,7 +161,7 @@ public class SimpleElasticsearchPersistentProperty extends
 			case Date_Nanos: {
 				List<ElasticsearchDateConverter> dateConverters = getDateConverters(field, actualType);
 				if (dateConverters.isEmpty()) {
-					LOGGER.warn("No date formatters configured for property '{}'.", getName());
+					LOGGER.warn(String.format("No date formatters configured for property '%s'.", getName()));
 					return;
 				}
 
@@ -170,7 +170,7 @@ public class SimpleElasticsearchPersistentProperty extends
 				} else if (Date.class.isAssignableFrom(actualType)) {
 					propertyValueConverter = new DatePropertyValueConverter(this, dateConverters);
 				} else {
-					LOGGER.warn("Unsupported type '{}' for date property '{}'.", actualType, getName());
+					LOGGER.warn(String.format("Unsupported type '%s' for date property '%s'.", actualType, getName()));
 				}
 				break;
 			}
@@ -181,7 +181,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 				List<ElasticsearchDateConverter> dateConverters = getDateConverters(field, actualType);
 				if (dateConverters.isEmpty()) {
-					LOGGER.warn("No date formatters configured for property '{}'.", getName());
+					LOGGER.warn(String.format("No date formatters configured for property '%s'.", getName()));
 					return;
 				}
 
@@ -191,7 +191,8 @@ public class SimpleElasticsearchPersistentProperty extends
 				} else if (Date.class.isAssignableFrom(genericType)) {
 					propertyValueConverter = new DateRangePropertyValueConverter(this, dateConverters);
 				} else {
-					LOGGER.warn("Unsupported generic type '{}' for date range property '{}'.", genericType, getName());
+					LOGGER.warn(
+							String.format("Unsupported generic type '{%s' for date range property '%s'.", genericType, getName()));
 				}
 				break;
 			}
@@ -208,8 +209,8 @@ public class SimpleElasticsearchPersistentProperty extends
 						|| (field.type() == FieldType.Float_Range && !Float.class.isAssignableFrom(genericType))
 						|| (field.type() == FieldType.Long_Range && !Long.class.isAssignableFrom(genericType))
 						|| (field.type() == FieldType.Double_Range && !Double.class.isAssignableFrom(genericType))) {
-					LOGGER.warn("Unsupported generic type '{}' for range field type '{}' of property '{}'.", genericType,
-							field.type(), getName());
+					LOGGER.warn(String.format("Unsupported generic type '%s' for range field type '%s' of property '%s'.",
+							genericType, field.type(), getName()));
 					return;
 				}
 
@@ -251,9 +252,9 @@ public class SimpleElasticsearchPersistentProperty extends
 		List<ElasticsearchDateConverter> converters = new ArrayList<>();
 
 		if (dateFormats.length == 0 && dateFormatPatterns.length == 0) {
-			LOGGER.warn(
-					"Property '{}' has @Field type '{}' but has no built-in format or custom date pattern defined. Make sure you have a converter registered for type {}.",
-					getName(), field.type().name(), actualType.getSimpleName());
+			LOGGER.warn(String.format(
+					"Property '%s' has @Field type '%s' but has no built-in format or custom date pattern defined. Make sure you have a converter registered for type %s.",
+					getName(), field.type().name(), actualType.getSimpleName()));
 			return converters;
 		}
 
@@ -266,8 +267,9 @@ public class SimpleElasticsearchPersistentProperty extends
 				case weekyear:
 				case weekyear_week:
 				case weekyear_week_day:
-					LOGGER.warn("No default converter available for '{}' and date format '{}'. Use a custom converter instead.",
-							actualType.getName(), dateFormat.name());
+					LOGGER.warn(String.format(
+							"No default converter available for '%s' and date format '%s'. Use a custom converter instead.",
+							actualType.getName(), dateFormat.name()));
 					break;
 				default:
 					converters.add(ElasticsearchDateConverter.of(dateFormat));

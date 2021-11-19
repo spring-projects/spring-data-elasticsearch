@@ -40,7 +40,7 @@ import org.springframework.util.Assert;
  * @author Roman Puchkovskiy
  * @since 3.2
  */
-class EntityOperations {
+public class EntityOperations {
 
 	private static final String ID_FIELD = "id";
 
@@ -81,7 +81,8 @@ class EntityOperations {
 	 * @return the {@link AdaptibleEntity}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	<T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService, RoutingResolver routingResolver) {
+	public <T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService,
+			RoutingResolver routingResolver) {
 
 		Assert.notNull(entity, "Bean must not be null!");
 		Assert.notNull(conversionService, "ConversionService must not be null!");
@@ -198,7 +199,7 @@ class EntityOperations {
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	interface AdaptibleEntity<T> extends Entity<T> {
+	public interface AdaptibleEntity<T> extends Entity<T> {
 
 		/**
 		 * Populates the identifier of the backing entity if it has an identifier property and there's no identifier

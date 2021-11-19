@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -222,8 +223,8 @@ public interface ReactiveSearchOperations {
 	/**
 	 * Does a suggest query.
 	 *
-	 * @param query the Query containing the suggest definition. Must be currently a
-	 *          {@link org.springframework.data.elasticsearch.core.query.NativeSearchQuery}, must not be {@literal null}.
+	 * @param query the Query containing the suggest definition. Must be currently a {@link NativeSearchQuery}, must not
+	 *          be {@literal null}.
 	 * @param entityType the type of the entities that might be returned for a completion suggestion, must not be
 	 *          {@literal null}.
 	 * @return suggest data
@@ -234,8 +235,8 @@ public interface ReactiveSearchOperations {
 	/**
 	 * Does a suggest query.
 	 *
-	 * @param query the Query containing the suggest definition. Must be currently a
-	 *          {@link org.springframework.data.elasticsearch.core.query.NativeSearchQuery}, must not be {@literal null}.
+	 * @param query the Query containing the suggest definition. Must be currently a {@link NativeSearchQuery}, must not
+	 *          be {@literal null}.
 	 * @param entityType the type of the entities that might be returned for a completion suggestion, must not be
 	 *          {@literal null}.
 	 * @param index the index to run the query against, must not be {@literal null}.

@@ -25,6 +25,7 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.RequestFactory;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
@@ -42,7 +43,7 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @since 4.0
  */
-abstract class AbstractIndexTemplate implements IndexOperations {
+public abstract class AbstractIndexTemplate implements IndexOperations {
 
 	protected final ElasticsearchConverter elasticsearchConverter;
 	protected final RequestFactory requestFactory;

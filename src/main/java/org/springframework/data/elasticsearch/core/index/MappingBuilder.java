@@ -27,12 +27,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -71,7 +71,7 @@ import com.fasterxml.jackson.databind.util.RawValue;
  */
 public class MappingBuilder {
 
-	private static final Logger logger = LoggerFactory.getLogger(ElasticsearchRestTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(ElasticsearchRestTemplate.class);
 
 	private static final String FIELD_INDEX = "index";
 	private static final String FIELD_PROPERTIES = "properties";
@@ -265,16 +265,16 @@ public class MappingBuilder {
 
 						if (property.isSeqNoPrimaryTermProperty()) {
 							if (property.isAnnotationPresent(Field.class)) {
-								logger.warn("Property {} of {} is annotated for inclusion in mapping, but its type is " + //
+								LOGGER.warn(String.format("Property %s of %s is annotated for inclusion in mapping, but its type is " + //
 								"SeqNoPrimaryTerm that is never mapped, so it is skipped", //
-										property.getFieldName(), entity.getType());
+										property.getFieldName(), entity.getType()));
 							}
 							return;
 						}
 
 						buildPropertyMapping(propertiesNode, isRootObject, property);
 					} catch (IOException e) {
-						logger.warn("error mapping property with name {}", property.getName(), e);
+						LOGGER.warn(String.format("error mapping property with name %s", property.getName()), e);
 					}
 				});
 			}
@@ -491,9 +491,9 @@ public class MappingBuilder {
 			JoinTypeRelation[] joinTypeRelations = property.getRequiredAnnotation(JoinTypeRelations.class).relations();
 
 			if (joinTypeRelations.length == 0) {
-				logger.warn("Property {}s type is JoinField but its annotation JoinTypeRelation is " + //
+				LOGGER.warn(String.format("Property %s's type is JoinField but its annotation JoinTypeRelation is " + //
 						"not properly maintained", //
-						property.getFieldName());
+						property.getFieldName()));
 				return;
 			}
 

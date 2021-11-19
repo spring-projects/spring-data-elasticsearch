@@ -30,40 +30,6 @@ There is support for automatic creation of indices and writing the mappings when
 
 ====
 
-[[elasticsearch.operations.template]]
-== ElasticsearchTemplate
-
-NOTE: Usage of the ElasticsearchTemplate is deprecated as of version 4.0, use ElasticsearchRestTemplate instead.
-
-The `ElasticsearchTemplate` is an implementation of the `ElasticsearchOperations` interface using the <<elasticsearch.clients.transport>>.
-
-.ElasticsearchTemplate configuration
-====
-[source,java]
-----
-@Configuration
-public class TransportClientConfig extends ElasticsearchConfigurationSupport {
-
-  @Bean
-  public Client elasticsearchClient() throws UnknownHostException {                 <1>
-    Settings settings = Settings.builder().put("cluster.name", "elasticsearch").build();
-    TransportClient client = new PreBuiltTransportClient(settings);
-    client.addTransportAddress(new TransportAddress(InetAddress.getByName("127.0.0.1"), 9300));
-    return client;
-  }
-
-  @Bean(name = {"elasticsearchOperations", "elasticsearchTemplate"})
-  public ElasticsearchTemplate elasticsearchTemplate() throws UnknownHostException { <2>
-  	return new ElasticsearchTemplate(elasticsearchClient());
-  }
-}
-----
-
-<1> Setting up the <<elasticsearch.clients.transport>>.
-Deprecated as of version 4.0.
-<2> Creating the `ElasticsearchTemplate` bean, offering both names, _elasticsearchOperations_ and _elasticsearchTemplate_.
-====
-
 [[elasticsearch.operations.resttemplate]]
 == ElasticsearchRestTemplate
 
