@@ -95,7 +95,6 @@ public class MappingElasticsearchConverter
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
-	// don't access directly, use getConversions(). to prevent null access
 	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
 	private final SpELContext spELContext = new SpELContext(new MapAccessor());
 	private final EntityInstantiators instantiators = new EntityInstantiators();
