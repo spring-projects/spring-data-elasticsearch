@@ -83,6 +83,7 @@ import org.springframework.util.ObjectUtils;
  * @author Konrad Kurdej
  * @author Subhobrata Dey
  * @author Marc Vanbrabant
+ * @author Anton Naydenov
  * @since 3.2
  */
 public class MappingElasticsearchConverter
@@ -145,14 +146,10 @@ public class MappingElasticsearchConverter
 		this.conversions = conversions;
 	}
 
-	private CustomConversions getConversions() {
-		return conversions;
-	}
-
 	@Override
 	public void afterPropertiesSet() {
 		DateFormatterRegistrar.addDateConverters(conversionService);
-		getConversions().registerConvertersIn(conversionService);
+		conversions.registerConvertersIn(conversionService);
 	}
 
 	// region read/write
@@ -160,7 +157,7 @@ public class MappingElasticsearchConverter
 	@Override
 	public <R> R read(Class<R> type, Document source) {
 
-		Reader reader = new Reader(mappingContext, conversionService, getConversions(), spELContext, instantiators);
+		Reader reader = new Reader(mappingContext, conversionService, conversions, spELContext, instantiators);
 		return reader.read(type, source);
 	}
 
@@ -169,7 +166,7 @@ public class MappingElasticsearchConverter
 
 		Assert.notNull(source, "source to map must not be null");
 
-		Writer writer = new Writer(mappingContext, conversionService, getConversions());
+		Writer writer = new Writer(mappingContext, conversionService, conversions);
 		writer.write(source, sink);
 	}
 
