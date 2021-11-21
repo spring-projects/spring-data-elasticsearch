@@ -56,6 +56,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author vdisk
  */
 public class CriteriaQueryMappingUnitTests {
 
@@ -440,6 +441,22 @@ public class CriteriaQueryMappingUnitTests {
 		softly.assertThat(sourceFilter).isNotNull();
 		softly.assertThat(sourceFilter.getIncludes()).containsExactly("first-name");
 		softly.assertThat(sourceFilter.getExcludes()).containsExactly("last-name");
+		softly.assertAll();
+	}
+
+	@Test
+	@DisplayName("should map names in source stored fields")
+	void shouldMapNamesInSourceStoredFields() {
+
+		Query query = Query.findAll();
+		query.addStoredFields("firstName", "lastName");
+
+		mappingElasticsearchConverter.updateQuery(query, Person.class);
+
+		SoftAssertions softly = new SoftAssertions();
+		List<String> storedFields = query.getStoredFields();
+		softly.assertThat(storedFields).isNotNull();
+		softly.assertThat(storedFields).containsExactly("first-name", "last-name");
 		softly.assertAll();
 	}
 

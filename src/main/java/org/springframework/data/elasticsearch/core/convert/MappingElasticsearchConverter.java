@@ -84,6 +84,7 @@ import org.springframework.util.ObjectUtils;
  * @author Subhobrata Dey
  * @author Marc Vanbrabant
  * @author Anton Naydenov
+ * @author vdisk
  * @since 3.2
  */
 public class MappingElasticsearchConverter
@@ -1146,6 +1147,11 @@ public class MappingElasticsearchConverter
 
 			if (!fields.isEmpty()) {
 				query.setFields(updateFieldNames(fields, persistentEntity));
+			}
+
+			List<String> storedFields = query.getStoredFields();
+			if (!CollectionUtils.isEmpty(storedFields)) {
+				query.setStoredFields(updateFieldNames(storedFields, persistentEntity));
 			}
 
 			SourceFilter sourceFilter = query.getSourceFilter();

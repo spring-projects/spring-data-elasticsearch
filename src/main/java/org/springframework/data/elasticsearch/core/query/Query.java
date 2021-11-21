@@ -41,6 +41,7 @@ import org.springframework.util.Assert;
  * @author Farid Azaza
  * @author Peter-Josef Meisch
  * @author Peer Mueller
+ * @author vdisk
  */
 public interface Query {
 
@@ -107,6 +108,28 @@ public interface Query {
 	 * @since 4.3
 	 */
 	void setFields(List<String> fields);
+
+	/**
+	 * Add stored fields to be added as part of search request
+	 *
+	 * @param storedFields
+	 */
+	void addStoredFields(String... storedFields);
+
+	/**
+	 * Get stored fields to be returned as part of search request
+	 *
+	 * @return null if not set
+	 */
+	@Nullable
+	List<String> getStoredFields();
+
+	/**
+	 * Set stored fields to be returned as part of search request
+	 *
+	 * @param storedFields
+	 */
+	void setStoredFields(@Nullable List<String> storedFields);
 
 	/**
 	 * Add source filter to be added as part of search request
