@@ -552,19 +552,24 @@ class RequestFactoryTests {
 	@DisplayName("should set stored fields on SearchRequest")
 	void shouldSetStoredFieldsOnSearchRequest() {
 
-		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withStoredFields("lastName", "location").build();
+		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withStoredFields("lastName", "location")
+				.build();
 
 		SearchRequest searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons"));
 
 		assertThat(searchRequest.source().storedFields()).isNotNull();
-		assertThat(searchRequest.source().storedFields().fieldNames()).isEqualTo(Arrays.asList("last-name", "current-location"));
+		assertThat(searchRequest.source().storedFields().fieldNames())
+				.isEqualTo(Arrays.asList("last-name", "current-location"));
 	}
 
 	// region entities
 	static class Person {
-		@Nullable @Id String id;
-		@Nullable @Field(name = "last-name") String lastName;
-		@Nullable @Field(name = "current-location") GeoPoint location;
+		@Nullable
+		@Id String id;
+		@Nullable
+		@Field(name = "last-name") String lastName;
+		@Nullable
+		@Field(name = "current-location") GeoPoint location;
 
 		public Person() {}
 

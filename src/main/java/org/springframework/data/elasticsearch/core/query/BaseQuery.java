@@ -113,9 +113,11 @@ public class BaseQuery implements Query {
 
 	@Override
 	public void addStoredFields(String... storedFields) {
+
 		if (storedFields.length == 0) {
 			return;
 		}
+
 		if (this.storedFields == null) {
 			this.storedFields = new ArrayList<>(storedFields.length);
 		}

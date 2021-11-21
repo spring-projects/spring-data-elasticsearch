@@ -474,28 +474,38 @@ public class CriteriaQueryMappingUnitTests {
 
 	// region test entities
 	static class Person {
-		@Nullable @Id String id;
-		@Nullable @Field(name = "first-name") String firstName;
-		@Nullable @Field(name = "last-name") String lastName;
-		@Nullable @MultiField(mainField = @Field(name = "nick-name"),
+		@Nullable
+		@Id String id;
+		@Nullable
+		@Field(name = "first-name") String firstName;
+		@Nullable
+		@Field(name = "last-name") String lastName;
+		@Nullable
+		@MultiField(mainField = @Field(name = "nick-name"),
 				otherFields = { @InnerField(suffix = "keyword", type = FieldType.Keyword) }) String nickName;
-		@Nullable @Field(name = "created-date", type = FieldType.Date, format = DateFormat.epoch_millis) Date createdDate;
-		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = {},
-				pattern = "dd.MM.uuuu") LocalDate birthDate;
+		@Nullable
+		@Field(name = "created-date", type = FieldType.Date, format = DateFormat.epoch_millis) Date createdDate;
+		@Nullable
+		@Field(name = "birth-date", type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate birthDate;
 	}
 
 	static class House {
-		@Nullable @Id String id;
-		@Nullable @Field(name = "per-sons", type = FieldType.Nested) List<Person> persons;
+		@Nullable
+		@Id String id;
+		@Nullable
+		@Field(name = "per-sons", type = FieldType.Nested) List<Person> persons;
 	}
 
 	static class ObjectWithPerson {
-		@Nullable @Id String id;
-		@Nullable @Field(name = "per-sons", type = FieldType.Object) List<Person> persons;
+		@Nullable
+		@Id String id;
+		@Nullable
+		@Field(name = "per-sons", type = FieldType.Object) List<Person> persons;
 	}
 
 	static class GeoShapeEntity {
-		@Nullable @Field(name = "geo-shape-field") GeoJson<?> geoShapeField;
+		@Nullable
+		@Field(name = "geo-shape-field") GeoJson<?> geoShapeField;
 	}
 	// endregion
 }

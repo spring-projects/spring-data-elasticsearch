@@ -113,6 +113,7 @@ public interface Query {
 	 * Add stored fields to be added as part of search request
 	 *
 	 * @param storedFields
+	 * @since 4.4
 	 */
 	void addStoredFields(String... storedFields);
 
@@ -120,6 +121,7 @@ public interface Query {
 	 * Get stored fields to be returned as part of search request
 	 *
 	 * @return null if not set
+	 * @since 4.4
 	 */
 	@Nullable
 	List<String> getStoredFields();
@@ -128,6 +130,7 @@ public interface Query {
 	 * Set stored fields to be returned as part of search request
 	 *
 	 * @param storedFields
+	 * @since 4.4
 	 */
 	void setStoredFields(@Nullable List<String> storedFields);
 

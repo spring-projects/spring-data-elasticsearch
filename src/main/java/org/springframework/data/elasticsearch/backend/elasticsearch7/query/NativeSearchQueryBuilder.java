@@ -244,7 +244,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @since 4.4
+	 */
 	public NativeSearchQueryBuilder withStoredFields(Collection<String> storedFields) {
+
 		if (this.storedFields == null) {
 			this.storedFields = new ArrayList<>(storedFields);
 		} else {
@@ -253,7 +257,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	/**
+	 * @since 4.4
+	 */
 	public NativeSearchQueryBuilder withStoredFields(String... storedFields) {
+
 		if (this.storedFields == null) {
 			this.storedFields = new ArrayList<>(storedFields.length);
 		}
