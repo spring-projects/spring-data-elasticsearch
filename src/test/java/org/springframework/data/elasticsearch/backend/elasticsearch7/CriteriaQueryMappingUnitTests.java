@@ -443,6 +443,22 @@ public class CriteriaQueryMappingUnitTests {
 		softly.assertAll();
 	}
 
+	@Test
+	@DisplayName("should map names in source stored fields")
+	void shouldMapNamesInSourceStoredFields() {
+
+		Query query = Query.findAll();
+		query.addStoredFields("firstName", "lastName");
+
+		mappingElasticsearchConverter.updateQuery(query, Person.class);
+
+		SoftAssertions softly = new SoftAssertions();
+		List<String> storedFields = query.getStoredFields();
+		softly.assertThat(storedFields).isNotNull();
+		softly.assertThat(storedFields).containsExactly("first-name", "last-name");
+		softly.assertAll();
+	}
+
 	// endregion
 
 	// region helper functions

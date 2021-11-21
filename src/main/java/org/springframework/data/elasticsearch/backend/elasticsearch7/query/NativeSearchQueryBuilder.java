@@ -67,6 +67,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private List<HighlightBuilder.Field> highlightFields = new ArrayList<>();
 	private Pageable pageable = Pageable.unpaged();
 	@Nullable private List<String> fields = new ArrayList<>();
+	@Nullable protected List<String> storedFields;
 	@Nullable private SourceFilter sourceFilter;
 	@Nullable private CollapseBuilder collapseBuilder;
 	@Nullable private List<IndexBoost> indicesBoost = new ArrayList<>();
@@ -242,6 +243,23 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withStoredFields(Collection<String> storedFields) {
+		if (this.storedFields == null) {
+			this.storedFields = new ArrayList<>(storedFields);
+		} else {
+			this.storedFields.addAll(storedFields);
+		}
+		return this;
+	}
+
+	public NativeSearchQueryBuilder withStoredFields(String... storedFields) {
+		if (this.storedFields == null) {
+			this.storedFields = new ArrayList<>(storedFields.length);
+		}
+		Collections.addAll(this.storedFields, storedFields);
+		return this;
+	}
+
 	public NativeSearchQueryBuilder withSourceFilter(SourceFilter sourceFilter) {
 		this.sourceFilter = sourceFilter;
 		return this;
@@ -340,6 +358,10 @@ public class NativeSearchQueryBuilder {
 
 		if (fields != null) {
 			nativeSearchQuery.setFields(fields);
+		}
+
+		if (storedFields != null) {
+			nativeSearchQuery.setStoredFields(storedFields);
 		}
 
 		if (sourceFilter != null) {

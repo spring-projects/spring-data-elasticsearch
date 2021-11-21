@@ -49,6 +49,7 @@ public class BaseQuery implements Query {
 	protected Pageable pageable = DEFAULT_PAGE;
 	@Nullable protected Sort sort;
 	protected List<String> fields = new ArrayList<>();
+	@Nullable protected List<String> storedFields;
 	@Nullable protected SourceFilter sourceFilter;
 	protected float minScore;
 	@Nullable protected Collection<String> ids;
@@ -107,6 +108,28 @@ public class BaseQuery implements Query {
 
 		this.fields.clear();
 		this.fields.addAll(fields);
+	}
+
+	@Override
+	public void addStoredFields(String... storedFields) {
+		if (storedFields.length == 0) {
+			return;
+		}
+		if (this.storedFields == null) {
+			this.storedFields = new ArrayList<>(storedFields.length);
+		}
+		addAll(this.storedFields, storedFields);
+	}
+
+	@Nullable
+	@Override
+	public List<String> getStoredFields() {
+		return storedFields;
+	}
+
+	@Override
+	public void setStoredFields(@Nullable List<String> storedFields) {
+		this.storedFields = storedFields;
 	}
 
 	@Override

@@ -1148,6 +1148,11 @@ public class MappingElasticsearchConverter
 				query.setFields(updateFieldNames(fields, persistentEntity));
 			}
 
+			List<String> storedFields = query.getStoredFields();
+			if (!CollectionUtils.isEmpty(storedFields)) {
+				query.setStoredFields(updateFieldNames(storedFields, persistentEntity));
+			}
+
 			SourceFilter sourceFilter = query.getSourceFilter();
 
 			if (sourceFilter != null) {

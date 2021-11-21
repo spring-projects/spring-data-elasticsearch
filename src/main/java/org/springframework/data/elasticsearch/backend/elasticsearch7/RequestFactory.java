@@ -670,6 +670,10 @@ public class RequestFactory {
 			query.getFields().forEach(sourceBuilder::fetchField);
 		}
 
+		if (!isEmpty(query.getStoredFields())) {
+			sourceBuilder.storedFields(query.getStoredFields());
+		}
+
 		if (query.getIndicesOptions() != null) {
 			request.indicesOptions(toElasticsearchIndicesOptions(query.getIndicesOptions()));
 		}
