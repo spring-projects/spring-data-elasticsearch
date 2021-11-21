@@ -73,6 +73,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  * @author Peer Mueller
+ * @author vdisk
  */
 @SuppressWarnings("ConstantConditions")
 @ExtendWith(MockitoExtension.class)

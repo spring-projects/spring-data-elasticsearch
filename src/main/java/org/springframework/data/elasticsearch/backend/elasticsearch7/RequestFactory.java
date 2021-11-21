@@ -116,6 +116,7 @@ import org.springframework.util.StringUtils;
  * @author Subhobrata Dey
  * @author Farid Faoudi
  * @author Peer Mueller
+ * @author vdisk
  * @since 4.0
  */
 // todo make package private again after refactoring

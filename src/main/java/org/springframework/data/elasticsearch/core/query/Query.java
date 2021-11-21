@@ -41,6 +41,7 @@ import org.springframework.util.Assert;
  * @author Farid Azaza
  * @author Peter-Josef Meisch
  * @author Peer Mueller
+ * @author vdisk
  */
 public interface Query {
 

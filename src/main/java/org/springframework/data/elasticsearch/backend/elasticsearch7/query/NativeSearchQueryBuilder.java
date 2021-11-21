@@ -54,6 +54,7 @@ import org.springframework.lang.Nullable;
  * @author Farid Azaza
  * @author Peter-Josef Meisch
  * @author Peer Mueller
+ * @author vdisk
  */
 public class NativeSearchQueryBuilder {
 

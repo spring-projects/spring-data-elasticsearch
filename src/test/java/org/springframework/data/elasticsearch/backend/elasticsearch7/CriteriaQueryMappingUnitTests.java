@@ -56,6 +56,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author vdisk
  */
 public class CriteriaQueryMappingUnitTests {
 
