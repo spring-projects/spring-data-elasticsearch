@@ -19,21 +19,16 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -87,7 +82,10 @@ import org.springframework.util.Assert;
  */
 public class MappingElasticsearchConverterUnitTests {
 
-	static final String JSON_STRING = "{\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Car\",\"name\":\"Grat\",\"model\":\"Ford\"}";
+	static final Set<String> JSON_STRING = new HashSet<String>(){{
+		add("{\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Car\",\"name\":\"Grat\",\"model\":\"Ford\"}");
+		add("{\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Car\",\"model\":\"Ford\",\"name\":\"Grat\"}");
+	}};
 	static final String CAR_MODEL = "Ford";
 	static final String CAR_NAME = "Grat";
 	MappingElasticsearchConverter mappingElasticsearchConverter;
@@ -262,8 +260,7 @@ public class MappingElasticsearchConverterUnitTests {
 		car.setModel(CAR_MODEL);
 		car.setName(CAR_NAME);
 		String jsonResult = mappingElasticsearchConverter.mapObject(car).toJson();
-
-		assertThat(jsonResult).isEqualTo(JSON_STRING);
+		assertThat(JSON_STRING.contains(jsonResult)).isTrue();
 	}
 
 	@Test // DATAES-530
@@ -271,7 +268,7 @@ public class MappingElasticsearchConverterUnitTests {
 		// Given
 
 		// When
-		Car result = mappingElasticsearchConverter.read(Car.class, Document.parse(JSON_STRING));
+		Car result = mappingElasticsearchConverter.read(Car.class, Document.parse(JSON_STRING.iterator().next()));
 
 		// Then
 		assertThat(result).isNotNull();
@@ -2086,7 +2083,7 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 	}
 
-	static class Car {
+	static class Car implements Serializable {
 		@Nullable private String name;
 		@Nullable private String model;
 
