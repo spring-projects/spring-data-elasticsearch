@@ -19,7 +19,6 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -28,7 +27,6 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
 
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -2083,7 +2081,7 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 	}
 
-	static class Car implements Serializable {
+	static class Car {
 		@Nullable private String name;
 		@Nullable private String model;
 
