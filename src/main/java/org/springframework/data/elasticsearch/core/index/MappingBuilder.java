@@ -349,7 +349,7 @@ public class MappingBuilder {
 				}
 
 				if (isNestedOrObjectProperty) {
-					Iterator<? extends TypeInformation<?>> iterator = property.getPersistentEntityTypes().iterator();
+					Iterator<? extends TypeInformation<?>> iterator = property.getPersistentEntityTypeInformation().iterator();
 					ElasticsearchPersistentEntity<?> persistentEntity = iterator.hasNext()
 							? elasticsearchConverter.getMappingContext().getPersistentEntity(iterator.next())
 							: null;

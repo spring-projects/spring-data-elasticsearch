@@ -58,7 +58,7 @@ public class Range<T> {
 	 * @param <T>
 	 * @param value must not be {@literal null}.
 	 * @return
-	 * @see Range#closed(T, T)
+	 * @see Range#closed(Object, Object) 
 	 */
 	public static <T> Range<T> just(T value) {
 		return Range.closed(value, value);
@@ -231,8 +231,8 @@ public class Range<T> {
 	}
 
 	/**
-	 * Value object representing a boundary. A boundary can either be {@link #unbounded() unbounded}, {@link #inclusive(T)
-	 * including its value} or {@link #exclusive(T) its value}.
+	 * Value object representing a boundary. A boundary can either be {@link #unbounded() unbounded}, {@link #inclusive(Object)} 
+	 * including its value} or {@link #exclusive(Object)}  its value}.
 	 */
 	public static final class Bound<T> {
 

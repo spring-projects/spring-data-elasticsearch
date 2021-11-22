@@ -126,7 +126,6 @@ public interface ReactiveSearchOperations {
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
-	 * @param <T>
 	 * @return a {@link Mono} emitting matching entities in a {@link SearchHits}.
 	 * @since 4.1
 	 */
@@ -140,7 +139,6 @@ public interface ReactiveSearchOperations {
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param resultType the projection result type.
-	 * @param <T>
 	 * @return a {@link Mono} emitting matching entities in a {@link SearchHits}.
 	 * @since 4.1
 	 */
@@ -152,7 +150,6 @@ public interface ReactiveSearchOperations {
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
-	 * @param <T>
 	 * @return a {@link Mono} emitting matching entities in a {@link SearchHits}.
 	 * @since 4.1
 	 */

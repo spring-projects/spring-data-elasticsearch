@@ -17,9 +17,9 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 
 import static org.springframework.util.StringUtils.*;
 
-import javax.annotation.PreDestroy;
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.inject.Produces;
+import jakarta.annotation.PreDestroy;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.enterprise.inject.Produces;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;

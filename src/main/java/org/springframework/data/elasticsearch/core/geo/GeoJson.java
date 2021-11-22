@@ -20,8 +20,8 @@ import org.springframework.data.elasticsearch.core.convert.GeoConverters;
 import org.springframework.data.elasticsearch.core.document.Document;
 
 /**
- * Interface definition for structures defined in <a href="https://geojson.org/">GeoJSON</a> format. copied from Spring
- * Data Mongodb
+ * Interface definition for structures defined in <a href="https://geojson.org">GeoJSON</a>
+ * format. copied from Spring  Data Mongodb
  *
  * @author Christoph Strobl
  * @since 1.7

@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.enterprise.inject.se.SeContainer;
-import javax.enterprise.inject.se.SeContainerInitializer;
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,7 +49,7 @@ import org.springframework.lang.Nullable;
 @IntegrationTest
 public class CdiRepositoryTests {
 
-	@Nullable private static SeContainer container;
+	@SuppressWarnings("NotNullFieldNotInitialized") private static SeContainer container;
 
 	// @Nullable private static CdiTestContainer cdiContainer;
 	private CdiProductRepository repository;
@@ -67,10 +67,7 @@ public class CdiRepositoryTests {
 
 	@AfterAll
 	public static void shutdown() throws Exception {
-
-		if (container != null) {
-			container.close();
-		}
+		container.close();
 	}
 
 	@BeforeEach
