@@ -18,17 +18,21 @@ package org.springframework.data.elasticsearch.repository.cdi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
-import javax.enterprise.event.Observes;
-import javax.enterprise.inject.UnsatisfiedResolutionException;
-import javax.enterprise.inject.spi.AfterBeanDiscovery;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.ProcessBean;
+import jakarta.enterprise.event.Observes;
+import jakarta.enterprise.inject.UnsatisfiedResolutionException;
+import jakarta.enterprise.inject.spi.AfterBeanDiscovery;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.inject.spi.ProcessBean;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.repository.cdi.CdiRepositoryBean;
 import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
@@ -43,14 +47,24 @@ import org.springframework.data.repository.cdi.CdiRepositoryExtensionSupport;
  */
 public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupport {
 
+	private static final Log LOGGER = LogFactory.getLog(ElasticsearchRepositoryExtension.class);
+
 	private final Map<Set<Annotation>, Bean<ElasticsearchOperations>> elasticsearchOperationsMap = new HashMap<>();
 
 	@SuppressWarnings("unchecked")
 	<T> void processBean(@Observes ProcessBean<T> processBean) {
+
 		Bean<T> bean = processBean.getBean();
+
 		for (Type type : bean.getTypes()) {
 			if (type instanceof Class<?> && ElasticsearchOperations.class.isAssignableFrom((Class<?>) type)) {
-				elasticsearchOperationsMap.put(bean.getQualifiers(), ((Bean<ElasticsearchOperations>) bean));
+
+				if (LOGGER.isDebugEnabled()) {
+					LOGGER.debug(String.format("Discovered %s with qualifiers %s.", ElasticsearchOperations.class.getName(),
+							bean.getQualifiers()));
+				}
+
+				elasticsearchOperationsMap.put(new HashSet<>(bean.getQualifiers()), ((Bean<ElasticsearchOperations>) bean));
 			}
 		}
 	}
@@ -62,22 +76,27 @@ public class ElasticsearchRepositoryExtension extends CdiRepositoryExtensionSupp
 			Set<Annotation> qualifiers = entry.getValue();
 
 			CdiRepositoryBean<?> repositoryBean = createRepositoryBean(repositoryType, qualifiers, beanManager);
-			afterBeanDiscovery.addBean(repositoryBean);
+
+			if (LOGGER.isInfoEnabled()) {
+				LOGGER.info(String.format("Registering bean for %s with qualifiers %s.", repositoryType.getName(), qualifiers));
+			}
+
 			registerBean(repositoryBean);
+			afterBeanDiscovery.addBean(repositoryBean);
 		}
 	}
 
 	private <T> CdiRepositoryBean<T> createRepositoryBean(Class<T> repositoryType, Set<Annotation> qualifiers,
 			BeanManager beanManager) {
 
-		if (!this.elasticsearchOperationsMap.containsKey(qualifiers)) {
+		Bean<ElasticsearchOperations> elasticsearchOperations = this.elasticsearchOperationsMap.get(qualifiers);
+
+		if (elasticsearchOperations == null) {
 			throw new UnsatisfiedResolutionException(String.format("Unable to resolve a bean for '%s' with qualifiers %s.",
 					ElasticsearchOperations.class.getName(), qualifiers));
 		}
 
-		Bean<ElasticsearchOperations> elasticsearchOperationsBean = this.elasticsearchOperationsMap.get(qualifiers);
-
-		return new ElasticsearchRepositoryBean<>(elasticsearchOperationsBean, qualifiers, repositoryType, beanManager,
-				getCustomImplementationDetector());
+		return new ElasticsearchRepositoryBean<>(elasticsearchOperations, qualifiers, repositoryType, beanManager,
+				Optional.of(getCustomImplementationDetector()));
 	}
 }

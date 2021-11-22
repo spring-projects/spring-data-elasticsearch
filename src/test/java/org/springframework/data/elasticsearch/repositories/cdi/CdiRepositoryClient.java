@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 import org.springframework.lang.Nullable;
 
