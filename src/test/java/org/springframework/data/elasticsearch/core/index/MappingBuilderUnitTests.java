@@ -38,6 +38,8 @@ import java.util.Map;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONCompare;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
@@ -950,7 +952,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should add fields that are excluded from source")
 	void shouldAddFieldsThatAreExcludedFromSource() throws JSONException {
 
-		String expected = "{\n" + //
+		String expected1 = "{\n" + //
 				"  \"properties\": {\n" + //
 				"    \"_class\": {\n" + //
 				"      \"type\": \"keyword\",\n" + //
@@ -982,10 +984,43 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"    ]\n" + //
 				"  }\n" + //
 				"}\n"; //
+		String expected2 = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"excluded-date\": {\n" + //
+				"      \"type\": \"date\",\n" + //
+				"      \"format\": \"date\"\n" + //
+				"    },\n" + //
+				"    \"nestedEntity\": {\n" + //
+				"      \"type\": \"nested\",\n" + //
+				"      \"properties\": {\n" + //
+				"        \"_class\": {\n" + //
+				"          \"type\": \"keyword\",\n" + //
+				"          \"index\": false,\n" + //
+				"          \"doc_values\": false\n" + //
+				"        },\n" + //
+				"        \"excluded-text\": {\n" + //
+				"          \"type\": \"text\"\n" + //
+				"        }\n" + //
+				"      }\n" + //
+				"    }\n" + //
+				"  },\n" + //
+				"  \"_source\": {\n" + //
+				"    \"excludes\": [\n" + //
+				"      \"nestedEntity.excluded-text\",\n" + //
+				"      \"excluded-date\"\n" + //
+				"    ]\n" + //
+				"  }\n" + //
+				"}\n"; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ExcludedFieldEntity.class);
 
-		assertEquals(expected, mapping, true);
+		assertThat(JSONCompare.compareJSON(expected1, mapping, JSONCompareMode.STRICT).passed()
+				|| JSONCompare.compareJSON(expected2, mapping, JSONCompareMode.STRICT).passed()).isTrue();
 	}
 
 	// region entities
