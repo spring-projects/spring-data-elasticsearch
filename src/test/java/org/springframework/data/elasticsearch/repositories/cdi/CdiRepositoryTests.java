@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.enterprise.inject.se.SeContainer;
-import javax.enterprise.inject.se.SeContainerInitializer;
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -49,7 +49,7 @@ import org.springframework.lang.Nullable;
 @IntegrationTest
 public class CdiRepositoryTests {
 
-	@Nullable private static SeContainer container;
+	@SuppressWarnings("NotNullFieldNotInitialized") private static SeContainer container;
 
 	// @Nullable private static CdiTestContainer cdiContainer;
 	private CdiProductRepository repository;
@@ -67,10 +67,7 @@ public class CdiRepositoryTests {
 
 	@AfterAll
 	public static void shutdown() throws Exception {
-
-		if (container != null) {
-			container.close();
-		}
+		container.close();
 	}
 
 	@BeforeEach
@@ -155,14 +152,16 @@ public class CdiRepositoryTests {
 
 	@Document(indexName = "test-index-product-cdi-repository")
 	static class Product {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private List<String> title;
 		@Nullable private String name;
 		@Nullable private String description;
 		@Nullable private String text;
 		@Nullable private List<String> categories;
 		@Nullable private Float weight;
-		@Nullable @Field(type = FieldType.Float) private Float price;
+		@Nullable
+		@Field(type = FieldType.Float) private Float price;
 		@Nullable private Integer popularity;
 		@Nullable private boolean available;
 		@Nullable private String location;
@@ -291,11 +290,15 @@ public class CdiRepositoryTests {
 
 	@Document(indexName = "test-index-book-cdi-repository")
 	static class Book {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @Field(type = FieldType.Object) private Author author;
-		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable
+		@Field(type = FieldType.Object) private Author author;
+		@Nullable
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
 

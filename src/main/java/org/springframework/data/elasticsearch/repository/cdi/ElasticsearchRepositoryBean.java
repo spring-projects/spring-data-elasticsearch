@@ -19,9 +19,9 @@ import java.lang.annotation.Annotation;
 import java.util.Optional;
 import java.util.Set;
 
-import javax.enterprise.context.spi.CreationalContext;
-import javax.enterprise.inject.spi.Bean;
-import javax.enterprise.inject.spi.BeanManager;
+import jakarta.enterprise.context.spi.CreationalContext;
+import jakarta.enterprise.inject.spi.Bean;
+import jakarta.enterprise.inject.spi.BeanManager;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.support.ElasticsearchRepositoryFactory;
@@ -49,12 +49,12 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 	 * @param repositoryType must not be {@literal null}.
 	 * @param beanManager must not be {@literal null}.
 	 * @param detector detector for the custom {@link org.springframework.data.repository.Repository} implementations
-	 *          {@link CustomRepositoryImplementationDetector}, can be {@literal null}.
+	 *          {@link CustomRepositoryImplementationDetector}, can be {@link Optional#empty()}.
 	 */
 	public ElasticsearchRepositoryBean(Bean<ElasticsearchOperations> operations, Set<Annotation> qualifiers,
-			Class<T> repositoryType, BeanManager beanManager, CustomRepositoryImplementationDetector detector) {
+			Class<T> repositoryType, BeanManager beanManager, Optional<CustomRepositoryImplementationDetector> detector) {
 
-		super(qualifiers, repositoryType, beanManager, Optional.of(detector));
+		super(qualifiers, repositoryType, beanManager, detector);
 
 		Assert.notNull(operations, "Cannot create repository with 'null' for ElasticsearchOperations.");
 		this.elasticsearchOperationsBean = operations;
@@ -62,7 +62,7 @@ public class ElasticsearchRepositoryBean<T> extends CdiRepositoryBean<T> {
 
 	/*
 	 * (non-Javadoc)
-	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(javax.enterprise.context.spi.CreationalContext, java.lang.Class)
+	 * @see org.springframework.data.repository.cdi.CdiRepositoryBean#create(jakarta.enterprise.context.spi.CreationalContext, java.lang.Class)
 	 */
 	@Override
 	protected T create(CreationalContext<T> creationalContext, Class<T> repositoryType) {

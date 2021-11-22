@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-elasticsearch</artifactId>
-	<version>4.4.0-SNAPSHOT</version>
+	<version>5.0.0-SNAPSHOT</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>2.7.0-SNAPSHOT</version>
+		<version>3.0.0-SNAPSHOT</version>
 	</parent>
 
 	<name>Spring Data Elasticsearch</name>
@@ -21,7 +22,7 @@
 		<elasticsearch>7.15.2</elasticsearch>
 		<log4j>2.14.1</log4j>
 		<netty>4.1.65.Final</netty>
-		<springdata.commons>2.7.0-SNAPSHOT</springdata.commons>
+		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
 		<testcontainers>1.15.3</testcontainers>
 		<blockhound-junit>1.0.6.RELEASE</blockhound-junit>
 		<java-module-name>spring.data.elasticsearch</java-module-name>
@@ -174,23 +175,40 @@
 		</dependency>
 
 		<dependency>
-			<groupId>javax.enterprise</groupId>
-			<artifactId>cdi-api</artifactId>
+			<groupId>jakarta.enterprise</groupId>
+			<artifactId>jakarta.enterprise.cdi-api</artifactId>
 			<version>${cdi}</version>
 			<scope>provided</scope>
 			<optional>true</optional>
 		</dependency>
 
 		<dependency>
-			<groupId>javax.annotation</groupId>
-			<artifactId>javax.annotation-api</artifactId>
-			<version>${javax-annotation-api}</version>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<version>${jakarta-annotation-api}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.openwebbeans</groupId>
 			<artifactId>openwebbeans-se</artifactId>
+			<classifier>jakarta</classifier>
+			<version>${webbeans}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.openwebbeans</groupId>
+			<artifactId>openwebbeans-spi</artifactId>
+			<classifier>jakarta</classifier>
+			<version>${webbeans}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.openwebbeans</groupId>
+			<artifactId>openwebbeans-impl</artifactId>
+			<classifier>jakarta</classifier>
 			<version>${webbeans}</version>
 			<scope>test</scope>
 		</dependency>
@@ -420,7 +438,9 @@
 								</module>
 							</checkstyleRules>
 							<includes>**/*</includes>
-							<excludes>.git/**/*,target/**/*,**/target/**/*,.idea/**/*,**/spring.schemas,**/*.svg,mvnw,mvnw.cmd,**/*.policy</excludes>
+							<excludes>
+								.git/**/*,target/**/*,**/target/**/*,.idea/**/*,**/spring.schemas,**/*.svg,mvnw,mvnw.cmd,**/*.policy
+							</excludes>
 							<sourceDirectories>./</sourceDirectories>
 						</configuration>
 					</plugin>
