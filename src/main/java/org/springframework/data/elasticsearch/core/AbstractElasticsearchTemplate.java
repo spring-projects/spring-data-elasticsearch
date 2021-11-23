@@ -148,7 +148,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	/**
 	 * Set the {@link EntityCallbacks} instance to use when invoking {@link EntityCallbacks callbacks} like the
 	 * {@link org.springframework.data.elasticsearch.core.event.BeforeConvertCallback}.
-	 * <p />
 	 * Overrides potentially existing {@link EntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.

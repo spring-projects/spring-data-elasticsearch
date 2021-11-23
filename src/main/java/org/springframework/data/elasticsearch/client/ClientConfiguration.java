@@ -55,7 +55,6 @@ public interface ClientConfiguration {
 
 	/**
 	 * Creates a new {@link ClientConfiguration} instance configured to localhost.
-	 * <p/>
 	 *
 	 * <pre class="code">
 	 * // "localhost:9200"
@@ -71,7 +70,6 @@ public interface ClientConfiguration {
 
 	/**
 	 * Creates a new {@link ClientConfiguration} instance configured to a single host given {@code hostAndPort}.
-	 * <p/>
 	 * For example given the endpoint http://localhost:9200
 	 *
 	 * <pre class="code">
@@ -86,7 +84,6 @@ public interface ClientConfiguration {
 
 	/**
 	 * Creates a new {@link ClientConfiguration} instance configured to a single host given {@link InetSocketAddress}.
-	 * <p/>
 	 * For example given the endpoint http://localhost:9200
 	 *
 	 * <pre class="code">

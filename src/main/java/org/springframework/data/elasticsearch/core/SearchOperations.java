@@ -205,7 +205,6 @@ public interface SearchOperations {
 
 	/**
 	 * Executes the given {@link Query} against elasticsearch and return result as {@link SearchHitsIterator}.
-	 * <p>
 	 *
 	 * @param <T> element return type
 	 * @param query the query to execute
@@ -218,7 +217,6 @@ public interface SearchOperations {
 
 	/**
 	 * Executes the given {@link Query} against elasticsearch and return result as {@link SearchHitsIterator}.
-	 * <p>
 	 *
 	 * @param <T> element return type
 	 * @param query the query to execute
