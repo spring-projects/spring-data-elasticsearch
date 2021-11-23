@@ -28,8 +28,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 /**
  * Provider for {@link WebClient}s using a pre-configured {@code scheme}. This class returns {@link WebClient} for a
  * specific {@link InetSocketAddress endpoint} and encapsulates common configuration aspects of {@link WebClient} so
- * that code using {@link WebClient} is not required to apply further configuration to the actual client.
- * <p/>
+ * that code using {@link WebClient} is not required to apply further configuration to the actual client. <br/>
  * Client instances are typically cached allowing reuse of pooled connections if configured on the
  * {@link ClientHttpConnector}.
  *

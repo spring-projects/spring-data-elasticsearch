@@ -211,7 +211,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	/**
 	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking {@link ReactiveEntityCallbacks callbacks}
 	 * like the {@link ReactiveBeforeConvertCallback}.
-	 * <p />
+	 * <br/>
 	 * Overrides potentially existing {@link ReactiveEntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.
