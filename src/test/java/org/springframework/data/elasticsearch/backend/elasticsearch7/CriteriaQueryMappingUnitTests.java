@@ -56,6 +56,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author vdisk
  */
 public class CriteriaQueryMappingUnitTests {
 
@@ -443,6 +444,22 @@ public class CriteriaQueryMappingUnitTests {
 		softly.assertAll();
 	}
 
+	@Test
+	@DisplayName("should map names in source stored fields")
+	void shouldMapNamesInSourceStoredFields() {
+
+		Query query = Query.findAll();
+		query.addStoredFields("firstName", "lastName");
+
+		mappingElasticsearchConverter.updateQuery(query, Person.class);
+
+		SoftAssertions softly = new SoftAssertions();
+		List<String> storedFields = query.getStoredFields();
+		softly.assertThat(storedFields).isNotNull();
+		softly.assertThat(storedFields).containsExactly("first-name", "last-name");
+		softly.assertAll();
+	}
+
 	// endregion
 
 	// region helper functions
@@ -457,28 +474,38 @@ public class CriteriaQueryMappingUnitTests {
 
 	// region test entities
 	static class Person {
-		@Nullable @Id String id;
-		@Nullable @Field(name = "first-name") String firstName;
-		@Nullable @Field(name = "last-name") String lastName;
-		@Nullable @MultiField(mainField = @Field(name = "nick-name"),
+		@Nullable
+		@Id String id;
+		@Nullable
+		@Field(name = "first-name") String firstName;
+		@Nullable
+		@Field(name = "last-name") String lastName;
+		@Nullable
+		@MultiField(mainField = @Field(name = "nick-name"),
 				otherFields = { @InnerField(suffix = "keyword", type = FieldType.Keyword) }) String nickName;
-		@Nullable @Field(name = "created-date", type = FieldType.Date, format = DateFormat.epoch_millis) Date createdDate;
-		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = {},
-				pattern = "dd.MM.uuuu") LocalDate birthDate;
+		@Nullable
+		@Field(name = "created-date", type = FieldType.Date, format = DateFormat.epoch_millis) Date createdDate;
+		@Nullable
+		@Field(name = "birth-date", type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate birthDate;
 	}
 
 	static class House {
-		@Nullable @Id String id;
-		@Nullable @Field(name = "per-sons", type = FieldType.Nested) List<Person> persons;
+		@Nullable
+		@Id String id;
+		@Nullable
+		@Field(name = "per-sons", type = FieldType.Nested) List<Person> persons;
 	}
 
 	static class ObjectWithPerson {
-		@Nullable @Id String id;
-		@Nullable @Field(name = "per-sons", type = FieldType.Object) List<Person> persons;
+		@Nullable
+		@Id String id;
+		@Nullable
+		@Field(name = "per-sons", type = FieldType.Object) List<Person> persons;
 	}
 
 	static class GeoShapeEntity {
-		@Nullable @Field(name = "geo-shape-field") GeoJson<?> geoShapeField;
+		@Nullable
+		@Field(name = "geo-shape-field") GeoJson<?> geoShapeField;
 	}
 	// endregion
 }

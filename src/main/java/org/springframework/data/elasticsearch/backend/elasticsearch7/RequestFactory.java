@@ -116,6 +116,7 @@ import org.springframework.util.StringUtils;
  * @author Subhobrata Dey
  * @author Farid Faoudi
  * @author Peer Mueller
+ * @author vdisk
  * @since 4.0
  */
 // todo make package private again after refactoring
@@ -668,6 +669,10 @@ public class RequestFactory {
 
 		if (!query.getFields().isEmpty()) {
 			query.getFields().forEach(sourceBuilder::fetchField);
+		}
+
+		if (!isEmpty(query.getStoredFields())) {
+			sourceBuilder.storedFields(query.getStoredFields());
 		}
 
 		if (query.getIndicesOptions() != null) {

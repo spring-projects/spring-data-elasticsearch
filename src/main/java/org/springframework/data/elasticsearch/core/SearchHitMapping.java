@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -50,8 +48,6 @@ import org.springframework.util.Assert;
  * @since 4.0
  */
 public class SearchHitMapping<T> {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(SearchHitMapping.class);
 
 	private final Class<T> type;
 	private final ElasticsearchConverter converter;

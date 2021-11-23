@@ -21,8 +21,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -51,16 +51,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
-import org.springframework.data.mapping.model.EntityInstantiator;
-import org.springframework.data.mapping.model.EntityInstantiators;
-import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
-import org.springframework.data.mapping.model.PropertyValueProvider;
-import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
-import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
+import org.springframework.data.mapping.model.*;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.format.datetime.DateFormatterRegistrar;
@@ -83,6 +74,8 @@ import org.springframework.util.ObjectUtils;
  * @author Konrad Kurdej
  * @author Subhobrata Dey
  * @author Marc Vanbrabant
+ * @author Anton Naydenov
+ * @author vdisk
  * @since 3.2
  */
 public class MappingElasticsearchConverter
@@ -91,11 +84,10 @@ public class MappingElasticsearchConverter
 	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions.";
 	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(MappingElasticsearchConverter.class);
+	private static final Log LOGGER = LogFactory.getLog(MappingElasticsearchConverter.class);
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	private final GenericConversionService conversionService;
-	// don't access directly, use getConversions(). to prevent null access
 	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
 	private final SpELContext spELContext = new SpELContext(new MapAccessor());
 	private final EntityInstantiators instantiators = new EntityInstantiators();
@@ -146,14 +138,10 @@ public class MappingElasticsearchConverter
 		this.conversions = conversions;
 	}
 
-	private CustomConversions getConversions() {
-		return conversions;
-	}
-
 	@Override
 	public void afterPropertiesSet() {
 		DateFormatterRegistrar.addDateConverters(conversionService);
-		getConversions().registerConvertersIn(conversionService);
+		conversions.registerConvertersIn(conversionService);
 	}
 
 	// region read/write
@@ -161,7 +149,7 @@ public class MappingElasticsearchConverter
 	@Override
 	public <R> R read(Class<R> type, Document source) {
 
-		Reader reader = new Reader(mappingContext, conversionService, getConversions(), spELContext, instantiators);
+		Reader reader = new Reader(mappingContext, conversionService, conversions, spELContext, instantiators);
 		return reader.read(type, source);
 	}
 
@@ -170,7 +158,7 @@ public class MappingElasticsearchConverter
 
 		Assert.notNull(source, "source to map must not be null");
 
-		Writer writer = new Writer(mappingContext, conversionService, getConversions());
+		Writer writer = new Writer(mappingContext, conversionService, conversions);
 		writer.write(source, sink);
 	}
 
@@ -436,10 +424,10 @@ public class MappingElasticsearchConverter
 				String key = propertyName + "-read";
 				int count = propertyWarnings.computeIfAbsent(key, k -> 0);
 				if (count < 5) {
-					LOGGER.warn(
-							"Type {} of property {} is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for reading!"
+					LOGGER.warn(String.format(
+							"Type %s of property %s is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for reading!"
 									+ " It cannot be mapped from a complex object in Elasticsearch!",
-							property.getType().getSimpleName(), propertyName);
+							property.getType().getSimpleName(), propertyName));
 					propertyWarnings.put(key, count + 1);
 				}
 			}
@@ -909,10 +897,10 @@ public class MappingElasticsearchConverter
 					String key = propertyName + "-write";
 					int count = propertyWarnings.computeIfAbsent(key, k -> 0);
 					if (count < 5) {
-						LOGGER.warn(
-								"Type {} of property {} is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for writing!"
+						LOGGER.warn(String.format(
+								"Type %s of property %s is a TemporalAccessor class but has neither a @Field annotation defining the date type nor a registered converter for writing!"
 										+ " It will be mapped to a complex object in Elasticsearch!",
-								property.getType().getSimpleName(), propertyName);
+								property.getType().getSimpleName(), propertyName));
 						propertyWarnings.put(key, count + 1);
 					}
 				} else if (!isSimpleType(value)) {
@@ -1150,6 +1138,11 @@ public class MappingElasticsearchConverter
 
 			if (!fields.isEmpty()) {
 				query.setFields(updateFieldNames(fields, persistentEntity));
+			}
+
+			List<String> storedFields = query.getStoredFields();
+			if (!CollectionUtils.isEmpty(storedFields)) {
+				query.setStoredFields(updateFieldNames(storedFields, persistentEntity));
 			}
 
 			SourceFilter sourceFilter = query.getSourceFilter();

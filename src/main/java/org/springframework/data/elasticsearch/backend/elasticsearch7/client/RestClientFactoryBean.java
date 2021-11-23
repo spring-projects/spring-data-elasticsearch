@@ -18,11 +18,11 @@ package org.springframework.data.elasticsearch.backend.elasticsearch7.client;
 import java.net.URL;
 import java.util.ArrayList;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
@@ -38,7 +38,7 @@ import org.springframework.util.Assert;
  */
 public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, InitializingBean, DisposableBean {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(RestClientFactoryBean.class);
+	private static final Log LOGGER = LogFactory.getLog(RestClientFactoryBean.class);
 
 	private @Nullable RestHighLevelClient client;
 	private String hosts = "http://localhost:9200";
