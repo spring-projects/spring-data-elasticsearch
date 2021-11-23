@@ -53,6 +53,10 @@ import org.elasticsearch.action.support.IndicesOptions;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.cluster.metadata.AliasMetadata;
 import org.elasticsearch.index.VersionType;
+import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.join.query.HasChildQueryBuilder;
+import org.elasticsearch.join.query.JoinQueryBuilders;
 import org.elasticsearch.join.query.ParentIdQueryBuilder;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
@@ -2986,6 +2990,46 @@ public abstract class ElasticsearchTemplateTests {
 
 		// cleanup
 		indexOperations.removeAlias(aliasQuery);
+	}
+
+	@Test // #1997
+	@DisplayName("should return document with inner hits size zero")
+	void shouldReturnDocumentWithInnerHitsSizeZero() {
+
+		// given
+		SampleJoinEntity sampleQuestionEntity1 = new SampleJoinEntity();
+		sampleQuestionEntity1.setUuid("q1");
+		sampleQuestionEntity1.setText("This is a question");
+		sampleQuestionEntity1.setMyJoinField(new JoinField<>("question"));
+
+		SampleJoinEntity sampleAnswerEntity1 = new SampleJoinEntity();
+		sampleAnswerEntity1.setUuid("a1");
+		sampleAnswerEntity1.setText("This is an answer");
+		sampleAnswerEntity1.setMyJoinField(new JoinField<>("answer", sampleQuestionEntity1.getUuid()));
+
+		SampleJoinEntity sampleAnswerEntity2 = new SampleJoinEntity();
+		sampleAnswerEntity1.setUuid("a2");
+		sampleAnswerEntity1.setText("This is an answer");
+		sampleAnswerEntity1.setMyJoinField(new JoinField<>("answer", sampleQuestionEntity1.getUuid()));
+
+		IndexOperations indexOps = operations.indexOps(SampleJoinEntity.class);
+		operations.save(Arrays.asList(sampleQuestionEntity1, sampleAnswerEntity1, sampleAnswerEntity2));
+		indexOps.refresh();
+
+		// when
+		Query query = new NativeSearchQueryBuilder().withQuery(
+				JoinQueryBuilders.hasChildQuery("answer", matchAllQuery(), org.apache.lucene.search.join.ScoreMode.Avg)
+						.innerHit(new InnerHitBuilder("innerHits").setSize(0)))
+				.build();
+
+		SearchHits<SampleJoinEntity> searchHits = operations.search(query, SampleJoinEntity.class);
+
+		// then
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHits()).hasSize(1);
+		assertThat(searchHits.getSearchHit(0).getInnerHits().size()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getInnerHits("innerHits").getTotalHits()).isEqualTo(1);
 	}
 
 	@Test // DATAES-541
