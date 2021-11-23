@@ -62,7 +62,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @author George Popides
- * @since 4.0
+ * @since 4.4
  */
 class RestIndexTemplate extends AbstractIndexTemplate implements IndexOperations {
 

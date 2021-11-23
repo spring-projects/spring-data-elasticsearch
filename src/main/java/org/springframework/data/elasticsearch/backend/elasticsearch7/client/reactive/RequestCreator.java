@@ -58,7 +58,7 @@ import org.springframework.data.elasticsearch.backend.elasticsearch7.client.util
  * @author Roman Puchkovskiy
  * @author Farid Faoudi
  * @author George Popides
- * @since 4.0
+ * @since 4.4
  */
 public interface RequestCreator {
 

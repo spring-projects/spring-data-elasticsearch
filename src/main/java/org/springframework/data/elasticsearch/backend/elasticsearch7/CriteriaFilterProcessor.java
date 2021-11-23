@@ -47,6 +47,7 @@ import org.springframework.util.Assert;
  * @author Mohsin Husen
  * @author Artur Konczak
  * @author Peter-Josef Meisch
+ * @since 4.4
  */
 class CriteriaFilterProcessor {
 

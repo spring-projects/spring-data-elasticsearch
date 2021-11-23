@@ -42,7 +42,7 @@ import org.springframework.util.Assert;
  * created with the {@link #from(SearchResponse,Function)} method.
  *
  * @author Peter-Josef Meisch
- * @since 4.0
+ * @since 4.4
  */
 public class SearchDocumentResponse {
 

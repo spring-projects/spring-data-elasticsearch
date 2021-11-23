@@ -117,7 +117,7 @@ import org.springframework.util.StringUtils;
  * @author Farid Faoudi
  * @author Peer Mueller
  * @author vdisk
- * @since 4.0
+ * @since 4.4
  */
 // todo make package private again after refactoring
 public class RequestFactory {

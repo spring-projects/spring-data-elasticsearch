@@ -43,7 +43,7 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  * @author Mark Paluch
- * @since 3.2
+ * @since 4.4
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
 

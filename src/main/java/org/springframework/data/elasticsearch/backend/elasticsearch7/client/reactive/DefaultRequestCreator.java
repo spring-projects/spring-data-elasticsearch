@@ -17,6 +17,6 @@ package org.springframework.data.elasticsearch.backend.elasticsearch7.client.rea
 
 /**
  * @author Roman Puchkovskiy
- * @since 4.0
+ * @since 4.4
  */
 class DefaultRequestCreator implements RequestCreator {}
