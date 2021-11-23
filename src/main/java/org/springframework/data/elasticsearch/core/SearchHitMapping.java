@@ -23,8 +23,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.search.aggregations.Aggregations;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.NestedMetaData;
@@ -44,11 +43,10 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Roman Puchkovskiy
  * @author Matt Gilene
+ * @author Sascha Woo
  * @since 4.0
  */
 class SearchHitMapping<T> {
-
-	private static final Logger LOGGER = LoggerFactory.getLogger(SearchHitMapping.class);
 
 	private final Class<T> type;
 	private final ElasticsearchConverter converter;
@@ -173,7 +171,7 @@ class SearchHitMapping<T> {
 	 */
 	private SearchHits<?> mapInnerDocuments(SearchHits<SearchDocument> searchHits, Class<T> type) {
 
-		if (searchHits.getTotalHits() == 0) {
+		if (searchHits.isEmpty()) {
 			return searchHits;
 		}
 
@@ -217,7 +215,7 @@ class SearchHitMapping<T> {
 						searchHits.getAggregations());
 			}
 		} catch (Exception e) {
-			LOGGER.warn("Could not map inner_hits", e);
+			throw new UncategorizedElasticsearchException("Unable to convert inner hits.", e);
 		}
 
 		return searchHits;
