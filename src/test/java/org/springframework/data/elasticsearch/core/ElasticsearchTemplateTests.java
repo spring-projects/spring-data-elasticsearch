@@ -2783,6 +2783,33 @@ public abstract class ElasticsearchTemplateTests {
 		assertThat(searchHits.getSearchHit(1).getInnerHits("innerHits").getTotalHits()).isEqualTo(1);
 	}
 
+	@Test // #1997
+	@DisplayName("should return document with inner hits size zero")
+	void shouldReturnDocumentWithInnerHitsSizeZero() {
+
+		// given
+		SampleEntity sampleEntity = SampleEntity.builder().id(nextIdAsString()).message("message 1").rate(1)
+				.version(System.currentTimeMillis()).build();
+
+		List<IndexQuery> indexQueries = getIndexQueries(Arrays.asList(sampleEntity));
+
+		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
+
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
+				.withCollapseBuilder(new CollapseBuilder("rate").setInnerHits(new InnerHitBuilder("innerHits").setSize(0)))
+				.build();
+
+		// when
+		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
+				IndexCoordinates.of(indexNameProvider.indexName()));
+
+		// then
+		assertThat(searchHits).isNotNull();
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHits()).hasSize(1);
+		assertThat(searchHits.getSearchHit(0).getContent().getMessage()).isEqualTo("message 1");
+	}
+
 	private IndexQuery getIndexQuery(SampleEntity sampleEntity) {
 		return new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity)
 				.withVersion(sampleEntity.getVersion()).build();
