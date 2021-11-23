@@ -59,6 +59,7 @@ import org.springframework.util.Assert;
  * @author Henrique Amaral
  * @author Peter-Josef Meisch
  * @author Nic Hines
+ * @author vdisk
  * @since 3.2
  */
 public final class RestClients {
@@ -98,12 +99,7 @@ public final class RestClients {
 			clientConfiguration.getHostNameVerifier().ifPresent(clientBuilder::setSSLHostnameVerifier);
 			clientBuilder.addInterceptorLast(new CustomHeaderInjector(clientConfiguration.getHeadersSupplier()));
 
-			if (ClientLogger.isEnabled()) {
-				HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-
-				clientBuilder.addInterceptorLast((HttpRequestInterceptor) interceptor);
-				clientBuilder.addInterceptorLast((HttpResponseInterceptor) interceptor);
-			}
+			addLoggingInterceptor(clientBuilder);
 
 			Builder requestConfigBuilder = RequestConfig.custom();
 			Duration connectTimeout = clientConfiguration.getConnectTimeout();
@@ -136,6 +132,19 @@ public final class RestClients {
 
 		RestHighLevelClient client = new RestHighLevelClient(builder);
 		return () -> client;
+	}
+
+	/**
+	 * Add a {@link HttpLoggingInterceptor} to the clientBuilder
+	 *
+	 * @param clientBuilder
+	 * @since 4.4
+	 */
+	public static void addLoggingInterceptor(HttpAsyncClientBuilder clientBuilder) {
+		HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+
+		clientBuilder.addInterceptorLast((HttpRequestInterceptor) interceptor);
+		clientBuilder.addInterceptorLast((HttpResponseInterceptor) interceptor);
 	}
 
 	private static Header[] toHeaderArray(HttpHeaders headers) {
@@ -188,6 +197,9 @@ public final class RestClients {
 
 		@Override
 		public void process(HttpRequest request, HttpContext context) throws IOException {
+			if (!ClientLogger.isEnabled()) {
+				return;
+			}
 
 			String logId = (String) context.getAttribute(RestClients.LOG_ID_ATTRIBUTE);
 
@@ -216,6 +228,10 @@ public final class RestClients {
 
 		@Override
 		public void process(HttpResponse response, HttpContext context) {
+			if (!ClientLogger.isEnabled()) {
+				return;
+			}
+
 			String logId = (String) context.getAttribute(RestClients.LOG_ID_ATTRIBUTE);
 			ClientLogger.logRawResponse(logId, HttpStatus.resolve(response.getStatusLine().getStatusCode()));
 		}
