@@ -64,7 +64,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  * @author Matt Gilene
- * @since 4.0
+ * @since 4.4
  */
 public final class DocumentAdapters {
 

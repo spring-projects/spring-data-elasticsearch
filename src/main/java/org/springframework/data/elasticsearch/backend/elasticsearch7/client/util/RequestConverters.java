@@ -119,7 +119,7 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Farid Faoudi
- * @since 3.2
+ * @since 4.4
  */
 @SuppressWarnings("JavadocReference")
 public class RequestConverters {

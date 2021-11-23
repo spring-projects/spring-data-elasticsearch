@@ -23,7 +23,7 @@ import org.springframework.lang.NonNull;
  * AggregationContainer implementation for an Elasticsearch7 aggregation.
  *
  * @author Peter-Josef Meisch
- * @since 4.3
+ * @since 4.4
  */
 public class ElasticsearchAggregation implements AggregationContainer<Aggregation> {
 

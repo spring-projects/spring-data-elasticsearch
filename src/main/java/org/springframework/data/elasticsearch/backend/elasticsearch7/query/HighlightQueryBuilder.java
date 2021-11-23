@@ -35,6 +35,7 @@ import org.springframework.util.StringUtils;
  * Converts the {@link Highlight} annotation from a method to an Elasticsearch {@link HighlightBuilder}.
  *
  * @author Peter-Josef Meisch
+ * @since 4.4
  */
 public class HighlightQueryBuilder {
 

@@ -27,7 +27,7 @@ import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperat
  * Default implementation of {@link ReactiveClusterOperations} using the {@link ReactiveElasticsearchOperations}.
  *
  * @author Peter-Josef Meisch
- * @since 4.2
+ * @since 4.4
  */
 public class DefaultReactiveClusterOperations implements ReactiveClusterOperations {
 	private final ReactiveElasticsearchOperations operations;

@@ -27,7 +27,7 @@ import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
  * Default implementation of {@link ClusterOperations} using the {@link ElasticsearchRestTemplate}.
  *
  * @author Peter-Josef Meisch
- * @since 4.2
+ * @since 4.4
  */
 class DefaultClusterOperations implements ClusterOperations {
 

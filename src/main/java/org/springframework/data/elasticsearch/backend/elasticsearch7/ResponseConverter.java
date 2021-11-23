@@ -56,7 +56,7 @@ import org.springframework.util.Assert;
  *
  * @author George Popides
  * @author Peter-Josef Meisch
- * @since 4.2
+ * @since 4.4
  */
 public class ResponseConverter {
 	private ResponseConverter() {}

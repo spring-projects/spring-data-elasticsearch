@@ -21,7 +21,7 @@ import org.elasticsearch.search.SearchHits;
  * Utility class to prevent leaking of Lucene API into Spring Data Elasticsearch.
  *
  * @author Peter-Josef Meisch
- * @since 4.0
+ * @since 4.4
  */
 public final class SearchHitsUtil {
 	private SearchHitsUtil() {}

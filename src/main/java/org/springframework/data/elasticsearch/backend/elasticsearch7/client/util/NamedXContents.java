@@ -91,7 +91,7 @@ import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reac
  * Only intended for internal use.
  *
  * @author Russell Parry
- * @since 4.0
+ * @since 4.4
  */
 public class NamedXContents {
 

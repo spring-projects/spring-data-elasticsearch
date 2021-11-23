@@ -55,6 +55,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Peer Mueller
  * @author vdisk
+ * @since 4.4
  */
 public class NativeSearchQueryBuilder {
 
@@ -105,17 +106,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withSorts(Collection<SortBuilder<?>> sortBuilders) {
 		this.sortBuilders.addAll(sortBuilders);
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withSorts(SortBuilder<?>... sortBuilders) {
 		Collections.addAll(this.sortBuilders, sortBuilders);
 		return this;
@@ -131,9 +126,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withCollapseBuilder(@Nullable CollapseBuilder collapseBuilder) {
 		this.collapseBuilder = collapseBuilder;
 		return this;
@@ -148,17 +140,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withAggregations(Collection<AbstractAggregationBuilder<?>> aggregationBuilders) {
 		this.aggregationBuilders.addAll(aggregationBuilders);
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withAggregations(AbstractAggregationBuilder<?>... aggregationBuilders) {
 		Collections.addAll(this.aggregationBuilders, aggregationBuilders);
 		return this;
@@ -173,18 +159,12 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withPipelineAggregations(
 			Collection<PipelineAggregationBuilder> pipelineAggregationBuilders) {
 		this.pipelineAggregationBuilders.addAll(pipelineAggregationBuilders);
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withPipelineAggregations(PipelineAggregationBuilder... pipelineAggregationBuilders) {
 		Collections.addAll(this.pipelineAggregationBuilders, pipelineAggregationBuilders);
 		return this;
@@ -200,9 +180,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withHighlightFields(Collection<HighlightBuilder.Field> highlightFields) {
 		this.highlightFields.addAll(highlightFields);
 		return this;
@@ -213,9 +190,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withIndicesBoost(IndexBoost... indicesBoost) {
 		Collections.addAll(this.indicesBoost, indicesBoost);
 		return this;
@@ -231,9 +205,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withFields(Collection<String> fields) {
 		this.fields.addAll(fields);
 		return this;
@@ -244,9 +215,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.4
-	 */
 	public NativeSearchQueryBuilder withStoredFields(Collection<String> storedFields) {
 
 		if (this.storedFields == null) {
@@ -257,9 +225,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.4
-	 */
 	public NativeSearchQueryBuilder withStoredFields(String... storedFields) {
 
 		if (this.storedFields == null) {
@@ -282,7 +247,6 @@ public class NativeSearchQueryBuilder {
 	/**
 	 * @param trackScores whether to track scores.
 	 * @return this object
-	 * @since 3.1
 	 */
 	public NativeSearchQueryBuilder withTrackScores(boolean trackScores) {
 		this.trackScores = trackScores;
@@ -294,9 +258,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withIds(String... ids) {
 		Collections.addAll(this.ids, ids);
 		return this;
@@ -327,9 +288,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.2
-	 */
 	public NativeSearchQueryBuilder withTrackTotalHits(Boolean trackTotalHits) {
 		this.trackTotalHits = trackTotalHits;
 		return this;
@@ -345,9 +303,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	/**
-	 * @since 4.3
-	 */
 	public NativeSearchQueryBuilder withSuggestBuilder(SuggestBuilder suggestBuilder) {
 		this.suggestBuilder = suggestBuilder;
 		return this;
