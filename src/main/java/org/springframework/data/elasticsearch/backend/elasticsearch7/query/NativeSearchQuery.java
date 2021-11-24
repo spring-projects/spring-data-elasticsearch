@@ -43,6 +43,7 @@ import org.springframework.lang.Nullable;
  * @author Jean-Baptiste Nizet
  * @author Martin Choraine
  * @author Peter-Josef Meisch
+ * @since 4.4
  */
 public class NativeSearchQuery extends BaseQuery {
 

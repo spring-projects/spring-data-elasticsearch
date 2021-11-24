@@ -20,6 +20,7 @@ import org.elasticsearch.script.Script;
 /**
  * @author Ryan Murfitt
  * @author Artur Konczak
+ * @since 4.4
  */
 public class ScriptField {
 

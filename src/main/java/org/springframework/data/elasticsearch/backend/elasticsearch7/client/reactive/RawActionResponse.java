@@ -32,7 +32,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Mark Paluch
- * @since 3.2
+ * @since 4.4
  */
 // todo make package private again after refactoring?
 public class RawActionResponse extends ActionResponse {

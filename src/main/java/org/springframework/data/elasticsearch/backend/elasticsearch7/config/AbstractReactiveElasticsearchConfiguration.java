@@ -28,7 +28,7 @@ import org.springframework.lang.Nullable;
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
- * @since 3.2
+ * @since 4.4
  * @see ElasticsearchConfigurationSupport
  */
 public abstract class AbstractReactiveElasticsearchConfiguration extends ElasticsearchConfigurationSupport {

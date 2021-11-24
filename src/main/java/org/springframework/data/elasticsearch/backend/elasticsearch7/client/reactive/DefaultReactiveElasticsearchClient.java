@@ -147,7 +147,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @author Brian Clozel
  * @author Farid Faoudi
  * @author George Popides
- * @since 3.2
+ * @since 4.4
  * @see ClientConfiguration
  * @see ReactiveRestClients
  */

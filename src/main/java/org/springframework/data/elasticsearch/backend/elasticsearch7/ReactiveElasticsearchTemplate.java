@@ -105,7 +105,7 @@ import org.springframework.util.Assert;
  * @author Russell Parry
  * @author Thomas Geese
  * @author Farid Faoudi
- * @since 3.2
+ * @since 4.4
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations, ApplicationContextAware {
 

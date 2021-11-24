@@ -77,7 +77,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Henrique Amaral
  * @author Thomas Geese
  * @author Farid Faoudi
- * @since 3.2
+ * @since 4.4
  * @see ClientConfiguration
  * @see ReactiveRestClients
  */

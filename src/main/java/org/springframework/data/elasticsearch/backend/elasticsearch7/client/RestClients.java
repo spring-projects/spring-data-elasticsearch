@@ -60,7 +60,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Nic Hines
  * @author vdisk
- * @since 3.2
+ * @since 4.4
  */
 public final class RestClients {
 

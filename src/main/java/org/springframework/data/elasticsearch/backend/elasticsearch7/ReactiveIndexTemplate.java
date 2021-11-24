@@ -65,7 +65,7 @@ import org.springframework.util.Assert;
 /**
  * @author Peter-Josef Meisch
  * @author George Popides
- * @since 4.1
+ * @since 4.4
  */
 class ReactiveIndexTemplate implements ReactiveIndexOperations {
 
