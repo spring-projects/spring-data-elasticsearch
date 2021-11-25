@@ -99,7 +99,9 @@ public final class RestClients {
 			clientConfiguration.getHostNameVerifier().ifPresent(clientBuilder::setSSLHostnameVerifier);
 			clientBuilder.addInterceptorLast(new CustomHeaderInjector(clientConfiguration.getHeadersSupplier()));
 
-			addLoggingInterceptor(clientBuilder);
+			if (ClientLogger.isEnabled()) {
+				addLoggingInterceptor(clientBuilder);
+			}
 
 			Builder requestConfigBuilder = RequestConfig.custom();
 			Duration connectTimeout = clientConfiguration.getConnectTimeout();
