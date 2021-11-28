@@ -99,12 +99,12 @@ public class SearchDocumentResponse {
 	 * creates a SearchDocumentResponse from the {@link SearchResponse}
 	 *
 	 * @param searchResponse must not be {@literal null}
-	 * @param suggestEntityCreator function to create an entity from a {@link SearchDocument}
+	 * @param entityCreator function to create an entity from a {@link SearchDocument}
 	 * @param <T> entity type
 	 * @return the SearchDocumentResponse
 	 */
 	public static <T> SearchDocumentResponse from(SearchResponse searchResponse,
-			Function<SearchDocument, T> suggestEntityCreator) {
+			Function<SearchDocument, T> entityCreator) {
 
 		Assert.notNull(searchResponse, "searchResponse must not be null");
 
@@ -113,7 +113,7 @@ public class SearchDocumentResponse {
 		Aggregations aggregations = searchResponse.getAggregations();
 		org.elasticsearch.search.suggest.Suggest suggest = searchResponse.getSuggest();
 
-		return from(searchHits, scrollId, aggregations, suggest, suggestEntityCreator);
+		return from(searchHits, scrollId, aggregations, suggest, entityCreator);
 	}
 
 	/**
@@ -123,14 +123,14 @@ public class SearchDocumentResponse {
 	 * @param scrollId scrollId
 	 * @param aggregations aggregations
 	 * @param suggestES the suggestion response from Elasticsearch
-	 * @param suggestEntityCreator function to create an entity from a {@link SearchDocument}
+	 * @param entityCreator function to create an entity from a {@link SearchDocument}
 	 * @param <T> entity type
 	 * @return the {@link SearchDocumentResponse}
 	 * @since 4.3
 	 */
 	public static <T> SearchDocumentResponse from(SearchHits searchHits, @Nullable String scrollId,
 			@Nullable Aggregations aggregations, @Nullable org.elasticsearch.search.suggest.Suggest suggestES,
-			Function<SearchDocument, T> suggestEntityCreator) {
+			Function<SearchDocument, T> entityCreator) {
 
 		TotalHits responseTotalHits = searchHits.getTotalHits();
 
@@ -154,7 +154,7 @@ public class SearchDocumentResponse {
 			}
 		}
 
-		Suggest suggest = suggestFrom(suggestES, suggestEntityCreator);
+		Suggest suggest = suggestFrom(suggestES, entityCreator);
 		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments, aggregations,
 				suggest);
 	}

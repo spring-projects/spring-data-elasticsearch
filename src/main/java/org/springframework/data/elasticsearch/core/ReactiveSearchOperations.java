@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -23,6 +22,7 @@ import java.util.List;
 
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
@@ -171,11 +171,67 @@ public interface ReactiveSearchOperations {
 	 * @param entityType must not be {@literal null}.
 	 * @param resultType the projection result type.
 	 * @param index the target index, must not be {@literal null}
-	 * @param <T>
 	 * @return a {@link Mono} emitting matching entities in a {@link SearchHits}.
 	 * @since 4.1
 	 */
 	<T> Mono<SearchPage<T>> searchForPage(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index);
+
+	/**
+	 * Perform a search and return the {@link ReactiveSearchHits} which contains information about the search results and
+	 * which will provide the documents by the {@link ReactiveSearchHits#getSearchHits()} method.
+	 *
+	 * @param <T> the result type class
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @return a {@link Mono} emitting the {@link ReactiveSearchHits} that contains the search result information
+	 * @since 4.4
+	 */
+	default <T> Mono<ReactiveSearchHits<T>> searchForHits(Query query, Class<T> entityType) {
+		return searchForHits(query, entityType, entityType);
+	}
+
+	/**
+	 * Perform a search and return the {@link ReactiveSearchHits} which contains information about the search results and
+	 * which will provide the documents by the {@link ReactiveSearchHits#getSearchHits()} method.
+	 *
+	 * @param <T> the result type class
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param resultType the projection result type.
+	 * @return a {@link Mono} emitting the {@link ReactiveSearchHits} that contains the search result information
+	 * @since 4.4
+	 */
+	<T> Mono<ReactiveSearchHits<T>> searchForHits(Query query, Class<?> entityType, Class<T> resultType);
+
+	/**
+	 * Perform a search and return the {@link ReactiveSearchHits} which contains information about the search results and
+	 * which will provide the documents by the {@link ReactiveSearchHits#getSearchHits()} method.
+	 *
+	 * @param <T> the result type class
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param index the target index, must not be {@literal null}
+	 * @return a {@link Mono} emitting the {@link ReactiveSearchHits} that contains the search result information
+	 * @since 4.4
+	 */
+	default <T> Mono<ReactiveSearchHits<T>> searchForHits(Query query, Class<T> entityType, IndexCoordinates index) {
+		return searchForHits(query, entityType, entityType, index);
+	}
+
+	/**
+	 * Perform a search and return the {@link ReactiveSearchHits} which contains information about the search results and
+	 * which will provide the documents by the {@link ReactiveSearchHits#getSearchHits()} method.
+	 *
+	 * @param <T> the result type class
+	 * @param query must not be {@literal null}.
+	 * @param entityType must not be {@literal null}.
+	 * @param resultType the projection result type.
+	 * @param index the target index, must not be {@literal null}
+	 * @return a {@link Mono} emitting the {@link ReactiveSearchHits} that contains the search result information
+	 * @since 4.4
+	 */
+	<T> Mono<ReactiveSearchHits<T>> searchForHits(Query query, Class<?> entityType, Class<T> resultType,
+			IndexCoordinates index);
 
 	/**
 	 * Perform an aggregation specified by the given {@link Query query}. <br />
