@@ -754,6 +754,31 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				.map(searchHits -> SearchHitSupport.searchPageFor(searchHits, query.getPageable()));
 	}
 
+	@Override
+	public <T> Mono<ReactiveSearchHits<T>> searchForHits(Query query, Class<?> entityType, Class<T> resultType) {
+		return searchForHits(query, entityType, resultType, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public <T> Mono<ReactiveSearchHits<T>> searchForHits(Query query, Class<?> entityType, Class<T> resultType,
+			IndexCoordinates index) {
+
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(entityType, "entityType must not be null");
+		Assert.notNull(resultType, "resultType must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>(resultType, index);
+
+		return doFindForResponse(query, entityType, index) //
+				.flatMap(searchDocumentResponse -> Flux.fromIterable(searchDocumentResponse.getSearchDocuments()) //
+						.flatMap(callback::toEntity) //
+						.collectList() //
+						.map(entities -> SearchHitMapping.mappingFor(resultType, converter) //
+								.mapHits(searchDocumentResponse, entities))) //
+				.map(ReactiveSearchHitSupport::searchHitsFor);
+	}
+
 	private Flux<SearchDocument> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		return Flux.defer(() -> {
@@ -777,8 +802,9 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			request = prepareSearchRequest(request, false);
 
 			SearchDocumentCallback<?> documentCallback = new ReadSearchDocumentCallback<>(clazz, index);
-
-			return doFindForResponse(request, searchDocument -> documentCallback.toEntity(searchDocument).block());
+			Function<SearchDocument, Object> entityCreator = searchDocument -> documentCallback.toEntity(searchDocument)
+					.block();
+			return doFindForResponse(request, entityCreator);
 		});
 	}
 
@@ -895,19 +921,18 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook on the actual execution result {@link Mono}. <br />
 	 *
 	 * @param request the already prepared {@link SearchRequest} ready to be executed.
-	 * @param suggestEntityCreator
+	 * @param entityCreator
 	 * @return a {@link Mono} emitting the result of the operation converted to s {@link SearchDocumentResponse}.
 	 */
 	protected Mono<SearchDocumentResponse> doFindForResponse(SearchRequest request,
-			Function<SearchDocument, ? extends Object> suggestEntityCreator) {
+			Function<SearchDocument, ? extends Object> entityCreator) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug(String.format("Executing doFindForResponse: %s", request));
 		}
 
-		return Mono.from(execute(client1 -> client1.searchForResponse(request))).map(searchResponse -> {
-			return SearchDocumentResponse.from(searchResponse, suggestEntityCreator);
-		});
+		return Mono.from(execute(client -> client.searchForResponse(request)))
+				.map(searchResponse -> SearchDocumentResponse.from(searchResponse, entityCreator));
 	}
 
 	/**

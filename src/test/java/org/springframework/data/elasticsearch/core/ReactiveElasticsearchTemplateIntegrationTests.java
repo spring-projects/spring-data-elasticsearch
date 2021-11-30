@@ -110,6 +110,7 @@ import org.springframework.util.StringUtils;
  * @author Roman Puchkovskiy
  * @author George Popides
  */
+@SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @SpringIntegrationTest
 public class ReactiveElasticsearchTemplateIntegrationTests {
 
@@ -1175,6 +1176,31 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 					assertThat(retrieved).isEqualTo(savedEntity.get());
 				}).verifyComplete();
 	}
+
+	@Test // #2015
+	@DisplayName("should return Mono of ReactiveSearchHits")
+	void shouldReturnMonoOfReactiveSearchHits() {
+		List<SampleEntity> entities = new ArrayList<>();
+		for (int i = 1; i <= 20; i++) {
+			entities.add(randomEntity("message " + i));
+		}
+
+		Query query = Query.findAll().setPageable(PageRequest.of(0, 7));
+
+		operations.saveAll(Mono.just(entities), SampleEntity.class).then().block();
+
+		Mono<ReactiveSearchHits<SampleEntity>> searchHitsMono = operations.searchForHits(query, SampleEntity.class);
+
+		searchHitsMono.as(StepVerifier::create) //
+				.consumeNextWith(reactiveSearchHits -> {
+					assertThat(reactiveSearchHits.getTotalHits()).isEqualTo(20);
+					reactiveSearchHits.getSearchHits().as(StepVerifier::create) //
+							.expectNextCount(7) //
+							.verifyComplete(); //
+				}) //
+				.verifyComplete();
+	}
+
 	// endregion
 
 	// region Helper functions
@@ -1249,10 +1275,13 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String message;
 		@Nullable private int rate;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 
 		@Nullable
 		public String getId() {
@@ -1324,7 +1353,8 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class OptimisticEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String message;
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 
@@ -1358,10 +1388,12 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class OptimisticAndVersionedEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String message;
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 
 		@Nullable
 		public String getId() {
@@ -1402,8 +1434,10 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class VersionedEntity {
-		@Nullable @Id private String id;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Version private Long version;
 
 		@Nullable
 		public String getId() {
@@ -1428,7 +1462,8 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Setting(settingPath = "settings/test-settings.json")
 	@Mapping(mappingPath = "mappings/test-mappings.json")
 	private static class EntityWithSettingsAndMappingsReactive {
-		@Nullable @Id String id;
+		@Nullable
+		@Id String id;
 
 		@Nullable
 		public String getId() {

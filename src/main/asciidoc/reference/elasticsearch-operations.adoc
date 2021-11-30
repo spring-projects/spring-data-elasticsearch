@@ -144,6 +144,9 @@ Returned by the low level scroll API functions in `ElasticsearchRestTemplate`, i
 .SearchHitsIterator<T>
 An Iterator returned by the streaming functions of the `SearchOperations` interface.
 
+.ReactiveSearchHits
+`ReactiveSearchOperations` has methods returning a `Mono<ReactiveSearchHits<T>>`, this contains the same information as a `SearchHits<T>` object, but will provide the contained `SearchHit<T>` objects as a `Flux<SearchHit<T>>` and not as a list.
+
 [[elasticsearch.operations.queries]]
 == Queries
 
