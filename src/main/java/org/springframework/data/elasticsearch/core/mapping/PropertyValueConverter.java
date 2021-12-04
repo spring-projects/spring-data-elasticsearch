@@ -24,7 +24,8 @@ package org.springframework.data.elasticsearch.core.mapping;
 public interface PropertyValueConverter {
 
 	/**
-	 * Converts a property value to an elasticsearch value.
+	 * Converts a property value to an elasticsearch value. If the converter cannot convert the value, it must return a
+	 * String representation.
 	 *
 	 * @param value the value to convert, must not be {@literal null}
 	 * @return The elasticsearch property value, must not be {@literal null}
