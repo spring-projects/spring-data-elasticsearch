@@ -76,7 +76,10 @@ public abstract class AbstractRangePropertyValueConverter<T> extends AbstractPro
 	public Object write(Object value) {
 
 		Assert.notNull(value, "value must not be null.");
-		Assert.isInstanceOf(Range.class, value, "value must be instance of Range.");
+
+		if (!Range.class.isAssignableFrom(value.getClass())) {
+			return value.toString();
+		}
 
 		try {
 			Range<T> range = (Range<T>) value;

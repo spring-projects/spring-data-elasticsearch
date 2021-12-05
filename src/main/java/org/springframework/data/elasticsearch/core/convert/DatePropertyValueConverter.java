@@ -58,6 +58,10 @@ public class DatePropertyValueConverter extends AbstractPropertyValueConverter {
 	@Override
 	public Object write(Object value) {
 
+		if (!Date.class.isAssignableFrom(value.getClass())) {
+			return value.toString();
+		}
+
 		try {
 			return dateConverters.get(0).format((Date) value);
 		} catch (Exception e) {

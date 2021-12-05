@@ -61,6 +61,10 @@ public class TemporalPropertyValueConverter extends AbstractPropertyValueConvert
 	@Override
 	public Object write(Object value) {
 
+		if (!TemporalAccessor.class.isAssignableFrom(value.getClass())) {
+			return value.toString();
+		}
+
 		try {
 			return dateConverters.get(0).format((TemporalAccessor) value);
 		} catch (Exception e) {
