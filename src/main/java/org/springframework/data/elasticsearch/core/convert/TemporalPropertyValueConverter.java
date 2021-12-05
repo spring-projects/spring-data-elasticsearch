@@ -50,9 +50,9 @@ public class TemporalPropertyValueConverter extends AbstractPropertyValueConvert
 			try {
 				return dateConverter.parse(s, (Class<? extends TemporalAccessor>) actualType);
 			} catch (Exception e) {
+
 				if (LOGGER.isTraceEnabled()) {
 					LOGGER.trace(e.getMessage(), e);
-
 				}
 			}
 		}
@@ -63,6 +63,10 @@ public class TemporalPropertyValueConverter extends AbstractPropertyValueConvert
 
 	@Override
 	public Object write(Object value) {
+
+		if (!TemporalAccessor.class.isAssignableFrom(value.getClass())) {
+			return value.toString();
+		}
 
 		try {
 			return dateConverters.get(0).format((TemporalAccessor) value);

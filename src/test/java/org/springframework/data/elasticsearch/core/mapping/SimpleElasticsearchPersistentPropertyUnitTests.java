@@ -265,23 +265,30 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	// region entities
 	static class FieldNameProperty {
-		@Nullable @Field(name = "by-name") String fieldProperty;
+		@Nullable
+		@Field(name = "by-name") String fieldProperty;
 	}
 
 	static class FieldValueProperty {
-		@Nullable @Field(value = "by-value") String fieldProperty;
+		@Nullable
+		@Field(value = "by-value") String fieldProperty;
 	}
 
 	static class MultiFieldProperty {
-		@Nullable @MultiField(mainField = @Field("mainfield"),
+		@Nullable
+		@MultiField(mainField = @Field("mainfield"),
 				otherFields = { @InnerField(suffix = "suff", type = FieldType.Keyword) }) String mainfieldProperty;
 	}
 
 	static class DatesProperty {
-		@Nullable @Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate localDate;
-		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
-		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date_time) Date legacyDate;
-		@Nullable @Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") List<LocalDate> localDateList;
+		@Nullable
+		@Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate localDate;
+		@Nullable
+		@Field(type = FieldType.Date, format = DateFormat.basic_date_time) LocalDateTime localDateTime;
+		@Nullable
+		@Field(type = FieldType.Date, format = DateFormat.basic_date_time) Date legacyDate;
+		@Nullable
+		@Field(type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") List<LocalDate> localDateList;
 	}
 
 	static class SeqNoPrimaryTermProperty {
@@ -344,8 +351,10 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	private static class EntityWithCustomValueConverters {
 		@Id private String id;
-		@Nullable @ValueConverter(ClassBasedValueConverter.class) private String fieldWithClassBasedConverter;
-		@Nullable @ValueConverter(EnumBasedValueConverter.class) private String fieldWithEnumBasedConverter;
+		@Nullable
+		@ValueConverter(ClassBasedValueConverter.class) private String fieldWithClassBasedConverter;
+		@Nullable
+		@ValueConverter(EnumBasedValueConverter.class) private String fieldWithEnumBasedConverter;
 	}
 
 	private static class ClassBasedValueConverter implements PropertyValueConverter {
