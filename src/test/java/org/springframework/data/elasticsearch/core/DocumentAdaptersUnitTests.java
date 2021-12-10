@@ -142,7 +142,7 @@ public class DocumentAdaptersUnitTests {
 		Map<String, DocumentField> fields = Collections.singletonMap("field",
 				new DocumentField("field", Collections.singletonList("value")));
 
-		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null, null);
+		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null);
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), null, fields);
 		searchHit.shard(shard);
 		searchHit.setSeqNo(1);
@@ -217,7 +217,7 @@ public class DocumentAdaptersUnitTests {
 
 		BytesArray source = new BytesArray("{\"field\":\"value\"}");
 
-		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null, null);
+		SearchShardTarget shard = new SearchShardTarget("node", new ShardId("index", "uuid", 42), null);
 		SearchHit searchHit = new SearchHit(123, "my-id", new Text("type"), null, null);
 		searchHit.shard(shard);
 		searchHit.sourceRef(source).score(42);

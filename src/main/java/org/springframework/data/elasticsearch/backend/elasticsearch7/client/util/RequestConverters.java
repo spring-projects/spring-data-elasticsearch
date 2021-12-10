@@ -80,14 +80,7 @@ import org.elasticsearch.common.Priority;
 import org.elasticsearch.common.Strings;
 import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.lucene.uid.Versions;
-import org.elasticsearch.common.xcontent.DeprecationHandler;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.ToXContent;
-import org.elasticsearch.common.xcontent.XContent;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentHelper;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.core.SuppressForbidden;
 import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.VersionType;
@@ -101,6 +94,13 @@ import org.elasticsearch.index.seqno.SequenceNumbers;
 import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.tasks.TaskId;
+import org.elasticsearch.xcontent.DeprecationHandler;
+import org.elasticsearch.xcontent.NamedXContentRegistry;
+import org.elasticsearch.xcontent.ToXContent;
+import org.elasticsearch.xcontent.XContent;
+import org.elasticsearch.xcontent.XContentBuilder;
+import org.elasticsearch.xcontent.XContentParser;
+import org.elasticsearch.xcontent.XContentType;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.http.HttpMethod;
 import org.springframework.lang.Nullable;
@@ -1232,7 +1232,12 @@ public class RequestConverters {
 			return this;
 		}
 
-		Params withIndicesOptions(IndicesOptions indicesOptions) {
+		Params withIndicesOptions(@Nullable IndicesOptions indicesOptions) {
+
+			if (indicesOptions == null) {
+				return this;
+			}
+
 			withIgnoreUnavailable(indicesOptions.ignoreUnavailable());
 			putParam("allow_no_indices", Boolean.toString(indicesOptions.allowNoIndices()));
 			String expandWildcards;
