@@ -25,13 +25,13 @@ import java.util.Map;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.common.xcontent.ToXContent;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilders;
 import org.elasticsearch.search.suggest.SuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
 import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
 import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
+import org.elasticsearch.xcontent.ToXContent;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -207,7 +207,8 @@ public abstract class CompletionWithContextsIntegrationTests {
 	 */
 	static class NonDocumentEntity {
 
-		@Nullable @Id private String someId;
+		@Nullable
+		@Id private String someId;
 		@Nullable private String someField1;
 		@Nullable private String someField2;
 
@@ -238,10 +239,12 @@ public abstract class CompletionWithContextsIntegrationTests {
 	static class ContextCompletionEntity {
 
 		public static final String LANGUAGE_CATEGORY = "language";
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
 
-		@Nullable @CompletionField(maxInputLength = 100, contexts = { @CompletionContext(name = LANGUAGE_CATEGORY,
+		@Nullable
+		@CompletionField(maxInputLength = 100, contexts = { @CompletionContext(name = LANGUAGE_CATEGORY,
 				type = CompletionContext.ContextMappingType.CATEGORY) }) private Completion suggest;
 
 		private ContextCompletionEntity() {}
