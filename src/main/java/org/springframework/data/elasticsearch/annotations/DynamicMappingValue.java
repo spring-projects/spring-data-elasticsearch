@@ -17,13 +17,23 @@ package org.springframework.data.elasticsearch.annotations;
 
 /**
  * values for the {@link DynamicMapping annotation}
- * 
+ *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @since 4.0
- * @deprecated since 4.3, use {@link Document#dynamic()} or {@link Field#dynamic()} instead. 
+ * @deprecated since 4.3, use {@link Document#dynamic()} or {@link Field#dynamic()} instead.
  */
 @Deprecated
 public enum DynamicMappingValue {
-	True, False, Strict
+	True("true"), False("false"), Strict("strict");
+
+	private final String mappedName;
+
+	DynamicMappingValue(String mappedName) {
+		this.mappedName = mappedName;
+	}
+
+	public String getMappedName() {
+		return mappedName;
+	}
 }
