@@ -308,8 +308,10 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "ignore-above-index")
 	static class IgnoreAboveEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Keyword, ignoreAbove = 10) private String message;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Keyword, ignoreAbove = 10) private String message;
 
 		@Nullable
 		public String getId() {
@@ -334,13 +336,17 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 		@Document(indexName = "fieldname-index")
 		static class IdEntity {
-			@Nullable @Id @Field("id-property") private String id;
+			@Nullable
+			@Id
+			@Field("id-property") private String id;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class TextEntity {
 
-			@Nullable @Id @Field("id-property") private String id;
+			@Nullable
+			@Id
+			@Field("id-property") private String id;
 
 			@Field(name = "text-property", type = FieldType.Text) //
 			@Nullable private String textProperty;
@@ -349,42 +355,57 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		@Document(indexName = "fieldname-index")
 		static class MappingEntity {
 
-			@Nullable @Id @Field("id-property") private String id;
+			@Nullable
+			@Id
+			@Field("id-property") private String id;
 
-			@Field("mapping-property") @Mapping(mappingPath = "/mappings/test-field-analyzed-mappings.json") //
+			@Field("mapping-property")
+			@Mapping(mappingPath = "/mappings/test-field-analyzed-mappings.json") //
 			@Nullable private byte[] mappingProperty;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class GeoPointEntity {
 
-			@Nullable @Id @Field("id-property") private String id;
+			@Nullable
+			@Id
+			@Field("id-property") private String id;
 
-			@Nullable @Field("geopoint-property") private GeoPoint geoPoint;
+			@Nullable
+			@Field("geopoint-property") private GeoPoint geoPoint;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class CircularEntity {
 
-			@Nullable @Id @Field("id-property") private String id;
+			@Nullable
+			@Id
+			@Field("id-property") private String id;
 
-			@Nullable @Field(name = "circular-property", type = FieldType.Object, ignoreFields = { "circular-property" }) //
+			@Nullable
+			@Field(name = "circular-property", type = FieldType.Object, ignoreFields = { "circular-property" }) //
 			private CircularEntity circularProperty;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class CompletionEntity {
 
-			@Nullable @Id @Field("id-property") private String id;
+			@Nullable
+			@Id
+			@Field("id-property") private String id;
 
-			@Nullable @Field("completion-property") @CompletionField(maxInputLength = 100) //
+			@Nullable
+			@Field("completion-property")
+			@CompletionField(maxInputLength = 100) //
 			private Completion suggest;
 		}
 
 		@Document(indexName = "fieldname-index")
 		static class MultiFieldEntity {
 
-			@Nullable @Id @Field("id-property") private String id;
+			@Nullable
+			@Id
+			@Field("id-property") private String id;
 
 			@Nullable //
 			@MultiField(mainField = @Field(name = "main-field", type = FieldType.Text, analyzer = "whitespace"),
@@ -396,11 +417,15 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "test-index-book-mapping-builder")
 	static class Book {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @Field(type = FieldType.Object) private Author author;
-		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable
+		@Field(type = FieldType.Object) private Author author;
+		@Nullable
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
 
@@ -452,9 +477,10 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "test-index-simple-recursive-mapping-builder")
 	static class SimpleRecursiveEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Object,
-				ignoreFields = { "circularObject" }) private SimpleRecursiveEntity circularObject;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Object, ignoreFields = { "circularObject" }) private SimpleRecursiveEntity circularObject;
 
 		@Nullable
 		public String getId() {
@@ -477,10 +503,14 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "test-copy-to-mapping-builder")
 	static class CopyToEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Keyword, copyTo = "name") private String firstName;
-		@Nullable @Field(type = FieldType.Keyword, copyTo = "name") private String lastName;
-		@Nullable @Field(type = FieldType.Keyword) private String name;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Keyword, copyTo = "name") private String firstName;
+		@Nullable
+		@Field(type = FieldType.Keyword, copyTo = "name") private String lastName;
+		@Nullable
+		@Field(type = FieldType.Keyword) private String name;
 
 		@Nullable
 		public String getId() {
@@ -522,9 +552,12 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-normalizer-mapping-builder")
 	@Setting(settingPath = "/settings/test-normalizer.json")
 	static class NormalizerEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Keyword, normalizer = "lower_case_normalizer") private String name;
-		@Nullable @MultiField(mainField = @Field(type = FieldType.Text), otherFields = { @InnerField(suffix = "lower_case",
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Keyword, normalizer = "lower_case_normalizer") private String name;
+		@Nullable
+		@MultiField(mainField = @Field(type = FieldType.Text), otherFields = { @InnerField(suffix = "lower_case",
 				type = FieldType.Keyword, normalizer = "lower_case_normalizer") }) private String description;
 
 		@Nullable
@@ -582,7 +615,8 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-sample-inherited-mapping-builder")
 	static class SampleInheritedEntity extends AbstractInheritedEntity {
 
-		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+		@Nullable
+		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
 
 		@Nullable
 		public String getMessage() {
@@ -627,9 +661,11 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "test-index-stock-mapping-builder")
 	static class StockPrice {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String symbol;
-		@Nullable @Field(type = FieldType.Double) private BigDecimal price;
+		@Nullable
+		@Field(type = FieldType.Double) private BigDecimal price;
 
 		@Nullable
 		public String getId() {
@@ -660,8 +696,10 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	}
 
 	static class AbstractInheritedEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Date, format = DateFormat.date_time, index = false) private Date createdDate;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Date, format = DateFormat.date_time, index = false) private Date createdDate;
 
 		@Nullable
 		public String getId() {
@@ -684,19 +722,25 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "test-index-geo-mapping-builder")
 	static class GeoEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		// geo shape - Spring Data
 		@Nullable private Box box;
 		@Nullable private Circle circle;
 		@Nullable private Polygon polygon;
 		// geo point - Custom implementation + Spring Data
-		@Nullable @GeoPointField private Point pointA;
+		@Nullable
+		@GeoPointField private Point pointA;
 		@Nullable private GeoPoint pointB;
-		@Nullable @GeoPointField private String pointC;
-		@Nullable @GeoPointField private double[] pointD;
+		@Nullable
+		@GeoPointField private String pointC;
+		@Nullable
+		@GeoPointField private double[] pointD;
 		// geo shape, until e have the classes for this, us a strng
-		@Nullable @GeoShapeField private String shape1;
-		@Nullable @GeoShapeField(coerce = true, ignoreMalformed = true, ignoreZValue = false,
+		@Nullable
+		@GeoShapeField private String shape1;
+		@Nullable
+		@GeoShapeField(coerce = true, ignoreMalformed = true, ignoreZValue = false,
 				orientation = GeoShapeField.Orientation.clockwise) private String shape2;
 
 		@Nullable
@@ -792,7 +836,8 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "test-index-user-mapping-builder")
 	static class User {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
 		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private Set<Group> groups = new HashSet<>();
 	}
@@ -800,7 +845,8 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	@Document(indexName = "test-index-group-mapping-builder")
 	static class Group {
 
-		@Nullable @Id String id;
+		@Nullable
+		@Id String id;
 
 		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private Set<User> users = new HashSet<>();
 	}
@@ -819,8 +865,10 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "completion")
 	static class CompletionDocument {
-		@Nullable @Id private String id;
-		@Nullable @CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@CompletionField(contexts = { @CompletionContext(name = "location", type = ContextMapping.Type.GEO,
 				path = "proppath") }) private Completion suggest;
 
 		@Nullable
@@ -844,7 +892,8 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "test-index-entity-with-seq-no-primary-term-mapping-builder")
 	static class EntityWithSeqNoPrimaryTerm {
-		@Nullable @Field(type = Object) private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Nullable
+		@Field(type = Object) private SeqNoPrimaryTerm seqNoPrimaryTerm;
 
 		@Nullable
 		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
@@ -857,10 +906,14 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	}
 
 	static class RankFeatureEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Rank_Feature) private Integer pageRank;
-		@Nullable @Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
-		@Nullable @Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Rank_Feature) private Integer pageRank;
+		@Nullable
+		@Field(type = FieldType.Rank_Feature, positiveScoreImpact = false) private Integer urlLength;
+		@Nullable
+		@Field(type = FieldType.Rank_Features) private Map<String, Integer> topics;
 
 		@Nullable
 		public String getId() {
@@ -901,16 +954,23 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "termvectors-test")
 	static class TermVectorFieldEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Text, termVector = TermVector.no) private String no;
-		@Nullable @Field(type = FieldType.Text, termVector = TermVector.yes) private String yes;
-		@Nullable @Field(type = FieldType.Text, termVector = TermVector.with_positions) private String with_positions;
-		@Nullable @Field(type = FieldType.Text, termVector = TermVector.with_offsets) private String with_offsets;
-		@Nullable @Field(type = FieldType.Text,
-				termVector = TermVector.with_positions_offsets) private String with_positions_offsets;
-		@Nullable @Field(type = FieldType.Text,
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Text, termVector = TermVector.no) private String no;
+		@Nullable
+		@Field(type = FieldType.Text, termVector = TermVector.yes) private String yes;
+		@Nullable
+		@Field(type = FieldType.Text, termVector = TermVector.with_positions) private String with_positions;
+		@Nullable
+		@Field(type = FieldType.Text, termVector = TermVector.with_offsets) private String with_offsets;
+		@Nullable
+		@Field(type = FieldType.Text, termVector = TermVector.with_positions_offsets) private String with_positions_offsets;
+		@Nullable
+		@Field(type = FieldType.Text,
 				termVector = TermVector.with_positions_payloads) private String with_positions_payloads;
-		@Nullable @Field(type = FieldType.Text,
+		@Nullable
+		@Field(type = FieldType.Text,
 				termVector = TermVector.with_positions_offsets_payloads) private String with_positions_offsets_payloads;
 
 		@Nullable
@@ -988,8 +1048,10 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "wildcard-test")
 	static class WildcardEntity {
-		@Nullable @Field(type = Wildcard) private String wildcardWithoutParams;
-		@Nullable @Field(type = Wildcard, nullValue = "WILD", ignoreAbove = 42) private String wildcardWithParams;
+		@Nullable
+		@Field(type = Wildcard) private String wildcardWithoutParams;
+		@Nullable
+		@Field(type = Wildcard, nullValue = "WILD", ignoreAbove = 42) private String wildcardWithParams;
 
 		@Nullable
 		public String getWildcardWithoutParams() {
@@ -1013,8 +1075,10 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	@Document(indexName = "disabled-entity-mapping")
 	@Mapping(enabled = false)
 	static class DisabledMappingEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Text) private String text;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text) private String text;
 
 		@Nullable
 		public String getId() {
@@ -1037,9 +1101,13 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "disabled-property-mapping")
 	static class DisabledMappingProperty {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Text) private String text;
-		@Nullable @Mapping(enabled = false) @Field(type = Object) private Object object;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text) private String text;
+		@Nullable
+		@Mapping(enabled = false)
+		@Field(type = Object) private Object object;
 
 		@Nullable
 		public String getId() {
@@ -1071,8 +1139,10 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Document(indexName = "densevector-test")
 	static class DenseVectorEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Dense_Vector, dims = 3) private float[] dense_vector;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Dense_Vector, dims = 3) private float[] dense_vector;
 
 		@Nullable
 		public String getId() {
@@ -1097,11 +1167,15 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 	@DynamicMapping(DynamicMappingValue.False)
 	static class DynamicMappingEntity {
 
-		@Nullable @DynamicMapping(DynamicMappingValue.Strict) @Field(type = FieldType.Object) private Author author;
-		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
-				type = FieldType.Object) private Map<String, Object> objectMap;
-		@Nullable @DynamicMapping(DynamicMappingValue.False) @Field(
-				type = FieldType.Nested) private List<Map<String, Object>> nestedObjectMap;
+		@Nullable
+		@DynamicMapping(DynamicMappingValue.Strict)
+		@Field(type = FieldType.Object) private Author author;
+		@Nullable
+		@DynamicMapping(DynamicMappingValue.False)
+		@Field(type = FieldType.Object) private Map<String, Object> objectMap;
+		@Nullable
+		@DynamicMapping(DynamicMappingValue.False)
+		@Field(type = FieldType.Nested) private List<Map<String, Object>> nestedObjectMap;
 
 		@Nullable
 		public Author getAuthor() {
@@ -1113,4 +1187,71 @@ public class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 		}
 	}
 
+	@Document(indexName = "allTypes")
+	private static class EntityWithAllTypes {
+		@Nullable
+		@Field(type = FieldType.Auto) String autoField;
+		@Nullable
+		@Field(type = FieldType.Text) String textField;
+		@Nullable
+		@Field(type = FieldType.Keyword) String keywordField;
+		@Nullable
+		@Field(type = FieldType.Long) String longField;
+		@Nullable
+		@Field(type = FieldType.Integer) String integerField;
+		@Nullable
+		@Field(type = FieldType.Short) String shortField;
+		@Nullable
+		@Field(type = FieldType.Byte) String byteField;
+		@Nullable
+		@Field(type = FieldType.Double) String doubleField;
+		@Nullable
+		@Field(type = FieldType.Float) String floatField;
+		@Nullable
+		@Field(type = FieldType.Half_Float) String halfFloatField;
+		@Nullable
+		@Field(type = FieldType.Scaled_Float) String scaledFloatField;
+		@Nullable
+		@Field(type = FieldType.Date) String dateField;
+		@Nullable
+		@Field(type = FieldType.Date_Nanos) String dateNanosField;
+		@Nullable
+		@Field(type = FieldType.Boolean) String booleanField;
+		@Nullable
+		@Field(type = FieldType.Binary) String binaryField;
+		@Nullable
+		@Field(type = FieldType.Integer_Range) String integerRangeField;
+		@Nullable
+		@Field(type = FieldType.Float_Range) String floatRangeField;
+		@Nullable
+		@Field(type = FieldType.Long_Range) String longRangeField;
+		@Nullable
+		@Field(type = FieldType.Double_Range) String doubleRangeField;
+		@Nullable
+		@Field(type = FieldType.Date_Range) String dateRangeField;
+		@Nullable
+		@Field(type = FieldType.Ip_Range) String ipRangeField;
+		@Nullable
+		@Field(type = FieldType.Object) String objectField;
+		@Nullable
+		@Field(type = FieldType.Nested) String nestedField;
+		@Nullable
+		@Field(type = FieldType.Ip) String ipField;
+		@Nullable
+		@Field(type = FieldType.TokenCount, analyzer = "standard") String tokenCountField;
+		@Nullable
+		@Field(type = FieldType.Percolator) String percolatorField;
+		@Nullable
+		@Field(type = FieldType.Flattened) String flattenedField;
+		@Nullable
+		@Field(type = FieldType.Search_As_You_Type) String searchAsYouTypeField;
+		@Nullable
+		@Field(type = FieldType.Rank_Feature) String rankFeatureField;
+		@Nullable
+		@Field(type = FieldType.Rank_Features) String rankFeaturesField;
+		@Nullable
+		@Field(type = FieldType.Wildcard) String wildcardField;
+		@Nullable
+		@Field(type = FieldType.Dense_Vector, dims = 1) String denseVectorField;
+	}
 }

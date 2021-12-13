@@ -17,10 +17,20 @@ package org.springframework.data.elasticsearch.annotations;
 
 /**
  * values for the {@link DynamicMapping annotation}
- * 
+ *
  * @author Peter-Josef Meisch
  * @since 4.0
  */
 public enum DynamicMappingValue {
-	True, False, Strict
+	True("true"), False("false"), Strict("strict");
+
+	private final String mappedName;
+
+	DynamicMappingValue(String mappedName) {
+		this.mappedName = mappedName;
+	}
+
+	public String getMappedName() {
+		return mappedName;
+	}
 }

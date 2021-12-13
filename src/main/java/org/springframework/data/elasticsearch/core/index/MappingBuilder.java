@@ -156,10 +156,9 @@ public class MappingBuilder {
 		boolean writeNestedProperties = !isRootObject && (isAnyPropertyAnnotatedWithField(entity) || nestedOrObjectField);
 		if (writeNestedProperties) {
 
-			String type = nestedOrObjectField ? fieldType.toString().toLowerCase()
-					: FieldType.Object.toString().toLowerCase();
-			builder.startObject(nestedObjectFieldName).field(FIELD_PARAM_TYPE, type);
+			String type = nestedOrObjectField ? fieldType.getMappedName() : FieldType.Object.getMappedName();
 
+			builder.startObject(nestedObjectFieldName).field(FIELD_PARAM_TYPE, type);
 			if (nestedOrObjectField && FieldType.Nested == fieldType && parentFieldAnnotation != null
 					&& parentFieldAnnotation.includeInParent()) {
 				builder.field("include_in_parent", true);
@@ -364,7 +363,7 @@ public class MappingBuilder {
 			}
 
 			builder.startObject(property.getFieldName()) //
-					.field(FIELD_PARAM_TYPE, field.type().name().toLowerCase()) //
+					.field(FIELD_PARAM_TYPE, field.type().getMappedName()) //
 					.field(MAPPING_ENABLED, false) //
 					.endObject(); //
 		} catch (Exception e) {
@@ -392,7 +391,7 @@ public class MappingBuilder {
 		builder.startObject(property.getFieldName());
 
 		if (nestedOrObjectField && dynamicMapping != null) {
-			builder.field(TYPE_DYNAMIC, dynamicMapping.value().name().toLowerCase());
+			builder.field(TYPE_DYNAMIC, dynamicMapping.value().getMappedName());
 		}
 
 		addFieldMappingParameters(builder, annotation, nestedOrObjectField);
@@ -441,7 +440,7 @@ public class MappingBuilder {
 		builder.startObject(property.getFieldName());
 
 		if (nestedOrObjectField && dynamicMapping != null) {
-			builder.field(TYPE_DYNAMIC, dynamicMapping.value().name().toLowerCase());
+			builder.field(TYPE_DYNAMIC, dynamicMapping.value().getMappedName());
 		}
 
 		addFieldMappingParameters(builder, annotation.mainField(), nestedOrObjectField);

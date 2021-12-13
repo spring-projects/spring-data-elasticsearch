@@ -71,7 +71,7 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_NULL_VALUE = "null_value";
 	static final String FIELD_PARAM_POSITION_INCREMENT_GAP = "position_increment_gap";
 	static final String FIELD_PARAM_POSITIVE_SCORE_IMPACT = "positive_score_impact";
-  	static final String FIELD_PARAM_DIMS = "dims";
+	static final String FIELD_PARAM_DIMS = "dims";
 	static final String FIELD_PARAM_SCALING_FACTOR = "scaling_factor";
 	static final String FIELD_PARAM_SEARCH_ANALYZER = "search_analyzer";
 	static final String FIELD_PARAM_STORE = "store";
@@ -101,7 +101,7 @@ public final class MappingParameters {
 	private final NullValueType nullValueType;
 	private final Integer positionIncrementGap;
 	private final boolean positiveScoreImpact;
-  	private final Integer dims;
+	private final Integer dims;
 	private final String searchAnalyzer;
 	private final double scalingFactor;
 	private final Similarity similarity;
@@ -163,7 +163,8 @@ public final class MappingParameters {
 		positiveScoreImpact = field.positiveScoreImpact();
 		dims = field.dims();
 		if (type == FieldType.Dense_Vector) {
-			Assert.isTrue(dims >= 1 && dims <= 2048, "Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
+			Assert.isTrue(dims >= 1 && dims <= 2048,
+					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
 		}
 		Assert.isTrue(field.enabled() || type == FieldType.Object, "enabled false is only allowed for field type object");
 		enabled = field.enabled();
@@ -205,7 +206,8 @@ public final class MappingParameters {
 		positiveScoreImpact = field.positiveScoreImpact();
 		dims = field.dims();
 		if (type == FieldType.Dense_Vector) {
-			Assert.isTrue(dims >= 1 && dims <= 2048, "Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
+			Assert.isTrue(dims >= 1 && dims <= 2048,
+					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
 		}
 		enabled = true;
 		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
@@ -229,7 +231,7 @@ public final class MappingParameters {
 		}
 
 		if (type != FieldType.Auto) {
-			builder.field(FIELD_PARAM_TYPE, type.name().toLowerCase());
+			builder.field(FIELD_PARAM_TYPE, type.getMappedName());
 
 			if (type == FieldType.Date) {
 				List<String> formats = new ArrayList<>();
