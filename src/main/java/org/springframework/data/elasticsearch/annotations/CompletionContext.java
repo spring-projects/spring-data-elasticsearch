@@ -46,6 +46,16 @@ public @interface CompletionContext {
 	 * @since 4.3
 	 */
 	enum ContextMappingType {
-		CATEGORY, GEO
+		CATEGORY("category"), GEO("geo");
+
+		private final String mappedName;
+
+		ContextMappingType(String mappedName) {
+			this.mappedName = mappedName;
+		}
+
+		public String getMappedName() {
+			return mappedName;
+		}
 	}
 }

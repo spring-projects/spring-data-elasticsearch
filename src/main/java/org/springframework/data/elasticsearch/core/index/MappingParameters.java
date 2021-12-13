@@ -237,7 +237,7 @@ public final class MappingParameters {
 		}
 
 		if (type != FieldType.Auto) {
-			objectNode.put(FIELD_PARAM_TYPE, type.toString().toLowerCase());
+			objectNode.put(FIELD_PARAM_TYPE, type.getMappedName());
 
 			if (type == FieldType.Date) {
 				List<String> formats = new ArrayList<>();

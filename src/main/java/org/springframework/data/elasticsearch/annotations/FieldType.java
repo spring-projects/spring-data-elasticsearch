@@ -26,40 +26,51 @@ package org.springframework.data.elasticsearch.annotations;
  * @author Morgan Lutz
  */
 public enum FieldType {
-	Auto, //
-	Text, //
-	Keyword, //
-	Long, //
-	Integer, //
-	Short, //
-	Byte, //
-	Double, //
-	Float, //
-	Half_Float, //
-	Scaled_Float, //
-	Date, //
-	Date_Nanos, //
-	Boolean, //
-	Binary, //
-	Integer_Range, //
-	Float_Range, //
-	Long_Range, //
-	Double_Range, //
-	Date_Range, //
-	Ip_Range, //
-	Object, //
-	Nested, //
-	Ip, //
-	TokenCount, //
-	Percolator, //
-	Flattened, //
-	Search_As_You_Type, //
+	Auto("auto"), //
+	Text("text"), //
+	Keyword("keyword"), //
+	Long("long"), //
+	Integer("integer"), //
+	Short("short"), //
+	Byte("byte"), //
+	Double("double"), //
+	Float("float"), //
+	Half_Float("half_float"), //
+	Scaled_Float("scaled_float"), //
+	Date("date"), //
+	Date_Nanos("date_nanos"), //
+	Boolean("boolean"), //
+	Binary("binary"), //
+	Integer_Range("integer_range"), //
+	Float_Range("float_range"), //
+	Long_Range("long_range"), //
+	Double_Range("double_range"), //
+	Date_Range("date_range"), //
+	Ip_Range("ip_range"), //
+	Object("object"), //
+	Nested("nested"), //
+	Ip("ip"), //
+	TokenCount("token_count"), //
+	Percolator("percolator"), //
+	Flattened("flattened"), //
+	Search_As_You_Type("search_as_you_type"), //
 	/** @since 4.1 */
-	Rank_Feature, //
+	Rank_Feature("rank_feature"), //
 	/** @since 4.1 */
-	Rank_Features, //
+	Rank_Features("rank_features"), //
 	/** since 4.2 */
-	Wildcard, //
+	Wildcard("wildcard"), //
 	/** @since 4.2 */
-	Dense_Vector //
+	Dense_Vector("dense_vector") //
+	;
+
+	private final String mappedName;
+
+	FieldType(String mappedName) {
+		this.mappedName = mappedName;
+	}
+
+	public String getMappedName() {
+		return mappedName;
+	}
 }
