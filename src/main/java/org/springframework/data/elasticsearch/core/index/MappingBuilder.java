@@ -230,8 +230,7 @@ public class MappingBuilder {
 			boolean writeNestedProperties = !isRootObject && (isAnyPropertyAnnotatedWithField(entity) || nestedOrObjectField);
 			if (writeNestedProperties) {
 
-				String type = nestedOrObjectField ? fieldType.toString().toLowerCase()
-						: FieldType.Object.toString().toLowerCase();
+				String type = nestedOrObjectField ? fieldType.getMappedName() : FieldType.Object.getMappedName();
 
 				ObjectNode nestedObjectNode = objectMapper.createObjectNode();
 				nestedObjectNode.put(FIELD_PARAM_TYPE, type);
@@ -247,9 +246,9 @@ public class MappingBuilder {
 			}
 
 			if (entity != null && entity.dynamic() != Dynamic.INHERIT) {
-				objectNode.put(TYPE_DYNAMIC, entity.dynamic().name().toLowerCase());
+				objectNode.put(TYPE_DYNAMIC, entity.dynamic().getMappedName());
 			} else if (dynamicMapping != null) {
-				objectNode.put(TYPE_DYNAMIC, dynamicMapping.value().name().toLowerCase());
+				objectNode.put(TYPE_DYNAMIC, dynamicMapping.value().getMappedName());
 			}
 
 			ObjectNode propertiesNode = objectNode.putObject(FIELD_PROPERTIES);
@@ -418,7 +417,7 @@ public class MappingBuilder {
 
 						ObjectNode contextNode = contextsNode.addObject();
 						contextNode.put(FIELD_CONTEXT_NAME, context.name());
-						contextNode.put(FIELD_CONTEXT_TYPE, context.type().name().toLowerCase());
+						contextNode.put(FIELD_CONTEXT_TYPE, context.type().getMappedName());
 
 						if (context.precision().length() > 0) {
 							contextNode.put(FIELD_CONTEXT_PRECISION, context.precision());
@@ -450,7 +449,7 @@ public class MappingBuilder {
 				}
 
 				propertiesNode.set(property.getFieldName(), objectMapper.createObjectNode() //
-						.put(FIELD_PARAM_TYPE, field.type().name().toLowerCase()) //
+						.put(FIELD_PARAM_TYPE, field.type().getMappedName()) //
 						.put(MAPPING_ENABLED, false) //
 				);
 
@@ -479,9 +478,9 @@ public class MappingBuilder {
 
 			if (nestedOrObjectField) {
 				if (annotation.dynamic() != Dynamic.INHERIT) {
-					fieldNode.put(TYPE_DYNAMIC, annotation.dynamic().name().toLowerCase());
+					fieldNode.put(TYPE_DYNAMIC, annotation.dynamic().getMappedName());
 				} else if (dynamicMapping != null) {
-					fieldNode.put(TYPE_DYNAMIC, dynamicMapping.value().name().toLowerCase());
+					fieldNode.put(TYPE_DYNAMIC, dynamicMapping.value().getMappedName());
 				}
 			}
 		}
@@ -530,9 +529,9 @@ public class MappingBuilder {
 
 			if (nestedOrObjectField) {
 				if (annotation.mainField().dynamic() != Dynamic.INHERIT) {
-					mainFieldNode.put(TYPE_DYNAMIC, annotation.mainField().dynamic().name().toLowerCase());
+					mainFieldNode.put(TYPE_DYNAMIC, annotation.mainField().dynamic().getMappedName());
 				} else if (dynamicMapping != null) {
-					mainFieldNode.put(TYPE_DYNAMIC, dynamicMapping.value().name().toLowerCase());
+					mainFieldNode.put(TYPE_DYNAMIC, dynamicMapping.value().getMappedName());
 				}
 			}
 
