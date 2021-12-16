@@ -50,6 +50,7 @@ import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
+import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.*;
 import org.springframework.data.util.ClassTypeInformation;
@@ -354,7 +355,7 @@ public class MappingElasticsearchConverter
 
 			if (source instanceof SearchDocument) {
 				SearchDocument searchDocument = (SearchDocument) source;
-				populateScriptFields(result, searchDocument);
+				populateScriptFields(targetEntity, result, searchDocument);
 			}
 
 			return result;
@@ -555,27 +556,17 @@ public class MappingElasticsearchConverter
 			return conversionService.convert(value, target);
 		}
 
-		private <T> void populateScriptFields(T result, SearchDocument searchDocument) {
+		private <T> void populateScriptFields(ElasticsearchPersistentEntity<?> entity, T result, SearchDocument searchDocument) {
 			Map<String, List<Object>> fields = searchDocument.getFields();
-			if (!fields.isEmpty()) {
-				for (java.lang.reflect.Field field : result.getClass().getDeclaredFields()) {
-					ScriptedField scriptedField = field.getAnnotation(ScriptedField.class);
-					if (scriptedField != null) {
-						String name = scriptedField.name().isEmpty() ? field.getName() : scriptedField.name();
-						Object value = searchDocument.getFieldValue(name);
-						if (value != null) {
-							field.setAccessible(true);
-							try {
-								field.set(result, value);
-							} catch (IllegalArgumentException e) {
-								throw new MappingException("failed to set scripted field: " + name + " with value: " + value, e);
-							} catch (IllegalAccessException e) {
-								throw new MappingException("failed to access scripted field: " + name, e);
-							}
-						}
-					}
+			entity.doWithProperties((SimplePropertyHandler) property -> {
+				if (property.isAnnotationPresent(ScriptedField.class) && fields.containsKey(property.getName())) {
+					ScriptedField scriptedField = property.findAnnotation(ScriptedField.class);
+					String name = scriptedField.name().isEmpty() ? property.getName() : scriptedField.name();
+					Object value = searchDocument.getFieldValue(name);
+
+					entity.getPropertyAccessor(result).setProperty(property, value);
 				}
-			}
+			});
 		}
 
 		/**
