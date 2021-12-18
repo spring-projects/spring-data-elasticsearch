@@ -556,11 +556,13 @@ public class MappingElasticsearchConverter
 			return conversionService.convert(value, target);
 		}
 
-		private <T> void populateScriptFields(ElasticsearchPersistentEntity<?> entity, T result, SearchDocument searchDocument) {
+		private <T> void populateScriptFields(ElasticsearchPersistentEntity<?> entity, T result,
+				SearchDocument searchDocument) {
 			Map<String, List<Object>> fields = searchDocument.getFields();
 			entity.doWithProperties((SimplePropertyHandler) property -> {
 				if (property.isAnnotationPresent(ScriptedField.class) && fields.containsKey(property.getName())) {
 					ScriptedField scriptedField = property.findAnnotation(ScriptedField.class);
+					// noinspection ConstantConditions
 					String name = scriptedField.name().isEmpty() ? property.getName() : scriptedField.name();
 					Object value = searchDocument.getFieldValue(name);
 
