@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -20,7 +21,7 @@
 	<properties>
 		<commonslang>2.6</commonslang>
 		<elasticsearch>7.12.1</elasticsearch>
-		<log4j>2.16.0</log4j>
+		<log4j>2.17.0</log4j>
 		<netty>4.1.52.Final</netty>
 		<springdata.commons>2.5.8-SNAPSHOT</springdata.commons>
 		<testcontainers>1.15.1</testcontainers>
@@ -284,24 +285,24 @@
 			<scope>test</scope>
 		</dependency>
 
-<!--
-		<dependency>
-			<groupId>org.apache.openwebbeans.test</groupId>
-			<artifactId>cditest-owb</artifactId>
-			<version>1.2.8</version>
-			<scope>test</scope>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.geronimo.specs</groupId>
-					<artifactId>geronimo-jcdi_1.0_spec</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.geronimo.specs</groupId>
-					<artifactId>geronimo-atinject_1.0_spec</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
--->
+		<!--
+				<dependency>
+					<groupId>org.apache.openwebbeans.test</groupId>
+					<artifactId>cditest-owb</artifactId>
+					<version>1.2.8</version>
+					<scope>test</scope>
+					<exclusions>
+						<exclusion>
+							<groupId>org.apache.geronimo.specs</groupId>
+							<artifactId>geronimo-jcdi_1.0_spec</artifactId>
+						</exclusion>
+						<exclusion>
+							<groupId>org.apache.geronimo.specs</groupId>
+							<artifactId>geronimo-atinject_1.0_spec</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+		-->
 
 		<dependency>
 			<groupId>org.skyscreamer</groupId>
@@ -479,7 +480,9 @@
 								</module>
 							</checkstyleRules>
 							<includes>**/*</includes>
-							<excludes>.git/**/*,target/**/*,**/target/**/*,.idea/**/*,**/spring.schemas,**/*.svg,mvnw,mvnw.cmd,**/*.policy</excludes>
+							<excludes>
+								.git/**/*,target/**/*,**/target/**/*,.idea/**/*,**/spring.schemas,**/*.svg,mvnw,mvnw.cmd,**/*.policy
+							</excludes>
 							<sourceDirectories>./</sourceDirectories>
 						</configuration>
 					</plugin>
