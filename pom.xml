@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-				 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
@@ -19,7 +19,7 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<elasticsearch>7.16.1</elasticsearch>
+		<elasticsearch>7.16.2</elasticsearch>
 		<log4j>2.17.0</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.7.0-SNAPSHOT</springdata.commons>
