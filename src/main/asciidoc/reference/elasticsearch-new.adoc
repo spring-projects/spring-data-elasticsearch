@@ -4,7 +4,7 @@
 [[new-features.4-4-0]]
 == New in Spring Data Elasticsearch 4.4
 
-* Upgrade to Elasticsearch 7.16.1.
+* Upgrade to Elasticsearch 7.16.2.
 
 [[new-features.4-3-0]]
 == New in Spring Data Elasticsearch 4.3
