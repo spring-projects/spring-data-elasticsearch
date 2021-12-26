@@ -29,6 +29,7 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
 import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
@@ -71,6 +72,19 @@ abstract class ElasticsearchOperationsCallbackIntegrationTests {
 					entity.setSeqNoPrimaryTerm(seqNoPrimaryTerm);
 				}
 				return entity;
+			}
+		}
+
+		@Component
+		static class SampleEntityAfterLoadCallback implements AfterLoadCallback<SampleEntity> {
+
+			@Override
+			public org.springframework.data.elasticsearch.core.document.Document onAfterLoad(
+					org.springframework.data.elasticsearch.core.document.Document document, Class<SampleEntity> type,
+					IndexCoordinates indexCoordinates) {
+
+				document.put("className", document.get("_class"));
+				return document;
 			}
 		}
 	}
@@ -214,12 +228,30 @@ abstract class ElasticsearchOperationsCallbackIntegrationTests {
 		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.getPrimaryTerm());
 	}
 
+	@Test // #2009
+	@DisplayName("should invoke after load callback")
+	void shouldInvokeAfterLoadCallback() {
+
+		SampleEntity entity = new SampleEntity("1", "test");
+		operations.save(entity);
+
+		SampleEntity loaded = operations.get(entity.getId(), SampleEntity.class);
+
+		assertThat(loaded).isNotNull();
+		assertThat(loaded.className).isEqualTo(SampleEntity.class.getName());
+	}
+
 	@Document(indexName = INDEX)
 	static class SampleEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String text;
 
-		@Nullable @JoinTypeRelations(relations = {
+		@ReadOnlyProperty
+		@Nullable private String className;
+
+		@Nullable
+		@JoinTypeRelations(relations = {
 				@JoinTypeRelation(parent = "question", children = { "answer" }) }) private JoinField<String> joinField;
 
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;

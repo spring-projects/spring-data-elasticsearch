@@ -22,11 +22,13 @@ import reactor.test.StepVerifier;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -35,6 +37,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -49,12 +52,27 @@ public class ReactiveElasticsearchOperationsCallbackTest {
 	@Configuration
 	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class, ElasticsearchRestTemplateConfiguration.class })
 	static class Config {
+
 		@Component
 		static class SampleEntityBeforeConvertCallback implements ReactiveBeforeConvertCallback<SampleEntity> {
 			@Override
 			public Mono<SampleEntity> onBeforeConvert(SampleEntity entity, IndexCoordinates index) {
 				entity.setText("reactive-converted");
 				return Mono.just(entity);
+			}
+		}
+
+		@Component
+		static class SampleEntityAfterLoadCallback
+				implements ReactiveAfterLoadCallback<ElasticsearchOperationsCallbackIntegrationTests.SampleEntity> {
+
+			@Override
+			public Mono<org.springframework.data.elasticsearch.core.document.Document> onAfterLoad(
+					org.springframework.data.elasticsearch.core.document.Document document,
+					Class<ElasticsearchOperationsCallbackIntegrationTests.SampleEntity> type, IndexCoordinates indexCoordinates) {
+
+				document.put("className", document.get("_class"));
+				return Mono.just(document);
 			}
 		}
 
@@ -88,10 +106,28 @@ public class ReactiveElasticsearchOperationsCallbackTest {
 				.verifyComplete();
 	}
 
+	@Test // #2009
+	@DisplayName("should invoke after load callback")
+	void shouldInvokeAfterLoadCallback() {
+
+		SampleEntity entity = new SampleEntity("1", "test");
+
+		operations.save(entity) //
+				.then(operations.get(entity.getId(), SampleEntity.class)) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(loaded -> { //
+					assertThat(loaded).isNotNull(); //
+					assertThat(loaded.className).isEqualTo(SampleEntity.class.getName()); //
+				}).verifyComplete(); //
+	}
+
 	@Document(indexName = "test-operations-reactive-callback")
 	static class SampleEntity {
 		@Id private String id;
 		private String text;
+
+		@ReadOnlyProperty
+		@Nullable private String className;
 
 		public SampleEntity(String id, String text) {
 			this.id = id;
