@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.suggest;
 
 import static org.assertj.core.api.Assertions.*;
 
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
@@ -54,6 +55,7 @@ import org.springframework.lang.Nullable;
 @SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @SpringIntegrationTest
 public class SuggestReactiveTemplateIntegrationTests {
+
 	@Configuration
 	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
 	static class Config {
@@ -86,32 +88,34 @@ public class SuggestReactiveTemplateIntegrationTests {
 	@DisplayName("should find suggestions for given prefix completion")
 	void shouldFindSuggestionsForGivenPrefixCompletion() {
 
-		loadCompletionObjectEntities();
+		loadCompletionObjectEntities().map(unused -> {
 
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
-				.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
-				.build();
+			NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
+					.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
+					.build();
 
-		operations.suggest(query, CompletionEntity.class) //
-				.as(StepVerifier::create) //
-				.assertNext(suggest -> {
-					Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
-							.getSuggestion("test-suggest");
-					assertThat(suggestion).isNotNull();
-					assertThat(suggestion).isInstanceOf(CompletionSuggestion.class);
-					// noinspection unchecked
-					List<CompletionSuggestion.Entry.Option<CompletionIntegrationTests.AnnotatedCompletionEntity>> options = ((CompletionSuggestion<CompletionIntegrationTests.AnnotatedCompletionEntity>) suggestion)
-							.getEntries().get(0).getOptions();
-					assertThat(options).hasSize(2);
-					assertThat(options.get(0).getText()).isIn("Marchand", "Mohsin");
-					assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
+			operations.suggest(query, CompletionEntity.class) //
+					.as(StepVerifier::create) //
+					.assertNext(suggest -> {
+						Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
+								.getSuggestion("test-suggest");
+						assertThat(suggestion).isNotNull();
+						assertThat(suggestion).isInstanceOf(CompletionSuggestion.class);
+						// noinspection unchecked
+						List<CompletionSuggestion.Entry.Option<CompletionIntegrationTests.AnnotatedCompletionEntity>> options = ((CompletionSuggestion<CompletionIntegrationTests.AnnotatedCompletionEntity>) suggestion)
+								.getEntries().get(0).getOptions();
+						assertThat(options).hasSize(2);
+						assertThat(options.get(0).getText()).isIn("Marchand", "Mohsin");
+						assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
 
-				}) //
-				.verifyComplete();
+					}) //
+					.verifyComplete();
+			return Mono.empty();
+		});
 	}
 
 	// region helper functions
-	private void loadCompletionObjectEntities() {
+	private Mono<Void> loadCompletionObjectEntities() {
 
 		CompletionEntity rizwan_idrees = new CompletionEntityBuilder("1").name("Rizwan Idrees")
 				.suggest(new String[] { "Rizwan Idrees" }).build();
@@ -124,7 +128,7 @@ public class SuggestReactiveTemplateIntegrationTests {
 		List<CompletionEntity> entities = new ArrayList<>(
 				Arrays.asList(rizwan_idrees, franck_marchand, mohsin_husen, artur_konczak));
 		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.indexName());
-		operations.saveAll(entities, index).blockLast();
+		return operations.saveAll(entities, index).then();
 	}
 	// endregion
 
@@ -132,11 +136,13 @@ public class SuggestReactiveTemplateIntegrationTests {
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class CompletionEntity {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
 		@Nullable private String name;
 
-		@Nullable @CompletionField(maxInputLength = 100) private Completion suggest;
+		@Nullable
+		@CompletionField(maxInputLength = 100) private Completion suggest;
 
 		private CompletionEntity() {}
 

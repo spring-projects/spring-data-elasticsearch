@@ -69,6 +69,7 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCallback;
+import org.springframework.data.elasticsearch.core.event.ReactiveAfterLoadCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -1159,6 +1160,17 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 
 		return Mono.just(entity);
 	}
+
+	protected <T> Mono<Document> maybeCallbackAfterLoad(Document document, Class<T> type,
+			IndexCoordinates indexCoordinates) {
+
+		if (entityCallbacks != null) {
+			return entityCallbacks.callback(ReactiveAfterLoadCallback.class, document, type, indexCoordinates);
+		}
+
+		return Mono.just(document);
+	}
+
 	// endregion
 
 	// region routing
@@ -1206,12 +1218,20 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 				return Mono.empty();
 			}
 
-			T entity = reader.read(type, document);
-			IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of(
-					document.hasId() ? document.getId() : null, document.getSeqNo(), document.getPrimaryTerm(),
-					document.getVersion());
-			entity = updateIndexedObject(entity, indexedObjectInformation);
-			return maybeCallAfterConvert(entity, document, index);
+			return maybeCallbackAfterLoad(document, type, index) //
+					.flatMap(documentAfterLoad -> {
+
+						T entity = reader.read(type, documentAfterLoad);
+
+						IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of( //
+								documentAfterLoad.hasId() ? documentAfterLoad.getId() : null, //
+								documentAfterLoad.getSeqNo(), //
+								documentAfterLoad.getPrimaryTerm(), //
+								documentAfterLoad.getVersion()); //
+						entity = updateIndexedObject(entity, indexedObjectInformation);
+
+						return maybeCallAfterConvert(entity, documentAfterLoad, index);
+					});
 		}
 	}
 

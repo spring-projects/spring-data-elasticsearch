@@ -33,6 +33,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
+import org.springframework.data.elasticsearch.core.event.AfterLoadCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -690,6 +691,15 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return entity;
 	}
 
+	protected <T> Document maybeCallbackAfterLoad(Document document, Class<T> type, IndexCoordinates indexCoordinates) {
+
+		if (entityCallbacks != null) {
+			return entityCallbacks.callback(AfterLoadCallback.class, document, type, indexCoordinates);
+		}
+
+		return document;
+	}
+
 	// endregion
 
 	protected void updateIndexedObjectsWithQueries(List<?> queries,
@@ -736,13 +746,18 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			if (document == null) {
 				return null;
 			}
+			Document documentAfterLoad = maybeCallbackAfterLoad(document, type, index);
 
-			T entity = reader.read(type, document);
-			IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of(
-					document.hasId() ? document.getId() : null, document.getSeqNo(), document.getPrimaryTerm(),
-					document.getVersion());
+			T entity = reader.read(type, documentAfterLoad);
+
+			IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of( //
+					documentAfterLoad.hasId() ? documentAfterLoad.getId() : null, //
+					documentAfterLoad.getSeqNo(), //
+					documentAfterLoad.getPrimaryTerm(), //
+					documentAfterLoad.getVersion()); //
 			entity = updateIndexedObject(entity, indexedObjectInformation);
-			return maybeCallbackAfterConvert(entity, document, index);
+
+			return maybeCallbackAfterConvert(entity, documentAfterLoad, index);
 		}
 	}
 
