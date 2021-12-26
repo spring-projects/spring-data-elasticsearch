@@ -13,7 +13,13 @@ Spring Data Elasticsearch uses the `EntityCallback` API internally for its audit
 
 | Reactive/BeforeConvertCallback
 | `onBeforeConvert(T entity, IndexCoordinates index)`
-| Invoked before a domain object is converted to `org.springframework.data.elasticsearch.core.document.Document`. Can return the `entity` or a modified entity which then will be converted.
+| Invoked before a domain object is converted to `org.springframework.data.elasticsearch.core.document.Document`.
+Can return the `entity` or a modified entity which then will be converted.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| Reactive/AfterLoadCallback
+| `onAfterLoad(Document document, Class<T> type, IndexCoordinates indexCoordinates)`
+| Invoked after the result from Elasticsearch has been read into a `org.springframework.data.elasticsearch.core.document.Document`.
 | `Ordered.LOWEST_PRECEDENCE`
 
 | Reactive/AfterConvertCallback
@@ -32,4 +38,3 @@ Spring Data Elasticsearch uses the `EntityCallback` API internally for its audit
 | `Ordered.LOWEST_PRECEDENCE`
 
 |===
-
