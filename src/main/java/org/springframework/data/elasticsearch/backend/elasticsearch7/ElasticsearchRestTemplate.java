@@ -326,7 +326,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 					failedDocuments.put(item.getId(), item.getFailureMessage());
 			}
 			throw new BulkFailureException(
-					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
+					"Bulk operation has failures. Use BulkFailureException.getFailedDocuments() for detailed messages ["
 							+ failedDocuments + ']',
 					failedDocuments);
 		}
