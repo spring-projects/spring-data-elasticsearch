@@ -67,12 +67,15 @@ public class DefaultElasticsearchTypeMapper extends DefaultTypeMapper<Map<String
 		this.typeKey = typeKey;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.mongodb.core.convert.MongoTypeMapper#isTypeKey(java.lang.String)
-	 */
+	@Override
 	public boolean isTypeKey(String key) {
 		return typeKey != null && typeKey.equals(key);
+	}
+
+	@Override
+	@Nullable
+	public String getTypeKey() {
+		return typeKey;
 	}
 
 	/*

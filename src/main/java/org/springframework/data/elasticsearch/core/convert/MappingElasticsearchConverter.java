@@ -92,6 +92,7 @@ public class MappingElasticsearchConverter
 	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
 	private final SpELContext spELContext = new SpELContext(new MapAccessor());
 	private final EntityInstantiators instantiators = new EntityInstantiators();
+	private final ElasticsearchTypeMapper typeMapper;
 
 	public MappingElasticsearchConverter(
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
@@ -106,6 +107,7 @@ public class MappingElasticsearchConverter
 
 		this.mappingContext = mappingContext;
 		this.conversionService = conversionService != null ? conversionService : new DefaultConversionService();
+		this.typeMapper = ElasticsearchTypeMapper.create(mappingContext);
 	}
 
 	@Override
@@ -145,12 +147,16 @@ public class MappingElasticsearchConverter
 		conversions.registerConvertersIn(conversionService);
 	}
 
+	public ElasticsearchTypeMapper getTypeMapper() {
+		return typeMapper;
+	}
+
 	// region read/write
 
 	@Override
 	public <R> R read(Class<R> type, Document source) {
 
-		Reader reader = new Reader(mappingContext, conversionService, conversions, spELContext, instantiators);
+		Reader reader = new Reader(mappingContext, conversionService, conversions, typeMapper, spELContext, instantiators);
 		return reader.read(type, source);
 	}
 
@@ -159,7 +165,7 @@ public class MappingElasticsearchConverter
 
 		Assert.notNull(source, "source to map must not be null");
 
-		Writer writer = new Writer(mappingContext, conversionService, conversions);
+		Writer writer = new Writer(mappingContext, conversionService, conversions, typeMapper);
 		writer.write(source, sink);
 	}
 
@@ -176,11 +182,11 @@ public class MappingElasticsearchConverter
 
 		private Base(
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
-				GenericConversionService conversionService, CustomConversions conversions) {
+				GenericConversionService conversionService, CustomConversions conversions, ElasticsearchTypeMapper typeMapper) {
 			this.mappingContext = mappingContext;
 			this.conversionService = conversionService;
 			this.conversions = conversions;
-			this.typeMapper = ElasticsearchTypeMapper.create(mappingContext);
+			this.typeMapper = typeMapper;
 		}
 	}
 
@@ -195,10 +201,10 @@ public class MappingElasticsearchConverter
 
 		public Reader(
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
-				GenericConversionService conversionService, CustomConversions conversions, SpELContext spELContext,
-				EntityInstantiators instantiators) {
+				GenericConversionService conversionService, CustomConversions conversions, ElasticsearchTypeMapper typeMapper,
+				SpELContext spELContext, EntityInstantiators instantiators) {
 
-			super(mappingContext, conversionService, conversions);
+			super(mappingContext, conversionService, conversions, typeMapper);
 			this.spELContext = spELContext;
 			this.instantiators = instantiators;
 		}
@@ -670,8 +676,8 @@ public class MappingElasticsearchConverter
 
 		public Writer(
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
-				GenericConversionService conversionService, CustomConversions conversions) {
-			super(mappingContext, conversionService, conversions);
+				GenericConversionService conversionService, CustomConversions conversions, ElasticsearchTypeMapper typeMapper) {
+			super(mappingContext, conversionService, conversions, typeMapper);
 		}
 
 		void write(Object source, Document sink) {
