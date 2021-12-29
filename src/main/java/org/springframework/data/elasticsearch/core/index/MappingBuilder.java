@@ -35,6 +35,8 @@ import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchTypeMapper;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -88,7 +90,7 @@ public class MappingBuilder {
 	private static final String COMPLETION_MAX_INPUT_LENGTH = "max_input_length";
 	private static final String COMPLETION_CONTEXTS = "contexts";
 
-	private static final String TYPEHINT_PROPERTY = "_class";
+	private static final String TYPEHINT_PROPERTY = ElasticsearchTypeMapper.DEFAULT_TYPE_KEY;
 
 	private static final String TYPE_DYNAMIC = "dynamic";
 	private static final String TYPE_VALUE_KEYWORD = "keyword";
@@ -189,7 +191,17 @@ public class MappingBuilder {
 		private void writeTypeHintMapping(ObjectNode propertiesNode) throws IOException {
 
 			if (writeTypeHints) {
-				propertiesNode.set(TYPEHINT_PROPERTY, objectMapper.createObjectNode() //
+				String typeHintProperty = null;
+
+				if (elasticsearchConverter instanceof MappingElasticsearchConverter) {
+					typeHintProperty = ((MappingElasticsearchConverter) elasticsearchConverter).getTypeMapper().getTypeKey();
+				}
+
+				if (typeHintProperty == null) {
+					typeHintProperty = TYPEHINT_PROPERTY;
+				}
+
+				propertiesNode.set(typeHintProperty, objectMapper.createObjectNode() //
 						.put(FIELD_PARAM_TYPE, TYPE_VALUE_KEYWORD) //
 						.put(FIELD_PARAM_INDEX, false) //
 						.put(FIELD_PARAM_DOC_VALUES, false));

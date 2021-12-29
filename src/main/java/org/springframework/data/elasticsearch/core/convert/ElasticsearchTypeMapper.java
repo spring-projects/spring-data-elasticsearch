@@ -21,6 +21,7 @@ import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.lang.Nullable;
 
 /**
  * Elasticsearch specific {@link TypeMapper} definition.
@@ -38,6 +39,13 @@ public interface ElasticsearchTypeMapper extends TypeMapper<Map<String, Object>>
 	 * @return {@literal true} if given {@literal key} is used as type hint key.
 	 */
 	boolean isTypeKey(String key);
+
+	/**
+	 * @return the type key.
+	 * @since 4.4
+	 */
+	@Nullable
+	String getTypeKey();
 
 	default boolean containsTypeInformation(Map<String, Object> source) {
 		return readType(source) != null;
