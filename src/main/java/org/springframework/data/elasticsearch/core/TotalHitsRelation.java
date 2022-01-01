@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package org.springframework.data.elasticsearch.core;
  * Enum to represent the relation that Elasticsearch returns for the totalHits value {@see <a href=
  * "https://www.elastic.co/guide/en/elasticsearch/reference/7.5/search-request-body.html#request-body-search-track-total-hits">Elasticsearch
  * docs</a>}
- * 
+ *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @since 4.0

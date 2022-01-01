@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,8 +30,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * A representation of a Elasticsearch document as extended {@link StringObjectMap Map}. All iterators preserve
- * original insertion order.
+ * A representation of a Elasticsearch document as extended {@link StringObjectMap Map}. All iterators preserve original
+ * insertion order.
  * <p>
  * Document does not allow {@code null} keys. It allows {@literal null} values.
  * <p>

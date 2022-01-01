@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2021-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -122,23 +122,13 @@ public class ClusterHealth {
 
 	@Override
 	public String toString() {
-		return "ClusterHealth{" +
-				"clusterName='" + clusterName + '\'' +
-				", status='" + status + '\'' +
-				", numberOfNodes=" + numberOfNodes +
-				", numberOfDataNodes=" + numberOfDataNodes +
-				", activeShards=" + activeShards +
-				", relocatingShards=" + relocatingShards +
-				", activePrimaryShards=" + activePrimaryShards +
-				", initializingShards=" + initializingShards +
-				", unassignedShards=" + unassignedShards +
-				", activeShardsPercent=" + activeShardsPercent +
-				", numberOfPendingTasks=" + numberOfPendingTasks +
-				", timedOut=" + timedOut +
-				", numberOfInFlightFetch=" + numberOfInFlightFetch +
-				", delayedUnassignedShards=" + delayedUnassignedShards +
-				", taskMaxWaitingTimeMillis=" + taskMaxWaitingTimeMillis +
-				'}';
+		return "ClusterHealth{" + "clusterName='" + clusterName + '\'' + ", status='" + status + '\'' + ", numberOfNodes="
+				+ numberOfNodes + ", numberOfDataNodes=" + numberOfDataNodes + ", activeShards=" + activeShards
+				+ ", relocatingShards=" + relocatingShards + ", activePrimaryShards=" + activePrimaryShards
+				+ ", initializingShards=" + initializingShards + ", unassignedShards=" + unassignedShards
+				+ ", activeShardsPercent=" + activeShardsPercent + ", numberOfPendingTasks=" + numberOfPendingTasks
+				+ ", timedOut=" + timedOut + ", numberOfInFlightFetch=" + numberOfInFlightFetch + ", delayedUnassignedShards="
+				+ delayedUnassignedShards + ", taskMaxWaitingTimeMillis=" + taskMaxWaitingTimeMillis + '}';
 	}
 
 	public static ClusterHealthBuilder builder() {

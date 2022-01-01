@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -128,7 +128,7 @@ public @interface InnerField {
 
 	/**
 	 * to be used in combination with {@link FieldType#Rank_Feature}
-	 * 
+	 *
 	 * @since 4.1
 	 */
 	boolean positiveScoreImpact() default true;

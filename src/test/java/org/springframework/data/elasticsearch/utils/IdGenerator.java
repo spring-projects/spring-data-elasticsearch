@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Class to provide sequential IDs. Uses an integer, 2^31 -1 values should be enough for the test runs.
- * 
+ *
  * @author Peter-Josef Meisch
  */
 public final class IdGenerator {
@@ -35,6 +35,7 @@ public final class IdGenerator {
 	public static double nextIdAsDouble() {
 		return NEXT.incrementAndGet();
 	}
+
 	public static String nextIdAsString() {
 		return "" + nextIdAsInt();
 	}

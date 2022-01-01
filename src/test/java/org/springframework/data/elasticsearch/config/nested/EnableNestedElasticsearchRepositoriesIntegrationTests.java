@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2021 the original author or authors.
+ * Copyright 2015-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,15 +63,20 @@ public abstract class EnableNestedElasticsearchRepositoriesIntegrationTests {
 
 	@Document(indexName = "test-index-sample-config-nested")
 	static class SampleEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
-		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String message;
 		@Nullable private int rate;
-		@Nullable @ScriptedField private Double scriptedRate;
+		@Nullable
+		@ScriptedField private Double scriptedRate;
 		@Nullable private boolean available;
 		@Nullable private String highlightedMessage;
 		@Nullable private GeoPoint location;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 	}
 
 	interface SampleRepository extends Repository<SampleEntity, Long> {}

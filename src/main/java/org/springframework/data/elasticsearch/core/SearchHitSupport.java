@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * Utility class with helper methods for working with {@link SearchHit}.
- * 
+ *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @author Roman Puchkovskiy
@@ -41,7 +41,7 @@ public final class SearchHitSupport {
 
 	/**
 	 * unwraps the data contained in a SearchHit for different types containing SearchHits if possible
-	 * 
+	 *
 	 * @param result the object, list, page or whatever containing SearchHit objects
 	 * @return a corresponding object where the SearchHits are replaced by their content if possible, otherwise the
 	 *         original object
@@ -119,7 +119,7 @@ public final class SearchHitSupport {
 
 	/**
 	 * SearchPage implementation.
-	 * 
+	 *
 	 * @param <T>
 	 */
 	static class SearchPageImpl<T> extends PageImpl<SearchHit<T>> implements SearchPage<T> {

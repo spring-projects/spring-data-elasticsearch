@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * value object to describe alias information.
- * 
+ *
  * @author Peter-Josef Meisch
  */
 public class AliasData {
@@ -41,12 +41,8 @@ public class AliasData {
 		this.isHidden = isHidden;
 	}
 
-	public static AliasData of(String alias,
-							   @Nullable Document filter,
-							   @Nullable String indexRouting,
-							   @Nullable String searchRouting,
-							   @Nullable Boolean isWriteIndex,
-							   @Nullable Boolean isHidden) {
+	public static AliasData of(String alias, @Nullable Document filter, @Nullable String indexRouting,
+			@Nullable String searchRouting, @Nullable Boolean isWriteIndex, @Nullable Boolean isHidden) {
 		return new AliasData(alias, filter, indexRouting, searchRouting, isWriteIndex, isHidden);
 	}
 

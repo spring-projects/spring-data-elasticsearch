@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2021-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,9 +86,11 @@ public abstract class RuntimeFieldsIntegrationTests {
 	private static class SomethingToBuy {
 		private @Id @Nullable String id;
 
-		@Nullable @Field(type = FieldType.Text) private String description;
+		@Nullable
+		@Field(type = FieldType.Text) private String description;
 
-		@Nullable @Field(type = FieldType.Double) private Double price;
+		@Nullable
+		@Field(type = FieldType.Double) private Double price;
 
 		@Nullable
 		public String getId() {

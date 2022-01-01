@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 
 	/**
 	 * {@link Converter} to write a byte[] to a base64 encoded {@link String} value.
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	@WritingConverter
@@ -139,7 +139,7 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 
 	/**
 	 * {@link Converter} to read a byte[] from a base64 encoded {@link String} value.
-	 * 
+	 *
 	 * @since 4.0
 	 */
 	@ReadingConverter

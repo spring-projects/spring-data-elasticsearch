@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1548,12 +1548,15 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	static class Person {
-		@Nullable @Id String id;
+		@Nullable
+		@Id String id;
 		@Nullable String name;
-		@Nullable @Field(name = "first-name") String firstName;
-		@Nullable @Field(name = "last-name") String lastName;
-		@Nullable @Field(name = "birth-date", type = FieldType.Date, format = {},
-				pattern = "dd.MM.uuuu") LocalDate birthDate;
+		@Nullable
+		@Field(name = "first-name") String firstName;
+		@Nullable
+		@Field(name = "last-name") String lastName;
+		@Nullable
+		@Field(name = "birth-date", type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") LocalDate birthDate;
 		@Nullable Gender gender;
 		@Nullable Address address;
 		@Nullable List<Person> coWorkers;
@@ -1711,8 +1714,10 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	static class LocalDatesEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(name = "dates", type = FieldType.Date, format = DateFormat.custom,
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(name = "dates", type = FieldType.Date, format = DateFormat.custom,
 				pattern = "dd.MM.uuuu") private List<LocalDate> dates;
 
 		@Nullable
@@ -2111,16 +2116,20 @@ public class MappingElasticsearchConverterUnitTests {
 
 	@org.springframework.data.elasticsearch.annotations.Document(indexName = "test-index-geo-core-entity-mapper")
 	static class GeoEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		// geo shape - Spring Data
 		@Nullable private Box box;
 		@Nullable private Circle circle;
 		@Nullable private Polygon polygon;
 		// geo point - Custom implementation + Spring Data
-		@Nullable @GeoPointField private Point pointA;
+		@Nullable
+		@GeoPointField private Point pointA;
 		@Nullable private GeoPoint pointB;
-		@Nullable @GeoPointField private String pointC;
-		@Nullable @GeoPointField private double[] pointD;
+		@Nullable
+		@GeoPointField private String pointC;
+		@Nullable
+		@GeoPointField private double[] pointD;
 
 		@Nullable
 		public String getId() {
@@ -2224,7 +2233,8 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	static class EntityWithListProperty {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private List<String> values;
 
 		@Nullable
@@ -2270,7 +2280,8 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	static class EntityWithObject {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private Object content;
 
 		@Nullable
@@ -2293,9 +2304,12 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	static class EntityWithNullField {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Text) private String notSaved;
-		@Nullable @Field(type = FieldType.Text, storeNullValue = true) private String saved;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Text) private String notSaved;
+		@Nullable
+		@Field(type = FieldType.Text, storeNullValue = true) private String saved;
 
 		@Nullable
 		public String getId() {
@@ -2328,9 +2342,12 @@ public class MappingElasticsearchConverterUnitTests {
 	private static class ElectricCar extends Car {}
 
 	private static class PersonWithCars {
-		@Id @Nullable String id;
-		@Field(type = FieldType.Text) @Nullable private String name;
-		@Field(type = FieldType.Nested) @Nullable private List<? extends Car> cars;
+		@Id
+		@Nullable String id;
+		@Field(type = FieldType.Text)
+		@Nullable private String name;
+		@Field(type = FieldType.Nested)
+		@Nullable private List<? extends Car> cars;
 
 		@Nullable
 		public String getId() {
@@ -2361,9 +2378,12 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	private static class EntityWithCustomValueConverters {
-		@Nullable @Id private String id;
-		@Nullable @ValueConverter(ClassBasedValueConverter.class) private String fieldWithClassBasedConverter;
-		@Nullable @ValueConverter(EnumBasedValueConverter.class) private String fieldWithEnumBasedConverter;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@ValueConverter(ClassBasedValueConverter.class) private String fieldWithClassBasedConverter;
+		@Nullable
+		@ValueConverter(EnumBasedValueConverter.class) private String fieldWithEnumBasedConverter;
 		@Nullable private String dontConvert;
 
 		@Nullable

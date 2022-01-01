@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2021-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,7 @@ import java.util.Map;
  */
 public class Settings extends DefaultStringObjectMap<Settings> {
 
-	public Settings() {
-	}
+	public Settings() {}
 
 	public Settings(Map<String, Object> map) {
 		super(map);
@@ -36,6 +35,7 @@ public class Settings extends DefaultStringObjectMap<Settings> {
 
 	/**
 	 * Creates a {@link Settings} object from the given JSON String
+	 *
 	 * @param json must not be {@literal null}
 	 * @return Settings object
 	 */

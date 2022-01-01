@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,8 @@ public abstract class SynonymRepositoryTests {
 	@Setting(settingPath = "/synonyms/settings.json")
 	@Mapping(mappingPath = "/synonyms/mappings.json")
 	static class SynonymEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String text;
 
 		@Nullable
