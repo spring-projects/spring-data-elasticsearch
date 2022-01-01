@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -391,7 +391,7 @@ public class ReactiveIndexOperationsTest {
 
 		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
 				.block();
-		Settings settings = indexOps .createSettings(TemplateClass.class).block();
+		Settings settings = indexOps.createSettings(TemplateClass.class).block();
 
 		AliasActions aliasActions = new AliasActions(
 				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
@@ -423,7 +423,7 @@ public class ReactiveIndexOperationsTest {
 
 		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
 				.block();
-		Settings settings = indexOps .createSettings(TemplateClass.class).block();
+		Settings settings = indexOps.createSettings(TemplateClass.class).block();
 
 		AliasActions aliasActions = new AliasActions(
 				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
@@ -507,9 +507,12 @@ public class ReactiveIndexOperationsTest {
 	@Document(indexName = TESTINDEX)
 	@Setting(shards = 3, replicas = 2, refreshInterval = "4s")
 	static class Entity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Text) private String text;
-		@Nullable @Field(name = "publication-date", type = FieldType.Date,
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Text) private String text;
+		@Nullable
+		@Field(name = "publication-date", type = FieldType.Date,
 				format = DateFormat.basic_date) private LocalDate publicationDate;
 
 		@Nullable
@@ -543,7 +546,8 @@ public class ReactiveIndexOperationsTest {
 	@Document(indexName = TESTINDEX)
 	@Setting(useServerConfiguration = true)
 	static class EntityUseServerConfig {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
 		@Nullable
 		public String getId() {
@@ -559,7 +563,8 @@ public class ReactiveIndexOperationsTest {
 	@Setting(settingPath = "/settings/test-settings.json")
 	@Mapping(mappingPath = "/mappings/test-mappings.json")
 	static class EntityWithAnnotatedSettingsAndMappings {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
 		@Nullable
 		public String getId() {
@@ -574,8 +579,10 @@ public class ReactiveIndexOperationsTest {
 	@Document(indexName = "test-template")
 	@Setting(refreshInterval = "5s")
 	static class TemplateClass {
-		@Id @Nullable private String id;
-		@Field(type = FieldType.Text) @Nullable private String message;
+		@Id
+		@Nullable private String id;
+		@Field(type = FieldType.Text)
+		@Nullable private String message;
 
 		@Nullable
 		public String getId() {

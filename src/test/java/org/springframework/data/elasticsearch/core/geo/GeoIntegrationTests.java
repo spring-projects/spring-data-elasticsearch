@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -354,7 +354,8 @@ public abstract class GeoIntegrationTests {
 	 */
 	@Document(indexName = "test-index-author-marker-core-geo")
 	static class AuthorMarkerEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
 		@Nullable private GeoPoint location;
 
@@ -429,11 +430,15 @@ public abstract class GeoIntegrationTests {
 
 	@Document(indexName = "test-index-location-marker-core-geo")
 	static class LocationMarkerEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @GeoPointField private String locationAsString;
-		@Nullable @GeoPointField private double[] locationAsArray;
-		@Nullable @GeoPointField private String locationAsGeoHash;
+		@Nullable
+		@GeoPointField private String locationAsString;
+		@Nullable
+		@GeoPointField private double[] locationAsArray;
+		@Nullable
+		@GeoPointField private String locationAsGeoHash;
 
 		public String getId() {
 			return id;

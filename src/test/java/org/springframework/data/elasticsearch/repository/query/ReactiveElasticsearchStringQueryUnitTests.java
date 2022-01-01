@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -206,13 +206,16 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 	@Document(indexName = "test-index-person-reactive-repository-string-query")
 	public class Person {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
 		@Nullable private String name;
 
-		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
+		@Nullable
+		@Field(type = FieldType.Nested) private List<Car> car;
 
-		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+		@Nullable
+		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
 
 		@Nullable
 		public String getId() {
@@ -253,11 +256,15 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 
 	@Document(indexName = "test-index-book-reactive-repository-string-query")
 	static class Book {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @Field(type = FieldType.Object) private Author author;
-		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable
+		@Field(type = FieldType.Object) private Author author;
+		@Nullable
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
 

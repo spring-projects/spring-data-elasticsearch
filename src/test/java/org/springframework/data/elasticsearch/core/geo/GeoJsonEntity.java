@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,8 @@ import org.springframework.lang.Nullable;
  */
 @Document(indexName = "geojson-index")
 public class GeoJsonEntity {
-	@Nullable @Id private String id;
+	@Nullable
+	@Id private String id;
 	@Nullable private GeoJsonPoint point1;
 	@Nullable private GeoJson<? extends Iterable<?>> point2;
 	@Nullable private GeoJsonMultiPoint multiPoint1;

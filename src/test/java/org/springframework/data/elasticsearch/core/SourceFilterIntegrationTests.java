@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2021-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -186,10 +186,14 @@ public abstract class SourceFilterIntegrationTests {
 
 	@Document(indexName = "sourcefilter-tests")
 	public static class Entity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Text) private String field1;
-		@Nullable @Field(type = FieldType.Text) private String field2;
-		@Nullable @Field(type = FieldType.Text) private String field3;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Text) private String field1;
+		@Nullable
+		@Field(type = FieldType.Text) private String field2;
+		@Nullable
+		@Field(type = FieldType.Text) private String field3;
 
 		@Nullable
 		public String getId() {

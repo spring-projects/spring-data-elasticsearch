@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -3651,14 +3651,19 @@ public abstract class ElasticsearchTemplateTests {
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(shards = 1, replicas = 0, refreshInterval = "-1")
 	static class SampleEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
-		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String message;
 		@Nullable private int rate;
-		@Nullable @ScriptedField private Double scriptedRate;
+		@Nullable
+		@ScriptedField private Double scriptedRate;
 		@Nullable private boolean available;
 		@Nullable private GeoPoint location;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 
 		static Builder builder() {
 			return new Builder();
@@ -3829,14 +3834,18 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	private static class SampleEntityUUIDKeyed {
-		@Nullable @Id private UUID id;
+		@Nullable
+		@Id private UUID id;
 		@Nullable private String type;
-		@Nullable @Field(type = FieldType.Text, fielddata = true) private String message;
+		@Nullable
+		@Field(type = FieldType.Text, fielddata = true) private String message;
 		@Nullable private int rate;
-		@Nullable @ScriptedField private Long scriptedRate;
+		@Nullable
+		@ScriptedField private Long scriptedRate;
 		@Nullable private boolean available;
 		@Nullable private GeoPoint location;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 
 		@Nullable
 		public UUID getId() {
@@ -3911,11 +3920,15 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "test-index-book-core-template")
 	static class Book {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @Field(type = FieldType.Object) private Author author;
-		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable
+		@Field(type = FieldType.Object) private Author author;
+		@Nullable
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
 
@@ -4040,8 +4053,10 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}", versionType = EXTERNAL_GTE)
 	private static class GTEVersionEntity {
-		@Nullable @Version private Long version;
-		@Nullable @Id private String id;
+		@Nullable
+		@Version private Long version;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
 
 		@Nullable
@@ -4074,9 +4089,11 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "test-index-hetro1-core-template")
 	static class HetroEntity1 {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String firstName;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 
 		HetroEntity1(String id, String firstName) {
 			this.id = id;
@@ -4115,9 +4132,11 @@ public abstract class ElasticsearchTemplateTests {
 	@Document(indexName = "test-index-hetro2-core-template")
 	static class HetroEntity2 {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String lastName;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 
 		HetroEntity2(String id, String lastName) {
 			this.id = id;
@@ -4157,7 +4176,8 @@ public abstract class ElasticsearchTemplateTests {
 	@Setting(useServerConfiguration = true, shards = 10, replicas = 10, refreshInterval = "-1")
 	private static class UseServerConfigurationEntity {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String val;
 
 		@Nullable
@@ -4182,8 +4202,10 @@ public abstract class ElasticsearchTemplateTests {
 	@Document(indexName = "test-index-sample-mapping")
 	static class SampleMappingEntity {
 
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
 
 		@Nullable
 		public String getId() {
@@ -4205,7 +4227,8 @@ public abstract class ElasticsearchTemplateTests {
 
 		static class NestedEntity {
 
-			@Nullable @Field(type = Text) private String someField;
+			@Nullable
+			@Field(type = Text) private String someField;
 
 			@Nullable
 			public String getSomeField() {
@@ -4220,9 +4243,12 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SearchHitsEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Long) Long number;
-		@Nullable @Field(type = FieldType.Keyword) String keyword;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Long) Long number;
+		@Nullable
+		@Field(type = FieldType.Keyword) String keyword;
 
 		public SearchHitsEntity() {}
 
@@ -4262,7 +4288,8 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "test-index-highlight-entity-template")
 	static class HighlightEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String message;
 
 		public HighlightEntity(@Nullable String id, @Nullable String message) {
@@ -4291,7 +4318,8 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "test-index-optimistic-entity-template")
 	static class OptimisticEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String message;
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 
@@ -4325,10 +4353,12 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "test-index-optimistic-and-versioned-entity-template")
 	static class OptimisticAndVersionedEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String message;
 		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 
 		@Nullable
 		public String getId() {
@@ -4369,8 +4399,10 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "test-index-versioned-entity-template")
 	static class VersionedEntity {
-		@Nullable @Id private String id;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Version private Long version;
 
 		@Nullable
 		public String getId() {
@@ -4393,10 +4425,14 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleJoinEntity {
-		@Nullable @Id @Field(type = Keyword) private String uuid;
-		@Nullable @JoinTypeRelations(relations = {
+		@Nullable
+		@Id
+		@Field(type = Keyword) private String uuid;
+		@Nullable
+		@JoinTypeRelations(relations = {
 				@JoinTypeRelation(parent = "question", children = { "answer" }) }) private JoinField<String> myJoinField;
-		@Nullable @Field(type = Text) private String text;
+		@Nullable
+		@Field(type = Text) private String text;
 
 		@Nullable
 		public String getUuid() {
@@ -4428,7 +4464,8 @@ public abstract class ElasticsearchTemplateTests {
 
 	@Document(indexName = "immutable-class")
 	private static final class ImmutableEntity {
-		@Id @Nullable private final String id;
+		@Id
+		@Nullable private final String id;
 		@Field(type = FieldType.Text) private final String text;
 		@Nullable private final SeqNoPrimaryTerm seqNoPrimaryTerm;
 
@@ -4486,8 +4523,10 @@ public abstract class ElasticsearchTemplateTests {
 	@Document(indexName = "immutable-scripted")
 	public static final class ImmutableWithScriptedEntity {
 		@Id private final String id;
-		@Field(type = Integer) @Nullable private final int rate;
-		@Nullable @ScriptedField private final Double scriptedRate;
+		@Field(type = Integer)
+		@Nullable private final int rate;
+		@Nullable
+		@ScriptedField private final Double scriptedRate;
 
 		public ImmutableWithScriptedEntity(String id, int rate, @Nullable java.lang.Double scriptedRate) {
 			this.id = id;

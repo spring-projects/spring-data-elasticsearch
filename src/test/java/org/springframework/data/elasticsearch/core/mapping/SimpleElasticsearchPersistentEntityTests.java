@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -281,7 +281,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 	// region entities
 	private static class EntityWithWrongVersionType {
 
-		@Nullable @Version private String version;
+		@Nullable
+		@Version private String version;
 
 		@Nullable
 		public String getVersion() {
@@ -296,8 +297,10 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 	@SuppressWarnings("unused")
 	private static class EntityWithMultipleVersionField {
 
-		@Nullable @Version private Long version1;
-		@Nullable @Version private Long version2;
+		@Nullable
+		@Version private Long version1;
+		@Nullable
+		@Version private Long version2;
 
 		@Nullable
 		public Long getVersion1() {
@@ -320,8 +323,10 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 
 	@SuppressWarnings("unused")
 	private static class FieldNameEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(name = "renamed-field") private String renamedField;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(name = "renamed-field") private String renamedField;
 	}
 
 	private static class EntityWithoutSeqNoPrimaryTerm {}
@@ -335,9 +340,12 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 	@SuppressWarnings("unused")
 	@Document(indexName = "fieldnames")
 	private static class EntityWithIdNameFields {
-		@Nullable @Id private String theRealId;
-		@Nullable @Field(type = FieldType.Text, name = "document") private String document;
-		@Nullable @Field(name = "id") private String renamedId;
+		@Nullable
+		@Id private String theRealId;
+		@Nullable
+		@Field(type = FieldType.Text, name = "document") private String document;
+		@Nullable
+		@Field(name = "id") private String renamedId;
 	}
 
 	@Document(indexName = "dontcare")
@@ -345,9 +353,12 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			sortOrders = { Setting.SortOrder.asc },
 			sortMissingValues = { Setting.SortMissing._last, Setting.SortMissing._last, Setting.SortMissing._first })
 	private static class SettingsInvalidSortParameterSizes {
-		@Nullable @Id private String id;
-		@Nullable @Field(name = "first-field", type = FieldType.Keyword) private String firstField;
-		@Nullable @Field(name = "second-field", type = FieldType.Keyword) private String secondField;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(name = "first-field", type = FieldType.Keyword) private String firstField;
+		@Nullable
+		@Field(name = "second-field", type = FieldType.Keyword) private String secondField;
 	}
 
 	@Document(indexName = "dontcare")
@@ -356,23 +367,29 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			sortOrders = { Setting.SortOrder.desc, Setting.SortOrder.asc },
 			sortMissingValues = { Setting.SortMissing._last, Setting.SortMissing._first })
 	private static class SettingsValidSortParameterSizes {
-		@Nullable @Id private String id;
-		@Nullable @Field(name = "first_field", type = FieldType.Keyword) private String firstField;
-		@Nullable @Field(name = "second_field", type = FieldType.Keyword) private String secondField;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(name = "first_field", type = FieldType.Keyword) private String firstField;
+		@Nullable
+		@Field(name = "second_field", type = FieldType.Keyword) private String secondField;
 	}
 
 	private static class DisableTypeHintNoSetting {
-		@Nullable @Id String id;
+		@Nullable
+		@Id String id;
 	}
 
 	@Document(indexName = "foo", writeTypeHint = WriteTypeHint.FALSE)
 	private static class DisableTypeHintExplicitSetting {
-		@Nullable @Id String id;
+		@Nullable
+		@Id String id;
 	}
 
 	@Document(indexName = "foo", writeTypeHint = WriteTypeHint.TRUE)
 	private static class EnableTypeHintExplicitSetting {
-		@Nullable @Id String id;
+		@Nullable
+		@Id String id;
 	}
 	// endregion
 }

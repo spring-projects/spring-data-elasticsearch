@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -222,7 +222,8 @@ public abstract class CompletionIntegrationTests {
 
 	static class NonDocumentEntity {
 
-		@Nullable @Id private String someId;
+		@Nullable
+		@Id private String someId;
 		@Nullable private String someField1;
 		@Nullable private String someField2;
 
@@ -248,11 +249,13 @@ public abstract class CompletionIntegrationTests {
 	@Document(indexName = "test-index-core-completion")
 	static class CompletionEntity {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
 		@Nullable private String name;
 
-		@Nullable @CompletionField(maxInputLength = 100) private Completion suggest;
+		@Nullable
+		@CompletionField(maxInputLength = 100) private Completion suggest;
 
 		private CompletionEntity() {}
 
@@ -331,9 +334,11 @@ public abstract class CompletionIntegrationTests {
 	@Document(indexName = "test-index-annotated-completion")
 	static class AnnotatedCompletionEntity {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @CompletionField(maxInputLength = 100) private Completion suggest;
+		@Nullable
+		@CompletionField(maxInputLength = 100) private Completion suggest;
 
 		private AnnotatedCompletionEntity() {}
 

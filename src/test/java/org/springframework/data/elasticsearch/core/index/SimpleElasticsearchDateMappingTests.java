@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,10 +53,14 @@ public class SimpleElasticsearchDateMappingTests extends MappingContextBaseTests
 
 	@Document(indexName = "test-index-date-mapping-core")
 	static class SampleDateMappingEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
-		@Nullable @Field(type = Date, format = {}, pattern = "dd.MM.uuuu hh:mm") private LocalDateTime customFormatDate;
-		@Nullable @Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime basicFormatDate;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text, index = false, store = true, analyzer = "standard") private String message;
+		@Nullable
+		@Field(type = Date, format = {}, pattern = "dd.MM.uuuu hh:mm") private LocalDateTime customFormatDate;
+		@Nullable
+		@Field(type = FieldType.Date, format = DateFormat.basic_date) private LocalDateTime basicFormatDate;
 
 		@Nullable
 		public String getId() {

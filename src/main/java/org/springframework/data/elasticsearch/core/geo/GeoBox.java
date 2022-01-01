@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,8 +41,8 @@ public class GeoBox {
 	}
 
 	/**
-	 * return a {@link org.springframework.data.elasticsearch.core.geo.GeoBox}
-	 * from a {@link org.springframework.data.geo.Box}.
+	 * return a {@link org.springframework.data.elasticsearch.core.geo.GeoBox} from a
+	 * {@link org.springframework.data.geo.Box}.
 	 *
 	 * @param box {@link org.springframework.data.geo.Box} to use
 	 * @return a {@link org.springframework.data.elasticsearch.core.geo.GeoBox}

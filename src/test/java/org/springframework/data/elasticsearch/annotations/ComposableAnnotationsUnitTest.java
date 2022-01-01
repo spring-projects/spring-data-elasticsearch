@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,11 +166,16 @@ public class ComposableAnnotationsUnitTest {
 
 	@DocumentNoCreate(indexName = "test-no-create")
 	static class ComposedAnnotationEntity {
-		@Nullable @Id private String id;
-		@Nullable @NullValueField(name = "null-value") private String nullValue;
-		@Nullable @LocalDateField private LocalDate theDate;
-		@Nullable @TextKeywordField private String multiField;
-		@Nullable @MyAnalyzerCompletionField private Completion suggest;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@NullValueField(name = "null-value") private String nullValue;
+		@Nullable
+		@LocalDateField private LocalDate theDate;
+		@Nullable
+		@TextKeywordField private String multiField;
+		@Nullable
+		@MyAnalyzerCompletionField private Completion suggest;
 
 		@Nullable
 		public String getId() {

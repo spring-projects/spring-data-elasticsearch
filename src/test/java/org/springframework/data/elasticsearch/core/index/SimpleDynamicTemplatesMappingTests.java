@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,9 +72,11 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings.json")
 	static class SampleDynamicTemplatesEntity {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
-		@Nullable @Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
+		@Nullable
+		@Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
 	}
 
 	/**
@@ -85,9 +87,11 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings_two.json")
 	static class SampleDynamicTemplatesEntityTwo {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
-		@Nullable @Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
+		@Nullable
+		@Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
 	}
 
 }

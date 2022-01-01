@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -385,11 +385,15 @@ public class NestedObjectTests {
 	@Document(indexName = "test-index-book-nested-objects")
 	static class Book {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @Field(type = FieldType.Object) private Author author;
-		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable
+		@Field(type = FieldType.Object) private Author author;
+		@Nullable
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
 
@@ -441,10 +445,13 @@ public class NestedObjectTests {
 
 	@Document(indexName = "test-index-person")
 	static class Person {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
-		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+		@Nullable
+		@Field(type = FieldType.Nested) private List<Car> car;
+		@Nullable
+		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
 
 		@Nullable
 		public String getId() {
@@ -508,11 +515,15 @@ public class NestedObjectTests {
 
 	@Document(indexName = "test-index-person-multiple-level-nested")
 	static class PersonMultipleLevelNested {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @Field(type = FieldType.Nested) private List<GirlFriend> girlFriends;
-		@Nullable @Field(type = FieldType.Nested) private List<Car> cars;
-		@Nullable @Field(type = FieldType.Nested, includeInParent = true) private List<Car> bestCars;
+		@Nullable
+		@Field(type = FieldType.Nested) private List<GirlFriend> girlFriends;
+		@Nullable
+		@Field(type = FieldType.Nested) private List<Car> cars;
+		@Nullable
+		@Field(type = FieldType.Nested, includeInParent = true) private List<Car> bestCars;
 
 		@Nullable
 		public String getId() {
@@ -563,7 +574,8 @@ public class NestedObjectTests {
 	static class GirlFriend {
 		@Nullable private String name;
 		@Nullable private String type;
-		@Nullable @Field(type = FieldType.Nested) private List<Car> cars;
+		@Nullable
+		@Field(type = FieldType.Nested) private List<Car> cars;
 
 		@Nullable
 		public String getName() {

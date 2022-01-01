@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -79,7 +79,8 @@ class SimpleReactiveElasticsearchRepositoryTests {
 	static final String INDEX = "test-index-sample-simple-reactive";
 
 	@Autowired ReactiveElasticsearchOperations operations;
-	@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection") @Autowired ReactiveSampleEntityRepository repository;
+	@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
+	@Autowired ReactiveSampleEntityRepository repository;
 
 	@BeforeEach
 	void setUp() {
@@ -636,12 +637,16 @@ class SimpleReactiveElasticsearchRepositoryTests {
 
 	@Document(indexName = INDEX)
 	static class SampleEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = Text, store = true, fielddata = true) private String type;
-		@Nullable @Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String message;
 		@Nullable private int rate;
 		@Nullable private boolean available;
-		@Nullable @Version private Long version;
+		@Nullable
+		@Version private Long version;
 
 		public SampleEntity() {}
 

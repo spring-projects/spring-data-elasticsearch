@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2021 the original author or authors.
+ * Copyright 2016-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,16 +101,20 @@ public abstract class GeoRepositoryIntegrationTests {
 
 	@Document(indexName = "test-index-geo-repository")
 	static class GeoEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		// geo shape - Spring Data
 		@Nullable private Box box;
 		@Nullable private Circle circle;
 		@Nullable private Polygon polygon;
 		// geo point - Custom implementation + Spring Data
-		@Nullable @GeoPointField private Point pointA;
+		@Nullable
+		@GeoPointField private Point pointA;
 		@Nullable private GeoPoint pointB;
-		@Nullable @GeoPointField private String pointC;
-		@Nullable @GeoPointField private double[] pointD;
+		@Nullable
+		@GeoPointField private String pointC;
+		@Nullable
+		@GeoPointField private double[] pointD;
 
 		@Nullable
 		public String getId() {

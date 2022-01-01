@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2021 the original author or authors.
+ * Copyright 2020-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,9 +121,11 @@ public abstract class InnerHitsIntegrationTests {
 
 	@Document(indexName = INDEX_NAME)
 	static class City {
-		@Nullable @Id private String name;
+		@Nullable
+		@Id private String name;
 		// NOTE: using a custom names here to cover property name matching
-		@Nullable @Field(name = "hou-ses", type = FieldType.Nested) private Collection<House> houses = new ArrayList<>();
+		@Nullable
+		@Field(name = "hou-ses", type = FieldType.Nested) private Collection<House> houses = new ArrayList<>();
 
 		public City(@Nullable String name, @Nullable Collection<House> houses) {
 			this.name = name;
@@ -150,11 +152,13 @@ public abstract class InnerHitsIntegrationTests {
 	}
 
 	static class House {
-		@Nullable @Field(type = FieldType.Text) private String street;
-		@Nullable @Field(type = FieldType.Text) private String streetNumber;
+		@Nullable
+		@Field(type = FieldType.Text) private String street;
+		@Nullable
+		@Field(type = FieldType.Text) private String streetNumber;
 		// NOTE: using a custom names here to cover property name matching
-		@Nullable @Field(name = "in-habi-tants",
-				type = FieldType.Nested) private List<Inhabitant> inhabitants = new ArrayList<>();
+		@Nullable
+		@Field(name = "in-habi-tants", type = FieldType.Nested) private List<Inhabitant> inhabitants = new ArrayList<>();
 
 		public House(@Nullable String street, @Nullable String streetNumber, @Nullable List<Inhabitant> inhabitants) {
 			this.street = street;
@@ -192,8 +196,10 @@ public abstract class InnerHitsIntegrationTests {
 
 	static class Inhabitant {
 		// NOTE: using a custom names here to cover property name matching
-		@Nullable @Field(name = "first-name", type = FieldType.Text) private String firstName;
-		@Nullable @Field(name = "last-name", type = FieldType.Text) private String lastName;
+		@Nullable
+		@Field(name = "first-name", type = FieldType.Text) private String firstName;
+		@Nullable
+		@Field(name = "last-name", type = FieldType.Text) private String lastName;
 
 		public Inhabitant(@Nullable String firstName, @Nullable String lastName) {
 			this.firstName = firstName;

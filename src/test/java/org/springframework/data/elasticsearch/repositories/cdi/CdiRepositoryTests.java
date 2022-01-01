@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2021 the original author or authors.
+ * Copyright 2014-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -155,14 +155,16 @@ public class CdiRepositoryTests {
 
 	@Document(indexName = "test-index-product-cdi-repository")
 	static class Product {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private List<String> title;
 		@Nullable private String name;
 		@Nullable private String description;
 		@Nullable private String text;
 		@Nullable private List<String> categories;
 		@Nullable private Float weight;
-		@Nullable @Field(type = FieldType.Float) private Float price;
+		@Nullable
+		@Field(type = FieldType.Float) private Float price;
 		@Nullable private Integer popularity;
 		@Nullable private boolean available;
 		@Nullable private String location;
@@ -291,11 +293,15 @@ public class CdiRepositoryTests {
 
 	@Document(indexName = "test-index-book-cdi-repository")
 	static class Book {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String name;
-		@Nullable @Field(type = FieldType.Object) private Author author;
-		@Nullable @Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
-		@Nullable @MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
+		@Nullable
+		@Field(type = FieldType.Object) private Author author;
+		@Nullable
+		@Field(type = FieldType.Nested) private Map<Integer, Collection<String>> buckets = new HashMap<>();
+		@Nullable
+		@MultiField(mainField = @Field(type = FieldType.Text, analyzer = "whitespace"),
 				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Text, analyzer = "stop",
 						searchAnalyzer = "standard") }) private String description;
 

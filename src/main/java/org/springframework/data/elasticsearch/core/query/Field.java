@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ public interface Field {
 
 	/**
 	 * Sets the path if this field has a multi-part name that should be used in a nested query.
+	 *
 	 * @param path the value to set
 	 * @since 4.2
 	 */
@@ -53,5 +54,6 @@ public interface Field {
 	 * @return the path if this is a field for a nested query
 	 * @since 4.2
 	 */
-	@Nullable String getPath();
+	@Nullable
+	String getPath();
 }

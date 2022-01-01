@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2021-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -144,7 +144,7 @@ public class Range<T> {
 		return (Range<T>) UNBOUNDED;
 	}
 
-    private Range(Bound<T> lowerBound, Bound<T> upperBound) {
+	private Range(Bound<T> lowerBound, Bound<T> upperBound) {
 
 		Assert.notNull(lowerBound, "Lower bound must not be null!");
 		Assert.notNull(upperBound, "Upper bound must not be null!");
@@ -160,7 +160,7 @@ public class Range<T> {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-    public boolean contains(T value) {
+	public boolean contains(T value) {
 
 		Assert.notNull(value, "Reference value must not be null!");
 		Assert.isInstanceOf(Comparable.class, value, "value must implements Comparable!");
@@ -239,8 +239,7 @@ public class Range<T> {
 		@SuppressWarnings({ "rawtypes", "unchecked" }) //
 		private static final Bound<?> UNBOUNDED = new Bound(Optional.empty(), true);
 
-		@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-        private final Optional<T> value;
+		@SuppressWarnings("OptionalUsedAsFieldOrParameterType") private final Optional<T> value;
 		private final boolean inclusive;
 
 		/**
@@ -358,7 +357,7 @@ public class Range<T> {
 		}
 
 		@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-        private Bound(Optional<T> value, boolean inclusive) {
+		private Bound(Optional<T> value, boolean inclusive) {
 			this.value = value;
 			this.inclusive = inclusive;
 		}
