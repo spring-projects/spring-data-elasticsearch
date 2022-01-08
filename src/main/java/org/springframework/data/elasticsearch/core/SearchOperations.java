@@ -19,7 +19,7 @@ import java.util.List;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.Query;

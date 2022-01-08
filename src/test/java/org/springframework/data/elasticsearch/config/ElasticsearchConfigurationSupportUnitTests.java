@@ -28,11 +28,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.ReactiveElasticsearchTemplate;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.client.reactive.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.config.AbstractElasticsearchConfiguration;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.config.AbstractReactiveElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 

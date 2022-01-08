@@ -27,7 +27,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.client.RestClients;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;

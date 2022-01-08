@@ -22,7 +22,7 @@ import java.util.List;
 
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;

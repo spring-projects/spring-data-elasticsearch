@@ -9,10 +9,6 @@ This section describes breaking changes from version 4.3.x to 4.4.x and how remo
 [[elasticsearch-migration-guide-4.3-4.4.breaking-changes]]
 == Breaking Changes
 
-=== Package changes
-
-* The package `org.springframework.data.elasticsearch.core.clients.elasticsearch7` has been renamed to `org.springframework.data.elasticsearch.core.backend.elasticsearch7`.
-
 === Removal of deprecated classes
 
 ==== `ElasticsearchTemplate` has been removed
