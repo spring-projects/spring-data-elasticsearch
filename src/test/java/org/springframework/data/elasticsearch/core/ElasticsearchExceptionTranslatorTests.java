@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.ElasticsearchExceptionTranslator;
 
 /**
  * @author Roman Puchkovskiy

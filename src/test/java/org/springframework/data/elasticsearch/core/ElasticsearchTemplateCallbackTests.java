@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;

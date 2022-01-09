@@ -28,7 +28,6 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
-import org.springframework.data.elasticsearch.backend.elasticsearch7.client.RestClients;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
@@ -48,7 +47,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Henrique Amaral
  * @since 3.2
  */
-public class ClientConfigurationBuilder
+class ClientConfigurationBuilder
 		implements ClientConfigurationBuilderWithRequiredEndpoint, MaybeSecureClientConfigurationBuilder {
 
 	private final List<InetSocketAddress> hosts = new ArrayList<>();
