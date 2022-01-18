@@ -111,6 +111,7 @@ import org.springframework.util.StringUtils;
  * @author Subhobrata Dey
  * @author Farid Faoudi
  * @author Peer Mueller
+ * @author Sijia Liu
  * @since 4.0
  */
 class RequestFactory {
@@ -771,6 +772,10 @@ class RequestFactory {
 
 		if (query.getSuggestBuilder() != null) {
 			sourceBuilder.suggest(query.getSuggestBuilder());
+		}
+
+		if (!isEmpty(query.getSearchExtBuilders())) {
+			sourceBuilder.ext(query.getSearchExtBuilders());
 		}
 	}
 

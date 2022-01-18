@@ -21,6 +21,7 @@ import java.util.List;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.script.mustache.SearchTemplateRequestBuilder;
+import org.elasticsearch.search.SearchExtBuilder;
 import org.elasticsearch.search.aggregations.AbstractAggregationBuilder;
 import org.elasticsearch.search.aggregations.PipelineAggregationBuilder;
 import org.elasticsearch.search.collapse.CollapseBuilder;
@@ -41,6 +42,7 @@ import org.springframework.lang.Nullable;
  * @author Jean-Baptiste Nizet
  * @author Martin Choraine
  * @author Peter-Josef Meisch
+ * @author Sijia Liu
  */
 public class NativeSearchQuery extends BaseQuery {
 
@@ -56,6 +58,7 @@ public class NativeSearchQuery extends BaseQuery {
 	@Nullable private List<IndexBoost> indicesBoost;
 	@Nullable private SearchTemplateRequestBuilder searchTemplate;
 	@Nullable private SuggestBuilder suggestBuilder;
+	@Nullable private List<SearchExtBuilder> searchExtBuilders;
 
 	public NativeSearchQuery(@Nullable QueryBuilder query) {
 
@@ -200,5 +203,21 @@ public class NativeSearchQuery extends BaseQuery {
 	@Nullable
 	public SuggestBuilder getSuggestBuilder() {
 		return suggestBuilder;
+	}
+
+	public void setSearchExtBuilders(List<SearchExtBuilder> searchExtBuilders) {
+		this.searchExtBuilders = searchExtBuilders;
+	}
+
+	public void addSearchExtBuilder(SearchExtBuilder searchExtBuilder) {
+		if (searchExtBuilders == null) {
+			searchExtBuilders = new ArrayList<>();
+		}
+		searchExtBuilders.add(searchExtBuilder);
+	}
+
+	@Nullable
+	public List<SearchExtBuilder> getSearchExtBuilders() {
+		return searchExtBuilders;
 	}
 }
