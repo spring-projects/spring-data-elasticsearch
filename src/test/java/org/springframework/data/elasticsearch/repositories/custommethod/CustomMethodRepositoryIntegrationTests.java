@@ -22,6 +22,7 @@ import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import java.lang.Long;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -1648,6 +1649,24 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(count).isEqualTo(20);
 	}
 
+	@Test
+	void shouldBeAbleToUseCollectionInQueryAnnotatedMethod() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+		List<String> ids = entities.stream()
+				.map(SampleEntity::getId)
+				.limit(7) // Just get subset
+				.collect(Collectors.toList());
+
+		List<SampleEntity> sampleEntities = repository.getByIds(ids);
+
+		assertThat(sampleEntities).hasSize(7);
+
+		List<String> returnedIds = sampleEntities.stream().map(SampleEntity::getId).collect(Collectors.toList());
+		assertThat(returnedIds).containsAll(ids);
+	}
+
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
@@ -1881,6 +1900,9 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 
 		@CountQuery("{\"bool\" : {\"must\" : {\"term\" : {\"type\" : \"?0\"}}}}")
 		long countWithQueryByType(String type);
+
+		@Query("{\"ids\" : {\"values\" : ?0 }}")
+		List<SampleEntity> getByIds(Collection<String> ids);
 	}
 
 	/**
