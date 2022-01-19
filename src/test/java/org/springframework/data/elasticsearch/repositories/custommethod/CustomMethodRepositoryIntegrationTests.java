@@ -72,6 +72,7 @@ import org.springframework.lang.Nullable;
  * @author Don Wellington
  * @author Peter-Josef Meisch
  * @author Rasmus Faber-Espensen
+ * @author James Mudd
  */
 @SpringIntegrationTest
 public abstract class CustomMethodRepositoryIntegrationTests {
