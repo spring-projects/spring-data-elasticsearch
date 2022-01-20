@@ -312,8 +312,9 @@ Repository methods can be defined to have the following return types for returni
 [[elasticsearch.query-methods.at-query]]
 == Using @Query Annotation
 
-.Declare query at the method using the `@Query` annotation.
+.Declare query on the method using the `@Query` annotation.
 ====
+The arguments passed to the method can be inserted into placeholders in the query string. the placeholders are of the form `?0`, `?1`, `?2` etc. for the first, second, third parameter and so on.
 [source,java]
 ----
 interface BookRepository extends ElasticsearchRepository<Book, String> {
@@ -338,3 +339,24 @@ It will be sent to Easticsearch as value of the query element; if for example th
 }
 ----
 ====
+.`@Query` annotation on a method taking a Collection argument
+====
+A repository method such as
+[source,java]
+----
+@Query("{\"ids\": {\"values\": ?0 }}")
+List<SampleEntity> getByIds(Collection<String> ids);
+----
+would make an https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html[IDs query] to return all the matching documents. So calling the method with a `List` of `["id1", "id2", "id3"]` would produce the query body
+[source,json]
+----
+{
+  "query": {
+    "ids": {
+      "values": ["id1", "id2", "id3"]
+    }
+  }
+}
+----
+====
+
