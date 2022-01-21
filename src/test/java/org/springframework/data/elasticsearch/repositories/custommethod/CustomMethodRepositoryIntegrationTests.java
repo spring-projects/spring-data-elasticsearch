@@ -93,7 +93,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	@Test
 	@org.junit.jupiter.api.Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of("*")).delete();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test
@@ -1654,9 +1654,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	void shouldBeAbleToUseCollectionInQueryAnnotatedMethod() {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
-		List<String> ids = entities.stream()
-				.map(SampleEntity::getId)
-				.limit(7) // Just get subset
+		List<String> ids = entities.stream().map(SampleEntity::getId).limit(7) // Just get subset
 				.collect(Collectors.toList());
 
 		List<SampleEntity> sampleEntities = repository.getByIds(ids);
@@ -1666,7 +1664,6 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		List<String> returnedIds = sampleEntities.stream().map(SampleEntity::getId).collect(Collectors.toList());
 		assertThat(returnedIds).containsAll(ids);
 	}
-
 
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 

@@ -125,7 +125,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of("*")).delete().block();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
 	}
 	// endregion
 

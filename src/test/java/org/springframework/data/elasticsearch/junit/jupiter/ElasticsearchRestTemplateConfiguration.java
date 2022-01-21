@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
+import static org.springframework.util.StringUtils.*;
+
 import java.time.Duration;
 
 import org.elasticsearch.client.RestHighLevelClient;
@@ -58,6 +60,13 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 		if (clusterConnectionInfo.isUseSsl()) {
 			configurationBuilder = ((ClientConfiguration.MaybeSecureClientConfigurationBuilder) configurationBuilder)
 					.usingSsl();
+		}
+
+		String user = System.getenv("DATAES_ELASTICSEARCH_USER");
+		String password = System.getenv("DATAES_ELASTICSEARCH_PASSWORD");
+
+		if (hasText(user) && hasText(password)) {
+			configurationBuilder.withBasicAuth(user, password);
 		}
 
 		return RestClients.create(configurationBuilder //
