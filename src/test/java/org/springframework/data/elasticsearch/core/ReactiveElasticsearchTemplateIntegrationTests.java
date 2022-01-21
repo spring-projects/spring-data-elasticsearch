@@ -19,7 +19,11 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
+import org.elasticsearch.common.Strings;
+import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
+import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -1188,6 +1192,38 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.verifyComplete();
 	}
 
+	@Test // #1529
+	void shouldWorkReindexForExistingIndex() {
+		String sourceIndexName = indexNameProvider.indexName();
+		String documentId = nextIdAsString();
+		ElasticsearchTemplateTests.SampleEntity sampleEntity = ElasticsearchTemplateTests.SampleEntity.builder().id(documentId).message("abc").build();
+		operations.save(sampleEntity).block();
+
+		indexNameProvider.increment();
+		String destIndexName = indexNameProvider.indexName();
+		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
+		operations.reindex(PostReindexRequest.builder(sourceIndexName, destIndexName).withRefresh(true).build())
+				.as(StepVerifier::create)
+				.consumeNextWith(postReindexResponse -> assertThat(postReindexResponse.getTotal()).isEqualTo(1L))
+				.verifyComplete();
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		operations.count(searchQuery, SampleEntity.class, IndexCoordinates.of(destIndexName))
+				.as(StepVerifier::create)
+				.expectNext(1L)
+				.verifyComplete();
+	}
+
+	@Test // #1529
+	void shouldWorkSubmitReindexTask(){
+		String sourceIndexName = indexNameProvider.indexName();
+		indexNameProvider.increment();
+		String destIndexName = indexNameProvider.indexName();
+		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
+		operations.submitReindexTask(PostReindexRequest.builder(sourceIndexName, destIndexName).build())
+				.as(StepVerifier::create)
+				.consumeNextWith(task -> assertThat(task).isNotBlank())
+				.verifyComplete();
+	}
 	// endregion
 
 	// region Helper functions

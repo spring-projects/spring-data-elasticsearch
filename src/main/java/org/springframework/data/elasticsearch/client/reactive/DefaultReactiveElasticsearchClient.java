@@ -83,11 +83,13 @@ import org.elasticsearch.action.update.UpdateResponse;
 import org.elasticsearch.client.GetAliasesResponse;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.indices.*;
+import org.elasticsearch.client.tasks.TaskSubmissionResponse;
 import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.mustache.SearchTemplateRequest;
@@ -143,6 +145,7 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @author Brian Clozel
  * @author Farid Faoudi
  * @author George Popides
+ * @author Sijia Liu
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -507,6 +510,19 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	public Mono<BulkResponse> bulk(HttpHeaders headers, BulkRequest bulkRequest) {
 		return sendRequest(bulkRequest, requestCreator.bulk(), BulkResponse.class, headers) //
 				.next();
+	}
+
+	@Override
+	public Mono<BulkByScrollResponse> reindex(HttpHeaders headers, ReindexRequest reindexRequest) {
+		return sendRequest(reindexRequest, requestCreator.reindex(), BulkByScrollResponse.class, headers)
+				.next();
+	}
+
+	@Override
+	public Mono<String> submitReindexTask(HttpHeaders headers, ReindexRequest reindexRequest) {
+		return sendRequest(reindexRequest, requestCreator.submitReindex(), TaskSubmissionResponse.class, headers)
+				.next()
+				.map(TaskSubmissionResponse::getTask);
 	}
 
 	@Override

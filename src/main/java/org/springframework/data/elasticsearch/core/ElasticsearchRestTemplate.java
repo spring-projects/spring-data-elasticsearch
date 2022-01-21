@@ -53,6 +53,7 @@ import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.suggest.SuggestBuilder;
@@ -61,7 +62,9 @@ import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.cluster.ElasticsearchClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
+import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
@@ -106,6 +109,7 @@ import org.springframework.util.Assert;
  * @author Gyula Attila Csorogi
  * @author Massimiliano Poggi
  * @author Farid Faoudi
+ * @author Sijia Liu
  * @since 4.4
  */
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
@@ -275,6 +279,26 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		final BulkByScrollResponse bulkByScrollResponse = execute(
 				client -> client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT));
 		return ResponseConverter.byQueryResponseOf(bulkByScrollResponse);
+	}
+
+	@Override
+	public PostReindexResponse reindex(PostReindexRequest postReindexRequest) {
+
+		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
+
+		final ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+		final BulkByScrollResponse bulkByScrollResponse = execute(
+				client -> client.reindex(reindexRequest, RequestOptions.DEFAULT));
+		return ResponseConverter.postReindexResponseOf(bulkByScrollResponse);
+	}
+
+	@Override
+	public String submitReindexTask(PostReindexRequest postReindexRequest) {
+		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
+
+		final ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+		return execute(
+				client -> client.submitReindexTask(reindexRequest, RequestOptions.DEFAULT).getTask());
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,

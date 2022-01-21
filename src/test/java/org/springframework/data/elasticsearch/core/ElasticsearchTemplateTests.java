@@ -83,6 +83,8 @@ import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
+import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.ScriptField;
@@ -126,6 +128,7 @@ import org.springframework.lang.Nullable;
  * @author Subhobrata Dey
  * @author Farid Faoudi
  * @author Peer Mueller
+ * @author Sijia Liu
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchTemplateTests {
@@ -3644,6 +3647,34 @@ public abstract class ElasticsearchTemplateTests {
 		Query query = operations.matchAllQuery().addSort(Sort.by(order));
 
 		operations.search(query, SampleEntity.class);
+	}
+
+	@Test // #1529
+	void shouldWorkReindexForExistingIndex() {
+		String sourceIndexName = indexNameProvider.indexName();
+		String documentId = nextIdAsString();
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("abc").build();
+		operations.save(sampleEntity);
+
+		indexNameProvider.increment();
+		String destIndexName = indexNameProvider.indexName();
+		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
+
+		final PostReindexResponse reindex = operations.reindex(PostReindexRequest.builder(sourceIndexName, destIndexName).withRefresh(true).build());
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		assertThat(reindex.getTotal()).isEqualTo(1);
+		assertThat(operations.count(searchQuery, IndexCoordinates.of(destIndexName))).isEqualTo(1);
+	}
+
+	@Test // #1529
+	void shouldWorkSubmitReindexTask(){
+		String sourceIndexName = indexNameProvider.indexName();
+		indexNameProvider.increment();
+		String destIndexName = indexNameProvider.indexName();
+		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
+		String task = operations.submitReindexTask(PostReindexRequest.builder(sourceIndexName, destIndexName).build());
+		// Maybe there should be a task api to detect whether the task exists
+		assertThat(task).isNotBlank();
 	}
 
 	// region entities

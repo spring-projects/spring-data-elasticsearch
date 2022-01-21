@@ -49,6 +49,7 @@ import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
@@ -289,4 +290,8 @@ public interface RequestCreator {
 	default Function<ClusterHealthRequest, Request> clusterHealth() {
 		return RequestConverters::clusterHealth;
 	}
+
+	default Function<ReindexRequest, Request> reindex() { return RequestConverters::reindex; }
+
+	default Function<ReindexRequest, Request> submitReindex() { return RequestConverters::submitReindex; }
 }

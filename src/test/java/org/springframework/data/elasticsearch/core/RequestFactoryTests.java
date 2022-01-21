@@ -36,6 +36,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
+import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.xcontent.ToXContent;
 import org.elasticsearch.xcontent.XContentType;
 import org.json.JSONException;
@@ -48,6 +49,7 @@ import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -55,18 +57,12 @@ import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
+import org.springframework.data.elasticsearch.core.index.reindex.Remote;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.RescorerQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery.ScoreMode;
-import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.lang.Nullable;
 
 /**
@@ -74,6 +70,7 @@ import org.springframework.lang.Nullable;
  * @author Roman Puchkovskiy
  * @author Peer Mueller
  * @author vdisk
+ * @author Sijia Liu
  */
 @SuppressWarnings("ConstantConditions")
 @ExtendWith(MockitoExtension.class)
@@ -560,6 +557,64 @@ class RequestFactoryTests {
 		assertThat(searchRequest.source().storedFields()).isNotNull();
 		assertThat(searchRequest.source().storedFields().fieldNames())
 				.isEqualTo(Arrays.asList("last-name", "current-location"));
+	}
+
+	@Test // #1529
+	void shouldCreatePostReindexRequest() throws IOException, JSONException {
+		final String expected = "{\n" +
+				"    \"source\":{\n" +
+				"        \"remote\":{\n" +
+				"                \"username\":\"admin\",\n" +
+				"                \"password\":\"admin\",\n" +
+				"                \"host\":\"http://localhost:9200/elasticsearch\",\n" +
+				"                \"socket_timeout\":\"30s\",\n" +
+				"                \"connect_timeout\":\"30s\"\n" +
+				"            },\n" +
+				"        \"index\":[\"source_1\",\"source_2\"],\n" +
+				"        \"size\":5,\n" +
+				"        \"query\":{\"match_all\":{\"boost\":1.0}},\n" +
+				"        \"_source\":{\"includes\":[\"name\"],\"excludes\":[]},\n" +
+				"        \"slice\":{\"id\":1,\"max\":20}\n" +
+				"    },\n" +
+				"    \"dest\":{\n" +
+				"        \"index\":\"destination\",\n" +
+				"        \"routing\":\"routing\",\n" +
+				"        \"op_type\":\"create\",\n" +
+				"        \"pipeline\":\"pipeline\",\n" +
+				"        \"version_type\":\"external\"\n" +
+				"    },\n" +
+				"    \"max_docs\":10,\n" +
+				"    \"script\":{\"source\":\"Math.max(1,2)\",\"lang\":\"java\"},\n" +
+				"    \"conflicts\":\"proceed\"\n" +
+				"}";
+
+		Remote remote = Remote.builder("http", "localhost",9200)
+				.withPathPrefix("elasticsearch")
+				.withUsername("admin")
+				.withPassword("admin")
+				.withConnectTimeout(Duration.ofSeconds(30))
+				.withSocketTimeout(Duration.ofSeconds(30)).build();
+
+		PostReindexRequest postReindexRequest = PostReindexRequest.builder("source_1", "destination")
+				.addSourceIndex("source_2")
+				.withConflicts("proceed")
+				.withMaxDocs(10)
+				.withSourceQuery(QueryBuilders.matchAllQuery())
+				.withSourceSize(5)
+				.withSourceSourceFilter(new FetchSourceFilterBuilder().withIncludes("name").build())
+				.withSourceRemote(remote)
+				.withSourceSlice(1,20)
+				.withDestOpType(IndexQuery.OpType.CREATE)
+				.withDestVersionType(Document.VersionType.EXTERNAL)
+				.withDestPipeline("pipeline")
+				.withDestRouting("routing")
+				.withScript("Math.max(1,2)", "java")
+				.build();
+
+		final ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+		final String json = requestToString(reindexRequest);
+
+		assertEquals(expected, json, false);
 	}
 
 	// region entities
