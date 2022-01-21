@@ -21,9 +21,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import org.elasticsearch.common.Strings;
 import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -1202,7 +1200,11 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		indexNameProvider.increment();
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
-		operations.reindex(PostReindexRequest.builder(sourceIndexName, destIndexName).withRefresh(true).build())
+		final PostReindexRequest postReindexRequest = PostReindexRequest
+				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
+				.withRefresh(true)
+				.build();
+		operations.reindex(postReindexRequest)
 				.as(StepVerifier::create)
 				.consumeNextWith(postReindexResponse -> assertThat(postReindexResponse.getTotal()).isEqualTo(1L))
 				.verifyComplete();
@@ -1219,7 +1221,10 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		indexNameProvider.increment();
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
-		operations.submitReindexTask(PostReindexRequest.builder(sourceIndexName, destIndexName).build())
+		final PostReindexRequest postReindexRequest = PostReindexRequest
+				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
+				.build();
+		operations.submitReindexTask(postReindexRequest)
 				.as(StepVerifier::create)
 				.consumeNextWith(task -> assertThat(task).isNotBlank())
 				.verifyComplete();

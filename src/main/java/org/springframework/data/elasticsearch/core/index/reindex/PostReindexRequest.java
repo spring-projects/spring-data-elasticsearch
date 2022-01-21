@@ -2,16 +2,13 @@ package org.springframework.data.elasticsearch.core.index.reindex;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-
-import static org.springframework.util.CollectionUtils.*;
 
 /**
  * Request to reindex some documents from one index to another.
@@ -110,19 +107,22 @@ public class PostReindexRequest {
 		return slices;
 	}
 
-	public static PostReindexRequestBuilder builder(String sourceIndex, String destIndex) {
+	public static PostReindexRequestBuilder builder(IndexCoordinates sourceIndex, IndexCoordinates destIndex) {
 		return new PostReindexRequestBuilder(sourceIndex, destIndex);
 	}
 
 	public static class Source {
-		private final List<String> indexes = new ArrayList<>();
+		private final IndexCoordinates indexes;
 		@Nullable private QueryBuilder query;
 		@Nullable private Remote remote;
 		@Nullable private Slice slice;
 		@Nullable private Integer size;
 		@Nullable private SourceFilter sourceFilter;
 
-		public List<String> getIndexes() {
+		Source(IndexCoordinates indexes){
+			this.indexes = indexes;
+		}
+		public IndexCoordinates getIndexes() {
 			return indexes;
 		}
 
@@ -172,18 +172,18 @@ public class PostReindexRequest {
 
 	public static class Dest {
 
-		private final String index;
+		private final IndexCoordinates index;
 		@Nullable private String pipeline;
 		@Nullable private String routing;
 		@Nullable private Document.VersionType versionType;
 		@Nullable private IndexQuery.OpType opType;
 
-		Dest(String index) {
+		Dest(IndexCoordinates index) {
 			Assert.notNull(index, "dest index must not be null");
 			this.index = index;
 		}
 
-		public String getIndex() {
+		public IndexCoordinates getIndex() {
 			return index;
 		}
 
@@ -241,9 +241,8 @@ public class PostReindexRequest {
 		@Nullable private Duration scroll;
 		@Nullable private Integer slices;
 
-		public PostReindexRequestBuilder(String sourceIndex, String destIndex) {
-			this.source = new Source();
-			this.source.indexes.add(sourceIndex);
+		public PostReindexRequestBuilder(IndexCoordinates sourceIndex, IndexCoordinates destIndex) {
+			this.source = new Source(sourceIndex);
 			this.dest = new Dest(destIndex);
 		}
 
@@ -255,25 +254,6 @@ public class PostReindexRequest {
 
 		public PostReindexRequestBuilder withConflicts(String conflicts) {
 			this.conflicts = conflicts;
-			return this;
-		}
-
-		public PostReindexRequestBuilder addSourceIndex(String sourceIndex) {
-			Assert.notNull(sourceIndex, "source index must not be null");
-			this.source.indexes.add(sourceIndex);
-			return this;
-		}
-
-		public PostReindexRequestBuilder withSourceIndexes(List<String> sourceIndexes) {
-			if (!isEmpty(sourceIndexes)) {
-				clearSourceIndexes();
-				this.source.indexes.addAll(sourceIndexes);
-			}
-			return this;
-		}
-
-		public PostReindexRequestBuilder clearSourceIndexes() {
-			this.source.indexes.clear();
 			return this;
 		}
 

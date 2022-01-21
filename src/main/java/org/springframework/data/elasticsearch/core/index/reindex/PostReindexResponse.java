@@ -9,7 +9,7 @@ import java.util.List;
  * Response of reindex request.
  * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html#docs-reindex-api-response-body)
  *
- * @author Onizuka
+ * @author Sijia Liu
  */
 public class PostReindexResponse {
 

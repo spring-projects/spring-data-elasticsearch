@@ -595,8 +595,8 @@ class RequestFactoryTests {
 				.withConnectTimeout(Duration.ofSeconds(30))
 				.withSocketTimeout(Duration.ofSeconds(30)).build();
 
-		PostReindexRequest postReindexRequest = PostReindexRequest.builder("source_1", "destination")
-				.addSourceIndex("source_2")
+		PostReindexRequest postReindexRequest = PostReindexRequest.builder(IndexCoordinates.of("source_1", "source_2"),
+						IndexCoordinates.of("destination"))
 				.withConflicts("proceed")
 				.withMaxDocs(10)
 				.withSourceQuery(QueryBuilders.matchAllQuery())

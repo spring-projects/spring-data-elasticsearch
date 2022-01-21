@@ -3660,7 +3660,9 @@ public abstract class ElasticsearchTemplateTests {
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
 
-		final PostReindexResponse reindex = operations.reindex(PostReindexRequest.builder(sourceIndexName, destIndexName).withRefresh(true).build());
+		final PostReindexRequest postReindexRequest = PostReindexRequest.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
+				.withRefresh(true).build();
+		final PostReindexResponse reindex = operations.reindex(postReindexRequest);
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		assertThat(reindex.getTotal()).isEqualTo(1);
 		assertThat(operations.count(searchQuery, IndexCoordinates.of(destIndexName))).isEqualTo(1);
@@ -3672,7 +3674,9 @@ public abstract class ElasticsearchTemplateTests {
 		indexNameProvider.increment();
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
-		String task = operations.submitReindexTask(PostReindexRequest.builder(sourceIndexName, destIndexName).build());
+		final PostReindexRequest postReindexRequest = PostReindexRequest
+				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName)).build();
+		String task = operations.submitReindexTask(postReindexRequest);
 		// Maybe there should be a task api to detect whether the task exists
 		assertThat(task).isNotBlank();
 	}

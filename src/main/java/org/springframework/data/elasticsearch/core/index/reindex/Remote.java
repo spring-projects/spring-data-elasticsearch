@@ -9,7 +9,7 @@ import java.time.Duration;
 /**
  * Remote info {@link RemoteInfo}
  *
- * @author Onizuka
+ * @author Sijia Liu
  */
 public class Remote {
 	private final String scheme;

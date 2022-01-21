@@ -404,7 +404,7 @@ class RequestFactory {
 		}
 		// region source build
 		final Source source = postReindexRequest.getSource();
-		reindexRequest.setSourceIndices(source.getIndexes().toArray(new String[]{}));
+		reindexRequest.setSourceIndices(source.getIndexes().getIndexNames());
 		if(source.getQuery() != null && source.getRemote() != null){
 			reindexRequest.setSourceQuery(source.getQuery());
 		}
@@ -448,7 +448,7 @@ class RequestFactory {
 
 		// region dest build
 		final Dest dest = postReindexRequest.getDest();
-		reindexRequest.setDestIndex(dest.getIndex())
+		reindexRequest.setDestIndex(dest.getIndex().getIndexName())
 				.setDestRouting(dest.getRouting())
 				.setDestPipeline(dest.getPipeline());
 
