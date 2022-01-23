@@ -15,14 +15,16 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
+import static org.springframework.util.StringUtils.*;
+
 import java.time.Duration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
+import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 
 /**
@@ -51,6 +53,13 @@ public class ReactiveElasticsearchRestTemplateConfiguration extends AbstractReac
 		if (clusterConnectionInfo.isUseSsl()) {
 			configurationBuilder = ((ClientConfiguration.MaybeSecureClientConfigurationBuilder) configurationBuilder)
 					.usingSsl();
+		}
+
+		String user = System.getenv("DATAES_ELASTICSEARCH_USER");
+		String password = System.getenv("DATAES_ELASTICSEARCH_PASSWORD");
+
+		if (hasText(user) && hasText(password)) {
+			configurationBuilder.withBasicAuth(user, password);
 		}
 
 		return ReactiveRestClients.create(configurationBuilder //

@@ -58,7 +58,7 @@ public abstract class DoubleIDRepositoryIntegrationTests {
 	@Test
 	@Order(Integer.MAX_VALUE)
 	public void cleanup() {
-		operations.indexOps(IndexCoordinates.of("*")).delete();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test

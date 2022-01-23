@@ -64,7 +64,7 @@ public abstract class DynamicSettingAndMappingEntityRepositoryIntegrationTests {
 	@Test
 	@Order(Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of("*")).delete();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test // DATAES-64

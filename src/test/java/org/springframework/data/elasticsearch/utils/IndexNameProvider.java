@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.utils;
 
 /**
- * Class providing an index name with a prefix and a index number
+ * Class providing an index name witInCo
  *
  * @author Peter-Josef Meisch
  */
@@ -40,5 +40,12 @@ public class IndexNameProvider {
 
 	public String indexName() {
 		return indexName;
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	public String getPrefix() {
+		return prefix;
 	}
 }
