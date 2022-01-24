@@ -389,7 +389,7 @@ public class ResponseConverter {
 
 	// region postReindexResponse
 
-	public static PostReindexResponse postReindexResponseOf(BulkByScrollResponse bulkByScrollResponse){
+	public static PostReindexResponse reindexResponseOf(BulkByScrollResponse bulkByScrollResponse){
 		final List<PostReindexResponse.Failure> failures = bulkByScrollResponse.getBulkFailures() //
 				.stream() //
 				.map(ResponseConverter::postReindexResponseFailureOf) //
