@@ -291,7 +291,13 @@ public interface RequestCreator {
 		return RequestConverters::clusterHealth;
 	}
 
+	/**
+	 * @since 4.4
+	 */
 	default Function<ReindexRequest, Request> reindex() { return RequestConverters::reindex; }
 
+	/**
+	 * @since 4.4
+	 */
 	default Function<ReindexRequest, Request> submitReindex() { return RequestConverters::submitReindex; }
 }

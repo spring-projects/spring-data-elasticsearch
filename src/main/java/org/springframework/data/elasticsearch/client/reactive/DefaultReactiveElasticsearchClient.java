@@ -519,7 +519,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 	}
 
 	@Override
-	public Mono<String> submitReindexTask(HttpHeaders headers, ReindexRequest reindexRequest) {
+	public Mono<String> submitReindex(HttpHeaders headers, ReindexRequest reindexRequest) {
 		return sendRequest(reindexRequest, requestCreator.submitReindex(), TaskSubmissionResponse.class, headers)
 				.next()
 				.map(TaskSubmissionResponse::getTask);

@@ -45,7 +45,7 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -389,13 +389,16 @@ public class ResponseConverter {
 
 	// region postReindexResponse
 
-	public static PostReindexResponse postReindexResponseOf(BulkByScrollResponse bulkByScrollResponse){
-		final List<PostReindexResponse.Failure> failures = bulkByScrollResponse.getBulkFailures() //
+	/**
+	 * @since 4.4
+	 */
+	public static ReindexResponse reindexResponseOf(BulkByScrollResponse bulkByScrollResponse){
+		final List<ReindexResponse.Failure> failures = bulkByScrollResponse.getBulkFailures() //
 				.stream() //
-				.map(ResponseConverter::postReindexResponseFailureOf) //
+				.map(ResponseConverter::reindexResponseFailureOf) //
 				.collect(Collectors.toList()); //
 
-		return PostReindexResponse.builder() //
+		return ReindexResponse.builder() //
 				.withTook(bulkByScrollResponse.getTook().getMillis()) //
 				.withTimedOut(bulkByScrollResponse.isTimedOut()) //
 				.withTotal(bulkByScrollResponse.getTotal()) //
@@ -414,8 +417,11 @@ public class ResponseConverter {
 
 	}
 
-	public static PostReindexResponse.Failure postReindexResponseFailureOf(BulkItemResponse.Failure failure) {
-		return PostReindexResponse.Failure.builder() //
+	/**
+	 * @since 4.4
+	 */
+	public static ReindexResponse.Failure reindexResponseFailureOf(BulkItemResponse.Failure failure) {
+		return ReindexResponse.Failure.builder() //
 				.withIndex(failure.getIndex()) //
 				.withType(failure.getType()) //
 				.withId(failure.getId()) //

@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.reindex;
 
-import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -30,14 +30,15 @@ import java.time.Duration;
  * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
  *
  * @author Sijia Liu
+ * @since 4.4
  */
-public class PostReindexRequest {
+public class ReindexRequest {
 
 	// Request body
 	private final Source source;
 	private final Dest dest;
 	@Nullable private final Integer maxDocs;
-	@Nullable private final String conflicts;
+	@Nullable private final Conflicts conflicts;
 	@Nullable private final Script script;
 
 	// Query parameters
@@ -49,7 +50,7 @@ public class PostReindexRequest {
 	@Nullable private final Duration scroll;
 	@Nullable private final Integer slices;
 
-	private PostReindexRequest(Source source, Dest dest,@Nullable Integer maxDocs, @Nullable String conflicts, @Nullable Script script, @Nullable Duration timeout, @Nullable Boolean requireAlias, @Nullable Boolean refresh, @Nullable String waitForActiveShards, @Nullable Integer requestsPerSecond, @Nullable Duration scroll, @Nullable Integer slices) {
+	private ReindexRequest(Source source, Dest dest, @Nullable Integer maxDocs, @Nullable Conflicts conflicts, @Nullable Script script, @Nullable Duration timeout, @Nullable Boolean requireAlias, @Nullable Boolean refresh, @Nullable String waitForActiveShards, @Nullable Integer requestsPerSecond, @Nullable Duration scroll, @Nullable Integer slices) {
 
 		Assert.notNull(source, "source must not be null");
 		Assert.notNull(dest, "dest must not be null");
@@ -87,7 +88,7 @@ public class PostReindexRequest {
 	}
 
 	@Nullable
-	public String getConflicts() {
+	public Conflicts getConflicts() {
 		return conflicts;
 	}
 
@@ -126,13 +127,17 @@ public class PostReindexRequest {
 		return slices;
 	}
 
-	public static PostReindexRequestBuilder builder(IndexCoordinates sourceIndex, IndexCoordinates destIndex) {
-		return new PostReindexRequestBuilder(sourceIndex, destIndex);
+	public static ReindexRequestBuilder builder(IndexCoordinates sourceIndex, IndexCoordinates destIndex) {
+		return new ReindexRequestBuilder(sourceIndex, destIndex);
+	}
+
+	public enum Conflicts {
+		PROCEED, ABORT
 	}
 
 	public static class Source {
 		private final IndexCoordinates indexes;
-		@Nullable private QueryBuilder query;
+		@Nullable private Query query;
 		@Nullable private Remote remote;
 		@Nullable private Slice slice;
 		@Nullable private Integer size;
@@ -143,7 +148,7 @@ public class PostReindexRequest {
 
 			this.indexes = indexes;
 		}
-		
+
 		public IndexCoordinates getIndexes() {
 			return indexes;
 		}
@@ -154,7 +159,7 @@ public class PostReindexRequest {
 		}
 
 		@Nullable
-		public QueryBuilder getQuery() {
+		public Query getQuery() {
 			return query;
 		}
 
@@ -202,6 +207,7 @@ public class PostReindexRequest {
 
 		private Dest(IndexCoordinates index) {
 			Assert.notNull(index, "dest index must not be null");
+
 			this.index = index;
 		}
 
@@ -232,9 +238,11 @@ public class PostReindexRequest {
 
 	public static class Script {
 		private final String source;
-		private final String lang;
+		@Nullable private final String lang;
 
-		Script(String source, String lang) {
+		private Script(String source, @Nullable String lang) {
+			Assert.notNull(source, "source must not be null");
+
 			this.source = source;
 			this.lang = lang;
 		}
@@ -243,17 +251,18 @@ public class PostReindexRequest {
 			return source;
 		}
 
+		@Nullable
 		public String getLang() {
 			return lang;
 		}
 	}
 
-	public static final class PostReindexRequestBuilder {
+	public static final class ReindexRequestBuilder {
 
 		private final Source source;
 		private final Dest dest;
 		@Nullable private Integer maxDocs;
-		@Nullable private String conflicts;
+		@Nullable private Conflicts conflicts;
 		@Nullable private Script script;
 		@Nullable private Duration timeout;
 		@Nullable private Boolean requireAlias;
@@ -263,112 +272,115 @@ public class PostReindexRequest {
 		@Nullable private Duration scroll;
 		@Nullable private Integer slices;
 
-		public PostReindexRequestBuilder(IndexCoordinates sourceIndex, IndexCoordinates destIndex) {
+		public ReindexRequestBuilder(IndexCoordinates sourceIndex, IndexCoordinates destIndex) {
+
+			Assert.notNull(sourceIndex, "sourceIndex must not be null");
+			Assert.notNull(destIndex, "destIndex must not be null");
 
 			this.source = new Source(sourceIndex);
 			this.dest = new Dest(destIndex);
 		}
 
         // region setter
-		public PostReindexRequestBuilder withMaxDocs(@Nullable Integer maxDocs) {
+
+		public ReindexRequestBuilder withMaxDocs(@Nullable Integer maxDocs) {
 			this.maxDocs = maxDocs;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withConflicts(String conflicts) {
+		public ReindexRequestBuilder withConflicts(Conflicts conflicts) {
 			this.conflicts = conflicts;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withSourceQuery(QueryBuilder query) {
+		public ReindexRequestBuilder withSourceQuery(Query query) {
 			this.source.query = query;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withSourceSlice(int id, int max){
+		public ReindexRequestBuilder withSourceSlice(int id, int max){
 			this.source.slice = new Slice(id, max);
 			return this;
 		}
 
-		public PostReindexRequestBuilder withSourceRemote(Remote remote) {
+		public ReindexRequestBuilder withSourceRemote(Remote remote) {
 			this.source.remote = remote;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withSourceSize(int size) {
+		public ReindexRequestBuilder withSourceSize(int size) {
 			this.source.size = size;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withSourceSourceFilter(SourceFilter sourceFilter){
+		public ReindexRequestBuilder withSourceSourceFilter(SourceFilter sourceFilter){
 			this.source.sourceFilter = sourceFilter;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withDestPipeline(String pipelineName){
+		public ReindexRequestBuilder withDestPipeline(String pipelineName){
 			this.dest.pipeline = pipelineName;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withDestRouting(String routing){
+		public ReindexRequestBuilder withDestRouting(String routing){
 			this.dest.routing = routing;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withDestVersionType(Document.VersionType versionType) {
+		public ReindexRequestBuilder withDestVersionType(Document.VersionType versionType) {
 			this.dest.versionType = versionType;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withDestOpType(IndexQuery.OpType opType) {
+		public ReindexRequestBuilder withDestOpType(IndexQuery.OpType opType) {
 			this.dest.opType = opType;
 			return this;
 		}
 
-
-		public PostReindexRequestBuilder withScript(String source, String lang) {
+		public ReindexRequestBuilder withScript(String source, @Nullable String lang) {
 			this.script = new Script(source, lang);
 			return this;
 		}
 
-		public PostReindexRequestBuilder withTimeout(Duration timeout){
+		public ReindexRequestBuilder withTimeout(Duration timeout){
 			this.timeout = timeout;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withRequireAlias(boolean requireAlias){
+		public ReindexRequestBuilder withRequireAlias(boolean requireAlias){
 			this.requireAlias = requireAlias;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withRefresh(boolean refresh){
+		public ReindexRequestBuilder withRefresh(boolean refresh){
 			this.refresh = refresh;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withWaitForActiveShards(String waitForActiveShards){
+		public ReindexRequestBuilder withWaitForActiveShards(String waitForActiveShards){
 			this.waitForActiveShards = waitForActiveShards;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withRequestsPerSecond(int requestsPerSecond){
+		public ReindexRequestBuilder withRequestsPerSecond(int requestsPerSecond){
 			this.requestsPerSecond = requestsPerSecond;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withScroll(Duration scroll){
+		public ReindexRequestBuilder withScroll(Duration scroll){
 			this.scroll = scroll;
 			return this;
 		}
 
-		public PostReindexRequestBuilder withSlices(int slices){
+		public ReindexRequestBuilder withSlices(int slices){
 			this.slices = slices;
 			return this;
 		}
 		// endregion
 
-		public PostReindexRequest build() {
-			return new PostReindexRequest(source, dest, maxDocs, conflicts, script, timeout, requireAlias, refresh, waitForActiveShards, requestsPerSecond, scroll, slices);
+		public ReindexRequest build() {
+			return new ReindexRequest(source, dest, maxDocs, conflicts, script, timeout, requireAlias, refresh, waitForActiveShards, requestsPerSecond, scroll, slices);
 		}
 	}
 }

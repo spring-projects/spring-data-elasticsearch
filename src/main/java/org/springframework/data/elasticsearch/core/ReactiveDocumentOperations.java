@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -312,17 +312,19 @@ public interface ReactiveDocumentOperations {
 	 * For example, you cannot reindex a data stream into itself.
 	 * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
 	 *
-	 * @param postReindexRequest reindex request parameters
+	 * @param reindexRequest reindex request parameters
 	 * @return a {@link Mono} emitting the reindex response
+	 * @since 4.4
 	 */
-	Mono<PostReindexResponse> reindex(PostReindexRequest postReindexRequest);
+	Mono<ReindexResponse> reindex(ReindexRequest reindexRequest);
 
 	/**
 	 * Submits a reindex task.
 	 * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
 	 *
-	 * @param postReindexRequest reindex request parameters
-	 * @return a {@link Mono} emitting the {@literal task}.
+	 * @param reindexRequest reindex request parameters
+	 * @return a {@link Mono} emitting the {@literal task} id.
+	 * @since 4.4
 	 */
-	Mono<String> submitReindexTask(PostReindexRequest postReindexRequest);
+	Mono<String> submitReindex(ReindexRequest reindexRequest);
 }

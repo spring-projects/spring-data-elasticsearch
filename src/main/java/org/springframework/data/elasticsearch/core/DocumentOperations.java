@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Collection;
 import java.util.List;
 
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
@@ -332,17 +332,19 @@ public interface DocumentOperations {
 	 * For example, you cannot reindex a data stream into itself.
 	 * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
 	 *
-	 * @param postReindexRequest reindex request parameters
+	 * @param reindexRequest reindex request parameters
 	 * @return the reindex response
+	 * @since 4.4
 	 */
-	PostReindexResponse reindex(PostReindexRequest postReindexRequest);
+	ReindexResponse reindex(ReindexRequest reindexRequest);
 
 	/**
 	 * Submits a reindex task.
 	 * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
 	 *
-	 * @param postReindexRequest reindex request parameters
-	 * @return the task
+	 * @param reindexRequest reindex request parameters
+	 * @return the task id
+	 * @since 4.4
 	 */
-	String submitReindexTask(PostReindexRequest postReindexRequest);
+	String submitReindex(ReindexRequest reindexRequest);
 }

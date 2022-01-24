@@ -46,7 +46,6 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.reactivestreams.Publisher;
@@ -71,8 +70,8 @@ import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCal
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterLoadCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -614,24 +613,24 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	}
 
 	@Override
-	public Mono<PostReindexResponse> reindex(PostReindexRequest postReindexRequest) {
+	public Mono<ReindexResponse> reindex(ReindexRequest postReindexRequest) {
 
 		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
 
 		return Mono.defer(() -> {
-			final ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
-			return Mono.from(execute(client -> client.reindex(reindexRequest))).map(ResponseConverter::postReindexResponseOf);
+			final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+			return Mono.from(execute(client -> client.reindex(reindexRequest))).map(ResponseConverter::reindexResponseOf);
 		});
 	}
 
 	@Override
-	public Mono<String> submitReindexTask(PostReindexRequest postReindexRequest) {
+	public Mono<String> submitReindex(ReindexRequest postReindexRequest) {
 
 		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
 
 		return Mono.defer(() -> {
-			final ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
-			return Mono.from(execute(client -> client.submitReindexTask(reindexRequest)));
+			final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+			return Mono.from(execute(client -> client.submitReindex(reindexRequest)));
 		});
 	}
 

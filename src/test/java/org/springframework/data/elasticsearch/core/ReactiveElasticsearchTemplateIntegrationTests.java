@@ -21,7 +21,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -98,6 +98,7 @@ import org.springframework.util.StringUtils;
  * @author Russell Parry
  * @author Roman Puchkovskiy
  * @author George Popides
+ * @author Sijia Liu
  */
 @SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @SpringIntegrationTest
@@ -1193,23 +1194,21 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 	@Test // #1529
 	void shouldWorkReindexForExistingIndex() {
 		String sourceIndexName = indexNameProvider.indexName();
-		String documentId = nextIdAsString();
-		ElasticsearchTemplateTests.SampleEntity sampleEntity = ElasticsearchTemplateTests.SampleEntity.builder().id(documentId).message("abc").build();
+		SampleEntity sampleEntity = randomEntity("abc");
 		operations.save(sampleEntity).block();
 
 		indexNameProvider.increment();
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
-		final PostReindexRequest postReindexRequest = PostReindexRequest
+		final ReindexRequest reindexRequest = ReindexRequest
 				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
 				.withRefresh(true)
 				.build();
-		operations.reindex(postReindexRequest)
+		operations.reindex(reindexRequest)
 				.as(StepVerifier::create)
 				.consumeNextWith(postReindexResponse -> assertThat(postReindexResponse.getTotal()).isEqualTo(1L))
 				.verifyComplete();
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		operations.count(searchQuery, SampleEntity.class, IndexCoordinates.of(destIndexName))
+		operations.count(operations.matchAllQuery(), SampleEntity.class, IndexCoordinates.of(destIndexName))
 				.as(StepVerifier::create)
 				.expectNext(1L)
 				.verifyComplete();
@@ -1221,10 +1220,10 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		indexNameProvider.increment();
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
-		final PostReindexRequest postReindexRequest = PostReindexRequest
+		final ReindexRequest reindexRequest = ReindexRequest
 				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
 				.build();
-		operations.submitReindexTask(postReindexRequest)
+		operations.submitReindex(reindexRequest)
 				.as(StepVerifier::create)
 				.consumeNextWith(task -> assertThat(task).isNotBlank())
 				.verifyComplete();

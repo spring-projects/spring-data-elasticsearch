@@ -83,8 +83,8 @@ import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.ScriptField;
@@ -3660,9 +3660,9 @@ public abstract class ElasticsearchTemplateTests {
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
 
-		final PostReindexRequest postReindexRequest = PostReindexRequest.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
+		final ReindexRequest reindexRequest = ReindexRequest.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
 				.withRefresh(true).build();
-		final PostReindexResponse reindex = operations.reindex(postReindexRequest);
+		final ReindexResponse reindex = operations.reindex(reindexRequest);
 		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		assertThat(reindex.getTotal()).isEqualTo(1);
 		assertThat(operations.count(searchQuery, IndexCoordinates.of(destIndexName))).isEqualTo(1);
@@ -3674,9 +3674,9 @@ public abstract class ElasticsearchTemplateTests {
 		indexNameProvider.increment();
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
-		final PostReindexRequest postReindexRequest = PostReindexRequest
+		final ReindexRequest reindexRequest = ReindexRequest
 				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName)).build();
-		String task = operations.submitReindexTask(postReindexRequest);
+		String task = operations.submitReindex(reindexRequest);
 		// Maybe there should be a task api to detect whether the task exists
 		assertThat(task).isNotBlank();
 	}

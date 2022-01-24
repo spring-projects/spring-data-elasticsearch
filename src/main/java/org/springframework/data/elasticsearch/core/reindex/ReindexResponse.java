@@ -25,8 +25,9 @@ import java.util.List;
  * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html#docs-reindex-api-response-body)
  *
  * @author Sijia Liu
+ * @since 4.4
  */
-public class PostReindexResponse {
+public class ReindexResponse {
 
 	private final long took;
 	private final boolean timedOut;
@@ -43,9 +44,9 @@ public class PostReindexResponse {
 	private final long throttledUntilMillis;
 	private final List<Failure> failures;
 
-	private PostReindexResponse(long took, boolean timedOut, long total, long updated, long deleted, int batches,
-								long versionConflicts, long noops, long bulkRetries, long searchRetries,
-								long throttledMillis, double requestsPerSecond, long throttledUntilMillis, List<Failure> failures) {
+	private ReindexResponse(long took, boolean timedOut, long total, long updated, long deleted, int batches,
+							long versionConflicts, long noops, long bulkRetries, long searchRetries,
+							long throttledMillis, double requestsPerSecond, long throttledUntilMillis, List<Failure> failures) {
 		this.took = took;
 		this.timedOut = timedOut;
 		this.total = total;
@@ -165,12 +166,12 @@ public class PostReindexResponse {
 	}
 
 	/**
-	 * Create a new {@link PostReindexResponse} to build {@link PostReindexResponse}
+	 * Create a new {@link ReindexResponseBuilder} to build {@link ReindexResponse}
 	 *
-	 * @return a new {@link PostReindexResponse} to build {@link PostReindexResponse}
+	 * @return a new {@link ReindexResponseBuilder} to build {@link ReindexResponse}
 	 */
-	public static PostReindexResponseBuilder builder() {
-		return new PostReindexResponseBuilder();
+	public static ReindexResponseBuilder builder() {
+		return new ReindexResponseBuilder();
 	}
 
 	public static class Failure {
@@ -306,7 +307,7 @@ public class PostReindexResponse {
 		}
 	}
 
-	public static final class PostReindexResponseBuilder {
+	public static final class ReindexResponseBuilder {
 		private long took;
 		private boolean timedOut;
 		private long total;
@@ -322,80 +323,80 @@ public class PostReindexResponse {
 		private long throttledUntilMillis;
 		private List<Failure> failures = Collections.emptyList();
 
-		private PostReindexResponseBuilder() {}
+		private ReindexResponseBuilder() {}
 
-		public PostReindexResponseBuilder withTook(long took) {
+		public ReindexResponseBuilder withTook(long took) {
 			this.took = took;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withTimedOut(boolean timedOut) {
+		public ReindexResponseBuilder withTimedOut(boolean timedOut) {
 			this.timedOut = timedOut;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withTotal(long total) {
+		public ReindexResponseBuilder withTotal(long total) {
 			this.total = total;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withUpdated(long updated) {
+		public ReindexResponseBuilder withUpdated(long updated) {
 			this.updated = updated;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withDeleted(long deleted) {
+		public ReindexResponseBuilder withDeleted(long deleted) {
 			this.deleted = deleted;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withBatches(int batches) {
+		public ReindexResponseBuilder withBatches(int batches) {
 			this.batches = batches;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withVersionConflicts(long versionConflicts) {
+		public ReindexResponseBuilder withVersionConflicts(long versionConflicts) {
 			this.versionConflicts = versionConflicts;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withNoops(long noops) {
+		public ReindexResponseBuilder withNoops(long noops) {
 			this.noops = noops;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withBulkRetries(long bulkRetries) {
+		public ReindexResponseBuilder withBulkRetries(long bulkRetries) {
 			this.bulkRetries = bulkRetries;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withSearchRetries(long searchRetries) {
+		public ReindexResponseBuilder withSearchRetries(long searchRetries) {
 			this.searchRetries = searchRetries;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withThrottledMillis(long throttledMillis){
+		public ReindexResponseBuilder withThrottledMillis(long throttledMillis){
 			this.throttledMillis = throttledMillis;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withRequestsPerSecond(double requestsPerSecond){
+		public ReindexResponseBuilder withRequestsPerSecond(double requestsPerSecond){
 			this.requestsPerSecond = requestsPerSecond;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withThrottledUntilMillis(long throttledUntilMillis){
+		public ReindexResponseBuilder withThrottledUntilMillis(long throttledUntilMillis){
 			this.throttledUntilMillis = throttledUntilMillis;
 			return this;
 		}
 
-		public PostReindexResponseBuilder withFailures(List<Failure> failures) {
+		public ReindexResponseBuilder withFailures(List<Failure> failures) {
 			this.failures = failures;
 			return this;
 		}
 
-		public PostReindexResponse build() {
-			return new PostReindexResponse(took, timedOut, total, updated, deleted, batches, versionConflicts, noops, bulkRetries,
+		public ReindexResponse build() {
+			return new ReindexResponse(took, timedOut, total, updated, deleted, batches, versionConflicts, noops, bulkRetries,
 					searchRetries, throttledMillis, requestsPerSecond, throttledUntilMillis, failures);
 		}
 	}
