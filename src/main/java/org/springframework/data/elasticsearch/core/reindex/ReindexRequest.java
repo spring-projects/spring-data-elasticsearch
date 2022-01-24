@@ -1,4 +1,19 @@
-package org.springframework.data.elasticsearch.core.index.reindex;
+/*
+ * Copyright 2019-2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.data.elasticsearch.core.reindex;
 
 import org.elasticsearch.index.query.QueryBuilder;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -34,11 +49,15 @@ public class PostReindexRequest {
 	@Nullable private final Duration scroll;
 	@Nullable private final Integer slices;
 
-	PostReindexRequest(@Nullable Integer maxDocs, @Nullable String conflicts, Source source, Dest dest, @Nullable Script script, @Nullable Duration timeout, @Nullable Boolean requireAlias, @Nullable Boolean refresh, @Nullable String waitForActiveShards, @Nullable Integer requestsPerSecond, @Nullable Duration scroll, @Nullable Integer slices) {
-		this.maxDocs = maxDocs;
-		this.conflicts = conflicts;
+	private PostReindexRequest(Source source, Dest dest,@Nullable Integer maxDocs, @Nullable String conflicts, @Nullable Script script, @Nullable Duration timeout, @Nullable Boolean requireAlias, @Nullable Boolean refresh, @Nullable String waitForActiveShards, @Nullable Integer requestsPerSecond, @Nullable Duration scroll, @Nullable Integer slices) {
+
+		Assert.notNull(source, "source must not be null");
+		Assert.notNull(dest, "dest must not be null");
+
 		this.source = source;
 		this.dest = dest;
+		this.maxDocs = maxDocs;
+		this.conflicts = conflicts;
 		this.script = script;
 		this.timeout = timeout;
 		this.requireAlias = requireAlias;
@@ -119,9 +138,12 @@ public class PostReindexRequest {
 		@Nullable private Integer size;
 		@Nullable private SourceFilter sourceFilter;
 
-		Source(IndexCoordinates indexes){
+		private Source(IndexCoordinates indexes){
+			Assert.notNull(indexes, "indexes must not be null");
+
 			this.indexes = indexes;
 		}
+		
 		public IndexCoordinates getIndexes() {
 			return indexes;
 		}
@@ -153,19 +175,19 @@ public class PostReindexRequest {
 	}
 
 	public static class Slice {
-		private final Integer id;
-		private final Integer max;
+		private final int id;
+		private final int max;
 
-		Slice(Integer id, Integer max) {
+		private Slice(int id, int max) {
 			this.id = id;
 			this.max = max;
 		}
 
-		public Integer getId() {
+		public int getId() {
 			return id;
 		}
 
-		public Integer getMax() {
+		public int getMax() {
 			return max;
 		}
 	}
@@ -178,7 +200,7 @@ public class PostReindexRequest {
 		@Nullable private Document.VersionType versionType;
 		@Nullable private IndexQuery.OpType opType;
 
-		Dest(IndexCoordinates index) {
+		private Dest(IndexCoordinates index) {
 			Assert.notNull(index, "dest index must not be null");
 			this.index = index;
 		}
@@ -242,6 +264,7 @@ public class PostReindexRequest {
 		@Nullable private Integer slices;
 
 		public PostReindexRequestBuilder(IndexCoordinates sourceIndex, IndexCoordinates destIndex) {
+
 			this.source = new Source(sourceIndex);
 			this.dest = new Dest(destIndex);
 		}
@@ -345,7 +368,7 @@ public class PostReindexRequest {
 		// endregion
 
 		public PostReindexRequest build() {
-			return new PostReindexRequest(maxDocs, conflicts, source, dest, script, timeout, requireAlias, refresh, waitForActiveShards, requestsPerSecond, scroll, slices);
+			return new PostReindexRequest(source, dest, maxDocs, conflicts, script, timeout, requireAlias, refresh, waitForActiveShards, requestsPerSecond, scroll, slices);
 		}
 	}
 }
