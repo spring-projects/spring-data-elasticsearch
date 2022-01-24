@@ -19,7 +19,7 @@
 
 	<properties>
 		<elasticsearch>7.16.3</elasticsearch>
-		<log4j>2.17.0</log4j>
+		<log4j>2.17.1</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.7.0-SNAPSHOT</springdata.commons>
 		<testcontainers>1.16.2</testcontainers>
@@ -208,6 +208,25 @@
 			</exclusions>
 		</dependency>
 
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>${slf4j}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-to-slf4j</artifactId>
+			<version>${log4j}</version>
+			<scope>test</scope>
+		</dependency>
+		
 		<dependency>
 			<groupId>io.projectreactor.tools</groupId>
 			<artifactId>blockhound-junit-platform</artifactId>

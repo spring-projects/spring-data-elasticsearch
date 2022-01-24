@@ -153,7 +153,7 @@ public abstract class ElasticsearchTemplateTests {
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of("*")).delete();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test // DATAES-106

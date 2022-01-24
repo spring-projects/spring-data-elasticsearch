@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repositories.cdi;
 
+import static org.springframework.util.StringUtils.*;
+
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
@@ -56,8 +58,17 @@ class ElasticsearchOperationsProducer {
 		// we rely on the tests being run with the SpringDataElasticsearchExtension class that sets up a containerized ES.
 		ClusterConnectionInfo connectionInfo = ClusterConnection.clusterConnectionInfo();
 
-		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
-				.connectedTo(connectionInfo.getHost() + ':' + connectionInfo.getHttpPort()) //
+		ClientConfiguration.TerminalClientConfigurationBuilder configurationBuilder = ClientConfiguration.builder() //
+				.connectedTo(connectionInfo.getHost() + ':' + connectionInfo.getHttpPort());
+
+		String user = System.getenv("DATAES_ELASTICSEARCH_USER");
+		String password = System.getenv("DATAES_ELASTICSEARCH_PASSWORD");
+
+		if (hasText(user) && hasText(password)) {
+			configurationBuilder.withBasicAuth(user, password);
+		}
+
+		ClientConfiguration clientConfiguration = configurationBuilder //
 				.build();
 
 		return RestClients.create(clientConfiguration).rest();
