@@ -36,7 +36,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
-import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.xcontent.ToXContent;
 import org.elasticsearch.xcontent.XContentType;
 import org.json.JSONException;
@@ -57,8 +56,8 @@ import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.Remote;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.Remote;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -560,19 +559,19 @@ class RequestFactoryTests {
 	}
 
 	@Test // #1529
-	void shouldCreatePostReindexRequest() throws IOException, JSONException {
+	void shouldCreateReindexRequest() throws IOException, JSONException {
 		final String expected = "{\n" +
 				"    \"source\":{\n" +
 				"        \"remote\":{\n" +
 				"                \"username\":\"admin\",\n" +
-				"                \"password\":\"admin\",\n" +
+				"                \"password\":\"password\",\n" +
 				"                \"host\":\"http://localhost:9200/elasticsearch\",\n" +
 				"                \"socket_timeout\":\"30s\",\n" +
 				"                \"connect_timeout\":\"30s\"\n" +
 				"            },\n" +
 				"        \"index\":[\"source_1\",\"source_2\"],\n" +
 				"        \"size\":5,\n" +
-				"        \"query\":{\"match_all\":{\"boost\":1.0}},\n" +
+				"        \"query\":{\"match_all\":{}},\n" +
 				"        \"_source\":{\"includes\":[\"name\"],\"excludes\":[]},\n" +
 				"        \"slice\":{\"id\":1,\"max\":20}\n" +
 				"    },\n" +
@@ -591,15 +590,15 @@ class RequestFactoryTests {
 		Remote remote = Remote.builder("http", "localhost",9200)
 				.withPathPrefix("elasticsearch")
 				.withUsername("admin")
-				.withPassword("admin")
+				.withPassword("password")
 				.withConnectTimeout(Duration.ofSeconds(30))
 				.withSocketTimeout(Duration.ofSeconds(30)).build();
 
-		PostReindexRequest postReindexRequest = PostReindexRequest.builder(IndexCoordinates.of("source_1", "source_2"),
+		ReindexRequest reindexRequest = ReindexRequest.builder(IndexCoordinates.of("source_1", "source_2"),
 						IndexCoordinates.of("destination"))
-				.withConflicts("proceed")
+				.withConflicts(ReindexRequest.Conflicts.PROCEED)
 				.withMaxDocs(10)
-				.withSourceQuery(QueryBuilders.matchAllQuery())
+				.withSourceQuery(new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build())
 				.withSourceSize(5)
 				.withSourceSourceFilter(new FetchSourceFilterBuilder().withIncludes("name").build())
 				.withSourceRemote(remote)
@@ -611,8 +610,31 @@ class RequestFactoryTests {
 				.withScript("Math.max(1,2)", "java")
 				.build();
 
-		final ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
-		final String json = requestToString(reindexRequest);
+		final String json = requestToString(requestFactory.reindexRequest(reindexRequest));
+
+		assertEquals(expected, json, false);
+	}
+
+	@Test
+	void shouldAllowSourceQueryForReindexWithoutRemote() throws IOException, JSONException {
+		final String expected = "{\n" +
+				"    \"source\":{\n" +
+				"        \"index\":[\"source\"],\n" +
+				"        \"query\":{\"match_all\":{}}\n" +
+				"    },\n" +
+				"    \"dest\":{\n" +
+				"        \"index\":\"destination\",\n" +
+				"        \"op_type\":\"index\",\n" +
+				"        \"version_type\":\"internal\"\n" +
+				"    }\n" +
+				"}";
+
+		ReindexRequest reindexRequest = ReindexRequest.builder(IndexCoordinates.of("source"),
+						IndexCoordinates.of("destination"))
+				.withSourceQuery(new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build())
+				.build();
+
+		final String json = requestToString(requestFactory.reindexRequest(reindexRequest));
 
 		assertEquals(expected, json, false);
 	}

@@ -63,7 +63,6 @@ import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.index.reindex.RemoteInfo;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.script.Script;
@@ -93,12 +92,12 @@ import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest.Source;
-import org.springframework.data.elasticsearch.core.index.reindex.Remote;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest.Dest;
-import org.springframework.data.elasticsearch.core.index.reindex.PostReindexRequest.Slice;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest.Source;
+import org.springframework.data.elasticsearch.core.reindex.Remote;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest.Dest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest.Slice;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -394,40 +393,44 @@ class RequestFactory {
 		return new DeleteIndexTemplateRequest(deleteTemplateRequest.getTemplateName());
 	}
 
-	public ReindexRequest reindexRequest(PostReindexRequest postReindexRequest){
-		final ReindexRequest reindexRequest = new ReindexRequest();
-		if(postReindexRequest.getConflicts() != null){
-			reindexRequest.setConflicts(postReindexRequest.getConflicts());
+	/**
+	 * @since 4.4
+	 */
+	public org.elasticsearch.index.reindex.ReindexRequest reindexRequest(ReindexRequest reindexRequest){
+		final org.elasticsearch.index.reindex.ReindexRequest request = new org.elasticsearch.index.reindex.ReindexRequest();
+		if(reindexRequest.getConflicts() != null){
+			request.setConflicts(reindexRequest.getConflicts().name().toLowerCase(Locale.ROOT));
 		}
-		if(postReindexRequest.getMaxDocs() != null){
-			reindexRequest.setMaxDocs(postReindexRequest.getMaxDocs());
+		if(reindexRequest.getMaxDocs() != null){
+			request.setMaxDocs(reindexRequest.getMaxDocs());
 		}
 		// region source build
-		final Source source = postReindexRequest.getSource();
-		reindexRequest.setSourceIndices(source.getIndexes().getIndexNames());
-		if(source.getQuery() != null && source.getRemote() != null){
-			reindexRequest.setSourceQuery(source.getQuery());
+		final Source source = reindexRequest.getSource();
+		request.setSourceIndices(source.getIndexes().getIndexNames());
+		// source query will build from RemoteInfo if remote exist
+		if(source.getQuery() != null && source.getRemote() == null){
+			request.setSourceQuery(getQuery(source.getQuery()));
 		}
 		if(source.getSize() != null){
-			reindexRequest.setSourceBatchSize(source.getSize());
+			request.setSourceBatchSize(source.getSize());
 		}
 
 		if(source.getRemote() != null){
 			Remote remote = source.getRemote();
-			QueryBuilder queryBuilder = source.getQuery() == null ? QueryBuilders.matchAllQuery() : source.getQuery();
-			BytesReference query = null;
+			QueryBuilder queryBuilder = source.getQuery() == null ? QueryBuilders.matchAllQuery() : getQuery(source.getQuery());
+			BytesReference query;
 			try {
 				XContentBuilder builder = XContentBuilder.builder(QUERY_CONTENT_TYPE).prettyPrint();
 				query = BytesReference.bytes(queryBuilder.toXContent(builder, ToXContent.EMPTY_PARAMS));
 			} catch (IOException e) {
-				// ignore it
+				throw new IllegalArgumentException("an IOException occurs while building the source query content",e);
 			}
-			reindexRequest.setRemoteInfo(new RemoteInfo(
+			request.setRemoteInfo(new RemoteInfo(
 					remote.getScheme(),
 					remote.getHost(),
 					remote.getPort(),
 					remote.getPathPrefix(),
-					Objects.requireNonNull(query),
+					query,
 					remote.getUsername(),
 					remote.getPassword(),
 					Collections.emptyMap(),
@@ -438,34 +441,34 @@ class RequestFactory {
 
 		final Slice slice = source.getSlice();
 		if(slice != null){
-			reindexRequest.getSearchRequest().source().slice(new SliceBuilder(slice.getId(), slice.getMax()));
+			request.getSearchRequest().source().slice(new SliceBuilder(slice.getId(), slice.getMax()));
 		}
 		final SourceFilter sourceFilter = source.getSourceFilter();
 		if(sourceFilter != null){
-			reindexRequest.getSearchRequest().source().fetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
+			request.getSearchRequest().source().fetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
 		}
 		// endregion
 
 		// region dest build
-		final Dest dest = postReindexRequest.getDest();
-		reindexRequest.setDestIndex(dest.getIndex().getIndexName())
+		final Dest dest = reindexRequest.getDest();
+		request.setDestIndex(dest.getIndex().getIndexName())
 				.setDestRouting(dest.getRouting())
 				.setDestPipeline(dest.getPipeline());
 
 		final org.springframework.data.elasticsearch.annotations.Document.VersionType versionType = dest.getVersionType();
 		if(versionType != null){
-			reindexRequest.setDestVersionType(VersionType.fromString(versionType.name().toLowerCase(Locale.ROOT)));
+			request.setDestVersionType(VersionType.fromString(versionType.name().toLowerCase(Locale.ROOT)));
 		}
 		final IndexQuery.OpType opType = dest.getOpType();
 		if(opType != null){
-			reindexRequest.setDestOpType(opType.name().toLowerCase(Locale.ROOT));
+			request.setDestOpType(opType.name().toLowerCase(Locale.ROOT));
 		}
 		// endregion
 
 		// region script build
-		final PostReindexRequest.Script script = postReindexRequest.getScript();
+		final ReindexRequest.Script script = reindexRequest.getScript();
 		if(script != null){
-			reindexRequest.setScript(new Script(DEFAULT_SCRIPT_TYPE,
+			request.setScript(new Script(DEFAULT_SCRIPT_TYPE,
 						script.getLang(),
 						script.getSource(),
 						Collections.emptyMap()
@@ -474,31 +477,31 @@ class RequestFactory {
 		// endregion
 
 		// region query parameters build
-		final Duration timeout = postReindexRequest.getTimeout();
+		final Duration timeout = reindexRequest.getTimeout();
 		if(timeout != null){
-			reindexRequest.setTimeout(timeValueSeconds(timeout.getSeconds()));
+			request.setTimeout(timeValueSeconds(timeout.getSeconds()));
 		}
-		if(postReindexRequest.getRefresh() != null){
-			reindexRequest.setRefresh(postReindexRequest.getRefresh());
+		if(reindexRequest.getRefresh() != null){
+			request.setRefresh(reindexRequest.getRefresh());
 		}
-		if(postReindexRequest.getRequireAlias() != null){
-			reindexRequest.setRequireAlias(postReindexRequest.getRequireAlias());
+		if(reindexRequest.getRequireAlias() != null){
+			request.setRequireAlias(reindexRequest.getRequireAlias());
 		}
-		if(postReindexRequest.getRequestsPerSecond() != null){
-			reindexRequest.setRequestsPerSecond(postReindexRequest.getRequestsPerSecond());
+		if(reindexRequest.getRequestsPerSecond() != null){
+			request.setRequestsPerSecond(reindexRequest.getRequestsPerSecond());
 		}
-		final Duration scroll = postReindexRequest.getScroll();
+		final Duration scroll = reindexRequest.getScroll();
 		if(scroll != null){
-			reindexRequest.setScroll(timeValueSeconds(scroll.getSeconds()));
+			request.setScroll(timeValueSeconds(scroll.getSeconds()));
 		}
-		if(postReindexRequest.getWaitForActiveShards() != null){
-			reindexRequest.setWaitForActiveShards(ActiveShardCount.parseString(postReindexRequest.getWaitForActiveShards()));
+		if(reindexRequest.getWaitForActiveShards() != null){
+			request.setWaitForActiveShards(ActiveShardCount.parseString(reindexRequest.getWaitForActiveShards()));
 		}
-		if(postReindexRequest.getSlices() != null){
-			reindexRequest.setSlices(postReindexRequest.getSlices());
+		if(reindexRequest.getSlices() != null){
+			request.setSlices(reindexRequest.getSlices());
 		}
 		// endregion
-		return reindexRequest;
+		return request;
 	}
 
 	// endregion
