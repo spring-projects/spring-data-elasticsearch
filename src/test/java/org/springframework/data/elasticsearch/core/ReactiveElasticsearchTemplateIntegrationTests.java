@@ -1208,7 +1208,7 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 				.as(StepVerifier::create)
 				.consumeNextWith(postReindexResponse -> assertThat(postReindexResponse.getTotal()).isEqualTo(1L))
 				.verifyComplete();
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+    Query searchQuery = operations.matchAllQuery();
 		operations.count(searchQuery, SampleEntity.class, IndexCoordinates.of(destIndexName))
 				.as(StepVerifier::create)
 				.expectNext(1L)
