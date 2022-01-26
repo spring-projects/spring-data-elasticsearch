@@ -45,8 +45,8 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
-import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -392,7 +392,7 @@ public class ResponseConverter {
 	/**
 	 * @since 4.4
 	 */
-	public static ReindexResponse reindexResponseOf(BulkByScrollResponse bulkByScrollResponse){
+	public static ReindexResponse reindexResponseOf(BulkByScrollResponse bulkByScrollResponse) {
 		final List<ReindexResponse.Failure> failures = bulkByScrollResponse.getBulkFailures() //
 				.stream() //
 				.map(ResponseConverter::reindexResponseFailureOf) //

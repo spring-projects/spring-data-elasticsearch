@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the original author or authors.
+ * Copyright 2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.reindex;
 
-import org.springframework.lang.Nullable;
-
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.lang.Nullable;
+
 /**
- * Response of reindex request.
- * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html#docs-reindex-api-response-body)
+ * Response of reindex request. (@see
+ * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html#docs-reindex-api-response-body)
  *
  * @author Sijia Liu
  * @since 4.4
@@ -45,8 +45,8 @@ public class ReindexResponse {
 	private final List<Failure> failures;
 
 	private ReindexResponse(long took, boolean timedOut, long total, long updated, long deleted, int batches,
-							long versionConflicts, long noops, long bulkRetries, long searchRetries,
-							long throttledMillis, double requestsPerSecond, long throttledUntilMillis, List<Failure> failures) {
+			long versionConflicts, long noops, long bulkRetries, long searchRetries, long throttledMillis,
+			double requestsPerSecond, long throttledUntilMillis, List<Failure> failures) {
 		this.took = took;
 		this.timedOut = timedOut;
 		this.total = total;
@@ -142,16 +142,16 @@ public class ReindexResponse {
 	}
 
 	/**
-	 *  The number of requests per second effectively executed during the reindex.
+	 * The number of requests per second effectively executed during the reindex.
 	 */
 	public double getRequestsPerSecond() {
 		return requestsPerSecond;
 	}
 
 	/**
-	 * This field should always be equal to zero in a _reindex response.
-	 * It only has meaning when using the Task API, where it indicates the next time (in milliseconds since epoch)
-	 * a throttled request will be executed again in order to conform to requests_per_second.
+	 * This field should always be equal to zero in a _reindex response. It only has meaning when using the Task API,
+	 * where it indicates the next time (in milliseconds since epoch) a throttled request will be executed again in order
+	 * to conform to requests_per_second.
 	 */
 	public long getThrottledUntilMillis() {
 		return throttledUntilMillis;
@@ -186,7 +186,7 @@ public class ReindexResponse {
 		@Nullable private final Boolean aborted;
 
 		private Failure(@Nullable String index, @Nullable String type, @Nullable String id, @Nullable Exception cause,
-						@Nullable Integer status, @Nullable Long seqNo, @Nullable Long term, @Nullable Boolean aborted) {
+				@Nullable Integer status, @Nullable Long seqNo, @Nullable Long term, @Nullable Boolean aborted) {
 			this.index = index;
 			this.type = type;
 			this.id = id;
@@ -375,17 +375,17 @@ public class ReindexResponse {
 			return this;
 		}
 
-		public ReindexResponseBuilder withThrottledMillis(long throttledMillis){
+		public ReindexResponseBuilder withThrottledMillis(long throttledMillis) {
 			this.throttledMillis = throttledMillis;
 			return this;
 		}
 
-		public ReindexResponseBuilder withRequestsPerSecond(double requestsPerSecond){
+		public ReindexResponseBuilder withRequestsPerSecond(double requestsPerSecond) {
 			this.requestsPerSecond = requestsPerSecond;
 			return this;
 		}
 
-		public ReindexResponseBuilder withThrottledUntilMillis(long throttledUntilMillis){
+		public ReindexResponseBuilder withThrottledUntilMillis(long throttledUntilMillis) {
 			this.throttledUntilMillis = throttledUntilMillis;
 			return this;
 		}

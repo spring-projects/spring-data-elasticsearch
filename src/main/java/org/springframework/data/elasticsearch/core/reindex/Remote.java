@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the original author or authors.
+ * Copyright 2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.reindex;
 
+import java.time.Duration;
+
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import java.time.Duration;
-
 /**
- * Remote info
- * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html#source)
+ * Remote info (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html#source)
  *
  * @author Sijia Liu
  * @since 4.4
@@ -38,7 +37,8 @@ public class Remote {
 	@Nullable private final Duration socketTimeout;
 	@Nullable private final Duration connectTimeout;
 
-	private Remote(String scheme, String host, int port, @Nullable String pathPrefix, @Nullable String username, @Nullable String password, @Nullable Duration socketTimeout, @Nullable Duration connectTimeout) {
+	private Remote(String scheme, String host, int port, @Nullable String pathPrefix, @Nullable String username,
+			@Nullable String password, @Nullable Duration socketTimeout, @Nullable Duration connectTimeout) {
 
 		Assert.notNull(scheme, "scheme must not be null");
 		Assert.notNull(host, "host must not be null");
@@ -90,11 +90,11 @@ public class Remote {
 		return pathPrefix;
 	}
 
-	public static RemoteBuilder builder(String scheme, String host, int port){
+	public static RemoteBuilder builder(String scheme, String host, int port) {
 		return new RemoteBuilder(scheme, host, port);
 	}
 
-	public static class RemoteBuilder{
+	public static class RemoteBuilder {
 		private final String scheme;
 		private final String host;
 		private final int port;
@@ -110,33 +110,33 @@ public class Remote {
 			this.port = port;
 		}
 
-		public RemoteBuilder withPathPrefix(String pathPrefix){
+		public RemoteBuilder withPathPrefix(String pathPrefix) {
 			this.pathPrefix = pathPrefix;
 			return this;
 		}
 
-		public RemoteBuilder withUsername(String username){
+		public RemoteBuilder withUsername(String username) {
 			this.username = username;
 			return this;
 		}
 
-		public RemoteBuilder withPassword(String password){
+		public RemoteBuilder withPassword(String password) {
 			this.password = password;
 			return this;
 		}
 
-		public RemoteBuilder withSocketTimeout(Duration socketTimeout){
+		public RemoteBuilder withSocketTimeout(Duration socketTimeout) {
 			this.socketTimeout = socketTimeout;
 			return this;
 		}
 
-		public RemoteBuilder withConnectTimeout(Duration connectTimeout){
+		public RemoteBuilder withConnectTimeout(Duration connectTimeout) {
 			this.connectTimeout = connectTimeout;
 			return this;
 		}
 
-		public Remote build(){
-			return new Remote(scheme, host, port , pathPrefix, username, password, socketTimeout, connectTimeout);
+		public Remote build() {
+			return new Remote(scheme, host, port, pathPrefix, username, password, socketTimeout, connectTimeout);
 		}
 	}
 }

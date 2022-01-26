@@ -19,9 +19,7 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -80,6 +78,7 @@ import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -1201,32 +1200,24 @@ public class ReactiveElasticsearchTemplateIntegrationTests {
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
 		final ReindexRequest reindexRequest = ReindexRequest
-				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
-				.withRefresh(true)
-				.build();
-		operations.reindex(reindexRequest)
-				.as(StepVerifier::create)
+				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName)).withRefresh(true).build();
+		operations.reindex(reindexRequest).as(StepVerifier::create)
 				.consumeNextWith(postReindexResponse -> assertThat(postReindexResponse.getTotal()).isEqualTo(1L))
 				.verifyComplete();
 		operations.count(operations.matchAllQuery(), SampleEntity.class, IndexCoordinates.of(destIndexName))
-				.as(StepVerifier::create)
-				.expectNext(1L)
-				.verifyComplete();
+				.as(StepVerifier::create).expectNext(1L).verifyComplete();
 	}
 
 	@Test // #1529
-	void shouldWorkSubmitReindexTask(){
+	void shouldWorkSubmitReindexTask() {
 		String sourceIndexName = indexNameProvider.indexName();
 		indexNameProvider.increment();
 		String destIndexName = indexNameProvider.indexName();
 		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
 		final ReindexRequest reindexRequest = ReindexRequest
-				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
-				.build();
-		operations.submitReindex(reindexRequest)
-				.as(StepVerifier::create)
-				.consumeNextWith(task -> assertThat(task).isNotBlank())
-				.verifyComplete();
+				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName)).build();
+		operations.submitReindex(reindexRequest).as(StepVerifier::create)
+				.consumeNextWith(task -> assertThat(task).isNotBlank()).verifyComplete();
 	}
 	// endregion
 

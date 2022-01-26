@@ -61,9 +61,7 @@ import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.cluster.ElasticsearchClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
-import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
-import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
@@ -73,6 +71,8 @@ import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilde
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -265,7 +265,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		final UpdateByQueryRequest updateByQueryRequest = requestFactory.updateByQueryRequest(query, index);
+		UpdateByQueryRequest updateByQueryRequest = requestFactory.updateByQueryRequest(query, index);
 
 		if (query.getRefreshPolicy() == null && getRefreshPolicy() != null) {
 			updateByQueryRequest.setRefresh(getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
@@ -285,8 +285,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
 
-		final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
-		final BulkByScrollResponse bulkByScrollResponse = execute(
+		org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+		BulkByScrollResponse bulkByScrollResponse = execute(
 				client -> client.reindex(reindexRequest, RequestOptions.DEFAULT));
 		return ResponseConverter.reindexResponseOf(bulkByScrollResponse);
 	}
@@ -295,9 +295,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	public String submitReindex(ReindexRequest postReindexRequest) {
 		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
 
-		final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
-		return execute(
-				client -> client.submitReindexTask(reindexRequest, RequestOptions.DEFAULT).getTask());
+		org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+		return execute(client -> client.submitReindexTask(reindexRequest, RequestOptions.DEFAULT).getTask());
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,

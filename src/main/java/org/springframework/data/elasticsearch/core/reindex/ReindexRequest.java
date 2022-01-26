@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the original author or authors.
+ * Copyright 2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.reindex;
 
+import java.time.Duration;
+
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -23,11 +25,9 @@ import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
-import java.time.Duration;
-
 /**
- * Request to reindex some documents from one index to another.
- * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
+ * Request to reindex some documents from one index to another. (@see
+ * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
  *
  * @author Sijia Liu
  * @since 4.4
@@ -50,7 +50,10 @@ public class ReindexRequest {
 	@Nullable private final Duration scroll;
 	@Nullable private final Integer slices;
 
-	private ReindexRequest(Source source, Dest dest, @Nullable Integer maxDocs, @Nullable Conflicts conflicts, @Nullable Script script, @Nullable Duration timeout, @Nullable Boolean requireAlias, @Nullable Boolean refresh, @Nullable String waitForActiveShards, @Nullable Integer requestsPerSecond, @Nullable Duration scroll, @Nullable Integer slices) {
+	private ReindexRequest(Source source, Dest dest, @Nullable Integer maxDocs, @Nullable Conflicts conflicts,
+			@Nullable Script script, @Nullable Duration timeout, @Nullable Boolean requireAlias, @Nullable Boolean refresh,
+			@Nullable String waitForActiveShards, @Nullable Integer requestsPerSecond, @Nullable Duration scroll,
+			@Nullable Integer slices) {
 
 		Assert.notNull(source, "source must not be null");
 		Assert.notNull(dest, "dest must not be null");
@@ -132,7 +135,18 @@ public class ReindexRequest {
 	}
 
 	public enum Conflicts {
-		PROCEED, ABORT
+		PROCEED("proceed"), ABORT("abort");
+
+		// value used in Elasticsearch
+		private final String esName;
+
+		Conflicts(String esName) {
+			this.esName = esName;
+		}
+
+		public String getEsName() {
+			return esName;
+		}
 	}
 
 	public static class Source {
@@ -143,7 +157,7 @@ public class ReindexRequest {
 		@Nullable private Integer size;
 		@Nullable private SourceFilter sourceFilter;
 
-		private Source(IndexCoordinates indexes){
+		private Source(IndexCoordinates indexes) {
 			Assert.notNull(indexes, "indexes must not be null");
 
 			this.indexes = indexes;
@@ -281,7 +295,7 @@ public class ReindexRequest {
 			this.dest = new Dest(destIndex);
 		}
 
-        // region setter
+		// region setter
 
 		public ReindexRequestBuilder withMaxDocs(@Nullable Integer maxDocs) {
 			this.maxDocs = maxDocs;
@@ -298,7 +312,7 @@ public class ReindexRequest {
 			return this;
 		}
 
-		public ReindexRequestBuilder withSourceSlice(int id, int max){
+		public ReindexRequestBuilder withSourceSlice(int id, int max) {
 			this.source.slice = new Slice(id, max);
 			return this;
 		}
@@ -313,17 +327,17 @@ public class ReindexRequest {
 			return this;
 		}
 
-		public ReindexRequestBuilder withSourceSourceFilter(SourceFilter sourceFilter){
+		public ReindexRequestBuilder withSourceSourceFilter(SourceFilter sourceFilter) {
 			this.source.sourceFilter = sourceFilter;
 			return this;
 		}
 
-		public ReindexRequestBuilder withDestPipeline(String pipelineName){
+		public ReindexRequestBuilder withDestPipeline(String pipelineName) {
 			this.dest.pipeline = pipelineName;
 			return this;
 		}
 
-		public ReindexRequestBuilder withDestRouting(String routing){
+		public ReindexRequestBuilder withDestRouting(String routing) {
 			this.dest.routing = routing;
 			return this;
 		}
@@ -343,44 +357,45 @@ public class ReindexRequest {
 			return this;
 		}
 
-		public ReindexRequestBuilder withTimeout(Duration timeout){
+		public ReindexRequestBuilder withTimeout(Duration timeout) {
 			this.timeout = timeout;
 			return this;
 		}
 
-		public ReindexRequestBuilder withRequireAlias(boolean requireAlias){
+		public ReindexRequestBuilder withRequireAlias(boolean requireAlias) {
 			this.requireAlias = requireAlias;
 			return this;
 		}
 
-		public ReindexRequestBuilder withRefresh(boolean refresh){
+		public ReindexRequestBuilder withRefresh(boolean refresh) {
 			this.refresh = refresh;
 			return this;
 		}
 
-		public ReindexRequestBuilder withWaitForActiveShards(String waitForActiveShards){
+		public ReindexRequestBuilder withWaitForActiveShards(String waitForActiveShards) {
 			this.waitForActiveShards = waitForActiveShards;
 			return this;
 		}
 
-		public ReindexRequestBuilder withRequestsPerSecond(int requestsPerSecond){
+		public ReindexRequestBuilder withRequestsPerSecond(int requestsPerSecond) {
 			this.requestsPerSecond = requestsPerSecond;
 			return this;
 		}
 
-		public ReindexRequestBuilder withScroll(Duration scroll){
+		public ReindexRequestBuilder withScroll(Duration scroll) {
 			this.scroll = scroll;
 			return this;
 		}
 
-		public ReindexRequestBuilder withSlices(int slices){
+		public ReindexRequestBuilder withSlices(int slices) {
 			this.slices = slices;
 			return this;
 		}
 		// endregion
 
 		public ReindexRequest build() {
-			return new ReindexRequest(source, dest, maxDocs, conflicts, script, timeout, requireAlias, refresh, waitForActiveShards, requestsPerSecond, scroll, slices);
+			return new ReindexRequest(source, dest, maxDocs, conflicts, script, timeout, requireAlias, refresh,
+					waitForActiveShards, requestsPerSecond, scroll, slices);
 		}
 	}
 }

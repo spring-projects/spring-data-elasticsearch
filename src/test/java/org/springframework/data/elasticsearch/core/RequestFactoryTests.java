@@ -560,55 +560,45 @@ class RequestFactoryTests {
 
 	@Test // #1529
 	void shouldCreateReindexRequest() throws IOException, JSONException {
-		final String expected = "{\n" +
-				"    \"source\":{\n" +
-				"        \"remote\":{\n" +
-				"                \"username\":\"admin\",\n" +
-				"                \"password\":\"password\",\n" +
-				"                \"host\":\"http://localhost:9200/elasticsearch\",\n" +
-				"                \"socket_timeout\":\"30s\",\n" +
-				"                \"connect_timeout\":\"30s\"\n" +
-				"            },\n" +
-				"        \"index\":[\"source_1\",\"source_2\"],\n" +
-				"        \"size\":5,\n" +
-				"        \"query\":{\"match_all\":{}},\n" +
-				"        \"_source\":{\"includes\":[\"name\"],\"excludes\":[]},\n" +
-				"        \"slice\":{\"id\":1,\"max\":20}\n" +
-				"    },\n" +
-				"    \"dest\":{\n" +
-				"        \"index\":\"destination\",\n" +
-				"        \"routing\":\"routing\",\n" +
-				"        \"op_type\":\"create\",\n" +
-				"        \"pipeline\":\"pipeline\",\n" +
-				"        \"version_type\":\"external\"\n" +
-				"    },\n" +
-				"    \"max_docs\":10,\n" +
-				"    \"script\":{\"source\":\"Math.max(1,2)\",\"lang\":\"java\"},\n" +
-				"    \"conflicts\":\"proceed\"\n" +
+		final String expected = "{\n" + //
+				"    \"source\":{\n" + //
+				"        \"remote\":{\n" + //
+				"                \"username\":\"admin\",\n" + //
+				"                \"password\":\"password\",\n" + //
+				"                \"host\":\"http://localhost:9200/elasticsearch\",\n" + //
+				"                \"socket_timeout\":\"30s\",\n" + //
+				"                \"connect_timeout\":\"30s\"\n" + //
+				"            },\n" + //
+				"        \"index\":[\"source_1\",\"source_2\"],\n" + //
+				"        \"size\":5,\n" + //
+				"        \"query\":{\"match_all\":{}},\n" + //
+				"        \"_source\":{\"includes\":[\"name\"],\"excludes\":[]},\n" + //
+				"        \"slice\":{\"id\":1,\"max\":20}\n" + //
+				"    },\n" + //
+				"    \"dest\":{\n" + //
+				"        \"index\":\"destination\",\n" + //
+				"        \"routing\":\"routing\",\n" + //
+				"        \"op_type\":\"create\",\n" + //
+				"        \"pipeline\":\"pipeline\",\n" + //
+				"        \"version_type\":\"external\"\n" + //
+				"    },\n" + //
+				"    \"max_docs\":10,\n" + //
+				"    \"script\":{\"source\":\"Math.max(1,2)\",\"lang\":\"java\"},\n" + //
+				"    \"conflicts\":\"proceed\"\n" + //
 				"}";
 
-		Remote remote = Remote.builder("http", "localhost",9200)
-				.withPathPrefix("elasticsearch")
-				.withUsername("admin")
-				.withPassword("password")
-				.withConnectTimeout(Duration.ofSeconds(30))
-				.withSocketTimeout(Duration.ofSeconds(30)).build();
-
-		ReindexRequest reindexRequest = ReindexRequest.builder(IndexCoordinates.of("source_1", "source_2"),
-						IndexCoordinates.of("destination"))
-				.withConflicts(ReindexRequest.Conflicts.PROCEED)
-				.withMaxDocs(10)
-				.withSourceQuery(new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build())
-				.withSourceSize(5)
-				.withSourceSourceFilter(new FetchSourceFilterBuilder().withIncludes("name").build())
-				.withSourceRemote(remote)
-				.withSourceSlice(1,20)
-				.withDestOpType(IndexQuery.OpType.CREATE)
-				.withDestVersionType(Document.VersionType.EXTERNAL)
-				.withDestPipeline("pipeline")
-				.withDestRouting("routing")
-				.withScript("Math.max(1,2)", "java")
+		Remote remote = Remote.builder("http", "localhost", 9200).withPathPrefix("elasticsearch").withUsername("admin")
+				.withPassword("password").withConnectTimeout(Duration.ofSeconds(30)).withSocketTimeout(Duration.ofSeconds(30))
 				.build();
+
+		ReindexRequest reindexRequest = ReindexRequest
+				.builder(IndexCoordinates.of("source_1", "source_2"), IndexCoordinates.of("destination"))
+				.withConflicts(ReindexRequest.Conflicts.PROCEED).withMaxDocs(10)
+				.withSourceQuery(new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build()).withSourceSize(5)
+				.withSourceSourceFilter(new FetchSourceFilterBuilder().withIncludes("name").build()).withSourceRemote(remote)
+				.withSourceSlice(1, 20).withDestOpType(IndexQuery.OpType.CREATE)
+				.withDestVersionType(Document.VersionType.EXTERNAL).withDestPipeline("pipeline").withDestRouting("routing")
+				.withScript("Math.max(1,2)", "java").build();
 
 		final String json = requestToString(requestFactory.reindexRequest(reindexRequest));
 
@@ -617,22 +607,21 @@ class RequestFactoryTests {
 
 	@Test
 	void shouldAllowSourceQueryForReindexWithoutRemote() throws IOException, JSONException {
-		final String expected = "{\n" +
-				"    \"source\":{\n" +
-				"        \"index\":[\"source\"],\n" +
-				"        \"query\":{\"match_all\":{}}\n" +
-				"    },\n" +
-				"    \"dest\":{\n" +
-				"        \"index\":\"destination\",\n" +
-				"        \"op_type\":\"index\",\n" +
-				"        \"version_type\":\"internal\"\n" +
-				"    }\n" +
+		final String expected = "{\n" + //
+				"    \"source\":{\n" + //
+				"        \"index\":[\"source\"],\n" + //
+				"        \"query\":{\"match_all\":{}}\n" + //
+				"    },\n" + //
+				"    \"dest\":{\n" + //
+				"        \"index\":\"destination\",\n" + //
+				"        \"op_type\":\"index\",\n" + //
+				"        \"version_type\":\"internal\"\n" + //
+				"    }\n" + //
 				"}";
 
-		ReindexRequest reindexRequest = ReindexRequest.builder(IndexCoordinates.of("source"),
-						IndexCoordinates.of("destination"))
-				.withSourceQuery(new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build())
-				.build();
+		ReindexRequest reindexRequest = ReindexRequest
+				.builder(IndexCoordinates.of("source"), IndexCoordinates.of("destination"))
+				.withSourceQuery(new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build()).build();
 
 		final String json = requestToString(requestFactory.reindexRequest(reindexRequest));
 

@@ -294,10 +294,14 @@ public interface RequestCreator {
 	/**
 	 * @since 4.4
 	 */
-	default Function<ReindexRequest, Request> reindex() { return RequestConverters::reindex; }
+	default Function<ReindexRequest, Request> reindex() {
+		return RequestConverters::reindex;
+	}
 
 	/**
 	 * @since 4.4
 	 */
-	default Function<ReindexRequest, Request> submitReindex() { return RequestConverters::submitReindex; }
+	default Function<ReindexRequest, Request> submitReindex() {
+		return RequestConverters::submitReindex;
+	}
 }

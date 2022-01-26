@@ -70,8 +70,6 @@ import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCal
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterLoadCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
-import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
-import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -84,6 +82,8 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
@@ -618,7 +618,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
 
 		return Mono.defer(() -> {
-			final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+			org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
 			return Mono.from(execute(client -> client.reindex(reindexRequest))).map(ResponseConverter::reindexResponseOf);
 		});
 	}
@@ -629,7 +629,7 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
 
 		return Mono.defer(() -> {
-			final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+			org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
 			return Mono.from(execute(client -> client.submitReindex(reindexRequest)));
 		});
 	}

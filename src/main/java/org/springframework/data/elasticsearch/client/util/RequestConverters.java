@@ -547,14 +547,17 @@ public class RequestConverters {
 				.withTimeout(reindexRequest.getTimeout()).withWaitForActiveShards(reindexRequest.getWaitForActiveShards())
 				.withRequestsPerSecond(reindexRequest.getRequestsPerSecond());
 
-		if(reindexRequest.getDestination().isRequireAlias()){
+		if (reindexRequest.getDestination().isRequireAlias()) {
 			params.putParam("require_alias", Boolean.TRUE.toString());
 		}
+
 		if (reindexRequest.getScrollTime() != null) {
 			params.putParam("scroll", reindexRequest.getScrollTime());
 		}
+
 		params.putParam("slices", Integer.toString(reindexRequest.getSlices()));
-		if(reindexRequest.getMaxDocs() > -1){
+
+		if (reindexRequest.getMaxDocs() > -1) {
 			params.putParam("max_docs", Integer.toString(reindexRequest.getMaxDocs()));
 		}
 		request.setEntity(createEntity(reindexRequest, REQUEST_BODY_CONTENT_TYPE));

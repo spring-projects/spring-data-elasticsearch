@@ -88,8 +88,8 @@ import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.index.reindex.ReindexRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.rest.BytesRestResponse;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.script.mustache.SearchTemplateRequest;
@@ -105,7 +105,6 @@ import org.elasticsearch.xcontent.XContentType;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
-import org.springframework.data.elasticsearch.core.ResponseConverter;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
@@ -115,6 +114,7 @@ import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsea
 import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient.Indices;
 import org.springframework.data.elasticsearch.client.util.NamedXContents;
 import org.springframework.data.elasticsearch.client.util.ScrollState;
+import org.springframework.data.elasticsearch.core.ResponseConverter;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.util.Lazy;
 import org.springframework.http.HttpHeaders;
@@ -150,7 +150,6 @@ import org.springframework.web.reactive.function.client.WebClient.RequestBodySpe
  * @see ClientConfiguration
  * @see ReactiveRestClients
  */
-// todo package private after refactoring
 public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearchClient, Indices, Cluster {
 
 	private final HostProvider<?> hostProvider;
@@ -514,14 +513,12 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	@Override
 	public Mono<BulkByScrollResponse> reindex(HttpHeaders headers, ReindexRequest reindexRequest) {
-		return sendRequest(reindexRequest, requestCreator.reindex(), BulkByScrollResponse.class, headers)
-				.next();
+		return sendRequest(reindexRequest, requestCreator.reindex(), BulkByScrollResponse.class, headers).next();
 	}
 
 	@Override
 	public Mono<String> submitReindex(HttpHeaders headers, ReindexRequest reindexRequest) {
-		return sendRequest(reindexRequest, requestCreator.submitReindex(), TaskSubmissionResponse.class, headers)
-				.next()
+		return sendRequest(reindexRequest, requestCreator.submitReindex(), TaskSubmissionResponse.class, headers).next()
 				.map(TaskSubmissionResponse::getTask);
 	}
 

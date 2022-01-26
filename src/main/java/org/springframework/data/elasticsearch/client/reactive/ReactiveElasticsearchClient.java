@@ -53,8 +53,8 @@ import org.elasticsearch.client.indices.*;
 import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
-import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.index.reindex.ReindexRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -722,7 +722,7 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the response
 	 * @since 4.4
 	 */
-	default Mono<BulkByScrollResponse> reindex(Consumer<ReindexRequest> consumer){
+	default Mono<BulkByScrollResponse> reindex(Consumer<ReindexRequest> consumer) {
 
 		ReindexRequest reindexRequest = new ReindexRequest();
 		consumer.accept(reindexRequest);
@@ -736,7 +736,7 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the response
 	 * @since 4.4
 	 */
-	default Mono<BulkByScrollResponse> reindex(ReindexRequest reindexRequest){
+	default Mono<BulkByScrollResponse> reindex(ReindexRequest reindexRequest) {
 		return reindex(HttpHeaders.EMPTY, reindexRequest);
 	}
 
@@ -757,7 +757,7 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the task id
 	 * @since 4.4
 	 */
-	default Mono<String> submitReindex(Consumer<ReindexRequest> consumer){
+	default Mono<String> submitReindex(Consumer<ReindexRequest> consumer) {
 
 		ReindexRequest reindexRequest = new ReindexRequest();
 		consumer.accept(reindexRequest);
@@ -771,7 +771,7 @@ public interface ReactiveElasticsearchClient {
 	 * @return the {@link Mono} emitting the task id
 	 * @since 4.4
 	 */
-	default Mono<String> submitReindex(ReindexRequest reindexRequest){
+	default Mono<String> submitReindex(ReindexRequest reindexRequest) {
 		return submitReindex(HttpHeaders.EMPTY, reindexRequest);
 	}
 
@@ -784,6 +784,7 @@ public interface ReactiveElasticsearchClient {
 	 * @since 4.4
 	 */
 	Mono<String> submitReindex(HttpHeaders headers, ReindexRequest reindexRequest);
+
 	/**
 	 * Compose the actual command/s to run against Elasticsearch using the underlying {@link WebClient connection}.
 	 * {@link #execute(ReactiveElasticsearchClientCallback) Execute} selects an active server from the available ones and

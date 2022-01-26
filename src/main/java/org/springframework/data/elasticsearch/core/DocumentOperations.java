@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Collection;
 import java.util.List;
 
-import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
-import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
@@ -27,6 +25,8 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.lang.Nullable;
 
@@ -327,10 +327,9 @@ public interface DocumentOperations {
 	ByQueryResponse updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
 
 	/**
-	 * Copies documents from a source to a destination.
-	 * The source can be any existing index, alias, or data stream. The destination must differ from the source.
-	 * For example, you cannot reindex a data stream into itself.
-	 * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
+	 * Copies documents from a source to a destination. The source can be any existing index, alias, or data stream. The
+	 * destination must differ from the source. For example, you cannot reindex a data stream into itself. (@see
+	 * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
 	 *
 	 * @param reindexRequest reindex request parameters
 	 * @return the reindex response
@@ -339,8 +338,7 @@ public interface DocumentOperations {
 	ReindexResponse reindex(ReindexRequest reindexRequest);
 
 	/**
-	 * Submits a reindex task.
-	 * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
+	 * Submits a reindex task. (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
 	 *
 	 * @param reindexRequest reindex request parameters
 	 * @return the task id
