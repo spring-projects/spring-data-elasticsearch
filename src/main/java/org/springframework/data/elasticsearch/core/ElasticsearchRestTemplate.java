@@ -61,7 +61,9 @@ import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.cluster.ElasticsearchClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
@@ -106,6 +108,7 @@ import org.springframework.util.Assert;
  * @author Gyula Attila Csorogi
  * @author Massimiliano Poggi
  * @author Farid Faoudi
+ * @author Sijia Liu
  * @since 4.4
  */
 public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
@@ -275,6 +278,26 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		final BulkByScrollResponse bulkByScrollResponse = execute(
 				client -> client.updateByQuery(updateByQueryRequest, RequestOptions.DEFAULT));
 		return ResponseConverter.byQueryResponseOf(bulkByScrollResponse);
+	}
+
+	@Override
+	public ReindexResponse reindex(ReindexRequest postReindexRequest) {
+
+		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
+
+		final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+		final BulkByScrollResponse bulkByScrollResponse = execute(
+				client -> client.reindex(reindexRequest, RequestOptions.DEFAULT));
+		return ResponseConverter.reindexResponseOf(bulkByScrollResponse);
+	}
+
+	@Override
+	public String submitReindex(ReindexRequest postReindexRequest) {
+		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
+
+		final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+		return execute(
+				client -> client.submitReindexTask(reindexRequest, RequestOptions.DEFAULT).getTask());
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,

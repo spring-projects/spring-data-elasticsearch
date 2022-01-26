@@ -54,6 +54,7 @@ import org.elasticsearch.index.get.GetResult;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.index.reindex.ReindexRequest;
 import org.elasticsearch.script.mustache.SearchTemplateRequest;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.aggregations.Aggregation;
@@ -76,6 +77,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Henrique Amaral
  * @author Thomas Geese
  * @author Farid Faoudi
+ * @author Sijia Liu
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
@@ -713,6 +715,75 @@ public interface ReactiveElasticsearchClient {
 	 */
 	Mono<BulkResponse> bulk(HttpHeaders headers, BulkRequest bulkRequest);
 
+	/**
+	 * Execute the given {@link ReindexRequest} against the {@literal reindex} API.
+	 *
+	 * @param consumer must not be {@literal null}
+	 * @return the {@link Mono} emitting the response
+	 * @since 4.4
+	 */
+	default Mono<BulkByScrollResponse> reindex(Consumer<ReindexRequest> consumer){
+
+		ReindexRequest reindexRequest = new ReindexRequest();
+		consumer.accept(reindexRequest);
+		return reindex(reindexRequest);
+	}
+
+	/**
+	 * Execute the given {@link ReindexRequest} against the {@literal reindex} API.
+	 *
+	 * @param reindexRequest must not be {@literal null}
+	 * @return the {@link Mono} emitting the response
+	 * @since 4.4
+	 */
+	default Mono<BulkByScrollResponse> reindex(ReindexRequest reindexRequest){
+		return reindex(HttpHeaders.EMPTY, reindexRequest);
+	}
+
+	/**
+	 * Execute the given {@link ReindexRequest} against the {@literal reindex} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param reindexRequest must not be {@literal null}
+	 * @return the {@link Mono} emitting the response
+	 * @since 4.4
+	 */
+	Mono<BulkByScrollResponse> reindex(HttpHeaders headers, ReindexRequest reindexRequest);
+
+	/**
+	 * Execute the given {@link ReindexRequest} against the {@literal reindex} API.
+	 *
+	 * @param consumer must not be {@literal null}
+	 * @return the {@link Mono} emitting the task id
+	 * @since 4.4
+	 */
+	default Mono<String> submitReindex(Consumer<ReindexRequest> consumer){
+
+		ReindexRequest reindexRequest = new ReindexRequest();
+		consumer.accept(reindexRequest);
+		return submitReindex(reindexRequest);
+	}
+
+	/**
+	 * Execute the given {@link ReindexRequest} against the {@literal reindex} API.
+	 *
+	 * @param reindexRequest must not be {@literal null}
+	 * @return the {@link Mono} emitting the task id
+	 * @since 4.4
+	 */
+	default Mono<String> submitReindex(ReindexRequest reindexRequest){
+		return submitReindex(HttpHeaders.EMPTY, reindexRequest);
+	}
+
+	/**
+	 * Execute the given {@link ReindexRequest} against the {@literal reindex} API.
+	 *
+	 * @param headers Use {@link HttpHeaders} to provide eg. authentication data. Must not be {@literal null}.
+	 * @param reindexRequest must not be {@literal null}
+	 * @return the {@link Mono} emitting the task id
+	 * @since 4.4
+	 */
+	Mono<String> submitReindex(HttpHeaders headers, ReindexRequest reindexRequest);
 	/**
 	 * Compose the actual command/s to run against Elasticsearch using the underlying {@link WebClient connection}.
 	 * {@link #execute(ReactiveElasticsearchClientCallback) Execute} selects an active server from the available ones and

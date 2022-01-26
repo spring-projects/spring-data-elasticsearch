@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
@@ -34,6 +36,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Peter-Josef Meisch
  * @author Farid Faoudi
+ * @author Sijia Liu
  * @since 4.0
  */
 public interface DocumentOperations {
@@ -322,4 +325,26 @@ public interface DocumentOperations {
 	 * @since 4.2
 	 */
 	ByQueryResponse updateByQuery(UpdateQuery updateQuery, IndexCoordinates index);
+
+	/**
+	 * Copies documents from a source to a destination.
+	 * The source can be any existing index, alias, or data stream. The destination must differ from the source.
+	 * For example, you cannot reindex a data stream into itself.
+	 * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
+	 *
+	 * @param reindexRequest reindex request parameters
+	 * @return the reindex response
+	 * @since 4.4
+	 */
+	ReindexResponse reindex(ReindexRequest reindexRequest);
+
+	/**
+	 * Submits a reindex task.
+	 * (@see https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-reindex.html)
+	 *
+	 * @param reindexRequest reindex request parameters
+	 * @return the task id
+	 * @since 4.4
+	 */
+	String submitReindex(ReindexRequest reindexRequest);
 }

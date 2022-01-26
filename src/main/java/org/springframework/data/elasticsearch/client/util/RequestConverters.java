@@ -532,11 +532,11 @@ public class RequestConverters {
 		return request;
 	}
 
-	public static Request reindex(ReindexRequest reindexRequest) throws IOException {
+	public static Request reindex(ReindexRequest reindexRequest) {
 		return prepareReindexRequest(reindexRequest, true);
 	}
 
-	static Request submitReindex(ReindexRequest reindexRequest) throws IOException {
+	public static Request submitReindex(ReindexRequest reindexRequest) {
 		return prepareReindexRequest(reindexRequest, false);
 	}
 
@@ -547,8 +547,15 @@ public class RequestConverters {
 				.withTimeout(reindexRequest.getTimeout()).withWaitForActiveShards(reindexRequest.getWaitForActiveShards())
 				.withRequestsPerSecond(reindexRequest.getRequestsPerSecond());
 
+		if(reindexRequest.getDestination().isRequireAlias()){
+			params.putParam("require_alias", Boolean.TRUE.toString());
+		}
 		if (reindexRequest.getScrollTime() != null) {
 			params.putParam("scroll", reindexRequest.getScrollTime());
+		}
+		params.putParam("slices", Integer.toString(reindexRequest.getSlices()));
+		if(reindexRequest.getMaxDocs() > -1){
+			params.putParam("max_docs", Integer.toString(reindexRequest.getMaxDocs()));
 		}
 		request.setEntity(createEntity(reindexRequest, REQUEST_BODY_CONTENT_TYPE));
 		return request;

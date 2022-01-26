@@ -83,6 +83,11 @@ import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.ScriptField;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -123,6 +128,7 @@ import org.springframework.lang.Nullable;
  * @author Subhobrata Dey
  * @author Farid Faoudi
  * @author Peer Mueller
+ * @author Sijia Liu
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchTemplateTests {
@@ -3641,6 +3647,38 @@ public abstract class ElasticsearchTemplateTests {
 		Query query = operations.matchAllQuery().addSort(Sort.by(order));
 
 		operations.search(query, SampleEntity.class);
+	}
+
+	@Test // #1529
+	void shouldWorkReindexForExistingIndex() {
+		String sourceIndexName = indexNameProvider.indexName();
+		String documentId = nextIdAsString();
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("abc").build();
+		operations.save(sampleEntity);
+
+		indexNameProvider.increment();
+		String destIndexName = indexNameProvider.indexName();
+		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
+
+		final ReindexRequest reindexRequest = ReindexRequest.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName))
+				.withRefresh(true).build();
+		final ReindexResponse reindex = operations.reindex(reindexRequest);
+		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		assertThat(reindex.getTotal()).isEqualTo(1);
+		assertThat(operations.count(searchQuery, IndexCoordinates.of(destIndexName))).isEqualTo(1);
+	}
+
+	@Test // #1529
+	void shouldWorkSubmitReindexTask(){
+		String sourceIndexName = indexNameProvider.indexName();
+		indexNameProvider.increment();
+		String destIndexName = indexNameProvider.indexName();
+		operations.indexOps(IndexCoordinates.of(destIndexName)).create();
+		final ReindexRequest reindexRequest = ReindexRequest
+				.builder(IndexCoordinates.of(sourceIndexName), IndexCoordinates.of(destIndexName)).build();
+		String task = operations.submitReindex(reindexRequest);
+		// Maybe there should be a task api to detect whether the task exists
+		assertThat(task).isNotBlank();
 	}
 
 	// region entities

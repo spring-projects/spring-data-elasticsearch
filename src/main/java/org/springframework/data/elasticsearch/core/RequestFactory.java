@@ -15,19 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.elasticsearch.core.TimeValue.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.elasticsearch.index.reindex.RemoteInfo.*;
+import static org.elasticsearch.script.Script.*;
 import static org.springframework.util.CollectionUtils.*;
 
+import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.DocWriteRequest;
@@ -58,6 +54,7 @@ import org.elasticsearch.client.indices.GetMappingsRequest;
 import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.client.indices.PutMappingRequest;
+import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.geo.GeoDistance;
 import org.elasticsearch.common.unit.DistanceUnit;
 import org.elasticsearch.core.TimeValue;
@@ -66,6 +63,7 @@ import org.elasticsearch.index.query.MoreLikeThisQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.RemoteInfo;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
@@ -73,6 +71,7 @@ import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.rescore.QueryRescoreMode;
 import org.elasticsearch.search.rescore.QueryRescorerBuilder;
+import org.elasticsearch.search.slice.SliceBuilder;
 import org.elasticsearch.search.sort.FieldSortBuilder;
 import org.elasticsearch.search.sort.GeoDistanceSortBuilder;
 import org.elasticsearch.search.sort.ScoreSortBuilder;
@@ -81,6 +80,8 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortMode;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
+import org.elasticsearch.xcontent.ToXContent;
+import org.elasticsearch.xcontent.XContentBuilder;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -91,7 +92,12 @@ import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest.Source;
+import org.springframework.data.elasticsearch.core.reindex.Remote;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest.Dest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest.Slice;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -385,6 +391,117 @@ class RequestFactory {
 
 	public DeleteIndexTemplateRequest deleteIndexTemplateRequest(DeleteTemplateRequest deleteTemplateRequest) {
 		return new DeleteIndexTemplateRequest(deleteTemplateRequest.getTemplateName());
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	public org.elasticsearch.index.reindex.ReindexRequest reindexRequest(ReindexRequest reindexRequest){
+		final org.elasticsearch.index.reindex.ReindexRequest request = new org.elasticsearch.index.reindex.ReindexRequest();
+		if(reindexRequest.getConflicts() != null){
+			request.setConflicts(reindexRequest.getConflicts().name().toLowerCase(Locale.ROOT));
+		}
+		if(reindexRequest.getMaxDocs() != null){
+			request.setMaxDocs(reindexRequest.getMaxDocs());
+		}
+		// region source build
+		final Source source = reindexRequest.getSource();
+		request.setSourceIndices(source.getIndexes().getIndexNames());
+		// source query will build from RemoteInfo if remote exist
+		if(source.getQuery() != null && source.getRemote() == null){
+			request.setSourceQuery(getQuery(source.getQuery()));
+		}
+		if(source.getSize() != null){
+			request.setSourceBatchSize(source.getSize());
+		}
+
+		if(source.getRemote() != null){
+			Remote remote = source.getRemote();
+			QueryBuilder queryBuilder = source.getQuery() == null ? QueryBuilders.matchAllQuery() : getQuery(source.getQuery());
+			BytesReference query;
+			try {
+				XContentBuilder builder = XContentBuilder.builder(QUERY_CONTENT_TYPE).prettyPrint();
+				query = BytesReference.bytes(queryBuilder.toXContent(builder, ToXContent.EMPTY_PARAMS));
+			} catch (IOException e) {
+				throw new IllegalArgumentException("an IOException occurs while building the source query content",e);
+			}
+			request.setRemoteInfo(new RemoteInfo(
+					remote.getScheme(),
+					remote.getHost(),
+					remote.getPort(),
+					remote.getPathPrefix(),
+					query,
+					remote.getUsername(),
+					remote.getPassword(),
+					Collections.emptyMap(),
+					remote.getSocketTimeout() == null ? DEFAULT_SOCKET_TIMEOUT : timeValueSeconds(remote.getSocketTimeout().getSeconds()),
+					remote.getConnectTimeout() == null ? DEFAULT_CONNECT_TIMEOUT : timeValueSeconds(remote.getConnectTimeout().getSeconds())
+			));
+		}
+
+		final Slice slice = source.getSlice();
+		if(slice != null){
+			request.getSearchRequest().source().slice(new SliceBuilder(slice.getId(), slice.getMax()));
+		}
+		final SourceFilter sourceFilter = source.getSourceFilter();
+		if(sourceFilter != null){
+			request.getSearchRequest().source().fetchSource(sourceFilter.getIncludes(), sourceFilter.getExcludes());
+		}
+		// endregion
+
+		// region dest build
+		final Dest dest = reindexRequest.getDest();
+		request.setDestIndex(dest.getIndex().getIndexName())
+				.setDestRouting(dest.getRouting())
+				.setDestPipeline(dest.getPipeline());
+
+		final org.springframework.data.elasticsearch.annotations.Document.VersionType versionType = dest.getVersionType();
+		if(versionType != null){
+			request.setDestVersionType(VersionType.fromString(versionType.name().toLowerCase(Locale.ROOT)));
+		}
+		final IndexQuery.OpType opType = dest.getOpType();
+		if(opType != null){
+			request.setDestOpType(opType.name().toLowerCase(Locale.ROOT));
+		}
+		// endregion
+
+		// region script build
+		final ReindexRequest.Script script = reindexRequest.getScript();
+		if(script != null){
+			request.setScript(new Script(DEFAULT_SCRIPT_TYPE,
+						script.getLang(),
+						script.getSource(),
+						Collections.emptyMap()
+					));
+		}
+		// endregion
+
+		// region query parameters build
+		final Duration timeout = reindexRequest.getTimeout();
+		if(timeout != null){
+			request.setTimeout(timeValueSeconds(timeout.getSeconds()));
+		}
+		if(reindexRequest.getRefresh() != null){
+			request.setRefresh(reindexRequest.getRefresh());
+		}
+		if(reindexRequest.getRequireAlias() != null){
+			request.setRequireAlias(reindexRequest.getRequireAlias());
+		}
+		if(reindexRequest.getRequestsPerSecond() != null){
+			request.setRequestsPerSecond(reindexRequest.getRequestsPerSecond());
+		}
+		final Duration scroll = reindexRequest.getScroll();
+		if(scroll != null){
+			request.setScroll(timeValueSeconds(scroll.getSeconds()));
+		}
+		if(reindexRequest.getWaitForActiveShards() != null){
+			request.setWaitForActiveShards(ActiveShardCount.parseString(reindexRequest.getWaitForActiveShards()));
+		}
+		if(reindexRequest.getSlices() != null){
+			request.setSlices(reindexRequest.getSlices());
+		}
+		// endregion
+		return request;
 	}
 
 	// endregion

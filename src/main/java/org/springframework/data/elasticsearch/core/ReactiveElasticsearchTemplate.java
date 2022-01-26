@@ -70,6 +70,8 @@ import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCal
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterLoadCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -105,6 +107,7 @@ import org.springframework.util.Assert;
  * @author Russell Parry
  * @author Thomas Geese
  * @author Farid Faoudi
+ * @author Sijia Liu
  * @since 3.2
  */
 public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOperations, ApplicationContextAware {
@@ -606,6 +609,28 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 			}
 
 			return Mono.from(execute(client -> client.updateBy(request)));
+		});
+	}
+
+	@Override
+	public Mono<ReindexResponse> reindex(ReindexRequest postReindexRequest) {
+
+		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
+
+		return Mono.defer(() -> {
+			final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+			return Mono.from(execute(client -> client.reindex(reindexRequest))).map(ResponseConverter::reindexResponseOf);
+		});
+	}
+
+	@Override
+	public Mono<String> submitReindex(ReindexRequest postReindexRequest) {
+
+		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
+
+		return Mono.defer(() -> {
+			final org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+			return Mono.from(execute(client -> client.submitReindex(reindexRequest)));
 		});
 	}
 

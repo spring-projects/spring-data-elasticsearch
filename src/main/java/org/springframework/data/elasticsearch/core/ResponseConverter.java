@@ -45,6 +45,7 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
+import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -54,6 +55,7 @@ import org.springframework.util.Assert;
  *
  * @author George Popides
  * @author Peter-Josef Meisch
+ * @author Sijia Liu
  * @since 4.2
  */
 public class ResponseConverter {
@@ -380,6 +382,54 @@ public class ResponseConverter {
 				.withNodeId(searchFailure.getNodeId()) //
 				.withShardId(searchFailure.getShardId()) //
 				.withStatus(searchFailure.getStatus().getStatus()) //
+				.build(); //
+	}
+
+	// endregion
+
+	// region postReindexResponse
+
+	/**
+	 * @since 4.4
+	 */
+	public static ReindexResponse reindexResponseOf(BulkByScrollResponse bulkByScrollResponse){
+		final List<ReindexResponse.Failure> failures = bulkByScrollResponse.getBulkFailures() //
+				.stream() //
+				.map(ResponseConverter::reindexResponseFailureOf) //
+				.collect(Collectors.toList()); //
+
+		return ReindexResponse.builder() //
+				.withTook(bulkByScrollResponse.getTook().getMillis()) //
+				.withTimedOut(bulkByScrollResponse.isTimedOut()) //
+				.withTotal(bulkByScrollResponse.getTotal()) //
+				.withUpdated(bulkByScrollResponse.getUpdated()) //
+				.withDeleted(bulkByScrollResponse.getDeleted()) //
+				.withBatches(bulkByScrollResponse.getBatches()) //
+				.withVersionConflicts(bulkByScrollResponse.getVersionConflicts()) //
+				.withNoops(bulkByScrollResponse.getNoops()) //
+				.withBulkRetries(bulkByScrollResponse.getBulkRetries()) //
+				.withSearchRetries(bulkByScrollResponse.getSearchRetries()) //
+				.withThrottledMillis(bulkByScrollResponse.getStatus().getThrottled().getMillis()) //
+				.withRequestsPerSecond(bulkByScrollResponse.getStatus().getRequestsPerSecond()) //
+				.withThrottledUntilMillis(bulkByScrollResponse.getStatus().getThrottledUntil().getMillis()) //
+				.withFailures(failures) //
+				.build(); //
+
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	public static ReindexResponse.Failure reindexResponseFailureOf(BulkItemResponse.Failure failure) {
+		return ReindexResponse.Failure.builder() //
+				.withIndex(failure.getIndex()) //
+				.withType(failure.getType()) //
+				.withId(failure.getId()) //
+				.withStatus(failure.getStatus().getStatus()) //
+				.withAborted(failure.isAborted()) //
+				.withCause(failure.getCause()) //
+				.withSeqNo(failure.getSeqNo()) //
+				.withTerm(failure.getTerm()) //
 				.build(); //
 	}
 
