@@ -1,3 +1,9 @@
+def p = [:]
+node {
+    checkout scm
+    p = readProperties interpolate: true, file: 'ci/pipeline.properties'
+}
+
 pipeline {
 	agent none
 
@@ -12,7 +18,7 @@ pipeline {
 	}
 
 	stages {
-		stage("test: baseline (jdk8)") {
+		stage("test: baseline (main)") {
 			when {
 				anyOf {
 					branch '4.2.x'
@@ -32,7 +38,7 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-						docker.image('adoptopenjdk/openjdk8:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
+						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.docker']) {
 							sh "docker login --username ${DOCKER_HUB_USR} --password ${DOCKER_HUB_PSW}"
 							sh 'PROFILE=none ci/verify.sh'
 							sh "ci/clean.sh"
@@ -50,7 +56,7 @@ pipeline {
 				}
 			}
 			parallel {
-				stage("test: baseline (jdk11)") {
+				stage("test: baseline (next)") {
 					agent {
 						label 'data'
 					}
@@ -64,7 +70,7 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('adoptopenjdk/openjdk11:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
+								docker.image(p['docker.java.11.image']).inside(p['docker.java.inside.docker']) {
 									sh "docker login --username ${DOCKER_HUB_USR} --password ${DOCKER_HUB_PSW}"
 									sh 'PROFILE=java11 ci/verify.sh'
 									sh "ci/clean.sh"
@@ -74,7 +80,7 @@ pipeline {
 					}
 				}
 
-				stage("test: baseline (jdk16)") {
+				stage("test: baseline (jdk15)") {
 					agent {
 						label 'data'
 					}
@@ -88,7 +94,7 @@ pipeline {
 					steps {
 						script {
 							docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-								docker.image('adoptopenjdk/openjdk16:latest').inside('-u root -v /var/run/docker.sock:/var/run/docker.sock -v /usr/bin/docker:/usr/bin/docker -v $HOME:/tmp/jenkins-home') {
+								docker.image(p['docker.java.15.image']).inside(p['docker.java.inside.docker']) {
 									sh "docker login --username ${DOCKER_HUB_USR} --password ${DOCKER_HUB_PSW}"
 									sh 'PROFILE=java11 ci/verify.sh'
 									sh "ci/clean.sh"
@@ -119,7 +125,7 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-						docker.image('adoptopenjdk/openjdk8:latest').inside('-v $HOME:/tmp/jenkins-home') {
+						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
 							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pci,artifactory -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-elasticsearch-non-root ' +
 									'-Dartifactory.server=https://repo.spring.io ' +
 									"-Dartifactory.username=${ARTIFACTORY_USR} " +
@@ -149,7 +155,7 @@ pipeline {
 			steps {
 				script {
 					docker.withRegistry('', 'hub.docker.com-springbuildmaster') {
-						docker.image('adoptopenjdk/openjdk8:latest').inside('-v $HOME:/tmp/jenkins-home') {
+						docker.image(p['docker.java.main.image']).inside(p['docker.java.inside.basic']) {
 							sh 'MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" ./mvnw -s settings.xml -Pci,distribute -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-elasticsearch-non-root ' +
 									'-Dartifactory.server=https://repo.spring.io ' +
 									"-Dartifactory.username=${ARTIFACTORY_USR} " +
