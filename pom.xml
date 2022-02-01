@@ -18,7 +18,7 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<elasticsearch>7.16.3</elasticsearch>
+		<elasticsearch>7.17.0</elasticsearch>
 		<log4j>2.17.1</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.7.0-SNAPSHOT</springdata.commons>
@@ -226,7 +226,7 @@
 			<version>${log4j}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>io.projectreactor.tools</groupId>
 			<artifactId>blockhound-junit-platform</artifactId>
