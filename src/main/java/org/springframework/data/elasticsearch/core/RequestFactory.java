@@ -118,6 +118,7 @@ import org.springframework.util.StringUtils;
  * @author Farid Faoudi
  * @author Peer Mueller
  * @author Sijia Liu
+ * @author Peter Nowak
  * @since 4.0
  */
 class RequestFactory {
@@ -1248,7 +1249,11 @@ class RequestFactory {
 				.map(it -> org.elasticsearch.action.support.IndicesOptions.WildcardStates.valueOf(it.name().toUpperCase()))
 				.collect(Collectors.toSet());
 
-		return new org.elasticsearch.action.support.IndicesOptions(EnumSet.copyOf(options), EnumSet.copyOf(wildcardStates));
+		return new org.elasticsearch.action.support.IndicesOptions(
+				options.isEmpty() ? EnumSet.noneOf(org.elasticsearch.action.support.IndicesOptions.Option.class)
+						: EnumSet.copyOf(options),
+				wildcardStates.isEmpty() ? EnumSet.noneOf(org.elasticsearch.action.support.IndicesOptions.WildcardStates.class)
+						: EnumSet.copyOf(wildcardStates));
 	}
 	// endregion
 

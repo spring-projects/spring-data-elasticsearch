@@ -22,6 +22,7 @@ import static org.skyscreamer.jsonassert.JSONAssert.*;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.HashSet;
 
 import org.elasticsearch.action.DocWriteRequest;
@@ -70,6 +71,7 @@ import org.springframework.lang.Nullable;
  * @author Peer Mueller
  * @author vdisk
  * @author Sijia Liu
+ * @author Peter Nowak
  */
 @SuppressWarnings("ConstantConditions")
 @ExtendWith(MockitoExtension.class)
@@ -626,6 +628,20 @@ class RequestFactoryTests {
 		final String json = requestToString(requestFactory.reindexRequest(reindexRequest));
 
 		assertEquals(expected, json, false);
+	}
+
+	@Test // #2075
+	@DisplayName("should not fail on empty Option set during toElasticsearchIndicesOptions")
+	void shouldNotFailOnEmptyOptionsOnToElasticsearchIndicesOptions() {
+		assertThat(requestFactory.toElasticsearchIndicesOptions(new IndicesOptions(
+				EnumSet.noneOf(IndicesOptions.Option.class), EnumSet.of(IndicesOptions.WildcardStates.OPEN)))).isNotNull();
+	}
+
+	@Test // #2075
+	@DisplayName("should not fail on empty WildcardState set during toElasticsearchIndicesOptions")
+	void shouldNotFailOnEmptyWildcardStatesOnToElasticsearchIndicesOptions() {
+		assertThat(requestFactory.toElasticsearchIndicesOptions(IndicesOptions.STRICT_SINGLE_INDEX_NO_EXPAND_FORBID_CLOSED))
+				.isNotNull();
 	}
 
 	// region entities
