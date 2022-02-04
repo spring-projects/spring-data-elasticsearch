@@ -9,7 +9,7 @@ pipeline {
 
 	triggers {
 		pollSCM 'H/10 * * * *'
-		upstream(upstreamProjects: "spring-data-commons/main", threshold: hudson.model.Result.SUCCESS)
+		upstream(upstreamProjects: "spring-data-commons/3.0.x", threshold: hudson.model.Result.SUCCESS)
 	}
 
 	options {
@@ -18,7 +18,7 @@ pipeline {
 	}
 
 	stages {
-		stage("test: baseline (main)") {
+		stage("test: baseline (Java 17)") {
 			when {
 				anyOf {
 					branch 'main'
