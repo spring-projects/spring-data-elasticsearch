@@ -29,13 +29,14 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes = { DynamicSettingAndMappingEntityRepositoryRestTemplateIntegrationTests.Config.class })
 public class DynamicSettingAndMappingEntityRepositoryRestTemplateIntegrationTests
 		extends DynamicSettingAndMappingEntityRepositoryIntegrationTests {
+
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {
 		@Bean
 		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider();
+			return new IndexNameProvider("dynamic-setting-and-mapping-3s7");
 		}
 	}
 

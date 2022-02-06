@@ -33,7 +33,7 @@ public class CriteriaQueryRestTemplateIntegrationTests extends CriteriaQueryInte
 	static class Config {
 		@Bean
 		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider();
+			return new IndexNameProvider("criteria-query-es7");
 		}
 	}
 

@@ -28,13 +28,14 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @ContextConfiguration(classes = { DoubleIDRepositoryRestTemplateIntegrationTests.Config.class })
 public class DoubleIDRepositoryRestTemplateIntegrationTests extends DoubleIDRepositoryIntegrationTests {
+
 	@Configuration
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {
 		@Bean
 		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider();
+			return new IndexNameProvider("doubleid-reository-es7");
 		}
 	}
 }

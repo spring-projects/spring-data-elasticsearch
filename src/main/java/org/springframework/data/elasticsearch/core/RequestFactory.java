@@ -600,7 +600,7 @@ class RequestFactory {
 	// region indexing
 	public IndexRequest indexRequest(IndexQuery query, IndexCoordinates index) {
 
-		String indexName = index.getIndexName();
+		String indexName = query.getIndexName() != null ? query.getIndexName() : index.getIndexName();
 		IndexRequest indexRequest;
 
 		Object queryObject = query.getObject();
@@ -1027,7 +1027,7 @@ class RequestFactory {
 	// region update
 	public UpdateRequest updateRequest(UpdateQuery query, IndexCoordinates index) {
 
-		String indexName = index.getIndexName();
+		String indexName = query.getIndexName() != null ? query.getIndexName() : index.getIndexName();
 		UpdateRequest updateRequest = new UpdateRequest(indexName, query.getId());
 
 		if (query.getScript() != null) {

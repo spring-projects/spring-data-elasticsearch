@@ -38,12 +38,13 @@ public class IndexQuery {
 	@Nullable private Long primaryTerm;
 	@Nullable private String routing;
 	@Nullable private OpType opType;
+	@Nullable private String indexName;
 
 	public IndexQuery() {}
 
 	public IndexQuery(@Nullable String id, @Nullable Object object, @Nullable Long version, @Nullable String source,
 			@Nullable String parentId, @Nullable Long seqNo, @Nullable Long primaryTerm, @Nullable String routing,
-			@Nullable OpType opType) {
+			@Nullable OpType opType, @Nullable String indexName) {
 		this.id = id;
 		this.object = object;
 		this.version = version;
@@ -53,6 +54,7 @@ public class IndexQuery {
 		this.primaryTerm = primaryTerm;
 		this.routing = routing;
 		this.opType = opType;
+		this.indexName = indexName;
 	}
 
 	@Nullable
@@ -150,6 +152,14 @@ public class IndexQuery {
 	 */
 	public void setOpType(OpType opType) {
 		this.opType = opType;
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	@Nullable
+	public String getIndexName() {
+		return indexName;
 	}
 
 	/**

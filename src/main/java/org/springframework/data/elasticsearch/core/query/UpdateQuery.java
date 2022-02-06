@@ -63,6 +63,7 @@ public class UpdateQuery {
 	@Nullable private final Integer slices;
 	@Nullable private final ScriptType scriptType;
 	@Nullable private final String scriptName;
+	@Nullable private final String indexName;
 
 	public static Builder builder(String id) {
 		return new Builder(id);
@@ -81,7 +82,7 @@ public class UpdateQuery {
 			@Nullable Boolean abortOnVersionConflict, @Nullable Integer batchSize, @Nullable Integer maxDocs,
 			@Nullable Integer maxRetries, @Nullable String pipeline, @Nullable Float requestsPerSecond,
 			@Nullable Boolean shouldStoreResult, @Nullable Integer slices, @Nullable ScriptType scriptType,
-			@Nullable String scriptName) {
+			@Nullable String scriptName, @Nullable String indexName) {
 
 		this.id = id;
 		this.script = script;
@@ -112,6 +113,7 @@ public class UpdateQuery {
 		this.slices = slices;
 		this.scriptType = scriptType;
 		this.scriptName = scriptName;
+		this.indexName = indexName;
 	}
 
 	public String getId() {
@@ -258,6 +260,14 @@ public class UpdateQuery {
 		return scriptName;
 	}
 
+	/**
+	 * @since 4.4
+	 */
+	@Nullable
+	public String getIndexName() {
+		return indexName;
+	}
+
 	public static final class Builder {
 		private String id;
 		@Nullable private String script = null;
@@ -288,6 +298,7 @@ public class UpdateQuery {
 		@Nullable private Integer slices;
 		@Nullable private ScriptType scriptType;
 		@Nullable private String scriptName;
+		@Nullable private String indexName;
 
 		private Builder(String id) {
 			this.id = id;
@@ -441,7 +452,12 @@ public class UpdateQuery {
 			return new UpdateQuery(id, script, params, document, upsert, lang, routing, scriptedUpsert, docAsUpsert,
 					fetchSource, fetchSourceIncludes, fetchSourceExcludes, ifSeqNo, ifPrimaryTerm, refreshPolicy, retryOnConflict,
 					timeout, waitForActiveShards, query, abortOnVersionConflict, batchSize, maxDocs, maxRetries, pipeline,
-					requestsPerSecond, shouldStoreResult, slices, scriptType, scriptName);
+					requestsPerSecond, shouldStoreResult, slices, scriptType, scriptName, indexName);
+		}
+
+		public Builder withIndex(@Nullable String indexName) {
+			this.indexName = indexName;
+			return this;
 		}
 	}
 }
