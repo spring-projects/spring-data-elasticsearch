@@ -40,6 +40,7 @@ public class IndexQueryBuilder {
 	@Nullable private String routing;
 	@Nullable private IndexQuery.OpType opType;
 	@Nullable private RefreshPolicy refreshPolicy;
+	@Nullable private String indexName;
 
 	public IndexQueryBuilder() {}
 
@@ -89,6 +90,14 @@ public class IndexQueryBuilder {
 	}
 
 	public IndexQuery build() {
-		return new IndexQuery(id, object, version, source, parentId, seqNo, primaryTerm, routing, opType);
+		return new IndexQuery(id, object, version, source, parentId, seqNo, primaryTerm, routing, opType, indexName);
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	public IndexQueryBuilder withIndex(@Nullable String indexName) {
+		this.indexName = indexName;
+		return this;
 	}
 }

@@ -29,6 +29,7 @@ import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.elasticsearch.common.lucene.search.function.CombineFunction;
 import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
@@ -57,12 +58,12 @@ import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
 import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
-import org.springframework.data.elasticsearch.core.reindex.Remote;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery.ScoreMode;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.data.elasticsearch.core.reindex.Remote;
 import org.springframework.lang.Nullable;
 
 /**
@@ -92,7 +93,8 @@ class RequestFactoryTests {
 		requestFactory = new RequestFactory((converter));
 	}
 
-	@Test // FPI-734
+	@Test
+	// FPI-734
 	void shouldBuildSearchWithGeoSortSort() throws JSONException {
 		CriteriaQuery query = new CriteriaQuery(new Criteria("lastName").is("Smith"));
 		Sort sort = Sort.by(new GeoDistanceOrder("location", new GeoPoint(49.0, 8.4)));
@@ -140,7 +142,8 @@ class RequestFactoryTests {
 		assertEquals(expected, searchRequest, false);
 	}
 
-	@Test // DATAES-449
+	@Test
+	// DATAES-449
 	void shouldAddRouting() {
 		String route = "route66";
 		CriteriaQuery query = new CriteriaQuery(new Criteria("lastName").is("Smith"));
@@ -152,7 +155,8 @@ class RequestFactoryTests {
 		assertThat(searchRequest.routing()).isEqualTo(route);
 	}
 
-	@Test // DATAES-765
+	@Test
+	// DATAES-765
 	void shouldAddMaxQueryWindowForUnpagedToRequest() {
 		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(Pageable.unpaged()).build();
 
@@ -162,7 +166,8 @@ class RequestFactoryTests {
 		assertThat(searchRequest.source().size()).isEqualTo(RequestFactory.INDEX_MAX_RESULT_WINDOW);
 	}
 
-	@Test // DATAES-799
+	@Test
+	// DATAES-799
 	void shouldIncludeSeqNoAndPrimaryTermFromIndexQueryToIndexRequest() {
 		IndexQuery query = new IndexQuery();
 		query.setObject(new Person());
@@ -175,7 +180,8 @@ class RequestFactoryTests {
 		assertThat(request.ifPrimaryTerm()).isEqualTo(2L);
 	}
 
-	@Test // DATAES-799
+	@Test
+	// DATAES-799
 	void shouldNotRequestSeqNoAndPrimaryTermWhenEntityClassDoesNotContainSeqNoPrimaryTermProperty() {
 		Query query = new NativeSearchQueryBuilder().build();
 
@@ -184,7 +190,8 @@ class RequestFactoryTests {
 		assertThat(request.source().seqNoAndPrimaryTerm()).isNull();
 	}
 
-	@Test // DATAES-799
+	@Test
+	// DATAES-799
 	void shouldRequestSeqNoAndPrimaryTermWhenEntityClassContainsSeqNoPrimaryTermProperty() {
 		Query query = new NativeSearchQueryBuilder().build();
 
@@ -194,7 +201,8 @@ class RequestFactoryTests {
 		assertThat(request.source().seqNoAndPrimaryTerm()).isTrue();
 	}
 
-	@Test // DATAES-799
+	@Test
+	// DATAES-799
 	void shouldNotRequestSeqNoAndPrimaryTermWhenEntityClassIsNull() {
 		Query query = new NativeSearchQueryBuilder().build();
 
@@ -203,7 +211,8 @@ class RequestFactoryTests {
 		assertThat(request.source().seqNoAndPrimaryTerm()).isNull();
 	}
 
-	@Test // DATAES-864
+	@Test
+	// DATAES-864
 	void shouldBuildIndicesAliasRequest() throws IOException, JSONException {
 
 		AliasActions aliasActions = new AliasActions();
@@ -316,7 +325,8 @@ class RequestFactoryTests {
 		assertEquals(expected, json, false);
 	}
 
-	@Test // DATAES-612
+	@Test
+	// DATAES-612
 	void shouldCreatePutIndexTemplateRequest() throws JSONException, IOException {
 
 		String expected = "{\n" + //
@@ -430,7 +440,8 @@ class RequestFactoryTests {
 		return XContentHelper.toXContent(request, XContentType.JSON, true).utf8ToString();
 	}
 
-	@Test // #1686
+	@Test
+	// #1686
 	void shouldBuildSearchWithRescorerQuery() throws JSONException {
 		CriteriaQuery query = new CriteriaQuery(new Criteria("lastName").is("Smith"));
 		RescorerQuery rescorerQuery = new RescorerQuery(new NativeSearchQueryBuilder() //
@@ -546,7 +557,7 @@ class RequestFactoryTests {
 		assertThat(searchRequest.requestCache()).isFalse();
 	}
 
-	@Test
+	@Test // #2004
 	@DisplayName("should set stored fields on SearchRequest")
 	void shouldSetStoredFieldsOnSearchRequest() {
 
@@ -560,7 +571,8 @@ class RequestFactoryTests {
 				.isEqualTo(Arrays.asList("last-name", "current-location"));
 	}
 
-	@Test // #1529
+	@Test
+	// #1529
 	void shouldCreateReindexRequest() throws IOException, JSONException {
 		final String expected = "{\n" + //
 				"    \"source\":{\n" + //
@@ -608,6 +620,7 @@ class RequestFactoryTests {
 	}
 
 	@Test
+	// #1529
 	void shouldAllowSourceQueryForReindexWithoutRemote() throws IOException, JSONException {
 		final String expected = "{\n" + //
 				"    \"source\":{\n" + //
@@ -642,6 +655,59 @@ class RequestFactoryTests {
 	void shouldNotFailOnEmptyWildcardStatesOnToElasticsearchIndicesOptions() {
 		assertThat(requestFactory.toElasticsearchIndicesOptions(IndicesOptions.STRICT_SINGLE_INDEX_NO_EXPAND_FORBID_CLOSED))
 				.isNotNull();
+	}
+
+	@Test // #2043
+	@DisplayName("should use index name from query if set in bulk index")
+	void shouldUseIndexNameFromQueryIfSetInBulkIndex() {
+
+		String queryIndexName = "query-index-name";
+		String methodIndexName = "method-index-name";
+		IndexQuery indexQuery = new IndexQueryBuilder().withIndex(queryIndexName).withId("42").withObject(new Person())
+				.build();
+
+		IndexRequest indexRequest = requestFactory.indexRequest(indexQuery, IndexCoordinates.of(methodIndexName));
+
+		assertThat(indexRequest.index()).isEqualTo(queryIndexName);
+	}
+
+	@Test // #2043
+	@DisplayName("should use index name from method if none is set in query in bulk index")
+	void shouldUseIndexNameFromMethodIfNoneIsSetInQueryInBulkIndex() {
+
+		String methodIndexName = "method-index-name";
+		IndexQuery indexQuery = new IndexQueryBuilder().withId("42").withObject(new Person()).build();
+
+		IndexRequest indexRequest = requestFactory.indexRequest(indexQuery, IndexCoordinates.of(methodIndexName));
+
+		assertThat(indexRequest.index()).isEqualTo(methodIndexName);
+	}
+
+	@Test // #2043
+	@DisplayName("should use index name from query if set in bulk update")
+	void shouldUseIndexNameFromQueryIfSetInBulkUpdate() {
+
+		String queryIndexName = "query-index-name";
+		String methodIndexName = "method-index-name";
+		UpdateQuery updateQuery = UpdateQuery.builder("42").withIndex(queryIndexName)
+				.withDocument(org.springframework.data.elasticsearch.core.document.Document.create()).build();
+
+		UpdateRequest updateRequest = requestFactory.updateRequest(updateQuery, IndexCoordinates.of(methodIndexName));
+
+		assertThat(updateRequest.index()).isEqualTo(queryIndexName);
+	}
+
+	@Test // #2043
+	@DisplayName("should use index name from method if none is set in query in bulk update")
+	void shouldUseIndexNameFromMethodIfNoneIsSetInQueryInBulkUpdate() {
+
+		String methodIndexName = "method-index-name";
+		UpdateQuery updateQuery = UpdateQuery.builder("42")
+				.withDocument(org.springframework.data.elasticsearch.core.document.Document.create()).build();
+
+		UpdateRequest updateRequest = requestFactory.updateRequest(updateQuery, IndexCoordinates.of(methodIndexName));
+
+		assertThat(updateRequest.index()).isEqualTo(methodIndexName);
 	}
 
 	// region entities
