@@ -954,7 +954,23 @@ public class Criteria {
 		/**
 		 * @since 4.3
 		 */
-		NOT_EMPTY
+		NOT_EMPTY;
+
+		/**
+		 * @return true if this key does not have an associated value
+		 * @since 4.4
+		 */
+		public boolean hasNoValue() {
+			return this == OperationKey.EXISTS || this == OperationKey.EMPTY || this == OperationKey.NOT_EMPTY;
+		}
+
+		/**
+		 * @return true if this key does have an associated value
+		 * @since 4.4
+		 */
+		public boolean hasValue() {
+			return !hasNoValue();
+		}
 	}
 
 	/**
@@ -967,9 +983,8 @@ public class Criteria {
 
 		protected CriteriaEntry(OperationKey key) {
 
-			boolean keyIsValid = key == OperationKey.EXISTS || key == OperationKey.EMPTY || key == OperationKey.NOT_EMPTY;
-			Assert.isTrue(keyIsValid,
-					"key must be OperationKey.EXISTS, OperationKey.EMPTY or OperationKey.EMPTY for this call");
+			Assert.isTrue(key.hasNoValue(),
+					"key must be OperationKey.EXISTS, OperationKey.EMPTY or OperationKey.NOT_EMPTY for this call");
 
 			this.key = key;
 		}
