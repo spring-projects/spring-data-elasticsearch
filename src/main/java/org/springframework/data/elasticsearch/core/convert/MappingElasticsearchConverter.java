@@ -1248,14 +1248,19 @@ public class MappingElasticsearchConverter
 				PropertyValueConverter propertyValueConverter = Objects
 						.requireNonNull(persistentProperty.getPropertyValueConverter());
 				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
-					Object value = criteriaEntry.getValue();
-					if (value.getClass().isArray()) {
-						Object[] objects = (Object[]) value;
-						for (int i = 0; i < objects.length; i++) {
-							objects[i] = propertyValueConverter.write(objects[i]);
+
+					if (criteriaEntry.getKey().hasValue()) {
+						Object value = criteriaEntry.getValue();
+
+						if (value.getClass().isArray()) {
+							Object[] objects = (Object[]) value;
+
+							for (int i = 0; i < objects.length; i++) {
+								objects[i] = propertyValueConverter.write(objects[i]);
+							}
+						} else {
+							criteriaEntry.setValue(propertyValueConverter.write(value));
 						}
-					} else {
-						criteriaEntry.setValue(propertyValueConverter.write(value));
 					}
 				});
 			}
