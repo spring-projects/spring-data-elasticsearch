@@ -66,6 +66,9 @@ import org.springframework.data.elasticsearch.core.geo.GeoJsonPolygon;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
@@ -1496,6 +1499,16 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(entity.getDontConvert()).isEqualTo("Monty Python's Flying Circus");
 	}
 
+	@Test // #2080
+	@DisplayName("should not try to call property converter on updating criteria exists")
+	void shouldNotTryToCallPropertyConverterOnUpdatingCriteriaExists() {
+
+		// don't care if the query makes no sense, we just add all criteria without values
+		Query query = new CriteriaQuery(Criteria.where("fieldWithClassBasedConverter").exists().empty().notEmpty());
+
+		mappingElasticsearchConverter.updateQuery(query, EntityWithCustomValueConverters.class);
+	}
+
 	private Map<String, Object> writeToMap(Object source) {
 
 		Document sink = Document.create();
@@ -2429,6 +2442,7 @@ public class MappingElasticsearchConverterUnitTests {
 			return reverse(value);
 		}
 	}
+	// endregion
 
 	private static String reverse(Object o) {
 
@@ -2436,5 +2450,4 @@ public class MappingElasticsearchConverterUnitTests {
 
 		return new StringBuilder().append(o.toString()).reverse().toString();
 	}
-	// endregion
 }
