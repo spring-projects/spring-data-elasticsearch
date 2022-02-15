@@ -47,9 +47,10 @@ import org.springframework.data.elasticsearch.core.query.Field;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.mapping.InstanceCreatorMetadata;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.Parameter;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
-import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.*;
@@ -307,11 +308,10 @@ public class MappingElasticsearchConverter
 			SpELExpressionEvaluator evaluator = new DefaultSpELExpressionEvaluator(source, spELContext);
 			MapValueAccessor accessor = new MapValueAccessor(source);
 
-			PreferredConstructor<?, ElasticsearchPersistentProperty> persistenceConstructor = entity
-					.getPersistenceConstructor();
+			InstanceCreatorMetadata<?> creatorMetadata = entity.getInstanceCreatorMetadata();
 
-			ParameterValueProvider<ElasticsearchPersistentProperty> propertyValueProvider = persistenceConstructor != null
-					&& persistenceConstructor.hasParameters() ? getParameterProvider(entity, accessor, evaluator)
+			ParameterValueProvider<ElasticsearchPersistentProperty> propertyValueProvider = creatorMetadata != null
+					&& creatorMetadata.hasParameters() ? getParameterProvider(entity, accessor, evaluator)
 							: NoOpParameterValueProvider.INSTANCE;
 
 			EntityInstantiator instantiator = instantiators.getInstantiatorFor(targetEntity);
@@ -649,8 +649,7 @@ public class MappingElasticsearchConverter
 			 * @see org.springframework.data.mapping.model.SpELExpressionParameterValueProvider#potentiallyConvertSpelValue(java.lang.Object, org.springframework.data.mapping.PreferredConstructor.Parameter)
 			 */
 			@Override
-			protected <T> T potentiallyConvertSpelValue(Object object,
-					PreferredConstructor.Parameter<T, ElasticsearchPersistentProperty> parameter) {
+			protected <T> T potentiallyConvertSpelValue(Object object, Parameter<T, ElasticsearchPersistentProperty> parameter) {
 				return readValue(object, parameter.getType());
 			}
 		}
@@ -660,7 +659,7 @@ public class MappingElasticsearchConverter
 			INSTANCE;
 
 			@Override
-			public <T> T getParameterValue(PreferredConstructor.Parameter<T, ElasticsearchPersistentProperty> parameter) {
+			public <T> T getParameterValue(Parameter<T, ElasticsearchPersistentProperty> parameter) {
 				return null;
 			}
 		}
