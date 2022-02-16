@@ -35,6 +35,10 @@ public class Completion {
 	@Nullable private Map<String, List<String>> contexts;
 	@Nullable private Integer weight;
 
+	public Completion() {
+		this.input = new String[0];
+	}
+
 	@PersistenceConstructor
 	public Completion(String[] input) {
 		this.input = input;
