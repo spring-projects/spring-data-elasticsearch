@@ -28,6 +28,7 @@ import org.springframework.lang.Nullable;
  * @author Mewes Kochheim
  * @author Robert Gruendler
  * @author Peter-Josef Meisch
+ * @author Houtaroy
  */
 public class Completion {
 
