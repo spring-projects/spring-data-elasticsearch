@@ -28,12 +28,17 @@ import org.springframework.lang.Nullable;
  * @author Mewes Kochheim
  * @author Robert Gruendler
  * @author Peter-Josef Meisch
+ * @author Houtaroy
  */
 public class Completion {
 
 	private String[] input;
 	@Nullable private Map<String, List<String>> contexts;
 	@Nullable private Integer weight;
+
+	public Completion() {
+		this.input = new String[0];
+	}
 
 	@PersistenceConstructor
 	public Completion(String[] input) {
