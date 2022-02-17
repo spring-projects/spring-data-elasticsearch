@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository;
 
 import org.springframework.data.repository.NoRepositoryBean;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.data.repository.reactive.ReactiveSortingRepository;
  * @since 3.2
  */
 @NoRepositoryBean
-public interface ReactiveElasticsearchRepository<T, ID> extends ReactiveSortingRepository<T, ID> {
+public interface ReactiveElasticsearchRepository<T, ID>
+		extends ReactiveSortingRepository<T, ID>, ReactiveCrudRepository<T, ID> {
 
 }

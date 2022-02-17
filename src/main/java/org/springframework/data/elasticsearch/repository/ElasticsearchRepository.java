@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.lang.Nullable;
@@ -31,7 +32,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @NoRepositoryBean
-public interface ElasticsearchRepository<T, ID> extends PagingAndSortingRepository<T, ID> {
+public interface ElasticsearchRepository<T, ID> extends PagingAndSortingRepository<T, ID>, CrudRepository<T, ID> {
 
 	/**
 	 * Search for similar entities using a morelikethis query
