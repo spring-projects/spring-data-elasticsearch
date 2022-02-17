@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.core.suggest;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.lang.Nullable;
 
 /**
@@ -40,7 +39,6 @@ public class Completion {
 		this.input = new String[0];
 	}
 
-	@PersistenceConstructor
 	public Completion(String[] input) {
 		this.input = input;
 	}
