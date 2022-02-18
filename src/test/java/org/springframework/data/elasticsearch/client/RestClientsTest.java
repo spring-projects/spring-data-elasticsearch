@@ -32,10 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.xcontent.XContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -68,6 +66,10 @@ public class RestClientsTest {
 		wireMockServer(server -> {
 
 			// wiremock is the dummy server, hoverfly the proxy
+			WireMock.configureFor(server.port());
+			stubForElasticsearchVersionCheck();
+			stubFor(head(urlEqualTo("/")).willReturn(aResponse() //
+					.withHeader("Content-Type", "application/json; charset=UTF-8")));
 
 			String serviceHost = "localhost:" + server.port();
 			String proxyHost = "localhost:" + hoverfly.getHoverflyConfig().getProxyPort();
@@ -92,6 +94,12 @@ public class RestClientsTest {
 	@DisplayName("should configure client and set all required headers")
 	void shouldConfigureClientAndSetAllRequiredHeaders(ClientUnderTestFactory clientUnderTestFactory) {
 		wireMockServer(server -> {
+
+			WireMock.configureFor(server.port());
+
+			stubForElasticsearchVersionCheck();
+			stubFor(head(urlEqualTo("/")).willReturn(aResponse() //
+					.withHeader("Content-Type", "application/json; charset=UTF-8")));
 
 			HttpHeaders defaultHeaders = new HttpHeaders();
 			defaultHeaders.addAll("def1", Arrays.asList("def1-1", "def1-2"));
@@ -148,63 +156,6 @@ public class RestClientsTest {
 		});
 	}
 
-	@ParameterizedTest // #2088
-	@MethodSource("clientUnderTestFactorySource")
-	@DisplayName("should set compatibility headers")
-	void shouldSetCompatibilityHeaders(ClientUnderTestFactory clientUnderTestFactory) {
-
-		wireMockServer(server -> {
-
-			stubFor(put(urlMatching("^/index/_doc/42(\\?.*)$?")) //
-					.willReturn(jsonResponse("{\n" + //
-			"  \"_id\": \"42\",\n" + //
-			"  \"_index\": \"test\",\n" + //
-			"  \"_primary_term\": 1,\n" + //
-			"  \"_seq_no\": 0,\n" + //
-			"  \"_shards\": {\n" + //
-			"    \"failed\": 0,\n" + //
-			"    \"successful\": 1,\n" + //
-			"    \"total\": 2\n" + //
-			"  },\n" + //
-			"  \"_type\": \"_doc\",\n" + //
-			"  \"_version\": 1,\n" + //
-			"  \"result\": \"created\"\n" + //
-			"}\n" //
-			, 201) //
-					.withHeader("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7") //
-					.withHeader("X-Elastic-Product", "Elasticsearch")));
-
-			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
-			configurationBuilder //
-					.connectedTo("localhost:" + server.port()) //
-					.withHeaders(() -> {
-						HttpHeaders defaultCompatibilityHeaders = new HttpHeaders();
-						defaultCompatibilityHeaders.add("Accept", "application/vnd.elasticsearch+json;compatible-with=7");
-						defaultCompatibilityHeaders.add("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7");
-						return defaultCompatibilityHeaders;
-					});
-
-			ClientConfiguration clientConfiguration = configurationBuilder.build();
-			ClientUnderTest clientUnderTest = clientUnderTestFactory.create(clientConfiguration);
-
-			class Foo {
-				public String id;
-
-				Foo(String id) {
-					this.id = id;
-				}
-			}
-			;
-
-			clientUnderTest.save(new Foo("42"));
-
-			verify(putRequestedFor(urlMatching("^/index/_doc/42(\\?.*)$?")) //
-					.withHeader("Accept", new EqualToPattern("application/vnd.elasticsearch+json;compatible-with=7")) //
-					.withHeader("Content-Type", new EqualToPattern("application/vnd.elasticsearch+json;compatible-with=7")) //
-			);
-		});
-	}
-
 	private StubMapping stubForElasticsearchVersionCheck() {
 		return stubFor(get(urlEqualTo("/")) //
 				.willReturn(okJson("{\n" + //
@@ -228,12 +179,6 @@ public class RestClientsTest {
 								.withHeader("X-Elastic-Product", "Elasticsearch")));
 	}
 
-	private StubMapping stubForHead() {
-		return stubFor(head(urlEqualTo("/")) //
-				.willReturn(ok() //
-						.withHeader("X-Elastic-Product", "Elasticsearch")));
-	}
-
 	/**
 	 * Consumer extension that catches checked exceptions and wraps them in a RuntimeException.
 	 */
@@ -253,8 +198,6 @@ public class RestClientsTest {
 
 	/**
 	 * starts a Wiremock server and calls consumer with the server as argument. Stops the server after consumer execution.
-	 * Before the consumer ids called the {@link #stubForHead()} and {@link #stubForElasticsearchVersionCheck()} are
-	 * registered.
 	 *
 	 * @param consumer the consumer
 	 */
@@ -265,10 +208,6 @@ public class RestClientsTest {
 		// test/resources/mappings
 		try {
 			wireMockServer.start();
-			WireMock.configureFor(wireMockServer.port());
-			stubForHead();
-			stubForElasticsearchVersionCheck();
-
 			consumer.accept(wireMockServer);
 		} finally {
 			wireMockServer.shutdown();
@@ -285,8 +224,6 @@ public class RestClientsTest {
 		 * @return true if successful
 		 */
 		boolean ping() throws Exception;
-
-		<T> void save(T entity) throws IOException;
 	}
 
 	/**
@@ -316,20 +253,7 @@ public class RestClientsTest {
 		@Override
 		ClientUnderTest create(ClientConfiguration clientConfiguration) {
 			RestHighLevelClient client = RestClients.create(clientConfiguration).rest();
-			return new ClientUnderTest() {
-				@Override
-				public boolean ping() throws Exception {
-					return client.ping(RequestOptions.DEFAULT);
-				}
-
-				@Override
-				public <T> void save(T entity) throws IOException {
-					IndexRequest indexRequest = new IndexRequest("index");
-					indexRequest.id("42");
-					indexRequest.source(entity, XContentType.JSON);
-					client.index(indexRequest, RequestOptions.DEFAULT);
-				}
-			};
+			return () -> client.ping(RequestOptions.DEFAULT);
 		}
 
 	}
@@ -347,20 +271,7 @@ public class RestClientsTest {
 		@Override
 		ClientUnderTest create(ClientConfiguration clientConfiguration) {
 			ReactiveElasticsearchClient client = ReactiveRestClients.create(clientConfiguration);
-			return new ClientUnderTest() {
-				@Override
-				public boolean ping() throws Exception {
-					return client.ping().block();
-				}
-
-				@Override
-				public <T> void save(T entity) throws IOException {
-					IndexRequest indexRequest = new IndexRequest("index");
-					indexRequest.id("42");
-					indexRequest.source("{}", XContentType.JSON);
-					client.index(indexRequest).block();
-				}
-			};
+			return () -> client.ping().block();
 		}
 	}
 
