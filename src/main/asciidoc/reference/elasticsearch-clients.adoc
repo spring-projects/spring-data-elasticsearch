@@ -199,6 +199,29 @@ Default is 5 sec.
 IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens.
 If this is used in the reactive setup, the supplier function *must not* block!
 
+=== Elasticsearch 7 compatibility headers
+
+When using Spring Data Elasticsearch 4 - which uses the Elasticsearch 7 client libraries - and accessing an Elasticsearch cluster that is running on version 8, it is necessary to set the compatibility headers
+https://www.elastic.co/guide/en/elasticsearch/reference/8.0/rest-api-compatibility.html[see Elasticserach documentation].
+This should be done using a header supplier like shown above:
+
+====
+[source,java]
+----
+ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
+    configurationBuilder //
+		// ...
+		.withHeaders(() -> {
+			HttpHeaders defaultCompatibilityHeaders = new HttpHeaders();
+			defaultCompatibilityHeaders.add("Accept",
+                          "application/vnd.elasticsearch+json;compatible-with=7");
+			defaultCompatibilityHeaders.add("Content-Type",
+                          "application/vnd.elasticsearch+json;compatible-with=7");
+			return defaultCompatibilityHeaders;
+		});
+----
+====
+
 [[elasticsearch.clients.logging]]
 == Client Logging
 
