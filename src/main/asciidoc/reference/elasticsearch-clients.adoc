@@ -154,23 +154,28 @@ If this is used in the reactive setup, the supplier function *must not* block!
 === Elasticsearch 7 compatibility headers
 
 When using Spring Data Elasticsearch 4 - which uses the Elasticsearch 7 client libraries - and accessing an Elasticsearch cluster that is running on version 8, it is necessary to set the compatibility headers
-https://www.elastic.co/guide/en/elasticsearch/reference/8.0/rest-api-compatibility.html[see Elasticserach documentation].
-This should be done using a header supplier like shown above:
+https://www.elastic.co/guide/en/elasticsearch/reference/8.0/rest-api-compatibility.html[see Elasticsearch 
+documentation].
+
+For the imperative client this must be done by setting the default headers, for the reactive code this must be done using a header supplier:
 
 ====
 [source,java]
 ----
-ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
-    configurationBuilder //
-		// ...
-		.withHeaders(() -> {
-			HttpHeaders defaultCompatibilityHeaders = new HttpHeaders();
-			defaultCompatibilityHeaders.add("Accept",
-                          "application/vnd.elasticsearch+json;compatible-with=7");
-			defaultCompatibilityHeaders.add("Content-Type",
-                          "application/vnd.elasticsearch+json;compatible-with=7");
-			return defaultCompatibilityHeaders;
-		});
+
+HttpHeaders compatibilityHeaders = new HttpHeaders();
+compatibilityHeaders.add("Accept", "application/vnd.elasticsearch+json;compatible-with=7");
+compatibilityHeaders.add("Content-Type", "application/vnd.elasticsearch+json;"
+    + "compatible-with=7");
+
+ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+    .connectedTo("localhost:9200")
+    .withProxy("localhost:8080")
+    .withBasicAuth("elastic","hcraescitsale")
+    .withDefaultHeaders(compatibilityHeaders)    // this variant for imperative code
+    .withHeaders(() -> compatibilityHeaders)     // this variant for reactive code
+    .build();
+		
 ----
 ====
 
