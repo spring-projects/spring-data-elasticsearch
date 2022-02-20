@@ -37,11 +37,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
@@ -88,34 +88,38 @@ public class SuggestReactiveTemplateIntegrationTests {
 	@DisplayName("should find suggestions for given prefix completion")
 	void shouldFindSuggestionsForGivenPrefixCompletion() {
 
-		loadCompletionObjectEntities().map(unused -> {
+		loadCompletionObjectEntities() //
+				.flatMap(unused -> {
+					Query query = getSuggestQuery("test-suggest", "suggest", "m");
+					return operations.suggest(query, CompletionEntity.class);
+				}) //
+				.as(StepVerifier::create) //
+				.assertNext(suggest -> {
+					Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
+							.getSuggestion("test-suggest");
+					assertThat(suggestion).isNotNull();
+					assertThat(suggestion).isInstanceOf(CompletionSuggestion.class);
+					// noinspection unchecked
+					List<CompletionSuggestion.Entry.Option<CompletionIntegrationTests.AnnotatedCompletionEntity>> options = ((CompletionSuggestion<CompletionIntegrationTests.AnnotatedCompletionEntity>) suggestion)
+							.getEntries().get(0).getOptions();
+					assertThat(options).hasSize(2);
+					assertThat(options.get(0).getText()).isIn("Marchand", "Mohsin");
+					assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
+				}) //
+				.verifyComplete();
+	}
 
-			NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
-					.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
-					.build();
-
-			operations.suggest(query, CompletionEntity.class) //
-					.as(StepVerifier::create) //
-					.assertNext(suggest -> {
-						Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
-								.getSuggestion("test-suggest");
-						assertThat(suggestion).isNotNull();
-						assertThat(suggestion).isInstanceOf(CompletionSuggestion.class);
-						// noinspection unchecked
-						List<CompletionSuggestion.Entry.Option<CompletionIntegrationTests.AnnotatedCompletionEntity>> options = ((CompletionSuggestion<CompletionIntegrationTests.AnnotatedCompletionEntity>) suggestion)
-								.getEntries().get(0).getOptions();
-						assertThat(options).hasSize(2);
-						assertThat(options.get(0).getText()).isIn("Marchand", "Mohsin");
-						assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
-
-					}) //
-					.verifyComplete();
-			return Mono.empty();
-		});
+	protected Query getSuggestQuery(String suggestionName, String fieldName, String prefix) {
+		return new NativeSearchQueryBuilder() //
+				.withSuggestBuilder(new SuggestBuilder() //
+						.addSuggestion(suggestionName, //
+								SuggestBuilders.completionSuggestion(fieldName) //
+										.prefix(prefix, Fuzziness.AUTO))) //
+				.build(); //
 	}
 
 	// region helper functions
-	private Mono<Void> loadCompletionObjectEntities() {
+	private Mono<CompletionEntity> loadCompletionObjectEntities() {
 
 		CompletionEntity rizwan_idrees = new CompletionEntityBuilder("1").name("Rizwan Idrees")
 				.suggest(new String[] { "Rizwan Idrees" }).build();
@@ -128,7 +132,7 @@ public class SuggestReactiveTemplateIntegrationTests {
 		List<CompletionEntity> entities = new ArrayList<>(
 				Arrays.asList(rizwan_idrees, franck_marchand, mohsin_husen, artur_konczak));
 		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.indexName());
-		return operations.saveAll(entities, index).then();
+		return operations.saveAll(entities, index).last();
 	}
 	// endregion
 
