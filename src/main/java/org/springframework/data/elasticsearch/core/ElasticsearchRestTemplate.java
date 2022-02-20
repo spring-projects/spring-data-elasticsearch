@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2021 the original author or authors.
+ * Copyright 2013-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -319,7 +319,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchRestTranspor
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
 
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
@@ -336,7 +336,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchRestTranspor
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
@@ -351,7 +351,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchRestTranspor
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
@@ -378,8 +378,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchRestTranspor
 		Assert.isTrue(items.length == request.requests().size(), "Response should has same length with queries");
 		return items;
 	}
-	// endregion
 
+	// endregion
 	// region ClientCallback
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on

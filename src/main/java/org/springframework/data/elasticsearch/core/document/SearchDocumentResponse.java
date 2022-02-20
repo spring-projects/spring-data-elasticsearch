@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,11 @@ package org.springframework.data.elasticsearch.core.document;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.lucene.search.TotalHits;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.common.text.Text;
@@ -38,12 +41,14 @@ import org.springframework.util.Assert;
 
 /**
  * This represents the complete search response from Elasticsearch, including the returned documents. Instances must be
- * created with the {@link #from(SearchResponse,Function)} method.
+ * created with the {@link #from(SearchResponse, EntityCreator)} method.
  *
  * @author Peter-Josef Meisch
  * @since 4.0
  */
 public class SearchDocumentResponse {
+
+	private static final Log LOGGER = LogFactory.getLog(SearchDocumentResponse.class);
 
 	private final long totalHits;
 	private final String totalHitsRelation;
@@ -98,12 +103,11 @@ public class SearchDocumentResponse {
 	 * creates a SearchDocumentResponse from the {@link SearchResponse}
 	 *
 	 * @param searchResponse must not be {@literal null}
-	 * @param suggestEntityCreator function to create an entity from a {@link SearchDocument}
+	 * @param entityCreator function to create an entity from a {@link SearchDocument}
 	 * @param <T> entity type
 	 * @return the SearchDocumentResponse
 	 */
-	public static <T> SearchDocumentResponse from(SearchResponse searchResponse,
-			Function<SearchDocument, T> suggestEntityCreator) {
+	public static <T> SearchDocumentResponse from(SearchResponse searchResponse, EntityCreator<T> entityCreator) {
 
 		Assert.notNull(searchResponse, "searchResponse must not be null");
 
@@ -112,7 +116,7 @@ public class SearchDocumentResponse {
 		Aggregations aggregations = searchResponse.getAggregations();
 		org.elasticsearch.search.suggest.Suggest suggest = searchResponse.getSuggest();
 
-		return from(searchHits, scrollId, aggregations, suggest, suggestEntityCreator);
+		return from(searchHits, scrollId, aggregations, suggest, entityCreator);
 	}
 
 	/**
@@ -122,14 +126,14 @@ public class SearchDocumentResponse {
 	 * @param scrollId scrollId
 	 * @param aggregations aggregations
 	 * @param suggestES the suggestion response from Elasticsearch
-	 * @param suggestEntityCreator function to create an entity from a {@link SearchDocument}
+	 * @param entityCreator function to create an entity from a {@link SearchDocument}
 	 * @param <T> entity type
 	 * @return the {@link SearchDocumentResponse}
 	 * @since 4.3
 	 */
 	public static <T> SearchDocumentResponse from(SearchHits searchHits, @Nullable String scrollId,
 			@Nullable Aggregations aggregations, @Nullable org.elasticsearch.search.suggest.Suggest suggestES,
-			Function<SearchDocument, T> suggestEntityCreator) {
+			EntityCreator<T> entityCreator) {
 
 		TotalHits responseTotalHits = searchHits.getTotalHits();
 
@@ -153,14 +157,14 @@ public class SearchDocumentResponse {
 			}
 		}
 
-		Suggest suggest = suggestFrom(suggestES, suggestEntityCreator);
+		Suggest suggest = suggestFrom(suggestES, entityCreator);
 		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments, aggregations,
 				suggest);
 	}
 
 	@Nullable
 	private static <T> Suggest suggestFrom(@Nullable org.elasticsearch.search.suggest.Suggest suggestES,
-			Function<SearchDocument, T> entityCreator) {
+			EntityCreator<T> entityCreator) {
 
 		if (suggestES == null) {
 			return null;
@@ -219,7 +223,19 @@ public class SearchDocumentResponse {
 					List<CompletionSuggestion.Entry.Option<T>> options = new ArrayList<>();
 					for (org.elasticsearch.search.suggest.completion.CompletionSuggestion.Entry.Option optionES : entryES) {
 						SearchDocument searchDocument = optionES.getHit() != null ? DocumentAdapters.from(optionES.getHit()) : null;
-						T hitEntity = searchDocument != null ? entityCreator.apply(searchDocument) : null;
+
+						T hitEntity = null;
+
+						if (searchDocument != null) {
+							try {
+								hitEntity = entityCreator.apply(searchDocument).get();
+							} catch (Exception e) {
+								if (LOGGER.isWarnEnabled()) {
+									LOGGER.warn("Error creating entity from SearchDocument");
+								}
+							}
+						}
+
 						options.add(new CompletionSuggestion.Entry.Option<T>(textToString(optionES.getText()),
 								textToString(optionES.getHighlighted()), optionES.getScore(), optionES.collateMatch(),
 								optionES.getContexts(), scoreDocFrom(optionES.getDoc()), searchDocument, hitEntity));
@@ -254,4 +270,14 @@ public class SearchDocumentResponse {
 	private static String textToString(@Nullable Text text) {
 		return text != null ? text.string() : "";
 	}
+
+	/**
+	 * A function to convert a {@link SearchDocument} async into an entity. Asynchronous so that it can be used from the
+	 * imperative and the reactive code.
+	 *
+	 * @param <T> the entity type
+	 */
+	@FunctionalInterface
+	public interface EntityCreator<T> extends Function<SearchDocument, CompletableFuture<T>> {}
+
 }

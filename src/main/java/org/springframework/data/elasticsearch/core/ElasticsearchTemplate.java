@@ -354,7 +354,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchRestTransportTem
 
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
@@ -372,7 +372,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchRestTransportTem
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
@@ -389,7 +389,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchRestTransportTem
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<T>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override

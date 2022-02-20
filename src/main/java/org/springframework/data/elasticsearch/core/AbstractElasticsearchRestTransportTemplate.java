@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -109,7 +110,8 @@ public abstract class AbstractElasticsearchRestTransportTemplate extends Abstrac
 		List<SearchHits<T>> res = new ArrayList<>(queries.size());
 		int c = 0;
 		for (Query query : queries) {
-			res.add(callback.doWith(SearchDocumentResponse.from(items[c++].getResponse(), documentCallback::doWith)));
+			res.add(
+					callback.doWith(SearchDocumentResponse.from(items[c++].getResponse(), getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -142,7 +144,7 @@ public abstract class AbstractElasticsearchRestTransportTemplate extends Abstrac
 					index);
 
 			SearchResponse response = items[c++].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith)));
+			res.add(callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -175,7 +177,7 @@ public abstract class AbstractElasticsearchRestTransportTemplate extends Abstrac
 					index);
 
 			SearchResponse response = items[c++].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith)));
+			res.add(callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -213,6 +215,10 @@ public abstract class AbstractElasticsearchRestTransportTemplate extends Abstrac
 	@Deprecated
 	public SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz) {
 		return suggest(suggestion, getIndexCoordinatesFor(clazz));
+	}
+
+	protected <T> SearchDocumentResponse.EntityCreator<T> getEntityCreator(ReadDocumentCallback<T> documentCallback) {
+		return searchDocument -> CompletableFuture.completedFuture(documentCallback.doWith(searchDocument));
 	}
 
 	// endregion

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the original author or authors.
+ * Copyright 2021-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.suggest;
 
 import static org.assertj.core.api.Assertions.*;
 
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.ArrayList;
@@ -39,8 +40,8 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
@@ -86,13 +87,11 @@ public class ReactiveElasticsearchTemplateSuggestIntegrationTests {
 	@DisplayName("should find suggestions for given prefix completion")
 	void shouldFindSuggestionsForGivenPrefixCompletion() {
 
-		loadCompletionObjectEntities();
-
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
-				.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
-				.build();
-
-		operations.suggest(query, CompletionEntity.class) //
+		loadCompletionObjectEntities() //
+				.flatMap(unused -> {
+					Query query = getSuggestQuery("test-suggest", "suggest", "m");
+					return operations.suggest(query, CompletionEntity.class);
+				}) //
 				.as(StepVerifier::create) //
 				.assertNext(suggest -> {
 					Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
@@ -105,13 +104,21 @@ public class ReactiveElasticsearchTemplateSuggestIntegrationTests {
 					assertThat(options).hasSize(2);
 					assertThat(options.get(0).getText()).isIn("Marchand", "Mohsin");
 					assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
-
 				}) //
 				.verifyComplete();
 	}
 
+	protected Query getSuggestQuery(String suggestionName, String fieldName, String prefix) {
+		return new NativeSearchQueryBuilder() //
+				.withSuggestBuilder(new SuggestBuilder() //
+						.addSuggestion(suggestionName, //
+								SuggestBuilders.completionSuggestion(fieldName) //
+										.prefix(prefix, Fuzziness.AUTO))) //
+				.build(); //
+	}
+
 	// region helper functions
-	private void loadCompletionObjectEntities() {
+	private Mono<CompletionEntity> loadCompletionObjectEntities() {
 
 		CompletionEntity rizwan_idrees = new CompletionEntityBuilder("1").name("Rizwan Idrees")
 				.suggest(new String[] { "Rizwan Idrees" }).build();
@@ -124,7 +131,7 @@ public class ReactiveElasticsearchTemplateSuggestIntegrationTests {
 		List<CompletionEntity> entities = new ArrayList<>(
 				Arrays.asList(rizwan_idrees, franck_marchand, mohsin_husen, artur_konczak));
 		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.indexName());
-		operations.saveAll(entities, index).blockLast();
+		return operations.saveAll(entities, index).last();
 	}
 	// endregion
 
@@ -132,11 +139,13 @@ public class ReactiveElasticsearchTemplateSuggestIntegrationTests {
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class CompletionEntity {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
 		@Nullable private String name;
 
-		@Nullable @CompletionField(maxInputLength = 100) private Completion suggest;
+		@Nullable
+		@CompletionField(maxInputLength = 100) private Completion suggest;
 
 		private CompletionEntity() {}
 

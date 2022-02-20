@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2021 the original author or authors.
+ * Copyright 2018-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.Version;
@@ -771,15 +770,18 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		});
 	}
 
-	private Mono<SearchDocumentResponse> doFindForResponse(Query query, Class<?> clazz, IndexCoordinates index) {
+	private <T> Mono<SearchDocumentResponse> doFindForResponse(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
 			request = prepareSearchRequest(request, false);
 
 			SearchDocumentCallback<?> documentCallback = new ReadSearchDocumentCallback<>(clazz, index);
+			// noinspection unchecked
+			SearchDocumentResponse.EntityCreator<T> entityCreator = searchDocument -> ((Mono<T>) documentCallback
+					.toEntity(searchDocument)).toFuture();
 
-			return doFindForResponse(request, searchDocument -> documentCallback.toEntity(searchDocument).block());
+			return doFindForResponse(request, entityCreator);
 		});
 	}
 
@@ -896,19 +898,18 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * Customization hook on the actual execution result {@link Mono}. <br />
 	 *
 	 * @param request the already prepared {@link SearchRequest} ready to be executed.
-	 * @param suggestEntityCreator
+	 * @param entityCreator
 	 * @return a {@link Mono} emitting the result of the operation converted to s {@link SearchDocumentResponse}.
 	 */
-	protected Mono<SearchDocumentResponse> doFindForResponse(SearchRequest request,
-			Function<SearchDocument, ? extends Object> suggestEntityCreator) {
+	protected <T> Mono<SearchDocumentResponse> doFindForResponse(SearchRequest request,
+			SearchDocumentResponse.EntityCreator<T> entityCreator) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug("Executing doFindForResponse: {}", request);
 		}
 
-		return Mono.from(execute(client1 -> client1.searchForResponse(request))).map(searchResponse -> {
-			return SearchDocumentResponse.from(searchResponse, suggestEntityCreator);
-		});
+		return Mono.from(execute(client -> client.searchForResponse(request)))
+				.map(searchResponse -> SearchDocumentResponse.from(searchResponse, entityCreator));
 	}
 
 	/**
