@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -820,15 +819,17 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 		});
 	}
 
-	private Mono<SearchDocumentResponse> doFindForResponse(Query query, Class<?> clazz, IndexCoordinates index) {
+	private <T> Mono<SearchDocumentResponse> doFindForResponse(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
 			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
 			request = prepareSearchRequest(request, false);
 
 			SearchDocumentCallback<?> documentCallback = new ReadSearchDocumentCallback<>(clazz, index);
-			Function<SearchDocument, Object> entityCreator = searchDocument -> documentCallback.toEntity(searchDocument)
-					.block();
+			// noinspection unchecked
+			SearchDocumentResponse.EntityCreator<T> entityCreator = searchDocument -> ((Mono<T>) documentCallback
+					.toEntity(searchDocument)).toFuture();
+
 			return doFindForResponse(request, entityCreator);
 		});
 	}
@@ -949,8 +950,8 @@ public class ReactiveElasticsearchTemplate implements ReactiveElasticsearchOpera
 	 * @param entityCreator
 	 * @return a {@link Mono} emitting the result of the operation converted to s {@link SearchDocumentResponse}.
 	 */
-	protected Mono<SearchDocumentResponse> doFindForResponse(SearchRequest request,
-			Function<SearchDocument, ? extends Object> entityCreator) {
+	protected <T> Mono<SearchDocumentResponse> doFindForResponse(SearchRequest request,
+			SearchDocumentResponse.EntityCreator<T> entityCreator) {
 
 		if (QUERY_LOGGER.isDebugEnabled()) {
 			QUERY_LOGGER.debug(String.format("Executing doFindForResponse: %s", request));

@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -386,7 +387,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
 
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	protected <T> SearchHits<T> doSearch(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index) {
@@ -410,7 +411,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
@@ -425,7 +426,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith));
+		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
@@ -458,7 +459,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
 		List<SearchHits<T>> res = new ArrayList<>(queries.size());
 		for (int i = 0; i < queries.size(); i++) {
-			res.add(callback.doWith(SearchDocumentResponse.from(items[i].getResponse(), documentCallback::doWith)));
+			res.add(callback.doWith(SearchDocumentResponse.from(items[i].getResponse(), getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -491,7 +492,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 					index);
 
 			SearchResponse response = items[i].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith)));
+			res.add(callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -524,7 +525,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 					index);
 
 			SearchResponse response = items[i].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response, documentCallback::doWith)));
+			res.add(callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -535,8 +536,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.isTrue(items.length == request.requests().size(), "Response should has same length with queries");
 		return items;
 	}
-	// endregion
 
+	private <T> SearchDocumentResponse.EntityCreator<T> getEntityCreator(ReadDocumentCallback<T> documentCallback) {
+		return searchDocument -> CompletableFuture.completedFuture(documentCallback.doWith(searchDocument));
+	}
+
+	// endregion
 	// region ClientCallback
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
