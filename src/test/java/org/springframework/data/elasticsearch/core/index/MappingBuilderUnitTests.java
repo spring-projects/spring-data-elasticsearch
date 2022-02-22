@@ -42,6 +42,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
+import org.springframework.data.elasticsearch.core.Range;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
@@ -717,6 +718,29 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"}"; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DateFormatsEntity.class);
+
+		assertEquals(expected, mapping, false);
+	}
+
+	@Test // #2102
+	@DisplayName("should write date formats for date range fields")
+	void shouldWriteDateFormatsForDateRangeFields() throws JSONException {
+
+		String expected = "{\n" + //
+				"  \"properties\": {\n" + //
+				"    \"_class\": {\n" + //
+				"      \"type\": \"keyword\",\n" + //
+				"      \"index\": false,\n" + //
+				"      \"doc_values\": false\n" + //
+				"    },\n" + //
+				"    \"field2\": {\n" + //
+				"      \"type\": \"date_range\",\n" + //
+				"      \"format\": \"date\"\n" + //
+				"    }\n" + //
+				"  }\n" + //
+				"}\n"; //
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DateRangeEntity.class);
 
 		assertEquals(expected, mapping, false);
 	}
@@ -1908,6 +1932,31 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		public void setField5(@Nullable LocalDateTime field5) {
 			this.field5 = field5;
+		}
+	}
+
+	private static class DateRangeEntity {
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Date_Range, format = DateFormat.date) private Range<LocalDateTime> field2;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public Range<LocalDateTime> getField2() {
+			return field2;
+		}
+
+		public void setField2(@Nullable Range<LocalDateTime> field2) {
+			this.field2 = field2;
 		}
 	}
 

@@ -239,7 +239,7 @@ public final class MappingParameters {
 		if (type != FieldType.Auto) {
 			objectNode.put(FIELD_PARAM_TYPE, type.getMappedName());
 
-			if (type == FieldType.Date) {
+			if (type == FieldType.Date || type == FieldType.Date_Nanos || type == FieldType.Date_Range) {
 				List<String> formats = new ArrayList<>();
 
 				// built-in formats
