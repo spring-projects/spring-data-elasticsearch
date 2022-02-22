@@ -30,7 +30,7 @@ import org.springframework.lang.Nullable;
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
  * @author Farid Faoudi
- * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html>docs</a>
+ * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html">docs</a>
  */
 public class UpdateQuery {
 
