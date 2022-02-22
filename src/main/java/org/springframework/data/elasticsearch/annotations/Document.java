@@ -44,7 +44,7 @@ public @interface Document {
 	 * Name of the Elasticsearch index.
 	 * <ul>
 	 * <li>Lowercase only</li>
-	 * <li><Cannot include \, /, *, ?, ", <, >, |, ` ` (space character), ,, #/li>
+	 * <li>Cannot include \, /, *, ?, ", &gt;, &lt;, |, ` ` (space character), ,, #</li>
 	 * <li>Cannot start with -, _, +</li>
 	 * <li>Cannot be . or ..</li>
 	 * <li>Cannot be longer than 255 bytes (note it is bytes, so multi-byte characters will count towards the 255 limit
