@@ -124,7 +124,6 @@ public interface ReactiveSearchOperations {
 	/**
 	 * Search the index for entities matching the given {@link Query query}.
 	 *
-	 * @param <T>
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param <T>
@@ -138,7 +137,6 @@ public interface ReactiveSearchOperations {
 	/**
 	 * Search the index for entities matching the given {@link Query query}.
 	 *
-	 * @param <T>
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param resultType the projection result type.
@@ -151,7 +149,6 @@ public interface ReactiveSearchOperations {
 	/**
 	 * Search the index for entities matching the given {@link Query query}.
 	 *
-	 * @param <T>
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param index the target index, must not be {@literal null}
@@ -166,7 +163,6 @@ public interface ReactiveSearchOperations {
 	/**
 	 * Search the index for entities matching the given {@link Query query}.
 	 *
-	 * @param <T>
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
 	 * @param resultType the projection result type.
