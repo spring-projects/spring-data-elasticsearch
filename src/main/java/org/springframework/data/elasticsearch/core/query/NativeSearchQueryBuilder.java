@@ -50,6 +50,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Peer Mueller
  * @author vdisk
+ * @author owen.qq
  */
 public class NativeSearchQueryBuilder {
 
@@ -80,6 +81,7 @@ public class NativeSearchQueryBuilder {
 	@Nullable private Duration timeout;
 	private final List<RescorerQuery> rescorerQueries = new ArrayList<>();
 	@Nullable private SuggestBuilder suggestBuilder;
+	@Nullable private List<Object> searchAfter;
 
 	public NativeSearchQueryBuilder withQuery(QueryBuilder queryBuilder) {
 		this.queryBuilder = queryBuilder;
@@ -342,6 +344,11 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
+	public NativeSearchQueryBuilder withSearchAfter(List<Object> searchAfter) {
+		this.searchAfter = searchAfter;
+		return this;
+	}
+
 	public NativeSearchQuery build() {
 
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery( //
@@ -431,6 +438,11 @@ public class NativeSearchQueryBuilder {
 		if (suggestBuilder != null) {
 			nativeSearchQuery.setSuggestBuilder(suggestBuilder);
 		}
+
+		if (searchAfter != null) {
+			nativeSearchQuery.setSearchAfter(searchAfter);
+		}
+
 		return nativeSearchQuery;
 	}
 }

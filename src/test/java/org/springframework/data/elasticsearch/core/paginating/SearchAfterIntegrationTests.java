@@ -15,13 +15,16 @@
  */
 package org.springframework.data.elasticsearch.core.paginating;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.elasticsearch.search.sort.SortBuilders;
+import org.elasticsearch.search.sort.SortOrder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +36,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
@@ -64,6 +68,41 @@ public abstract class SearchAfterIntegrationTests {
 		do {
 			query.setSearchAfter(searchAfter);
 			SearchHits<Entity> searchHits = operations.search(query, Entity.class);
+
+			if (searchHits.getSearchHits().size() == 0) {
+				break;
+			}
+			foundEntities.addAll(searchHits.stream().map(searchHit -> searchHit.getContent()).collect(Collectors.toList()));
+			searchAfter = searchHits.getSearchHit((int) (searchHits.getSearchHits().size() - 1)).getSortValues();
+
+			if (++loop > 10) {
+				fail("loop not terminating");
+			}
+		} while (true);
+
+		assertThat(foundEntities).containsExactlyElementsOf(entities);
+	}
+
+	@Test // #2105
+	@DisplayName("should read pages with search_after using native search query")
+	void shouldReadPagesWithSearchAfterUsingNativeSearchQuery() {
+
+		List<Entity> entities = IntStream.rangeClosed(1, 10).mapToObj(i -> new Entity((long) i, "message " + i))
+										 .collect(Collectors.toList());
+		operations.save(entities);
+
+		NativeSearchQueryBuilder nativeSearchQueryBuilder = new NativeSearchQueryBuilder();
+
+		nativeSearchQueryBuilder.withPageable(PageRequest.of(0, 3));
+		nativeSearchQueryBuilder.withSorts(SortBuilders.fieldSort("id").order(SortOrder.ASC));
+
+		List<Object> searchAfter = null;
+		List<Entity> foundEntities = new ArrayList<>();
+
+		int loop = 0;
+		do {
+			nativeSearchQueryBuilder.withSearchAfter(searchAfter);
+			SearchHits<Entity> searchHits = operations.search(nativeSearchQueryBuilder.build(), Entity.class);
 
 			if (searchHits.getSearchHits().size() == 0) {
 				break;
