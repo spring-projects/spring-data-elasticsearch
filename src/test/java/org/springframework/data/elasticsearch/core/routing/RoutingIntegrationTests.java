@@ -27,18 +27,23 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.*;
+import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.MultiGetItem;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -49,14 +54,13 @@ import org.springframework.lang.Nullable;
 @SpringIntegrationTest
 public abstract class RoutingIntegrationTests {
 
-	private static final String INDEX = "routing-test";
 	private static final String ID_0 = "id0";
 	private static final String ID_1 = "id1";
 	private static final String ID_2 = "id2";
 	private static final String ID_3 = "id3";
 
 	@Autowired ElasticsearchOperations operations;
-	@Nullable private IndexOperations indexOps;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeAll
 	static void beforeAll() {
@@ -81,10 +85,14 @@ public abstract class RoutingIntegrationTests {
 
 	@BeforeEach
 	void setUp() {
-		indexOps = operations.indexOps(RoutingEntity.class);
-		indexOps.delete();
-		indexOps.create();
-		indexOps.putMapping();
+		indexNameProvider.increment();
+		operations.indexOps(RoutingEntity.class).createWithMapping();
+	}
+
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test // #1218
@@ -106,7 +114,8 @@ public abstract class RoutingIntegrationTests {
 		RoutingEntity entity = new RoutingEntity(ID_1, ID_2);
 		operations.save(entity);
 
-		String deletedId = operations.withRouting(RoutingResolver.just(ID_2)).delete(entity.id, IndexCoordinates.of(INDEX));
+		String deletedId = operations.withRouting(RoutingResolver.just(ID_2)).delete(entity.id,
+				IndexCoordinates.of(indexNameProvider.indexName()));
 
 		assertThat(deletedId).isEqualTo(entity.getId());
 	}
@@ -157,24 +166,25 @@ public abstract class RoutingIntegrationTests {
 
 	@Test
 	void shouldCreateACopyOfTheClientWithRefreshPolicy() {
-		//given
+		// given
 		AbstractElasticsearchTemplate sourceTemplate = (AbstractElasticsearchTemplate) operations;
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		DefaultRoutingResolver defaultRoutingResolver = new DefaultRoutingResolver(mappingContext);
 
-		//when
+		// when
 		ElasticsearchOperations operationsCopy = this.operations.withRouting(defaultRoutingResolver);
 		AbstractElasticsearchTemplate copyTemplate = (AbstractElasticsearchTemplate) operationsCopy;
 
-		//then
+		// then
 		assertThat(sourceTemplate.getRefreshPolicy()).isEqualTo(copyTemplate.getRefreshPolicy());
 	}
 
-	@Document(indexName = INDEX)
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(shards = 7)
 	@Routing("routing")
 	static class RoutingEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String routing;
 
 		public RoutingEntity(@Nullable String id, @Nullable String routing) {

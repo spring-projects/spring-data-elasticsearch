@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -87,6 +88,7 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 	}
 
 	@Override
+	@Nullable
 	public Object get(Object key) {
 		return delegate.get(key);
 	}
@@ -149,5 +151,41 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 	@Override
 	public String toString() {
 		return "DefaultStringObjectMap: " + toJson();
+	}
+
+	/**
+	 * Gets the object at the given key path (dot separated) or null if no object exists with this path.
+	 *
+	 * @param path the key path, must not be {@literal null}
+	 * @return the found object or null
+	 */
+	@Nullable
+	public Object path(String path) {
+
+		Assert.notNull(path, "path must not be null");
+
+		Map<String, Object> current = this;
+
+		String[] segments = path.split("\\.");
+		for (int i = 0; i < segments.length; i++) {
+			String segment = segments[i];
+
+			if (current.containsKey(segment)) {
+				Object currentObject = current.get(segment);
+
+				if (i == segments.length - 1) {
+					return currentObject;
+				}
+
+				if (currentObject instanceof Map) {
+					current = (Map<String, Object>) currentObject;
+				} else {
+					return null;
+				}
+			} else {
+				return null;
+			}
+		}
+		return null;
 	}
 }

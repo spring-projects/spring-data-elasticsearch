@@ -29,11 +29,11 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Mark Paluch
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 3.2
  */
 public abstract class ClientLogger {
 
-	private static final String lineSeparator = System.getProperty("line.separator");
 	private static final Log WIRE_LOGGER = LogFactory.getLog("org.springframework.data.elasticsearch.client.WIRE");
 
 	private ClientLogger() {}
@@ -64,6 +64,24 @@ public abstract class ClientLogger {
 	}
 
 	/**
+	 * Log an outgoing HTTP request.
+	 *
+	 * @param logId the correlation id, see {@link #newLogId()}.
+	 * @param method HTTP method
+	 * @param endpoint URI
+	 * @param parameters optional parameters.
+	 * @param headers a String containing the headers
+	 * @since 4.4
+	 */
+	public static void logRequest(String logId, String method, String endpoint, Object parameters, String headers) {
+
+		if (isEnabled()) {
+			WIRE_LOGGER.trace(String.format("[%s] Sending request%n%s %s%nParameters: %s%nHeaders: %s", logId,
+					method.toUpperCase(), endpoint, parameters, headers));
+		}
+	}
+
+	/**
 	 * Log an outgoing HTTP request with a request body.
 	 *
 	 * @param logId the correlation id, see {@link #newLogId()}.
@@ -76,8 +94,28 @@ public abstract class ClientLogger {
 			Supplier<Object> body) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace(String.format("[%s] Sending request %s %s with parameters: %s%sRequest body: %s", logId,
-					method.toUpperCase(), endpoint, parameters, lineSeparator, body.get()));
+			WIRE_LOGGER.trace(String.format("[%s] Sending request %s %s with parameters: %s%nRequest body: %s", logId,
+					method.toUpperCase(), endpoint, parameters, body.get()));
+		}
+	}
+
+	/**
+	 * Log an outgoing HTTP request with a request body.
+	 *
+	 * @param logId the correlation id, see {@link #newLogId()}.
+	 * @param method HTTP method
+	 * @param endpoint URI
+	 * @param parameters optional parameters.
+	 * @param headers a String containing the headers
+	 * @param body body content supplier.
+	 * @since 4.4
+	 */
+	public static void logRequest(String logId, String method, String endpoint, Object parameters, String headers,
+			Supplier<Object> body) {
+
+		if (isEnabled()) {
+			WIRE_LOGGER.trace(String.format("[%s] Sending request%n%s %s%nParameters: %s%nHeaders: %s%nRequest body: %s",
+					logId, method.toUpperCase(), endpoint, parameters, headers, body.get()));
 		}
 	}
 
@@ -95,6 +133,20 @@ public abstract class ClientLogger {
 	}
 
 	/**
+	 * Log a raw HTTP response without logging the body.
+	 *
+	 * @param logId the correlation id, see {@link #newLogId()}.
+	 * @param statusCode the HTTP status code.
+	 * @param headers a String containing the headers
+	 */
+	public static void logRawResponse(String logId, @Nullable HttpStatus statusCode, String headers) {
+
+		if (isEnabled()) {
+			WIRE_LOGGER.trace(String.format("[%s] Received response: %s%n%s", logId, statusCode, headers));
+		}
+	}
+
+	/**
 	 * Log a raw HTTP response along with the body.
 	 *
 	 * @param logId the correlation id, see {@link #newLogId()}.
@@ -104,8 +156,24 @@ public abstract class ClientLogger {
 	public static void logResponse(String logId, HttpStatus statusCode, String body) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace(
-					String.format("[%s] Received response: %s%sResponse body: %s", logId, statusCode, lineSeparator, body));
+			WIRE_LOGGER.trace(String.format("[%s] Received response: %s%nResponse body: %s", logId, statusCode, body));
+		}
+	}
+
+	/**
+	 * Log a raw HTTP response along with the body.
+	 *
+	 * @param logId the correlation id, see {@link #newLogId()}.
+	 * @param statusCode the HTTP status code.
+	 * @param headers a String containing the headers
+	 * @param body body content.
+	 * @since 4.4
+	 */
+	public static void logResponse(String logId, @Nullable HttpStatus statusCode, String headers, String body) {
+
+		if (isEnabled()) {
+			WIRE_LOGGER.trace(String.format("[%s] Received response: %s%nHeaders: %s%nResponse body: %s", logId, statusCode,
+					headers, body));
 		}
 	}
 

@@ -20,19 +20,21 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -42,13 +44,12 @@ import org.springframework.lang.Nullable;
 public abstract class SourceFilterIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOps;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	void setUp() {
-		indexOps = operations.indexOps(Entity.class);
-		indexOps.create();
-		indexOps.putMapping();
+		indexNameProvider.increment();
+		operations.indexOps(Entity.class).createWithMapping();
 
 		Entity entity = new Entity();
 		entity.setId("42");
@@ -58,9 +59,10 @@ public abstract class SourceFilterIntegrationTests {
 		operations.save(entity);
 	}
 
-	@AfterEach
-	void tearDown() {
-		indexOps.delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test // #1659, #1678
@@ -184,7 +186,7 @@ public abstract class SourceFilterIntegrationTests {
 		assertThat(entity.getField3()).isNull();
 	}
 
-	@Document(indexName = "sourcefilter-tests")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	public static class Entity {
 		@Nullable
 		@Id private String id;

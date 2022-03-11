@@ -5,6 +5,7 @@
     "analysis": {
       "analyzer": {
         "synonym_analyzer": {
+          "type": "custom",
           "tokenizer": "whitespace",
           "filter": [
             "synonym_filter"
@@ -14,7 +15,7 @@
       "filter": {
         "synonym_filter": {
           "type": "synonym",
-          "lenient" : true,
+          "lenient": true,
           "synonyms": [
             "british,english",
             "queen,monarch"

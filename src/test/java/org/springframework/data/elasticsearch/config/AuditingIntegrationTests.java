@@ -23,6 +23,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
@@ -33,6 +35,7 @@ import org.springframework.data.domain.Persistable;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.lang.Nullable;
 
@@ -40,7 +43,17 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  */
+@SpringIntegrationTest
 public abstract class AuditingIntegrationTests {
+
+	@Configuration
+	@EnableElasticsearchAuditing(auditorAwareRef = "auditorAware")
+	static class Config {
+		@Bean
+		public AuditorAware<String> auditorAware() {
+			return auditorProvider();
+		}
+	}
 
 	public static AuditorAware<String> auditorProvider() {
 		return new AuditorAware<String>() {

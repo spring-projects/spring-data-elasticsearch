@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.reindex;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
 import org.springframework.lang.Nullable;
 
 /**
@@ -32,9 +33,10 @@ public class ReindexResponse {
 	private final long took;
 	private final boolean timedOut;
 	private final long total;
+	private final long created;
 	private final long updated;
 	private final long deleted;
-	private final int batches;
+	private final long batches;
 	private final long versionConflicts;
 	private final long noops;
 	private final long bulkRetries;
@@ -44,12 +46,13 @@ public class ReindexResponse {
 	private final long throttledUntilMillis;
 	private final List<Failure> failures;
 
-	private ReindexResponse(long took, boolean timedOut, long total, long updated, long deleted, int batches,
-			long versionConflicts, long noops, long bulkRetries, long searchRetries, long throttledMillis,
+	private ReindexResponse(long took, boolean timedOut, long total, long created, long updated, long deleted,
+			long batches, long versionConflicts, long noops, long bulkRetries, long searchRetries, long throttledMillis,
 			double requestsPerSecond, long throttledUntilMillis, List<Failure> failures) {
 		this.took = took;
 		this.timedOut = timedOut;
 		this.total = total;
+		this.created = created;
 		this.updated = updated;
 		this.deleted = deleted;
 		this.batches = batches;
@@ -85,6 +88,13 @@ public class ReindexResponse {
 	}
 
 	/**
+	 * The number of documents that were successfully created.
+	 */
+	public long getCreated() {
+		return created;
+	}
+
+	/**
 	 * The number of documents that were successfully updated.
 	 */
 	public long getUpdated() {
@@ -101,7 +111,7 @@ public class ReindexResponse {
 	/**
 	 * The number of scroll responses pulled back by the update by query.
 	 */
-	public int getBatches() {
+	public long getBatches() {
 		return batches;
 	}
 
@@ -184,9 +194,11 @@ public class ReindexResponse {
 		@Nullable private final Long seqNo;
 		@Nullable private final Long term;
 		@Nullable private final Boolean aborted;
+		@Nullable private final ElasticsearchErrorCause elasticsearchErrorCause;
 
 		private Failure(@Nullable String index, @Nullable String type, @Nullable String id, @Nullable Exception cause,
-				@Nullable Integer status, @Nullable Long seqNo, @Nullable Long term, @Nullable Boolean aborted) {
+				@Nullable Integer status, @Nullable Long seqNo, @Nullable Long term, @Nullable Boolean aborted,
+				@Nullable ElasticsearchErrorCause elasticsearchErrorCause) {
 			this.index = index;
 			this.type = type;
 			this.id = id;
@@ -195,6 +207,7 @@ public class ReindexResponse {
 			this.seqNo = seqNo;
 			this.term = term;
 			this.aborted = aborted;
+			this.elasticsearchErrorCause = elasticsearchErrorCause;
 		}
 
 		@Nullable
@@ -237,6 +250,11 @@ public class ReindexResponse {
 			return aborted;
 		}
 
+		@Nullable
+		public ElasticsearchErrorCause getElasticsearchErrorCause() {
+			return elasticsearchErrorCause;
+		}
+
 		/**
 		 * Create a new {@link Failure.FailureBuilder} to build {@link Failure}
 		 *
@@ -258,6 +276,7 @@ public class ReindexResponse {
 			@Nullable private Long seqNo;
 			@Nullable private Long term;
 			@Nullable private Boolean aborted;
+			@Nullable private ElasticsearchErrorCause elasticsearchErrorCause;
 
 			private FailureBuilder() {}
 
@@ -276,7 +295,7 @@ public class ReindexResponse {
 				return this;
 			}
 
-			public Failure.FailureBuilder withCause(Exception cause) {
+			public Failure.FailureBuilder withCause(@Nullable Exception cause) {
 				this.cause = cause;
 				return this;
 			}
@@ -301,8 +320,13 @@ public class ReindexResponse {
 				return this;
 			}
 
+			public Failure.FailureBuilder withErrorCause(@Nullable ElasticsearchErrorCause elasticsearchErrorCause) {
+				this.elasticsearchErrorCause = elasticsearchErrorCause;
+				return this;
+			}
+
 			public Failure build() {
-				return new Failure(index, type, id, cause, status, seqNo, term, aborted);
+				return new Failure(index, type, id, cause, status, seqNo, term, aborted, elasticsearchErrorCause);
 			}
 		}
 	}
@@ -311,9 +335,10 @@ public class ReindexResponse {
 		private long took;
 		private boolean timedOut;
 		private long total;
+		private long created;
 		private long updated;
 		private long deleted;
-		private int batches;
+		private long batches;
 		private long versionConflicts;
 		private long noops;
 		private long bulkRetries;
@@ -340,6 +365,11 @@ public class ReindexResponse {
 			return this;
 		}
 
+		public ReindexResponseBuilder withCreated(long created) {
+			this.created = created;
+			return this;
+		}
+
 		public ReindexResponseBuilder withUpdated(long updated) {
 			this.updated = updated;
 			return this;
@@ -350,7 +380,7 @@ public class ReindexResponse {
 			return this;
 		}
 
-		public ReindexResponseBuilder withBatches(int batches) {
+		public ReindexResponseBuilder withBatches(long batches) {
 			this.batches = batches;
 			return this;
 		}
@@ -396,8 +426,8 @@ public class ReindexResponse {
 		}
 
 		public ReindexResponse build() {
-			return new ReindexResponse(took, timedOut, total, updated, deleted, batches, versionConflicts, noops, bulkRetries,
-					searchRetries, throttledMillis, requestsPerSecond, throttledUntilMillis, failures);
+			return new ReindexResponse(took, timedOut, total, created, updated, deleted, batches, versionConflicts, noops,
+					bulkRetries, searchRetries, throttledMillis, requestsPerSecond, throttledUntilMillis, failures);
 		}
 	}
 }

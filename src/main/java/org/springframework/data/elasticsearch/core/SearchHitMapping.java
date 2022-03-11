@@ -23,11 +23,11 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
-import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.NestedMetaData;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;

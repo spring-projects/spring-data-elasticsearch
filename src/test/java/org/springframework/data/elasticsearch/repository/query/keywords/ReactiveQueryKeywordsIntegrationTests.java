@@ -26,40 +26,22 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  */
-@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @SpringIntegrationTest
-@ContextConfiguration(classes = { ReactiveQueryKeywordsIntegrationTests.Config.class })
-public class ReactiveQueryKeywordsIntegrationTests {
-
-	@Configuration
-	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
-	@EnableReactiveElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {
-		@Bean
-		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider("reactive-template");
-		}
-	}
+public abstract class ReactiveQueryKeywordsIntegrationTests {
 
 	@Autowired private IndexNameProvider indexNameProvider;
 	@Autowired private ReactiveElasticsearchOperations operations;

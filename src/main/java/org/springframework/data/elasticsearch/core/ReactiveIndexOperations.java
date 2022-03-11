@@ -230,8 +230,7 @@ public interface ReactiveIndexOperations {
 	Mono<Boolean> putTemplate(PutTemplateRequest putTemplateRequest);
 
 	/**
-	 * gets an index template using the legacy Elasticsearch
-	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 * gets an index template using the legacy Elasticsearch interface.
 	 *
 	 * @param templateName the template name
 	 * @return Mono of TemplateData, {@literal Mono.empty()} if no template with the given name exists.
@@ -242,8 +241,7 @@ public interface ReactiveIndexOperations {
 	}
 
 	/**
-	 * gets an index template using the legacy Elasticsearch
-	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 * gets an index template using the legacy Elasticsearch interface.
 	 *
 	 * @param getTemplateRequest the request parameters
 	 * @return Mono of TemplateData, {@literal Mono.empty()} if no template with the given name exists.

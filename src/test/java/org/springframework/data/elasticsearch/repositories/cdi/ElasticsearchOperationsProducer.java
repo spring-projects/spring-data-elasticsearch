@@ -36,6 +36,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.ClusterConnectionInf
 @ApplicationScoped
 class ElasticsearchOperationsProducer {
 
+	// todo #1973 switch to use the new client
 	@Produces
 	public ElasticsearchOperations createElasticsearchTemplate(RestHighLevelClient restHighLevelClient) {
 		return new ElasticsearchRestTemplate(restHighLevelClient);

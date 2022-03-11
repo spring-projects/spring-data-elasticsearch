@@ -23,7 +23,9 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.admin.indices.alias.IndicesAliasesRequest;
@@ -38,16 +40,16 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
 import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
 import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.xcontent.ToXContent;
 import org.elasticsearch.xcontent.XContentType;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -75,7 +77,6 @@ import org.springframework.lang.Nullable;
  * @author Peter Nowak
  */
 @SuppressWarnings("ConstantConditions")
-@ExtendWith(MockitoExtension.class)
 class RequestFactoryTests {
 
 	@Nullable private static RequestFactory requestFactory;
@@ -93,8 +94,53 @@ class RequestFactoryTests {
 		requestFactory = new RequestFactory((converter));
 	}
 
+	@Test // DATAES-187
+	public void shouldUsePageableOffsetToSetFromInSearchRequest() {
+
+		// given
+		Pageable pageable = new PageRequest(1, 10, Sort.unsorted()) {
+			@Override
+			public long getOffset() {
+				return 30;
+			}
+		};
+
+		NativeSearchQuery query = new NativeSearchQueryBuilder() //
+				.withPageable(pageable) //
+				.build();
+
+		// when
+		SearchRequest searchRequest = requestFactory.searchRequest(query, null, IndexCoordinates.of("test"));
+
+		// then
+		assertThat(searchRequest.source().from()).isEqualTo(30);
+	}
+
+	@Test // DATAES-693
+	public void shouldReturnSourceWhenRequested() {
+		// given
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("id", "1");
+		doc.put("message", "test");
+
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.from(doc);
+
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withFetchSource(true) //
+				.build();
+
+		// when
+		UpdateRequest request = requestFactory.updateRequest(updateQuery, IndexCoordinates.of("index"));
+
+		// then
+		assertThat(request).isNotNull();
+		assertThat(request.fetchSource()).isEqualTo(FetchSourceContext.FETCH_SOURCE);
+	}
+
 	@Test
-	// FPI-734
+	// DATAES-734
 	void shouldBuildSearchWithGeoSortSort() throws JSONException {
 		CriteriaQuery query = new CriteriaQuery(new Criteria("lastName").is("Smith"));
 		Sort sort = Sort.by(new GeoDistanceOrder("location", new GeoPoint(49.0, 8.4)));
@@ -607,7 +653,7 @@ class RequestFactoryTests {
 
 		ReindexRequest reindexRequest = ReindexRequest
 				.builder(IndexCoordinates.of("source_1", "source_2"), IndexCoordinates.of("destination"))
-				.withConflicts(ReindexRequest.Conflicts.PROCEED).withMaxDocs(10)
+				.withConflicts(ReindexRequest.Conflicts.PROCEED).withMaxDocs(10L)
 				.withSourceQuery(new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build()).withSourceSize(5)
 				.withSourceSourceFilter(new FetchSourceFilterBuilder().withIncludes("name").build()).withSourceRemote(remote)
 				.withSourceSlice(1, 20).withDestOpType(IndexQuery.OpType.CREATE)

@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import java.text.ParseException;
@@ -24,8 +23,8 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -33,12 +32,11 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -51,14 +49,14 @@ import org.springframework.lang.Nullable;
 @SpringIntegrationTest
 public abstract class LogEntityIntegrationTests {
 
-	private final IndexCoordinates index = IndexCoordinates.of("test-index-log-core");
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() throws ParseException {
-		indexOperations = operations.indexOps(LogEntity.class);
-		IndexInitializer.init(indexOperations);
+
+		indexNameProvider.increment();
+		operations.indexOps(LogEntity.class).createWithMapping();
 
 		SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm");
 		IndexQuery indexQuery1 = new LogEntityBuilder("1").action("update").date(dateFormatter.parse("2013-10-18 18:01"))
@@ -73,57 +71,62 @@ public abstract class LogEntityIntegrationTests {
 		IndexQuery indexQuery4 = new LogEntityBuilder("4").action("update").date(dateFormatter.parse("2013-10-19 18:04"))
 				.code(2).ip("10.10.10.4").buildIndex();
 
-		operations.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4), index);
-		indexOperations.refresh();
+		operations.bulkIndex(Arrays.asList(indexQuery1, indexQuery2, indexQuery3, indexQuery4),
+				IndexCoordinates.of(indexNameProvider.indexName()));
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
+
+	/**
+	 * Creates a Query that will be executed as term query on the "ip" field
+	 *
+	 * @param ip the parameter for the query
+	 * @return Query instance
+	 */
+	abstract Query termQueryForIp(String ip);
+
+	/**
+	 * Creates a Query that will be executed as range query on the "ip" field
+	 *
+	 * @param from the parameter for the query
+	 * @param to the parameter for the query
+	 * @return Query instance
+	 */
+	abstract Query rangeQueryForIp(String from, String to);
 
 	@Test // DATAES-66
 	public void shouldIndexGivenLogEntityWithIPFieldType() {
 
-		// when
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10.1")).build();
-		SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class, index);
+		Query searchQuery = termQueryForIp("10.10.10.1");
+		SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class);
 
-		// then
 		assertThat(entities).isNotNull().hasSize(1);
-	}
-
-	protected Class<? extends Exception> invalidIpExceptionClass() {
-		return DataAccessException.class;
 	}
 
 	@Test // DATAES-66
 	public void shouldThrowExceptionWhenInvalidIPGivenForSearchQuery() {
 
-		// when
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("ip", "10.10.10")).build();
+		Query searchQuery = termQueryForIp("10.10.10");
 
 		assertThatThrownBy(() -> {
-			SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class, index);
-		}).isInstanceOf(invalidIpExceptionClass());
+			SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class);
+		}).isInstanceOf(DataAccessException.class);
 	}
 
 	@Test // DATAES-66
 	public void shouldReturnLogsForGivenIPRanges() {
 
-		// when
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder()
-				.withQuery(rangeQuery("ip").from("10.10.10.1").to("10.10.10.3")).build();
-		SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class, index);
+		Query searchQuery = rangeQueryForIp("10.10.10.1", "10.10.10.3");
+		SearchHits<LogEntity> entities = operations.search(searchQuery, LogEntity.class);
 
-		// then
 		assertThat(entities).isNotNull().hasSize(3);
 	}
 
-	/**
-	 * Simple type to test facets
-	 */
-	@Document(indexName = "test-index-log-core")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class LogEntity {
 
 		private static final SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
@@ -188,15 +191,9 @@ public abstract class LogEntityIntegrationTests {
 		}
 	}
 
-	/**
-	 * Simple type to test facets
-	 *
-	 * @author Artur Konczak
-	 * @author Mohsin Husen
-	 */
 	static class LogEntityBuilder {
 
-		private LogEntity result;
+		private final LogEntity result;
 
 		public LogEntityBuilder(String id) {
 			result = new LogEntity(id);

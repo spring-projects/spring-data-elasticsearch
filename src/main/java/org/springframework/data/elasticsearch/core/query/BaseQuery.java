@@ -72,6 +72,23 @@ public class BaseQuery implements Query {
 	private List<IdWithRouting> idsWithRouting = Collections.emptyList();
 	private final List<RuntimeField> runtimeFields = new ArrayList<>();
 
+	public BaseQuery() {}
+
+	public <Q extends BaseQuery, B extends BaseQueryBuilder<Q, B>> BaseQuery(BaseQueryBuilder<Q, B> builder) {
+		this.sort = builder.getSort();
+		// do a setPageable after setting the sort, because the pageable may contain an additional sort
+		this.setPageable(builder.getPageable() != null ? builder.getPageable() : DEFAULT_PAGE);
+		this.ids = builder.getIds();
+		this.trackScores = builder.getTrackScores();
+		this.maxResults = builder.getMaxResults();
+		this.indicesOptions = builder.getIndicesOptions();
+		this.minScore = builder.getMinScore();
+		this.preference = builder.getPreference();
+		this.sourceFilter = builder.getSourceFilter();
+		this.fields = builder.getFields();
+		// #1973 add the other fields to the builder
+	}
+
 	@Override
 	@Nullable
 	public Sort getSort() {

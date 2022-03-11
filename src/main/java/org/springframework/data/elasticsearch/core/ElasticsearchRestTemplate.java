@@ -12,7 +12,7 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 package org.springframework.data.elasticsearch.core;
 
 import java.io.IOException;
@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -62,7 +61,7 @@ import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.cluster.ElasticsearchClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.DocumentAdapters;
-import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentResponseBuilder;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
@@ -118,13 +117,16 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	private final RestHighLevelClient client;
 	private final ElasticsearchExceptionTranslator exceptionTranslator = new ElasticsearchExceptionTranslator();
+	protected RequestFactory requestFactory;
 
-	// region Initialization
+	// region _initialization
 	public ElasticsearchRestTemplate(RestHighLevelClient client) {
 
 		Assert.notNull(client, "Client must not be null!");
 
 		this.client = client;
+		requestFactory = new RequestFactory(this.elasticsearchConverter);
+
 	}
 
 	public ElasticsearchRestTemplate(RestHighLevelClient client, ElasticsearchConverter elasticsearchConverter) {
@@ -134,12 +136,23 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(client, "Client must not be null!");
 
 		this.client = client;
+		requestFactory = new RequestFactory(this.elasticsearchConverter);
 	}
 
 	@Override
 	protected AbstractElasticsearchTemplate doCopy() {
-		return new ElasticsearchRestTemplate(client, elasticsearchConverter);
+		ElasticsearchRestTemplate copy = new ElasticsearchRestTemplate(client, elasticsearchConverter);
+		copy.requestFactory = this.requestFactory;
+		return copy;
 	}
+
+	/**
+	 * @since 4.0
+	 */
+	public RequestFactory getRequestFactory() {
+		return requestFactory;
+	}
+
 	// endregion
 
 	// region IndexOperations
@@ -282,22 +295,23 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public ReindexResponse reindex(ReindexRequest postReindexRequest) {
+	public ReindexResponse reindex(ReindexRequest reindexRequest) {
 
-		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
+		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
+		org.elasticsearch.index.reindex.ReindexRequest reindexRequestES = requestFactory.reindexRequest(reindexRequest);
 		BulkByScrollResponse bulkByScrollResponse = execute(
-				client -> client.reindex(reindexRequest, RequestOptions.DEFAULT));
+				client -> client.reindex(reindexRequestES, RequestOptions.DEFAULT));
 		return ResponseConverter.reindexResponseOf(bulkByScrollResponse);
 	}
 
 	@Override
-	public String submitReindex(ReindexRequest postReindexRequest) {
-		Assert.notNull(postReindexRequest, "postReindexRequest must not be null");
+	public String submitReindex(ReindexRequest reindexRequest) {
 
-		org.elasticsearch.index.reindex.ReindexRequest reindexRequest = requestFactory.reindexRequest(postReindexRequest);
-		return execute(client -> client.submitReindexTask(reindexRequest, RequestOptions.DEFAULT).getTask());
+		Assert.notNull(reindexRequest, "reindexRequest must not be null");
+
+		org.elasticsearch.index.reindex.ReindexRequest reindexRequestES = requestFactory.reindexRequest(reindexRequest);
+		return execute(client -> client.submitReindexTask(reindexRequestES, RequestOptions.DEFAULT).getTask());
 	}
 
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
@@ -387,7 +401,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
 
-		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
+		return callback.doWith(SearchDocumentResponseBuilder.from(response, getEntityCreator(documentCallback)));
 	}
 
 	protected <T> SearchHits<T> doSearch(MoreLikeThisQuery query, Class<T> clazz, IndexCoordinates index) {
@@ -411,12 +425,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
+		return callback.doWith(SearchDocumentResponseBuilder.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
-	public <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
-			Class<T> clazz, IndexCoordinates index) {
+	public <T> SearchScrollHits<T> searchScrollContinue(String scrollId, long scrollTimeInMillis, Class<T> clazz,
+			IndexCoordinates index) {
 
 		SearchScrollRequest request = new SearchScrollRequest(scrollId);
 		request.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
@@ -426,7 +440,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
-		return callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback)));
+		return callback.doWith(SearchDocumentResponseBuilder.from(response, getEntityCreator(documentCallback)));
 	}
 
 	@Override
@@ -459,7 +473,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
 		List<SearchHits<T>> res = new ArrayList<>(queries.size());
 		for (int i = 0; i < queries.size(); i++) {
-			res.add(callback.doWith(SearchDocumentResponse.from(items[i].getResponse(), getEntityCreator(documentCallback))));
+			res.add(callback
+					.doWith(SearchDocumentResponseBuilder.from(items[i].getResponse(), getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -492,7 +507,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 					index);
 
 			SearchResponse response = items[i].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback))));
+			res.add(callback.doWith(SearchDocumentResponseBuilder.from(response, getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -525,7 +540,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 					index);
 
 			SearchResponse response = items[i].getResponse();
-			res.add(callback.doWith(SearchDocumentResponse.from(response, getEntityCreator(documentCallback))));
+			res.add(callback.doWith(SearchDocumentResponseBuilder.from(response, getEntityCreator(documentCallback))));
 		}
 		return res;
 	}
@@ -537,11 +552,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		return items;
 	}
 
-	private <T> SearchDocumentResponse.EntityCreator<T> getEntityCreator(ReadDocumentCallback<T> documentCallback) {
-		return searchDocument -> CompletableFuture.completedFuture(documentCallback.doWith(searchDocument));
-	}
-
 	// endregion
+
 	// region ClientCallback
 	/**
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on

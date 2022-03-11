@@ -19,9 +19,10 @@ import java.util.List;
 
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.lang.Nullable;
 
@@ -77,7 +78,9 @@ public interface SearchOperations {
 	 *             and get the suggest from {@link SearchHits#getSuggest()}
 	 */
 	@Deprecated
-	SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz);
+	default SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz) {
+		throw new InvalidDataAccessApiUsageException("Unsupported operation");
+	}
 
 	/**
 	 * Does a suggest query
@@ -90,7 +93,9 @@ public interface SearchOperations {
 	 *             and get the suggest from {@link SearchHits#getSuggest()}
 	 */
 	@Deprecated
-	SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index);
+	default SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index) {
+		throw new InvalidDataAccessApiUsageException("Unsupported operation");
+	}
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object.

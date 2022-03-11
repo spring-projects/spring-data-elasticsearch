@@ -32,7 +32,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
- * Converts the {@link Highlight} annotation from a method to an Elasticsearch {@link HighlightBuilder}.
+ * Converts the {@link Highlight} annotation from a method to an Elasticsearch 7 {@link HighlightBuilder}.
  *
  * @author Peter-Josef Meisch
  */

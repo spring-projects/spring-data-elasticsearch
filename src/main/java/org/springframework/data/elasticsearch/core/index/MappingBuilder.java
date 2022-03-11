@@ -73,7 +73,7 @@ import com.fasterxml.jackson.databind.util.RawValue;
  */
 public class MappingBuilder {
 
-	private static final Log LOGGER = LogFactory.getLog(ElasticsearchRestTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(MappingBuilder.class);
 
 	private static final String FIELD_INDEX = "index";
 	private static final String FIELD_PROPERTIES = "properties";
