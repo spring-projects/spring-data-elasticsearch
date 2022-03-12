@@ -345,6 +345,10 @@ public class NativeSearchQueryBuilder {
 	}
 
 	public NativeSearchQueryBuilder withSearchAfter(List<Object> searchAfter) {
+		if (searchAfter != null && searchAfter.isEmpty()) {
+			return this;
+		}
+
 		this.searchAfter = searchAfter;
 		return this;
 	}

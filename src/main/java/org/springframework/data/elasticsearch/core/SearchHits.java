@@ -99,4 +99,5 @@ public interface SearchHits<T> extends Streamable<SearchHit<T>> {
 	default Iterator<SearchHit<T>> iterator() {
 		return getSearchHits().iterator();
 	}
+
 }
