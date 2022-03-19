@@ -15,12 +15,30 @@
  */
 package org.springframework.data.elasticsearch.client.reactive;
 
+import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.ApplicationProtocolConfig;
+import io.netty.handler.ssl.ClientAuth;
+import io.netty.handler.ssl.IdentityCipherSuiteFilter;
+import io.netty.handler.ssl.JdkSslContext;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.transport.ProxyProvider;
+
 import java.net.InetSocketAddress;
+import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import javax.net.ssl.SSLContext;
+
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ClientHttpConnector;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -152,4 +170,96 @@ public interface WebClientProvider {
 	 * @since 4.3
 	 */
 	WebClientProvider withRequestConfigurer(Consumer<WebClient.RequestHeadersSpec<?>> requestConfigurer);
+
+	/**
+	 * Creates a {@link WebClientProvider} for the given configuration
+	 *
+	 * @param clientConfiguration must not be {@literal} null
+	 * @return the {@link WebClientProvider}
+	 * @since 4.3
+	 */
+	static WebClientProvider getWebClientProvider(ClientConfiguration clientConfiguration) {
+
+		Assert.notNull(clientConfiguration, "clientConfiguration must not be null");
+
+		Duration connectTimeout = clientConfiguration.getConnectTimeout();
+		Duration soTimeout = clientConfiguration.getSocketTimeout();
+
+		HttpClient httpClient = HttpClient.create().compress(true);
+
+		if (!connectTimeout.isNegative()) {
+			httpClient = httpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, Math.toIntExact(connectTimeout.toMillis()));
+		}
+
+		if (!soTimeout.isNegative()) {
+			httpClient = httpClient.doOnConnected(connection -> connection //
+					.addHandlerLast(new ReadTimeoutHandler(soTimeout.toMillis(), TimeUnit.MILLISECONDS))
+					.addHandlerLast(new WriteTimeoutHandler(soTimeout.toMillis(), TimeUnit.MILLISECONDS)));
+		}
+
+		if (clientConfiguration.getProxy().isPresent()) {
+			String proxy = clientConfiguration.getProxy().get();
+			String[] hostPort = proxy.split(":");
+
+			if (hostPort.length != 2) {
+				throw new IllegalArgumentException("invalid proxy configuration " + proxy + ", should be \"host:port\"");
+			}
+			httpClient = httpClient.proxy(proxyOptions -> proxyOptions.type(ProxyProvider.Proxy.HTTP).host(hostPort[0])
+					.port(Integer.parseInt(hostPort[1])));
+		}
+
+		String scheme = "http";
+
+		if (clientConfiguration.useSsl()) {
+
+			Optional<SSLContext> sslContext = clientConfiguration.getSslContext();
+
+			if (sslContext.isPresent()) {
+				httpClient = httpClient
+						.secure(sslContextSpec -> sslContextSpec.sslContext(new JdkSslContext(sslContext.get(), true, null,
+								IdentityCipherSuiteFilter.INSTANCE, ApplicationProtocolConfig.DISABLED, ClientAuth.NONE, null, false)));
+			} else {
+				httpClient = httpClient.secure();
+			}
+
+			scheme = "https";
+		}
+
+		WebClientProvider provider = WebClientProvider.create(scheme, new ReactorClientHttpConnector(httpClient));
+
+		if (clientConfiguration.getPathPrefix() != null) {
+			provider = provider.withPathPrefix(clientConfiguration.getPathPrefix());
+		}
+
+		Function<WebClient, WebClient> webClientConfigurer = webClient -> {
+			for (ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer : clientConfiguration
+					.getClientConfigurers()) {
+
+				if (clientConfigurer instanceof ReactiveRestClients.WebClientConfigurationCallback) {
+					ReactiveRestClients.WebClientConfigurationCallback webClientConfigurationCallback = (ReactiveRestClients.WebClientConfigurationCallback) clientConfigurer;
+					webClient = webClientConfigurationCallback.configure(webClient);
+				}
+
+				if (clientConfigurer instanceof ElasticsearchClients.WebClientConfigurationCallback) {
+					ElasticsearchClients.WebClientConfigurationCallback webClientConfigurationCallback = (ElasticsearchClients.WebClientConfigurationCallback) clientConfigurer;
+					webClient = webClientConfigurationCallback.configure(webClient);
+				}
+			}
+			return webClient;
+		};
+
+		provider = provider //
+				.withDefaultHeaders(clientConfiguration.getDefaultHeaders()) //
+				.withWebClientConfigurer(webClientConfigurer) //
+				.withRequestConfigurer(requestHeadersSpec -> requestHeadersSpec //
+						.headers(httpHeaders -> {
+							HttpHeaders suppliedHeaders = clientConfiguration.getHeadersSupplier().get();
+
+							if (suppliedHeaders != null && suppliedHeaders != HttpHeaders.EMPTY) {
+								httpHeaders.addAll(suppliedHeaders);
+							}
+						}));
+
+		return provider;
+	}
 }

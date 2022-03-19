@@ -66,15 +66,18 @@ class RestIndexTemplate extends AbstractIndexTemplate implements IndexOperations
 	private static final Log LOGGER = LogFactory.getLog(RestIndexTemplate.class);
 
 	private final ElasticsearchRestTemplate restTemplate;
+	protected final RequestFactory requestFactory;
 
 	public RestIndexTemplate(ElasticsearchRestTemplate restTemplate, Class<?> boundClass) {
 		super(restTemplate.getElasticsearchConverter(), boundClass);
 		this.restTemplate = restTemplate;
+		requestFactory = new RequestFactory(elasticsearchConverter);
 	}
 
 	public RestIndexTemplate(ElasticsearchRestTemplate restTemplate, IndexCoordinates boundIndex) {
 		super(restTemplate.getElasticsearchConverter(), boundIndex);
 		this.restTemplate = restTemplate;
+		requestFactory = new RequestFactory(elasticsearchConverter);
 	}
 
 	@Override
@@ -116,7 +119,7 @@ class RestIndexTemplate extends AbstractIndexTemplate implements IndexOperations
 	@Override
 	protected Map<String, Object> doGetMapping(IndexCoordinates index) {
 
-		Assert.notNull(index, "No index defined for getMapping()");
+		Assert.notNull(index, "No index defined for doGetMapping()");
 
 		GetMappingsRequest mappingsRequest = requestFactory.getMappingsRequest(index);
 

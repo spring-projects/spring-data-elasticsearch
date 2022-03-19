@@ -122,13 +122,23 @@ public class ClusterHealth {
 
 	@Override
 	public String toString() {
-		return "ClusterHealth{" + "clusterName='" + clusterName + '\'' + ", status='" + status + '\'' + ", numberOfNodes="
-				+ numberOfNodes + ", numberOfDataNodes=" + numberOfDataNodes + ", activeShards=" + activeShards
-				+ ", relocatingShards=" + relocatingShards + ", activePrimaryShards=" + activePrimaryShards
-				+ ", initializingShards=" + initializingShards + ", unassignedShards=" + unassignedShards
-				+ ", activeShardsPercent=" + activeShardsPercent + ", numberOfPendingTasks=" + numberOfPendingTasks
-				+ ", timedOut=" + timedOut + ", numberOfInFlightFetch=" + numberOfInFlightFetch + ", delayedUnassignedShards="
-				+ delayedUnassignedShards + ", taskMaxWaitingTimeMillis=" + taskMaxWaitingTimeMillis + '}';
+		return "ClusterHealth{" + //
+				"clusterName='" + clusterName + '\'' + //
+				", status='" + status + '\'' + //
+				", numberOfNodes=" + numberOfNodes + //
+				", numberOfDataNodes=" + numberOfDataNodes + //
+				", activeShards=" + activeShards + //
+				", relocatingShards=" + relocatingShards + //
+				", activePrimaryShards=" + activePrimaryShards + //
+				", initializingShards=" + initializingShards + //
+				", unassignedShards=" + unassignedShards + //
+				", activeShardsPercent=" + activeShardsPercent + //
+				", numberOfPendingTasks=" + numberOfPendingTasks + //
+				", timedOut=" + timedOut + //
+				", numberOfInFlightFetch=" + numberOfInFlightFetch + //
+				", delayedUnassignedShards=" + delayedUnassignedShards + //
+				", taskMaxWaitingTimeMillis=" + taskMaxWaitingTimeMillis + //
+				'}'; //
 	}
 
 	public static ClusterHealthBuilder builder() {
@@ -160,7 +170,7 @@ public class ClusterHealth {
 		}
 
 		public ClusterHealthBuilder withStatus(String status) {
-			this.status = status;
+			this.status = status.toUpperCase();
 			return this;
 		}
 

@@ -17,18 +17,17 @@ package org.springframework.data.elasticsearch.repositories.spel;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 
 /**
  * SpELEntityTest
@@ -40,19 +39,19 @@ import org.springframework.data.elasticsearch.utils.IndexInitializer;
 public abstract class SpELEntityIntegrationTests {
 
 	@Autowired private SpELRepository repository;
-
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.indexOps(SpELEntity.class);
-		IndexInitializer.init(indexOperations);
+		indexNameProvider.increment();
+		operations.indexOps(SpELEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		operations.indexOps(IndexCoordinates.of("test-index-abz-*")).delete();
+	@Test
+	@Order(Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test
@@ -65,7 +64,7 @@ public abstract class SpELEntityIntegrationTests {
 		// when
 
 		// then
-		long count = operations.count(operations.matchAllQuery(), IndexCoordinates.of("test-index-abz-entity"));
+		long count = operations.count(operations.matchAllQuery(), SpELEntity.class);
 		assertThat(count).isEqualTo(2);
 	}
 
@@ -79,11 +78,11 @@ public abstract class SpELEntityIntegrationTests {
 		// when
 
 		// then
-		long count = operations.count(operations.matchAllQuery(), IndexCoordinates.of("test-index-abz-entity"));
+		long count = operations.count(operations.matchAllQuery(), SpELEntity.class);
 		assertThat(count).isEqualTo(1);
 	}
 
-	@Document(indexName = "#{'test-index-abz'+'-'+'entity'}")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SpELEntity {
 
 		@Id private String id;

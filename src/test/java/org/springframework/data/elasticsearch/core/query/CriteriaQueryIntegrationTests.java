@@ -78,10 +78,10 @@ public abstract class CriteriaQueryIntegrationTests {
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(
 				new Criteria("message").contains("test").and("message").contains("some"));
-		SearchHit<SampleEntity> searchHit = operations.searchOne(criteriaQuery, SampleEntity.class);
+		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		assertThat(searchHit).isNotNull();
-		assertThat(searchHit.getId()).isEqualTo(sampleEntity1.id);
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo(sampleEntity1.id);
 	}
 
 	@Test // DATAES-706
@@ -170,8 +170,9 @@ public abstract class CriteriaQueryIntegrationTests {
 		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
 		// then
-		assertThat(criteriaQuery.getCriteria().getField().getName()).isEqualTo("message");
 		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
+		SearchHit<SampleEntity> searchHit = searchHits.getSearchHit(0);
+		assertThat(searchHit.getId()).isEqualTo(searchHit.getId());
 	}
 
 	@Test
@@ -651,40 +652,21 @@ public abstract class CriteriaQueryIntegrationTests {
 	@Test
 	public void shouldPerformBoostOperation() {
 
-		List<IndexQuery> indexQueries = new ArrayList<>();
-		// first document
 		String documentId = nextIdAsString();
-		SampleEntity sampleEntity1 = new SampleEntity();
-		sampleEntity1.setId(documentId);
-		sampleEntity1.setRate(700);
-		sampleEntity1.setMessage("bar foo");
-		sampleEntity1.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setId(documentId);
+		sampleEntity.setRate(700);
+		sampleEntity.setMessage("foo");
+		sampleEntity.setVersion(System.currentTimeMillis());
 
-		IndexQuery indexQuery1 = new IndexQuery();
-		indexQuery1.setId(documentId);
-		indexQuery1.setObject(sampleEntity1);
-		indexQueries.add(indexQuery1);
+		operations.save(sampleEntity);
 
-		// second document
-		String documentId2 = nextIdAsString();
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setRate(800);
-		sampleEntity2.setMessage("foo");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-
-		IndexQuery indexQuery2 = new IndexQuery();
-		indexQuery2.setId(documentId2);
-		indexQuery2.setObject(sampleEntity2);
-		indexQueries.add(indexQuery2);
-
-		operations.bulkIndex(indexQueries, SampleEntity.class);
-
-		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("foo").boost(1));
+		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("message").contains("foo").boost(2));
 
 		SearchHits<SampleEntity> searchHits = operations.search(criteriaQuery, SampleEntity.class);
 
-		assertThat(searchHits.getTotalHits()).isGreaterThanOrEqualTo(1);
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getScore()).isEqualTo(2.0f);
 	}
 
 	@Test

@@ -20,16 +20,13 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.geometry.utils.Geohash;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -37,8 +34,10 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
+import org.springframework.data.elasticsearch.utils.geohash.Geohash;
 import org.springframework.data.geo.Point;
 import org.springframework.lang.Nullable;
 
@@ -56,32 +55,31 @@ import org.springframework.lang.Nullable;
 @SpringIntegrationTest
 public abstract class GeoIntegrationTests {
 
-	private final IndexCoordinates locationMarkerIndex = IndexCoordinates.of("test-index-location-marker-core-geo");
-	private final IndexCoordinates authorMarkerIndex = IndexCoordinates.of("test-index-author-marker-core-geo");
-
 	@Autowired private ElasticsearchOperations operations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
-		IndexInitializer.init(operations.indexOps(AuthorMarkerEntity.class));
-		IndexInitializer.init(operations.indexOps(LocationMarkerEntity.class));
+		indexNameProvider.increment();
+		operations.indexOps(AuthorMarkerEntity.class).createWithMapping();
+		operations.indexOps(LocationMarkerEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		operations.indexOps(AuthorMarkerEntity.class).delete();
-		operations.indexOps(LocationMarkerEntity.class).delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*" + indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	private void loadClassBaseEntities() {
 
 		List<IndexQuery> indexQueries = new ArrayList<>();
-		indexQueries
-				.add(new AuthorMarkerEntityBuilder("1").name("Franck Marchand").location(45.7806d, 3.0875d).buildIndex());
-		indexQueries.add(new AuthorMarkerEntityBuilder("2").name("Mohsin Husen").location(51.5171d, 0.1062d).buildIndex());
-		indexQueries.add(new AuthorMarkerEntityBuilder("3").name("Rizwan Idrees").location(51.5171d, 0.1062d).buildIndex());
-		operations.bulkIndex(indexQueries, authorMarkerIndex);
-		operations.indexOps(AuthorMarkerEntity.class).refresh();
+		indexQueries.add(new AuthorMarkerEntityBuilder("1").name("abc").location(45.7806d, 3.0875d).buildIndex());
+		indexQueries.add(new AuthorMarkerEntityBuilder("2").name("def").location(51.5171d, 0.1062d).buildIndex());
+		indexQueries.add(new AuthorMarkerEntityBuilder("3").name("ghi").location(51.5171d, 0.1062d).buildIndex());
+		indexQueries.add(
+				new AuthorMarkerEntityBuilder("4").name("jkl").location(38.77353441278326d, -9.09882204680034d).buildIndex());
+		operations.bulkIndex(indexQueries, AuthorMarkerEntity.class);
 	}
 
 	private void loadAnnotationBaseEntities() {
@@ -91,30 +89,39 @@ public abstract class GeoIntegrationTests {
 		String latLonString = "51.000000, 0.100000";
 		String geohash = "u10j46mkfekr";
 		Geohash.stringEncode(0.100000, 51.000000);
+
 		LocationMarkerEntity location1 = new LocationMarkerEntity();
 		location1.setId("1");
-		location1.setName("Artur Konczak");
+		location1.setName("location 1");
 		location1.setLocationAsString(latLonString);
 		location1.setLocationAsArray(lonLatArray);
 		location1.setLocationAsGeoHash(geohash);
+
 		LocationMarkerEntity location2 = new LocationMarkerEntity();
 		location2.setId("2");
-		location2.setName("Mohsin Husen");
+		location2.setName("location 2");
 		location2.setLocationAsString(geohash.substring(0, 8));
 		location2.setLocationAsArray(lonLatArray);
 		location2.setLocationAsGeoHash(geohash.substring(0, 8));
+
 		LocationMarkerEntity location3 = new LocationMarkerEntity();
 		location3.setId("3");
-		location3.setName("Rizwan Idrees");
+		location3.setName("location 3");
 		location3.setLocationAsString(geohash);
 		location3.setLocationAsArray(lonLatArray);
 		location3.setLocationAsGeoHash(geohash);
+
+		LocationMarkerEntity location4 = new LocationMarkerEntity();
+		location4.setId("4");
+		location4.setName("location 4");
+		location4.setLocationAsArray(new double[] { -9.09882204680034d, 38.77353441278326d });
+
 		indexQueries.add(buildIndex(location1));
 		indexQueries.add(buildIndex(location2));
 		indexQueries.add(buildIndex(location3));
+		indexQueries.add(buildIndex(location4));
 
-		operations.bulkIndex(indexQueries, locationMarkerIndex);
-		operations.indexOps(LocationMarkerEntity.class).refresh();
+		operations.bulkIndex(indexQueries, LocationMarkerEntity.class);
 	}
 
 	@Test
@@ -127,11 +134,11 @@ public abstract class GeoIntegrationTests {
 
 		// when
 		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
-				AuthorMarkerEntity.class, authorMarkerIndex);
+				AuthorMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria).hasSize(1);
-		assertThat(geoAuthorsForGeoCriteria.getSearchHit(0).getContent().getName()).isEqualTo("Franck Marchand");
+		assertThat(geoAuthorsForGeoCriteria.getSearchHit(0).getContent().getName()).isEqualTo("abc");
 	}
 
 	@Test
@@ -140,15 +147,15 @@ public abstract class GeoIntegrationTests {
 		// given
 		loadClassBaseEntities();
 		CriteriaQuery geoLocationCriteriaQuery2 = new CriteriaQuery(
-				new Criteria("name").is("Mohsin Husen").and("location").within(new GeoPoint(51.5171d, 0.1062d), "20km"));
+				new Criteria("name").is("def").and("location").within(new GeoPoint(51.5171d, 0.1062d), "20km"));
 
 		// when
 		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria2 = operations.search(geoLocationCriteriaQuery2,
-				AuthorMarkerEntity.class, authorMarkerIndex);
+				AuthorMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria2).hasSize(1);
-		assertThat(geoAuthorsForGeoCriteria2.getSearchHit(0).getContent().getName()).isEqualTo("Mohsin Husen");
+		assertThat(geoAuthorsForGeoCriteria2.getSearchHit(0).getContent().getName()).isEqualTo("def");
 	}
 
 	@Test
@@ -160,7 +167,7 @@ public abstract class GeoIntegrationTests {
 				new Criteria("locationAsString").within(new GeoPoint(51.000000, 0.100000), "1km"));
 		// when
 		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
-				LocationMarkerEntity.class, locationMarkerIndex);
+				LocationMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria).hasSize(1);
@@ -176,7 +183,7 @@ public abstract class GeoIntegrationTests {
 
 		// when
 		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
-				LocationMarkerEntity.class, locationMarkerIndex);
+				LocationMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria).hasSize(3);
@@ -191,7 +198,7 @@ public abstract class GeoIntegrationTests {
 				new Criteria("locationAsArray").within("51.001000, 0.10100", "1km"));
 		// when
 		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
-				LocationMarkerEntity.class, locationMarkerIndex);
+				LocationMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria).hasSize(3);
@@ -206,7 +213,7 @@ public abstract class GeoIntegrationTests {
 
 		// when
 		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(geoLocationCriteriaQuery,
-				LocationMarkerEntity.class, locationMarkerIndex);
+				LocationMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria).hasSize(3);
@@ -217,16 +224,17 @@ public abstract class GeoIntegrationTests {
 
 		// given
 		loadAnnotationBaseEntities();
-		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder()
-				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsArray").setCorners(52, -1, 50, 1));
 
 		// when
-		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(queryBuilder.build(),
-				LocationMarkerEntity.class, locationMarkerIndex);
+		Query query = nativeQueryForBoundingBox("locationAsArray", 52, -1, 50, 1);
+		SearchHits<LocationMarkerEntity> geoAuthorsForGeoCriteria = operations.search(query, LocationMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria).hasSize(3);
 	}
+
+	protected abstract Query nativeQueryForBoundingBox(String fieldName, double top, double left, double bottom,
+			double right);
 
 	@Test
 	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingGeoBox() {
@@ -238,12 +246,12 @@ public abstract class GeoIntegrationTests {
 
 		// when
 		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
-				AuthorMarkerEntity.class, authorMarkerIndex);
+				AuthorMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria3).hasSize(2);
 		assertThat(geoAuthorsForGeoCriteria3.stream().map(SearchHit::getContent).map(AuthorMarkerEntity::getName))
-				.containsExactlyInAnyOrder("Mohsin Husen", "Rizwan Idrees");
+				.containsExactlyInAnyOrder("def", "ghi");
 	}
 
 	@Test
@@ -256,12 +264,12 @@ public abstract class GeoIntegrationTests {
 
 		// when
 		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
-				AuthorMarkerEntity.class, authorMarkerIndex);
+				AuthorMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria3).hasSize(2);
 		assertThat(geoAuthorsForGeoCriteria3.stream().map(SearchHit::getContent).map(AuthorMarkerEntity::getName))
-				.containsExactlyInAnyOrder("Mohsin Husen", "Rizwan Idrees");
+				.containsExactlyInAnyOrder("def", "ghi");
 	}
 
 	@Test
@@ -274,12 +282,12 @@ public abstract class GeoIntegrationTests {
 
 		// when
 		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
-				AuthorMarkerEntity.class, authorMarkerIndex);
+				AuthorMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria3).hasSize(2);
 		assertThat(geoAuthorsForGeoCriteria3.stream().map(SearchHit::getContent).map(AuthorMarkerEntity::getName))
-				.containsExactlyInAnyOrder("Mohsin Husen", "Rizwan Idrees");
+				.containsExactlyInAnyOrder("def", "ghi");
 	}
 
 	@Test
@@ -292,12 +300,12 @@ public abstract class GeoIntegrationTests {
 
 		// when
 		SearchHits<AuthorMarkerEntity> geoAuthorsForGeoCriteria3 = operations.search(geoLocationCriteriaQuery3,
-				AuthorMarkerEntity.class, authorMarkerIndex);
+				AuthorMarkerEntity.class);
 
 		// then
 		assertThat(geoAuthorsForGeoCriteria3).hasSize(2);
 		assertThat(geoAuthorsForGeoCriteria3.stream().map(SearchHit::getContent).map(AuthorMarkerEntity::getName))
-				.containsExactlyInAnyOrder("Mohsin Husen", "Rizwan Idrees");
+				.containsExactlyInAnyOrder("def", "ghi");
 	}
 
 	@Test
@@ -305,32 +313,20 @@ public abstract class GeoIntegrationTests {
 
 		// given
 		loadAnnotationBaseEntities();
-		NativeSearchQueryBuilder location1 = new NativeSearchQueryBuilder()
-				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsGeoHash").setCorners("u"));
-		NativeSearchQueryBuilder location2 = new NativeSearchQueryBuilder()
-				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsGeoHash").setCorners("u1"));
-		NativeSearchQueryBuilder location3 = new NativeSearchQueryBuilder()
-				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsGeoHash").setCorners("u10"));
-		NativeSearchQueryBuilder location4 = new NativeSearchQueryBuilder()
-				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsGeoHash").setCorners("u10j"));
-		NativeSearchQueryBuilder location5 = new NativeSearchQueryBuilder()
-				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsGeoHash").setCorners("u10j4"));
-		NativeSearchQueryBuilder location11 = new NativeSearchQueryBuilder()
-				.withFilter(QueryBuilders.geoBoundingBoxQuery("locationAsGeoHash").setCorners("u10j46mkfek"));
+		Query location1 = nativeQueryForBoundingBox("locationAsGeoHash", "u");
+		Query location2 = nativeQueryForBoundingBox("locationAsGeoHash", "u1");
+		Query location3 = nativeQueryForBoundingBox("locationAsGeoHash", "u10");
+		Query location4 = nativeQueryForBoundingBox("locationAsGeoHash", "u10j");
+		Query location5 = nativeQueryForBoundingBox("locationAsGeoHash", "u10j4");
+		Query location11 = nativeQueryForBoundingBox("locationAsGeoHash", "u10j46mkfek");
 
 		// when
-		SearchHits<LocationMarkerEntity> result1 = operations.search(location1.build(), LocationMarkerEntity.class,
-				locationMarkerIndex);
-		SearchHits<LocationMarkerEntity> result2 = operations.search(location2.build(), LocationMarkerEntity.class,
-				locationMarkerIndex);
-		SearchHits<LocationMarkerEntity> result3 = operations.search(location3.build(), LocationMarkerEntity.class,
-				locationMarkerIndex);
-		SearchHits<LocationMarkerEntity> result4 = operations.search(location4.build(), LocationMarkerEntity.class,
-				locationMarkerIndex);
-		SearchHits<LocationMarkerEntity> result5 = operations.search(location5.build(), LocationMarkerEntity.class,
-				locationMarkerIndex);
-		SearchHits<LocationMarkerEntity> result11 = operations.search(location11.build(), LocationMarkerEntity.class,
-				locationMarkerIndex);
+		SearchHits<LocationMarkerEntity> result1 = operations.search(location1, LocationMarkerEntity.class);
+		SearchHits<LocationMarkerEntity> result2 = operations.search(location2, LocationMarkerEntity.class);
+		SearchHits<LocationMarkerEntity> result3 = operations.search(location3, LocationMarkerEntity.class);
+		SearchHits<LocationMarkerEntity> result4 = operations.search(location4, LocationMarkerEntity.class);
+		SearchHits<LocationMarkerEntity> result5 = operations.search(location5, LocationMarkerEntity.class);
+		SearchHits<LocationMarkerEntity> result11 = operations.search(location11, LocationMarkerEntity.class);
 
 		// then
 		assertThat(result1).hasSize(3);
@@ -341,6 +337,8 @@ public abstract class GeoIntegrationTests {
 		assertThat(result11).hasSize(2);
 	}
 
+	protected abstract Query nativeQueryForBoundingBox(String fieldName, String geoHash);
+
 	private IndexQuery buildIndex(LocationMarkerEntity result) {
 		IndexQuery indexQuery = new IndexQuery();
 		indexQuery.setId(result.getId());
@@ -348,11 +346,7 @@ public abstract class GeoIntegrationTests {
 		return indexQuery;
 	}
 
-	/**
-	 * @author Franck Marchand
-	 * @author Mohsin Husen
-	 */
-	@Document(indexName = "test-index-author-marker-core-geo")
+	@Document(indexName = "author-#{@indexNameProvider.indexName()}")
 	static class AuthorMarkerEntity {
 		@Nullable
 		@Id private String id;
@@ -393,11 +387,6 @@ public abstract class GeoIntegrationTests {
 		}
 	}
 
-	/**
-	 * @author Franck Marchand
-	 * @author Mohsin Husen
-	 */
-
 	static class AuthorMarkerEntityBuilder {
 
 		private AuthorMarkerEntity result;
@@ -428,7 +417,7 @@ public abstract class GeoIntegrationTests {
 		}
 	}
 
-	@Document(indexName = "test-index-location-marker-core-geo")
+	@Document(indexName = "location-#{@indexNameProvider.indexName()}")
 	static class LocationMarkerEntity {
 		@Nullable
 		@Id private String id;

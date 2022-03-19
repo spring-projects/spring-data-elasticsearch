@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.springframework.util.StringUtils.*;
+
 import reactor.core.publisher.Mono;
 
 import java.io.BufferedReader;
@@ -22,10 +24,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.data.elasticsearch.ResourceFailureException;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.util.Assert;
 
 /**
@@ -35,6 +40,8 @@ import org.springframework.util.Assert;
  * @since 4.1
  */
 public abstract class ReactiveResourceUtil {
+
+	private static final Log LOGGER = LogFactory.getLog(ReactiveResourceUtil.class);
 
 	private static final int BUFFER_SIZE = 8_192;
 
@@ -72,6 +79,33 @@ public abstract class ReactiveResourceUtil {
 					}
 				}).onErrorResume(
 						throwable -> Mono.error(new ResourceFailureException("Could not load resource from " + url, throwable)));
+	}
+
+	/**
+	 * loads a Document initialized with data from a given resource path.
+	 *
+	 * @param path the path to load data from
+	 * @param annotation the annotation that had the resource path defined
+	 * @return the parsed document
+	 * @since 4.4
+	 */
+	public static Mono<Document> loadDocument(String path, String annotation) {
+
+		if (hasText(path)) {
+			return readFileFromClasspath(path).flatMap(s -> {
+				if (hasText(s)) {
+					return Mono.just(Document.parse(s));
+				} else {
+					return Mono.just(Document.create());
+				}
+			});
+		} else {
+			if (LOGGER.isInfoEnabled()) {
+				LOGGER.info(String.format("path in %s has to be defined. Using default instead.", annotation));
+			}
+		}
+
+		return Mono.just(Document.create());
 	}
 
 	// Utility constructor

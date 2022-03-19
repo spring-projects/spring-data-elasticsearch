@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.util.CollectionUtils.*;
 
 import java.util.ArrayList;
@@ -29,8 +28,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -42,7 +39,9 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.util.StreamUtils;
@@ -116,25 +115,34 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	@SuppressWarnings("unchecked")
 	@Override
 	public Page<T> findAll(Pageable pageable) {
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withPageable(pageable).build();
+
+		Assert.notNull(pageable, "pageable must not be null");
+
+		Query query = Query.findAll();
+		query.setPageable(pageable);
 		SearchHits<T> searchHits = execute(operations -> operations.search(query, entityClass, getIndexCoordinates()));
-		// noinspection ConstantConditions
 		SearchPage<T> page = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
+		// noinspection ConstantConditions
 		return (Page<T>) SearchHitSupport.unwrapSearchHits(page);
 	}
 
 	@SuppressWarnings("unchecked")
 	@Override
 	public Iterable<T> findAll(Sort sort) {
+
+		Assert.notNull(sort, "sort must not be null");
+
 		int itemCount = (int) this.count();
 
 		if (itemCount == 0) {
 			return new PageImpl<>(Collections.emptyList());
 		}
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withPageable(PageRequest.of(0, itemCount, sort)).build();
+		Pageable pageable = PageRequest.of(0, itemCount, sort);
+		Query query = Query.findAll();
+		query.setPageable(pageable);
 		List<SearchHit<T>> searchHitList = execute(
 				operations -> operations.search(query, entityClass, getIndexCoordinates()).getSearchHits());
+		// noinspection ConstantConditions
 		return (List<T>) SearchHitSupport.unwrapSearchHits(searchHitList);
 	}
 
@@ -166,8 +174,8 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 	@Override
 	public long count() {
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
-		// noinspection ConstantConditions
+		Query query = Query.findAll();
+		((BaseQuery) query).setMaxResults(0);
 		return execute(operations -> operations.count(query, entityClass, getIndexCoordinates()));
 	}
 
@@ -287,10 +295,9 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	@Override
 	public void deleteAll() {
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		Query query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 
 		executeAndRefresh((OperationsCallback<Void>) operations -> {
-			operations.delete(query, entityClass, indexCoordinates);
+			operations.delete(Query.findAll(), entityClass, indexCoordinates);
 			return null;
 		});
 	}

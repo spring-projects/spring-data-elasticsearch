@@ -17,13 +17,12 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -34,14 +33,12 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonPoint;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * Test that a whole entity can be converted using custom conversions
@@ -49,31 +46,27 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { EntityCustomConversionIntegrationTests.Config.class })
-public class EntityCustomConversionIntegrationTests {
+public abstract class EntityCustomConversionIntegrationTests {
 
 	@Configuration
 	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.core.mapping" },
 			considerNestedRepositories = true)
-	static class Config extends ElasticsearchRestTemplateConfiguration {
-		@Override
-		public ElasticsearchCustomConversions elasticsearchCustomConversions() {
-			return new ElasticsearchCustomConversions(Arrays.asList(new EntityToMapConverter(), new MapToEntityConverter()));
-		}
-	}
+	static class Config {}
 
 	@Autowired private ElasticsearchOperations operations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	void setUp() {
+		indexNameProvider.increment();
 		IndexOperations indexOps = operations.indexOps(Entity.class);
-		indexOps.create();
-		indexOps.putMapping();
+		indexOps.createWithMapping();
 	}
 
-	@AfterEach
-	void tearDown() {
-		operations.indexOps(Entity.class).delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test // #1667
@@ -109,7 +102,7 @@ public class EntityCustomConversionIntegrationTests {
 		assertThat(foundEntity).isEqualTo(entity);
 	}
 
-	@Document(indexName = "entity-with-custom-conversions")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class Entity {
 		@Nullable private String value;
 		@Nullable private GeoJsonPoint location;

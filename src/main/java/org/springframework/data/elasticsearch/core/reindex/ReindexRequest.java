@@ -37,7 +37,7 @@ public class ReindexRequest {
 	// Request body
 	private final Source source;
 	private final Dest dest;
-	@Nullable private final Integer maxDocs;
+	@Nullable private final Long maxDocs;
 	@Nullable private final Conflicts conflicts;
 	@Nullable private final Script script;
 
@@ -46,14 +46,14 @@ public class ReindexRequest {
 	@Nullable private final Boolean requireAlias;
 	@Nullable private final Boolean refresh;
 	@Nullable private final String waitForActiveShards;
-	@Nullable private final Integer requestsPerSecond;
+	@Nullable private final Long requestsPerSecond;
 	@Nullable private final Duration scroll;
-	@Nullable private final Integer slices;
+	@Nullable private final Long slices;
 
-	private ReindexRequest(Source source, Dest dest, @Nullable Integer maxDocs, @Nullable Conflicts conflicts,
+	private ReindexRequest(Source source, Dest dest, @Nullable Long maxDocs, @Nullable Conflicts conflicts,
 			@Nullable Script script, @Nullable Duration timeout, @Nullable Boolean requireAlias, @Nullable Boolean refresh,
-			@Nullable String waitForActiveShards, @Nullable Integer requestsPerSecond, @Nullable Duration scroll,
-			@Nullable Integer slices) {
+			@Nullable String waitForActiveShards, @Nullable Long requestsPerSecond, @Nullable Duration scroll,
+			@Nullable Long slices) {
 
 		Assert.notNull(source, "source must not be null");
 		Assert.notNull(dest, "dest must not be null");
@@ -73,7 +73,7 @@ public class ReindexRequest {
 	}
 
 	@Nullable
-	public Integer getMaxDocs() {
+	public Long getMaxDocs() {
 		return maxDocs;
 	}
 
@@ -116,7 +116,7 @@ public class ReindexRequest {
 	}
 
 	@Nullable
-	public Integer getRequestsPerSecond() {
+	public Long getRequestsPerSecond() {
 		return requestsPerSecond;
 	}
 
@@ -126,7 +126,7 @@ public class ReindexRequest {
 	}
 
 	@Nullable
-	public Integer getSlices() {
+	public Long getSlices() {
 		return slices;
 	}
 
@@ -275,16 +275,16 @@ public class ReindexRequest {
 
 		private final Source source;
 		private final Dest dest;
-		@Nullable private Integer maxDocs;
+		@Nullable private Long maxDocs;
 		@Nullable private Conflicts conflicts;
 		@Nullable private Script script;
 		@Nullable private Duration timeout;
 		@Nullable private Boolean requireAlias;
 		@Nullable private Boolean refresh;
 		@Nullable private String waitForActiveShards;
-		@Nullable private Integer requestsPerSecond;
+		@Nullable private Long requestsPerSecond;
 		@Nullable private Duration scroll;
-		@Nullable private Integer slices;
+		@Nullable private Long slices;
 
 		public ReindexRequestBuilder(IndexCoordinates sourceIndex, IndexCoordinates destIndex) {
 
@@ -297,7 +297,7 @@ public class ReindexRequest {
 
 		// region setter
 
-		public ReindexRequestBuilder withMaxDocs(@Nullable Integer maxDocs) {
+		public ReindexRequestBuilder withMaxDocs(@Nullable Long maxDocs) {
 			this.maxDocs = maxDocs;
 			return this;
 		}
@@ -377,7 +377,7 @@ public class ReindexRequest {
 			return this;
 		}
 
-		public ReindexRequestBuilder withRequestsPerSecond(int requestsPerSecond) {
+		public ReindexRequestBuilder withRequestsPerSecond(long requestsPerSecond) {
 			this.requestsPerSecond = requestsPerSecond;
 			return this;
 		}
@@ -387,7 +387,7 @@ public class ReindexRequest {
 			return this;
 		}
 
-		public ReindexRequestBuilder withSlices(int slices) {
+		public ReindexRequestBuilder withSlices(long slices) {
 			this.slices = slices;
 			return this;
 		}

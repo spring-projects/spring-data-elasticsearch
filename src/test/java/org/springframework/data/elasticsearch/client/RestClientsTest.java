@@ -21,6 +21,8 @@ import static io.specto.hoverfly.junit.dsl.HoverflyDsl.*;
 import static io.specto.hoverfly.junit.verification.HoverflyVerifications.*;
 import static org.assertj.core.api.Assertions.*;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
 import io.specto.hoverfly.junit.core.Hoverfly;
 import io.specto.hoverfly.junit5.HoverflyExtension;
 import io.specto.hoverfly.junit5.api.HoverflyCapture;
@@ -40,7 +42,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
 import org.springframework.http.HttpHeaders;
 
@@ -60,7 +63,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 @ExtendWith(HoverflyExtension.class)
 public class RestClientsTest {
 
-	@ParameterizedTest // DATAES-700
+	@ParameterizedTest(name = "{0}") // DATAES-700
 	@MethodSource("clientUnderTestFactorySource")
 	@DisplayName("should use configured proxy")
 	void shouldUseConfiguredProxy(ClientUnderTestFactory clientUnderTestFactory, Hoverfly hoverfly) throws IOException {
@@ -87,10 +90,11 @@ public class RestClientsTest {
 		});
 	}
 
-	@ParameterizedTest // DATAES-801, DATAES-588
+	@ParameterizedTest(name = "{0}") // DATAES-801, DATAES-588
 	@MethodSource("clientUnderTestFactorySource")
 	@DisplayName("should configure client and set all required headers")
 	void shouldConfigureClientAndSetAllRequiredHeaders(ClientUnderTestFactory clientUnderTestFactory) {
+
 		wireMockServer(server -> {
 
 			HttpHeaders defaultHeaders = new HttpHeaders();
@@ -112,17 +116,29 @@ public class RestClientsTest {
 						return httpHeaders;
 					});
 
-			if (clientUnderTestFactory instanceof RestClientUnderTestFactory) {
+			if (clientUnderTestFactory instanceof ERHLCUnderTestFactory) {
 				configurationBuilder
 						.withClientConfigurer(RestClients.RestClientConfigurationCallback.from(httpClientBuilder -> {
 							clientConfigurerCount.incrementAndGet();
 							return httpClientBuilder;
 						}));
-			} else if (clientUnderTestFactory instanceof ReactiveElasticsearchClientUnderTestFactory) {
+			} else if (clientUnderTestFactory instanceof ReactiveERHLCUnderTestFactory) {
 				configurationBuilder.withClientConfigurer(ReactiveRestClients.WebClientConfigurationCallback.from(webClient -> {
 					clientConfigurerCount.incrementAndGet();
 					return webClient;
 				}));
+			} else if (clientUnderTestFactory instanceof ELCUnderTestFactory) {
+				configurationBuilder.withClientConfigurer(
+						ElasticsearchClients.ElasticsearchClientConfigurationCallback.from(httpClientBuilder -> {
+							clientConfigurerCount.incrementAndGet();
+							return httpClientBuilder;
+						}));
+			} else if (clientUnderTestFactory instanceof ReactiveELCUnderTestFactory) {
+				configurationBuilder
+						.withClientConfigurer(ElasticsearchClients.ElasticsearchClientConfigurationCallback.from(webClient -> {
+							clientConfigurerCount.incrementAndGet();
+							return webClient;
+						}));
 			}
 
 			ClientConfiguration clientConfiguration = configurationBuilder.build();
@@ -130,7 +146,8 @@ public class RestClientsTest {
 			ClientUnderTest clientUnderTest = clientUnderTestFactory.create(clientConfiguration);
 
 			// do several calls to check that the headerSupplier provided values are set
-			for (int i = 1; i <= 3; i++) {
+			int startValue = clientUnderTest.usesInitialRequest() ? 2 : 1;
+			for (int i = startValue; i <= startValue + 2; i++) {
 				clientUnderTest.ping();
 
 				verify(headRequestedFor(urlEqualTo("/")) //
@@ -140,7 +157,7 @@ public class RestClientsTest {
 						.withHeader("def2", new EqualToPattern("def2-1")) //
 						.withHeader("supplied", new EqualToPattern("val0")) //
 						// on the first call Elasticsearch does the version check and thus already increments the counter
-						.withHeader("supplied", new EqualToPattern("val" + (i + 1))) //
+						.withHeader("supplied", new EqualToPattern("val" + (i))) //
 				);
 			}
 
@@ -155,7 +172,8 @@ public class RestClientsTest {
 
 		wireMockServer(server -> {
 
-			stubFor(put(urlMatching("^/index/_doc/42(\\?.*)$?")) //
+			String urlPattern = "^/index/_doc/42(\\?.*)?$";
+			stubFor(put(urlMatching(urlPattern)) //
 					.willReturn(jsonResponse("{\n" + //
 			"  \"_id\": \"42\",\n" + //
 			"  \"_index\": \"test\",\n" + //
@@ -196,9 +214,9 @@ public class RestClientsTest {
 			}
 			;
 
-			clientUnderTest.save(new Foo("42"));
+			clientUnderTest.index(new Foo("42"));
 
-			verify(putRequestedFor(urlMatching("^/index/_doc/42(\\?.*)$?")) //
+			verify(putRequestedFor(urlMatching(urlPattern)) //
 					.withHeader("Accept", new EqualToPattern("application/vnd.elasticsearch+json;compatible-with=7")) //
 					.withHeader("Content-Type", new EqualToPattern("application/vnd.elasticsearch+json;compatible-with=7")) //
 			);
@@ -286,7 +304,15 @@ public class RestClientsTest {
 		 */
 		boolean ping() throws Exception;
 
-		<T> void save(T entity) throws IOException;
+		/**
+		 * @return true if the client send an initial request for discovery, version check or similar.
+		 */
+		boolean usesInitialRequest();
+
+		/**
+		 * save an entity using an index request
+		 */
+		<T> void index(T entity) throws IOException;
 	}
 
 	/**
@@ -304,9 +330,9 @@ public class RestClientsTest {
 	}
 
 	/**
-	 * {@link ClientUnderTestFactory} implementation for the Standard {@link RestHighLevelClient}.
+	 * {@link ClientUnderTestFactory} implementation for the old {@link RestHighLevelClient}.
 	 */
-	static class RestClientUnderTestFactory extends ClientUnderTestFactory {
+	static class ERHLCUnderTestFactory extends ClientUnderTestFactory {
 
 		@Override
 		protected String getDisplayName() {
@@ -323,7 +349,12 @@ public class RestClientsTest {
 				}
 
 				@Override
-				public <T> void save(T entity) throws IOException {
+				public boolean usesInitialRequest() {
+					return true;
+				}
+
+				@Override
+				public <T> void index(T entity) throws IOException {
 					IndexRequest indexRequest = new IndexRequest("index");
 					indexRequest.id("42");
 					indexRequest.source(entity, XContentType.JSON);
@@ -335,30 +366,103 @@ public class RestClientsTest {
 	}
 
 	/**
-	 * {@link ClientUnderTestFactory} implementation for the {@link ReactiveElasticsearchClient}.
+	 * {@link ClientUnderTestFactory} implementation for the {@link co.elastic.clients.elasticsearch.ElasticsearchClient}.
 	 */
-	static class ReactiveElasticsearchClientUnderTestFactory extends ClientUnderTestFactory {
+	static class ELCUnderTestFactory extends ClientUnderTestFactory {
 
 		@Override
 		protected String getDisplayName() {
-			return "ReactiveElasticsearchClient";
+			return "ElasticsearchClient";
 		}
 
 		@Override
 		ClientUnderTest create(ClientConfiguration clientConfiguration) {
-			ReactiveElasticsearchClient client = ReactiveRestClients.create(clientConfiguration);
+
+			ElasticsearchClient client = ElasticsearchClients.createImperative(clientConfiguration);
 			return new ClientUnderTest() {
 				@Override
 				public boolean ping() throws Exception {
-					return client.ping().block();
+					return client.ping().value();
 				}
 
 				@Override
-				public <T> void save(T entity) throws IOException {
+				public boolean usesInitialRequest() {
+					return false;
+				}
+
+				@Override
+				public <T> void index(T entity) throws IOException {
+					client.index(ir -> ir.index("index").id("42").document(entity));
+				}
+			};
+		}
+	}
+
+	/**
+	 * {@link ClientUnderTestFactory} implementation for the
+	 * {@link org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient}.
+	 */
+	static class ReactiveERHLCUnderTestFactory extends ClientUnderTestFactory {
+
+		@Override
+		protected String getDisplayName() {
+			return "ReactiveElasticsearchClient (RHLC based)";
+		}
+
+		@Override
+		ClientUnderTest create(ClientConfiguration clientConfiguration) {
+			org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient client = ReactiveRestClients
+					.create(clientConfiguration);
+			return new ClientUnderTest() {
+				@Override
+				public boolean ping() throws Exception {
+					return Boolean.TRUE.equals(client.ping().block());
+				}
+
+				@Override
+				public boolean usesInitialRequest() {
+					return true;
+				}
+
+				@Override
+				public <T> void index(T entity) throws IOException {
 					IndexRequest indexRequest = new IndexRequest("index");
 					indexRequest.id("42");
-					indexRequest.source("{}", XContentType.JSON);
+					indexRequest.source(entity, XContentType.JSON);
 					client.index(indexRequest).block();
+				}
+			};
+		}
+	}
+
+	/**
+	 * {@link ClientUnderTestFactory} implementation for the {@link ReactiveElasticsearchClient}.
+	 */
+	static class ReactiveELCUnderTestFactory extends ClientUnderTestFactory {
+
+		@Override
+		protected String getDisplayName() {
+			return "ReactiveElasticsearchClient (ELC based)";
+		}
+
+		@Override
+		ClientUnderTest create(ClientConfiguration clientConfiguration) {
+
+			ReactiveElasticsearchClient client = ElasticsearchClients.createReactive(clientConfiguration);
+			return new ClientUnderTest() {
+				@Override
+				public boolean ping() throws Exception {
+					return Boolean.TRUE.equals(client.ping().map(BooleanResponse::value).block());
+				}
+
+				@Override
+				public boolean usesInitialRequest() {
+					return false;
+				}
+
+				@Override
+				public <T> void index(T entity) throws IOException {
+					client.index(ir -> ir.index("index").id("42").document(entity)).block();
 				}
 			};
 		}
@@ -371,8 +475,9 @@ public class RestClientsTest {
 	 */
 	static Stream<ClientUnderTestFactory> clientUnderTestFactorySource() {
 		return Stream.of( //
-				new RestClientUnderTestFactory(), //
-				new ReactiveElasticsearchClientUnderTestFactory() //
-		);
+				new ERHLCUnderTestFactory(), //
+				new ReactiveERHLCUnderTestFactory(), //
+				new ELCUnderTestFactory(), //
+				new ReactiveELCUnderTestFactory());
 	}
 }

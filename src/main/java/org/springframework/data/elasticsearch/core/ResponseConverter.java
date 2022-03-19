@@ -293,7 +293,7 @@ public class ResponseConverter {
 
 		MultiGetResponse.Failure responseFailure = itemResponse.getFailure();
 		return responseFailure != null ? MultiGetItem.Failure.of(responseFailure.getIndex(), responseFailure.getType(),
-				responseFailure.getId(), responseFailure.getFailure()) : null;
+				responseFailure.getId(), responseFailure.getFailure(), null) : null;
 	}
 	// endregion
 
@@ -387,8 +387,7 @@ public class ResponseConverter {
 
 	// endregion
 
-	// region postReindexResponse
-
+	// region reindex
 	/**
 	 * @since 4.4
 	 */
@@ -402,6 +401,7 @@ public class ResponseConverter {
 				.withTook(bulkByScrollResponse.getTook().getMillis()) //
 				.withTimedOut(bulkByScrollResponse.isTimedOut()) //
 				.withTotal(bulkByScrollResponse.getTotal()) //
+				.withCreated(bulkByScrollResponse.getCreated()) //
 				.withUpdated(bulkByScrollResponse.getUpdated()) //
 				.withDeleted(bulkByScrollResponse.getDeleted()) //
 				.withBatches(bulkByScrollResponse.getBatches()) //

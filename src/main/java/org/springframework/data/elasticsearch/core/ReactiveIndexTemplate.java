@@ -180,13 +180,14 @@ class ReactiveIndexTemplate implements ReactiveIndexOperations {
 	@Override
 	public Mono<Document> createMapping(Class<?> clazz) {
 
+		// noinspection DuplicatedCode
 		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
 
 		if (mappingAnnotation != null) {
 			String mappingPath = mappingAnnotation.mappingPath();
 
 			if (hasText(mappingPath)) {
-				return loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
+				return ReactiveResourceUtil.loadDocument(mappingAnnotation.mappingPath(), "@Mapping");
 			}
 		}
 
@@ -230,7 +231,7 @@ class ReactiveIndexTemplate implements ReactiveIndexOperations {
 		ElasticsearchPersistentEntity<?> persistentEntity = getRequiredPersistentEntity(clazz);
 		String settingPath = persistentEntity.settingPath();
 		return hasText(settingPath) //
-				? loadDocument(settingPath, "@Setting") //
+				? ReactiveResourceUtil.loadDocument(settingPath, "@Setting") //
 						.map(Settings::new) //
 				: Mono.just(persistentEntity.getDefaultSettings());
 	}
@@ -349,23 +350,6 @@ class ReactiveIndexTemplate implements ReactiveIndexOperations {
 
 	private ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
 		return converter.getMappingContext().getRequiredPersistentEntity(clazz);
-	}
-
-	private Mono<Document> loadDocument(String path, String annotation) {
-
-		if (hasText(path)) {
-			return ReactiveResourceUtil.readFileFromClasspath(path).flatMap(s -> {
-				if (hasText(s)) {
-					return Mono.just(Document.parse(s));
-				} else {
-					return Mono.just(Document.create());
-				}
-			});
-		} else {
-			LOGGER.info(String.format("path in %s has to be defined. Using default empty Document instead.", annotation));
-		}
-
-		return Mono.just(Document.create());
 	}
 
 	private Class<?> checkForBoundClass() {

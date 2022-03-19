@@ -23,7 +23,15 @@ import static org.springframework.util.CollectionUtils.*;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.elasticsearch.action.DocWriteRequest;
@@ -41,7 +49,6 @@ import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.WriteRequest;
@@ -270,7 +277,7 @@ class RequestFactory {
 	}
 
 	public GetIndexRequest getIndexRequest(IndexCoordinates index) {
-		return new GetIndexRequest(index.getIndexNames());
+		return new GetIndexRequest(index.getIndexNames()).humanReadable(false);
 	}
 
 	public IndicesExistsRequest indicesExistsRequest(IndexCoordinates index) {
@@ -405,7 +412,7 @@ class RequestFactory {
 		}
 
 		if (reindexRequest.getMaxDocs() != null) {
-			request.setMaxDocs(reindexRequest.getMaxDocs());
+			request.setMaxDocs(Math.toIntExact(reindexRequest.getMaxDocs()));
 		}
 		// region source build
 		final Source source = reindexRequest.getSource();
@@ -464,12 +471,12 @@ class RequestFactory {
 
 		final org.springframework.data.elasticsearch.annotations.Document.VersionType versionType = dest.getVersionType();
 		if (versionType != null) {
-			request.setDestVersionType(VersionType.fromString(versionType.name().toLowerCase(Locale.ROOT)));
+			request.setDestVersionType(VersionType.fromString(versionType.getEsName()));
 		}
 
 		final IndexQuery.OpType opType = dest.getOpType();
 		if (opType != null) {
-			request.setDestOpType(opType.name().toLowerCase(Locale.ROOT));
+			request.setDestOpType(opType.getEsName());
 		}
 		// endregion
 
@@ -508,7 +515,7 @@ class RequestFactory {
 		}
 
 		if (reindexRequest.getSlices() != null) {
-			request.setSlices(reindexRequest.getSlices());
+			request.setSlices(Math.toIntExact(reindexRequest.getSlices()));
 		}
 		// endregion
 		return request;
@@ -919,22 +926,6 @@ class RequestFactory {
 			List<SortBuilder<?>> sorts = nativeSearchQuery.getElasticsearchSorts();
 			if (sorts != null) {
 				sorts.forEach(sourceBuilder::sort);
-			}
-		}
-	}
-
-	@SuppressWarnings("rawtypes")
-	private void prepareSort(Query query, SearchRequestBuilder searchRequestBuilder,
-			@Nullable ElasticsearchPersistentEntity<?> entity) {
-		if (query.getSort() != null) {
-			query.getSort().forEach(order -> searchRequestBuilder.addSort(getSortBuilder(order, entity)));
-		}
-
-		if (query instanceof NativeSearchQuery) {
-			NativeSearchQuery nativeSearchQuery = (NativeSearchQuery) query;
-			List<SortBuilder<?>> sorts = nativeSearchQuery.getElasticsearchSorts();
-			if (sorts != null) {
-				sorts.forEach(searchRequestBuilder::addSort);
 			}
 		}
 	}

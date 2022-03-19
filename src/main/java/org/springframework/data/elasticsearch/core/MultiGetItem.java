@@ -15,12 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
 import org.springframework.lang.Nullable;
 
 /**
  * Response object for items returned from multiget requests, encapsulating the returned data and potential error
  * information.
- * 
+ *
  * @param <T> the entity type
  * @author Peter-Josef Meisch
  * @since 4.2
@@ -61,16 +62,20 @@ public class MultiGetItem<T> {
 		@Nullable private final String type;
 		@Nullable private final String id;
 		@Nullable private final Exception exception;
+		@Nullable private final ElasticsearchErrorCause elasticsearchErrorCause;
 
-		private Failure(@Nullable String index, @Nullable String type, @Nullable String id, @Nullable Exception exception) {
+		private Failure(@Nullable String index, @Nullable String type, @Nullable String id, @Nullable Exception exception,
+				@Nullable ElasticsearchErrorCause elasticsearchErrorCause) {
 			this.index = index;
 			this.type = type;
 			this.id = id;
 			this.exception = exception;
+			this.elasticsearchErrorCause = elasticsearchErrorCause;
 		}
 
-		public static Failure of(String index, String type, String id, Exception exception) {
-			return new Failure(index, type, id, exception);
+		public static Failure of(String index, @Nullable String type, String id, @Nullable Exception exception,
+				@Nullable ElasticsearchErrorCause elasticsearchErrorCause) {
+			return new Failure(index, type, id, exception, elasticsearchErrorCause);
 		}
 
 		@Nullable
@@ -91,6 +96,11 @@ public class MultiGetItem<T> {
 		@Nullable
 		public Exception getException() {
 			return exception;
+		}
+
+		@Nullable
+		public ElasticsearchErrorCause getElasticsearchErrorCause() {
+			return elasticsearchErrorCause;
 		}
 	}
 }

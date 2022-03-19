@@ -44,7 +44,6 @@ import org.springframework.util.Assert;
  * @author Rasmus Faber-Espensen
  * @author James Bodkin
  * @author Peter-Josef Meisch
- * @since 4.4
  */
 class CriteriaQueryProcessor {
 

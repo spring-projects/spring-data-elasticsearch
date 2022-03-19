@@ -44,7 +44,9 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	 * @param callback must not be {@literal null}.
 	 * @param <T> the type the Publisher emits
 	 * @return the {@link Publisher} emitting results.
+	 * @deprecated since 4.4, use the execute methods from the implementing classes (they are client specific)
 	 */
+	@Deprecated
 	<T> Publisher<T> execute(ClientCallback<Publisher<T>> callback);
 
 	/**
@@ -126,7 +128,7 @@ public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperati
 	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
 	 * {@link ReactiveElasticsearchClient}.
 	 *
-	 * @param <T>
+	 * @param <T> result type of the callback
 	 * @author Christoph Strobl
 	 * @since 3.2
 	 */

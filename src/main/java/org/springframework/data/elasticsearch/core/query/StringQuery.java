@@ -23,10 +23,11 @@ import org.springframework.data.domain.Sort;
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
+ * @author Peter-Josef Meisch
  */
 public class StringQuery extends BaseQuery {
 
-	private String source;
+	private final String source;
 
 	public StringQuery(String source) {
 		this.source = source;
@@ -41,6 +42,21 @@ public class StringQuery extends BaseQuery {
 		this.pageable = pageable;
 		this.sort = sort;
 		this.source = source;
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	public StringQuery(StringQueryBuilder builder) {
+		super(builder);
+		this.source = builder.getSource();
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	public static StringQueryBuilder builder(String source) {
+		return new StringQueryBuilder(source);
 	}
 
 	public String getSource() {

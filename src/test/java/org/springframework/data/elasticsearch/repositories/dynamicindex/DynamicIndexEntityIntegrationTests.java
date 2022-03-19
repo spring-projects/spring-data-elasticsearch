@@ -30,7 +30,9 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 
 /**
- * DynamicIndexEntityIntegrationTests
+ * DynamicIndexEntityIntegration. Not: this does not use the normal
+ * {@link org.springframework.data.elasticsearch.utils.IndexNameProvider} b ut testes this functionality with a custom
+ * one.
  *
  * @author Sylvain Laurent
  * @author Peter-Josef Meisch

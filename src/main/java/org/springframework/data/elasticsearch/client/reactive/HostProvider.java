@@ -100,10 +100,33 @@ public interface HostProvider<T extends HostProvider<T>> {
 	}
 
 	/**
+	 * Get the {@link WebClient} connecting to an active host utilizing cached {@link ElasticsearchHost}.
+	 *
+	 * @return the {@link Mono} emitting the client for an active host or {@link Mono#error(Throwable) an error} if none
+	 *         found.
+	 * @since 4.4
+	 */
+	default Mono<WebClient> getWebClient() {
+		return getWebClient(Verification.LAZY);
+	}
+
+	/**
+	 * Get the {@link WebClient} connecting to an active host.
+	 *
+	 * @param verification must not be {@literal null}.
+	 * @return the {@link Mono} emitting the client for an active host or {@link Mono#error(Throwable) an error} if none
+	 *         found.
+	 * @since 4.4
+	 */
+	default Mono<WebClient> getWebClient(Verification verification) {
+		return lookupActiveHost(verification).map(this::createWebClient);
+	}
+
+	/**
 	 * Creates a {@link WebClient} for {@link InetSocketAddress endpoint}.
 	 *
 	 * @param endpoint must not be {@literal null}.
-	 * @return a {@link WebClient} using the the given endpoint as {@literal base url}.
+	 * @return a {@link WebClient} using the the given endpoint as {@literal transport url}.
 	 */
 	WebClient createWebClient(InetSocketAddress endpoint);
 
