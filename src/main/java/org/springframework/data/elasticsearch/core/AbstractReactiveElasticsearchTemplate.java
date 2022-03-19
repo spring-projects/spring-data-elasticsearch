@@ -149,9 +149,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	/**
 	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking {@link ReactiveEntityCallbacks callbacks}
-	 * like the {@link ReactiveBeforeConvertCallback}.
-	 * <p />
-	 * Overrides potentially existing {@link ReactiveEntityCallbacks}.
+	 * like the {@link ReactiveBeforeConvertCallback}. Overrides potentially existing {@link ReactiveEntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.
 	 * @throws IllegalArgumentException if the given instance is {@literal null}.
