@@ -228,8 +228,7 @@ public interface IndexOperations {
 	boolean putTemplate(PutTemplateRequest putTemplateRequest);
 
 	/**
-	 * gets an index template using the legacy Elasticsearch
-	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 * gets an index template using the legacy Elasticsearch interface.
 	 *
 	 * @param templateName the template name
 	 * @return TemplateData, {@literal null} if no template with the given name exists.
@@ -241,8 +240,7 @@ public interface IndexOperations {
 	}
 
 	/**
-	 * gets an index template using the legacy Elasticsearch
-	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 * gets an index template using the legacy Elasticsearch interface.
 	 *
 	 * @param getTemplateRequest the request parameters
 	 * @return TemplateData, {@literal null} if no template with the given name exists.
@@ -252,8 +250,7 @@ public interface IndexOperations {
 	TemplateData getTemplate(GetTemplateRequest getTemplateRequest);
 
 	/**
-	 * check if an index template exists using the legacy Elasticsearch
-	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 * check if an index template exists using the legacy Elasticsearch interface.
 	 *
 	 * @param templateName the template name
 	 * @return {@literal true} if the index exists
@@ -264,8 +261,7 @@ public interface IndexOperations {
 	}
 
 	/**
-	 * check if an index template exists using the legacy Elasticsearch
-	 * interface/Users/peter/Entwicklung/Projekte/spring-data-elasticsearch/src/main/java/org/springframework/data/elasticsearch/core/IndexOperations.java.
+	 * check if an index template exists using the legacy Elasticsearch interface.
 	 *
 	 * @param existsTemplateRequest the request parameters
 	 * @return {@literal true} if the index exists

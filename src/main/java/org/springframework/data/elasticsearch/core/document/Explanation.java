@@ -23,16 +23,16 @@ import org.springframework.util.Assert;
 
 /**
  * class that holds explanations returned from an Elasticsearch search.
- * 
+ *
  * @author Peter-Josef Meisch
  */
 public class Explanation {
-	private final boolean match;
+	@Nullable private final Boolean match;
 	private final Double value;
 	@Nullable private final String description;
 	private final List<Explanation> details;
 
-	public Explanation(boolean match, Double value, @Nullable String description, List<Explanation> details) {
+	public Explanation(@Nullable Boolean match, Double value, @Nullable String description, List<Explanation> details) {
 
 		Assert.notNull(value, "value must not be null");
 		Assert.notNull(details, "details must not be null");
@@ -44,7 +44,7 @@ public class Explanation {
 	}
 
 	public boolean isMatch() {
-		return match;
+		return match != null && match;
 	}
 
 	public Double getValue() {

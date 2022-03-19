@@ -23,8 +23,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -34,10 +34,10 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -51,18 +51,18 @@ public abstract class InnerObjectIntegrationTests {
 	@Autowired private SampleElasticSearchBookRepository bookRepository;
 
 	@Autowired ElasticsearchOperations operations;
-
-	private IndexOperations indexOperations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
-		indexOperations = operations.indexOps(Book.class);
-		IndexInitializer.init(indexOperations);
+		indexNameProvider.increment();
+		operations.indexOps(Book.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@Order(Integer.MAX_VALUE)
+	public void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test
@@ -85,7 +85,7 @@ public abstract class InnerObjectIntegrationTests {
 		assertThat(bookRepository.findById(id)).isNotNull();
 	}
 
-	@Document(indexName = "test-index-book")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class Book {
 		@Nullable
 		@Id private String id;

@@ -124,6 +124,22 @@ public @interface Document {
 	 * @since 4.3
 	 */
 	enum VersionType {
-		INTERNAL, EXTERNAL, EXTERNAL_GTE
+		INTERNAL("internal"), //
+		EXTERNAL("external"), //
+		EXTERNAL_GTE("external_gte"), //
+		/**
+		 * @since 4.4
+		 */
+		FORCE("force");
+
+		private final String esName;
+
+		VersionType(String esName) {
+			this.esName = esName;
+		}
+
+		public String getEsName() {
+			return esName;
+		}
 	}
 }

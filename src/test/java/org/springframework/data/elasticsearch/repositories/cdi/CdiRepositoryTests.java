@@ -37,6 +37,8 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.IntegrationTest;
 import org.springframework.lang.Nullable;
 
@@ -49,9 +51,11 @@ import org.springframework.lang.Nullable;
 @IntegrationTest
 public class CdiRepositoryTests {
 
-	@SuppressWarnings("NotNullFieldNotInitialized") private static SeContainer container;
+	public static final String PERSON_INDEX = "test-index-person-cdi-repository";
+	public static final String PRODUCT_INDEX = "test-index-product-cdi-repository";
 
-	// @Nullable private static CdiTestContainer cdiContainer;
+	@Nullable private static SeContainer container;
+
 	private CdiProductRepository repository;
 	private SamplePersonRepository personRepository;
 	private QualifiedProductRepository qualifiedProductRepository;
@@ -67,7 +71,16 @@ public class CdiRepositoryTests {
 
 	@AfterAll
 	public static void shutdown() throws Exception {
-		container.close();
+
+		if (container != null) {
+			ElasticsearchOperations operations = container.select(ElasticsearchOperations.class).get();
+
+			if (operations != null) {
+				operations.indexOps(IndexCoordinates.of(PERSON_INDEX)).delete();
+				operations.indexOps(IndexCoordinates.of(PRODUCT_INDEX)).delete();
+			}
+			container.close();
+		}
 	}
 
 	@BeforeEach
@@ -150,7 +163,7 @@ public class CdiRepositoryTests {
 		assertThat(personRepository.returnOne()).isEqualTo(1);
 	}
 
-	@Document(indexName = "test-index-product-cdi-repository")
+	@Document(indexName = PRODUCT_INDEX)
 	static class Product {
 		@Nullable
 		@Id private String id;
@@ -275,7 +288,7 @@ public class CdiRepositoryTests {
 		}
 	}
 
-	@Document(indexName = "test-index-person-cdi-repository")
+	@Document(indexName = PERSON_INDEX)
 	static class Person {
 
 		@Id private String id;
@@ -288,7 +301,6 @@ public class CdiRepositoryTests {
 
 	}
 
-	@Document(indexName = "test-index-book-cdi-repository")
 	static class Book {
 		@Nullable
 		@Id private String id;

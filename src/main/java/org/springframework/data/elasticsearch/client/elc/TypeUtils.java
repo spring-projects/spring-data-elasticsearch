@@ -1,0 +1,298 @@
+/*
+ * Copyright 2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.data.elasticsearch.client.elc;
+
+import co.elastic.clients.elasticsearch._types.Conflicts;
+import co.elastic.clients.elasticsearch._types.DistanceUnit;
+import co.elastic.clients.elasticsearch._types.GeoDistanceType;
+import co.elastic.clients.elasticsearch._types.OpType;
+import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch._types.SortMode;
+import co.elastic.clients.elasticsearch._types.VersionType;
+import co.elastic.clients.elasticsearch._types.mapping.FieldType;
+import co.elastic.clients.elasticsearch.core.search.BoundaryScanner;
+import co.elastic.clients.elasticsearch.core.search.BuiltinHighlighterType;
+import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
+import co.elastic.clients.elasticsearch.core.search.HighlighterFragmenter;
+import co.elastic.clients.elasticsearch.core.search.HighlighterOrder;
+import co.elastic.clients.elasticsearch.core.search.HighlighterTagsSchema;
+import co.elastic.clients.elasticsearch.core.search.HighlighterType;
+
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
+import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.Order;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.lang.Nullable;
+
+/**
+ * Utility to handle new Elasticsearch client type values.
+ *
+ * @author Peter-Josef Meisch
+ * @since 4.4
+ */
+final class TypeUtils {
+
+	@Nullable
+	static BoundaryScanner boundaryScanner(@Nullable String value) {
+
+		if (value != null) {
+			switch (value.toLowerCase()) {
+				case "chars":
+					return BoundaryScanner.Chars;
+				case "sentence":
+					return BoundaryScanner.Sentence;
+				case "word":
+					return BoundaryScanner.Word;
+				default:
+					return null;
+			}
+		}
+		return null;
+	}
+
+	static Conflicts conflicts(ReindexRequest.Conflicts conflicts) {
+		switch (conflicts) {
+			case ABORT:
+				return Conflicts.Abort;
+			case PROCEED:
+				return Conflicts.Proceed;
+		}
+
+		throw new IllegalArgumentException("Cannot map conflicts value " + conflicts.name());
+	}
+
+	@Nullable
+	static DistanceUnit distanceUnit(String unit) {
+
+		switch (unit.toLowerCase()) {
+			case "in":
+			case "inch":
+				return DistanceUnit.Inches;
+			case "yd":
+			case "yards":
+				return DistanceUnit.Yards;
+			case "ft":
+			case "feet":
+				return DistanceUnit.Feet;
+			case "km":
+			case "kilometers":
+				return DistanceUnit.Kilometers;
+			case "nm":
+			case "nmi":
+				return DistanceUnit.NauticMiles;
+			case "mm":
+			case "millimeters":
+				return DistanceUnit.Millimeters;
+			case "cm":
+			case "centimeters":
+				return DistanceUnit.Centimeters;
+			case "mi":
+			case "miles":
+				return DistanceUnit.Miles;
+			case "m":
+			case "meters":
+				return DistanceUnit.Meters;
+		}
+		return null;
+	}
+
+	@Nullable
+	static FieldType fieldType(String type) {
+
+		for (FieldType fieldType : FieldType.values()) {
+
+			if (fieldType.jsonValue().equals(type)) {
+				return fieldType;
+			}
+		}
+		return null;
+	}
+
+	@Nullable
+	static GeoDistanceType geoDistanceType(GeoDistanceOrder.DistanceType distanceType) {
+
+		switch (distanceType) {
+			case arc:
+				return GeoDistanceType.Arc;
+			case plane:
+				return GeoDistanceType.Plane;
+		}
+
+		return null;
+	}
+
+	@Nullable
+	static HighlighterFragmenter highlighterFragmenter(@Nullable String value) {
+
+		if (value != null) {
+			switch (value.toLowerCase()) {
+				case "simple":
+					return HighlighterFragmenter.Simple;
+				case "span":
+					return HighlighterFragmenter.Span;
+				default:
+					return null;
+			}
+		}
+
+		return null;
+	}
+
+	@Nullable
+	static HighlighterOrder highlighterOrder(@Nullable String value) {
+
+		if (value != null) {
+			if ("score".equals(value.toLowerCase())) {
+				return HighlighterOrder.Score;
+			}
+		}
+
+		return null;
+	}
+
+	@Nullable
+	static HighlighterType highlighterType(@Nullable String value) {
+
+		if (value != null) {
+			switch (value.toLowerCase()) {
+				case "unified":
+					return HighlighterType.of(b -> b.builtin(BuiltinHighlighterType.Unified));
+				case "plain":
+					return HighlighterType.of(b -> b.builtin(BuiltinHighlighterType.Plain));
+				case "fvh":
+					return HighlighterType.of(b -> b.builtin(BuiltinHighlighterType.FastVector));
+				default:
+					return null;
+			}
+		}
+
+		return null;
+	}
+
+	@Nullable
+	static HighlighterEncoder highlighterEncoder(@Nullable String value) {
+
+		if (value != null) {
+			switch (value.toLowerCase()) {
+				case "default":
+					return HighlighterEncoder.Default;
+				case "html":
+					return HighlighterEncoder.Html;
+				default:
+					return null;
+			}
+		}
+
+		return null;
+	}
+
+	@Nullable
+	static HighlighterTagsSchema highlighterTagsSchema(@Nullable String value) {
+
+		if (value != null) {
+			if ("styled".equals(value.toLowerCase())) {
+				return HighlighterTagsSchema.Styled;
+			}
+		}
+
+		return null;
+	}
+
+	@Nullable
+	static OpType opType(@Nullable IndexQuery.OpType opType) {
+
+		if (opType != null) {
+			switch (opType) {
+				case INDEX:
+					return OpType.Index;
+				case CREATE:
+					return OpType.Create;
+			}
+		}
+		return null;
+	}
+
+	static Refresh refresh(@Nullable RefreshPolicy refreshPolicy) {
+
+		if (refreshPolicy == null) {
+			return Refresh.False;
+		}
+
+		switch (refreshPolicy) {
+			case IMMEDIATE:
+				return Refresh.True;
+			case WAIT_UNTIL:
+				return Refresh.WaitFor;
+			case NONE:
+			default:
+				return Refresh.False;
+		}
+	}
+
+	@Nullable
+	static SortMode sortMode(Order.Mode mode) {
+
+		switch (mode) {
+			case min:
+				return SortMode.Min;
+			case max:
+				return SortMode.Max;
+			case median:
+				return SortMode.Median;
+			case avg:
+				return SortMode.Avg;
+		}
+
+		return null;
+	}
+
+	@Nullable
+	static VersionType versionType(
+			@Nullable org.springframework.data.elasticsearch.annotations.Document.VersionType versionType) {
+
+		if (versionType != null) {
+			switch (versionType) {
+				case INTERNAL:
+					return VersionType.Internal;
+				case EXTERNAL:
+					return VersionType.External;
+				case EXTERNAL_GTE:
+					return VersionType.ExternalGte;
+				case FORCE:
+					return VersionType.Force;
+			}
+		}
+
+		return null;
+	}
+
+	static Integer waitForActiveShardsCount(@Nullable String value) {
+		// values taken from the RHLC implementation
+		if (value == null) {
+			return -2;
+		} else if ("all".equals(value.toUpperCase())) {
+			return -1;
+		} else {
+			try {
+				return Integer.parseInt(value);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException("Illegale value for waitForActiveShards" + value);
+			}
+		}
+	}
+
+}

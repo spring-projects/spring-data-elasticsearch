@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,14 +37,15 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
+import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -64,16 +64,19 @@ public abstract class UUIDElasticsearchRepositoryIntegrationTests {
 
 	@Autowired ElasticsearchOperations operations;
 	private IndexOperations indexOperations;
+	@Autowired IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
+		indexNameProvider.increment();
 		indexOperations = operations.indexOps(SampleEntityUUIDKeyed.class);
-		IndexInitializer.init(indexOperations);
+		indexOperations.createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@org.junit.jupiter.api.Order(Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test
@@ -279,7 +282,6 @@ public abstract class UUIDElasticsearchRepositoryIntegrationTests {
 		repository.deleteAll();
 
 		// then
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll();
 		assertThat(sampleEntities).isEmpty();
 	}
@@ -534,7 +536,7 @@ public abstract class UUIDElasticsearchRepositoryIntegrationTests {
 		return sampleEntities;
 	}
 
-	@Document(indexName = "test-index-uuid-keyed")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntityUUIDKeyed {
 		@Nullable
 		@Id private UUID id;

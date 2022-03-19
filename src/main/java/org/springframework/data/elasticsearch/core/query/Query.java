@@ -339,7 +339,7 @@ public interface Query {
 	void setScrollTime(@Nullable Duration scrollTime);
 
 	/**
-	 * @return {@literal true} if scrollTimeMillis is set.
+	 * @return {@literal true} if a scroll time is set.
 	 * @since 4.0
 	 */
 	default boolean hasScrollTime() {

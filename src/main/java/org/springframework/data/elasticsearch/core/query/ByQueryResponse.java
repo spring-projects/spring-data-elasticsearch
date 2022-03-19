@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
 import org.springframework.lang.Nullable;
 
 /**
@@ -173,9 +174,11 @@ public class ByQueryResponse {
 		@Nullable private final Long seqNo;
 		@Nullable private final Long term;
 		@Nullable private final Boolean aborted;
+		@Nullable private final ElasticsearchErrorCause elasticsearchErrorCause;
 
 		private Failure(@Nullable String index, @Nullable String type, @Nullable String id, @Nullable Exception cause,
-				@Nullable Integer status, @Nullable Long seqNo, @Nullable Long term, @Nullable Boolean aborted) {
+				@Nullable Integer status, @Nullable Long seqNo, @Nullable Long term, @Nullable Boolean aborted,
+				@Nullable ElasticsearchErrorCause elasticsearchErrorCause) {
 			this.index = index;
 			this.type = type;
 			this.id = id;
@@ -184,6 +187,7 @@ public class ByQueryResponse {
 			this.seqNo = seqNo;
 			this.term = term;
 			this.aborted = aborted;
+			this.elasticsearchErrorCause = elasticsearchErrorCause;
 		}
 
 		@Nullable
@@ -247,6 +251,7 @@ public class ByQueryResponse {
 			@Nullable private Long seqNo;
 			@Nullable private Long term;
 			@Nullable private Boolean aborted;
+			@Nullable private ElasticsearchErrorCause elasticsearchErrorCause;
 
 			private FailureBuilder() {}
 
@@ -290,8 +295,13 @@ public class ByQueryResponse {
 				return this;
 			}
 
+			public FailureBuilder withErrorCause(ElasticsearchErrorCause elasticsearchErrorCause) {
+				this.elasticsearchErrorCause = elasticsearchErrorCause;
+				return this;
+			}
+
 			public Failure build() {
-				return new Failure(index, type, id, cause, status, seqNo, term, aborted);
+				return new Failure(index, type, id, cause, status, seqNo, term, aborted, elasticsearchErrorCause);
 			}
 		}
 	}

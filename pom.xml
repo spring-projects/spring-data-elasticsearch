@@ -19,6 +19,7 @@
 
 	<properties>
 		<elasticsearch>7.17.1</elasticsearch>
+		<elasticsearch-java>7.17.1</elasticsearch-java>
 		<log4j>2.17.1</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
@@ -134,10 +135,34 @@
 			<scope>test</scope>
 		</dependency>
 
-		<!-- Elasticsearch -->
+		<!-- Elasticsearch  RestHighLevelClient, will be removed probably in SDE 5 -->
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
+			<version>${elasticsearch}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- new Elasticsearch client, needs the low-level rest client and json api -->
+		<dependency>
+			<groupId>co.elastic.clients</groupId>
+			<artifactId>elasticsearch-java</artifactId>
+			<version>${elasticsearch-java}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>elasticsearch-rest-client</artifactId> <!-- is Apache 2-->
 			<version>${elasticsearch}</version>
 			<exclusions>
 				<exclusion>
@@ -497,6 +522,7 @@
 			<id>local-maven-repo</id>
 			<url>file:///${project.basedir}/src/test/resources/local-maven-repo</url>
 		</repository>
+		
 	</repositories>
 
 	<pluginRepositories>

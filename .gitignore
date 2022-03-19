@@ -21,3 +21,6 @@ target
 *.iws
 .idea
 /.env
+
+
+/zap.env

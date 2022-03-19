@@ -22,7 +22,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -33,8 +35,10 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -44,6 +48,20 @@ import org.springframework.lang.Nullable;
 public abstract class SearchAfterIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
+	@Autowired private IndexNameProvider indexNameProvider;
+
+	@BeforeEach
+	public void before() {
+
+		indexNameProvider.increment();
+		operations.indexOps(Entity.class).createWithMapping();
+	}
+
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
+	}
 
 	@Test // #1143
 	@DisplayName("should read pages with search_after")
@@ -79,7 +97,7 @@ public abstract class SearchAfterIntegrationTests {
 		assertThat(foundEntities).containsExactlyElementsOf(entities);
 	}
 
-	@Document(indexName = "test-search-after")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	private static class Entity {
 		@Nullable
 		@Id private Long id;

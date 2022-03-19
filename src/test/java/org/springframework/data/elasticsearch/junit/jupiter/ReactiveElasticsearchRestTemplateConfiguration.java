@@ -28,14 +28,14 @@ import org.springframework.data.elasticsearch.config.AbstractReactiveElasticsear
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 
 /**
- * Configuration for Spring Data Elasticsearch Integration Tests using
- * {@link org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations}
+ * Configuration for Spring Data Elasticsearch Integration Tests using {@link ReactiveElasticsearchClient}
  *
  * @author Peter-Josef Meisch
  */
 @Configuration
 public class ReactiveElasticsearchRestTemplateConfiguration extends AbstractReactiveElasticsearchConfiguration {
 
+	@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 	@Autowired private ClusterConnectionInfo clusterConnectionInfo;
 
 	@Override

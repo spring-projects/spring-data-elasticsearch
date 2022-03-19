@@ -20,26 +20,24 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.elasticsearch.search.suggest.SuggestBuilders;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -51,20 +49,22 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class CompletionIntegrationTests {
+public abstract class CompletionIntegrationTests implements NewElasticsearchClientDevelopment {
 
 	@Autowired private ElasticsearchOperations operations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	private void setup() {
-		IndexInitializer.init(operations.indexOps(CompletionEntity.class));
-		IndexInitializer.init(operations.indexOps(AnnotatedCompletionEntity.class));
+		indexNameProvider.increment();
+		operations.indexOps(CompletionEntity.class).createWithMapping();
+		operations.indexOps(AnnotatedCompletionEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		operations.indexOps(CompletionEntity.class).delete();
-		operations.indexOps(AnnotatedCompletionEntity.class).delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	private void loadCompletionObjectEntities() {
@@ -79,9 +79,7 @@ public abstract class CompletionIntegrationTests {
 		indexQueries.add(new CompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[] { "Artur", "Konczak" })
 				.buildIndex());
 
-		IndexCoordinates index = IndexCoordinates.of("test-index-core-completion");
-		operations.bulkIndex(indexQueries, index);
-		operations.indexOps(CompletionEntity.class).refresh();
+		operations.bulkIndex(indexQueries, CompletionEntity.class);
 	}
 
 	private void loadAnnotatedCompletionObjectEntities() {
@@ -100,8 +98,7 @@ public abstract class CompletionIntegrationTests {
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Artur Konczak")
 				.suggest(new String[] { "Artur", "Konczak" }).buildIndex());
 
-		operations.bulkIndex(indexQueries, IndexCoordinates.of("test-index-annotated-completion"));
-		operations.indexOps(AnnotatedCompletionEntity.class).refresh();
+		operations.bulkIndex(indexQueries, AnnotatedCompletionEntity.class);
 	}
 
 	private void loadAnnotatedCompletionObjectEntitiesWithWeights() {
@@ -116,17 +113,15 @@ public abstract class CompletionIntegrationTests {
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Mewes Kochheim4")
 				.suggest(new String[] { "Mewes Kochheim4" }, Integer.MAX_VALUE).buildIndex());
 
-		operations.bulkIndex(indexQueries, IndexCoordinates.of("test-index-annotated-completion"));
-		operations.indexOps(AnnotatedCompletionEntity.class).refresh();
+		operations.bulkIndex(indexQueries, AnnotatedCompletionEntity.class);
 	}
 
+	@DisabledIf("newElasticsearchClient") // todo #1973, ES issue 150
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingCompletionEntity() {
 
 		loadCompletionObjectEntities();
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
-				.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
-				.build();
+		Query query = getSuggestQuery("test-suggest", "suggest", "m");
 
 		SearchHits<CompletionEntity> searchHits = operations.search(query, CompletionEntity.class);
 
@@ -145,20 +140,20 @@ public abstract class CompletionIntegrationTests {
 		assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
 	}
 
+	protected abstract Query getSuggestQuery(String suggestionName, String fieldName, String prefix);
+
 	@Test // DATAES-754
 	void shouldRetrieveEntityWithCompletion() {
 		loadCompletionObjectEntities();
-		IndexCoordinates index = IndexCoordinates.of("test-index-core-completion");
-		operations.get("1", CompletionEntity.class, index);
+		operations.get("1", CompletionEntity.class);
 	}
 
+	@DisabledIf("newElasticsearchClient") // todo #1973, ES issue 150
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 
 		loadAnnotatedCompletionObjectEntities();
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
-				.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
-				.build();
+		Query query = getSuggestQuery("test-suggest", "suggest", "m");
 
 		SearchHits<AnnotatedCompletionEntity> searchHits = operations.search(query, AnnotatedCompletionEntity.class);
 
@@ -177,13 +172,12 @@ public abstract class CompletionIntegrationTests {
 		assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
 	}
 
+	@DisabledIf("newElasticsearchClient") // todo #1973, ES issue 150
 	@Test
 	public void shouldFindSuggestionsWithWeightsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 
 		loadAnnotatedCompletionObjectEntitiesWithWeights();
-		NativeSearchQuery query = new NativeSearchQueryBuilder().withSuggestBuilder(new SuggestBuilder()
-				.addSuggestion("test-suggest", SuggestBuilders.completionSuggestion("suggest").prefix("m", Fuzziness.AUTO)))
-				.build();
+		Query query = getSuggestQuery("test-suggest", "suggest", "m");
 
 		SearchHits<AnnotatedCompletionEntity> searchHits = operations.search(query, AnnotatedCompletionEntity.class);
 
@@ -246,7 +240,7 @@ public abstract class CompletionIntegrationTests {
 		}
 	}
 
-	@Document(indexName = "test-index-core-completion")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class CompletionEntity {
 
 		@Nullable
@@ -328,10 +322,7 @@ public abstract class CompletionIntegrationTests {
 		}
 	}
 
-	/**
-	 * @author Mewes Kochheim
-	 */
-	@Document(indexName = "test-index-annotated-completion")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-annotated")
 	static class AnnotatedCompletionEntity {
 
 		@Nullable

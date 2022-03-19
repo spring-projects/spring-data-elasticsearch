@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -177,8 +178,8 @@ public final class DocumentAdapters {
 		Map<String, SearchHits> sourceInnerHits = source.getInnerHits();
 
 		if (sourceInnerHits != null) {
-			sourceInnerHits.forEach((name, searchHits) -> innerHits.put(name,
-					SearchDocumentResponse.from(searchHits, null, null, null, searchDocument -> null)));
+			sourceInnerHits.forEach((name, searchHits) -> innerHits.put(name, SearchDocumentResponseBuilder.from(searchHits,
+					null, null, null, searchDocument -> CompletableFuture.completedFuture(null))));
 		}
 
 		NestedMetaData nestedMetaData = from(source.getNestedIdentity());

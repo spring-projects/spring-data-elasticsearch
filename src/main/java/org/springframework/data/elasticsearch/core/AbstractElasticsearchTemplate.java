@@ -21,16 +21,17 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.convert.EntityReader;
-import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.AfterLoadCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
@@ -77,7 +78,6 @@ import org.springframework.util.Assert;
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
 	protected ElasticsearchConverter elasticsearchConverter;
-	protected RequestFactory requestFactory;
 	protected EntityOperations entityOperations;
 	@Nullable protected EntityCallbacks entityCallbacks;
 	@Nullable protected RefreshPolicy refreshPolicy;
@@ -95,8 +95,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				.getMappingContext();
 		this.entityOperations = new EntityOperations(mappingContext);
 		this.routingResolver = new DefaultRoutingResolver(mappingContext);
-
-		requestFactory = new RequestFactory(this.elasticsearchConverter);
 
 		// initialize the VersionInfo class in the initialization phase
 		// noinspection ResultOfMethodCallIgnored
@@ -428,7 +426,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	/*
 	 * internal use only, not for public API
 	 */
-	abstract protected <T> SearchScrollHits<T> searchScrollContinue(@Nullable String scrollId, long scrollTimeInMillis,
+	abstract protected <T> SearchScrollHits<T> searchScrollContinue(String scrollId, long scrollTimeInMillis,
 			Class<T> clazz, IndexCoordinates index);
 
 	/*
@@ -452,13 +450,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		Assert.notNull(elasticsearchConverter, "elasticsearchConverter is not initialized.");
 
 		return elasticsearchConverter;
-	}
-
-	/**
-	 * @since 4.0
-	 */
-	public RequestFactory getRequestFactory() {
-		return requestFactory;
 	}
 
 	protected static String[] toArray(List<String> values) {
@@ -550,9 +541,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Nullable
 	private SeqNoPrimaryTerm getEntitySeqNoPrimaryTerm(Object entity) {
 
-		EntityOperations.AdaptibleEntity<Object> adaptibleEntity = entityOperations.forEntity(entity,
+		EntityOperations.AdaptableEntity<Object> adaptableEntity = entityOperations.forEntity(entity,
 				elasticsearchConverter.getConversionService(), routingResolver);
-		return adaptibleEntity.hasSeqNoPrimaryTerm() ? adaptibleEntity.getSeqNoPrimaryTerm() : null;
+		return adaptableEntity.hasSeqNoPrimaryTerm() ? adaptableEntity.getSeqNoPrimaryTerm() : null;
 	}
 
 	private <T> IndexQuery getIndexQuery(T entity) {
@@ -585,6 +576,10 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		}
 
 		return builder.build();
+	}
+
+	protected <T> SearchDocumentResponse.EntityCreator<T> getEntityCreator(ReadDocumentCallback<T> documentCallback) {
+		return searchDocument -> CompletableFuture.completedFuture(documentCallback.doWith(searchDocument));
 	}
 
 	/**

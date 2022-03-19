@@ -32,7 +32,6 @@ import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.sort.SortBuilder;
 import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.springframework.data.domain.Pageable;
 import org.springframework.lang.Nullable;
 
 /**
@@ -52,7 +51,7 @@ import org.springframework.lang.Nullable;
  * @author vdisk
  * @author owen.qq
  */
-public class NativeSearchQueryBuilder {
+public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery, NativeSearchQueryBuilder> {
 
 	@Nullable private QueryBuilder queryBuilder;
 	@Nullable private QueryBuilder filterBuilder;
@@ -62,21 +61,12 @@ public class NativeSearchQueryBuilder {
 	private final List<PipelineAggregationBuilder> pipelineAggregationBuilders = new ArrayList<>();
 	@Nullable private HighlightBuilder highlightBuilder;
 	@Nullable private List<HighlightBuilder.Field> highlightFields = new ArrayList<>();
-	private Pageable pageable = Pageable.unpaged();
-	@Nullable private List<String> fields = new ArrayList<>();
 	@Nullable protected List<String> storedFields;
-	@Nullable private SourceFilter sourceFilter;
 	@Nullable private CollapseBuilder collapseBuilder;
 	@Nullable private List<IndexBoost> indicesBoost = new ArrayList<>();
 	@Nullable private SearchTemplateRequestBuilder searchTemplateBuilder;
-	private float minScore;
-	private boolean trackScores;
-	@Nullable private List<String> ids = new ArrayList<>();
 	@Nullable private String route;
 	@Nullable private SearchType searchType;
-	@Nullable private IndicesOptions indicesOptions;
-	@Nullable private String preference;
-	@Nullable private Integer maxResults;
 	@Nullable private Boolean trackTotalHits;
 	@Nullable private Duration timeout;
 	private final List<RescorerQuery> rescorerQueries = new ArrayList<>();
@@ -223,24 +213,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withPageable(Pageable pageable) {
-		this.pageable = pageable;
-		return this;
-	}
-
-	/**
-	 * @since 4.3
-	 */
-	public NativeSearchQueryBuilder withFields(Collection<String> fields) {
-		this.fields.addAll(fields);
-		return this;
-	}
-
-	public NativeSearchQueryBuilder withFields(String... fields) {
-		Collections.addAll(this.fields, fields);
-		return this;
-	}
-
 	public NativeSearchQueryBuilder withStoredFields(Collection<String> storedFields) {
 
 		if (this.storedFields == null) {
@@ -260,39 +232,6 @@ public class NativeSearchQueryBuilder {
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withSourceFilter(SourceFilter sourceFilter) {
-		this.sourceFilter = sourceFilter;
-		return this;
-	}
-
-	public NativeSearchQueryBuilder withMinScore(float minScore) {
-		this.minScore = minScore;
-		return this;
-	}
-
-	/**
-	 * @param trackScores whether to track scores.
-	 * @return this object
-	 * @since 3.1
-	 */
-	public NativeSearchQueryBuilder withTrackScores(boolean trackScores) {
-		this.trackScores = trackScores;
-		return this;
-	}
-
-	public NativeSearchQueryBuilder withIds(Collection<String> ids) {
-		this.ids.addAll(ids);
-		return this;
-	}
-
-	/**
-	 * @since 4.3
-	 */
-	public NativeSearchQueryBuilder withIds(String... ids) {
-		Collections.addAll(this.ids, ids);
-		return this;
-	}
-
 	public NativeSearchQueryBuilder withRoute(String route) {
 		this.route = route;
 		return this;
@@ -305,16 +244,6 @@ public class NativeSearchQueryBuilder {
 
 	public NativeSearchQueryBuilder withIndicesOptions(IndicesOptions indicesOptions) {
 		this.indicesOptions = indicesOptions;
-		return this;
-	}
-
-	public NativeSearchQueryBuilder withPreference(String preference) {
-		this.preference = preference;
-		return this;
-	}
-
-	public NativeSearchQueryBuilder withMaxResults(Integer maxResults) {
-		this.maxResults = maxResults;
 		return this;
 	}
 
@@ -356,25 +285,15 @@ public class NativeSearchQueryBuilder {
 	public NativeSearchQuery build() {
 
 		NativeSearchQuery nativeSearchQuery = new NativeSearchQuery( //
+				this, //
 				queryBuilder, //
 				filterBuilder, //
 				sortBuilders, //
 				highlightBuilder, //
 				highlightFields.toArray(new HighlightBuilder.Field[highlightFields.size()]));
 
-		nativeSearchQuery.setPageable(pageable);
-		nativeSearchQuery.setTrackScores(trackScores);
-
-		if (fields != null) {
-			nativeSearchQuery.setFields(fields);
-		}
-
 		if (storedFields != null) {
 			nativeSearchQuery.setStoredFields(storedFields);
-		}
-
-		if (sourceFilter != null) {
-			nativeSearchQuery.addSourceFilter(sourceFilter);
 		}
 
 		if (indicesBoost != null) {
@@ -401,14 +320,6 @@ public class NativeSearchQueryBuilder {
 			nativeSearchQuery.setPipelineAggregations(pipelineAggregationBuilders);
 		}
 
-		if (minScore > 0) {
-			nativeSearchQuery.setMinScore(minScore);
-		}
-
-		if (ids != null) {
-			nativeSearchQuery.setIds(ids);
-		}
-
 		if (route != null) {
 			nativeSearchQuery.setRoute(route);
 		}
@@ -419,14 +330,6 @@ public class NativeSearchQueryBuilder {
 
 		if (indicesOptions != null) {
 			nativeSearchQuery.setIndicesOptions(indicesOptions);
-		}
-
-		if (preference != null) {
-			nativeSearchQuery.setPreference(preference);
-		}
-
-		if (maxResults != null) {
-			nativeSearchQuery.setMaxResults(maxResults);
 		}
 
 		nativeSearchQuery.setTrackTotalHits(trackTotalHits);

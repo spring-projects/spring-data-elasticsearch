@@ -73,15 +73,15 @@ public class EntityOperations {
 	}
 
 	/**
-	 * Creates a new {@link AdaptibleEntity} for the given bean and {@link ConversionService} and {@link RoutingResolver}.
+	 * Creates a new {@link AdaptableEntity} for the given bean and {@link ConversionService} and {@link RoutingResolver}.
 	 *
 	 * @param entity must not be {@literal null}.
 	 * @param conversionService must not be {@literal null}.
 	 * @param routingResolver the {@link RoutingResolver}, must not be {@literal null}
-	 * @return the {@link AdaptibleEntity}
+	 * @return the {@link AdaptableEntity}
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <T> AdaptibleEntity<T> forEntity(T entity, ConversionService conversionService,
+	public <T> AdaptableEntity<T> forEntity(T entity, ConversionService conversionService,
 			RoutingResolver routingResolver) {
 
 		Assert.notNull(entity, "Bean must not be null!");
@@ -91,7 +91,7 @@ public class EntityOperations {
 			return new SimpleMappedEntity((Map<String, Object>) entity);
 		}
 
-		return AdaptibleMappedEntity.of(entity, context, conversionService, routingResolver);
+		return AdaptableMappedEntity.of(entity, context, conversionService, routingResolver);
 	}
 
 	/**
@@ -199,7 +199,7 @@ public class EntityOperations {
 	 * @author Mark Paluch
 	 * @author Christoph Strobl
 	 */
-	public interface AdaptibleEntity<T> extends Entity<T> {
+	public interface AdaptableEntity<T> extends Entity<T> {
 
 		/**
 		 * Populates the identifier of the backing entity if it has an identifier property and there's no identifier
@@ -267,7 +267,7 @@ public class EntityOperations {
 	 * @author Christoph Strobl
 	 * @since 3.2
 	 */
-	private static class MapBackedEntity<T extends Map<String, Object>> implements AdaptibleEntity<T> {
+	private static class MapBackedEntity<T extends Map<String, Object>> implements AdaptableEntity<T> {
 
 		public MapBackedEntity(T map) {
 
@@ -289,7 +289,7 @@ public class EntityOperations {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#populateIdIfNecessary(java.lang.Object)
+		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptableEntity#populateIdIfNecessary(java.lang.Object)
 		 */
 		@Nullable
 		@Override
@@ -302,7 +302,7 @@ public class EntityOperations {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#initializeVersionProperty()
+		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptableEntity#initializeVersionProperty()
 		 */
 		@Override
 		public T initializeVersionProperty() {
@@ -311,7 +311,7 @@ public class EntityOperations {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#getVersion()
+		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptableEntity#getVersion()
 		 */
 		@Override
 		@Nullable
@@ -331,7 +331,7 @@ public class EntityOperations {
 
 		/*
 		 * (non-Javadoc)
-		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptibleEntity#incrementVersion()
+		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptableEntity#incrementVersion()
 		 */
 		@Override
 		public T incrementVersion() {
@@ -476,7 +476,7 @@ public class EntityOperations {
 	 * @param <T>
 	 * @since 3.2
 	 */
-	private static class AdaptibleMappedEntity<T> extends MappedEntity<T> implements AdaptibleEntity<T> {
+	private static class AdaptableMappedEntity<T> extends MappedEntity<T> implements AdaptableEntity<T> {
 
 		private final ElasticsearchPersistentEntity<?> entity;
 		private final ConvertingPropertyAccessor<T> propertyAccessor;
@@ -484,7 +484,7 @@ public class EntityOperations {
 		private final ConversionService conversionService;
 		private final RoutingResolver routingResolver;
 
-		private AdaptibleMappedEntity(T bean, ElasticsearchPersistentEntity<?> entity,
+		private AdaptableMappedEntity(T bean, ElasticsearchPersistentEntity<?> entity,
 				IdentifierAccessor identifierAccessor, ConvertingPropertyAccessor<T> propertyAccessor,
 				ConversionService conversionService, RoutingResolver routingResolver) {
 
@@ -497,7 +497,7 @@ public class EntityOperations {
 			this.routingResolver = routingResolver;
 		}
 
-		static <T> AdaptibleEntity<T> of(T bean,
+		static <T> AdaptableEntity<T> of(T bean,
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> context,
 				ConversionService conversionService, RoutingResolver routingResolver) {
 
@@ -505,7 +505,7 @@ public class EntityOperations {
 			IdentifierAccessor identifierAccessor = entity.getIdentifierAccessor(bean);
 			PersistentPropertyAccessor<T> propertyAccessor = entity.getPropertyAccessor(bean);
 
-			return new AdaptibleMappedEntity<>(bean, entity, identifierAccessor,
+			return new AdaptableMappedEntity<>(bean, entity, identifierAccessor,
 					new ConvertingPropertyAccessor<>(propertyAccessor, conversionService), conversionService, routingResolver);
 		}
 

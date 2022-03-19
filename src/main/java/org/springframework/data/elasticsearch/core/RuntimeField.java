@@ -57,4 +57,18 @@ public class RuntimeField {
 		map.put("script", script);
 		return map;
 	}
+
+	/**
+	 * @since 4.4
+	 */
+	public String getType() {
+		return type;
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	public String getScript() {
+		return script;
+	}
 }

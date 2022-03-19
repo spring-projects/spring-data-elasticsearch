@@ -45,8 +45,6 @@ import org.springframework.util.Assert;
 public abstract class AbstractIndexTemplate implements IndexOperations {
 
 	protected final ElasticsearchConverter elasticsearchConverter;
-	protected final RequestFactory requestFactory;
-
 	@Nullable protected final Class<?> boundClass;
 	@Nullable private final IndexCoordinates boundIndex;
 
@@ -55,7 +53,6 @@ public abstract class AbstractIndexTemplate implements IndexOperations {
 		Assert.notNull(boundClass, "boundClass may not be null");
 
 		this.elasticsearchConverter = elasticsearchConverter;
-		requestFactory = new RequestFactory(elasticsearchConverter);
 		this.boundClass = boundClass;
 		this.boundIndex = null;
 	}
@@ -65,7 +62,6 @@ public abstract class AbstractIndexTemplate implements IndexOperations {
 		Assert.notNull(boundIndex, "boundIndex may not be null");
 
 		this.elasticsearchConverter = elasticsearchConverter;
-		requestFactory = new RequestFactory(elasticsearchConverter);
 		this.boundClass = null;
 		this.boundIndex = boundIndex;
 	}
@@ -195,12 +191,9 @@ public abstract class AbstractIndexTemplate implements IndexOperations {
 
 	@Override
 	public Document createMapping(Class<?> clazz) {
-		return buildMapping(clazz);
-	}
-
-	protected Document buildMapping(Class<?> clazz) {
 
 		// load mapping specified in Mapping annotation if present
+		// noinspection DuplicatedCode
 		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
 
 		if (mappingAnnotation != null) {

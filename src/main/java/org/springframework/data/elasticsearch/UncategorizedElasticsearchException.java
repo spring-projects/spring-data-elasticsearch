@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch;
 
 import org.springframework.dao.UncategorizedDataAccessException;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
@@ -23,11 +24,48 @@ import org.springframework.dao.UncategorizedDataAccessException;
  */
 public class UncategorizedElasticsearchException extends UncategorizedDataAccessException {
 
+	/**
+	 * the response status code from Elasticsearch if available
+	 *
+	 * @since 4.4
+	 */
+	@Nullable private final Integer statusCode;
+
+	/**
+	 * The response body from Elasticsearch if available
+	 *
+	 * @since 4.4
+	 */
+	@Nullable final String responseBody;
+
 	public UncategorizedElasticsearchException(String msg) {
-		super(msg, null);
+		this(msg, null);
 	}
 
-	public UncategorizedElasticsearchException(String msg, Throwable cause) {
+	public UncategorizedElasticsearchException(String msg, @Nullable Throwable cause) {
+		this(msg, null, null, cause);
+	}
+
+	public UncategorizedElasticsearchException(String msg, @Nullable Integer statusCode, @Nullable String responseBody,
+			@Nullable Throwable cause) {
 		super(msg, cause);
+		this.statusCode = statusCode;
+		this.responseBody = responseBody;
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	@Nullable
+	public Integer getStatusCode() {
+		return statusCode;
+	}
+
+	/**
+	 * @since 4.4
+	 */
+	@Nullable
+	public String getResponseBody() {
+		return responseBody;
 	}
 }

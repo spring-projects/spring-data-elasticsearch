@@ -25,13 +25,13 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
  * @author Christoph Strobl
  */
 interface SampleUUIDKeyedElasticsearchRepository
-		extends ElasticsearchRepository<EnableElasticsearchRepositoriesTests.SampleEntityUUIDKeyed, UUID> {
+		extends ElasticsearchRepository<EnableRepositoriesIntegrationTests.SampleEntityUUIDKeyed, UUID> {
 
 	long deleteSampleEntityUUIDKeyedById(UUID id);
 
-	List<EnableElasticsearchRepositoriesTests.SampleEntityUUIDKeyed> deleteByAvailable(boolean available);
+	List<EnableRepositoriesIntegrationTests.SampleEntityUUIDKeyed> deleteByAvailable(boolean available);
 
-	List<EnableElasticsearchRepositoriesTests.SampleEntityUUIDKeyed> deleteByMessage(String message);
+	List<EnableRepositoriesIntegrationTests.SampleEntityUUIDKeyed> deleteByMessage(String message);
 
 	void deleteByType(String type);
 

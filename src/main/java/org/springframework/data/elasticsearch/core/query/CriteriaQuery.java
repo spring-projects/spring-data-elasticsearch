@@ -28,7 +28,19 @@ import org.springframework.util.Assert;
  */
 public class CriteriaQuery extends BaseQuery {
 
-	private Criteria criteria;
+	private final Criteria criteria;
+
+	/**
+	 * @since 4.4
+	 */
+	public CriteriaQuery(CriteriaQueryBuilder builder) {
+		super(builder);
+		this.criteria = builder.getCriteria();
+	}
+
+	public static CriteriaQueryBuilder builder(Criteria criteria) {
+		return new CriteriaQueryBuilder(criteria);
+	}
 
 	public CriteriaQuery(Criteria criteria) {
 		this(criteria, Pageable.unpaged());

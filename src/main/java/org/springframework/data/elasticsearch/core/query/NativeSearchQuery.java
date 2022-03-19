@@ -61,7 +61,6 @@ public class NativeSearchQuery extends BaseQuery {
 	@Nullable private List<SearchExtBuilder> searchExtBuilders;
 
 	public NativeSearchQuery(@Nullable QueryBuilder query) {
-
 		this.query = query;
 	}
 
@@ -92,6 +91,17 @@ public class NativeSearchQuery extends BaseQuery {
 			@Nullable List<SortBuilder<?>> sorts, @Nullable HighlightBuilder highlightBuilder,
 			@Nullable HighlightBuilder.Field[] highlightFields) {
 
+		this.query = query;
+		this.filter = filter;
+		this.sorts = sorts;
+		this.highlightBuilder = highlightBuilder;
+		this.highlightFields = highlightFields;
+	}
+
+	public NativeSearchQuery(NativeSearchQueryBuilder builder, @Nullable QueryBuilder query,
+			@Nullable QueryBuilder filter, @Nullable List<SortBuilder<?>> sorts, @Nullable HighlightBuilder highlightBuilder,
+			@Nullable HighlightBuilder.Field[] highlightFields) {
+		super(builder);
 		this.query = query;
 		this.filter = filter;
 		this.sorts = sorts;

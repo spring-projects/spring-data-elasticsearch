@@ -168,6 +168,16 @@ public class IndexQuery {
 	 * @since 4.2
 	 */
 	public enum OpType {
-		INDEX, CREATE
+		INDEX("index"), CREATE("create");
+
+		private final String esName;
+
+		OpType(String esName) {
+			this.esName = esName;
+		}
+
+		public String getEsName() {
+			return esName;
+		}
 	}
 }

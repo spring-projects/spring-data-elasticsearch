@@ -16,22 +16,22 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -41,13 +41,19 @@ import org.springframework.lang.Nullable;
 public abstract class FieldNamingStrategyIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	void setUp() {
-		IndexOperations indexOps = this.operations.indexOps(Entity.class);
-		indexOps.delete();
-		indexOps.create();
-		indexOps.putMapping();
+		indexNameProvider.increment();
+		IndexOperations indexOps = operations.indexOps(EntityCustomConversionIntegrationTests.Entity.class);
+		indexOps.createWithMapping();
+	}
+
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test // #1565
@@ -60,13 +66,15 @@ public abstract class FieldNamingStrategyIntegrationTests {
 		operations.save(entity);
 
 		// use a native query here to prevent automatic property name matching
-		Query query = new NativeSearchQueryBuilder().withQuery(matchQuery("some_text", "searched")).build();
+		Query query = nativeMatchQuery("some_text", "searched");
 		SearchHits<Entity> searchHits = operations.search(query, Entity.class);
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 	}
 
-	@Document(indexName = "field-naming-strategy-test")
+	protected abstract Query nativeMatchQuery(String fieldName, String value);
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class Entity {
 		@Nullable
 		@Id private String id;
