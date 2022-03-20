@@ -172,7 +172,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public boolean writeTypeHints() {
 
-		boolean writeTypeHints = contextConfiguration.writeTypeHints;
+		boolean writeTypeHints = contextConfiguration.getWriteTypeHints();
 
 		if (document != null) {
 			switch (document.writeTypeHint()) {
@@ -548,7 +548,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	/**
 	 * Configuration settings passed in from the creating {@link SimpleElasticsearchMappingContext}.
 	 */
-	static class ContextConfiguration {
+	public static class ContextConfiguration {
 
 		private final FieldNamingStrategy fieldNamingStrategy;
 		private final boolean writeTypeHints;
@@ -560,6 +560,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		public FieldNamingStrategy getFieldNamingStrategy() {
 			return fieldNamingStrategy;
+		}
+
+		public boolean getWriteTypeHints() {
+			return writeTypeHints;
 		}
 	}
 
