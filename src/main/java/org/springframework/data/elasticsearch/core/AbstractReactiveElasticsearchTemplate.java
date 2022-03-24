@@ -73,7 +73,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	protected final SimpleElasticsearchMappingContext mappingContext;
 	protected final EntityOperations entityOperations;
 
-	protected @Nullable RefreshPolicy refreshPolicy = RefreshPolicy.IMMEDIATE;
+	protected @Nullable RefreshPolicy refreshPolicy = RefreshPolicy.NONE;
 	protected RoutingResolver routingResolver;
 
 	protected @Nullable ReactiveEntityCallbacks entityCallbacks;

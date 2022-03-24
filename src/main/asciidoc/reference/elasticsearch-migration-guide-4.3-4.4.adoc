@@ -28,6 +28,14 @@ Connections to Elasticsearch must be made using either the imperative `Elasticse
 In 4.3 two classes (`ElasticsearchAggregations` and `ElasticsearchAggregation`) had been moved to the `org.springframework.data.elasticsearch.core.clients.elasticsearch7` package in preparation for the integration of the new Elasticsearch client.
 The were moved back to the `org.springframework.data.elasticsearch.core` package as we keep the classes use the old Elasticsearch client where they were.
 
+=== Behaviour change
+
+The `ReactiveElasticsearchTemplate`, when created directly or by Spring Boot configuration had a default refresh policy of IMMEDIATE.
+This could cause performance issues on heavy indexing and was different than the default behaviour of Elasticsearch.
+This has been changed to that now the default refresh policy is NONE.
+When the
+`ReactiveElasticsearchTemplate` was provided by using the configuration like described in <<elasticsearch.clients.reactive>> the default refresh policy already was set to NONE.
+
 [[elasticsearch-migration-guide-4.3-4.4.new-clients]]
 == New Elasticsearch client
 
