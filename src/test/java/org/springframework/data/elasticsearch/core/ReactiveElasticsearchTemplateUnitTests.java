@@ -85,7 +85,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(WriteRequest.RefreshPolicy.IMMEDIATE);
+		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(WriteRequest.RefreshPolicy.NONE);
 	}
 
 	@Test // DATAES-504
@@ -170,7 +170,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(WriteRequest.RefreshPolicy.IMMEDIATE);
+		assertThat(captor.getValue().getRefreshPolicy()).isEqualTo(WriteRequest.RefreshPolicy.NONE);
 	}
 
 	@Test // DATAES-504
@@ -198,7 +198,7 @@ public class ReactiveElasticsearchTemplateUnitTests {
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().isRefresh()).isTrue();
+		assertThat(captor.getValue().isRefresh()).isFalse();
 	}
 
 	@Test // DATAES-504
@@ -207,13 +207,13 @@ public class ReactiveElasticsearchTemplateUnitTests {
 		ArgumentCaptor<DeleteByQueryRequest> captor = ArgumentCaptor.forClass(DeleteByQueryRequest.class);
 		when(client.deleteBy(captor.capture())).thenReturn(Mono.empty());
 
-		template.setRefreshPolicy(RefreshPolicy.NONE);
+		template.setRefreshPolicy(RefreshPolicy.IMMEDIATE);
 
 		template.delete(new StringQuery(QueryBuilders.matchAllQuery().toString()), Object.class, index) //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
-		assertThat(captor.getValue().isRefresh()).isFalse();
+		assertThat(captor.getValue().isRefresh()).isTrue();
 	}
 
 	@Test // DATAES-504
