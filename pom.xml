@@ -435,7 +435,7 @@
 			<plugin>
 				<groupId>org.pitest</groupId>
 				<artifactId>pitest-maven</artifactId>
-				<version>1.5.2</version>
+				<version>1.7.5</version>
 				<dependencies>
 					<dependency>
 						<groupId>org.pitest</groupId>
@@ -444,6 +444,9 @@
 					</dependency>
 				</dependencies>
 				<configuration>
+					<jvmArgs>
+						<jvmArg>-XX:+AllowRedefinitionToAddDeleteMethods</jvmArg>
+					</jvmArgs>
 					<excludedGroups>integration-test</excludedGroups>
 					<targetClasses>
 						<param>org.springframework.data.elasticsearch.core.geo.*</param>
@@ -460,7 +463,7 @@
 				<groupId>org.asciidoctor</groupId>
 				<artifactId>asciidoctor-maven-plugin</artifactId>
 			</plugin>
-		</plugins>
+        </plugins>
 	</build>
 
 	<profiles>
