@@ -18,8 +18,8 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<elasticsearch>7.17.1</elasticsearch>
-		<elasticsearch-java>7.17.1</elasticsearch-java>
+		<elasticsearch>7.17.2</elasticsearch>
+		<elasticsearch-java>7.17.2</elasticsearch-java>
 		<log4j>2.17.1</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.7.0-SNAPSHOT</springdata.commons>
@@ -505,7 +505,7 @@
 			<id>local-maven-repo</id>
 			<url>file:///${project.basedir}/src/test/resources/local-maven-repo</url>
 		</repository>
-		
+
 	</repositories>
 
 	<pluginRepositories>
