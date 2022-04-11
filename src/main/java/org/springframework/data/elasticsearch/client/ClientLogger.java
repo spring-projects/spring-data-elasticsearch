@@ -20,6 +20,7 @@ import java.util.function.Supplier;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
@@ -30,6 +31,7 @@ import org.springframework.util.ObjectUtils;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Oliver Drotbohm
  * @since 3.2
  */
 public abstract class ClientLogger {
@@ -125,7 +127,7 @@ public abstract class ClientLogger {
 	 * @param logId the correlation id, see {@link #newLogId()}.
 	 * @param statusCode the HTTP status code.
 	 */
-	public static void logRawResponse(String logId, @Nullable HttpStatus statusCode) {
+	public static void logRawResponse(String logId, @Nullable HttpStatusCode statusCode) {
 
 		if (isEnabled()) {
 			WIRE_LOGGER.trace(String.format("[%s] Received raw response: %s", logId, statusCode));
@@ -153,7 +155,7 @@ public abstract class ClientLogger {
 	 * @param statusCode the HTTP status code.
 	 * @param body body content.
 	 */
-	public static void logResponse(String logId, HttpStatus statusCode, String body) {
+	public static void logResponse(String logId, HttpStatusCode statusCode, String body) {
 
 		if (isEnabled()) {
 			WIRE_LOGGER.trace(String.format("[%s] Received response: %s%nResponse body: %s", logId, statusCode, body));

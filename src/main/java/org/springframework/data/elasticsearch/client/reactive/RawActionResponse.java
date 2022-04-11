@@ -21,7 +21,7 @@ import java.io.IOException;
 
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.common.io.stream.StreamOutput;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.client.reactive.ClientHttpResponse;
 import org.springframework.web.reactive.function.BodyExtractor;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -32,6 +32,7 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Mark Paluch
+ * @author Oliver Drotbohm
  * @since 3.2
  */
 class RawActionResponse extends ActionResponse {
@@ -46,7 +47,7 @@ class RawActionResponse extends ActionResponse {
 		return new RawActionResponse(response);
 	}
 
-	public HttpStatus statusCode() {
+	public HttpStatusCode statusCode() {
 		return delegate.statusCode();
 	}
 
