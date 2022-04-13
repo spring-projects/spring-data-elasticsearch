@@ -116,6 +116,30 @@ class RequestFactoryTests {
 		assertThat(searchRequest.source().from()).isEqualTo(30);
 	}
 
+	@Test // DATAES-227
+	public void shouldUseUpsertOnUpdate() {
+
+		// given
+		Map<String, Object> doc = new HashMap<>();
+		doc.put("id", "1");
+		doc.put("message", "test");
+
+		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
+				.from(doc);
+
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withDocument(document) //
+				.withUpsert(document) //
+				.build();
+
+		// when
+		UpdateRequest request = requestFactory.updateRequest(updateQuery, IndexCoordinates.of("index"));
+
+		// then
+		assertThat(request).isNotNull();
+		assertThat(request.upsertRequest()).isNotNull();
+	}
+
 	@Test // DATAES-693
 	public void shouldReturnSourceWhenRequested() {
 		// given

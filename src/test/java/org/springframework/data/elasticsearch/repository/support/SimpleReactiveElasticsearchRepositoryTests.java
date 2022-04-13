@@ -67,6 +67,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  * @author Jens Schauder
  */
+// todo #1973 test for both clients
 @SpringIntegrationTest
 @ContextConfiguration(classes = { SimpleReactiveElasticsearchRepositoryTests.Config.class })
 class SimpleReactiveElasticsearchRepositoryTests {

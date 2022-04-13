@@ -17,14 +17,19 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 import co.elastic.clients.elasticsearch.core.search.Suggester;
 import co.elastic.clients.util.ObjectBuilder;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery;
+import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -35,15 +40,45 @@ import org.springframework.util.Assert;
 public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQueryBuilder> {
 
 	@Nullable private Query query;
+	@Nullable private Query filter;
 	private final Map<String, Aggregation> aggregations = new LinkedHashMap<>();
 	@Nullable private Suggester suggester;
+	@Nullable private FieldCollapse fieldCollapse;
+	private final List<ScriptedField> scriptedFields = new ArrayList<>();
+	private List<RescorerQuery> rescorerQueries = new ArrayList<>();
 
-	public NativeQueryBuilder() {
-	}
+	public NativeQueryBuilder() {}
 
 	@Nullable
 	public Query getQuery() {
 		return query;
+	}
+
+	@Nullable
+	public Query getFilter() {
+		return this.filter;
+	}
+
+	public Map<String, Aggregation> getAggregations() {
+		return aggregations;
+	}
+
+	@Nullable
+	public Suggester getSuggester() {
+		return suggester;
+	}
+
+	@Nullable
+	public FieldCollapse getFieldCollapse() {
+		return fieldCollapse;
+	}
+
+	public List<ScriptedField> getScriptedFields() {
+		return scriptedFields;
+	}
+
+	public List<RescorerQuery> getRescorerQueries() {
+		return rescorerQueries;
 	}
 
 	public NativeQueryBuilder withQuery(Query query) {
@@ -51,6 +86,11 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		Assert.notNull(query, "query must not be null");
 
 		this.query = query;
+		return this;
+	}
+
+	public NativeQueryBuilder withFilter(@Nullable Query filter) {
+		this.filter = filter;
 		return this;
 	}
 
@@ -75,11 +115,28 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		return this;
 	}
 
-	public NativeQuery build() {
-		NativeQuery nativeQuery = new NativeQuery(this);
-		nativeQuery.setAggregations(aggregations);
-		nativeQuery.setSuggester(suggester);
+	public NativeQueryBuilder withFieldCollapse(@Nullable FieldCollapse fieldCollapse) {
+		this.fieldCollapse = fieldCollapse;
+		return this;
+	}
 
-		return nativeQuery;
+	public NativeQueryBuilder withScriptedField(ScriptedField scriptedField) {
+
+		Assert.notNull(scriptedField, "scriptedField must not be null");
+
+		this.scriptedFields.add(scriptedField);
+		return this;
+	}
+
+	public NativeQueryBuilder withResorerQuery(RescorerQuery resorerQuery) {
+
+		Assert.notNull(resorerQuery, "resorerQuery must not be null");
+
+		this.rescorerQueries.add(resorerQuery);
+		return this;
+	}
+
+	public NativeQuery build() {
+		return new NativeQuery(this);
 	}
 }

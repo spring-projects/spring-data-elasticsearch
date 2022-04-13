@@ -234,7 +234,7 @@ public abstract class AggregationIntegrationTests {
 	 */
 	static class ArticleEntityBuilder {
 
-		private ArticleEntity result;
+		private final ArticleEntity result;
 
 		public ArticleEntityBuilder(String id) {
 			result = new ArticleEntity(id);

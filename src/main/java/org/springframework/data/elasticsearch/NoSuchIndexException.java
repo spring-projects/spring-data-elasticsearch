@@ -25,6 +25,14 @@ public class NoSuchIndexException extends NonTransientDataAccessResourceExceptio
 
 	private final String index;
 
+	/**
+	 * @since 4.4
+	 */
+	public NoSuchIndexException(String index) {
+		super(String.format("Index %s not found.", index));
+		this.index = index;
+	}
+
 	public NoSuchIndexException(String index, Throwable cause) {
 		super(String.format("Index %s not found.", index), cause);
 		this.index = index;

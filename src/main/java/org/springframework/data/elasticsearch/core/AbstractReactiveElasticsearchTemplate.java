@@ -443,7 +443,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 			IndexCoordinates index);
 
 	@Override
-	public Flux<AggregationContainer<?>> aggregate(Query query, Class<?> entityType) {
+	public Flux<? extends AggregationContainer<?>> aggregate(Query query, Class<?> entityType) {
 		return aggregate(query, entityType, getIndexCoordinatesFor(entityType));
 	}
 

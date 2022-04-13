@@ -30,6 +30,17 @@ public class Highlight {
 	private final HighlightParameters parameters;
 	private final List<HighlightField> fields;
 
+	/**
+	 * @since 4.4
+	 */
+	public Highlight(List<HighlightField> fields) {
+
+		Assert.notNull(fields, "fields must not be null");
+
+		this.parameters = HighlightParameters.builder().build();
+		this.fields = fields;
+	}
+
 	public Highlight(HighlightParameters parameters, List<HighlightField> fields) {
 
 		Assert.notNull(parameters, "parameters must not be null");

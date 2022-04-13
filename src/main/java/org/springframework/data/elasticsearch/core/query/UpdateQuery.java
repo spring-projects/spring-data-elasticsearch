@@ -35,11 +35,8 @@ import org.springframework.lang.Nullable;
 public class UpdateQuery {
 
 	private final String id;
-	@Nullable private final String script;
-	@Nullable private final Map<String, Object> params;
 	@Nullable private final Document document;
 	@Nullable private final Document upsert;
-	@Nullable private final String lang;
 	@Nullable private final String routing;
 	@Nullable private final Boolean scriptedUpsert;
 	@Nullable private final Boolean docAsUpsert;
@@ -61,9 +58,8 @@ public class UpdateQuery {
 	@Nullable private final Float requestsPerSecond;
 	@Nullable private final Boolean shouldStoreResult;
 	@Nullable private final Integer slices;
-	@Nullable private final ScriptType scriptType;
-	@Nullable private final String scriptName;
 	@Nullable private final String indexName;
+	@Nullable private final ScriptData scriptData;
 
 	public static Builder builder(String id) {
 		return new Builder(id);
@@ -85,11 +81,8 @@ public class UpdateQuery {
 			@Nullable String scriptName, @Nullable String indexName) {
 
 		this.id = id;
-		this.script = script;
-		this.params = params;
 		this.document = document;
 		this.upsert = upsert;
-		this.lang = lang;
 		this.routing = routing;
 		this.scriptedUpsert = scriptedUpsert;
 		this.docAsUpsert = docAsUpsert;
@@ -111,9 +104,13 @@ public class UpdateQuery {
 		this.requestsPerSecond = requestsPerSecond;
 		this.shouldStoreResult = shouldStoreResult;
 		this.slices = slices;
-		this.scriptType = scriptType;
-		this.scriptName = scriptName;
 		this.indexName = indexName;
+
+		if (scriptType != null || lang != null || script != null || scriptName != null || params != null) {
+			this.scriptData = new ScriptData(scriptType, lang, script, scriptName, params);
+		} else {
+			this.scriptData = null;
+		}
 	}
 
 	public String getId() {
@@ -122,12 +119,12 @@ public class UpdateQuery {
 
 	@Nullable
 	public String getScript() {
-		return script;
+		return scriptData != null ? scriptData.getScript() : null;
 	}
 
 	@Nullable
 	public Map<String, Object> getParams() {
-		return params;
+		return scriptData != null ? scriptData.getParams() : null;
 	}
 
 	@Nullable
@@ -142,7 +139,7 @@ public class UpdateQuery {
 
 	@Nullable
 	public String getLang() {
-		return lang;
+		return scriptData != null ? scriptData.getLanguage() : null;
 	}
 
 	@Nullable
@@ -252,12 +249,12 @@ public class UpdateQuery {
 
 	@Nullable
 	public ScriptType getScriptType() {
-		return scriptType;
+		return scriptData != null ? scriptData.getType() : null;
 	}
 
 	@Nullable
 	public String getScriptName() {
-		return scriptName;
+		return scriptData != null ? scriptData.getScriptName() : null;
 	}
 
 	/**
@@ -268,13 +265,21 @@ public class UpdateQuery {
 		return indexName;
 	}
 
+	/**
+	 * @since 4.4
+	 */
+	@Nullable
+	public ScriptData getScriptData() {
+		return scriptData;
+	}
+
 	public static final class Builder {
 		private String id;
 		@Nullable private String script = null;
 		@Nullable private Map<String, Object> params;
 		@Nullable private Document document = null;
 		@Nullable private Document upsert = null;
-		@Nullable private String lang = "painless";
+		@Nullable private String lang = null;
 		@Nullable private String routing = null;
 		@Nullable private Boolean scriptedUpsert;
 		@Nullable private Boolean docAsUpsert;

@@ -297,7 +297,7 @@ public class ReactiveIndicesTemplate extends ReactiveChildTemplate<ReactiveElast
 
 		co.elastic.clients.elasticsearch.indices.ExistsTemplateRequest existsTemplateRequestES = requestConverter
 				.indicesExistsTemplateRequest(existsTemplateRequest);
-		return Mono.from(execute(client1 -> client1.existsTemplate(existsTemplateRequestES))).map(BooleanResponse::value);
+		return Mono.from(execute(client -> client.existsTemplate(existsTemplateRequestES))).map(BooleanResponse::value);
 	}
 
 	@Override
@@ -307,13 +307,18 @@ public class ReactiveIndicesTemplate extends ReactiveChildTemplate<ReactiveElast
 
 		co.elastic.clients.elasticsearch.indices.DeleteTemplateRequest deleteTemplateRequestES = requestConverter
 				.indicesDeleteTemplateRequest(deleteTemplateRequest);
-		return Mono.from(execute(client1 -> client1.deleteTemplate(deleteTemplateRequestES)))
+		return Mono.from(execute(client -> client.deleteTemplate(deleteTemplateRequestES)))
 				.map(DeleteTemplateResponse::acknowledged);
 	}
 
 	@Override
 	public Flux<IndexInformation> getInformation(IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
+
+		GetIndexRequest request = requestConverter.indicesGetIndexRequest(index);
+
+		return Mono.from(execute(client -> client.get(request))) //
+				.map(responseConverter::indicesGetIndexInformations) //
+				.flatMapMany(Flux::fromIterable);
 	}
 
 	@Override

@@ -17,12 +17,9 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import java.io.IOException;
-import java.lang.Long;
-import java.lang.Object;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,12 +27,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.junit.jupiter.api.AfterEach;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -45,18 +40,16 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Rizwan Idrees
@@ -68,29 +61,22 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Murali Chevuri
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { SimpleElasticsearchRepositoryIntegrationTests.Config.class })
-class SimpleElasticsearchRepositoryIntegrationTests {
-
-	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.repository.support" },
-			considerNestedRepositories = true)
-	static class Config {}
+abstract class ElasticsearchRepositoryIntegrationTests {
 
 	@Autowired private SampleElasticsearchRepository repository;
-
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	void before() {
-		indexOperations = operations.indexOps(SampleEntity.class);
-		IndexInitializer.init(indexOperations);
+		indexNameProvider.increment();
+		operations.indexOps(SampleEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@org.junit.jupiter.api.Order(Integer.MAX_VALUE)
+	public void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	@Test
@@ -369,7 +355,7 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.deleteAllById(Arrays.asList(id1, id3));
 
 		// then
-		assertThat(repository.findAll()).extracting(SampleEntity::getId).containsExactly(id2);
+		Assertions.assertThat(repository.findAll()).extracting(SampleEntity::getId).containsExactly(id2);
 	}
 
 	@Test
@@ -539,8 +525,8 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		repository.deleteAll(sampleEntities);
 
 		// then
-		assertThat(repository.findById(documentId1)).isNotPresent();
-		assertThat(repository.findById(documentId2)).isNotPresent();
+		Assertions.assertThat(repository.findById(documentId1)).isNotPresent();
+		Assertions.assertThat(repository.findById(documentId2)).isNotPresent();
 	}
 
 	@Test
@@ -677,14 +663,14 @@ class SimpleElasticsearchRepositoryIntegrationTests {
 		return sampleEntities;
 	}
 
-	@Document(indexName = "test-index-sample-simple-repository")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
 		@Nullable
 		@Id private String id;
 		@Nullable
-		@Field(type = Text, store = true, fielddata = true) private String type;
+		@Field(type = FieldType.Text, store = true, fielddata = true) private String type;
 		@Nullable
-		@Field(type = Text, store = true, fielddata = true) private String message;
+		@Field(type = FieldType.Text, store = true, fielddata = true) private String message;
 		@Nullable private int rate;
 		@Nullable private boolean available;
 		@Nullable
