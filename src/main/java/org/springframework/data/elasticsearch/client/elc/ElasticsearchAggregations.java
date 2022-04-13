@@ -17,9 +17,12 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.elasticsearch.core.AggregationsContainer;
+import org.springframework.util.Assert;
 
 /**
  * AggregationsContainer implementation for the Elasticsearch aggregations.
@@ -27,16 +30,33 @@ import org.springframework.data.elasticsearch.core.AggregationsContainer;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-public class ElasticsearchAggregations implements AggregationsContainer<Map<String, Aggregate>> {
+public class ElasticsearchAggregations implements AggregationsContainer<List<ElasticsearchAggregation>> {
 
-	private final Map<String, Aggregate> aggregations;
+	private final List<ElasticsearchAggregation> aggregations;
 
-	public ElasticsearchAggregations(Map<String, Aggregate> aggregations) {
+	public ElasticsearchAggregations(List<ElasticsearchAggregation> aggregations) {
+
+		Assert.notNull(aggregations, "aggregations must not be null");
+
 		this.aggregations = aggregations;
 	}
 
+	/**
+	 * convenience constructor taking a map as it is returned from the new Elasticsearch client.
+	 *
+	 * @param aggregationsMap aggregate map
+	 */
+	public ElasticsearchAggregations(Map<String, Aggregate> aggregationsMap) {
+
+		Assert.notNull(aggregationsMap, "aggregationsMap must not be null");
+
+		aggregations = new ArrayList<>(aggregationsMap.size());
+		aggregationsMap
+				.forEach((name, aggregate) -> aggregations.add(new ElasticsearchAggregation(new Aggregation(name, aggregate))));
+	}
+
 	@Override
-	public Map<String, Aggregate> aggregations() {
+	public List<ElasticsearchAggregation> aggregations() {
 		return aggregations;
 	}
 }

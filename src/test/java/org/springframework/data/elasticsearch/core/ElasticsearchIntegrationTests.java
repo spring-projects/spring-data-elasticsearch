@@ -36,19 +36,6 @@ import java.util.stream.IntStream;
 
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.util.Lists;
-import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.common.lucene.search.function.CombineFunction;
-import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
-import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
-import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder.FilterFunctionBuilder;
-import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
-import org.elasticsearch.join.query.ParentIdQueryBuilder;
-import org.elasticsearch.script.Script;
-import org.elasticsearch.script.ScriptType;
-import org.elasticsearch.search.collapse.CollapseBuilder;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -82,7 +69,8 @@ import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.core.query.RescorerQuery.ScoreMode;
+import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.util.StreamUtils;
@@ -170,7 +158,23 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 	protected abstract BaseQueryBuilder<?, ?> getBuilderWithWildcardQuery(String field, String value);
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
+	protected abstract Query getQueryWithCollapse(String collapseField, @Nullable String innerHits,
+			@Nullable Integer size);
+
+	protected abstract Query getMatchAllQueryWithFilterForId(String id);
+
+	protected abstract Query getQueryForParentId(String type, String id, @Nullable String route);
+
+	protected Query getMatchAllQueryWithInlineExpressionScript(String fieldName, String script,
+			Map<String, java.lang.Object> params) {
+		return getMatchAllQueryWithIncludesAndInlineExpressionScript(null, fieldName, script, params);
+	}
+
+	protected abstract Query getMatchAllQueryWithIncludesAndInlineExpressionScript(@Nullable String includes,
+			String fieldName, String script, Map<String, java.lang.Object> params);
+
+	protected abstract Query getQueryWithRescorer();
+
 	@Test
 	public void shouldThrowDataAccessExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
 
@@ -451,7 +455,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(searchHits.getTotalHits()).isEqualTo(2);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test
 	public void shouldDoBulkUpdate() {
 
@@ -618,11 +621,9 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(operations.count(searchQuery, IndexCoordinates.of("test-index-*"))).isEqualTo(2);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test
 	public void shouldFilterSearchResultsForGivenFilter() {
 
-		// given
 		String documentId = nextIdAsString();
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
@@ -630,14 +631,11 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withFilter(boolQuery().filter(termQuery("id", documentId))).build();
+		Query query = getMatchAllQueryWithFilterForId(documentId);
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
-		// then
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 	}
 
@@ -825,7 +823,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test
 	public void shouldUseScriptedFields() {
 
@@ -847,10 +844,8 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		params.put("factor", 2);
 
 		// when
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withScriptField(
-				new ScriptField("scriptedRate", new Script(ScriptType.INLINE, "expression", "doc['rate'] * factor", params)))
-				.build();
-		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
+		Query query = getMatchAllQueryWithInlineExpressionScript("scriptedRate", "doc['rate'] * factor", params);
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// then
@@ -1502,7 +1497,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(indexOperations.exists()).isFalse();
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test
 	public void shouldDoPartialUpdateForExistingDocument() {
 
@@ -1534,10 +1528,9 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test
 	void shouldDoUpdateByQueryForExistingDocument() {
-		// given
+
 		final String documentId = nextIdAsString();
 		final String messageBeforeUpdate = "some test message";
 		final String messageAfterUpdate = "test message";
@@ -1549,7 +1542,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		final NativeSearchQuery query = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
+		final Query query = operations.matchAllQuery();
 
 		final UpdateQuery updateQuery = UpdateQuery.builder(query)
 				.withScriptType(org.springframework.data.elasticsearch.core.ScriptType.INLINE)
@@ -1557,42 +1550,15 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 				.withParams(Collections.singletonMap("newMessage", messageAfterUpdate)).withAbortOnVersionConflict(true)
 				.build();
 
-		// when
 		operations.updateByQuery(updateQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		// then
 		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
-	@Test // DATAES-227
-	public void shouldUseUpsertOnUpdate() {
-
-		// given
-		Map<String, Object> doc = new HashMap<>();
-		doc.put("id", "1");
-		doc.put("message", "test");
-
-		org.springframework.data.elasticsearch.core.document.Document document = org.springframework.data.elasticsearch.core.document.Document
-				.from(doc);
-
-		UpdateQuery updateQuery = UpdateQuery.builder("1") //
-				.withDocument(document) //
-				.withUpsert(document) //
-				.build();
-
-		// when
-		UpdateRequest request = getRequestFactory().updateRequest(updateQuery, IndexCoordinates.of("index"));
-
-		// then
-		assertThat(request).isNotNull();
-		assertThat(request.upsertRequest()).isNotNull();
-	}
 
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test
 	public void shouldDoUpsertIfDocumentDoesNotExist() {
 
@@ -1650,63 +1616,57 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(entities.size()).isGreaterThanOrEqualTo(1);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
+	@DisabledIf(value = "newElasticsearchClient",
+			disabledReason = "todo #1973 can't check response, open ES issue 161 that does not allow seqno")
+	// and version to be set in the request
 	@Test // DATAES-487
 	public void shouldReturnSameEntityForMultiSearch() {
 
-		// given
 		List<IndexQuery> indexQueries = new ArrayList<>();
-
 		indexQueries.add(buildIndex(SampleEntity.builder().id("1").message("ab").build()));
 		indexQueries.add(buildIndex(SampleEntity.builder().id("2").message("bc").build()));
 		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac").build()));
-
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
+		List<Query> queries = new ArrayList<>();
+		queries.add(getTermQuery("message", "ab"));
+		queries.add(getTermQuery("message", "bc"));
+		queries.add(getTermQuery("message", "ac"));
 
-		// when
-		List<NativeSearchQuery> queries = new ArrayList<>();
 
-		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("message", "ab")).build());
-		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("message", "bc")).build());
-		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("message", "ac")).build());
-
-		// then
 		List<SearchHits<SampleEntity>> searchHits = operations.multiSearch(queries, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
+
 		for (SearchHits<SampleEntity> sampleEntity : searchHits) {
 			assertThat(sampleEntity.getTotalHits()).isEqualTo(1);
 		}
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
+	@DisabledIf(value = "newElasticsearchClient",
+			disabledReason = "todo #1973 can't check response, open ES issue 161 that does not allow seqno")
+	// and version to be set in the request
 	@Test // DATAES-487
 	public void shouldReturnDifferentEntityForMultiSearch() {
 
-		// given
 		Class<Book> clazz = Book.class;
 		IndexOperations bookIndexOperations = operations.indexOps(Book.class);
 		bookIndexOperations.delete();
-		bookIndexOperations.create();
-		indexOperations.putMapping(clazz);
+		bookIndexOperations.createWithMapping();
 		bookIndexOperations.refresh();
-
-		IndexCoordinates bookIndex = IndexCoordinates.of("test-index-book-core-template");
-
+		IndexCoordinates bookIndex = IndexCoordinates.of("i-need-my-own-index");
 		operations.index(buildIndex(SampleEntity.builder().id("1").message("ab").build()),
 				IndexCoordinates.of(indexNameProvider.indexName()));
 		operations.index(buildIndex(Book.builder().id("2").description("bc").build()), bookIndex);
-
 		bookIndexOperations.refresh();
 
-		// when
-		List<NativeSearchQuery> queries = new ArrayList<>();
-		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("message", "ab")).build());
-		queries.add(new NativeSearchQueryBuilder().withQuery(termQuery("description", "bc")).build());
+		List<Query> queries = new ArrayList<>();
+		queries.add(getTermQuery("message", "ab"));
+		queries.add(getTermQuery("description", "bc"));
 
 		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries, Lists.newArrayList(SampleEntity.class, clazz),
 				IndexCoordinates.of(indexNameProvider.indexName(), bookIndex.getIndexName()));
 
-		// then
+		bookIndexOperations.delete();
+
 		SearchHits<?> searchHits0 = searchHitsList.get(0);
 		assertThat(searchHits0.getTotalHits()).isEqualTo(1L);
 		SearchHit<SampleEntity> searchHit0 = (SearchHit<SampleEntity>) searchHits0.getSearchHit(0);
@@ -1950,7 +1910,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 	@Test
 	public void shouldIndexSampleEntityWithIndexAtRuntime() {
 
-		String indexName = "custom-" + indexNameProvider.indexName();
+		String indexName = indexNameProvider.indexName() + "-custom";
 
 		// given
 		String documentId = nextIdAsString();
@@ -2699,7 +2659,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(sampleEntities.get(2).getContent().getMessage()).isEqualTo(sampleEntity1.getMessage());
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test // DATAES-593
 	public void shouldReturnDocumentWithCollapsedField() {
 
@@ -2715,11 +2674,9 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withCollapseField("rate")
-				.build();
+		Query query = getQueryWithCollapse("rate", null, null);
 
-		// when
-		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// then
@@ -2730,7 +2687,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(searchHits.getSearchHit(1).getContent().getMessage()).isEqualTo("message 2");
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test // #1493
 	@DisplayName("should return document with collapse field and inner hits")
 	public void shouldReturnDocumentWithCollapsedFieldAndInnerHits() {
@@ -2747,11 +2703,10 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withCollapseBuilder(new CollapseBuilder("rate").setInnerHits(new InnerHitBuilder("innerHits"))).build();
+		Query query = getQueryWithCollapse("rate", "innerHits", null);
 
 		// when
-		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// then
@@ -2764,7 +2719,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(searchHits.getSearchHit(1).getInnerHits("innerHits").getTotalHits()).isEqualTo(1);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
+
 	@Test // #1997
 	@DisplayName("should return document with inner hits size zero")
 	void shouldReturnDocumentWithInnerHitsSizeZero() {
@@ -2777,12 +2732,10 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withCollapseBuilder(new CollapseBuilder("rate").setInnerHits(new InnerHitBuilder("innerHits").setSize(0)))
-				.build();
+		Query query = getQueryWithCollapse("rate", "innerHits", 0);
 
 		// when
-		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// then
@@ -2867,7 +2820,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		List<Object> sortValues = searchHit.getSortValues();
 		assertThat(sortValues).hasSize(2);
 		assertThat(sortValues.get(0)).isInstanceOf(String.class).isEqualTo("thousands");
-		// transport client returns Long, RestHghlevelClient Integer, new ElasticsearchClient String
+		// transport client returns Long, RestHighlevelClient Integer, new ElasticsearchClient String
 		java.lang.Object o = sortValues.get(1);
 		if (o instanceof Integer) {
 			Integer i = (Integer) o;
@@ -2882,7 +2835,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		}
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test // DATAES-715
 	void shouldReturnHighlightFieldsInSearchHit() {
 		IndexCoordinates index = IndexCoordinates.of("test-index-highlight-entity-template");
@@ -2893,11 +2845,10 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		operations.index(indexQuery, index);
 		operations.indexOps(index).refresh();
 
-		NativeSearchQuery query = new NativeSearchQueryBuilder() //
-				.withQuery(termQuery("message", "message")) //
-				.withHighlightFields(new HighlightBuilder.Field("message")) //
+		Query query = getBuilderWithTermQuery("message", "message") //
+				.withHighlightQuery(
+						new HighlightQuery(new Highlight(singletonList(new HighlightField("message"))), HighlightEntity.class))
 				.build();
-
 		SearchHits<HighlightEntity> searchHits = operations.search(query, HighlightEntity.class, index);
 
 		assertThat(searchHits).isNotNull();
@@ -2910,10 +2861,9 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(highlightField.get(1)).contains("<em>message</em>");
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test // #1686
 	void shouldRunRescoreQueryInSearchQuery() {
-		IndexCoordinates index = IndexCoordinates.of("test-index-rescore-entity-template");
+		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.getPrefix() + "rescore-entity");
 
 		// matches main query better
 		SampleEntity entity = SampleEntity.builder() //
@@ -2933,17 +2883,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		operations.bulkIndex(indexQueries, index);
 
-		NativeSearchQuery query = new NativeSearchQueryBuilder() //
-				.withQuery(boolQuery().filter(existsQuery("rate")).should(termQuery("message", "message"))) //
-				.withRescorerQuery(
-						new RescorerQuery(new NativeSearchQueryBuilder().withQuery(QueryBuilders
-								.functionScoreQuery(new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {
-										new FilterFunctionBuilder(new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5).setWeight(1f)),
-										new FilterFunctionBuilder(
-												new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5).setWeight(100f)) })
-								.scoreMode(FunctionScoreQuery.ScoreMode.SUM).maxBoost(80f).boostMode(CombineFunction.REPLACE)).build())
-										.withScoreMode(ScoreMode.Max).withWindowSize(100))
-				.build();
+		Query query = getQueryWithRescorer();
 
 		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class, index);
 
@@ -2955,6 +2895,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		// score capped to 80
 		assertThat(searchHit.getScore()).isEqualTo(80f);
 	}
+
 
 	@Test
 	// DATAES-738
@@ -3128,7 +3069,9 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThatSeqNoPrimaryTermIsFilled(retrieved);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
+	@DisabledIf(value = "newElasticsearchClient",
+			disabledReason = "todo #1973 can't check response, open ES issue 161 that does not allow seqno")
+																				// and version to be set in the request
 	@Test // DATAES-799
 	void multiSearchShouldReturnSeqNoPrimaryTerm() {
 		OptimisticEntity original = new OptimisticEntity();
@@ -3158,7 +3101,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThatSeqNoPrimaryTermIsFilled(retrieved);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test // DATAES-799
 	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnEntityWithSeqNoPrimaryTermProperty() {
 		OptimisticEntity original = new OptimisticEntity();
@@ -3175,7 +3117,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThatThrownBy(() -> operations.save(forEdit2)).isInstanceOf(OptimisticLockingFailureException.class);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test // DATAES-799
 	void shouldThrowOptimisticLockingFailureExceptionWhenConcurrentUpdateOccursOnVersionedEntityWithSeqNoPrimaryTermProperty() {
 		OptimisticAndVersionedEntity original = new OptimisticAndVersionedEntity();
@@ -3204,7 +3145,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		operations.save(forEdit);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test
 	void shouldSupportCRUDOpsForEntityWithJoinFields() throws Exception {
 		String qId1 = java.util.UUID.randomUUID().toString();
@@ -3258,9 +3198,8 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		operations.save(
 				Arrays.asList(sampleQuestionEntity1, sampleQuestionEntity2, sampleAnswerEntity1, sampleAnswerEntity2), index);
 
-		SearchHits<SampleJoinEntity> hits = operations.search(
-				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId1)).build(),
-				SampleJoinEntity.class);
+		Query query = getQueryForParentId("answer", qId1, null);
+		SearchHits<SampleJoinEntity> hits = operations.search(query, SampleJoinEntity.class);
 
 		List<String> hitIds = hits.getSearchHits().stream()
 				.map(sampleJoinEntitySearchHit -> sampleJoinEntitySearchHit.getId()).collect(Collectors.toList());
@@ -3287,8 +3226,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		// when
 		operations.bulkUpdate(queries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		SearchHits<SampleJoinEntity> updatedHits = operations.search(
-				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).build(),
+		SearchHits<SampleJoinEntity> updatedHits = operations.search(getQueryForParentId("answer", qId2, null),
 				SampleJoinEntity.class);
 
 		List<String> hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
@@ -3300,8 +3238,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(hitIds.size()).isEqualTo(1);
 		assertThat(hitIds.get(0)).isEqualTo(aId2);
 
-		updatedHits = operations.search(
-				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId1)).build(),
+		updatedHits = operations.search(getQueryForParentId("answer", qId1, null),
 				SampleJoinEntity.class);
 
 		hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
@@ -3315,20 +3252,15 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 	}
 
 	private void shouldDeleteEntityWithJoinFields(String qId2, String aId2) throws Exception {
-		Query query = new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).withRoute(qId2)
-				.build();
-		operations.delete(query, SampleJoinEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		SearchHits<SampleJoinEntity> deletedHits = operations.search(
-				new NativeSearchQueryBuilder().withQuery(new ParentIdQueryBuilder("answer", qId2)).build(),
+		operations.delete(getQueryForParentId("answer", qId2, qId2), SampleJoinEntity.class,
+				IndexCoordinates.of(indexNameProvider.indexName()));
+
+		SearchHits<SampleJoinEntity> deletedHits = operations.search(getQueryForParentId("answer", qId2, null),
 				SampleJoinEntity.class);
 
-		List<String> hitIds = deletedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
-			@Override
-			public String apply(SearchHit<SampleJoinEntity> sampleJoinEntitySearchHit) {
-				return sampleJoinEntitySearchHit.getId();
-			}
-		}).collect(Collectors.toList());
+		List<String> hitIds = deletedHits.getSearchHits().stream()
+				.map(sampleJoinEntitySearchHit -> sampleJoinEntitySearchHit.getId()).collect(Collectors.toList());
 		assertThat(hitIds.size()).isEqualTo(0);
 	}
 
@@ -3539,7 +3471,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(retrieved).isEqualTo(saved);
 	}
 
-	@DisabledIf("newElasticsearchClient") // todo #1973 still needs implementation
 	@Test // #1488
 	@DisplayName("should set scripted fields on immutable objects")
 	void shouldSetScriptedFieldsOnImmutableObjects() {
@@ -3549,13 +3480,10 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		Map<String, Object> params = new HashMap<>();
 		params.put("factor", 2);
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery())
-				.withSourceFilter(new FetchSourceFilterBuilder().withIncludes("*").build())
-				.withScriptField(new ScriptField("scriptedRate",
-						new Script(ScriptType.INLINE, "expression", "doc['rate'] * factor", params)))
-				.build();
+		Query query = getMatchAllQueryWithIncludesAndInlineExpressionScript("*", "scriptedRate", "doc['rate'] * factor",
+				params);
 
-		SearchHits<ImmutableWithScriptedEntity> searchHits = operations.search(searchQuery,
+		SearchHits<ImmutableWithScriptedEntity> searchHits = operations.search(query,
 				ImmutableWithScriptedEntity.class);
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
@@ -3564,6 +3492,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(foundEntity.getRate()).isEqualTo(42);
 		assertThat(foundEntity.getScriptedRate()).isEqualTo(84.0);
 	}
+
 
 	@Test // #1893
 	@DisplayName("should index document from source with version")
@@ -3875,7 +3804,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		}
 	}
 
-	@Document(indexName = "test-index-book-core-template")
+	@Document(indexName = "i-need-my-own-index")
 	static class Book {
 		@Nullable
 		@Id private String id;
@@ -4419,7 +4348,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		}
 	}
 
-	@Document(indexName = "immutable-class")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-immutable")
 	private static final class ImmutableEntity {
 		@Id
 		@Nullable private final String id;
@@ -4477,7 +4406,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		}
 	}
 
-	@Document(indexName = "immutable-scripted")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-immutable-scripted")
 	public static final class ImmutableWithScriptedEntity {
 		@Id private final String id;
 		@Field(type = Integer)

@@ -18,16 +18,29 @@ package org.springframework.data.elasticsearch.core;
 import static org.springframework.data.elasticsearch.client.elc.QueryBuilders.*;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
+import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScoreMode;
+import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
+import co.elastic.clients.json.JsonData;
+
+import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.ELCQueries;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery;
+import org.springframework.data.elasticsearch.core.query.ScriptData;
+import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -54,7 +67,7 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 
 	@Override
 	protected Query queryWithIds(String... ids) {
-		return NativeQuery.builder().withIds(ids).build();
+		return ELCQueries.queryWithIds(ids);
 	}
 
 	@Override
@@ -64,7 +77,7 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 
 	@Override
 	protected BaseQueryBuilder<?, ?> getBuilderWithMatchAllQuery() {
-		return NativeQuery.builder().withQuery(matchAllQueryAsQuery());
+		return ELCQueries.getBuilderWithMatchAllQuery();
 	}
 
 	@Override
@@ -91,6 +104,103 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 						.must(m -> m.wildcard(w1 -> w1.field(firstField).wildcard(firstValue))) //
 						.should(s -> s.wildcard(w2 -> w2.field(secondField).wildcard(secondValue)))))) //
 				.withMinScore(minScore) //
+				.build();
+	}
+
+	@Override
+	protected Query getQueryWithCollapse(String collapseField, @Nullable String innerHits, @Nullable Integer size) {
+		return NativeQuery.builder() //
+				.withQuery(matchAllQueryAsQuery()) //
+				.withFieldCollapse(FieldCollapse.of(fc -> {
+					fc.field(collapseField);
+
+					if (innerHits != null) {
+						fc.innerHits(ih -> ih.name(innerHits).size(size));
+					}
+					return fc;
+				})).build();
+	}
+
+	@Override
+	protected Query getMatchAllQueryWithFilterForId(String id) {
+		return NativeQuery.builder() //
+				.withQuery(matchAllQueryAsQuery()) //
+				.withFilter(termQueryAsQuery("id", id)) //
+				.build();
+	}
+
+	@Override
+	protected Query getQueryForParentId(String type, String id, @Nullable String route) {
+
+		NativeQueryBuilder queryBuilder = NativeQuery.builder() //
+				.withQuery(qb -> qb //
+						.parentId(p -> p.type(type).id(id)) //
+				);
+
+		if (route != null) {
+			queryBuilder.withRoute(route);
+		}
+
+		return queryBuilder.build();
+	}
+
+	@Override
+	protected Query getMatchAllQueryWithIncludesAndInlineExpressionScript(@Nullable String includes, String fieldName,
+			String script, Map<String, Object> params) {
+
+		NativeQueryBuilder nativeQueryBuilder = NativeQuery.builder().withQuery(matchAllQueryAsQuery());
+
+		if (includes != null) {
+			nativeQueryBuilder.withSourceFilter(new FetchSourceFilterBuilder().withIncludes(includes).build());
+		}
+
+		return nativeQueryBuilder.withScriptedField(new ScriptedField( //
+				fieldName, //
+				new ScriptData(ScriptType.INLINE, "expression", script, null, params))) //
+				.build();
+	}
+
+	@Override
+	protected Query getQueryWithRescorer() {
+
+		return NativeQuery.builder() //
+				.withQuery(q -> q //
+						.bool(b -> b //
+								.filter(f -> f.exists(e -> e.field("rate"))) //
+								.should(s -> s.term(t -> t.field("message").value("message"))) //
+						)) //
+				.withResorerQuery( //
+						new RescorerQuery(NativeQuery.builder() //
+								.withQuery(q -> q //
+										.functionScore(fs -> fs //
+												.functions(f1 -> f1 //
+														.filter(matchAllQueryAsQuery()) //
+														.weight(1.0) //
+														.gauss(d -> d //
+																.field("rate") //
+																.placement(dp -> dp //
+																		.origin(JsonData.of(0)) //
+																		.scale(JsonData.of(10)) //
+																		.decay(0.5)) //
+														)) //
+												.functions(f2 -> f2 //
+														.filter(matchAllQueryAsQuery()).weight(100.0) //
+														.gauss(d -> d //
+																.field("rate") //
+																.placement(dp -> dp //
+																		.origin(JsonData.of(0)) //
+																		.scale(JsonData.of(10)) //
+																		.decay(0.5)) //
+
+														)) //
+												.scoreMode(FunctionScoreMode.Sum) //
+												.maxBoost(80.0) //
+												.boostMode(FunctionBoostMode.Replace)) //
+								) //
+								.build() //
+						) //
+								.withScoreMode(RescorerQuery.ScoreMode.Max) //
+								.withWindowSize(100)) //
 				.build();
 	}
 }

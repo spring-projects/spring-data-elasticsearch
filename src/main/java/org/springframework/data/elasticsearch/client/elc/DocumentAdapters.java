@@ -28,6 +28,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -77,18 +78,12 @@ final class DocumentAdapters {
 
 		NestedMetaData nestedMetaData = from(hit.nested());
 
-		// todo #1973 explanation
 		Explanation explanation = from(hit.explanation());
 
 		// todo #1973 matchedQueries
 		List<String> matchedQueries = null;
-		// todo #1973 documentFields
-		Map<String, List<Object>> documentFields = Collections.emptyMap();
 
-		Document document;
-		Object source = hit.source();
-		if (source == null) {
-			// Elasticsearch provides raw JsonData, so we build the fields into a JSON string
+		Function<Map<String, JsonData>, EntityAsMap> fromFields = fields -> {
 			StringBuilder sb = new StringBuilder("{");
 			final boolean[] firstField = { true };
 			hit.fields().forEach((key, jsonData) -> {
@@ -100,7 +95,25 @@ final class DocumentAdapters {
 				firstField[0] = false;
 			});
 			sb.append('}');
-			document = Document.parse(sb.toString());
+			return new EntityAsMap().fromJson(sb.toString());
+		};
+
+		EntityAsMap hitFieldsAsMap = fromFields.apply(hit.fields());
+
+		Map<String, List<Object>> documentFields = new LinkedHashMap<>();
+		hitFieldsAsMap.entrySet().forEach(entry -> {
+			if (entry.getValue() instanceof List) {
+				// noinspection unchecked
+				documentFields.put(entry.getKey(), (List<Object>) entry.getValue());
+			} else {
+				documentFields.put(entry.getKey(), Collections.singletonList(entry.getValue()));
+			}
+		});
+
+		Document document;
+		Object source = hit.source();
+		if (source == null) {
+			document = Document.from(hitFieldsAsMap);
 		} else {
 			if (source instanceof EntityAsMap) {
 				document = Document.from((EntityAsMap) source);

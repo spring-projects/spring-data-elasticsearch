@@ -212,14 +212,6 @@ public class ReactiveElasticsearchIndicesClient
 		return existsTemplate(fn.apply(new ExistsTemplateRequest.Builder()).build());
 	}
 
-	public Mono<BooleanResponse> existsType(ExistsTypeRequest request) {
-		return Mono.fromFuture(transport.performRequestAsync(request, ExistsTypeRequest._ENDPOINT, transportOptions));
-	}
-
-	public Mono<BooleanResponse> existsType(Function<ExistsTypeRequest.Builder, ObjectBuilder<ExistsTypeRequest>> fn) {
-		return existsType(fn.apply(new ExistsTypeRequest.Builder()).build());
-	}
-
 	public Mono<FlushResponse> flush(FlushRequest request) {
 		return Mono.fromFuture(transport.performRequestAsync(request, FlushRequest._ENDPOINT, transportOptions));
 	}
@@ -230,19 +222,6 @@ public class ReactiveElasticsearchIndicesClient
 
 	public Mono<FlushResponse> flush() {
 		return flush(builder -> builder);
-	}
-
-	public Mono<FlushSyncedResponse> flushSynced(FlushSyncedRequest request) {
-		return Mono.fromFuture(transport.performRequestAsync(request, FlushSyncedRequest._ENDPOINT, transportOptions));
-	}
-
-	public Mono<FlushSyncedResponse> flushSynced(
-			Function<FlushSyncedRequest.Builder, ObjectBuilder<FlushSyncedRequest>> fn) {
-		return flushSynced(fn.apply(new FlushSyncedRequest.Builder()).build());
-	}
-
-	public Mono<FlushSyncedResponse> flushSynced() {
-		return flushSynced(builder -> builder);
 	}
 
 	@SuppressWarnings("SpellCheckingInspection")
@@ -258,14 +237,6 @@ public class ReactiveElasticsearchIndicesClient
 	@SuppressWarnings("SpellCheckingInspection")
 	public Mono<ForcemergeResponse> forcemerge() {
 		return forcemerge(builder -> builder);
-	}
-
-	public Mono<FreezeResponse> freeze(FreezeRequest request) {
-		return Mono.fromFuture(transport.performRequestAsync(request, FreezeRequest._ENDPOINT, transportOptions));
-	}
-
-	public Mono<FreezeResponse> freeze(Function<FreezeRequest.Builder, ObjectBuilder<FreezeRequest>> fn) {
-		return freeze(fn.apply(new FreezeRequest.Builder()).build());
 	}
 
 	public Mono<GetIndexResponse> get(GetIndexRequest request) {
@@ -361,18 +332,6 @@ public class ReactiveElasticsearchIndicesClient
 
 	public Mono<GetTemplateResponse> getTemplate() {
 		return getTemplate(builder -> builder);
-	}
-
-	public Mono<GetUpgradeResponse> getUpgrade(GetUpgradeRequest request) {
-		return Mono.fromFuture(transport.performRequestAsync(request, GetUpgradeRequest._ENDPOINT, transportOptions));
-	}
-
-	public Mono<GetUpgradeResponse> getUpgrade(Function<GetUpgradeRequest.Builder, ObjectBuilder<GetUpgradeRequest>> fn) {
-		return getUpgrade(fn.apply(new GetUpgradeRequest.Builder()).build());
-	}
-
-	public Mono<GetUpgradeResponse> getUpgrade() {
-		return getUpgrade(builder -> builder);
 	}
 
 	public Mono<MigrateToDataStreamResponse> migrateToDataStream(MigrateToDataStreamRequest request) {
@@ -599,18 +558,6 @@ public class ReactiveElasticsearchIndicesClient
 
 	public Mono<UpdateAliasesResponse> updateAliases() {
 		return updateAliases(builder -> builder);
-	}
-
-	public Mono<UpgradeResponse> upgrade(UpgradeRequest request) {
-		return Mono.fromFuture(transport.performRequestAsync(request, UpgradeRequest._ENDPOINT, transportOptions));
-	}
-
-	public Mono<UpgradeResponse> upgrade(Function<UpgradeRequest.Builder, ObjectBuilder<UpgradeRequest>> fn) {
-		return upgrade(fn.apply(new UpgradeRequest.Builder()).build());
-	}
-
-	public Mono<UpgradeResponse> upgrade() {
-		return upgrade(builder -> builder);
 	}
 
 	public Mono<ValidateQueryResponse> validateQuery(ValidateQueryRequest request) {

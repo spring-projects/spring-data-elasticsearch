@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the original author or authors.
+ * Copyright 2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,35 +18,28 @@ package org.springframework.data.elasticsearch.core.query;
 import org.springframework.util.Assert;
 
 /**
- * Response data from an update request ({@link UpdateQuery}). Currently contains only the result status value from
- * Elasticsearch. Should be extended if further information is needed.
- *
  * @author Peter-Josef Meisch
- * @since 4.0
+ * @since 4.4
  */
-public class UpdateResponse {
+public class ScriptedField {
 
-	private Result result;
+	private final String fieldName;
+	private final ScriptData scriptData;
 
-	public UpdateResponse(Result result) {
+	public ScriptedField(String fieldName, ScriptData scriptData) {
 
-		Assert.notNull(result, "result must not be null");
+		Assert.notNull(fieldName, "fieldName must not be null");
+		Assert.notNull(scriptData, "scriptData must not be null");
 
-		this.result = result;
+		this.fieldName = fieldName;
+		this.scriptData = scriptData;
 	}
 
-	/**
-	 * @since 4.4
-	 */
-	public static UpdateResponse of(Result result) {
-		return new UpdateResponse(result);
+	public String getFieldName() {
+		return fieldName;
 	}
 
-	public Result getResult() {
-		return result;
-	}
-
-	public enum Result {
-		CREATED, UPDATED, DELETED, NOT_FOUND, NOOP;
+	public ScriptData getScriptData() {
+		return scriptData;
 	}
 }

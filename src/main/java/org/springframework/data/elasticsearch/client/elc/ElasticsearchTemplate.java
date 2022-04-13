@@ -15,10 +15,13 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
+
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.msearch.MultiSearchResponseItem;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 
@@ -40,6 +43,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchScrollHits;
 import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
@@ -137,7 +141,12 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
+
+		Assert.notNull(queries, "queries must not be null");
+		Assert.notNull(bulkOptions, "bulkOptions must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		doBulkOperation(queries, bulkOptions, index);
 	}
 
 	@Override
@@ -155,12 +164,25 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
+
+		UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index, getRefreshPolicy(),
+				routingResolver.getRouting());
+		co.elastic.clients.elasticsearch.core.UpdateResponse<Document> response = execute(
+				client -> client.update(request, Document.class));
+		return UpdateResponse.of(result(response.result()));
 	}
 
 	@Override
 	public ByQueryResponse updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
+
+		Assert.notNull(updateQuery, "updateQuery must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		UpdateByQueryRequest request = requestConverter.documentUpdateByQueryRequest(updateQuery, index,
+				getRefreshPolicy());
+
+		UpdateByQueryResponse byQueryResponse = execute(client -> client.updateByQuery(request));
+		return responseConverter.byQueryResponse(byQueryResponse);
 	}
 
 	@Override
@@ -404,14 +426,52 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return doMultiSearch(multiSearchQueryParameters);
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private List<SearchHits<?>> doMultiSearch(List<MultiSearchQueryParameter> multiSearchQueryParameters) {
-		throw new UnsupportedOperationException("not implemented");
+
+		MsearchRequest request = requestConverter.searchMsearchRequest(multiSearchQueryParameters);
+
+		MsearchResponse<EntityAsMap> msearchResponse = execute(client -> client.msearch(request, EntityAsMap.class));
+		List<MultiSearchResponseItem<EntityAsMap>> responseItems = msearchResponse.responses();
+
+		Assert.isTrue(multiSearchQueryParameters.size() == responseItems.size(),
+				"number of response items does not match number of requests");
+
+		List<SearchHits<?>> searchHitsList = new ArrayList<>(multiSearchQueryParameters.size());
+
+		Iterator<MultiSearchQueryParameter> queryIterator = multiSearchQueryParameters.iterator();
+		Iterator<MultiSearchResponseItem<EntityAsMap>> responseIterator = responseItems.iterator();
+
+		while (queryIterator.hasNext()) {
+			MultiSearchQueryParameter queryParameter = queryIterator.next();
+			MultiSearchResponseItem<EntityAsMap> responseItem = responseIterator.next();
+
+			// if responseItem kind is Result then responsItem.value is a MultiSearchItem which is derived from SearchResponse
+
+			if (responseItem.isResult()) {
+
+				Class clazz = queryParameter.clazz;
+				ReadDocumentCallback<?> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz,
+						queryParameter.index);
+				SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(clazz,
+						queryParameter.index);
+
+				SearchHits<?> searchHits = callback.doWith(
+						SearchDocumentResponseBuilder.from(responseItem.result(), getEntityCreator(documentCallback), jsonpMapper));
+
+				searchHitsList.add(searchHits);
+			} else {
+				// todo #1973 add failure
+			}
+		}
+
+		return searchHitsList;
 	}
 
 	/**
 	 * value class combining the information needed for a single query in a multisearch request.
 	 */
-	private static class MultiSearchQueryParameter {
+	static class MultiSearchQueryParameter {
 		final Query query;
 		final Class<?> clazz;
 		final IndexCoordinates index;

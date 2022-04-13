@@ -21,11 +21,15 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.aggregations.StatsBucketAggregate;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.ELCQueries;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.QueryBuilders;
@@ -55,18 +59,17 @@ public class AggregationELCIntegrationTests extends AggregationIntegrationTests 
 
 	@Override
 	protected Query getTermsAggsQuery(String aggsName, String aggsField) {
-		return NativeQuery.builder() //
-				.withQuery(QueryBuilders.matchAllQueryAsQuery()) //
-				.withAggregation(aggsName, Aggregation.of(a -> a //
-						.terms(ta -> ta.field(aggsField)))) //
-				.withMaxResults(0) //
-				.build();
+		return ELCQueries.getTermsAggsQuery(aggsName, aggsField);
 	}
 
 	@Override
 	protected void assertThatAggsHasResult(AggregationsContainer<?> aggregationsContainer, String aggsName) {
-		Map<String, Aggregate> aggregations = ((ElasticsearchAggregations) aggregationsContainer).aggregations();
-		assertThat(aggregations).containsKey(aggsName);
+		List<ElasticsearchAggregation> aggregations = ((ElasticsearchAggregations) aggregationsContainer).aggregations();
+		List<String> aggNames = aggregations.stream() //
+				.map(ElasticsearchAggregation::aggregation) //
+				.map(org.springframework.data.elasticsearch.client.elc.Aggregation::getName) //
+				.collect(Collectors.toList());
+		assertThat(aggNames).contains(aggsName);
 	}
 
 	@Override
@@ -84,9 +87,13 @@ public class AggregationELCIntegrationTests extends AggregationIntegrationTests 
 	@Override
 	protected void assertThatPipelineAggsAreCorrect(AggregationsContainer<?> aggregationsContainer, String aggsName,
 			String pipelineAggsName) {
-		Map<String, Aggregate> aggregations = ((ElasticsearchAggregations) aggregationsContainer).aggregations();
-		assertThat(aggregations).containsKey(aggsName);
-		Aggregate aggregate = aggregations.get(pipelineAggsName);
+		Map<String, Aggregate> aggregates = ((ElasticsearchAggregations) aggregationsContainer).aggregations().stream() //
+				.map(ElasticsearchAggregation::aggregation) //
+				.collect(Collectors.toMap(org.springframework.data.elasticsearch.client.elc.Aggregation::getName,
+						org.springframework.data.elasticsearch.client.elc.Aggregation::getAggregate));
+
+		assertThat(aggregates).containsKey(aggsName);
+		Aggregate aggregate = aggregates.get(pipelineAggsName);
 		assertThat(aggregate.isStatsBucket()).isTrue();
 		StatsBucketAggregate statsBucketAggregate = aggregate.statsBucket();
 		assertThat(statsBucketAggregate.min()).isEqualTo(1.0);

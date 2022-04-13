@@ -127,10 +127,49 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, transportOptions));
 	}
 
+	public <T, P> Mono<UpdateResponse<T>> update(UpdateRequest<T, P> request, Class<T> clazz) {
+
+		Assert.notNull(request, "request must not be null");
+
+		// noinspection unchecked
+		JsonEndpoint<UpdateRequest<?, ?>, UpdateResponse<T>, ErrorResponse> endpoint = new EndpointWithResponseMapperAttr(
+				UpdateRequest._ENDPOINT, "co.elastic.clients:Deserializer:_global.update.TDocument",
+				this.getDeserializer(clazz));
+		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, this.transportOptions));
+	}
+
+	public <T, P> Mono<UpdateResponse<T>> update(
+			Function<UpdateRequest.Builder<T, P>, ObjectBuilder<UpdateRequest<T, P>>> fn, Class<T> clazz) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return update(fn.apply(new UpdateRequest.Builder<>()).build(), clazz);
+	}
+
 	public <T> Mono<GetResponse<T>> get(Function<GetRequest.Builder, ObjectBuilder<GetRequest>> fn, Class<T> tClass) {
 		Assert.notNull(fn, "fn must not be null");
 
 		return get(fn.apply(new GetRequest.Builder()).build(), tClass);
+	}
+
+	public <T> Mono<MgetResponse<T>> mget(MgetRequest request, Class<T> clazz) {
+
+		Assert.notNull(request, "request must not be null");
+		Assert.notNull(clazz, "clazz must not be null");
+
+		// noinspection unchecked
+		JsonEndpoint<MgetRequest, MgetResponse<T>, ErrorResponse> endpoint = (JsonEndpoint<MgetRequest, MgetResponse<T>, ErrorResponse>) MgetRequest._ENDPOINT;
+		endpoint = new EndpointWithResponseMapperAttr<>(endpoint, "co.elastic.clients:Deserializer:_global.mget.TDocument",
+				this.getDeserializer(clazz));
+
+		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, transportOptions));
+	}
+
+	public <T> Mono<MgetResponse<T>> mget(Function<MgetRequest.Builder, ObjectBuilder<MgetRequest>> fn, Class<T> clazz) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return mget(fn.apply(new MgetRequest.Builder()).build(), clazz);
 	}
 
 	public Mono<ReindexResponse> reindex(ReindexRequest request) {
@@ -159,6 +198,21 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		Assert.notNull(fn, "fn must not be null");
 
 		return delete(fn.apply(new DeleteRequest.Builder()).build());
+	}
+
+	public Mono<DeleteByQueryResponse> deleteByQuery(DeleteByQueryRequest request) {
+
+		Assert.notNull(request, "request must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request, DeleteByQueryRequest._ENDPOINT, transportOptions));
+	}
+
+	public Mono<DeleteByQueryResponse> deleteByQuery(
+			Function<DeleteByQueryRequest.Builder, ObjectBuilder<DeleteByQueryRequest>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return deleteByQuery(fn.apply(new DeleteByQueryRequest.Builder()).build());
 	}
 
 	// endregion

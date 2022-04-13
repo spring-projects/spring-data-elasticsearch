@@ -62,15 +62,15 @@ public class BaseQuery implements Query {
 	@Nullable protected Integer maxResults;
 	@Nullable protected HighlightQuery highlightQuery;
 	@Nullable private Boolean trackTotalHits;
-	@Nullable private Integer trackTotalHitsUpTo;
-	@Nullable private Duration scrollTime;
-	@Nullable private Duration timeout;
+	@Nullable protected Integer trackTotalHitsUpTo;
+	@Nullable protected Duration scrollTime;
+	@Nullable protected Duration timeout;
 	private boolean explain = false;
-	@Nullable private List<Object> searchAfter;
+	@Nullable protected List<Object> searchAfter;
 	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
 	@Nullable protected Boolean requestCache;
-	private List<IdWithRouting> idsWithRouting = Collections.emptyList();
-	private final List<RuntimeField> runtimeFields = new ArrayList<>();
+	protected List<IdWithRouting> idsWithRouting = Collections.emptyList();
+	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
 
 	public BaseQuery() {}
 
@@ -86,6 +86,8 @@ public class BaseQuery implements Query {
 		this.preference = builder.getPreference();
 		this.sourceFilter = builder.getSourceFilter();
 		this.fields = builder.getFields();
+		this.highlightQuery = builder.highlightQuery;
+		this.route = builder.getRoute();
 		// #1973 add the other fields to the builder
 	}
 

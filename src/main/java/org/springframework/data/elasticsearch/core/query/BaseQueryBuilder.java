@@ -44,6 +44,8 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	@Nullable private String preference;
 	@Nullable private SourceFilter sourceFilter;
 	private List<String> fields = new ArrayList<>();
+	@Nullable protected HighlightQuery highlightQuery;
+	@Nullable private String route;
 
 	@Nullable
 	public Pageable getPageable() {
@@ -90,6 +92,16 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 
 	public List<String> getFields() {
 		return fields;
+	}
+
+	@Nullable
+	public HighlightQuery getHighlightQuery() {
+		return highlightQuery;
+	}
+
+	@Nullable
+	public String getRoute() {
+		return route;
 	}
 
 	public SELF withPageable(Pageable pageable) {
@@ -153,6 +165,16 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 
 	public SELF withFields(Collection<String> fields) {
 		this.fields.addAll(fields);
+		return self();
+	}
+
+	public SELF withHighlightQuery(HighlightQuery highlightQuery) {
+		this.highlightQuery = highlightQuery;
+		return self();
+	}
+
+	public SELF withRoute(String route) {
+		this.route = route;
 		return self();
 	}
 
