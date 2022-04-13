@@ -27,8 +27,17 @@ import java.util.Map;
 import org.elasticsearch.action.support.ActiveShardCount;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.common.lucene.search.function.CombineFunction;
+import org.elasticsearch.common.lucene.search.function.FunctionScoreQuery;
 import org.elasticsearch.core.TimeValue;
+import org.elasticsearch.index.query.InnerHitBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.functionscore.FunctionScoreQueryBuilder;
+import org.elasticsearch.index.query.functionscore.GaussDecayFunctionBuilder;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
+import org.elasticsearch.join.query.ParentIdQueryBuilder;
+import org.elasticsearch.script.Script;
+import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
@@ -38,12 +47,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.IndicesOptions;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery;
+import org.springframework.data.elasticsearch.core.query.ScriptField;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
+import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
@@ -113,6 +126,79 @@ public class ElasticsearchERHLCIntegrationTests extends ElasticsearchIntegration
 						.must(wildcardQuery(firstField, firstValue)) //
 						.should(wildcardQuery(secondField, secondValue))) //
 				.withMinScore(minScore).build();
+	}
+
+	@Override
+	protected Query getQueryWithCollapse(String collapseField, @Nullable String innerHits, @Nullable Integer size) {
+		CollapseBuilder collapseBuilder = new CollapseBuilder(collapseField);
+
+		if (innerHits != null) {
+			InnerHitBuilder innerHitBuilder = new InnerHitBuilder(innerHits);
+
+			if (size != null) {
+				innerHitBuilder.setSize(size);
+			}
+
+			collapseBuilder.setInnerHits(innerHitBuilder);
+		}
+
+		return new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withCollapseBuilder(collapseBuilder).build();
+	}
+
+	@Override
+	protected Query getMatchAllQueryWithFilterForId(String id) {
+		return new NativeSearchQueryBuilder().withQuery(matchAllQuery()).withFilter(boolQuery().filter(termQuery("id", id)))
+				.build();
+	}
+
+	@Override
+	protected Query getQueryForParentId(String type, String id, @Nullable String route) {
+
+		NativeSearchQueryBuilder queryBuilder = new NativeSearchQueryBuilder()
+				.withQuery(new ParentIdQueryBuilder(type, id));
+
+		if (route != null) {
+			queryBuilder.withRoute(route);
+		}
+		return queryBuilder.build();
+	}
+
+	@Override
+	protected Query getMatchAllQueryWithIncludesAndInlineExpressionScript(@Nullable String includes, String fieldName,
+			String script, Map<String, java.lang.Object> params) {
+
+		NativeSearchQueryBuilder nativeSearchQueryBuilder = new NativeSearchQueryBuilder().withQuery(matchAllQuery());
+
+		if (includes != null) {
+			nativeSearchQueryBuilder.withSourceFilter(new FetchSourceFilterBuilder().withIncludes(includes).build());
+		}
+		return nativeSearchQueryBuilder.withScriptField(new ScriptField(fieldName,
+				new Script(org.elasticsearch.script.ScriptType.INLINE, "expression", script, params))).build();
+	}
+
+	@Override
+	protected Query getQueryWithRescorer() {
+		return new NativeSearchQueryBuilder() //
+				.withQuery( //
+						boolQuery() //
+								.filter(existsQuery("rate")) //
+								.should(termQuery("message", "message"))) //
+				.withRescorerQuery( //
+						new RescorerQuery( //
+								new NativeSearchQueryBuilder() //
+										.withQuery(QueryBuilders
+												.functionScoreQuery(new FunctionScoreQueryBuilder.FilterFunctionBuilder[] {
+														new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+																new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5).setWeight(1f)),
+														new FunctionScoreQueryBuilder.FilterFunctionBuilder(
+																new GaussDecayFunctionBuilder("rate", 0, 10, null, 0.5).setWeight(100f)) }) //
+												.scoreMode(FunctionScoreQuery.ScoreMode.SUM) //
+												.maxBoost(80f) //
+												.boostMode(CombineFunction.REPLACE)) //
+										.build())//
+												.withScoreMode(RescorerQuery.ScoreMode.Max) //
+												.withWindowSize(100)) //
+				.build();
 	}
 
 	@Test // DATAES-768

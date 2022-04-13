@@ -16,14 +16,15 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
-import static org.springframework.util.ObjectUtils.*;
+import static org.springframework.util.CollectionUtils.*;
 
+import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.InlineScript;
 import co.elastic.clients.elasticsearch._types.OpType;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.VersionType;
+import co.elastic.clients.elasticsearch._types.WaitForActiveShardOptions;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch._types.mapping.Property;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
@@ -31,20 +32,17 @@ import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
-import co.elastic.clients.elasticsearch.core.DeleteRequest;
-import co.elastic.clients.elasticsearch.core.GetRequest;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.MgetRequest;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
+import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetOperation;
 import co.elastic.clients.elasticsearch.core.search.Highlight;
+import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
@@ -58,6 +56,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +66,7 @@ import java.util.stream.Collectors;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
+import org.springframework.data.elasticsearch.core.ScriptType;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -562,6 +562,79 @@ class RequestConverter {
 		return builder.build();
 	}
 
+	private UpdateOperation<?, ?> bulkUpdateOperation(UpdateQuery query, IndexCoordinates index,
+			@Nullable RefreshPolicy refreshPolicy) {
+
+		UpdateOperation.Builder<Object, Object> uob = new UpdateOperation.Builder<>();
+		String indexName = query.getIndexName() != null ? query.getIndexName() : index.getIndexName();
+
+		uob.index(indexName).id(query.getId());
+		uob.action(a -> {
+			a //
+					.script(getScript(query.getScriptData())) //
+					.doc(query.getDocument()) //
+					.upsert(query.getUpsert()) //
+					.scriptedUpsert(query.getScriptedUpsert()) //
+					.docAsUpsert(query.getDocAsUpsert()) //
+			;
+
+			if (query.getFetchSource() != null) {
+				a.source(sc -> sc.fetch(query.getFetchSource()));
+			}
+
+			if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
+				List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
+						: Collections.emptyList();
+				List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
+						: Collections.emptyList();
+				a.source(sc -> sc.filter(sf -> sf.includes(includes).excludes(excludes)));
+			}
+
+			return a;
+		});
+
+		uob //
+				.routing(query.getRouting()) //
+				.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
+				.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
+				.retryOnConflict(query.getRetryOnConflict()) //
+		;
+
+		// no refresh, timeout, waitForActiveShards on UpdateOperation or UpdateAction
+
+		return uob.build();
+	}
+
+	@Nullable
+	private co.elastic.clients.elasticsearch._types.Script getScript(@Nullable ScriptData scriptData) {
+
+		if (scriptData == null) {
+			return null;
+		}
+
+		Map<String, JsonData> params = new HashMap<>();
+
+		if (scriptData.getParams() != null) {
+			scriptData.getParams().forEach((key, value) -> {
+				params.put(key, JsonData.of(value, jsonpMapper));
+			});
+		}
+		return co.elastic.clients.elasticsearch._types.Script.of(sb -> {
+			if (scriptData.getType() == ScriptType.INLINE) {
+				sb.inline(is -> is //
+						.lang(scriptData.getLanguage()) //
+						.source(scriptData.getScript()) //
+						.params(params)); //
+			} else if (scriptData.getType() == ScriptType.STORED) {
+				sb.stored(ss -> ss //
+						.id(scriptData.getScript()) //
+						.params(params) //
+				);
+			}
+			return sb;
+		});
+	}
+
 	public BulkRequest documentBulkRequest(List<?> queries, BulkOptions bulkOptions, IndexCoordinates indexCoordinates,
 			@Nullable RefreshPolicy refreshPolicy) {
 
@@ -599,7 +672,8 @@ class RequestConverter {
 					ob.index(bulkIndexOperation(indexQuery, indexCoordinates, refreshPolicy));
 				}
 			} else if (query instanceof UpdateQuery) {
-				// todo #1973
+				UpdateQuery updateQuery = (UpdateQuery) query;
+				ob.update(bulkUpdateOperation(updateQuery, indexCoordinates, refreshPolicy));
 			}
 			return ob.build();
 		}).collect(Collectors.toList());
@@ -674,7 +748,7 @@ class RequestConverter {
 					}
 
 					if (source.getQuery() != null) {
-						s.query(getQuery(source.getQuery()));
+						s.query(getQuery(source.getQuery(), null));
 					}
 
 					if (source.getRemote() != null) {
@@ -731,13 +805,8 @@ class RequestConverter {
 			builder.script(s -> s.inline(InlineScript.of(i -> i.lang(script.getLang()).source(script.getSource()))));
 		}
 
-		if (reindexRequest.getTimeout() != null) {
-			builder.timeout(tv -> tv.time(reindexRequest.getTimeout().toMillis() + "ms"));
-		}
-
-		if (reindexRequest.getScroll() != null) {
-			builder.scroll(tv -> tv.time(reindexRequest.getScroll().toMillis() + "ms"));
-		}
+		builder.timeout(time(reindexRequest.getTimeout())) //
+				.scroll(time(reindexRequest.getScroll()));
 
 		if (reindexRequest.getWaitForActiveShards() != null) {
 			builder.waitForActiveShards(wfas -> wfas //
@@ -779,7 +848,7 @@ class RequestConverter {
 
 		return DeleteByQueryRequest.of(b -> {
 			b.index(Arrays.asList(index.getIndexNames())) //
-					.query(getQuery(query))//
+					.query(getQuery(query, clazz))//
 					.refresh(deleteByQueryRefresh(refreshPolicy));
 
 			if (query.isLimiting()) {
@@ -787,16 +856,147 @@ class RequestConverter {
 				b.maxDocs(Long.valueOf(query.getMaxResults()));
 			}
 
-			if (query.hasScrollTime()) {
-				// noinspection ConstantConditions
-				b.scroll(Time.of(t -> t.time(query.getScrollTime().toMillis() + "ms")));
-			}
+			b.scroll(time(query.getScrollTime()));
 
 			if (query.getRoute() != null) {
 				b.routing(query.getRoute());
 			}
 
 			return b;
+		});
+	}
+
+	public UpdateRequest<Document, ?> documentUpdateRequest(UpdateQuery query, IndexCoordinates index,
+			@Nullable RefreshPolicy refreshPolicy, @Nullable String routing) {
+
+		String indexName = query.getIndexName() != null ? query.getIndexName() : index.getIndexName();
+		return UpdateRequest.of(uqb -> {
+			uqb.index(indexName).id(query.getId());
+
+			if (query.getScript() != null) {
+				Map<String, JsonData> params = new HashMap<>();
+
+				if (query.getParams() != null) {
+					query.getParams().forEach((key, value) -> {
+						params.put(key, JsonData.of(value, jsonpMapper));
+					});
+				}
+
+				uqb.script(sb -> {
+					if (query.getScriptType() == ScriptType.INLINE) {
+						sb.inline(is -> is //
+								.lang(query.getLang()) //
+								.source(query.getScript()) //
+								.params(params)); //
+					} else if (query.getScriptType() == ScriptType.STORED) {
+						sb.stored(ss -> ss //
+								.id(query.getScript()) //
+								.params(params) //
+						);
+					}
+					return sb;
+				}
+
+				);
+			}
+
+			uqb //
+					.doc(query.getDocument()) //
+					.upsert(query.getUpsert()) //
+					.routing(query.getRouting() != null ? query.getRouting() : routing) //
+					.scriptedUpsert(query.getScriptedUpsert()) //
+					.docAsUpsert(query.getDocAsUpsert()) //
+					.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
+					.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
+					.refresh(refresh(refreshPolicy)) //
+					.retryOnConflict(query.getRetryOnConflict()) //
+			;
+
+			if (query.getFetchSource() != null) {
+				uqb.source(sc -> sc.fetch(query.getFetchSource()));
+			}
+
+			if (query.getFetchSourceIncludes() != null || query.getFetchSourceExcludes() != null) {
+				List<String> includes = query.getFetchSourceIncludes() != null ? query.getFetchSourceIncludes()
+						: Collections.emptyList();
+				List<String> excludes = query.getFetchSourceExcludes() != null ? query.getFetchSourceExcludes()
+						: Collections.emptyList();
+				uqb.source(sc -> sc.filter(sf -> sf.includes(includes).excludes(excludes)));
+			}
+
+			if (query.getTimeout() != null) {
+				uqb.timeout(tv -> tv.time(query.getTimeout()));
+			}
+
+			String waitForActiveShards = query.getWaitForActiveShards();
+			if (waitForActiveShards != null) {
+				if ("all".equalsIgnoreCase(waitForActiveShards)) {
+					uqb.waitForActiveShards(wfa -> wfa.option(WaitForActiveShardOptions.All));
+				} else {
+					int val;
+					try {
+						val = Integer.parseInt(waitForActiveShards);
+					} catch (NumberFormatException var3) {
+						throw new IllegalArgumentException("cannot parse ActiveShardCount[" + waitForActiveShards + "]", var3);
+					}
+					uqb.waitForActiveShards(wfa -> wfa.count(val));
+				}
+			}
+
+			return uqb;
+		} //
+		);
+	}
+
+	public UpdateByQueryRequest documentUpdateByQueryRequest(UpdateQuery updateQuery, IndexCoordinates index,
+			@Nullable RefreshPolicy refreshPolicy) {
+
+		return UpdateByQueryRequest.of(ub -> {
+			ub //
+					.index(Arrays.asList(index.getIndexNames())) //
+					.refresh(refreshPolicy == RefreshPolicy.IMMEDIATE) //
+					.routing(updateQuery.getRouting()) //
+					.script(getScript(updateQuery.getScriptData())) //
+					.maxDocs(updateQuery.getMaxDocs() != null ? Long.valueOf(updateQuery.getMaxDocs()) : null) //
+					.pipeline(updateQuery.getPipeline()) //
+					.requestsPerSecond(
+							updateQuery.getRequestsPerSecond() != null ? updateQuery.getRequestsPerSecond().longValue() : null) //
+					.slices(updateQuery.getSlices() != null ? Long.valueOf(updateQuery.getSlices()) : null) //
+			;
+
+			if (updateQuery.getAbortOnVersionConflict() != null) {
+				ub.conflicts(updateQuery.getAbortOnVersionConflict() ? Conflicts.Abort : Conflicts.Proceed);
+			}
+
+			if (updateQuery.getBatchSize() != null) {
+				ub.size(Long.valueOf(updateQuery.getBatchSize()));
+			}
+
+			if (updateQuery.getQuery() != null) {
+				Query queryQuery = updateQuery.getQuery();
+				ub.query(getQuery(queryQuery, null));
+
+				// no indicesOptions available like in old client
+
+				ub.scroll(time(queryQuery.getScrollTime()));
+			}
+
+			// no maxRetries available like in old client
+			// no shouldStoreResult
+
+			if (updateQuery.getRefreshPolicy() != null) {
+				ub.refresh(updateQuery.getRefreshPolicy() == RefreshPolicy.IMMEDIATE);
+			}
+
+			if (updateQuery.getTimeout() != null) {
+				ub.timeout(tb -> tb.time(updateQuery.getTimeout()));
+			}
+
+			if (updateQuery.getWaitForActiveShards() != null) {
+				ub.waitForActiveShards(w -> w.count(waitForActiveShardsCount(updateQuery.getWaitForActiveShards())));
+			}
+
+			return ub;
 		});
 	}
 
@@ -831,11 +1031,34 @@ class RequestConverter {
 			builder.scroll(t -> t.time(scrollTimeInMillis + "ms"));
 		}
 
-		builder.query(getQuery(query));
+		builder.query(getQuery(query, clazz));
 
 		addFilter(query, builder);
 
 		return builder.build();
+	}
+
+	public MsearchRequest searchMsearchRequest(
+			List<ElasticsearchTemplate.MultiSearchQueryParameter> multiSearchQueryParameters) {
+
+		return MsearchRequest.of(mrb -> {
+			multiSearchQueryParameters.forEach(param -> {
+				ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(param.clazz);
+
+				mrb.searches(sb -> sb //
+						.header(h -> h //
+								.index(param.index.getIndexName()) //
+				// todo #1973 add remaining flags for header
+				) //
+						.body(bb -> bb //
+								.query(getQuery(param.query, param.clazz))//
+				// #1973 seq_no_primary_term and version not available in client ES issue 161
+				// todo #1973 add remaining flags for body
+				) //
+				);
+			});
+			return mrb;
+		});
 	}
 
 	private <T> void prepareSearchRequest(Query query, @Nullable Class<T> clazz, IndexCoordinates indexCoordinates,
@@ -930,7 +1153,11 @@ class RequestConverter {
 		if (!isEmpty(query.getSearchAfter())) {
 			builder.searchAfter(query.getSearchAfter().stream().map(Object::toString).collect(Collectors.toList()));
 		}
-		// todo #1973 rescorer queries
+
+		query.getRescorerQueries().forEach(rescorerQuery -> {
+			builder.rescore(getRescore(rescorerQuery));
+		});
+
 		// todo #1973 request cache
 
 		if (!query.getRuntimeFields().isEmpty()) {
@@ -952,10 +1179,25 @@ class RequestConverter {
 			// request_cache is not allowed on scroll requests.
 			builder.requestCache(null);
 			Duration scrollTimeout = query.getScrollTime() != null ? query.getScrollTime() : Duration.ofMinutes(1);
-			builder.scroll(tv -> tv.time(scrollTimeout.toMillis() + "ms"));
+			builder.scroll(time(scrollTimeout));
 			// limit the number of documents in a batch
 			builder.size(500);
 		}
+	}
+
+	private Rescore getRescore(RescorerQuery rescorerQuery) {
+
+		return Rescore.of(r -> r //
+				.query(rq -> rq //
+						.query(getQuery(rescorerQuery.getQuery(), null)) //
+						.scoreMode(scoreMode(rescorerQuery.getScoreMode())) //
+						.queryWeight(rescorerQuery.getQueryWeight() != null ? Double.valueOf(rescorerQuery.getQueryWeight()) : 1.0) //
+						.rescoreQueryWeight(
+								rescorerQuery.getRescoreQueryWeight() != null ? Double.valueOf(rescorerQuery.getRescoreQueryWeight())
+										: 1.0) //
+
+				) //
+				.windowSize(rescorerQuery.getWindowSize()));
 	}
 
 	private void addHighlight(Query query, SearchRequest.Builder builder) {
@@ -1032,23 +1274,35 @@ class RequestConverter {
 	}
 
 	private void prepareNativeSearch(NativeQuery query, SearchRequest.Builder builder) {
-		// todo #1973 script fields
-		// todo #1973 collapse builder
+
+		query.getScriptedFields().forEach(scriptedField -> {
+			builder.scriptFields(scriptedField.getFieldName(), sf -> sf.script(getScript(scriptedField.getScriptData())));
+		});
+
+		builder //
+				.suggest(query.getSuggester()) //
+				.collapse(query.getFieldCollapse()) //
+		;
+
 		// todo #1973 indices boost
 
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
 		}
 
-		builder.suggest(query.getSuggester());
-
 		// todo #1973 searchExt
 	}
 
 	@Nullable
-	private co.elastic.clients.elasticsearch._types.query_dsl.Query getQuery(Query query) {
+	private co.elastic.clients.elasticsearch._types.query_dsl.Query getQuery(@Nullable Query query,
+			@Nullable Class<?> clazz) {
 
-		// todo #1973 some native stuff
+		if (query == null) {
+			return null;
+		}
+
+		elasticsearchConverter.updateQuery(query, clazz);
+
 		co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = null;
 
 		if (query instanceof CriteriaQuery) {
@@ -1074,7 +1328,7 @@ class RequestConverter {
 		} else if (query instanceof StringQuery) {
 			// no filter for StringQuery
 		} else if (query instanceof NativeQuery) {
-			// todo #1973 NativeQuery filter
+			builder.postFilter(((NativeQuery) query).getFilter());
 		} else {
 			throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
 		}
@@ -1128,6 +1382,7 @@ class RequestConverter {
 
 		return moreLikeThisQuery;
 	}
+
 	// endregion
 
 	// region helper functions

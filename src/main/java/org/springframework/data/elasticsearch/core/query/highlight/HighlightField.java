@@ -25,6 +25,17 @@ public class HighlightField {
 	private final String name;
 	private final HighlightFieldParameters parameters;
 
+	/**
+	 * @since 4.4
+	 */
+	public HighlightField(String name) {
+
+		Assert.notNull(name, "name must not be null");
+
+		this.name = name;
+		this.parameters = HighlightFieldParameters.builder().build();
+	}
+
 	public HighlightField(String name, HighlightFieldParameters parameters) {
 
 		Assert.notNull(name, "name must not be null");

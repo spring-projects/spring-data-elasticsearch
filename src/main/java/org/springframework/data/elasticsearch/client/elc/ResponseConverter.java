@@ -23,6 +23,7 @@ import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
+import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetError;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
 import co.elastic.clients.elasticsearch.indices.*;
@@ -314,6 +315,56 @@ class ResponseConverter {
 	}
 
 	public ByQueryResponse byQueryResponse(DeleteByQueryResponse response) {
+		// the code for the methods taking a DeleteByQueryResponse or a UpdateByQueryResponse is duplicated because the
+		// Elasticsearch responses do not share a common class
+		// noinspection DuplicatedCode
+		List<ByQueryResponse.Failure> failures = response.failures().stream().map(this::byQueryResponseFailureOf)
+				.collect(Collectors.toList());
+
+		ByQueryResponse.ByQueryResponseBuilder builder = ByQueryResponse.builder();
+
+		if (response.took() != null) {
+			builder.withTook(response.took());
+		}
+
+		if (response.timedOut() != null) {
+			builder.withTimedOut(response.timedOut());
+		}
+
+		if (response.total() != null) {
+			builder.withTotal(response.total());
+		}
+
+		if (response.deleted() != null) {
+			builder.withDeleted(response.deleted());
+		}
+
+		if (response.batches() != null) {
+			builder.withBatches(Math.toIntExact(response.batches()));
+		}
+
+		if (response.versionConflicts() != null) {
+			builder.withVersionConflicts(response.versionConflicts());
+		}
+
+		if (response.noops() != null) {
+			builder.withNoops(response.noops());
+		}
+
+		if (response.retries() != null) {
+			builder.withBulkRetries(response.retries().bulk());
+			builder.withSearchRetries(response.retries().search());
+		}
+
+		builder.withFailures(failures);
+
+		return builder.build();
+	}
+
+	public ByQueryResponse byQueryResponse(UpdateByQueryResponse response) {
+		// the code for the methods taking a DeleteByQueryResponse or a UpdateByQueryResponse is duplicated because the
+		// Elasticsearch responses do not share a common class
+		// noinspection DuplicatedCode
 		List<ByQueryResponse.Failure> failures = response.failures().stream().map(this::byQueryResponseFailureOf)
 				.collect(Collectors.toList());
 
@@ -358,8 +409,8 @@ class ResponseConverter {
 	}
 
 	// endregion
-
 	// region helper functions
+
 	private long timeToLong(Time time) {
 
 		if (time.isTime()) {

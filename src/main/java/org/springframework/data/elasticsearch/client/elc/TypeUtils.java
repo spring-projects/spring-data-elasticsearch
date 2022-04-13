@@ -20,7 +20,9 @@ import co.elastic.clients.elasticsearch._types.DistanceUnit;
 import co.elastic.clients.elasticsearch._types.GeoDistanceType;
 import co.elastic.clients.elasticsearch._types.OpType;
 import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.SortMode;
+import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.VersionType;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch.core.search.BoundaryScanner;
@@ -30,11 +32,16 @@ import co.elastic.clients.elasticsearch.core.search.HighlighterFragmenter;
 import co.elastic.clients.elasticsearch.core.search.HighlighterOrder;
 import co.elastic.clients.elasticsearch.core.search.HighlighterTagsSchema;
 import co.elastic.clients.elasticsearch.core.search.HighlighterType;
+import co.elastic.clients.elasticsearch.core.search.ScoreMode;
+
+import java.time.Duration;
 
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Order;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.lang.Nullable;
 
@@ -244,6 +251,54 @@ final class TypeUtils {
 	}
 
 	@Nullable
+	static UpdateResponse.Result result(@Nullable Result result) {
+
+		if (result == null) {
+			return null;
+		}
+
+		switch (result) {
+			case Created:
+				return UpdateResponse.Result.CREATED;
+			case Updated:
+				return UpdateResponse.Result.UPDATED;
+			case Deleted:
+				return UpdateResponse.Result.DELETED;
+			case NotFound:
+				return UpdateResponse.Result.NOT_FOUND;
+			case NoOp:
+				return UpdateResponse.Result.NOOP;
+		}
+
+		return null;
+	}
+
+	@Nullable
+	static ScoreMode scoreMode(@Nullable RescorerQuery.ScoreMode scoreMode) {
+
+		if (scoreMode == null) {
+			return null;
+		}
+
+		switch (scoreMode) {
+			case Default:
+				return null;
+			case Avg:
+				return ScoreMode.Avg;
+			case Max:
+				return ScoreMode.Max;
+			case Min:
+				return ScoreMode.Min;
+			case Total:
+				return ScoreMode.Total;
+			case Multiply:
+				return ScoreMode.Multiply;
+		}
+
+		return null;
+	}
+
+	@Nullable
 	static SortMode sortMode(Order.Mode mode) {
 
 		switch (mode) {
@@ -258,6 +313,16 @@ final class TypeUtils {
 		}
 
 		return null;
+	}
+
+	@Nullable
+	static Time time(@Nullable Duration duration) {
+
+		if (duration == null) {
+			return null;
+		}
+
+		return Time.of(t -> t.time(duration.toMillis() + "ms"));
 	}
 
 	@Nullable

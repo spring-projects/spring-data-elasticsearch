@@ -65,7 +65,6 @@ public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery
 	@Nullable private CollapseBuilder collapseBuilder;
 	@Nullable private List<IndexBoost> indicesBoost = new ArrayList<>();
 	@Nullable private SearchTemplateRequestBuilder searchTemplateBuilder;
-	@Nullable private String route;
 	@Nullable private SearchType searchType;
 	@Nullable private Boolean trackTotalHits;
 	@Nullable private Duration timeout;
@@ -232,11 +231,6 @@ public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withRoute(String route) {
-		this.route = route;
-		return this;
-	}
-
 	public NativeSearchQueryBuilder withSearchType(SearchType searchType) {
 		this.searchType = searchType;
 		return this;
@@ -318,10 +312,6 @@ public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery
 
 		if (!isEmpty(pipelineAggregationBuilders)) {
 			nativeSearchQuery.setPipelineAggregations(pipelineAggregationBuilders);
-		}
-
-		if (route != null) {
-			nativeSearchQuery.setRoute(route);
 		}
 
 		if (searchType != null) {

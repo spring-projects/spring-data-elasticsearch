@@ -15,10 +15,13 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
+
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.get.GetResult;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 import reactor.core.publisher.Flux;
@@ -46,6 +49,7 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -104,6 +108,34 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	}
 
 	@Override
+	public <T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entitiesPublisher, IndexCoordinates index) {
+
+		Assert.notNull(entitiesPublisher, "entitiesPublisher must not be null!");
+
+		return entitiesPublisher //
+				.flatMapMany(entities -> Flux.fromIterable(entities) //
+						.concatMap(entity -> maybeCallBeforeConvert(entity, index)) //
+				).collectList() //
+				.map(Entities::new) //
+				.flatMapMany(entities -> {
+
+					if (entities.isEmpty()) {
+						return Flux.empty();
+					}
+
+					return doBulkOperation(entities.indexQueries(), BulkOptions.defaultOptions(), index)//
+							.index() //
+							.flatMap(indexAndResponse -> {
+								T savedEntity = entities.entityAt(indexAndResponse.getT1());
+								BulkResponseItem response = indexAndResponse.getT2();
+								updateIndexedObject(savedEntity, IndexedObjectInformation.of(response.id(), response.seqNo(),
+										response.primaryTerm(), response.version()));
+								return maybeCallAfterSave(savedEntity, index);
+							});
+				});
+	}
+
+	@Override
 	public <T> Mono<T> get(String id, Class<T> entityType, IndexCoordinates index) {
 
 		Assert.notNull(id, "id must not be null");
@@ -144,9 +176,9 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		return Mono.from(execute( //
 				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.ReindexResponse>>) client -> client
 						.reindex(reindexRequestES)))
-				.flatMap(response -> (response.task() == null)
-						? Mono.error( // todo #1973 check behaviour and create issue in ES if necessary
-								new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
+				.flatMap(response -> (response.task() == null) ? Mono.error( // todo #1973 check behaviour and create issue in
+																																			// ES if necessary
+						new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
 						: Mono.just(response.task()));
 	}
 
@@ -170,7 +202,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	}
 
-	private <R> Mono<BulkResponse> checkForBulkOperationFailure(BulkResponse bulkResponse) {
+	private Mono<BulkResponse> checkForBulkOperationFailure(BulkResponse bulkResponse) {
 
 		if (bulkResponse.errors()) {
 			Map<String, String> failedDocuments = new HashMap<>();
@@ -214,6 +246,31 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				}).onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
 	}
 
+	@Override
+	public <T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
+
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(clazz, "clazz must not be null");
+
+		MgetRequest request = requestConverter.documentMgetRequest(query, clazz, index);
+
+		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(converter, clazz, index);
+
+		Publisher<MgetResponse<EntityAsMap>> response = execute(
+				(ClientCallback<Publisher<MgetResponse<EntityAsMap>>>) client -> client.mget(request, EntityAsMap.class));
+
+		return Mono.from(response)//
+				.flatMapMany(it -> Flux.fromIterable(DocumentAdapters.from(it))) //
+				.flatMap(multiGetItem -> {
+					if (multiGetItem.isFailed()) {
+						return Mono.just(MultiGetItem.of(null, multiGetItem.getFailure()));
+					} else {
+						return callback.toEntity(multiGetItem.getItem()) //
+								.map(t -> MultiGetItem.of(t, multiGetItem.getFailure()));
+					}
+				});
+	}
+
 	// endregion
 
 	@Override
@@ -223,8 +280,30 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	protected Mono<Boolean> doExists(String id, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index, true);
+
+		return Mono.from(execute(
+				((ClientCallback<Publisher<GetResponse<EntityAsMap>>>) client -> client.get(getRequest, EntityAsMap.class))))
+				.map(GetResult::found) //
+				.onErrorReturn(NoSuchIndexException.class, false);
 	}
+
+	@Override
+	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index) {
+
+		Assert.notNull(query, "query must not be null");
+
+		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, entityType, index,
+				getRefreshPolicy());
+		return Mono
+				.from(execute((ClientCallback<Publisher<DeleteByQueryResponse>>) client -> client.deleteByQuery(request)))
+				.map(responseConverter::byQueryResponse);
+	}
+
 	// region search operations
 
 	@Override
@@ -307,7 +386,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false, false);
 
 		// noinspection unchecked
-		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<T>((Class<T>) clazz, index);
+		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>((Class<T>) clazz, index);
 		SearchDocumentResponse.EntityCreator<T> entityCreator = searchDocument -> callback.toEntity(searchDocument)
 				.toFuture();
 
@@ -315,6 +394,15 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				.from(execute((ClientCallback<Publisher<SearchResponse<EntityAsMap>>>) client -> client.search(searchRequest,
 						EntityAsMap.class)))
 				.map(searchResponse -> SearchDocumentResponseBuilder.from(searchResponse, entityCreator, jsonpMapper));
+	}
+
+	@Override
+	public Flux<? extends AggregationContainer<?>> aggregate(Query query, Class<?> entityType, IndexCoordinates index) {
+
+		return doFindForResponse(query, entityType, index).flatMapMany(searchDocumentResponse -> {
+			ElasticsearchAggregations aggregations = (ElasticsearchAggregations) searchDocumentResponse.getAggregations();
+			return aggregations == null ? Flux.empty() : Flux.fromIterable(aggregations.aggregations());
+		});
 	}
 
 	// endregion
@@ -326,7 +414,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	protected Mono<String> getRuntimeLibraryVersion() {
-		return Mono.just(Version.VERSION.toString());
+		return Mono.just(Version.VERSION != null ? Version.VERSION.toString() : "null");
 	}
 
 	@Override
@@ -335,46 +423,21 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	}
 
 	@Override
-	public <T> Flux<T> saveAll(Mono<? extends Collection<? extends T>> entitiesPublisher, IndexCoordinates index) {
-
-		Assert.notNull(entitiesPublisher, "entitiesPublisher must not be null!");
-
-		return entitiesPublisher //
-				.flatMapMany(entities -> Flux.fromIterable(entities) //
-						.concatMap(entity -> maybeCallBeforeConvert(entity, index)) //
-				).collectList() //
-				.map(Entities::new) //
-				.flatMapMany(entities -> {
-
-					if (entities.isEmpty()) {
-						return Flux.empty();
-					}
-
-					return doBulkOperation(entities.indexQueries(), BulkOptions.defaultOptions(), index)//
-							.index() //
-							.flatMap(indexAndResponse -> {
-								T savedEntity = entities.entityAt(indexAndResponse.getT1());
-								BulkResponseItem response = indexAndResponse.getT2();
-								updateIndexedObject(savedEntity, IndexedObjectInformation.of(response.id(), response.seqNo(),
-										response.primaryTerm(), response.version()));
-								return maybeCallAfterSave(savedEntity, index);
-							});
-				});
-	}
-
-	@Override
-	public <T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
-	}
-
-	@Override
-	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
-	}
-
-	@Override
 	public Mono<UpdateResponse> update(UpdateQuery updateQuery, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
+
+		Assert.notNull(updateQuery, "UpdateQuery must not be null");
+		Assert.notNull(index, "Index must not be null");
+
+		UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index, getRefreshPolicy(),
+				routingResolver.getRouting());
+
+		return Mono.from(execute(
+				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.UpdateResponse<Document>>>) client -> client
+						.update(request, Document.class)))
+				.flatMap(response -> {
+					UpdateResponse.Result result = result(response.result());
+					return result == null ? Mono.empty() : Mono.just(UpdateResponse.of(result));
+				});
 	}
 
 	@Override
@@ -411,11 +474,6 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	@Override
 	public ReactiveClusterOperations cluster() {
 		return new ReactiveClusterTemplate(client.cluster(), converter);
-	}
-
-	@Override
-	public Flux<AggregationContainer<?>> aggregate(Query query, Class<?> entityType, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override
