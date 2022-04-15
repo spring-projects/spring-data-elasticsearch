@@ -25,7 +25,9 @@ import org.springframework.util.ObjectUtils;
  *
  * @author Sascha Woo
  * @since 4.3
+ * @deprecated use {org.springframework.data.domain.Range} instead.
  */
+@Deprecated(since = "5.0", forRemoval = true)
 public class Range<T> {
 
 	private final static Range<?> UNBOUNDED = Range.of(Bound.unbounded(), Bound.UNBOUNDED);
@@ -58,7 +60,7 @@ public class Range<T> {
 	 * @param <T>
 	 * @param value must not be {@literal null}.
 	 * @return
-	 * @see Range#closed(Object, Object) 
+	 * @see Range#closed(Object, Object)
 	 */
 	public static <T> Range<T> just(T value) {
 		return Range.closed(value, value);
@@ -231,8 +233,8 @@ public class Range<T> {
 	}
 
 	/**
-	 * Value object representing a boundary. A boundary can either be {@link #unbounded() unbounded}, {@link #inclusive(Object)} 
-	 * including its value} or {@link #exclusive(Object)}  its value}.
+	 * Value object representing a boundary. A boundary can either be {@link #unbounded() unbounded},
+	 * {@link #inclusive(Object)} including its value} or {@link #exclusive(Object)} its value}.
 	 */
 	public static final class Bound<T> {
 

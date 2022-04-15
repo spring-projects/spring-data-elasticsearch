@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
  * @author Sascha Woo
  * @since 4.3
  */
+@Deprecated(since = "5.0", forRemoval = true)
 public class RangeUnitTests {
 
 	@Test

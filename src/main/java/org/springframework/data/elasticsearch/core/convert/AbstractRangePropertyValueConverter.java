@@ -18,7 +18,7 @@ package org.springframework.data.elasticsearch.core.convert;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.data.elasticsearch.core.Range;
+import org.springframework.data.domain.Range;
 import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.util.Assert;
 
@@ -44,6 +44,7 @@ public abstract class AbstractRangePropertyValueConverter<T> extends AbstractPro
 		Assert.isInstanceOf(Map.class, value, "value must be instance of Map.");
 
 		try {
+			// noinspection unchecked
 			Map<String, Object> source = (Map<String, Object>) value;
 			Range.Bound<T> lowerBound;
 			Range.Bound<T> upperBound;
@@ -82,12 +83,13 @@ public abstract class AbstractRangePropertyValueConverter<T> extends AbstractPro
 		}
 
 		try {
+			// noinspection unchecked
 			Range<T> range = (Range<T>) value;
 			Range.Bound<T> lowerBound = range.getLowerBound();
 			Range.Bound<T> upperBound = range.getUpperBound();
 			Map<String, Object> target = new LinkedHashMap<>();
 
-			if (lowerBound.isBounded()) {
+			if (lowerBound.getValue().isPresent()) {
 				String lowerBoundValue = format(lowerBound.getValue().get());
 				if (lowerBound.isInclusive()) {
 					target.put(GTE_FIELD, lowerBoundValue);
@@ -96,7 +98,7 @@ public abstract class AbstractRangePropertyValueConverter<T> extends AbstractPro
 				}
 			}
 
-			if (upperBound.isBounded()) {
+			if (upperBound.getValue().isPresent()) {
 				String upperBoundValue = format(upperBound.getValue().get());
 				if (upperBound.isInclusive()) {
 					target.put(LTE_FIELD, upperBoundValue);

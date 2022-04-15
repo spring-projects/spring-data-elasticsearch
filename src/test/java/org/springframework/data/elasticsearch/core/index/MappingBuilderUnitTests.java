@@ -40,9 +40,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.domain.Range;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
-import org.springframework.data.elasticsearch.core.Range;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
@@ -167,7 +167,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				"      \"coerce\": true\n" + //
 				"    }\n" + //
 				"  }\n" + //
-				"}\n}"; //
+				"}\n"; //
 
 		// when
 		String mapping;
