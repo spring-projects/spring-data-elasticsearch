@@ -21,6 +21,8 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
@@ -35,16 +37,27 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Taylor Ono
  * @author Peter-Josef Meisch
+ * @author Alexander Torres
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
 	private String query;
+	private String includes;
+	private String excludes;
+	private Boolean hasSourceFilter = false;
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
 			String query) {
 		super(queryMethod, elasticsearchOperations);
 		Assert.notNull(query, "Query cannot be empty");
 		this.query = query;
+		this.includes = "";
+		this.excludes = "";
+		if (queryMethod.hasIncludes() || queryMethod.hasExcludes()) {
+			this.includes = queryMethod.getIncludes();
+			this.excludes = queryMethod.getExcludes();
+			this.hasSourceFilter = true;
+		}
 	}
 
 	@Override
@@ -64,6 +77,10 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 		if (queryMethod.hasAnnotatedHighlight()) {
 			stringQuery.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
+		}
+
+		if (hasSourceFilter) {
+			stringQuery.addSourceFilter(createSourceFilter(accessor));
 		}
 
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
@@ -101,6 +118,25 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		String queryString = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService())
 				.replacePlaceholders(this.query, parameterAccessor);
 		return new StringQuery(queryString);
+	}
+
+	protected SourceFilter createSourceFilter(ParametersParameterAccessor parameterAccessor) {
+		StringQueryUtil stringQueryUtil = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService());
+
+		String[] includeList = new String[0];
+		String[] excludeList = new String[0];
+
+		final String sourceFilterDelim = ",";
+		if (includes.length() != 0) {
+			String includeFilter = stringQueryUtil.replacePlaceholders(includes, parameterAccessor);
+			includeList = includeFilter.split(sourceFilterDelim);
+		}
+		if (excludes.length() != 0) {
+			String excludeFilter = stringQueryUtil.replacePlaceholders(excludes, parameterAccessor);
+			excludeList = excludeFilter.split(sourceFilterDelim);
+		}
+
+		return new FetchSourceFilterBuilder().withExcludes(excludeList).withIncludes(includeList).build();
 	}
 
 }

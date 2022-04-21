@@ -41,16 +41,19 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
+import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Niklas Herder
+ * @author Alexander Torres
  */
 @ExtendWith(MockitoExtension.class)
 public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryUnitTestBase {
@@ -136,6 +139,27 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 		ElasticsearchQueryMethod queryMethod = getQueryMethod(methodName, argTypes);
 		ElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
 		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
+	}
+
+	@Test // #2062
+	@DisplayName("create source filter for query")
+	void shouldCreateSourceFilter() {
+		ElasticsearchQueryMethod queryMethod = mock(ElasticsearchQueryMethod.class);
+		when(queryMethod.hasIncludes()).thenReturn(true);
+		when(queryMethod.getIncludes()).thenReturn("?0");
+		when(queryMethod.getExcludes()).thenReturn("?1");
+
+		ElasticsearchStringQuery elasticsearchStringQuery = spy(new ElasticsearchStringQuery(
+				queryMethod,
+				operations,
+				"{\"match_all\": {}}"
+		));
+		ParametersParameterAccessor parameterAccessor = mock(ParametersParameterAccessor.class);
+		when(parameterAccessor.getBindableValue(0)).thenReturn("foo");
+		when(parameterAccessor.getBindableValue(1)).thenReturn("bar");
+		SourceFilter resp = elasticsearchStringQuery.createSourceFilter(parameterAccessor);
+		assertThat(resp.getIncludes()).isEqualTo(new String[]{"foo"});
+		assertThat(resp.getExcludes()).isEqualTo(new String[]{"bar"});
 	}
 
 	@Test // #1866

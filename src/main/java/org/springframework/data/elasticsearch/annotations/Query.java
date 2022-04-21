@@ -27,6 +27,7 @@ import java.util.Collection;
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
  * @author Steven Pearce
+ * @author Alexander Torres
  */
 
 @Retention(RetentionPolicy.RUNTIME)

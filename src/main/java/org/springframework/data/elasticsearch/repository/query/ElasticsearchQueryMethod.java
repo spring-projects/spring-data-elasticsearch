@@ -50,6 +50,7 @@ import org.springframework.util.ClassUtils;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Alexander Torres
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
@@ -121,6 +122,22 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		return new HighlightQuery(
 				org.springframework.data.elasticsearch.core.query.highlight.Highlight.of(highlightAnnotation),
 				getDomainClass());
+	}
+
+	public boolean hasIncludes() {
+		return hasAnnotatedQuery() && !queryAnnotation.includes().equals("");
+	}
+
+	public boolean hasExcludes() {
+		return hasAnnotatedQuery() && !queryAnnotation.excludes().equals("");
+	}
+
+	public String getIncludes() {
+		return queryAnnotation.includes();
+	}
+
+	public String getExcludes() {
+		return queryAnnotation.excludes();
 	}
 
 	/**
