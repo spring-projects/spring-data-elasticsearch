@@ -25,7 +25,7 @@ import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
 import co.elastic.clients.transport.ElasticsearchTransport;
@@ -300,7 +300,7 @@ public class DevTests {
 				.query(query -> query.match(matchQuery -> matchQuery.field("content").query(FieldValue.of("content1"))))
 				.build();
 
-		SearchResponse<EntityAsMap> searchResponse = null;
+		ResponseBody<EntityAsMap> searchResponse = null;
 		try {
 			searchResponse = searchImperative(searchRequest);
 			assertThat(searchResponse).isNotNull();
@@ -316,11 +316,11 @@ public class DevTests {
 		}
 	}
 
-	private SearchResponse<EntityAsMap> searchImperative(SearchRequest searchRequest) throws IOException {
+	private ResponseBody<EntityAsMap> searchImperative(SearchRequest searchRequest) throws IOException {
 		return imperativeElasticsearchClient.search(searchRequest, EntityAsMap.class);
 	}
 
-	private SearchResponse<EntityAsMap> searchReactive(SearchRequest searchRequest) {
+	private ResponseBody<EntityAsMap> searchReactive(SearchRequest searchRequest) {
 		return Objects.requireNonNull(reactiveElasticsearchClient.search(searchRequest, EntityAsMap.class).block());
 	}
 	// endregion

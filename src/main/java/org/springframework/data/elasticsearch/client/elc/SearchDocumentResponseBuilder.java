@@ -19,6 +19,7 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.elasticsearch.core.search.Suggestion;
 import co.elastic.clients.elasticsearch.core.search.TotalHits;
 import co.elastic.clients.json.JsonpMapper;
@@ -45,21 +46,22 @@ class SearchDocumentResponseBuilder {
 	/**
 	 * creates a SearchDocumentResponse from the {@link SearchResponse}
 	 *
-	 * @param searchResponse the Elasticsearch search response
+	 * @param responseBody the Elasticsearch response body
 	 * @param entityCreator function to create an entity from a {@link SearchDocument}
 	 * @param jsonpMapper to map JsonData objects
 	 * @return the SearchDocumentResponse
 	 */
-	public static <T> SearchDocumentResponse from(SearchResponse<EntityAsMap> searchResponse,
+	@SuppressWarnings("DuplicatedCode")
+	public static <T> SearchDocumentResponse from(ResponseBody<EntityAsMap> responseBody,
 			SearchDocumentResponse.EntityCreator<T> entityCreator, JsonpMapper jsonpMapper) {
 
-		Assert.notNull(searchResponse, "searchResponse must not be null");
+		Assert.notNull(responseBody, "responseBody must not be null");
 		Assert.notNull(entityCreator, "entityCreator must not be null");
 
-		HitsMetadata<EntityAsMap> hitsMetadata = searchResponse.hits();
-		String scrollId = searchResponse.scrollId();
-		Map<String, Aggregate> aggregations = searchResponse.aggregations();
-		Map<String, List<Suggestion<EntityAsMap>>> suggest = searchResponse.suggest();
+		HitsMetadata<EntityAsMap> hitsMetadata = responseBody.hits();
+		String scrollId = responseBody.scrollId();
+		Map<String, Aggregate> aggregations = responseBody.aggregations();
+		Map<String, List<Suggestion<EntityAsMap>>> suggest = responseBody.suggest();
 
 		return from(hitsMetadata, scrollId, aggregations, suggest, entityCreator, jsonpMapper);
 	}

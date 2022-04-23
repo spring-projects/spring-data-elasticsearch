@@ -22,6 +22,7 @@ import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.get.GetResult;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 import reactor.core.publisher.Flux;
@@ -326,22 +327,27 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Time scrollTimeout = searchRequest.scroll() != null ? searchRequest.scroll() : Time.of(t -> t.time("1m"));
 
-		Flux<SearchResponse<EntityAsMap>> searchResponses = Flux.usingWhen(Mono.fromSupplier(ScrollState::new), //
-				state -> Mono
-						.from(execute((ClientCallback<Publisher<SearchResponse<EntityAsMap>>>) client -> client
-								.search(searchRequest, EntityAsMap.class))) //
-						.expand(entityAsMapSearchResponse -> {
+		Flux<ResponseBody<EntityAsMap>> searchResponses = Flux.usingWhen(Mono.fromSupplier(ScrollState::new), //
+				state -> {
+					return Mono
+							.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client1 -> client1
+									.search(searchRequest, EntityAsMap.class))) //
+							.expand(entityAsMapSearchResponse -> {
 
-							state.updateScrollId(entityAsMapSearchResponse.scrollId());
+								state.updateScrollId(entityAsMapSearchResponse.scrollId());
 
-							if (entityAsMapSearchResponse.hits() == null
-									|| CollectionUtils.isEmpty(entityAsMapSearchResponse.hits().hits())) {
-								return Mono.empty();
-							}
+								if (entityAsMapSearchResponse.hits() == null
+										|| CollectionUtils.isEmpty(entityAsMapSearchResponse.hits().hits())) {
+									return Mono.empty();
+								}
 
-							return Mono.from(execute((ClientCallback<Publisher<ScrollResponse<EntityAsMap>>>) client -> client.scroll(
-									ScrollRequest.of(sr -> sr.scrollId(state.getScrollId()).scroll(scrollTimeout)), EntityAsMap.class)));
-						}),
+								return Mono.from(execute((ClientCallback<Publisher<ScrollResponse<EntityAsMap>>>) client1 -> {
+									ScrollRequest scrollRequest = ScrollRequest
+											.of(sr -> sr.scrollId(state.getScrollId()).scroll(scrollTimeout));
+									return client1.scroll(scrollRequest, EntityAsMap.class);
+								}));
+							});
+				},
 				this::cleanupScroll, (state, ex) -> cleanupScroll(state), this::cleanupScroll);
 
 		return searchResponses.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits())
@@ -363,7 +369,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		SearchRequest searchRequest = requestConverter.searchRequest(query, entityType, index, true, false);
 
 		return Mono
-				.from(execute((ClientCallback<Publisher<SearchResponse<EntityAsMap>>>) client -> client.search(searchRequest,
+				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
 						EntityAsMap.class)))
 				.map(searchResponse -> searchResponse.hits().total() != null ? searchResponse.hits().total().value() : 0L);
 	}
@@ -371,7 +377,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	private Flux<SearchDocument> doFind(SearchRequest searchRequest) {
 
 		return Mono
-				.from(execute((ClientCallback<Publisher<SearchResponse<EntityAsMap>>>) client -> client.search(searchRequest,
+				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
 						EntityAsMap.class))) //
 				.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits()) //
 				.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));
@@ -391,7 +397,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				.toFuture();
 
 		return Mono
-				.from(execute((ClientCallback<Publisher<SearchResponse<EntityAsMap>>>) client -> client.search(searchRequest,
+				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
 						EntityAsMap.class)))
 				.map(searchResponse -> SearchDocumentResponseBuilder.from(searchResponse, entityCreator, jsonpMapper));
 	}

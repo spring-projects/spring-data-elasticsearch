@@ -22,6 +22,7 @@ import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.msearch.MultiSearchResponseItem;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 
@@ -353,8 +354,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return getSearchScrollHits(clazz, index, response);
 	}
 
-	private <T, R extends SearchResponse<EntityAsMap>> SearchScrollHits<T> getSearchScrollHits(Class<T> clazz,
-			IndexCoordinates index, R response) {
+	private <T> SearchScrollHits<T> getSearchScrollHits(Class<T> clazz, IndexCoordinates index,
+			ResponseBody<EntityAsMap> response) {
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
@@ -446,7 +447,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 			MultiSearchQueryParameter queryParameter = queryIterator.next();
 			MultiSearchResponseItem<EntityAsMap> responseItem = responseIterator.next();
 
-			// if responseItem kind is Result then responsItem.value is a MultiSearchItem which is derived from SearchResponse
+			// if responseItem kind is Result then responseItem.value is a MultiSearchItem which is derived from
+			// SearchResponse
 
 			if (responseItem.isResult()) {
 
