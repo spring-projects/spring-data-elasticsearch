@@ -18,8 +18,10 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<elasticsearch>7.17.2</elasticsearch>
-		<elasticsearch-java>7.17.2</elasticsearch-java>
+		<!-- version of the RestHighLevelClient	-->
+		<elasticsearch-rhlc>7.17.3</elasticsearch-rhlc>
+		<!-- version of the new ElasticsearchClient	-->
+		<elasticsearch-java>7.17.3</elasticsearch-java>
 		<log4j>2.17.1</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.7.0-SNAPSHOT</springdata.commons>
@@ -139,7 +141,7 @@
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
-			<version>${elasticsearch}</version>
+			<version>${elasticsearch-rhlc}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>commons-logging</groupId>
@@ -163,7 +165,7 @@
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-client</artifactId> <!-- is Apache 2-->
-			<version>${elasticsearch}</version>
+			<version>${elasticsearch-java}</version>
 			<exclusions>
 				<exclusion>
 					<groupId>commons-logging</groupId>
