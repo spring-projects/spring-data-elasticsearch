@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.ApiClient;
 import co.elastic.clients.elasticsearch._types.ErrorResponse;
 import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.JsonEndpoint;
 import co.elastic.clients.transport.TransportOptions;
@@ -218,7 +219,7 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 	// endregion
 	// region search
 
-	public <T> Mono<SearchResponse<T>> search(SearchRequest request, Class<T> tDocumentClass) {
+	public <T> Mono<ResponseBody<T>> search(SearchRequest request, Class<T> tDocumentClass) {
 
 		Assert.notNull(request, "request must not be null");
 		Assert.notNull(tDocumentClass, "tDocumentClass must not be null");
@@ -227,7 +228,7 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 				SearchRequest.createSearchEndpoint(this.getDeserializer(tDocumentClass)), transportOptions));
 	}
 
-	public <T> Mono<SearchResponse<T>> search(Function<SearchRequest.Builder, ObjectBuilder<SearchRequest>> fn,
+	public <T> Mono<ResponseBody<T>> search(Function<SearchRequest.Builder, ObjectBuilder<SearchRequest>> fn,
 			Class<T> tDocumentClass) {
 
 		Assert.notNull(fn, "fn must not be null");
