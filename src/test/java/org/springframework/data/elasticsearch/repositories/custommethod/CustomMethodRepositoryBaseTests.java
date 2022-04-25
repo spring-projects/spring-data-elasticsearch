@@ -1972,7 +1972,7 @@ public abstract class CustomMethodRepositoryBaseTests {
 				value = "{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}",
 				valueParams = "{" +
 						"\"_source\": {" +
-							"\"excludes\": \"?1\""  +
+							"\"excludes\": ?1"  +
 						"}" +
 					"}"
 

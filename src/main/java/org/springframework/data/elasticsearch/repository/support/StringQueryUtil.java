@@ -27,7 +27,6 @@ import org.springframework.util.NumberUtils;
 /**
  * @author Peter-Josef Meisch
  * @author Niklas Herder
- * @author Alexander Torres
  */
 final public class StringQueryUtil {
 
@@ -56,12 +55,6 @@ final public class StringQueryUtil {
 			String parameter = getParameterWithIndex(accessor, index);
 			String replacement = Matcher.quoteReplacement(parameter);
 
-			/**
-			 * Without this condition, interpolation fails for collections
-			 */
-			if (replacement.charAt(0) == '[' && replacement.charAt(replacement.length() - 1) == ']') {
-				placeholder = "\"" + placeholder + "\"";
-			}
 			result = result.replaceAll(placeholder, replacement);
 		}
 		return result;

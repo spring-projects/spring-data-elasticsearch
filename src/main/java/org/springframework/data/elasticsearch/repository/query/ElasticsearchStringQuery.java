@@ -53,7 +53,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 	private String query;
 	@Nullable
-	private JsonNode valueParams;
+	private String valueParams;
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
 			String query) {
@@ -141,21 +141,20 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		if (valueParams == null) {
 			return;
 		}
-		if (valueParams.has("_source")) {
-			String _source = valueParams.get("_source").toString();
-			String input = stringQueryUtil.replacePlaceholders(_source, parameterAccessor);
-			FetchSourceFilterBuilder sourceFilterConfig = om.readValue(input, FetchSourceFilterBuilder.class);
+		String valueParamsInput = stringQueryUtil.replacePlaceholders(valueParams, parameterAccessor);
+		JsonNode valueParamsNode = om.readTree(valueParamsInput);
+		if (valueParamsNode.has("_source")) {
+			String _source = valueParamsNode.get("_source").toString();
+			FetchSourceFilterBuilder sourceFilterConfig = om.readValue(_source, FetchSourceFilterBuilder.class);
 			stringQuery.addSourceFilter(sourceFilterConfig.build());
 		}
 		final String AGGREGATION_KEYWORD = "aggs";
-		if (valueParams.has(AGGREGATION_KEYWORD)) {
-			String input = valueParams.get(AGGREGATION_KEYWORD).toString();
-			String aggs = stringQueryUtil.replacePlaceholders(input, parameterAccessor);
-			JsonNode customAggregationConfigs = om.readTree(aggs);
-			Assert.isTrue(customAggregationConfigs.isObject(), "`aggs` should be a JSON object");
+		if (valueParamsNode.has(AGGREGATION_KEYWORD)) {
+			JsonNode aggs = valueParamsNode.get(AGGREGATION_KEYWORD);
+			Assert.isTrue(aggs.isObject(), "`aggs` should be a JSON object");
 
 			List<TermsAggregationBuilder> aggregations = new ArrayList<>();
-			Iterator<Map.Entry<String, JsonNode>> aggregationConfigs = customAggregationConfigs.fields();
+			Iterator<Map.Entry<String, JsonNode>> aggregationConfigs = aggs.fields();
 			aggregationConfigs.forEachRemaining(it -> {
 				String aggregationName = it.getKey();
 				JsonNode aggregationConfig = it.getValue();
