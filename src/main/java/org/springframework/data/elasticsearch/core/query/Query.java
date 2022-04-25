@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -41,6 +42,7 @@ import org.springframework.util.Assert;
  * @author Farid Azaza
  * @author Peter-Josef Meisch
  * @author Peer Mueller
+ * @author Alexander Torres
  */
 public interface Query {
 
@@ -440,4 +442,9 @@ public interface Query {
 			return routing;
 		}
 	}
+
+	@Nullable
+	SearchSourceBuilder getSearchSourceBuilder();
+
+	void setSearchSourceBuilder(SearchSourceBuilder searchSourceBuilder);
 }

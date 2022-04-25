@@ -20,14 +20,17 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import java.lang.Long;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.elasticsearch.search.aggregations.Aggregation;
+import org.elasticsearch.search.aggregations.Aggregations;
+import org.elasticsearch.search.aggregations.InternalAggregations;
+import org.elasticsearch.search.aggregations.bucket.terms.LongTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.StringTerms;
+import org.elasticsearch.search.aggregations.bucket.terms.UnmappedTerms;
+import org.elasticsearch.search.aggregations.support.AggregationContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -60,6 +63,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
 /**
@@ -71,6 +75,7 @@ import org.springframework.lang.Nullable;
  * @author Don Wellington
  * @author Peter-Josef Meisch
  * @author Rasmus Faber-Espensen
+ * @author Alexander Torres
  */
 @SpringIntegrationTest
 public abstract class CustomMethodRepositoryBaseTests {
@@ -111,6 +116,69 @@ public abstract class CustomMethodRepositoryBaseTests {
 		// then
 		assertThat(page).isNotNull();
 		assertThat(page.getTotalElements()).isGreaterThanOrEqualTo(1);
+	}
+
+	@Test // #2146
+	public void shouldExecuteSourceFilterSearch() {
+		Set<String> excludes = new HashSet<>();
+		excludes.add("message");
+		List<SampleEntity> sampleEntities = createSampleEntities("abc", 1);
+		repository.saveAll(sampleEntities);
+		SearchHits<SampleEntity> sampleEntitySearchHits = repository.searchWithSourceFilter("abc", excludes);
+		SampleEntity sampleEntity = sampleEntitySearchHits.getSearchHit(0).getContent();
+		assertThat(sampleEntity.getMessage()).isNull();
+	}
+
+	@Test // #2146
+	public void shouldExecuteAggregatedSearch() {
+		// TODO set docker elasticsearch credentials
+		String name = "test-agg";
+		String field = "available";
+		String subField = "rate";
+		String type = "abc";
+		List<SampleEntity> sampleEntities = createSampleEntities(type, 10);
+
+		sampleEntities.get(0).setAvailable(false);
+		sampleEntities.get(1).setAvailable(false);
+		sampleEntities.get(2).setAvailable(false);
+		sampleEntities.get(0).setRate(1);
+		sampleEntities.get(1).setRate(1);
+		sampleEntities.get(3).setRate(1);
+		repository.saveAll(sampleEntities);
+		SearchHits<SampleEntity> response = repository.searchWithAggregations(type, name, field, subField);
+		InternalAggregations _aggregations = (InternalAggregations) Objects.requireNonNull(response.getAggregations())
+				.aggregations();
+		List<Aggregation> aggregations = _aggregations.asList();
+		assertThat(aggregations.isEmpty()).isFalse();
+		Aggregation aggregation = aggregations.get(0);
+		assertThat(aggregation.getName()).isEqualTo(name);
+		assertThat(aggregation.getMetadata()).isNotNull();
+		assertThat(aggregation.getMetadata().containsKey("test")).isTrue();
+		assertThat(aggregation.getMetadata().get("test")).isEqualTo("value1");
+		LongTerms stringTerms = (LongTerms) aggregation;
+		List<LongTerms.Bucket> buckets = stringTerms.getBuckets();
+		assertThat(buckets.size()).isEqualTo(2);
+		LongTerms.Bucket firstBucket = buckets.get(0);
+		LongTerms.Bucket secondBucket = buckets.get(1);
+		Map<String, Long> bucketMap = new HashMap<>();
+		// top level aggregations
+		bucketMap.put("true", 7L);
+		bucketMap.put("false", 3L);
+
+		List<Aggregation> subaggregationsBuckets1 = firstBucket.getAggregations().asList();
+		List<Aggregation> subaggregationsBuckets2 = secondBucket.getAggregations().asList();
+
+		assertThat(firstBucket.getDocCount()).isEqualTo(7L);
+		assertThat(subaggregationsBuckets1.get(0).getName()).isEqualTo("sub-agg");
+		// Assuming the first sub bucket is for "true" and "0" and the second for "true" and "1"
+		assertThat(((LongTerms)subaggregationsBuckets1.get(0)).getBuckets().get(0).getDocCount()).isEqualTo(6L);
+		assertThat(((LongTerms)subaggregationsBuckets1.get(0)).getBuckets().get(1).getDocCount()).isEqualTo(1L);
+
+		assertThat(secondBucket.getDocCount()).isEqualTo(3L);
+		// Assuming the first sub bucket is for "false" and "0" and the second for "false" and "1"
+		assertThat(subaggregationsBuckets2.get(0).getName()).isEqualTo("sub-agg");
+		assertThat(((LongTerms)subaggregationsBuckets2.get(0)).getBuckets().get(0).getDocCount()).isEqualTo(2L);
+		assertThat(((LongTerms)subaggregationsBuckets2.get(0)).getBuckets().get(1).getDocCount()).isEqualTo(1L);
 	}
 
 	@Test
@@ -1876,6 +1944,40 @@ public abstract class CustomMethodRepositoryBaseTests {
 
 		@CountQuery("{\"bool\" : {\"must\" : {\"term\" : {\"type\" : \"?0\"}}}}")
 		long countWithQueryByType(String type);
+
+		@Query(value = "{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}",
+				valueParams =
+					"{" +
+						"\"aggs\": {" +
+							"\"?1\": {" +
+								"\"terms\": {" +
+									"\"field\": \"?2\"" +
+								"}," +
+							    "\"meta\": {" +
+								    "\"test\": \"value1\"" +
+							    "}," +
+								"\"aggs\": {" +
+									"\"sub-agg\": {" +
+										"\"terms\": {" +
+											"\"field\": \"?3\"" +
+										"}" +
+									"}" +
+								"}" +
+							"}" +
+						"}" +
+					"}")
+		SearchHits<SampleEntity> searchWithAggregations(String type, String name, String field, String subField);
+
+		@Query(
+				value = "{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}",
+				valueParams = "{" +
+						"\"_source\": {" +
+							"\"excludes\": \"?1\""  +
+						"}" +
+					"}"
+
+		)
+		SearchHits<SampleEntity> searchWithSourceFilter(String type, Set<String> excludes);
 	}
 
 	/**

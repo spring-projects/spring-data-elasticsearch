@@ -47,7 +47,7 @@ public @interface Query {
 	 * @deprecated since 4.2, not implemented and used anywhere
 	 */
 	String name() default "";
-
+	String valueParams() default "";
 	String includes() default "";
 	String excludes() default "";
 

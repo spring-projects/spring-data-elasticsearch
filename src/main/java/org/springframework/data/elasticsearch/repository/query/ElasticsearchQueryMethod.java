@@ -20,6 +20,9 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Highlight;
@@ -122,6 +125,24 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		return new HighlightQuery(
 				org.springframework.data.elasticsearch.core.query.highlight.Highlight.of(highlightAnnotation),
 				getDomainClass());
+	}
+
+	/**
+	 * @since 4.4
+	 * @return if the method has additional configuration for querying
+	 */
+	public boolean hasValueParams() {
+		return hasAnnotatedQuery() && !queryAnnotation.valueParams().equals("");
+	}
+
+	/**
+	 * @since 4.4
+	 * @return the additional configuration for querying
+	 * @throws JsonProcessingException if the json or elasticsearch argument is malformed
+	 */
+	public JsonNode getValueParams() throws JsonProcessingException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		return objectMapper.readValue(queryAnnotation.valueParams(), JsonNode.class);
 	}
 
 	public boolean hasIncludes() {

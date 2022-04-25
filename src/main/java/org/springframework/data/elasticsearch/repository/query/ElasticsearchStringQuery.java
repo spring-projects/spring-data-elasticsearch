@@ -15,6 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.elasticsearch.search.aggregations.*;
+import org.elasticsearch.search.aggregations.bucket.terms.TermsAggregationBuilder;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -25,9 +31,13 @@ import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilde
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
+import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.util.StreamUtils;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.util.*;
 
 /**
  * ElasticsearchStringQuery
@@ -42,6 +52,8 @@ import org.springframework.util.Assert;
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
 	private String query;
+	@Nullable
+	private JsonNode valueParams;
 	private String includes;
 	private String excludes;
 	private Boolean hasSourceFilter = false;
@@ -58,6 +70,15 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			this.excludes = queryMethod.getExcludes();
 			this.hasSourceFilter = true;
 		}
+
+		if (queryMethod.hasValueParams()) {
+			try {
+				this.valueParams = queryMethod.getValueParams();
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+		}
+
 	}
 
 	@Override
@@ -81,6 +102,14 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 		if (hasSourceFilter) {
 			stringQuery.addSourceFilter(createSourceFilter(accessor));
+		}
+
+		if (valueParams != null) {
+			try {
+				addValueParams(stringQuery, accessor);
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
 		}
 
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
@@ -112,6 +141,103 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		return (queryMethod.isNotSearchHitMethod() && queryMethod.isNotSearchPageMethod())
 				? SearchHitSupport.unwrapSearchHits(result)
 				: result;
+	}
+
+	/**
+	 * Parse the value parameters for elasticsearch and add them to the string query.
+	 * @param stringQuery
+	 * @throws JsonProcessingException if the json is not formatted properly
+	 * @since 4.4
+	 */
+	private void addValueParams(StringQuery stringQuery, ParameterAccessor parameterAccessor) throws JsonProcessingException {
+		StringQueryUtil stringQueryUtil = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService());
+		ObjectMapper om = new ObjectMapper();
+		if (valueParams == null) {
+			return;
+		}
+		if (valueParams.has("_source")) {
+			String _source = valueParams.get("_source").toString();
+			String input = stringQueryUtil.replacePlaceholders(_source, parameterAccessor);
+			FetchSourceFilterBuilder sourceFilterConfig = om.readValue(input, FetchSourceFilterBuilder.class);
+			stringQuery.addSourceFilter(sourceFilterConfig.build());
+		}
+		final String AGGREGATION_KEYWORD = "aggs";
+		if (valueParams.has(AGGREGATION_KEYWORD)) {
+			String input = valueParams.get(AGGREGATION_KEYWORD).toString();
+			String aggs = stringQueryUtil.replacePlaceholders(input, parameterAccessor);
+			JsonNode customAggregationConfigs = om.readTree(aggs);
+			Assert.isTrue(customAggregationConfigs.isObject(), "`aggs` should be a JSON object");
+
+			List<TermsAggregationBuilder> aggregations = new ArrayList<>();
+			Iterator<Map.Entry<String, JsonNode>> aggregationConfigs = customAggregationConfigs.fields();
+			aggregationConfigs.forEachRemaining(it -> {
+				String aggregationName = it.getKey();
+				JsonNode aggregationConfig = it.getValue();
+				try {
+					aggregations.add(processAggregationConfig(aggregationName, aggregationConfig));
+				} catch (JsonProcessingException e) {
+					e.printStackTrace();
+				}
+			});
+			if (!aggregations.isEmpty()) {
+				SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+				for(TermsAggregationBuilder aggregation: aggregations) {
+					searchSourceBuilder.aggregation(aggregation);
+				}
+				stringQuery.setSearchSourceBuilder(searchSourceBuilder);
+			}
+		}
+	}
+
+	/**
+	 * Process a configuration for an aggregation.
+	 *
+	 * @param aggName name of the aggregation
+	 * @param aggConfig configuration of the aggregation
+	 * @return the term aggregation builder
+	 * @since 4.4
+	 * @throws JsonProcessingException
+	 */
+	private TermsAggregationBuilder processAggregationConfig(String aggName, JsonNode aggConfig) throws JsonProcessingException {
+		TermsAggregationBuilder aggregation = AggregationBuilders.terms(aggName);
+		// parse the terms
+		if (aggConfig.has("terms")) {
+			JsonNode terms = aggConfig.get("terms");
+			Assert.isTrue(terms.isObject(), "`terms` must be a JSON object");
+			if (terms.has("field")) {
+				String field = terms.get("field").textValue();
+				aggregation.field(field);
+			}
+		}
+
+		if (aggConfig.has("meta")) {
+			Map meta = new ObjectMapper().readValue(aggConfig.get("meta").toString(), Map.class);
+			aggregation.setMetadata(meta);
+		}
+
+		// Parse the sub-aggregations
+		if (aggConfig.has("aggs")) {
+			processAggregationConfig(aggConfig, aggregation);
+		}
+
+		return aggregation;
+	}
+
+	/**
+	 * parse the sub aggregation configurations and add them to the parent
+	 * @param aggConfig
+	 * @param aggregation
+	 * @since 4.4
+	 */
+	private void processAggregationConfig(JsonNode aggConfig, TermsAggregationBuilder aggregation) {
+		Iterator<Map.Entry<String, JsonNode>> subAggregationConfigs = aggConfig.get("aggs").fields();
+		subAggregationConfigs.forEachRemaining(it -> {
+			try {
+				aggregation.subAggregation(processAggregationConfig(it.getKey(), it.getValue()));
+			} catch (JsonProcessingException e) {
+				e.printStackTrace();
+			}
+		});
 	}
 
 	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {

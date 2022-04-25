@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.springframework.lang.Nullable;
 
 /**
@@ -22,11 +23,22 @@ import org.springframework.lang.Nullable;
  *
  * @Author Jon Tsiros
  * @author Peter-Josef Meisch
+ * @author Alexander Torres
  */
 public class FetchSourceFilterBuilder {
 
 	@Nullable private String[] includes;
 	@Nullable private String[] excludes;
+
+	@Nullable
+	public String[] getExcludes() {
+		return excludes;
+	}
+
+	@Nullable
+	public String[] getIncludes() {
+		return includes;
+	}
 
 	public FetchSourceFilterBuilder withIncludes(String... includes) {
 		this.includes = includes;

@@ -125,7 +125,8 @@ import org.springframework.util.StringUtils;
  * @author Subhobrata Dey
  * @author Farid Faoudi
  * @author Peer Mueller
- * @since 4.0
+ * @author Alexander Torres
+ * @since 4.4
  */
 class RequestFactory {
 
@@ -938,6 +939,10 @@ class RequestFactory {
 
 		SearchRequest request = new SearchRequest(indexNames);
 		SearchSourceBuilder sourceBuilder = new SearchSourceBuilder();
+		// replace source builder if one specified
+		if (query.getSearchSourceBuilder() != null) {
+			sourceBuilder = query.getSearchSourceBuilder();
+		}
 		sourceBuilder.version(true);
 		sourceBuilder.trackScores(query.getTrackScores());
 		if (hasSeqNoPrimaryTermProperty(clazz)) {
@@ -1014,7 +1019,9 @@ class RequestFactory {
 			sourceBuilder.searchAfter(query.getSearchAfter().toArray());
 		}
 
-		query.getRescorerQueries().forEach(rescorer -> sourceBuilder.addRescorer(getQueryRescorerBuilder(rescorer)));
+		for (RescorerQuery rescorer : query.getRescorerQueries()) {
+			sourceBuilder.addRescorer(getQueryRescorerBuilder(rescorer));
+		}
 
 		if (query.getRequestCache() != null) {
 			request.requestCache(query.getRequestCache());
@@ -1085,6 +1092,12 @@ class RequestFactory {
 
 		if (query.getPreference() != null) {
 			searchRequestBuilder.setPreference(query.getPreference());
+		}
+
+		if (query.getSearchSourceBuilder() != null) {
+			SearchSourceBuilder origBuilder = searchRequestBuilder.request().source();
+			SearchSourceBuilder additionalSource = query.getSearchSourceBuilder();
+			additionalSource.aggregations().getAggregatorFactories().forEach(origBuilder::aggregation);
 		}
 
 		prepareSort(query, searchRequestBuilder, getPersistentEntity(clazz));

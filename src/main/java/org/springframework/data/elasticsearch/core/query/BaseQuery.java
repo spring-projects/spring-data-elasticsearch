@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RuntimeField;
@@ -43,6 +44,7 @@ import org.springframework.util.Assert;
  * @author Farid Azaza
  * @author Peter-Josef Meisch
  * @author Peer Mueller
+ * @author Alexander Torres
  */
 public class BaseQuery implements Query {
 
@@ -69,6 +71,19 @@ public class BaseQuery implements Query {
 	@Nullable protected Boolean requestCache;
 	private List<IdWithRouting> idsWithRouting = Collections.emptyList();
 	private final List<RuntimeField> runtimeFields = new ArrayList<>();
+	@Nullable
+	private SearchSourceBuilder searchSourceBuilder;
+
+	@Override
+	@Nullable
+	public SearchSourceBuilder getSearchSourceBuilder() {
+		return searchSourceBuilder;
+	}
+
+	@Override
+	public void setSearchSourceBuilder(SearchSourceBuilder searchSourceBuilder) {
+		this.searchSourceBuilder = searchSourceBuilder;
+	}
 
 	@Override
 	@Nullable
