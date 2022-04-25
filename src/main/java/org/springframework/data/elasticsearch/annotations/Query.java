@@ -17,8 +17,6 @@ package org.springframework.data.elasticsearch.annotations;
 
 import org.springframework.data.annotation.QueryAnnotation;
 import java.lang.annotation.*;
-import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Query
@@ -48,8 +46,6 @@ public @interface Query {
 	 */
 	String name() default "";
 	String valueParams() default "";
-	String includes() default "";
-	String excludes() default "";
 
 	/**
 	 * Returns whether the query defined should be executed as count projection.

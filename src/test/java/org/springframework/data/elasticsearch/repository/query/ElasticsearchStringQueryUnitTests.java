@@ -141,27 +141,6 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
 	}
 
-	@Test // #2062
-	@DisplayName("create source filter for query")
-	void shouldCreateSourceFilter() {
-		ElasticsearchQueryMethod queryMethod = mock(ElasticsearchQueryMethod.class);
-		when(queryMethod.hasIncludes()).thenReturn(true);
-		when(queryMethod.getIncludes()).thenReturn("?0");
-		when(queryMethod.getExcludes()).thenReturn("?1");
-
-		ElasticsearchStringQuery elasticsearchStringQuery = spy(new ElasticsearchStringQuery(
-				queryMethod,
-				operations,
-				"{\"match_all\": {}}"
-		));
-		ParametersParameterAccessor parameterAccessor = mock(ParametersParameterAccessor.class);
-		when(parameterAccessor.getBindableValue(0)).thenReturn("foo");
-		when(parameterAccessor.getBindableValue(1)).thenReturn("bar");
-		SourceFilter resp = elasticsearchStringQuery.createSourceFilter(parameterAccessor);
-		assertThat(resp.getIncludes()).isEqualTo(new String[]{"foo"});
-		assertThat(resp.getExcludes()).isEqualTo(new String[]{"bar"});
-	}
-
 	@Test // #1866
 	@DisplayName("should use converter on parameters")
 	void shouldUseConverterOnParameters() throws NoSuchMethodException {

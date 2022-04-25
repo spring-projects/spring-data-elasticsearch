@@ -54,22 +54,12 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	private String query;
 	@Nullable
 	private JsonNode valueParams;
-	private String includes;
-	private String excludes;
-	private Boolean hasSourceFilter = false;
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
 			String query) {
 		super(queryMethod, elasticsearchOperations);
 		Assert.notNull(query, "Query cannot be empty");
 		this.query = query;
-		this.includes = "";
-		this.excludes = "";
-		if (queryMethod.hasIncludes() || queryMethod.hasExcludes()) {
-			this.includes = queryMethod.getIncludes();
-			this.excludes = queryMethod.getExcludes();
-			this.hasSourceFilter = true;
-		}
 
 		if (queryMethod.hasValueParams()) {
 			try {
@@ -98,10 +88,6 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 		if (queryMethod.hasAnnotatedHighlight()) {
 			stringQuery.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
-		}
-
-		if (hasSourceFilter) {
-			stringQuery.addSourceFilter(createSourceFilter(accessor));
 		}
 
 		if (valueParams != null) {
@@ -245,24 +231,4 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 				.replacePlaceholders(this.query, parameterAccessor);
 		return new StringQuery(queryString);
 	}
-
-	protected SourceFilter createSourceFilter(ParametersParameterAccessor parameterAccessor) {
-		StringQueryUtil stringQueryUtil = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService());
-
-		String[] includeList = new String[0];
-		String[] excludeList = new String[0];
-
-		final String sourceFilterDelim = ",";
-		if (includes.length() != 0) {
-			String includeFilter = stringQueryUtil.replacePlaceholders(includes, parameterAccessor);
-			includeList = includeFilter.split(sourceFilterDelim);
-		}
-		if (excludes.length() != 0) {
-			String excludeFilter = stringQueryUtil.replacePlaceholders(excludes, parameterAccessor);
-			excludeList = excludeFilter.split(sourceFilterDelim);
-		}
-
-		return new FetchSourceFilterBuilder().withExcludes(excludeList).withIncludes(includeList).build();
-	}
-
 }

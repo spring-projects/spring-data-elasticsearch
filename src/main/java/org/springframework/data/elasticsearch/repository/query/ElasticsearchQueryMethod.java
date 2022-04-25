@@ -145,22 +145,6 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		return objectMapper.readValue(queryAnnotation.valueParams(), JsonNode.class);
 	}
 
-	public boolean hasIncludes() {
-		return hasAnnotatedQuery() && !queryAnnotation.includes().equals("");
-	}
-
-	public boolean hasExcludes() {
-		return hasAnnotatedQuery() && !queryAnnotation.excludes().equals("");
-	}
-
-	public String getIncludes() {
-		return queryAnnotation.includes();
-	}
-
-	public String getExcludes() {
-		return queryAnnotation.excludes();
-	}
-
 	/**
 	 * @return the {@link ElasticsearchEntityMetadata} for the query methods {@link #getReturnedObjectType() return type}.
 	 * @since 3.2
