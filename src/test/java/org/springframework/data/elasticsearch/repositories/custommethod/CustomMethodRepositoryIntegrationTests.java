@@ -20,12 +20,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import java.lang.Long;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -40,12 +35,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.elasticsearch.annotations.CountQuery;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.Highlight;
-import org.springframework.data.elasticsearch.annotations.HighlightField;
-import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -73,6 +63,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Rasmus Faber-Espensen
  * @author James Mudd
+ * @Author Alexander Torres
  */
 @SpringIntegrationTest
 public abstract class CustomMethodRepositoryIntegrationTests {
@@ -1665,6 +1656,17 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(returnedIds).containsAll(ids);
 	}
 
+	@Test // #2146
+	public void shouldExecuteSourceFilterSearch() {
+		Set<String> excludes = new HashSet<>();
+		excludes.add("message");
+		List<SampleEntity> sampleEntities = createSampleEntities("abc", 1);
+		repository.saveAll(sampleEntities);
+		SearchHits<SampleEntity> sampleEntitySearchHits = repository.searchWithSourceFilter("abc", excludes);
+		SampleEntity sampleEntity = sampleEntitySearchHits.getSearchHit(0).getContent();
+		assertThat(sampleEntity.getMessage()).isNull();
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
@@ -1771,6 +1773,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	 * @author Rizwan Idrees
 	 * @author Mohsin Husen
 	 * @author Kevin Leturc
+	 * @author Alexander Torres
 	 */
 	@SuppressWarnings("SpringDataRepositoryMethodParametersInspection")
 	public interface SampleCustomMethodRepository extends ElasticsearchRepository<SampleEntity, String> {
@@ -1901,6 +1904,11 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 
 		@Query("{\"ids\" : {\"values\" : ?0 }}")
 		List<SampleEntity> getByIds(Collection<String> ids);
+
+		@SourceFilters(excludes = "?1")
+		@Query(value = "{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
+		SearchHits<SampleEntity> searchWithSourceFilter(String type, Set<String> excludes);
+
 	}
 
 	/**

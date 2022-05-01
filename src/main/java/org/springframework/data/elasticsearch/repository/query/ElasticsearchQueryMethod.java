@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
+import org.springframework.data.elasticsearch.annotations.SourceFilters;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -50,6 +51,7 @@ import org.springframework.util.ClassUtils;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Alexander Torres
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
@@ -58,6 +60,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	protected final Method method; // private in base class, but needed here and in derived classes as well
 	@Nullable private final Query queryAnnotation;
 	@Nullable private final Highlight highlightAnnotation;
+	@Nullable private SourceFilters sourceFilters;
 	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
 
 	public ElasticsearchQueryMethod(Method method, RepositoryMetadata repositoryMetadata, ProjectionFactory factory,
@@ -71,6 +74,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		this.mappingContext = mappingContext;
 		this.queryAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
 		this.highlightAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Highlight.class);
+		this.sourceFilters = AnnotatedElementUtils.findMergedAnnotation(method, SourceFilters.class);
 
 		verifyCountQueryTypes();
 	}
@@ -247,4 +251,21 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		return queryAnnotation != null && queryAnnotation.count();
 	}
 
+	/**
+	 *
+	 * @return if source filters annotation present
+	 * @since 4.4
+	 */
+	public boolean hasSourceFilters() {
+		return sourceFilters != null;
+	}
+
+	/**
+	 *
+	 * @return source filters config
+	 * @since 4.4
+	 */
+	public SourceFilters getSourceFilters() {
+		return sourceFilters;
+	}
 }

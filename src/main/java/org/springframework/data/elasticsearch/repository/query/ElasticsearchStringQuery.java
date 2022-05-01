@@ -15,14 +15,20 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.annotations.SourceFilters;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
+import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
@@ -35,6 +41,7 @@ import org.springframework.util.Assert;
  * @author Mark Paluch
  * @author Taylor Ono
  * @author Peter-Josef Meisch
+ * @author Alexander Torres
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
@@ -64,6 +71,11 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 		if (queryMethod.hasAnnotatedHighlight()) {
 			stringQuery.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
+		}
+
+		if (queryMethod.hasSourceFilters()) {
+			SourceFilter sourceFilter = processSourceFilterParams(queryMethod.getSourceFilters(), accessor);
+			stringQuery.addSourceFilter(sourceFilter);
 		}
 
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
@@ -103,4 +115,36 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		return new StringQuery(queryString);
 	}
 
+	/**
+	 * Parse the {@link SourceFilters} attributes to construct a SourceFilter {@link SourceFilter}
+	 * @param parameterAccessor the accessor with the query method parameter details
+	 * @throws JsonProcessingException if the json is not formatted properly
+	 * @return source filter with includes and excludes for a  query
+	 * @since 4.4
+	 */
+	private SourceFilter processSourceFilterParams(SourceFilters sourceFilters, ParameterAccessor parameterAccessor) {
+		StringQueryUtil stringQueryUtil = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService());
+		ObjectMapper objectMapper = new ObjectMapper();
+		FetchSourceFilterBuilder fetchSourceFilterBuilder = new FetchSourceFilterBuilder();
+		String errorMessage = null;
+		String includesInput = stringQueryUtil.replacePlaceholders(sourceFilters.includes(), parameterAccessor);
+		String excludesInput = stringQueryUtil.replacePlaceholders(sourceFilters.excludes(), parameterAccessor);
+		try {
+			if (!includesInput.equals("")) {
+				String[] includes = objectMapper.readValue(includesInput, String[].class);
+				fetchSourceFilterBuilder.withIncludes(includes);
+			}
+			if (!excludesInput.equals("")) {
+				String[] excludes = objectMapper.readValue(excludesInput, String[].class);
+				fetchSourceFilterBuilder.withExcludes(excludes);
+			}
+		} catch (JsonProcessingException e) {
+			errorMessage = e.getMessage();
+		}
+
+		SourceFilter sourceFilter = fetchSourceFilterBuilder.build();
+		Assert.isTrue(sourceFilter.getIncludes().length > 0 || sourceFilter.getExcludes().length > 0,
+				"At least one includes or excludes should be provided.\n Found error: " + errorMessage);
+		return sourceFilter;
+	}
 }
