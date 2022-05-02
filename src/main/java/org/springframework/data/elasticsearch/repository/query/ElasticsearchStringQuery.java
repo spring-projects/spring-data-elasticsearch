@@ -118,7 +118,6 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	/**
 	 * Parse the {@link SourceFilters} attributes to construct a SourceFilter {@link SourceFilter}
 	 * @param parameterAccessor the accessor with the query method parameter details
-	 * @throws JsonProcessingException if the json is not formatted properly
 	 * @return source filter with includes and excludes for a  query
 	 * @since 4.4
 	 */
