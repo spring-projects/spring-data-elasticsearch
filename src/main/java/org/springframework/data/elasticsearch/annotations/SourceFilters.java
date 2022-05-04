@@ -23,6 +23,7 @@ import java.lang.annotation.*;
  * SourceFilters
  *
  * @author Alexander Torres
+ * @since 4.4
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.METHOD, ElementType.ANNOTATION_TYPE })
