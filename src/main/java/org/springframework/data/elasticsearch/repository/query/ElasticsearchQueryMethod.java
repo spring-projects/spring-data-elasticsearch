@@ -265,6 +265,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @return source filters config
 	 * @since 4.4
 	 */
+  @Nullable
 	public SourceFilters getSourceFilters() {
 		return sourceFilters;
 	}
