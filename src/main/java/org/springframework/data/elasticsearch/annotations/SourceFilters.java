@@ -21,7 +21,8 @@ import java.lang.annotation.*;
 
 /**
  * SourceFilters
- *
+ * Use this annotation to introduce a _source filter on your elasticsearch query. You may also use parameter interpolation
+ * (i.e. {@literal @SourceFilters(includes = ?0, excludes = "[\"field1\"]") SearchHits filteredSearch(String includesArray)}
  * @author Alexander Torres
  * @since 4.4
  */
@@ -31,13 +32,15 @@ import java.lang.annotation.*;
 @QueryAnnotation
 public @interface SourceFilters {
     /**
-     * Fields to include in the query search hits. (e.g. ["field1", "field2"])
+     * Fields to include in the query search hits.
+     * (e.g. ["field1", "field2"] or ?1)
      * @return
      */
     String includes() default "";
 
     /**
-     * Fields to exclude from the query search hits. (e.g. ["field1", "field2"])
+     * Fields to exclude from the query search hits.
+     * (e.g. ["field1", "field2"] or ?1)
      * @return
      */
     String excludes() default "";

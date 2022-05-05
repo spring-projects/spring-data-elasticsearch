@@ -60,7 +60,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	protected final Method method; // private in base class, but needed here and in derived classes as well
 	@Nullable private final Query queryAnnotation;
 	@Nullable private final Highlight highlightAnnotation;
-	@Nullable private SourceFilters sourceFilters;
+	@Nullable private final SourceFilters sourceFilters;
 	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
 
 	public ElasticsearchQueryMethod(Method method, RepositoryMetadata repositoryMetadata, ProjectionFactory factory,
@@ -265,7 +265,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @return source filters config
 	 * @since 4.4
 	 */
-  @Nullable
+  	@Nullable
 	public SourceFilters getSourceFilters() {
 		return sourceFilters;
 	}
