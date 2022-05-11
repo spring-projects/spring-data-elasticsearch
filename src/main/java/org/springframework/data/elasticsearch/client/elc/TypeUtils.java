@@ -15,15 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import co.elastic.clients.elasticsearch._types.Conflicts;
-import co.elastic.clients.elasticsearch._types.DistanceUnit;
-import co.elastic.clients.elasticsearch._types.GeoDistanceType;
-import co.elastic.clients.elasticsearch._types.OpType;
-import co.elastic.clients.elasticsearch._types.Refresh;
-import co.elastic.clients.elasticsearch._types.Result;
-import co.elastic.clients.elasticsearch._types.SortMode;
-import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch._types.VersionType;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch.core.search.BoundaryScanner;
 import co.elastic.clients.elasticsearch.core.search.BuiltinHighlighterType;
@@ -40,6 +32,7 @@ import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Order;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
@@ -299,6 +292,23 @@ final class TypeUtils {
 	}
 
 	@Nullable
+	static SearchType searchType(@Nullable Query.SearchType searchType) {
+
+		if (searchType == null) {
+			return null;
+		}
+
+		switch (searchType) {
+			case QUERY_THEN_FETCH:
+				return SearchType.QueryThenFetch;
+			case DFS_QUERY_THEN_FETCH:
+				return SearchType.DfsQueryThenFetch;
+		}
+
+		return null;
+	}
+
+	@Nullable
 	static SortMode sortMode(Order.Mode mode) {
 
 		switch (mode) {
@@ -323,6 +333,16 @@ final class TypeUtils {
 		}
 
 		return Time.of(t -> t.time(duration.toMillis() + "ms"));
+	}
+
+	@Nullable
+	static String timeStringMs(@Nullable Duration duration) {
+
+		if (duration == null) {
+			return null;
+		}
+
+		return duration.toMillis() + "ms";
 	}
 
 	@Nullable

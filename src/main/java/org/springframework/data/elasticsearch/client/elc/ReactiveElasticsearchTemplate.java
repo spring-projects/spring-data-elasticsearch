@@ -177,8 +177,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		return Mono.from(execute( //
 				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.ReindexResponse>>) client -> client
 						.reindex(reindexRequestES)))
-				.flatMap(response -> (response.task() == null) ? Mono.error( // todo #1973 check behaviour and create issue in
-																																			// ES if necessary
+				.flatMap(response -> (response.task() == null) ? Mono.error(
 						new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
 						: Mono.just(response.task()));
 	}
@@ -499,7 +498,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	public Query idsQuery(List<String> ids) {
-		throw new UnsupportedOperationException("not implemented");
+		return NativeQuery.builder().withQuery(QueryBuilders.idsQueryAsQuery(ids)).build();
 	}
 
 	/**

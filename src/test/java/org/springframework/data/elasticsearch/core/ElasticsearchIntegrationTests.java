@@ -1617,7 +1617,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 	}
 
 	@DisabledIf(value = "newElasticsearchClient",
-			disabledReason = "todo #1973 can't check response, open ES issue 161 that does not allow seqno")
+			disabledReason = "todo #2138 can't check response, open ES issue 161 that does not allow seqno")
 	// and version to be set in the request
 	@Test // DATAES-487
 	public void shouldReturnSameEntityForMultiSearch() {
@@ -1642,7 +1642,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 	}
 
 	@DisabledIf(value = "newElasticsearchClient",
-			disabledReason = "todo #1973 can't check response, open ES issue 161 that does not allow seqno")
+			disabledReason = "todo #2138 can't check response, open ES issue 161 that does not allow seqno")
 	// and version to be set in the request
 	@Test // DATAES-487
 	public void shouldReturnDifferentEntityForMultiSearch() {
@@ -3070,7 +3070,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 	}
 
 	@DisabledIf(value = "newElasticsearchClient",
-			disabledReason = "todo #1973 can't check response, open ES issue 161 that does not allow seqno")
+			disabledReason = "todo #2138 can't check response, open ES issue 161 that does not allow seqno")
 																				// and version to be set in the request
 	@Test // DATAES-799
 	void multiSearchShouldReturnSeqNoPrimaryTerm() {

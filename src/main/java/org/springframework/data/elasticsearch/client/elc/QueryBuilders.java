@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.LatLonGeoLocation;
+import co.elastic.clients.elasticsearch._types.query_dsl.IdsQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
@@ -29,6 +30,7 @@ import co.elastic.clients.util.ObjectBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.List;
 import java.util.function.Function;
 
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -45,6 +47,21 @@ public final class QueryBuilders {
 
 	private QueryBuilders() {}
 
+	public static IdsQuery idsQuery(List<String> ids) {
+
+		Assert.notNull(ids, "ids must not be null");
+
+		return IdsQuery.of(i -> i.values(ids));
+	}
+
+	public static Query idsQueryAsQuery(List<String> ids) {
+
+		Assert.notNull(ids, "ids must not be null");
+
+		Function<Query.Builder, ObjectBuilder<Query>> builder = b -> b.ids(idsQuery(ids));
+
+		return builder.apply(new Query.Builder()).build();
+	}
 	public static MatchQuery matchQuery(String fieldName, String query, @Nullable Operator operator,
 			@Nullable Float boost) {
 

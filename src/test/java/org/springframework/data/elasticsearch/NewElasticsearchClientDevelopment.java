@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch;
 
 /**
- * TODO #1973 remove when the new Elasticsearch client is fully working
+ * TODO remove when the new Elasticsearch client is fully working
  *
  * @author Peter-Josef Meisch
  */

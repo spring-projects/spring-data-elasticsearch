@@ -116,7 +116,7 @@ class SearchDocumentResponseBuilder {
 		ElasticsearchAggregations aggregationsContainer = aggregations != null ? new ElasticsearchAggregations(aggregations)
 				: null;
 
-		// todo #1973
+		// todo #2154
 		Suggest suggest = null;
 
 		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments,

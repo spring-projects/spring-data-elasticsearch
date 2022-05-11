@@ -106,7 +106,6 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 	}
 
 	private boolean isSeqNoConflict(Throwable exception) {
-		// todo #1973 check if this works
 		Integer status = null;
 		String message = null;
 

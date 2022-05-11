@@ -22,7 +22,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * class that holds explanations returned from an Elasticsearch search.
+ * class that holds explanations returned from an Elasticsearch search. Note: the new Elasticsearch client does not
+ * return the match property in search hits anymore, probably because a returned hit always is a match.
  *
  * @author Peter-Josef Meisch
  */
