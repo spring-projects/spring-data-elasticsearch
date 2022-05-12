@@ -71,6 +71,7 @@ public class BaseQuery implements Query {
 	@Nullable protected Boolean requestCache;
 	protected List<IdWithRouting> idsWithRouting = Collections.emptyList();
 	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
+	@Nullable protected List<IndexBoost> indicesBoost;
 
 	public BaseQuery() {}
 
@@ -88,7 +89,7 @@ public class BaseQuery implements Query {
 		this.fields = builder.getFields();
 		this.highlightQuery = builder.highlightQuery;
 		this.route = builder.getRoute();
-		// #1973 add the other fields to the builder
+		this.indicesBoost = builder.getIndicesBoost();
 	}
 
 	@Override
@@ -432,5 +433,11 @@ public class BaseQuery implements Query {
 	@Override
 	public List<RuntimeField> getRuntimeFields() {
 		return runtimeFields;
+	}
+
+	@Override
+	@Nullable
+	public List<IndexBoost> getIndicesBoost() {
+		return indicesBoost;
 	}
 }

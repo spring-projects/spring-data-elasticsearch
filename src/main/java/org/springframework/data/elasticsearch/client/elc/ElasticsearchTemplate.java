@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.client.UnsupportedBackendOperation;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
@@ -67,6 +69,8 @@ import org.springframework.util.Assert;
  * @since 4.4
  */
 public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
+
+	private static final Log LOGGER = LogFactory.getLog(ElasticsearchTemplate.class);
 
 	private final ElasticsearchClient client;
 	private final RequestConverter requestConverter;
@@ -249,7 +253,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 				client -> client.reindex(reindexRequestES));
 
 		if (reindexResponse.task() == null) {
-			// todo #1973 check behaviour and create issue in ES if necessary
 			throw new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request");
 		}
 
@@ -447,9 +450,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 			MultiSearchQueryParameter queryParameter = queryIterator.next();
 			MultiSearchResponseItem<EntityAsMap> responseItem = responseIterator.next();
 
-			// if responseItem kind is Result then responseItem.value is a MultiSearchItem which is derived from
-			// SearchResponse
-
 			if (responseItem.isResult()) {
 
 				Class clazz = queryParameter.clazz;
@@ -463,7 +463,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 				searchHitsList.add(searchHits);
 			} else {
-				// todo #1973 add failure
+				if (LOGGER.isWarnEnabled()) {
+					LOGGER
+							.warn(String.format("multisearch responsecontains failure: {}", responseItem.failure().error().reason()));
+				}
 			}
 		}
 

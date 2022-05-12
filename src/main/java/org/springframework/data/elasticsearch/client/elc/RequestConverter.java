@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -192,7 +193,7 @@ class RequestConverter {
 
 					if (filterQuery != null) {
 						elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
-						co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getFilter(filterQuery);
+						co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getQuery(filterQuery, null);
 						if (esQuery != null) {
 							addActionBuilder.filter(esQuery);
 
@@ -239,7 +240,8 @@ class RequestConverter {
 		PutMappingRequest.Builder builder = new PutMappingRequest.Builder();
 		builder.index(Arrays.asList(indexCoordinates.getIndexNames()));
 		addPropertiesToMapping(builder, mapping);
-		// TODO #1973 what else to add
+
+		// TODO #2155 what else to add
 
 		return builder.build();
 	}
@@ -374,7 +376,7 @@ class RequestConverter {
 							Query filterQuery = parameters.getFilterQuery();
 
 							if (filterQuery != null) {
-								co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getFilter(filterQuery);
+								co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getQuery(filterQuery, null);
 
 								if (esQuery != null) {
 									aliasBuilder.filter(esQuery);
@@ -475,7 +477,7 @@ class RequestConverter {
 			}
 		}
 
-		builder.refresh(refresh(refreshPolicy));
+		builder.refresh(TypeUtils.refresh(refreshPolicy));
 
 		return builder.build();
 	}
@@ -644,9 +646,9 @@ class RequestConverter {
 			builder.timeout(tb -> tb.time(Long.valueOf(bulkOptions.getTimeout().toMillis()).toString() + "ms"));
 		}
 
-		builder.refresh(refresh(refreshPolicy));
+		builder.refresh(TypeUtils.refresh(refreshPolicy));
 		if (bulkOptions.getRefreshPolicy() != null) {
-			builder.refresh(refresh(bulkOptions.getRefreshPolicy()));
+			builder.refresh(TypeUtils.refresh(bulkOptions.getRefreshPolicy()));
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
@@ -791,13 +793,13 @@ class RequestConverter {
 					ReindexRequest.Dest dest = reindexRequest.getDest();
 					return d //
 							.index(dest.getIndex().getIndexName()) //
-							.versionType(versionType(dest.getVersionType())) //
-							.opType(opType(dest.getOpType()));
+							.versionType(TypeUtils.versionType(dest.getVersionType())) //
+							.opType(TypeUtils.opType(dest.getOpType()));
 				} //
 				);
 
 		if (reindexRequest.getConflicts() != null) {
-			builder.conflicts(conflicts(reindexRequest.getConflicts()));
+			builder.conflicts(TypeUtils.conflicts(reindexRequest.getConflicts()));
 		}
 
 		ReindexRequest.Script script = reindexRequest.getScript();
@@ -810,7 +812,7 @@ class RequestConverter {
 
 		if (reindexRequest.getWaitForActiveShards() != null) {
 			builder.waitForActiveShards(wfas -> wfas //
-					.count(waitForActiveShardsCount(reindexRequest.getWaitForActiveShards())));
+					.count(TypeUtils.waitForActiveShardsCount(reindexRequest.getWaitForActiveShards())));
 		}
 
 		builder //
@@ -835,7 +837,7 @@ class RequestConverter {
 			if (routing != null) {
 				r.routing(routing);
 			}
-			r.refresh(refresh(refreshPolicy));
+			r.refresh(TypeUtils.refresh(refreshPolicy));
 			return r;
 		});
 	}
@@ -908,7 +910,7 @@ class RequestConverter {
 					.docAsUpsert(query.getDocAsUpsert()) //
 					.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
 					.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
-					.refresh(refresh(refreshPolicy)) //
+					.refresh(TypeUtils.refresh(refreshPolicy)) //
 					.retryOnConflict(query.getRetryOnConflict()) //
 			;
 
@@ -993,7 +995,7 @@ class RequestConverter {
 			}
 
 			if (updateQuery.getWaitForActiveShards() != null) {
-				ub.waitForActiveShards(w -> w.count(waitForActiveShardsCount(updateQuery.getWaitForActiveShards())));
+				ub.waitForActiveShards(w -> w.count(TypeUtils.waitForActiveShardsCount(updateQuery.getWaitForActiveShards())));
 			}
 
 			return ub;
@@ -1048,12 +1050,12 @@ class RequestConverter {
 				mrb.searches(sb -> sb //
 						.header(h -> h //
 								.index(param.index.getIndexName()) //
-				// todo #1973 add remaining flags for header
+				// todo #2156 add remaining flags for header
 				) //
 						.body(bb -> bb //
 								.query(getQuery(param.query, param.clazz))//
-				// #1973 seq_no_primary_term and version not available in client ES issue 161
-				// todo #1973 add remaining flags for body
+				// todo #2138 seq_no_primary_term and version not available in client ES issue 161
+				// todo #2156 add remaining flags for body
 				) //
 				);
 			});
@@ -1101,7 +1103,7 @@ class RequestConverter {
 		}
 
 		if (query.getIndicesOptions() != null) {
-			// todo #1973 indices options
+			// new Elasticsearch client does not support the old Indices options, need to be adapted
 		}
 
 		if (query.isLimiting()) {
@@ -1116,7 +1118,7 @@ class RequestConverter {
 			builder.preference(query.getPreference());
 		}
 
-		// todo #1973 searchType
+		builder.searchType(searchType(query.getSearchType()));
 
 		if (query.getSort() != null) {
 			List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
@@ -1144,7 +1146,7 @@ class RequestConverter {
 			builder.routing(query.getRoute());
 		}
 
-		// todo #1973 timeout
+		builder.timeout(timeStringMs(query.getTimeout()));
 
 		if (query.getExplain()) {
 			builder.explain(true);
@@ -1158,7 +1160,7 @@ class RequestConverter {
 			builder.rescore(getRescore(rescorerQuery));
 		});
 
-		// todo #1973 request cache
+		builder.requestCache(query.getRequestCache());
 
 		if (!query.getRuntimeFields().isEmpty()) {
 
@@ -1183,6 +1185,15 @@ class RequestConverter {
 			// limit the number of documents in a batch
 			builder.size(500);
 		}
+
+		if (!isEmpty(query.getIndicesBoost())) {
+			Map<String, Double> boosts = new LinkedHashMap<>();
+			query.getIndicesBoost().forEach(indexBoost -> {
+				boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost());
+			});
+			// noinspection unchecked
+			builder.indicesBoost(boosts);
+		}
 	}
 
 	private Rescore getRescore(RescorerQuery rescorerQuery) {
@@ -1190,7 +1201,7 @@ class RequestConverter {
 		return Rescore.of(r -> r //
 				.query(rq -> rq //
 						.query(getQuery(rescorerQuery.getQuery(), null)) //
-						.scoreMode(scoreMode(rescorerQuery.getScoreMode())) //
+						.scoreMode(TypeUtils.scoreMode(rescorerQuery.getScoreMode())) //
 						.queryWeight(rescorerQuery.getQueryWeight() != null ? Double.valueOf(rescorerQuery.getQueryWeight()) : 1.0) //
 						.rescoreQueryWeight(
 								rescorerQuery.getRescoreQueryWeight() != null ? Double.valueOf(rescorerQuery.getRescoreQueryWeight())
@@ -1242,8 +1253,9 @@ class RequestConverter {
 						.geoDistance(gd -> gd //
 								.field(fieldName) //
 								.location(loc -> loc.latlon(QueryBuilders.latLon(geoDistanceOrder.getGeoPoint())))//
-								.distanceType(geoDistanceType(geoDistanceOrder.getDistanceType())).mode(sortMode(finalMode)) //
-								.unit(distanceUnit(geoDistanceOrder.getUnit())) //
+								.distanceType(TypeUtils.geoDistanceType(geoDistanceOrder.getDistanceType()))
+								.mode(TypeUtils.sortMode(finalMode)) //
+								.unit(TypeUtils.distanceUnit(geoDistanceOrder.getUnit())) //
 								.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped())));
 			} else {
 				String missing = (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) ? "_first"
@@ -1253,10 +1265,10 @@ class RequestConverter {
 						.field(f -> {
 							f.field(fieldName) //
 									.order(sortOrder) //
-									.mode(sortMode(finalMode));
+									.mode(TypeUtils.sortMode(finalMode));
 
 							if (finalUnmappedType != null) {
-								FieldType fieldType = fieldType(finalUnmappedType);
+								FieldType fieldType = TypeUtils.fieldType(finalUnmappedType);
 
 								if (fieldType != null) {
 									f.unmappedType(fieldType);
@@ -1284,13 +1296,11 @@ class RequestConverter {
 				.collapse(query.getFieldCollapse()) //
 		;
 
-		// todo #1973 indices boost
-
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
 		}
 
-		// todo #1973 searchExt
+		// todo #2150 searchExt, currently not supported by the new client
 	}
 
 	@Nullable
@@ -1461,12 +1471,6 @@ class RequestConverter {
 		}
 
 		return versionType != null ? versionType : VersionType.External;
-	}
-
-	private co.elastic.clients.elasticsearch._types.query_dsl.Query getFilter(Query filterQuery) {
-		// TODO #1973 add filter query
-
-		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Nullable

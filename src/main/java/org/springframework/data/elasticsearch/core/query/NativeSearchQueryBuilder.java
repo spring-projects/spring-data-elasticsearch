@@ -63,7 +63,6 @@ public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery
 	@Nullable private List<HighlightBuilder.Field> highlightFields = new ArrayList<>();
 	@Nullable protected List<String> storedFields;
 	@Nullable private CollapseBuilder collapseBuilder;
-	@Nullable private List<IndexBoost> indicesBoost = new ArrayList<>();
 	@Nullable private SearchTemplateRequestBuilder searchTemplateBuilder;
 	@Nullable private SearchType searchType;
 	@Nullable private Boolean trackTotalHits;
@@ -194,19 +193,6 @@ public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withIndicesBoost(Collection<IndexBoost> indicesBoost) {
-		this.indicesBoost.addAll(indicesBoost);
-		return this;
-	}
-
-	/**
-	 * @since 4.3
-	 */
-	public NativeSearchQueryBuilder withIndicesBoost(IndexBoost... indicesBoost) {
-		Collections.addAll(this.indicesBoost, indicesBoost);
-		return this;
-	}
-
 	public NativeSearchQueryBuilder withSearchTemplate(SearchTemplateRequestBuilder searchTemplateBuilder) {
 		this.searchTemplateBuilder = searchTemplateBuilder;
 		return this;
@@ -288,10 +274,6 @@ public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery
 
 		if (storedFields != null) {
 			nativeSearchQuery.setStoredFields(storedFields);
-		}
-
-		if (indicesBoost != null) {
-			nativeSearchQuery.setIndicesBoost(indicesBoost);
 		}
 
 		if (searchTemplateBuilder != null) {

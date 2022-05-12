@@ -46,6 +46,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	private List<String> fields = new ArrayList<>();
 	@Nullable protected HighlightQuery highlightQuery;
 	@Nullable private String route;
+	@Nullable private List<IndexBoost> indicesBoost;
 
 	@Nullable
 	public Pageable getPageable() {
@@ -102,6 +103,11 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	@Nullable
 	public String getRoute() {
 		return route;
+	}
+
+	@Nullable
+	public List<IndexBoost> getIndicesBoost() {
+		return indicesBoost;
 	}
 
 	public SELF withPageable(Pageable pageable) {
@@ -175,6 +181,16 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 
 	public SELF withRoute(String route) {
 		this.route = route;
+		return self();
+	}
+
+	public SELF withIndicesBoost(List<IndexBoost> indicesBoost) {
+		this.indicesBoost = indicesBoost;
+		return self();
+	}
+
+	public SELF withIndicesBoost(IndexBoost... indicesBoost) {
+		this.indicesBoost = Arrays.asList(indicesBoost);
 		return self();
 	}
 

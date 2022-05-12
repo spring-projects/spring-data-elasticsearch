@@ -55,7 +55,6 @@ public class NativeSearchQuery extends BaseQuery {
 	@Nullable private List<PipelineAggregationBuilder> pipelineAggregations;
 	@Nullable private HighlightBuilder highlightBuilder;
 	@Nullable private HighlightBuilder.Field[] highlightFields;
-	@Nullable private List<IndexBoost> indicesBoost;
 	@Nullable private SearchTemplateRequestBuilder searchTemplate;
 	@Nullable private SuggestBuilder suggestBuilder;
 	@Nullable private List<SearchExtBuilder> searchExtBuilders;
@@ -180,11 +179,6 @@ public class NativeSearchQuery extends BaseQuery {
 
 	public void setPipelineAggregations(List<PipelineAggregationBuilder> pipelineAggregationBuilders) {
 		this.pipelineAggregations = pipelineAggregationBuilders;
-	}
-
-	@Nullable
-	public List<IndexBoost> getIndicesBoost() {
-		return indicesBoost;
 	}
 
 	public void setIndicesBoost(List<IndexBoost> indicesBoost) {

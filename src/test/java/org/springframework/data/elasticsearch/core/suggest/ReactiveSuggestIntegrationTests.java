@@ -67,7 +67,7 @@ public abstract class ReactiveSuggestIntegrationTests implements NewElasticsearc
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
 	}
 
-	@DisabledIf(value = "newElasticsearchClient", disabledReason="todo #1973, ES issue 150")
+	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
 	@Test // #1302
 	@DisplayName("should find suggestions for given prefix completion")
 	void shouldFindSuggestionsForGivenPrefixCompletion() {

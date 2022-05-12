@@ -434,6 +434,12 @@ public interface Query {
 	List<RuntimeField> getRuntimeFields();
 
 	/**
+	 * @since 4.4
+	 */
+	@Nullable
+	List<IndexBoost> getIndicesBoost();
+
+	/**
 	 * @since 4.3
 	 */
 	enum SearchType {
