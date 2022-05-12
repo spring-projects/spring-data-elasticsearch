@@ -277,8 +277,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	 */
 	protected Mono<GetResult> doGet(GetRequest request) {
 
-		return Mono.from(execute(client -> client.get(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.empty());
+		return Mono.from(execute(client -> client.get(request)));
 	}
 
 	protected Mono<String> doDeleteById(String id, @Nullable String routing, IndexCoordinates index) {
@@ -633,8 +632,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 			QUERY_LOGGER.debug(String.format("Executing doCount: %s", request));
 		}
 
-		return Mono.from(execute(client -> client.count(request))) //
-				.onErrorResume(NoSuchIndexException.class, it -> Mono.just(0L));
+		return Mono.from(execute(client -> client.count(request)));
 	}
 
 	/**

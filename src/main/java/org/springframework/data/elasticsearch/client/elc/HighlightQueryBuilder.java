@@ -87,10 +87,6 @@ class HighlightQueryBuilder {
 			builder.boundaryScannerLocale(parameters.getBoundaryScannerLocale());
 		}
 
-		if (parameters.getForceSource()) { // default is false
-			// todo #1973 parameter missing in new client
-		}
-
 		if (StringUtils.hasLength(parameters.getFragmenter())) {
 			builder.fragmenter(highlighterFragmenter(parameters.getFragmenter()));
 		}
@@ -109,10 +105,6 @@ class HighlightQueryBuilder {
 
 		if (StringUtils.hasLength(parameters.getOrder())) {
 			builder.order(highlighterOrder(parameters.getOrder()));
-		}
-
-		if (parameters.getPhraseLimit() > -1) {
-			// todo #1973 parameter missing in new client
 		}
 
 		if (parameters.getPreTags().length > 0) {

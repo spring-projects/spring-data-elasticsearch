@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.data.elasticsearch.core.convert.GeoConverters;
@@ -67,9 +68,13 @@ class CriteriaFilterProcessor {
 		for (Criteria chainedCriteria : criteria.getCriteriaChain()) {
 
 			if (chainedCriteria.isOr()) {
-				// todo #1973
+				BoolQuery.Builder boolQueryBuilder = QueryBuilders.bool();
+				queriesForEntries(chainedCriteria).forEach(boolQueryBuilder::should);
+				filterQueries.add(new Query(boolQueryBuilder.build()));
 			} else if (chainedCriteria.isNegating()) {
-				// todo #1973
+				Collection<? extends Query> negatingFilters = buildNegatingFilter(criteria.getField().getName(),
+						criteria.getFilterCriteriaEntries());
+				filterQueries.addAll(negatingFilters);
 			} else {
 				filterQueries.addAll(queriesForEntries(chainedCriteria));
 			}
@@ -85,9 +90,26 @@ class CriteriaFilterProcessor {
 				BoolQuery.Builder boolQueryBuilder = QueryBuilders.bool();
 				filterQueries.forEach(boolQueryBuilder::must);
 				BoolQuery boolQuery = boolQueryBuilder.build();
-				return Optional.of(boolQuery._toQuery());
+				return Optional.of(new Query(boolQuery));
 			}
 		}
+	}
+
+	private static Collection<? extends Query> buildNegatingFilter(String fieldName,
+			Set<Criteria.CriteriaEntry> filterCriteriaEntries) {
+
+		List<Query> negationFilters = new ArrayList<>();
+
+		filterCriteriaEntries.forEach(criteriaEntry -> {
+			Optional<Query> query = queryFor(criteriaEntry.getKey(), criteriaEntry.getValue(), fieldName);
+
+			if (query.isPresent()) {
+				BoolQuery negatingFilter = QueryBuilders.bool().mustNot(query.get()).build();
+				negationFilters.add(new Query(negatingFilter));
+			}
+		});
+
+		return negationFilters;
 	}
 
 	private static Collection<? extends Query> queriesForEntries(Criteria criteria) {

@@ -20,12 +20,15 @@ import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.assertj.core.api.SoftAssertions;
+import org.assertj.core.data.Offset;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 
 /**
@@ -104,6 +107,55 @@ class DocumentAdaptersUnitTests {
 		softly.assertThat(document.hasPrimaryTerm()).isTrue();
 		softly.assertThat(document.getPrimaryTerm()).isEqualTo(2);
 
+		softly.assertAll();
+	}
+
+	@Test // #725 #1973
+	@DisplayName("should adapt returned explanations")
+	void shouldAdaptReturnedExplanations() {
+
+		Hit<EntityAsMap> searchHit = new Hit.Builder<EntityAsMap>() //
+				.index("index") //
+				.id("42") //
+				.explanation(eb -> eb //
+						.value(3.14f) //
+						.description("explanation 3.14") //
+						.details(edb -> edb.description("explanation noMatch").value(0f)))
+				.build();
+
+		SearchDocument searchDocument = DocumentAdapters.from(searchHit, jsonpMapper);
+
+		SoftAssertions softly = new SoftAssertions();
+
+		Explanation explanation = searchDocument.getExplanation();
+		softly.assertThat(explanation).isNotNull();
+		softly.assertThat(explanation.isMatch()).isTrue();
+		softly.assertThat(explanation.getValue()).isCloseTo(3.14, Offset.offset(0.001));
+		softly.assertThat(explanation.getDescription()).isEqualTo("explanation 3.14");
+		List<Explanation> details = explanation.getDetails();
+		softly.assertThat(details)
+				.containsExactly(new Explanation(null, 0.0, "explanation noMatch", Collections.emptyList()));
+		softly.assertAll();
+	}
+
+	@Test // DATAES-979 #1973
+	@DisplayName("should adapt returned matched queries")
+	void shouldAdaptReturnedMatchedQueries() {
+
+		Hit<EntityAsMap> searchHit = new Hit.Builder<EntityAsMap>() //
+				.index("index") //
+				.id("42") //
+				.matchedQueries("query1", "query2") //
+				.build();
+
+		SearchDocument searchDocument = DocumentAdapters.from(searchHit, jsonpMapper);
+
+		SoftAssertions softly = new SoftAssertions();
+
+		List<String> matchedQueries = searchDocument.getMatchedQueries();
+		softly.assertThat(matchedQueries).isNotNull();
+		softly.assertThat(matchedQueries).hasSize(2);
+		softly.assertThat(matchedQueries).isEqualTo(Arrays.asList("query1", "query2"));
 		softly.assertAll();
 	}
 }

@@ -16,81 +16,68 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.core.query.Query.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.lang.Boolean;
-import java.lang.Long;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.elasticsearch.RestStatusException;
+import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.annotations.CountQuery;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.lang.Nullable;
-import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Jens Schauder
  */
-// todo #1973 test for both clients
 @SpringIntegrationTest
-@ContextConfiguration(classes = { SimpleReactiveElasticsearchRepositoryTests.Config.class })
-class SimpleReactiveElasticsearchRepositoryTests {
-
-	@Configuration
-	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
-	@EnableReactiveElasticsearchRepositories(considerNestedRepositories = true)
-	static class Config {}
-
-	static final String INDEX = "test-index-sample-simple-reactive";
+abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 	@Autowired ReactiveElasticsearchOperations operations;
-	@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 	@Autowired ReactiveSampleEntityRepository repository;
 
+	@Autowired private IndexNameProvider indexNameProvider;
+
 	@BeforeEach
-	void setUp() {
-		operations.indexOps(IndexCoordinates.of(INDEX)).delete().block();
+	void before() {
+		indexNameProvider.increment();
+		operations.indexOps(SampleEntity.class).createWithMapping().block();
 	}
 
-	@AfterEach
-	void after() {
-		operations.indexOps(IndexCoordinates.of(INDEX)).delete().block();
+	@Test
+	@org.junit.jupiter.api.Order(Integer.MAX_VALUE)
+	public void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
 	}
 
 	@Test // DATAES-519
@@ -104,7 +91,7 @@ class SimpleReactiveElasticsearchRepositoryTests {
 	}
 
 	private Mono<Boolean> documentWithIdExistsInIndex(String id) {
-		return operations.exists(id, IndexCoordinates.of(INDEX));
+		return operations.exists(id, IndexCoordinates.of(indexNameProvider.indexName()));
 	}
 
 	@Test // DATAES-519
@@ -122,9 +109,12 @@ class SimpleReactiveElasticsearchRepositoryTests {
 
 	@Test // DATAES-519, DATAES-767, DATAES-822
 	void findByIdShouldErrorIfIndexDoesNotExist() {
+
+		operations.indexOps(SampleEntity.class).delete().block();
 		repository.findById("id-two") //
 				.as(StepVerifier::create) //
-				.expectError(RestStatusException.class);
+				.expectError(NoSuchIndexException.class) //
+				.verify();
 	}
 
 	@Test // DATAES-519
@@ -268,9 +258,12 @@ class SimpleReactiveElasticsearchRepositoryTests {
 
 	@Test // DATAES-519, DATAES-767, DATAES-822
 	void countShouldErrorWhenIndexDoesNotExist() {
+
+		operations.indexOps(SampleEntity.class).delete().block();
 		repository.count() //
 				.as(StepVerifier::create) //
-				.expectError(RestStatusException.class);
+				.expectError(NoSuchIndexException.class) //
+				.verify();
 	}
 
 	@Test // DATAES-519
@@ -596,7 +589,7 @@ class SimpleReactiveElasticsearchRepositoryTests {
 	}
 
 	Mono<Void> bulkIndex(SampleEntity... entities) {
-		return operations.saveAll(Arrays.asList(entities), IndexCoordinates.of(INDEX)).then();
+		return operations.saveAll(Arrays.asList(entities), IndexCoordinates.of(indexNameProvider.indexName())).then();
 	}
 
 	interface ReactiveSampleEntityRepository extends ReactiveCrudRepository<SampleEntity, String> {
@@ -636,14 +629,14 @@ class SimpleReactiveElasticsearchRepositoryTests {
 		Mono<Long> retrieveCountByText(String message);
 	}
 
-	@Document(indexName = INDEX)
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
 		@Nullable
 		@Id private String id;
 		@Nullable
-		@Field(type = Text, store = true, fielddata = true) private String type;
+		@Field(type = FieldType.Text, store = true, fielddata = true) private String type;
 		@Nullable
-		@Field(type = Text, store = true, fielddata = true) private String message;
+		@Field(type = FieldType.Text, store = true, fielddata = true) private String message;
 		@Nullable private int rate;
 		@Nullable private boolean available;
 		@Nullable
