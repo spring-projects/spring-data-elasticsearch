@@ -820,7 +820,7 @@ class RequestConverter {
 				.refresh(reindexRequest.getRefresh()) //
 				.requireAlias(reindexRequest.getRequireAlias()) //
 				.requestsPerSecond(reindexRequest.getRequestsPerSecond()) //
-				.slices(reindexRequest.getSlices());
+				.slices(slices(reindexRequest.getSlices()));
 
 		return builder.build();
 	}
@@ -963,24 +963,24 @@ class RequestConverter {
 					.pipeline(updateQuery.getPipeline()) //
 					.requestsPerSecond(
 							updateQuery.getRequestsPerSecond() != null ? updateQuery.getRequestsPerSecond().longValue() : null) //
-					.slices(updateQuery.getSlices() != null ? Long.valueOf(updateQuery.getSlices()) : null) //
-			;
+					.slices(slices(updateQuery.getSlices() != null ? Long.valueOf(updateQuery.getSlices()) : null));
 
 			if (updateQuery.getAbortOnVersionConflict() != null) {
 				ub.conflicts(updateQuery.getAbortOnVersionConflict() ? Conflicts.Abort : Conflicts.Proceed);
 			}
 
-			if (updateQuery.getBatchSize() != null) {
-				ub.size(Long.valueOf(updateQuery.getBatchSize()));
-			}
-
 			if (updateQuery.getQuery() != null) {
 				Query queryQuery = updateQuery.getQuery();
+
+				if (updateQuery.getBatchSize() != null) {
+					((BaseQuery) queryQuery).setMaxResults(updateQuery.getBatchSize());
+				}
 				ub.query(getQuery(queryQuery, null));
 
 				// no indicesOptions available like in old client
 
 				ub.scroll(time(queryQuery.getScrollTime()));
+
 			}
 
 			// no maxRetries available like in old client
@@ -1164,11 +1164,11 @@ class RequestConverter {
 
 		if (!query.getRuntimeFields().isEmpty()) {
 
-			Map<String, RuntimeField> runtimeMappings = new HashMap<>();
+			Map<String, List<RuntimeField>> runtimeMappings = new HashMap<>();
 			query.getRuntimeFields().forEach(runtimeField -> {
-				runtimeMappings.put(runtimeField.getName(), RuntimeField.of(rt -> rt //
+				runtimeMappings.put(runtimeField.getName(), Collections.singletonList(RuntimeField.of(rt -> rt //
 						.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType())) //
-						.script(s -> s.inline(is -> is.source(runtimeField.getScript())))));
+						.script(s -> s.inline(is -> is.source(runtimeField.getScript()))))));
 			});
 			builder.runtimeMappings(runtimeMappings);
 		}
@@ -1328,6 +1328,7 @@ class RequestConverter {
 		} else {
 			throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
 		}
+
 		return esQuery;
 	}
 

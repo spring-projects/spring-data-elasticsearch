@@ -46,6 +46,11 @@ public class GeoELCIntegrationTests extends GeoIntegrationTests {
 	}
 
 	@Override
+	public boolean newElasticsearchClient() {
+		return true;
+	}
+
+	@Override
 	protected Query nativeQueryForBoundingBox(String fieldName, double top, double left, double bottom, double right) {
 		return NativeQuery.builder() //
 				.withQuery(q -> q //

@@ -27,7 +27,6 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @ContextConfiguration(classes = { ReactiveIndexOperationsELCIntegrationTests.Config.class })
 public class ReactiveIndexOperationsELCIntegrationTests extends ReactiveIndexOperationsIntegrationTests {
-
 	@Configuration
 	@Import({ ReactiveElasticsearchTemplateConfiguration.class })
 	static class Config {
@@ -35,5 +34,10 @@ public class ReactiveIndexOperationsELCIntegrationTests extends ReactiveIndexOpe
 		IndexNameProvider indexNameProvider() {
 			return new IndexNameProvider("reactive-indexoperations");
 		}
+	}
+
+	@Override
+	public boolean newElasticsearchClient() {
+		return true;
 	}
 }

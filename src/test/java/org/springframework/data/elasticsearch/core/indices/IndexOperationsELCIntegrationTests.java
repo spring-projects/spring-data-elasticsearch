@@ -33,12 +33,12 @@ public class IndexOperationsELCIntegrationTests extends IndexOperationsIntegrati
 	static class Config {
 		@Bean
 		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider("indexoperations-es");
+			return new IndexNameProvider("indexoperations");
 		}
 	}
 
 	@Override
-	public boolean usesNewElasticsearchClient() {
+	public boolean newElasticsearchClient() {
 		return true;
 	}
 }

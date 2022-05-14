@@ -22,4 +22,5 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  */
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
-public class IndexTemplateERHLCIntegrationTests extends IndexTemplateIntegrationTests {}
+public class IndexTemplateERHLCIntegrationTests extends IndexTemplateIntegrationTests {
+}

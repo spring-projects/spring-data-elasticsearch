@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -40,12 +41,14 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.CountQuery;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -75,13 +78,18 @@ import org.springframework.lang.Nullable;
  * @author James Mudd
  */
 @SpringIntegrationTest
-public abstract class CustomMethodRepositoryIntegrationTests {
+public abstract class CustomMethodRepositoryIntegrationTests implements NewElasticsearchClientDevelopment {
 
 	@Autowired private IndexNameProvider indexNameProvider;
 	@Autowired private SampleCustomMethodRepository repository;
 	@Autowired private SampleStreamingCustomMethodRepository streamingRepository;
 
 	@Autowired ElasticsearchOperations operations;
+
+	boolean rhlcWithCluster8() {
+		var clusterVersion = ((AbstractElasticsearchTemplate) operations).getClusterVersion();
+		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
+	}
 
 	@BeforeEach
 	public void before() {
@@ -806,6 +814,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(page.getTotalElements()).isEqualTo(1L);
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test
 	public void shouldExecuteCustomMethodWithNearBox() {
 
@@ -1365,6 +1374,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(count).isEqualTo(1L);
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-106
 	public void shouldCountCustomMethodWithNearBox() {
 

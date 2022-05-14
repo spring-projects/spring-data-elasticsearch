@@ -16,19 +16,17 @@
 package org.springframework.data.elasticsearch;
 
 /**
- * TODO remove when the new Elasticsearch client is fully working
+ * TODO remove when the new Elasticsearch client is fully working and the old client is removed
  *
  * @author Peter-Josef Meisch
  */
 public interface NewElasticsearchClientDevelopment {
 
-	boolean forceEnable = false;
-
-	default boolean usesNewElasticsearchClient() {
+	default boolean newElasticsearchClient() {
 		return false;
 	}
 
-	default boolean newElasticsearchClient() {
-		return !forceEnable && usesNewElasticsearchClient();
+	default boolean oldElasticsearchClient() {
+		return !newElasticsearchClient();
 	}
 }

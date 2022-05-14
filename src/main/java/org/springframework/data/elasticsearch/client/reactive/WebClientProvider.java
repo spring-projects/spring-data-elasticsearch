@@ -257,6 +257,16 @@ public interface WebClientProvider {
 							if (suppliedHeaders != null && suppliedHeaders != HttpHeaders.EMPTY) {
 								httpHeaders.addAll(suppliedHeaders);
 							}
+
+							// this WebClientProvider is built with ES 7 and not used on 8 anymore
+							httpHeaders.add("Accept", "application/vnd.elasticsearch+json;compatible-with=7");
+
+							var contentTypeHeader = "Content-Type";
+							if (httpHeaders.containsKey(contentTypeHeader)) {
+								httpHeaders.remove(contentTypeHeader);
+							}
+							httpHeaders.add(contentTypeHeader, "application/vnd.elasticsearch+json;compatible-with=7");
+
 						}));
 
 		return provider;

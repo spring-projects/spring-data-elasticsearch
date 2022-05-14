@@ -177,16 +177,29 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 							.isInstanceOf(IllegalArgumentException.class);
 		}
 
-		@Test // #1719
+		@Test // #1719, #2158
 		@DisplayName("should write sort parameters to Settings object")
 		void shouldWriteSortParametersToSettingsObject() throws JSONException {
 
-			String expected = "{\n" + //
-					"  \"index.sort.field\": [\"second_field\", \"first_field\"],\n" + //
-					"  \"index.sort.mode\": [\"max\", \"min\"],\n" + //
-					"  \"index.sort.order\": [\"desc\",\"asc\"],\n" + //
-					"  \"index.sort.missing\": [\"_last\",\"_first\"]\n" + //
-					"}\n"; //
+			String expected = """
+					{
+					  "index": {
+					    "sort": {
+					      "field": [
+					        "second_field",
+					        "first_field"
+					      ],
+					      "mode": [
+					        "max",
+					        "min"
+					      ],
+					      "missing": [
+					        "_last",
+					        "_first"
+					      ]
+					    }
+					  }
+					}					""";
 
 			ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.get().getMappingContext()
 					.getRequiredPersistentEntity(SettingsValidSortParameterSizes.class);

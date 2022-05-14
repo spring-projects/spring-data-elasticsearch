@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -70,6 +71,7 @@ public abstract class IndexOperationsIntegrationTests implements NewElasticsearc
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
+	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2165, ES issue 286")
 	@Test // #1646, #1718
 	@DisplayName("should return a list of info for specific index")
 	void shouldReturnInformationList() throws JSONException {

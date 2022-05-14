@@ -23,12 +23,15 @@ import java.util.UUID;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -39,10 +42,16 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class IndexTemplateIntegrationTests {
+public abstract class IndexTemplateIntegrationTests implements NewElasticsearchClientDevelopment {
 
 	@Autowired ElasticsearchOperations operations;
 
+	boolean rhlcWithCluster8() {
+		var clusterVersion = ((AbstractElasticsearchTemplate) operations).getClusterVersion();
+		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
+	}
+
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-612
 	void shouldCreateTemplate() {
 
@@ -76,6 +85,7 @@ public abstract class IndexTemplateIntegrationTests {
 		assertThat(templateData).isNull();
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-612
 	void shouldGetTemplate() throws JSONException {
 		IndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
@@ -101,7 +111,7 @@ public abstract class IndexTemplateIntegrationTests {
 
 		assertThat(templateData).isNotNull();
 		assertThat(templateData.getIndexPatterns()).containsExactlyInAnyOrder(putTemplateRequest.getIndexPatterns());
-		assertEquals(settings.toJson(), templateData.getSettings().toJson(), false);
+		assertEquals(settings.flatten().toJson(), templateData.getSettings().toJson(), false);
 		assertEquals(mapping.toJson(), templateData.getMapping().toJson(), false);
 		Map<String, AliasData> aliases = templateData.getAliases();
 		assertThat(aliases).hasSize(2);

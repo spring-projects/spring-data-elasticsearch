@@ -61,7 +61,7 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 	}
 
 	@Override
-	public boolean usesNewElasticsearchClient() {
+	public boolean newElasticsearchClient() {
 		return true;
 	}
 
