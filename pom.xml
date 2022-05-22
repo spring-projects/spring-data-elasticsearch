@@ -4,7 +4,7 @@
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-elasticsearch</artifactId>
-	<version>3.1.22.BUILD-SNAPSHOT</version>
+	<version>3.1.23.BUILD-SNAPSHOT</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
@@ -20,7 +20,7 @@
 		<commonscollections>3.2.1</commonscollections>
 		<commonslang>2.6</commonslang>
 		<elasticsearch>6.2.4</elasticsearch>
-		<log4j>2.9.1</log4j>
+		<log4j>2.17.0</log4j>
 		<springdata.commons>2.1.22.BUILD-SNAPSHOT</springdata.commons>
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 	</properties>
