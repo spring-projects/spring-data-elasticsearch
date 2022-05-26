@@ -86,7 +86,7 @@ final public class ElasticsearchDateConverter {
 	 */
 	public String format(TemporalAccessor accessor) {
 
-		Assert.notNull("accessor", "accessor must not be null");
+		Assert.notNull(accessor, "accessor must not be null");
 
 		if (accessor instanceof Instant) {
 			Instant instant = (Instant) accessor;
