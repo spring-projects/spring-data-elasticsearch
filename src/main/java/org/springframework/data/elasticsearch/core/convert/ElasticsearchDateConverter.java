@@ -66,7 +66,6 @@ final public class ElasticsearchDateConverter {
 	 */
 	public static ElasticsearchDateConverter of(String pattern) {
 
-		Assert.notNull(pattern, "pattern must not be null");
 		Assert.hasText(pattern, "pattern must not be empty");
 
 		String[] subPatterns = pattern.split("\\|\\|");
