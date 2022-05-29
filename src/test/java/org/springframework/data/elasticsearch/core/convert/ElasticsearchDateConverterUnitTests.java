@@ -21,13 +21,13 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 
 /**
- * @author Peter-Josef Meisch
+ * @author Peter-Josef Meisch zhaoyunxing
  * @author Tim te Beek
  * @author Sascha Woo
  */
 class ElasticsearchDateConverterUnitTests {
 
-	private ZonedDateTime zdt = ZonedDateTime.now(ZoneId.of("Europe/Berlin"));
+	private final ZonedDateTime zdt = ZonedDateTime.now(ZoneId.systemDefault());
 
 	@ParameterizedTest // DATAES-716
 	@EnumSource(DateFormat.class)
@@ -85,7 +85,7 @@ class ElasticsearchDateConverterUnitTests {
 		GregorianCalendar calendar = GregorianCalendar
 				.from(ZonedDateTime.of(LocalDateTime.of(2020, 4, 19, 19, 44), ZoneId.of("UTC")));
 		Date legacyDate = calendar.getTime();
-		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time);
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time, ZoneId.of("UTC").getId());
 
 		String formatted = converter.format(legacyDate);
 
@@ -97,7 +97,7 @@ class ElasticsearchDateConverterUnitTests {
 		GregorianCalendar calendar = GregorianCalendar
 				.from(ZonedDateTime.of(LocalDateTime.of(2020, 4, 19, 19, 44), ZoneId.of("UTC")));
 		Date legacyDate = calendar.getTime();
-		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time);
+		ElasticsearchDateConverter converter = ElasticsearchDateConverter.of(DateFormat.basic_date_time, ZoneId.of("UTC").getId());
 
 		Date parsed = converter.parse("20200419T194400.000Z");
 

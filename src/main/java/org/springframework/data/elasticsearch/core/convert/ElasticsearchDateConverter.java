@@ -36,7 +36,7 @@ import org.springframework.util.Assert;
  * Provides Converter instances to convert to and from Dates in the different date and time formats that elasticsearch
  * understands.
  *
- * @author Peter-Josef Meisch
+ * @author Peter-Josef Meisch zhaoyunxing
  * @since 4.0
  */
 final public class ElasticsearchDateConverter {
@@ -59,6 +59,21 @@ final public class ElasticsearchDateConverter {
 	}
 
 	/**
+	 * Creates an ElasticsearchDateConverter for the given {@link DateFormat} and timezone.
+	 *
+	 * @param dateFormat must not be @{literal null}
+	 * @param timezone must not be @{literal null}
+	 * @return converter
+	 */
+	public static ElasticsearchDateConverter of(DateFormat dateFormat, String timezone) {
+
+		Assert.notNull(dateFormat, "dateFormat must not be null");
+		Assert.notNull(timezone, "timezone must not be null");
+
+		return of(dateFormat.name(),timezone);
+	}
+
+	/**
 	 * Creates an ElasticsearchDateConverter for the given pattern.
 	 *
 	 * @param pattern must not be {@literal null}
@@ -66,11 +81,27 @@ final public class ElasticsearchDateConverter {
 	 */
 	public static ElasticsearchDateConverter of(String pattern) {
 
+		return of(pattern,ZoneId.systemDefault().getId());
+	}
+
+	/**
+	 * Creates an ElasticsearchDateConverter for the given pattern and timezone.
+	 *
+	 * @param pattern must not be {@literal null}
+	 * @param timezone must not be {@literal null}
+	 * @return converter
+	 */
+	public static ElasticsearchDateConverter of(String pattern, String timezone) {
+
 		Assert.hasText(pattern, "pattern must not be empty");
+		Assert.hasText(timezone, "timezone must not be empty");
 
 		String[] subPatterns = pattern.split("\\|\\|");
 
-		return converters.computeIfAbsent(subPatterns[0].trim(), p -> new ElasticsearchDateConverter(forPattern(p)));
+		return converters.computeIfAbsent(subPatterns[0].trim(), p -> {
+			DateFormatter dateFormatter = forPattern(p,timezone);
+			return new ElasticsearchDateConverter(dateFormatter);
+		});
 	}
 
 	private ElasticsearchDateConverter(DateFormatter dateFormatter) {
@@ -86,12 +117,6 @@ final public class ElasticsearchDateConverter {
 	public String format(TemporalAccessor accessor) {
 
 		Assert.notNull(accessor, "accessor must not be null");
-
-		if (accessor instanceof Instant) {
-			Instant instant = (Instant) accessor;
-			ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.of("UTC"));
-			return dateFormatter.format(zonedDateTime);
-		}
 
 		return dateFormatter.format(accessor);
 	}
@@ -136,9 +161,10 @@ final public class ElasticsearchDateConverter {
 	 * or a literal pattern.
 	 *
 	 * @param pattern the pattern to use
+	 * @param timezone timezone
 	 * @return DateFormatter
 	 */
-	private static DateFormatter forPattern(String pattern) {
+	private static DateFormatter forPattern(String pattern, String timezone) {
 
 		String resolvedPattern = pattern;
 
@@ -167,7 +193,8 @@ final public class ElasticsearchDateConverter {
 			}
 		}
 
-		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(resolvedPattern);
+		DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(resolvedPattern)
+				.withZone(ZoneId.of(timezone));
 		return new PatternDateFormatter(dateTimeFormatter);
 	}
 
@@ -327,7 +354,7 @@ final public class ElasticsearchDateConverter {
 			} catch (Exception e) {
 				if (accessor instanceof Instant) {
 					// as alternatives try to format a ZonedDateTime or LocalDateTime
-					return dateTimeFormatter.format(ZonedDateTime.ofInstant((Instant) accessor, ZoneId.of("UTC")));
+					return dateTimeFormatter.format(ZonedDateTime.ofInstant((Instant) accessor, ZoneId.systemDefault()));
 				} else {
 					throw e;
 				}
@@ -353,7 +380,7 @@ final public class ElasticsearchDateConverter {
 					} catch (Exception exception) {
 						LocalDateTime localDateTime = dateTimeFormatter.parse(input, getTemporalQuery(LocalDateTime.class));
 						// noinspection unchecked
-						return (T) localDateTime.toInstant(ZoneOffset.UTC);
+						return (T) localDateTime.atZone(ZoneId.systemDefault()).toInstant();
 					}
 				} else {
 					throw e;
