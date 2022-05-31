@@ -21,8 +21,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -38,7 +40,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class RuntimeFieldsIntegrationTests {
+public abstract class RuntimeFieldsIntegrationTests implements NewElasticsearchClientDevelopment {
 
 	@Autowired private ElasticsearchOperations operations;
 	@Autowired protected IndexNameProvider indexNameProvider;
@@ -58,6 +60,7 @@ public abstract class RuntimeFieldsIntegrationTests {
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
+	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2171, ES issue 298")
 	@Test // #1971
 	@DisplayName("should use runtime-field from query in search")
 	void shouldUseRuntimeFieldFromQueryInSearch() {

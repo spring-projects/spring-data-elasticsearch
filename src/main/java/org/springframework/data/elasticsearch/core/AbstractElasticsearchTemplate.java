@@ -145,8 +145,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	/**
 	 * Set the {@link EntityCallbacks} instance to use when invoking {@link EntityCallbacks callbacks} like the
-	 * {@link org.springframework.data.elasticsearch.core.event.BeforeConvertCallback}.
-	 * Overrides potentially existing {@link EntityCallbacks}.
+	 * {@link org.springframework.data.elasticsearch.core.event.BeforeConvertCallback}. Overrides potentially existing
+	 * {@link EntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.
 	 * @throws IllegalArgumentException if the given instance is {@literal null}.
@@ -588,19 +588,19 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 * @return the version as string if it can be retrieved
 	 */
 	@Nullable
-	abstract protected String getClusterVersion();
+	public abstract String getClusterVersion();
 
 	/**
 	 * @return the vendor name of the used cluster and client library
 	 * @since 4.3
 	 */
-	abstract protected String getVendor();
+	public abstract String getVendor();
 
 	/**
 	 * @return the version of the used client runtime library.
 	 * @since 4.3
 	 */
-	abstract protected String getRuntimeLibraryVersion();
+	public abstract String getRuntimeLibraryVersion();
 
 	// endregion
 

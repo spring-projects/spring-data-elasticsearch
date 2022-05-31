@@ -607,7 +607,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	// region helper methods
 	@Override
-	protected String getClusterVersion() {
+	public String getClusterVersion() {
 		try {
 			return execute(client -> client.info(RequestOptions.DEFAULT)).getVersion().getNumber();
 		} catch (Exception ignored) {}
@@ -629,12 +629,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	protected String getVendor() {
+	public String getVendor() {
 		return "Elasticsearch";
 	}
 
 	@Override
-	protected String getRuntimeLibraryVersion() {
+	public String getRuntimeLibraryVersion() {
 		return Version.CURRENT.toString();
 	}
 

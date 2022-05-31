@@ -273,18 +273,18 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	// endregion
 
 	@Override
-	protected String getClusterVersion() {
+	public String getClusterVersion() {
 		return execute(client -> client.info().version().number());
 
 	}
 
 	@Override
-	protected String getVendor() {
+	public String getVendor() {
 		return "Elasticsearch";
 	}
 
 	@Override
-	protected String getRuntimeLibraryVersion() {
+	public String getRuntimeLibraryVersion() {
 		return Version.VERSION.toString();
 	}
 

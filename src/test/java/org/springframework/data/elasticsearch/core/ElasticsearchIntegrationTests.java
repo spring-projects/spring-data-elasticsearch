@@ -2783,6 +2783,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(settings).doesNotContainKey("index.max_result_window");
 	}
 
+	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2165, ES issue 286")
 	@Test // DATAES-709
 	public void shouldIncludeDefaultsOnGetIndexSettings() {
 

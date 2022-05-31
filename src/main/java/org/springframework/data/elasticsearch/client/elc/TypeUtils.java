@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch.core.search.BoundaryScanner;
-import co.elastic.clients.elasticsearch.core.search.BuiltinHighlighterType;
 import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
 import co.elastic.clients.elasticsearch.core.search.HighlighterFragmenter;
 import co.elastic.clients.elasticsearch.core.search.HighlighterOrder;
@@ -170,11 +169,11 @@ final class TypeUtils {
 		if (value != null) {
 			switch (value.toLowerCase()) {
 				case "unified":
-					return HighlighterType.of(b -> b.builtin(BuiltinHighlighterType.Unified));
+					return HighlighterType.Unified;
 				case "plain":
-					return HighlighterType.of(b -> b.builtin(BuiltinHighlighterType.Plain));
+					return HighlighterType.Plain;
 				case "fvh":
-					return HighlighterType.of(b -> b.builtin(BuiltinHighlighterType.FastVector));
+					return HighlighterType.FastVector;
 				default:
 					return null;
 			}
@@ -306,6 +305,16 @@ final class TypeUtils {
 		}
 
 		return null;
+	}
+
+	@Nullable
+	static Slices slices(@Nullable Long count) {
+
+		if (count == null) {
+			return null;
+		}
+
+		return Slices.of(s -> s.value(Math.toIntExact(count)));
 	}
 
 	@Nullable

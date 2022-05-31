@@ -611,15 +611,15 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	 * @return the vendor name of the used cluster and client library
 	 * @since 4.3
 	 */
-	abstract protected Mono<String> getVendor();
+	public abstract Mono<String> getVendor();
 
 	/**
 	 * @return the version of the used client runtime library.
 	 * @since 4.3
 	 */
-	abstract protected Mono<String> getRuntimeLibraryVersion();
+	public abstract Mono<String> getRuntimeLibraryVersion();
 
-	abstract protected Mono<String> getClusterVersion();
+	public abstract Mono<String> getClusterVersion();
 
 	/**
 	 * Value class to capture client independent information from a response to an index request.

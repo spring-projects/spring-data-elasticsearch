@@ -31,26 +31,20 @@ import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
-import org.springframework.data.elasticsearch.core.index.AliasAction;
-import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
-import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
+import org.springframework.data.elasticsearch.core.index.*;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -60,11 +54,16 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class ReactiveIndexOperationsIntegrationTests {
+public abstract class ReactiveIndexOperationsIntegrationTests implements NewElasticsearchClientDevelopment {
 
 	@Autowired private ReactiveElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
 	private ReactiveIndexOperations indexOperations;
+
+	boolean rhlcWithCluster8() {
+		var clusterVersion = ((AbstractReactiveElasticsearchTemplate) operations).getClusterVersion().block();
+		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
+	}
 
 	@BeforeEach
 	void setUp() {
@@ -124,11 +123,11 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 	@Test // DATAES-678
 	void shouldCreateIndexWithGivenSettings() {
 
-		org.springframework.data.elasticsearch.core.document.Document requiredSettings = org.springframework.data.elasticsearch.core.document.Document
-				.create();
-		requiredSettings.put("index.number_of_replicas", 3);
-		requiredSettings.put("index.number_of_shards", 4);
-		requiredSettings.put("index.refresh_interval", "5s");
+		var index = new Settings() //
+				.append("number_of_replicas", 3) //
+				.append("number_of_shards", 4)//
+				.append("refresh_interval", "5s");
+		var requiredSettings = new Settings().append("index", index);
 
 		indexOperations.create(requiredSettings) //
 				.as(StepVerifier::create) //
@@ -136,9 +135,10 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 				.verifyComplete();
 
 		indexOperations.getSettings().as(StepVerifier::create).consumeNextWith(settings -> {
-			assertThat(settings.get("index.number_of_replicas")).isEqualTo("3");
-			assertThat(settings.get("index.number_of_shards")).isEqualTo("4");
-			assertThat(settings.get("index.refresh_interval")).isEqualTo("5s");
+			var flattened = settings.flatten();
+			assertThat(flattened.get("index.number_of_replicas")).isEqualTo("3");
+			assertThat(flattened.get("index.number_of_shards")).isEqualTo("4");
+			assertThat(flattened.get("index.refresh_interval")).isEqualTo("5s");
 		}).verifyComplete();
 	}
 
@@ -359,6 +359,7 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 				.verifyComplete();
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-612
 	void shouldPutTemplate() {
 
@@ -391,6 +392,7 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 				.verifyComplete();
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-612
 	void shouldGetTemplate() throws JSONException {
 
@@ -417,10 +419,8 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 		SoftAssertions softly = new SoftAssertions();
 		softly.assertThat(templateData).isNotNull();
 		softly.assertThat(templateData.getIndexPatterns()).containsExactlyInAnyOrder(putTemplateRequest.getIndexPatterns());
-		assertEquals(settings.toJson(), templateData.getSettings().toJson(), false);
-
+		assertEquals(settings.flatten().toJson(), templateData.getSettings().toJson(), false);
 		assertEquals(mapping.toJson(), templateData.getMapping().toJson(), false);
-
 		Map<String, AliasData> aliases = templateData.getAliases();
 		softly.assertThat(aliases).hasSize(2);
 		AliasData alias1 = aliases.get("alias1");

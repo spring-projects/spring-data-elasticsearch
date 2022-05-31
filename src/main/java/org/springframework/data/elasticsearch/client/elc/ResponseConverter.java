@@ -90,7 +90,7 @@ class ResponseConverter {
 				.withNumberOfPendingTasks(healthResponse.numberOfPendingTasks()) //
 				.withRelocatingShards(healthResponse.relocatingShards()) //
 				.withStatus(healthResponse.status().toString()) //
-				.withTaskMaxWaitingTimeMillis(Long.parseLong(healthResponse.taskMaxWaitingInQueueMillis())) //
+				.withTaskMaxWaitingTimeMillis(healthResponse.taskMaxWaitingInQueueMillis().toEpochMilli()) //
 				.withTimedOut(healthResponse.timedOut()) //
 				.withUnassignedShards(healthResponse.unassignedShards()) //
 				.build(); //
@@ -144,11 +144,11 @@ class ResponseConverter {
 		if (indexMappingRecord == null) {
 
 			if (mappings.size() != 1) {
-			LOGGER.warn("no mapping returned for index {}", indexCoordinates.getIndexName());
-			return Document.create();
-		}
-		String index = mappings.keySet().iterator().next();
-		indexMappingRecord = mappings.get(index);
+				LOGGER.warn("no mapping returned for index {}", indexCoordinates.getIndexName());
+				return Document.create();
+			}
+			String index = mappings.keySet().iterator().next();
+			indexMappingRecord = mappings.get(index);
 		}
 
 		return Document.parse(toJson(indexMappingRecord.mappings(), jsonpMapper));
@@ -277,9 +277,9 @@ class ResponseConverter {
 				.withNoops(reindexResponse.noops()) //
 				.withBulkRetries(reindexResponse.retries().bulk()) //
 				.withSearchRetries(reindexResponse.retries().search()) //
-				.withThrottledMillis(Long.parseLong(reindexResponse.throttledMillis())) //
+				.withThrottledMillis(reindexResponse.throttledMillis().toEpochMilli()) //
 				.withRequestsPerSecond(reindexResponse.requestsPerSecond()) //
-				.withThrottledUntilMillis(Long.parseLong(reindexResponse.throttledUntilMillis())).withFailures(failures) //
+				.withThrottledUntilMillis(reindexResponse.throttledUntilMillis().toEpochMilli()).withFailures(failures) //
 				.build();
 	}
 

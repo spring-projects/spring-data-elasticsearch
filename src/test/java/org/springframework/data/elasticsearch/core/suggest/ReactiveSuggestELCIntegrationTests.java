@@ -45,7 +45,7 @@ public class ReactiveSuggestELCIntegrationTests extends ReactiveSuggestIntegrati
 	}
 
 	@Override
-	public boolean usesNewElasticsearchClient() {
+	public boolean newElasticsearchClient() {
 		return true;
 	}
 

@@ -47,7 +47,7 @@ public class CompletionELCIntegrationTests extends CompletionIntegrationTests {
 	}
 
 	@Override
-	public boolean usesNewElasticsearchClient() {
+	public boolean newElasticsearchClient() {
 		return true;
 	}
 

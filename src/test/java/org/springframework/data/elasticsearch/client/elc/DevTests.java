@@ -19,6 +19,9 @@ import static org.assertj.core.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.Script;
+import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
+import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
@@ -36,6 +39,7 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -83,22 +87,29 @@ public class DevTests {
 
 		ElasticsearchClient client = imperativeElasticsearchClient;
 
-		String index = "testindex";
+String index = "testindex";
 
-		Person person = new Person("42", new Name("Ford", "Prefect"));
+var p = new Product("p1", 42.0);
 
-		if (LOGGER.isInfoEnabled()) {
-			LOGGER.info(String.format("Person: %s", person));
-		}
+client.index(ir -> ir //
+		.index(index)//
+		.document(p));
 
-		IndexRequest<Object> indexRequest = IndexRequest.of(b -> b.index(index).id(person.id).document(person));
+client.indices().flush(f -> f.index(index));
 
-		client.index(indexRequest);
-		client.search(srb -> srb.index(index).trackTotalHits(thb -> thb.enabled(false)), Person.class);
+RuntimeField runtimeField = RuntimeField.of(rf -> rf //
+		.type(RuntimeFieldType.Double) //
+		.script(Script.of(s -> s //
+				.inline(i -> i. //
+						source("emit(doc['price'].value * 1.19)") //
+				) //
+		)) //
+); //
 
-		ReactiveClient asyncClient = new ReactiveClient(client._transport());
-
-		asyncClient.index(indexRequest).block();
+client.search(sr -> sr //
+		.index(index) //
+		.runtimeMappings("priceWithTax", Collections.singletonList(runtimeField)), //
+		Person.class); //
 	}
 
 	static class ReactiveClient {
@@ -110,6 +121,36 @@ public class DevTests {
 
 		public <T> Mono<IndexResponse> index(IndexRequest<T> request) {
 			return Mono.fromFuture(transport.performRequestAsync(request, IndexRequest._ENDPOINT, null));
+		}
+	}
+
+	static class Product {
+		@Nullable String id;
+		@Nullable Double price;
+
+		public Product() {}
+
+		public Product(@Nullable String id, @Nullable Double price) {
+			this.id = id;
+			this.price = price;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public Double getPrice() {
+			return price;
+		}
+
+		public void setPrice(@Nullable Double price) {
+			this.price = price;
 		}
 	}
 
@@ -327,7 +368,7 @@ public class DevTests {
 
 	private ClientConfiguration clientConfiguration() {
 		return ClientConfiguration.builder() //
-				.connectedTo("localhost:9200")//
+				.connectedTo("thranduil.local.:9200")//
 				.withBasicAuth("elastic", "hcraescitsale").withProxy("localhost:8080") //
 				.withHeaders(() -> {
 					HttpHeaders headers = new HttpHeaders();

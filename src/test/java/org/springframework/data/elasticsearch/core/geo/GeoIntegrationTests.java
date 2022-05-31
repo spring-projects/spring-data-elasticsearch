@@ -23,10 +23,13 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -53,10 +56,15 @@ import org.springframework.lang.Nullable;
  *         Latitude , max Longitude , max Latitude
  */
 @SpringIntegrationTest
-public abstract class GeoIntegrationTests {
+public abstract class GeoIntegrationTests implements NewElasticsearchClientDevelopment {
 
 	@Autowired private ElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
+
+	boolean rhlcWithCluster8() {
+		var clusterVersion = ((AbstractElasticsearchTemplate) operations).getClusterVersion();
+		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
+	}
 
 	@BeforeEach
 	public void before() {
@@ -219,6 +227,7 @@ public abstract class GeoIntegrationTests {
 		assertThat(geoAuthorsForGeoCriteria).hasSize(3);
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test
 	public void shouldFindAllMarkersForNativeSearchQuery() {
 
@@ -236,6 +245,7 @@ public abstract class GeoIntegrationTests {
 	protected abstract Query nativeQueryForBoundingBox(String fieldName, double top, double left, double bottom,
 			double right);
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test
 	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingGeoBox() {
 
@@ -254,6 +264,7 @@ public abstract class GeoIntegrationTests {
 				.containsExactlyInAnyOrder("def", "ghi");
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test
 	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingGeohash() {
 
@@ -272,6 +283,7 @@ public abstract class GeoIntegrationTests {
 				.containsExactlyInAnyOrder("def", "ghi");
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test
 	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingGeoPoints() {
 
@@ -290,6 +302,7 @@ public abstract class GeoIntegrationTests {
 				.containsExactlyInAnyOrder("def", "ghi");
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test
 	public void shouldFindAuthorMarkersInBoxForGivenCriteriaQueryUsingPoints() {
 
@@ -308,6 +321,7 @@ public abstract class GeoIntegrationTests {
 				.containsExactlyInAnyOrder("def", "ghi");
 	}
 
+	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test
 	public void shouldFindLocationWithGeoHashPrefix() {
 

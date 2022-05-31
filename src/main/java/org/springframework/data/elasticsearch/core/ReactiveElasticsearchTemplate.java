@@ -676,7 +676,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	// region Helper methods
 	@Override
-	protected Mono<String> getClusterVersion() {
+	public Mono<String> getClusterVersion() {
 		try {
 			return Mono.from(execute(ReactiveElasticsearchClient::info))
 					.map(mainResponse -> mainResponse.getVersion().toString());
@@ -689,7 +689,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	 * @since 4.3
 	 */
 	@Override
-	protected Mono<String> getVendor() {
+	public Mono<String> getVendor() {
 		return Mono.just("Elasticsearch");
 	}
 
@@ -698,7 +698,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	 * @since 4.3
 	 */
 	@Override
-	protected Mono<String> getRuntimeLibraryVersion() {
+	public Mono<String> getRuntimeLibraryVersion() {
 		return Mono.just(Version.CURRENT.toString());
 	}
 

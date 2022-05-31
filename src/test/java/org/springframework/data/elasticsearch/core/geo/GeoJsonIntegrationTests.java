@@ -19,20 +19,21 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.Arrays;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.geo.Point;
 import org.springframework.lang.Nullable;
 
@@ -44,7 +45,21 @@ abstract class GeoJsonIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
 
-	private IndexOperations indexOps;
+	@Autowired private IndexNameProvider indexNameProvider;
+
+	@BeforeEach
+	public void before() {
+		indexNameProvider.increment();
+		operations.indexOps(Area.class).createWithMapping();
+		operations.indexOps(GeoJsonEntity.class).createWithMapping();
+		operations.save(Arrays.asList(area10To20, area30To40));
+	}
+
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of("*" + indexNameProvider.getPrefix() + "*")).delete();
+	}
 
 	// region data
 
@@ -89,29 +104,6 @@ abstract class GeoJsonIntegrationTests {
 	private final Area area32To37 = new Area("area32To37", geoShape30To40);
 	// endregion
 
-	// region setup
-	@BeforeEach
-	void setUp() {
-		indexOps = operations.indexOps(GeoJsonEntity.class);
-		indexOps.delete();
-		indexOps.create();
-		indexOps.putMapping();
-
-		IndexOperations indexOpsArea = operations.indexOps(Area.class);
-		indexOpsArea.delete();
-		indexOpsArea.create();
-		indexOpsArea.putMapping();
-
-		operations.save(Arrays.asList(area10To20, area30To40));
-		indexOpsArea.refresh();
-	}
-
-	@AfterEach
-	void tearDown() {
-		indexOps.delete();
-	}
-	// endregion
-
 	// region tests
 	@Test // DATAES-930
 	@DisplayName("should write and read an entity with GeoJson properties")
@@ -149,7 +141,6 @@ abstract class GeoJsonIntegrationTests {
 		entity.setGeometryCollection2(geoJsonGeometryCollection);
 
 		operations.save(entity);
-		indexOps.refresh();
 
 		GeoJsonEntity result = operations.get("42", GeoJsonEntity.class);
 
@@ -202,7 +193,7 @@ abstract class GeoJsonIntegrationTests {
 	// endregion
 
 	// region test classes
-	@Document(indexName = "areas")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-area")
 	static class Area {
 		@Nullable
 		@Id private String id;

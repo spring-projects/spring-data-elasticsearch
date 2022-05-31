@@ -42,4 +42,9 @@ public class CustomMethodRepositoryERHLCIntegrationTests extends CustomMethodRep
 			return new IndexNameProvider("custom-method-repository-es7");
 		}
 	}
+
+	@Override
+	public boolean newElasticsearchClient() {
+		return false;
+	}
 }

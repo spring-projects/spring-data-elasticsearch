@@ -45,6 +45,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
@@ -54,6 +55,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -88,7 +90,7 @@ import org.springframework.util.StringUtils;
  */
 @SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @SpringIntegrationTest
-public abstract class ReactiveElasticsearchIntegrationTests {
+public abstract class ReactiveElasticsearchIntegrationTests implements NewElasticsearchClientDevelopment {
 
 	@Autowired private ReactiveElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
@@ -1072,6 +1074,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		}).verifyComplete();
 	}
 
+	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2165, ES issue 286")
 	@Test // #1646, #1718
 	@DisplayName("should return a list of info for specific index")
 	void shouldReturnInformationListOfAllIndices() {

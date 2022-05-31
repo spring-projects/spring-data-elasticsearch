@@ -21,8 +21,8 @@
 		<!-- version of the RestHighLevelClient	-->
 		<elasticsearch-rhlc>7.17.3</elasticsearch-rhlc>
 		<!-- version of the new ElasticsearchClient	-->
-		<elasticsearch-java>7.17.3</elasticsearch-java>
-		<log4j>2.17.1</log4j>
+		<elasticsearch-java>8.2.2</elasticsearch-java>
+		<log4j>2.17.2</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
 		<testcontainers>1.16.2</testcontainers>

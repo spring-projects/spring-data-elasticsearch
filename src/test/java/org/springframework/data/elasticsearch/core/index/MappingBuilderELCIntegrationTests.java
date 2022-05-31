@@ -39,7 +39,7 @@ public class MappingBuilderELCIntegrationTests extends MappingBuilderIntegration
 	}
 
 	@Override
-	public boolean usesNewElasticsearchClient() {
+	public boolean newElasticsearchClient() {
 		return true;
 	}
 }

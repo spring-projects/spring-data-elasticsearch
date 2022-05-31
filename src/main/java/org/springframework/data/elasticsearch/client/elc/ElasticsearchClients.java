@@ -19,6 +19,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
+import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 
@@ -41,8 +42,10 @@ import org.apache.http.HttpResponse;
 import org.apache.http.HttpResponseInterceptor;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
@@ -242,6 +245,18 @@ public final class ElasticsearchClients {
 
 		TransportOptions.Builder transportOptionsBuilder = transportOptions != null ? transportOptions.toBuilder()
 				: new RestClientOptions(RequestOptions.DEFAULT).toBuilder();
+
+		// need to add the compatibility header, this is only done automatically when not passing in custom options.
+		// code copied from RestClientTransport as it is not available outside the package
+		ContentType jsonContentType = null;
+		if (Version.VERSION == null) {
+			jsonContentType = ContentType.APPLICATION_JSON;
+		} else {
+			jsonContentType = ContentType.create("application/vnd.elasticsearch+json",
+					new BasicNameValuePair("compatible-with", String.valueOf(Version.VERSION.major())));
+		}
+		transportOptionsBuilder.addHeader("Accept", jsonContentType.toString());
+
 		TransportOptions transportOptionsWithHeader = transportOptionsBuilder
 				.addHeader(X_SPRING_DATA_ELASTICSEARCH_CLIENT, clientType).build();
 

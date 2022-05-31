@@ -510,36 +510,37 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 				return new Settings();
 			}
 
-			Settings settings = new Settings() //
-					.append("index.number_of_shards", String.valueOf(shards))
-					.append("index.number_of_replicas", String.valueOf(replicas));
+			var index = new Settings() //
+					.append("number_of_shards", String.valueOf(shards)) //
+					.append("number_of_replicas", String.valueOf(replicas));
 
 			if (refreshIntervall != null) {
-				settings.append("index.refresh_interval", refreshIntervall);
+				index.append("refresh_interval", refreshIntervall);
 			}
 
 			if (indexStoreType != null) {
-				settings.append("index.store.type", indexStoreType);
+				index.append("store", new Settings().append("type", indexStoreType));
 			}
 
 			if (sortFields != null && sortFields.length > 0) {
-				settings.append("index.sort.field", sortFields);
+				var sort = new Settings().append("field", sortFields);
 
 				if (sortOrders != null && sortOrders.length > 0) {
-					settings.append("index.sort.order", sortOrders);
+					sort.append("order", sortOrders);
 				}
 
 				if (sortModes != null && sortModes.length > 0) {
-					settings.append("index.sort.mode", sortModes);
+					sort.append("mode", sortModes);
 				}
 
 				if (sortMissingValues != null && sortMissingValues.length > 0) {
-					settings.append("index.sort.missing", sortMissingValues);
+					sort.append("missing", sortMissingValues);
 				}
+
+				index.append("sort", sort);
 			}
 
-			return settings; //
-
+			return new Settings().append("index", index); //
 		}
 	}
 

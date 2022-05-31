@@ -37,4 +37,9 @@ public class RuntimeFieldsELCIntegrationTests extends RuntimeFieldsIntegrationTe
 			return new IndexNameProvider("runtime-fields-rest-template");
 		}
 	}
+
+	@Override
+	public boolean newElasticsearchClient() {
+		return true;
+	}
 }

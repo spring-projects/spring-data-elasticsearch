@@ -23,7 +23,7 @@ import org.springframework.lang.Nullable;
 /**
  * this class contains each GeoJson type as explicit type and as GeoJson interface. Used by several test classes
  */
-@Document(indexName = "geojson-index")
+@Document(indexName = "#{@indexNameProvider.indexName()}-geojson")
 public class GeoJsonEntity {
 	@Nullable
 	@Id private String id;

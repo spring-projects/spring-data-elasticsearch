@@ -16,12 +16,26 @@
 package org.springframework.data.elasticsearch.core.geo;
 
 import org.junit.jupiter.api.DisplayName;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  */
-@ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
+@ContextConfiguration(classes = { GeoJsonERHLCIntegrationTests.Config.class })
 @DisplayName("GeoJson integration test with RestHighLevelClient")
-public class GeoJsonERHLCIntegrationTests extends GeoJsonIntegrationTests {}
+public class GeoJsonERHLCIntegrationTests extends GeoJsonIntegrationTests {
+	@Configuration
+	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	static class Config {
+		@Bean
+		IndexNameProvider indexNameProvider() {
+			return new IndexNameProvider("geojson-integration-es7");
+		}
+	}
+
+}
