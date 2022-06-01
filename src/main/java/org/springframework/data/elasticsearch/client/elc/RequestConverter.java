@@ -1049,12 +1049,13 @@ class RequestConverter {
 
 				mrb.searches(sb -> sb //
 						.header(h -> h //
-								.index(param.index.getIndexName()) //
+								.index(Arrays.asList(param.index.getIndexNames())) //
 				// todo #2156 add remaining flags for header
 				) //
 						.body(bb -> bb //
 								.query(getQuery(param.query, param.clazz))//
-				// todo #2138 seq_no_primary_term and version not available in client ES issue 161
+								.seqNoPrimaryTerm(persistentEntity.hasSeqNoPrimaryTermProperty())
+								.version(true)
 				// todo #2156 add remaining flags for body
 				) //
 				);
