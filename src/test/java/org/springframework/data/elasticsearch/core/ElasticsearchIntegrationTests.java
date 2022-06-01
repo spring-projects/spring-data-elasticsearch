@@ -1616,9 +1616,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(entities.size()).isGreaterThanOrEqualTo(1);
 	}
 
-	@DisabledIf(value = "newElasticsearchClient",
-			disabledReason = "todo #2138 can't check response, open ES issue 161 that does not allow seqno")
-	// and version to be set in the request
 	@Test // DATAES-487
 	public void shouldReturnSameEntityForMultiSearch() {
 
@@ -1641,13 +1638,9 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		}
 	}
 
-	@DisabledIf(value = "newElasticsearchClient",
-			disabledReason = "todo #2138 can't check response, open ES issue 161 that does not allow seqno")
-	// and version to be set in the request
 	@Test // DATAES-487
 	public void shouldReturnDifferentEntityForMultiSearch() {
 
-		Class<Book> clazz = Book.class;
 		IndexOperations bookIndexOperations = operations.indexOps(Book.class);
 		bookIndexOperations.delete();
 		bookIndexOperations.createWithMapping();
@@ -1662,7 +1655,8 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		queries.add(getTermQuery("message", "ab"));
 		queries.add(getTermQuery("description", "bc"));
 
-		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries, Lists.newArrayList(SampleEntity.class, clazz),
+		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries, Lists.newArrayList(SampleEntity.class,
+						Book.class),
 				IndexCoordinates.of(indexNameProvider.indexName(), bookIndex.getIndexName()));
 
 		bookIndexOperations.delete();
@@ -1674,7 +1668,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		SearchHits<?> searchHits1 = searchHitsList.get(1);
 		assertThat(searchHits1.getTotalHits()).isEqualTo(1L);
 		SearchHit<Book> searchHit1 = (SearchHit<Book>) searchHits1.getSearchHit(0);
-		assertThat(searchHit1.getContent().getClass()).isEqualTo(clazz);
+		assertThat(searchHit1.getContent().getClass()).isEqualTo(Book.class);
 	}
 
 	@Test
@@ -3070,9 +3064,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThatSeqNoPrimaryTermIsFilled(retrieved);
 	}
 
-	@DisabledIf(value = "newElasticsearchClient",
-			disabledReason = "todo #2138 can't check response, open ES issue 161 that does not allow seqno")
-																				// and version to be set in the request
 	@Test // DATAES-799
 	void multiSearchShouldReturnSeqNoPrimaryTerm() {
 		OptimisticEntity original = new OptimisticEntity();
