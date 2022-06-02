@@ -144,14 +144,29 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota-Prius' } } } }");
 	}
 
+	@Test // #1866
+	@DisplayName("should handle array-of-strings parameters correctly")
+	void shouldHandleArrayOfStringsParametersCorrectly() throws Exception {
+
+		List<String> otherNames = List.of("Wesley", "Emmett");
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByOtherNames", otherNames);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'terms' : { 'otherNames' : [\"Wesley\",\"Emmett\"] } } } }");
+	}
+
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
 			throws NoSuchMethodException {
 
-		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
+		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass)
+				.map(clazz -> Collection.class.isAssignableFrom(clazz) ? List.class : clazz).toArray(Class[]::new);
 		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(methodName, argTypes);
 		ReactiveElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
 
-		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
+		return elasticsearchStringQuery.createQuery(new ConvertingParameterAccessor(operations.getElasticsearchConverter(),
+				new ElasticsearchParametersParameterAccessor(queryMethod, args)));
 	}
 
 	private ReactiveElasticsearchStringQuery queryForMethod(ReactiveElasticsearchQueryMethod queryMethod) {
@@ -195,6 +210,9 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'car' : '?0' } } } }")
 		Mono<Person> findByCar(Car car);
 
+		@Query("{ 'bool' : { 'must' : { 'terms' : { 'otherNames' : ?0 } } } }")
+		Flux<Person> findByOtherNames(List<String> otherNames);
+
 	}
 
 	/**
@@ -210,6 +228,8 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 		@Id private String id;
 
 		@Nullable private String name;
+
+		@Nullable private List<String> otherNames;
 
 		@Nullable
 		@Field(type = FieldType.Nested) private List<Car> car;
@@ -233,6 +253,15 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		@Nullable
+		public List<String> getOtherNames() {
+			return otherNames;
+		}
+
+		public void setOtherNames(List<String> otherNames) {
+			this.otherNames = otherNames;
 		}
 
 		@Nullable

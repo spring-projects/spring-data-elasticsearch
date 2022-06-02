@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -84,6 +84,10 @@ public class ConvertingParameterAccessor implements ElasticsearchParameterAccess
 
 		if (value == null) {
 			return "null";
+		}
+
+		if (Collection.class.isAssignableFrom(value.getClass())) {
+			return value;
 		}
 
 		if (converter.getConversionService().canConvert(value.getClass(), String.class)) {

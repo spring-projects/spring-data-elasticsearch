@@ -588,6 +588,21 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		assertThat(documentWithIdExistsInIndex("id-three").block()).isTrue();
 	}
 
+	@Test // #2135
+	void FluxOfSearchHitForArrayQuery() {
+		bulkIndex(new SampleEntity("id-one", "message1"), //
+				new SampleEntity("id-two", "message2"), //
+				new SampleEntity("id-three", "message3")) //
+						.block();
+
+		repository.findAllViaAnnotatedQueryByMessageIn(List.of("message1", "message3")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo("id-one")) //
+				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo("id-three")) //
+				.verifyComplete();
+
+	}
+
 	Mono<Void> bulkIndex(SampleEntity... entities) {
 		return operations.saveAll(Arrays.asList(entities), IndexCoordinates.of(indexNameProvider.indexName())).then();
 	}
@@ -627,6 +642,9 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 		@CountQuery(value = "{\"bool\": {\"must\": [{\"term\": {\"message\": \"?0\"}}]}}")
 		Mono<Long> retrieveCountByText(String message);
+
+		@Query("{ \"terms\": { \"message\": ?0 } }")
+		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageIn(List<String> messages);
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
