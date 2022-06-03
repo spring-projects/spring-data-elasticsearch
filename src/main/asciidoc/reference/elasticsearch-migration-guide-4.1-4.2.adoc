@@ -14,7 +14,7 @@ The parameters of the `@Document` annotation that are relevant for  the index se
 == Removals
 
 The `@Score` annotation that was used to set the score return value in an entity was deprecated in version 4.0 and has been removed.
-Scroe values are returned in the `SearchHit` instances that encapsulate the returned entities.
+Score values are returned in the `SearchHit` instances that encapsulate the returned entities.
 
 The `org.springframework.data.elasticsearch.ElasticsearchException` class has been removed.
 The remaining usages have been replaced with `org.springframework.data.mapping.MappingException` and `org.springframework.dao.InvalidDataAccessApiUsageException`.
