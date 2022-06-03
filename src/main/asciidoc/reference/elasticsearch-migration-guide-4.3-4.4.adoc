@@ -69,7 +69,7 @@ public class SpringdataElasticTestApplication {
 ====
 
 Remove Spring Data Elasticsearch related properties from your application configuration.
-If Spring Data Elasticsearch was configured using a programmatic configuration (see <<elastisearch.clients>>), remove these beans from the Spring application context.
+If Spring Data Elasticsearch was configured using a programmatic configuration (see <<elasticsearch.clients>>), remove these beans from the Spring application context.
 
 ==== Add dependencies
 
