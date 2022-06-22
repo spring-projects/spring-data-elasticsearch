@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.suggest.response;
 
+import org.springframework.lang.Nullable;
+
 import java.util.List;
 
 /**
@@ -22,13 +24,14 @@ import java.util.List;
  */
 public class TermSuggestion extends Suggest.Suggestion<TermSuggestion.Entry> {
 
-	private final SortBy sort;
+	@Nullable private final SortBy sort;
 
-	public TermSuggestion(String name, int size, List<Entry> entries, SortBy sort) {
+	public TermSuggestion(String name, int size, List<Entry> entries, @Nullable SortBy sort) {
 		super(name, size, entries);
 		this.sort = sort;
 	}
 
+	@Nullable
 	public SortBy getSort() {
 		return sort;
 	}
@@ -43,7 +46,7 @@ public class TermSuggestion extends Suggest.Suggestion<TermSuggestion.Entry> {
 
 			private final int freq;
 
-			public Option(String text, String highlighted, float score, Boolean collateMatch, int freq) {
+			public Option(String text, @Nullable String highlighted, double score, @Nullable Boolean collateMatch, int freq) {
 				super(text, highlighted, score, collateMatch);
 				this.freq = freq;
 			}

@@ -19,6 +19,7 @@ import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.MgetResponse;
 import co.elastic.clients.elasticsearch.core.explain.ExplanationDetail;
 import co.elastic.clients.elasticsearch.core.get.GetResult;
+import co.elastic.clients.elasticsearch.core.search.CompletionSuggestOption;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.NestedIdentity;
 import co.elastic.clients.json.JsonData;
@@ -140,6 +141,21 @@ final class DocumentAdapters {
 		float score = hit.score() != null ? hit.score().floatValue() : Float.NaN;
 		return new SearchDocumentAdapter(document, score, hit.sort().toArray(new String[0]), documentFields,
 				highlightFields, innerHits, nestedMetaData, explanation, matchedQueries, hit.routing());
+	}
+
+	public static SearchDocument from(CompletionSuggestOption<EntityAsMap> completionSuggestOption) {
+
+		Document document = completionSuggestOption.source() != null ? Document.from(completionSuggestOption.source())
+				: Document.create();
+		document.setIndex(completionSuggestOption.index());
+
+		if (completionSuggestOption.id() != null) {
+			document.setId(completionSuggestOption.id());
+		}
+
+		float score = completionSuggestOption.score() != null ? completionSuggestOption.score().floatValue() : Float.NaN;
+		return new SearchDocumentAdapter(document, score, new Object[] {}, Collections.emptyMap(), Collections.emptyMap(),
+				Collections.emptyMap(), null, null, null, completionSuggestOption.routing());
 	}
 
 	@Nullable

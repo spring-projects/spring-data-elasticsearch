@@ -17,24 +17,30 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
-import co.elastic.clients.elasticsearch.core.search.ResponseBody;
-import co.elastic.clients.elasticsearch.core.search.Suggestion;
-import co.elastic.clients.elasticsearch.core.search.TotalHits;
+import co.elastic.clients.elasticsearch.core.search.*;
 import co.elastic.clients.json.JsonpMapper;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.elasticsearch.search.SearchHits;
 import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
+import org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion;
+import org.springframework.data.elasticsearch.core.suggest.response.PhraseSuggestion;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
+import org.springframework.data.elasticsearch.core.suggest.response.TermSuggestion;
+import org.springframework.data.elasticsearch.support.ScoreDoc;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 
 /**
  * Factory class to create {@link SearchDocumentResponse} instances.
@@ -43,6 +49,9 @@ import org.springframework.util.Assert;
  * @since 4.4
  */
 class SearchDocumentResponseBuilder {
+
+	private static final Log LOGGER = LogFactory.getLog(SearchDocumentResponseBuilder.class);
+
 	/**
 	 * creates a SearchDocumentResponse from the {@link SearchResponse}
 	 *
@@ -80,7 +89,7 @@ class SearchDocumentResponseBuilder {
 	 * @return the {@link SearchDocumentResponse}
 	 */
 	public static <T> SearchDocumentResponse from(HitsMetadata<?> hitsMetadata, @Nullable String scrollId,
-			Map<String, Aggregate> aggregations, Map<String, List<Suggestion<EntityAsMap>>> suggestES,
+			@Nullable Map<String, Aggregate> aggregations, Map<String, List<Suggestion<EntityAsMap>>> suggestES,
 			SearchDocumentResponse.EntityCreator<T> entityCreator, JsonpMapper jsonpMapper) {
 
 		Assert.notNull(hitsMetadata, "hitsMetadata must not be null");
@@ -116,10 +125,116 @@ class SearchDocumentResponseBuilder {
 		ElasticsearchAggregations aggregationsContainer = aggregations != null ? new ElasticsearchAggregations(aggregations)
 				: null;
 
-		// todo #2154
-		Suggest suggest = null;
+		Suggest suggest = suggestFrom(suggestES, entityCreator);
 
 		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments,
 				aggregationsContainer, suggest);
+	}
+
+	@Nullable
+	private static <T> Suggest suggestFrom(Map<String, List<Suggestion<EntityAsMap>>> suggestES,
+			SearchDocumentResponse.EntityCreator<T> entityCreator) {
+
+		if (CollectionUtils.isEmpty(suggestES)) {
+			return null;
+		}
+
+		List<Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>>> suggestions = new ArrayList<>();
+
+		suggestES.forEach((name, suggestionsES) -> {
+
+			if (!suggestionsES.isEmpty()) {
+				// take the type from the first entry
+				switch (suggestionsES.get(0)._kind()) {
+					case Term: {
+						suggestions.add(getTermSuggestion(name, suggestionsES));
+						break;
+					}
+					case Phrase: {
+						suggestions.add(getPhraseSuggestion(name, suggestionsES));
+						break;
+					}
+					case Completion: {
+						suggestions.add(getCompletionSuggestion(name, suggestionsES, entityCreator));
+						break;
+					}
+					default:
+						break;
+				}
+			}
+		});
+
+		// todo: hasScoreDocs checks if any one
+		boolean hasScoreDocs = false;
+
+		return new Suggest(suggestions, hasScoreDocs);
+	}
+
+	private static TermSuggestion getTermSuggestion(String name, List<Suggestion<EntityAsMap>> suggestionsES) {
+
+		List<TermSuggestion.Entry> entries = new ArrayList<>();
+		suggestionsES.forEach(suggestionES -> {
+			TermSuggest termSuggest = suggestionES.term();
+
+			TermSuggestOption optionES = termSuggest.options();
+			List<TermSuggestion.Entry.Option> options = new ArrayList<>();
+			options.add(new TermSuggestion.Entry.Option(optionES.text(), null, optionES.score(), null,
+					Math.toIntExact(optionES.freq())));
+			entries.add(new TermSuggestion.Entry(termSuggest.text(), termSuggest.offset(), termSuggest.length(), options));
+		});
+		return new TermSuggestion(name, suggestionsES.size(), entries, null);
+	}
+
+	private static PhraseSuggestion getPhraseSuggestion(String name, List<Suggestion<EntityAsMap>> suggestionsES) {
+
+		List<PhraseSuggestion.Entry> entries = new ArrayList<>();
+		suggestionsES.forEach(suggestionES -> {
+			PhraseSuggest phraseSuggest = suggestionES.phrase();
+			PhraseSuggestOption optionES = phraseSuggest.options();
+			List<PhraseSuggestion.Entry.Option> options = new ArrayList<>();
+			options.add(new PhraseSuggestion.Entry.Option(optionES.text(), optionES.highlighted(), null, null));
+			entries.add(new PhraseSuggestion.Entry(phraseSuggest.text(), phraseSuggest.offset(), phraseSuggest.length(),
+					options, null));
+		});
+		return new PhraseSuggestion(name, suggestionsES.size(), entries);
+	}
+
+	private static <T> CompletionSuggestion<T> getCompletionSuggestion(String name,
+			List<Suggestion<EntityAsMap>> suggestionsES, SearchDocumentResponse.EntityCreator<T> entityCreator) {
+		List<CompletionSuggestion.Entry<T>> entries = new ArrayList<>();
+		suggestionsES.forEach(suggestionES -> {
+			CompletionSuggest<EntityAsMap> completionSuggest = suggestionES.completion();
+			List<CompletionSuggestion.Entry.Option<T>> options = new ArrayList<>();
+			List<CompletionSuggestOption<EntityAsMap>> optionsES = completionSuggest.options();
+			optionsES.forEach(optionES -> {
+				SearchDocument searchDocument = (optionES.source() != null) ? DocumentAdapters.from(optionES) : null;
+				T hitEntity = null;
+
+				if (searchDocument != null) {
+					try {
+						hitEntity = entityCreator.apply(searchDocument).get();
+					} catch (Exception e) {
+						if (LOGGER.isWarnEnabled()) {
+							LOGGER.warn("Error creating entity from SearchDocument: " + e.getMessage());
+						}
+					}
+				}
+
+				Map<String, Set<String>> contexts = new HashMap<>();
+				optionES.contexts().forEach((key, contextList) -> contexts.put(key,
+						contextList.stream().map(context -> context._get().toString()).collect(Collectors.toSet())));
+
+				// response from the new client does not have a doc and shardindex as the ScoreDoc from the old client responses
+
+				options.add(new CompletionSuggestion.Entry.Option<>(optionES.text(), null, optionES.score(),
+						optionES.collateMatch() != null ? optionES.collateMatch() : false, contexts,
+						new ScoreDoc(optionES.score() != null ? optionES.score() : Double.NaN, null, null), searchDocument,
+						hitEntity));
+			});
+
+			entries.add(new CompletionSuggestion.Entry<>(completionSuggest.text(), completionSuggest.offset(),
+					completionSuggest.length(), options));
+		});
+		return new CompletionSuggestion<>(name, suggestionsES.size(), entries);
 	}
 }

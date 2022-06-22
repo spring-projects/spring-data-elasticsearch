@@ -106,11 +106,12 @@ public class Suggest {
 
 			public abstract static class Option {
 				private final String text;
-				private final String highlighted;
-				private final float score;
+				@Nullable private final String highlighted;
+				@Nullable private final Double score;
 				@Nullable private final Boolean collateMatch;
 
-				public Option(String text, String highlighted, float score, @Nullable Boolean collateMatch) {
+				public Option(String text, @Nullable String highlighted, @Nullable Double score,
+						@Nullable Boolean collateMatch) {
 					this.text = text;
 					this.highlighted = highlighted;
 					this.score = score;
@@ -121,11 +122,13 @@ public class Suggest {
 					return text;
 				}
 
+				@Nullable
 				public String getHighlighted() {
 					return highlighted;
 				}
 
-				public float getScore() {
+				@Nullable
+				public Double getScore() {
 					return score;
 				}
 

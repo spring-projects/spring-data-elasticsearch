@@ -156,7 +156,7 @@ public class SearchDocumentResponseBuilder {
 					List<PhraseSuggestion.Entry.Option> options = new ArrayList<>();
 					for (org.elasticsearch.search.suggest.phrase.PhraseSuggestion.Entry.Option optionES : entryES) {
 						options.add(new PhraseSuggestion.Entry.Option(textToString(optionES.getText()),
-								textToString(optionES.getHighlighted()), optionES.getScore(), optionES.collateMatch()));
+								textToString(optionES.getHighlighted()), (double) optionES.getScore(), optionES.collateMatch()));
 					}
 
 					entries.add(new PhraseSuggestion.Entry(textToString(entryES.getText()), entryES.getOffset(),
@@ -188,7 +188,7 @@ public class SearchDocumentResponseBuilder {
 						}
 
 						options.add(new CompletionSuggestion.Entry.Option<>(textToString(optionES.getText()),
-								textToString(optionES.getHighlighted()), optionES.getScore(), optionES.collateMatch(),
+								textToString(optionES.getHighlighted()), (double) optionES.getScore(), optionES.collateMatch(),
 								optionES.getContexts(), scoreDocFrom(optionES.getDoc()), searchDocument, hitEntity));
 					}
 

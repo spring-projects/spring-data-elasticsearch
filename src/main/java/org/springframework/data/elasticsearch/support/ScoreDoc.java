@@ -15,31 +15,35 @@
  */
 package org.springframework.data.elasticsearch.support;
 
+import org.springframework.lang.Nullable;
+
 /**
  * @author Peter-Josef Meisch
  * @since 4.3
  */
 public class ScoreDoc {
 
-	private final float score;
-	private final int doc;
-	private final int shardIndex;
+	private final double score;
+	@Nullable private final Integer doc;
+	@Nullable private final Integer shardIndex;
 
-	public ScoreDoc(float score, int doc, int shardIndex) {
+	public ScoreDoc(double score, @Nullable Integer doc, @Nullable Integer shardIndex) {
 		this.score = score;
 		this.doc = doc;
 		this.shardIndex = shardIndex;
 	}
 
-	public float getScore() {
+	public double getScore() {
 		return score;
 	}
 
-	public int getDoc() {
+	@Nullable
+	public Integer getDoc() {
 		return doc;
 	}
 
-	public int getShardIndex() {
+	@Nullable
+	public Integer getShardIndex() {
 		return shardIndex;
 	}
 }
