@@ -54,9 +54,9 @@ public class ReactiveSuggestELCIntegrationTests extends ReactiveSuggestIntegrati
 		return NativeQuery.builder() //
 				.withSuggester(Suggester.of(s -> s //
 						.suggesters(suggestionName, FieldSuggester.of(fs -> fs //
+								.prefix(prefix) //
 								.completion(cs -> cs //
 										.field(fieldName) //
-										.prefix(prefix) //
 										.fuzzy(SuggestFuzziness.of(f -> f //
 												// NOTE we currently need to set all these values to their default as the client code does not
 												// have them nullable

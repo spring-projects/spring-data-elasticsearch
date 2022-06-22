@@ -49,7 +49,7 @@ public class CompletionSuggestion<T> extends Suggest.Suggestion<CompletionSugges
 			@Nullable private final T hitEntity;
 			@Nullable private SearchHit<T> searchHit;
 
-			public Option(String text, String highlighted, float score, Boolean collateMatch,
+			public Option(String text, @Nullable String highlighted, @Nullable Double score, Boolean collateMatch,
 					Map<String, Set<String>> contexts, ScoreDoc scoreDoc, @Nullable SearchDocument searchDocument,
 					@Nullable T hitEntity) {
 				super(text, highlighted, score, collateMatch);

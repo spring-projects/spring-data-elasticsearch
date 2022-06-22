@@ -111,12 +111,12 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Mewes Kochheim3")
 				.suggest(new String[] { "Mewes Kochheim3" }, 2).buildIndex());
 		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Mewes Kochheim4")
-				.suggest(new String[] { "Mewes Kochheim4" }, Integer.MAX_VALUE).buildIndex());
+				.suggest(new String[] { "Mewes Kochheim4" }, 4444).buildIndex());
 
 		operations.bulkIndex(indexQueries, AnnotatedCompletionEntity.class);
 	}
 
-	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
+	// @DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingCompletionEntity() {
 
@@ -148,7 +148,7 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 		operations.get("1", CompletionEntity.class);
 	}
 
-	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
+	// @DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 
@@ -172,7 +172,7 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 		assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
 	}
 
-	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES 1issue 150")
+	// @DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES 1issue 150")
 	@Test
 	public void shouldFindSuggestionsWithWeightsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 
@@ -205,7 +205,7 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 					assertThat(option.getScore()).isEqualTo(2);
 					break;
 				case "Mewes Kochheim4":
-					assertThat(option.getScore()).isEqualTo(Integer.MAX_VALUE);
+					assertThat(option.getScore()).isEqualTo(4444);
 					break;
 				default:
 					fail("Unexpected option");

@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.suggest.response;
 
+import org.springframework.lang.Nullable;
+
 import java.util.List;
 
 /**
@@ -29,20 +31,21 @@ public class PhraseSuggestion extends Suggest.Suggestion<PhraseSuggestion.Entry>
 
 	public static class Entry extends Suggest.Suggestion.Entry<Entry.Option> {
 
-		private final double cutoffScore;
+		@Nullable private final Double cutoffScore;
 
-		public Entry(String text, int offset, int length, List<Option> options, double cutoffScore) {
+		public Entry(String text, int offset, int length, List<Option> options, @Nullable Double cutoffScore) {
 			super(text, offset, length, options);
 			this.cutoffScore = cutoffScore;
 		}
 
-		public double getCutoffScore() {
+		@Nullable
+		public Double getCutoffScore() {
 			return cutoffScore;
 		}
 
 		public static class Option extends Suggest.Suggestion.Entry.Option {
 
-			public Option(String text, String highlighted, float score, Boolean collateMatch) {
+			public Option(String text, String highlighted, @Nullable Double score, @Nullable Boolean collateMatch) {
 				super(text, highlighted, score, collateMatch);
 			}
 		}

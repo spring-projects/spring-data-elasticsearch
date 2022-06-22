@@ -745,9 +745,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 			IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of( //
 					documentAfterLoad.hasId() ? documentAfterLoad.getId() : null, //
-					documentAfterLoad.getSeqNo(), //
-					documentAfterLoad.getPrimaryTerm(), //
-					documentAfterLoad.getVersion()); //
+					documentAfterLoad.hasSeqNo() ? documentAfterLoad.getSeqNo() : null, //
+					documentAfterLoad.hasPrimaryTerm() ? documentAfterLoad.getPrimaryTerm() : null, //
+					documentAfterLoad.hasVersion() ? documentAfterLoad.getVersion() : null); //
 			entity = updateIndexedObject(entity, indexedObjectInformation);
 
 			return maybeCallbackAfterConvert(entity, documentAfterLoad, index);
