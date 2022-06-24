@@ -40,8 +40,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.CompletionContext;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -124,7 +124,7 @@ public abstract class CompletionWithContextsIntegrationTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
+		SearchResponse suggestResponse = ((ElasticsearchRestTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
 				IndexCoordinates.of("test-index-context-completion"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();
@@ -156,7 +156,7 @@ public abstract class CompletionWithContextsIntegrationTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
+		SearchResponse suggestResponse = ((ElasticsearchRestTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
 				IndexCoordinates.of("test-index-context-completion"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();
@@ -188,7 +188,7 @@ public abstract class CompletionWithContextsIntegrationTests {
 		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
 
 		// when
-		SearchResponse suggestResponse = ((AbstractElasticsearchTemplate) operations).suggest(
+		SearchResponse suggestResponse = ((ElasticsearchRestTemplate) operations).suggest(
 				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
 				IndexCoordinates.of("test-index-context-completion"));
 		assertThat(suggestResponse.getSuggest()).isNotNull();

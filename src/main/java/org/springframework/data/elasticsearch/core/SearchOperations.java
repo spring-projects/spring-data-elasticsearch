@@ -17,12 +17,8 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.lang.Nullable;
 
@@ -65,37 +61,6 @@ public interface SearchOperations {
 	 * @return count
 	 */
 	long count(Query query, @Nullable Class<?> clazz, IndexCoordinates index);
-
-	/**
-	 * Does a suggest query
-	 *
-	 * @param suggestion the query
-	 * @param clazz the entity class
-	 * @return the suggest response
-	 * @since 4.1
-	 * @deprecated since 4.3 use a {@link NativeSearchQueryBuilder} with
-	 *             {@link NativeSearchQueryBuilder#withSuggestBuilder(SuggestBuilder)}, call {@link #search(Query, Class)}
-	 *             and get the suggest from {@link SearchHits#getSuggest()}
-	 */
-	@Deprecated
-	default SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz) {
-		throw new InvalidDataAccessApiUsageException("Unsupported operation");
-	}
-
-	/**
-	 * Does a suggest query
-	 *
-	 * @param suggestion the query
-	 * @param index the index to run the query against
-	 * @return the suggest response
-	 * @deprecated since 4.3 use a {@link NativeSearchQueryBuilder} with
-	 *             {@link NativeSearchQueryBuilder#withSuggestBuilder(SuggestBuilder)}, call {@link #search(Query, Class)}
-	 *             and get the suggest from {@link SearchHits#getSuggest()}
-	 */
-	@Deprecated
-	default SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index) {
-		throw new InvalidDataAccessApiUsageException("Unsupported operation");
-	}
 
 	/**
 	 * Execute the query against elasticsearch and return the first returned object.

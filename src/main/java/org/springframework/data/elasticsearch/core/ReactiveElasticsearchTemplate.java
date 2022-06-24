@@ -43,7 +43,6 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
 import org.elasticsearch.index.reindex.UpdateByQueryRequest;
-import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -555,26 +554,6 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		return Flux.from(execute(client -> client.aggregate(request))) //
 				.onErrorResume(NoSuchIndexException.class, it -> Flux.empty()).map(ElasticsearchAggregation::new);
-	}
-
-	@Override
-	@Deprecated
-	public Flux<org.elasticsearch.search.suggest.Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType) {
-		return doSuggest(suggestion, getIndexCoordinatesFor(entityType));
-	}
-
-	@Override
-	@Deprecated
-	public Flux<org.elasticsearch.search.suggest.Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index) {
-		return doSuggest(suggestion, index);
-	}
-
-	@Deprecated
-	private Flux<org.elasticsearch.search.suggest.Suggest> doSuggest(SuggestBuilder suggestion, IndexCoordinates index) {
-		return Flux.defer(() -> {
-			SearchRequest request = requestFactory.searchRequest(suggestion, index);
-			return Flux.from(execute(client -> client.suggest(request)));
-		});
 	}
 
 	protected Mono<Long> doCount(Query query, Class<?> entityType, IndexCoordinates index) {

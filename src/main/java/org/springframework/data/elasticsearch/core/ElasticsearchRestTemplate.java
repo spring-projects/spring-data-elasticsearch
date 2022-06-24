@@ -454,7 +454,6 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		}
 	}
 
-	@Override
 	public SearchResponse suggest(SuggestBuilder suggestion, IndexCoordinates index) {
 		SearchRequest searchRequest = requestFactory.searchRequest(suggestion, index);
 		return execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
@@ -638,7 +637,6 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		return Version.CURRENT.toString();
 	}
 
-	@Override
 	@Deprecated
 	public SearchResponse suggest(SuggestBuilder suggestion, Class<?> clazz) {
 		return suggest(suggestion, getIndexCoordinatesFor(clazz));

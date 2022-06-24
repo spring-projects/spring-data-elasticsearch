@@ -20,7 +20,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 
-import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
@@ -246,28 +245,6 @@ public interface ReactiveSearchOperations {
 	 * @since 4.0
 	 */
 	Flux<? extends AggregationContainer<?>> aggregate(Query query, Class<?> entityType, IndexCoordinates index);
-
-	/**
-	 * Does a suggest query
-	 *
-	 * @param suggestion the query
-	 * @param entityType must not be {@literal null}.
-	 * @return the suggest response (Elasticsearch library classes)
-	 * @deprecated since 4.3, use {@link #suggest(Query, Class)}
-	 */
-	@Deprecated
-	Flux<org.elasticsearch.search.suggest.Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType);
-
-	/**
-	 * Does a suggest query
-	 *
-	 * @param suggestion the query
-	 * @param index the index to run the query against
-	 * @return the suggest response (Elasticsearch library classes)
-	 * @deprecated since 4.3, use {@link #suggest(Query, Class, IndexCoordinates)}
-	 */
-	@Deprecated
-	Flux<org.elasticsearch.search.suggest.Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index);
 
 	/**
 	 * Does a suggest query.
