@@ -34,8 +34,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.elasticsearch.search.suggest.Suggest;
-import org.elasticsearch.search.suggest.SuggestBuilder;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -177,8 +175,9 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		return Mono.from(execute( //
 				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.ReindexResponse>>) client -> client
 						.reindex(reindexRequestES)))
-				.flatMap(response -> (response.task() == null) ? Mono.error(
-						new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
+				.flatMap(response -> (response.task() == null)
+						? Mono.error(
+								new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
 						: Mono.just(response.task()));
 	}
 
@@ -346,8 +345,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 									return client1.scroll(scrollRequest, EntityAsMap.class);
 								}));
 							});
-				},
-				this::cleanupScroll, (state, ex) -> cleanupScroll(state), this::cleanupScroll);
+				}, this::cleanupScroll, (state, ex) -> cleanupScroll(state), this::cleanupScroll);
 
 		return searchResponses.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits())
 				.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));
@@ -479,16 +477,6 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	@Override
 	public ReactiveClusterOperations cluster() {
 		return new ReactiveClusterTemplate(client.cluster(), converter);
-	}
-
-	@Override
-	public Flux<Suggest> suggest(SuggestBuilder suggestion, Class<?> entityType) {
-		throw new UnsupportedOperationException("not implemented");
-	}
-
-	@Override
-	public Flux<Suggest> suggest(SuggestBuilder suggestion, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override
