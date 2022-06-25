@@ -30,7 +30,8 @@ import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
+import org.springframework.data.elasticsearch.client.erhlc.ReactiveRestClients;
+import org.springframework.data.elasticsearch.client.erhlc.RestClients;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 

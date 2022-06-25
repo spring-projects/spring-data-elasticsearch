@@ -29,7 +29,16 @@ import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Long;
 import java.lang.Object;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -60,6 +69,7 @@ import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -106,6 +116,8 @@ import org.springframework.lang.Nullable;
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests implements NewElasticsearchClientDevelopment {
+
+	static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
 
 	private static final String MULTI_INDEX_PREFIX = "test-index";
 	private static final String MULTI_INDEX_ALL = MULTI_INDEX_PREFIX + "*";
@@ -377,8 +389,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 				.version(System.currentTimeMillis()).build();
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
-		Query query = getBuilderWithMatchAllQuery()
-				.withPreference("_local").build();
+		Query query = getBuilderWithMatchAllQuery().withPreference("_local").build();
 
 		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
@@ -395,11 +406,11 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 				.version(System.currentTimeMillis()).build();
 		IndexQuery indexQuery = getIndexQuery(sampleEntity);
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
-		Query query = getBuilderWithMatchAllQuery()
-				.withPreference("_only_nodes:oops").build();
+		Query query = getBuilderWithMatchAllQuery().withPreference("_only_nodes:oops").build();
 
-		assertThatThrownBy(() -> operations.search(query, SampleEntity.class,
-				IndexCoordinates.of(indexNameProvider.indexName()))).isInstanceOf(Exception.class);
+		assertThatThrownBy(
+				() -> operations.search(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())))
+						.isInstanceOf(Exception.class);
 	}
 
 	@Test // DATAES-422 - Add support for IndicesOptions in search queries
@@ -674,7 +685,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(searchHits.getTotalHits()).isEqualTo(3);
 		assertThat(searchHits.getSearchHit(0).getContent().getRate()).isEqualTo(sampleEntity2.getRate());
 	}
-
 
 	@Test
 	public void shouldSortResultsGivenMultipleSortCriteria() {
@@ -1000,8 +1010,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		FetchSourceFilterBuilder sourceFilter = new FetchSourceFilterBuilder();
 		sourceFilter.withIncludes("message");
 
-		Query searchQuery = getBuilderWithMatchAllQuery()
-				.withSourceFilter(sourceFilter.build()).build();
+		Query searchQuery = getBuilderWithMatchAllQuery().withSourceFilter(sourceFilter.build()).build();
 
 		// when
 		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class,
@@ -1557,8 +1566,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
-
-
 	@Test
 	public void shouldDoUpsertIfDocumentDoesNotExist() {
 
@@ -1596,8 +1603,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		operations.index(idxQuery, index);
 
 		// when
-		Query query = getBuilderWithMatchAllQuery()
-				.withIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN).build();
+		Query query = getBuilderWithMatchAllQuery().withIndicesOptions(IndicesOptions.LENIENT_EXPAND_OPEN).build();
 
 		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations)
 				.searchScrollStart(scrollTimeInMillis, query, SampleEntity.class, index);
@@ -1629,7 +1635,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		queries.add(getTermQuery("message", "bc"));
 		queries.add(getTermQuery("message", "ac"));
 
-
 		List<SearchHits<SampleEntity>> searchHits = operations.multiSearch(queries, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
@@ -1655,8 +1660,8 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		queries.add(getTermQuery("message", "ab"));
 		queries.add(getTermQuery("description", "bc"));
 
-		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries, Lists.newArrayList(SampleEntity.class,
-						Book.class),
+		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries,
+				Lists.newArrayList(SampleEntity.class, Book.class),
 				IndexCoordinates.of(indexNameProvider.indexName(), bookIndex.getIndexName()));
 
 		bookIndexOperations.delete();
@@ -2507,11 +2512,10 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// when
-		Query query = getBuilderWithMatchQuery("message", "message")
-				.withPageable(PageRequest.of(0, 10)).build();
+		Query query = getBuilderWithMatchQuery("message", "message").withPageable(PageRequest.of(0, 10)).build();
 
-		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
-				query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
+		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000, query,
+				SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
@@ -2589,8 +2593,8 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 				.withSort(Sort.by(Sort.Order.desc("message"))) //
 				.withPageable(PageRequest.of(0, 10)).build();
 
-		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
-				query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
+		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000, query,
+				SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
@@ -2635,8 +2639,8 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 				.build();
 
 		// when
-		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000,
-				query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
+		SearchScrollHits<SampleEntity> scroll = ((AbstractElasticsearchTemplate) operations).searchScrollStart(1000, query,
+				SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
@@ -2712,7 +2716,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(searchHits.getSearchHit(1).getContent().getMessage()).isEqualTo("message 2");
 		assertThat(searchHits.getSearchHit(1).getInnerHits("innerHits").getTotalHits()).isEqualTo(1);
 	}
-
 
 	@Test // #1997
 	@DisplayName("should return document with inner hits size zero")
@@ -2891,7 +2894,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(searchHit.getScore()).isEqualTo(80f);
 	}
 
-
 	@Test
 	// DATAES-738
 	void shouldSaveEntityWithIndexCoordinates() {
@@ -3042,8 +3044,8 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		OptimisticEntity saved = operations.save(original);
 
 		List<MultiGetItem<OptimisticEntity>> retrievedList = operations.multiGet(
-				queryWithIds(Objects.requireNonNull(saved.getId())),
-				OptimisticEntity.class, operations.getIndexCoordinatesFor(OptimisticEntity.class));
+				queryWithIds(Objects.requireNonNull(saved.getId())), OptimisticEntity.class,
+				operations.getIndexCoordinatesFor(OptimisticEntity.class));
 
 		assertThat(retrievedList).hasSize(1);
 		OptimisticEntity retrieved = retrievedList.get(0).getItem();
@@ -3230,8 +3232,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(hitIds.size()).isEqualTo(1);
 		assertThat(hitIds.get(0)).isEqualTo(aId2);
 
-		updatedHits = operations.search(getQueryForParentId("answer", qId1, null),
-				SampleJoinEntity.class);
+		updatedHits = operations.search(getQueryForParentId("answer", qId1, null), SampleJoinEntity.class);
 
 		hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
 			@Override
@@ -3261,10 +3262,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		document.put("name", joinField.getName());
 		document.put("parent", joinField.getParent());
 		return document;
-	}
-
-	protected RequestFactory getRequestFactory() {
-		return ((ElasticsearchRestTemplate) operations).getRequestFactory();
 	}
 
 	@Test // DATAES-908
@@ -3344,7 +3341,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		SearchHits<SampleEntity> searchHits = operations.search(queryAll, SampleEntity.class);
 
 		SoftAssertions softly = new SoftAssertions();
-		softly.assertThat(searchHits.getTotalHits()).isEqualTo((long) RequestFactory.INDEX_MAX_RESULT_WINDOW);
+		softly.assertThat(searchHits.getTotalHits()).isEqualTo((long) INDEX_MAX_RESULT_WINDOW);
 		softly.assertThat(searchHits.getTotalHitsRelation()).isEqualTo(TotalHitsRelation.GREATER_THAN_OR_EQUAL_TO);
 		softly.assertAll();
 	}
@@ -3475,8 +3472,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		Query query = getMatchAllQueryWithIncludesAndInlineExpressionScript("*", "scriptedRate", "doc['rate'] * factor",
 				params);
 
-		SearchHits<ImmutableWithScriptedEntity> searchHits = operations.search(query,
-				ImmutableWithScriptedEntity.class);
+		SearchHits<ImmutableWithScriptedEntity> searchHits = operations.search(query, ImmutableWithScriptedEntity.class);
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 		ImmutableWithScriptedEntity foundEntity = searchHits.getSearchHit(0).getContent();
@@ -3484,7 +3480,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(foundEntity.getRate()).isEqualTo(42);
 		assertThat(foundEntity.getScriptedRate()).isEqualTo(84.0);
 	}
-
 
 	@Test // #1893
 	@DisplayName("should index document from source with version")

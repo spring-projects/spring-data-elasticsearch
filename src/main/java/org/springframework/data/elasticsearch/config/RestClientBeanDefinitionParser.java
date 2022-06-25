@@ -19,7 +19,7 @@ import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.data.elasticsearch.client.RestClientFactoryBean;
+import org.springframework.data.elasticsearch.client.erhlc.RestClientFactoryBean;
 import org.w3c.dom.Element;
 
 /**

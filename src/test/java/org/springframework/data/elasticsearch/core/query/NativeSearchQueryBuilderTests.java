@@ -20,6 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQuery;
+import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 
 import com.google.common.collect.Lists;
 

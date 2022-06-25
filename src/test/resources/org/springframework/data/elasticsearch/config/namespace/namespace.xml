@@ -6,7 +6,7 @@
 		http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd">
 
 	<bean name="elasticsearchTemplate"
-		  class="org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate">
+		  class="org.springframework.data.elasticsearch.client.erhlc.ElasticsearchRestTemplate">
 		<constructor-arg name="client" ref="restClient"/>
 	</bean>
 

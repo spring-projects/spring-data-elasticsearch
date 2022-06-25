@@ -20,9 +20,11 @@ import jakarta.json.stream.JsonGenerator;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
@@ -41,13 +43,28 @@ final class JsonUtils {
 		JsonGenerator generator = mapper.jsonProvider().createGenerator(baos);
 		mapper.serialize(object, generator);
 		generator.close();
-		String jsonMapping = "{}";
+		String json = "{}";
 		try {
-			jsonMapping = baos.toString("UTF-8");
+			json = baos.toString("UTF-8");
 		} catch (UnsupportedEncodingException e) {
 			LOGGER.warn("could not read json", e);
 		}
 
-		return jsonMapping;
+		return json;
 	}
+
+	@Nullable
+	public static String queryToJson(@Nullable co.elastic.clients.elasticsearch._types.query_dsl.Query query, JsonpMapper mapper) {
+
+		if (query == null) {
+			return null;
+		}
+
+		var baos = new ByteArrayOutputStream();
+		var generator = mapper.jsonProvider().createGenerator(baos);
+		query.serialize(generator, mapper);
+		generator.close();
+		return baos.toString(StandardCharsets.UTF_8);
+	}
+
 }

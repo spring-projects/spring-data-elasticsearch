@@ -23,9 +23,9 @@ import jakarta.enterprise.inject.Produces;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.RestClients;
+import org.springframework.data.elasticsearch.client.erhlc.RestClients;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.client.erhlc.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.junit.jupiter.ClusterConnection;
 import org.springframework.data.elasticsearch.junit.jupiter.ClusterConnectionInfo;
 

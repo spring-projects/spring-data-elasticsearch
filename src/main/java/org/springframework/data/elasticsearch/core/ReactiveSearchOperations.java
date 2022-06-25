@@ -21,8 +21,8 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 

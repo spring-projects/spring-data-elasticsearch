@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.elasticsearch.search.SearchHits;
 import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -76,11 +75,11 @@ class SearchDocumentResponseBuilder {
 	}
 
 	/**
-	 * creates a {@link SearchDocumentResponseBuilder} from {@link SearchHits} with the given scrollId aggregations and
+	 * creates a {@link SearchDocumentResponseBuilder} from {@link HitsMetadata} with the given scrollId aggregations and
 	 * suggestES
 	 *
 	 * @param <T> entity type
-	 * @param hitsMetadata the {@link SearchHits} to process
+	 * @param hitsMetadata the {@link HitsMetadata} to process
 	 * @param scrollId scrollId
 	 * @param aggregations aggregations
 	 * @param suggestES the suggestion response from Elasticsearch
