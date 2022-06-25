@@ -12,4 +12,7 @@ include::elasticsearch-migration-guide-4.1-4.2.adoc[]
 include::elasticsearch-migration-guide-4.2-4.3.adoc[]
 
 include::elasticsearch-migration-guide-4.3-4.4.adoc[]
+
+include::elasticsearch-migration-guide-4.4-5.0.adoc[]
+
 :leveloffset: -1

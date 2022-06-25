@@ -1,0 +1,144 @@
+[[elasticsearch-migration-guide-4.4-5.0]]
+= Upgrading from 4.4.x to 5.0.x
+
+This section describes breaking changes from version 4.4.x to 5.0.x and how removed features can be replaced by new 
+introduced features.
+
+[[elasticsearch-migration-guide-4.4-4.5.deprecations]]
+== Deprecations
+
+=== `org.springframework.data.elasticsearch.client.erhlc` package
+
+See <<elasticsearch-migration-guide-4.4-5.0.breaking-changes-packages>>, all classes in this package have been 
+deprecated, as the default client implementations to use are the ones based on the new Java Client from 
+Elasticsearch, se <<elasticsearch-migration-guide-4.4-5.0.new-clients>>
+
+[[elasticsearch-migration-guide-4.4-5.0.breaking-changes]]
+== Breaking Changes
+
+=== Removal of deprecated calls
+
+==== suggest calls in operations interfaces have been removed
+
+Both `SearchOperations` and `ReactiveSearchOperations` had deprecated calls that were using Elasticsearch classes as 
+parameters. These now have been removed and so the dependency on Elasticsearch classes in these APIs has been cleaned.
+
+[[elasticsearch-migration-guide-4.4-5.0.breaking-changes-packages]]
+=== Package changes
+
+All the classes that are using or depend on the deprecated Elasticsearch `RestHighLevelClient` have been moved to the 
+package `org.springframework.data.elasticsearch.client.erhlc`. By this change we now have a clear separation of code 
+using the old deprecated Elasticsearch libraries, code using the new Elasticsearch client and code that is 
+independent of the client implementation. Also the reactive implementation that was provided up to now has been moved
+here, as this implementation contains code that was copied and adapted from Elasticsearch libraries.
+
+
+[[elasticsearch-migration-guide-4.4-5.0.new-clients]]
+== New Elasticsearch client
+
+Spring Data Elasticsearch  now uses the new `ElasticsearchClient` and has 
+deprecated the use of the previous `RestHighLevelClient`.
+
+=== How to use the new client
+
+In order to use the new client the following steps are necessary:
+
+==== Add dependencies
+
+The dependencies for the new Elasticsearch client are still optional in Spring Data Elasticsearch so they need to be added explicitly:
+
+====
+[source,xml]
+----
+<dependencies>
+    <dependency>
+        <groupId>co.elastic.clients</groupId>
+        <artifactId>elasticsearch-java</artifactId>
+        <version>7.17.3</version>
+        <exclusions>
+            <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+    <dependency>
+        <groupId>org.elasticsearch.client</groupId>
+        <artifactId>elasticsearch-rest-client</artifactId> <!-- is Apache 2-->
+        <version>7.17.3</version>
+        <exclusions>
+            <exclusion>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+            </exclusion>
+        </exclusions>
+    </dependency>
+</dependencies>
+----
+====
+
+When using Spring Boot, it is necessary to set the following property in the _pom.xml_.
+
+====
+[source,xml]
+----
+<properties>
+    <jakarta-json.version>2.0.1</jakarta-json.version>
+</properties>
+----
+====
+
+==== New configuration classes
+
+===== Imperative style
+
+In order configure Spring Data Elasticsearch to use the new client, it is necessary to create a configuration bean that derives from `org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration`:
+
+====
+[source,java]
+----
+@Configuration
+public class NewRestClientConfig extends ElasticsearchConfiguration {
+
+	@Override
+	public ClientConfiguration clientConfiguration() {
+		return ClientConfiguration.builder() //
+			.connectedTo("localhost:9200") //
+			.build();
+	}
+}
+----
+====
+
+The configuration is done in the same way as with the old client, but it is not necessary anymore to create more than the configuration bean.
+With this configuration, the following beans will be available in the Spring application context:
+
+* a `RestClient` bean, that is the configured low level `RestClient` that is used by the Elasticsearch client
+* an `ElasticsearchClient` bean, this is the new client that uses the `RestClient`
+* an `ElasticsearchOperations` bean, available with the bean names _elasticsearchOperations_ and _elasticsearchTemplate_, this uses the `ElasticsearchClient`
+
+===== Reactive style
+
+To use the new client in a reactive environment the only difference is the class from which to derive the configuration:
+
+====
+[source,java]
+----
+@Configuration
+public class NewRestClientConfig extends ReactiveElasticsearchConfiguration {
+
+	@Override
+	public ClientConfiguration clientConfiguration() {
+		return ClientConfiguration.builder() //
+			.connectedTo("localhost:9200") //
+			.build();
+	}
+}
+----
+====
+
+With this configuration, the following beans will be available in the Spring application context:
+
+* a `RestClient` bean, that is the configured low level `RestClient` that is used by the Elasticsearch client
+* an `ReactiveElasticsearchClient` bean, this is the new reactive client that uses the `RestClient`
+* an `ReactiveElasticsearchOperations` bean, available with the bean names _reactiveElasticsearchOperations_ and _reactiveElasticsearchTemplate_, this uses the `ReactiveElasticsearchClient`

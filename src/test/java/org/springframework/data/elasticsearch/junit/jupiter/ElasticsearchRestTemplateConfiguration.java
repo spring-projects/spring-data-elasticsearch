@@ -25,10 +25,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.RestClients;
-import org.springframework.data.elasticsearch.config.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.client.erhlc.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.client.erhlc.ElasticsearchRestTemplate;
+import org.springframework.data.elasticsearch.client.erhlc.RestClients;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 
@@ -36,7 +36,9 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
  * Configuration for Spring Data Elasticsearch using {@link ElasticsearchRestTemplate}.
  *
  * @author Peter-Josef Meisch
+ * @deprecated since 5.0
  */
+@Deprecated
 @Configuration
 public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearchConfiguration {
 

@@ -33,6 +33,7 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchShardTarget;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.elasticsearch.client.erhlc.DocumentAdapters;
 
 /**
  * Unit tests for {@link DocumentAdapters}.

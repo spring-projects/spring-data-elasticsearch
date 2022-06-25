@@ -1,6 +1,12 @@
 [[new-features]]
 = What's new
 
+[[new-features.5-0-0]]
+== New in Spring Data Elasticsearch 5.0
+
+* Upgrade to Java 17 baseline
+* Upgrade to Spring Framework 6
+
 [[new-features.4-4-0]]
 == New in Spring Data Elasticsearch 4.4
 

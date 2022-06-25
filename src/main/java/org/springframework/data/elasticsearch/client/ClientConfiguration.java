@@ -27,7 +27,8 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
+import org.springframework.data.elasticsearch.client.erhlc.ReactiveRestClients;
+import org.springframework.data.elasticsearch.client.erhlc.RestClients;
 import org.springframework.http.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -68,8 +69,8 @@ public interface ClientConfiguration {
 	}
 
 	/**
-	 * Creates a new {@link ClientConfiguration} instance configured to a single host given {@code hostAndPort}.
-	 * For example given the endpoint http://localhost:9200
+	 * Creates a new {@link ClientConfiguration} instance configured to a single host given {@code hostAndPort}. For
+	 * example given the endpoint http://localhost:9200
 	 *
 	 * <pre class="code">
 	 * ClientConfiguration configuration = ClientConfiguration.create("localhost:9200");
@@ -82,8 +83,8 @@ public interface ClientConfiguration {
 	}
 
 	/**
-	 * Creates a new {@link ClientConfiguration} instance configured to a single host given {@link InetSocketAddress}.
-	 * For example given the endpoint http://localhost:9200
+	 * Creates a new {@link ClientConfiguration} instance configured to a single host given {@link InetSocketAddress}. For
+	 * example given the endpoint http://localhost:9200
 	 *
 	 * <pre class="code">
 	 * ClientConfiguration configuration = ClientConfiguration

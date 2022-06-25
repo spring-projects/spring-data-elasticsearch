@@ -16,8 +16,9 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.reactivestreams.Publisher;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
+import org.springframework.data.elasticsearch.client.erhlc.ReactiveClusterOperations;
+import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;

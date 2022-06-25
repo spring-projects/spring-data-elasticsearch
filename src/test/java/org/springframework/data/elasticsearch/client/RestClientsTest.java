@@ -44,7 +44,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.client.reactive.ReactiveRestClients;
+import org.springframework.data.elasticsearch.client.erhlc.ReactiveRestClients;
+import org.springframework.data.elasticsearch.client.erhlc.RestClients;
 import org.springframework.http.HttpHeaders;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -400,7 +401,7 @@ public class RestClientsTest {
 
 	/**
 	 * {@link ClientUnderTestFactory} implementation for the
-	 * {@link org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient}.
+	 * {@link org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchClient}.
 	 */
 	static class ReactiveERHLCUnderTestFactory extends ClientUnderTestFactory {
 
@@ -411,7 +412,7 @@ public class RestClientsTest {
 
 		@Override
 		ClientUnderTest create(ClientConfiguration clientConfiguration) {
-			org.springframework.data.elasticsearch.client.reactive.ReactiveElasticsearchClient client = ReactiveRestClients
+			org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchClient client = ReactiveRestClients
 					.create(clientConfiguration);
 			return new ClientUnderTest() {
 				@Override

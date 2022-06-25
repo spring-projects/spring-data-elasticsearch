@@ -62,6 +62,9 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQuery;
+import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
+import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
@@ -707,8 +710,7 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 		entity.rate = 42;
 		index(entity);
 
-		Query query = getBuilderWithMatchAllQuery().withSort(Sort.by(Sort.Direction.DESC, "rate"))
-				.build();
+		Query query = getBuilderWithMatchAllQuery().withSort(Sort.by(Sort.Direction.DESC, "rate")).build();
 
 		operations.search(query, SampleEntity.class) //
 				.as(StepVerifier::create) //

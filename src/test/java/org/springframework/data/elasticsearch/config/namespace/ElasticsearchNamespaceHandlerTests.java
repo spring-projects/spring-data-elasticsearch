@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.client.RestClientFactoryBean;
+import org.springframework.data.elasticsearch.client.erhlc.RestClientFactoryBean;
 import org.springframework.data.elasticsearch.junit.jupiter.Tags;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
