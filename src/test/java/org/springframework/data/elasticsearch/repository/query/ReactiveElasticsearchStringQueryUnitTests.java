@@ -144,7 +144,7 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota-Prius' } } } }");
 	}
 
-	@Test // #1866
+	@Test // #2135
 	@DisplayName("should handle array-of-strings parameters correctly")
 	void shouldHandleArrayOfStringsParametersCorrectly() throws Exception {
 
@@ -157,6 +157,19 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 				.isEqualTo("{ 'bool' : { 'must' : { 'terms' : { 'otherNames' : [\"Wesley\",\"Emmett\"] } } } }");
 	}
 
+	@Test // #2135
+	@DisplayName("should handle array-of-Integers parameters correctly")
+	void shouldHandleArrayOfIntegerParametersCorrectly() throws Exception {
+
+		List<Integer> ages = List.of(42, 57);
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAges", ages);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'terms' : { 'ages' : [42,57] } } } }");
+	}
+
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
 			throws NoSuchMethodException {
 
@@ -165,8 +178,7 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(methodName, argTypes);
 		ReactiveElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
 
-		return elasticsearchStringQuery.createQuery(new ConvertingParameterAccessor(operations.getElasticsearchConverter(),
-				new ElasticsearchParametersParameterAccessor(queryMethod, args)));
+		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
 	}
 
 	private ReactiveElasticsearchStringQuery queryForMethod(ReactiveElasticsearchQueryMethod queryMethod) {
@@ -212,6 +224,9 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 
 		@Query("{ 'bool' : { 'must' : { 'terms' : { 'otherNames' : ?0 } } } }")
 		Flux<Person> findByOtherNames(List<String> otherNames);
+
+		@Query("{ 'bool' : { 'must' : { 'terms' : { 'ages' : ?0 } } } }")
+		Flux<Person> findByAges(List<Integer> ages);
 
 	}
 

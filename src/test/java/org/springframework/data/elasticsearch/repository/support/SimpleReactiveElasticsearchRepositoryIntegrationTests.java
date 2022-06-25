@@ -603,6 +603,37 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 	}
 
+	@Test // #2135
+	void FluxOfSearchHitForIntegerArrayQuery() {
+		bulkIndex(new SampleEntity("id-one", "test", 3), //
+				new SampleEntity("id-two", "test test", 1), //
+				new SampleEntity("id-three", "test test", 2)) //
+						.block();
+
+		repository.findAllViaAnnotatedQueryByRatesIn(List.of(2, 3)) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo("id-one")) //
+				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo("id-three")) //
+				.verifyComplete();
+
+	}
+
+	@Test // #2135
+	void FluxOfSearchHitForStringAndIntegerArrayQuery() {
+		bulkIndex(new SampleEntity("id-one", "message1", 1), //
+				new SampleEntity("id-two", "message2", 2), //
+				new SampleEntity("id-three", "message3", 3), //
+				new SampleEntity("id-four", "message4", 4), //
+				new SampleEntity("id-five", "message5", 5)) //
+						.block();
+
+		repository.findAllViaAnnotatedQueryByMessageInAndRatesIn(List.of("message5", "message3"), List.of(2, 3)) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo("id-three")) //
+				.verifyComplete();
+
+	}
+
 	Mono<Void> bulkIndex(SampleEntity... entities) {
 		return operations.saveAll(Arrays.asList(entities), IndexCoordinates.of(indexNameProvider.indexName())).then();
 	}
@@ -645,6 +676,13 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 		@Query("{ \"terms\": { \"message\": ?0 } }")
 		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageIn(List<String> messages);
+
+		@Query("{ \"terms\": { \"rate\": ?0 } }")
+		Flux<SampleEntity> findAllViaAnnotatedQueryByRatesIn(List<Integer> rates);
+
+		@Query("{\"bool\": {\"must\": [{ \"terms\": { \"message\": ?0 } }, { \"terms\": { \"rate\": ?1 } }] } }")
+		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageInAndRatesIn(List<String> messages, List<Integer> rates);
+
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
