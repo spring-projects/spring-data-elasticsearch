@@ -1096,8 +1096,7 @@ class RequestFactory {
 
 	public UpdateByQueryRequest updateByQueryRequest(UpdateQuery query, IndexCoordinates index) {
 
-		String indexName = index.getIndexName();
-		final UpdateByQueryRequest updateByQueryRequest = new UpdateByQueryRequest(indexName);
+		final UpdateByQueryRequest updateByQueryRequest = new UpdateByQueryRequest(index.getIndexNames());
 		updateByQueryRequest.setScript(getScript(query));
 
 		if (query.getAbortOnVersionConflict() != null) {
