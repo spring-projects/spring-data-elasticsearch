@@ -239,7 +239,7 @@ public class ElasticsearchERHLCIntegrationTests extends ElasticsearchIntegration
 		assertThat(fetchSourceContext.excludes()).containsExactlyInAnyOrder("excl");
 	}
 
-	@Test // #1446
+	@Test // #1446, #2191
 	void shouldUseAllOptionsFromUpdateByQuery() throws JSONException {
 
 		Query searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()) //
@@ -269,9 +269,10 @@ public class ElasticsearchERHLCIntegrationTests extends ElasticsearchIntegration
 				"    }" + "  }" + '}';
 
 		// when
-		UpdateByQueryRequest request = getRequestFactory().updateByQueryRequest(updateQuery, IndexCoordinates.of("index"));
+		UpdateByQueryRequest request = getRequestFactory().updateByQueryRequest(updateQuery, IndexCoordinates.of("index1", "index2"));
 
 		// then
+		assertThat(request.indices()).containsExactlyInAnyOrder("index1", "index2");
 		assertThat(request).isNotNull();
 		assertThat(request.getSearchRequest().indicesOptions()).usingRecursiveComparison()
 				.isEqualTo(IndicesOptions.LENIENT_EXPAND_OPEN);
