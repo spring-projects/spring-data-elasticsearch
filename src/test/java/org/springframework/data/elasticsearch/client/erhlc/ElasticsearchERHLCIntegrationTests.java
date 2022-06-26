@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.core.ElasticsearchIntegrationTests;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.ScriptType;
@@ -74,7 +75,9 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Don Wellington
  * @author Peter-Josef Meisch
  * @author Farid Faoudi
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { ElasticsearchERHLCIntegrationTests.Config.class })
 @DisplayName("Using Elasticsearch RestHighLevelClient")
 public class ElasticsearchERHLCIntegrationTests extends ElasticsearchIntegrationTests {

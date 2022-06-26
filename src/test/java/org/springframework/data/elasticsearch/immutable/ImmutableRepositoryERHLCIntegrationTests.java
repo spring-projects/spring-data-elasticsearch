@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.immutable;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -25,8 +26,10 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = ImmutableRepositoryERHLCIntegrationTests.Config.class)
 public class ImmutableRepositoryERHLCIntegrationTests extends ImmutableRepositoryIntegrationTests {
 

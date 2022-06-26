@@ -21,6 +21,10 @@
 		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
 
 		<!-- version of the RestHighLevelClient	-->
+		<opensearch-rhlc>2.3.0</opensearch-rhlc>
+		<opensearch-lucene>9.3.0</opensearch-lucene>
+
+		<!-- version of the RestHighLevelClient	-->
 		<elasticsearch-rhlc>7.17.6</elasticsearch-rhlc>
 		<!-- version of the new ElasticsearchClient	-->
 		<elasticsearch-java>8.4.2</elasticsearch-java>
@@ -43,7 +47,7 @@
 		-->
 		<mvn.unit-test.goal>test</mvn.unit-test.goal>
 		<mvn.integration-test-elasticsearch.goal>integration-test</mvn.integration-test-elasticsearch.goal>
-		<mvn.integration-test-opensearch.goal>none</mvn.integration-test-opensearch.goal>
+		<mvn.integration-test-opensearch.goal>integration-test</mvn.integration-test-opensearch.goal>
 	</properties>
 
 	<developers>
@@ -149,6 +153,20 @@
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-high-level-client</artifactId>
 			<version>${elasticsearch-rhlc}</version>
+			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		
+		<!-- Opensearch  RestHighLevelClient -->
+		<dependency>
+			<groupId>org.opensearch.client</groupId>
+			<artifactId>opensearch-rest-high-level-client</artifactId>
+			<version>${opensearch-rhlc}</version>
 			<optional>true</optional>
 			<exclusions>
 				<exclusion>
@@ -438,6 +456,152 @@
 							<systemPropertyVariables>
 								<sde.integration-test.environment>opensearch</sde.integration-test.environment>
 							</systemPropertyVariables>
+							<!-- 
+								Opensearch and Elasticsearch Rest Clients transitively depend on Apache Lucene, referencing
+								absolutely different versions (8.11.1 vs 9.1.0, as an example). Since Elastisearch is the default
+								one, all Opensearch tests are going to fail due to this incompatibility (NoClassDefFound, ...). As
+								a workaround, we exclude managed Apache Lucene dependencies (which are coming from Elasticsearch) and
+								replace those with manually downloaded Apache Lucene dependencies, which are required by Opensearch. 
+								This is needed for integration tests only, isolated to Opensearch test execution.
+							-->
+							<classpathDependencyExcludes>
+								<classpathDependencyExclude>org.apache.lucene:lucene-core</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-analyzers-common</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-backward-codecs</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-grouping</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-highlighter</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-join</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-memory</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-misc</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-queries</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-queryparser</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-sandbox</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-spatial3d</classpathDependencyExclude>
+								<classpathDependencyExclude>org.apache.lucene:lucene-suggest</classpathDependencyExclude>
+							</classpathDependencyExcludes>
+							<additionalClasspathElements>
+								<additionalClasspathElement>${project.build.directory}/lucene-core-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-analysis-common-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-backward-codecs-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-grouping-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-highlighter-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-join-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-memory-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-misc-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-queries-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-queryparser-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-sandbox-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-spatial3d-${opensearch-lucene}.jar</additionalClasspathElement>
+								<additionalClasspathElement>${project.build.directory}/lucene-suggest-${opensearch-lucene}.jar</additionalClasspathElement>
+							</additionalClasspathElements>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>copy</id>
+						<phase>pre-integration-test</phase>
+						<goals>
+							<goal>copy</goal>
+						</goals>
+						<configuration>
+							<artifactItems>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-core</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-analysis-common</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-backward-codecs</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-grouping</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-highlighter</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-join</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-memory</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-misc</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-queries</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-queryparser</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-sandbox</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-spatial3d</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+								<artifactItem>
+									<groupId>org.apache.lucene</groupId>
+									<artifactId>lucene-suggest</artifactId>
+									<version>${opensearch-lucene}</version>
+									<overWrite>true</overWrite>
+									<outputDirectory>${project.build.directory}</outputDirectory>
+								</artifactItem>
+							</artifactItems>
 						</configuration>
 					</execution>
 				</executions>

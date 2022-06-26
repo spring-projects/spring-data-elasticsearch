@@ -22,6 +22,7 @@ import co.elastic.clients.elasticsearch.core.search.Suggester;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
@@ -31,8 +32,10 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { CompletionELCIntegrationTests.Config.class })
 public class CompletionELCIntegrationTests extends CompletionIntegrationTests {
 

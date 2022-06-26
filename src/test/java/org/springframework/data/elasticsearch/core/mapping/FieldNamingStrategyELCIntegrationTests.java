@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
@@ -27,8 +28,10 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { FieldNamingStrategyELCIntegrationTests.Config.class })
 public class FieldNamingStrategyELCIntegrationTests extends FieldNamingStrategyIntegrationTests {
 

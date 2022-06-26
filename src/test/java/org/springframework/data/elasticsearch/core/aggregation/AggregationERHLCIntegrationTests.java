@@ -28,6 +28,7 @@ import org.elasticsearch.search.aggregations.pipeline.StatsBucket;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.client.erhlc.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.AggregationsContainer;
@@ -39,7 +40,9 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { AggregationERHLCIntegrationTests.Config.class })
 public class AggregationERHLCIntegrationTests extends AggregationIntegrationTests {
 

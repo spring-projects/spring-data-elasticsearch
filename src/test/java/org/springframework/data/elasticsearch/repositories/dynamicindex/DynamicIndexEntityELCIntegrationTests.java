@@ -18,14 +18,17 @@ package org.springframework.data.elasticsearch.repositories.dynamicindex;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { DynamicIndexEntityELCIntegrationTests.Config.class })
 public class DynamicIndexEntityELCIntegrationTests extends DynamicIndexEntityIntegrationTests {
 	@Configuration

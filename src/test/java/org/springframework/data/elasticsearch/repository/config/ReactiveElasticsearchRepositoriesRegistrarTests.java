@@ -24,6 +24,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
@@ -35,7 +36,9 @@ import org.springframework.test.context.ContextConfiguration;
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ReactiveElasticsearchRepositoriesRegistrarTests.Config.class })
 public class ReactiveElasticsearchRepositoriesRegistrarTests {

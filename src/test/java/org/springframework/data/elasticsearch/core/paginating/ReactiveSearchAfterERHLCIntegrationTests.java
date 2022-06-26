@@ -18,14 +18,17 @@ package org.springframework.data.elasticsearch.core.paginating;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { ReactiveSearchAfterERHLCIntegrationTests.Config.class })
 public class ReactiveSearchAfterERHLCIntegrationTests extends ReactiveSearchAfterIntegrationTests {
 

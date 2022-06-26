@@ -41,6 +41,44 @@ This means that a switch to this client version can only be done with the next m
 
 It should be possible to use the Elasticsearch 7 client to access a cluster running version 8 by setting the appropriate compatibility headers (see the documentation at https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#elasticsearch.clients.configuration). but I encountered and heard of cases where the response from the server is not parseable by the client although the headers are set, so use with care.
 
+
+== About Opensearch versions and clients
+
+[[opensearch]]
+=== Opensearch 2.x / 1.x client libraries
+
+Spring Data Elasticsearch will in version 5.0 offer Opensearch support and has the possibility to use the `RestHighLevelCLient` to connect to Opensearch clusters. 
+The default dependency management stays unchanged and references Elasticsearch clients, the Opensearch dependencies are declared optional in order to not conflict with Elasticsearch ones. The dependency exclusion could be used to switch off Elasticsearch integration in favor of Opensearch.
+
+[source,xml]
+----
+<dependency>
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-elasticsearch</artifactId>
+	<version>${version}</version>
+	<exclusions>
+		<exclusion>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>*</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+
+<!-- Opensearch RestHighLevelClient -->
+<dependency>
+	<groupId>org.opensearch.client</groupId>
+	<artifactId>opensearch-rest-high-level-client</artifactId>
+	<version>${opensearch.version}</version>
+	<exclusions>
+		<exclusion>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+----
+
+
 == Code of Conduct
 
 This project is governed by the https://github.com/spring-projects/.github/blob/e3cc2ff230d8f1dca06535aa6b5a4a23815861d4/CODE_OF_CONDUCT.md[Spring Code of Conduct].
@@ -84,7 +122,7 @@ public class MyService {
 }
 ----
 
-=== Using the RestClient
+=== Using the Elasticsearch RestClient
 
 Provide a configuration like this:
 
@@ -96,6 +134,32 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
     @Override
     @Bean
     public RestHighLevelClient elasticsearchClient() {
+
+        final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+            .connectedTo("localhost:9200")
+            .build();
+
+        return RestClients.create(clientConfiguration).rest();
+    }
+}
+----
+
+=== Using the Opensearch RestClient
+
+Provide a configuration like this:
+
+[source,java]
+----
+import org.springframework.data.elasticsearch.client.orhlc.AbstractOpensearchConfiguration;
+import org.springframework.data.elasticsearch.client.orhlc.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.orhlc.RestClients;
+
+@Configuration
+public class RestClientConfig extends AbstractOpensearchConfiguration {
+
+    @Override
+    @Bean
+    public RestHighLevelClient opensearchClient() {
 
         final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
             .connectedTo("localhost:9200")
@@ -118,6 +182,8 @@ Add the Maven dependency:
   <version>${version}</version>
 </dependency>
 ----
+
+To configure Opensearch integration, please check <<opensearch>> section.
 
 // NOTE: since Github does not support include directives, the content of
 // the src/main/asciidoc/reference/preface.adoc file is duplicated here

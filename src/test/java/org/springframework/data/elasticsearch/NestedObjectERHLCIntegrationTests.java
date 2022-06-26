@@ -30,7 +30,9 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { NestedObjectERHLCIntegrationTests.Config.class })
 public class NestedObjectERHLCIntegrationTests extends NestedObjectIntegrationTests {
 	@Configuration

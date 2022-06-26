@@ -18,13 +18,16 @@ package org.springframework.data.elasticsearch.core.indices;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
- * a@author Peter-Josef Meisch
+ * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { IndexOperationsELCIntegrationTests.Config.class })
 public class IndexOperationsELCIntegrationTests extends IndexOperationsIntegrationTests {
 

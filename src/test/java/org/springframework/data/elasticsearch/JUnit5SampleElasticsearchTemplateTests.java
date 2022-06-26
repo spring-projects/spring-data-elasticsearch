@@ -31,8 +31,10 @@ import org.springframework.test.context.ContextConfiguration;
  * ContextConfiguration must include the {@link ElasticsearchTemplateConfiguration} class.
  *
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
 @DisplayName("a sample JUnit 5 test with the new rest client")

@@ -16,12 +16,15 @@
 package org.springframework.data.elasticsearch.config;
 
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { AuditingERHLCIntegrationTests.Config.class })
 public class AuditingERHLCIntegrationTests extends AuditingIntegrationTests {
 

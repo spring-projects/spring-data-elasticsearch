@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.erhlc;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.ElasticsearchPartQueryIntegrationTests;
@@ -29,8 +30,10 @@ import org.springframework.test.context.ContextConfiguration;
  * access to the {@link RequestFactory} class here
  *
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { ElasticsearchPartQueryERHLCIntegrationTests.Config.class })
 public class ElasticsearchPartQueryERHLCIntegrationTests extends ElasticsearchPartQueryIntegrationTests {
 

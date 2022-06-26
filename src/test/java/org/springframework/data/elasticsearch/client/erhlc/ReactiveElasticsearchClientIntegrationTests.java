@@ -62,6 +62,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
@@ -83,7 +84,9 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Russell Parry
  * @author Thomas Geese
  * @author Farid Faoudi
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ReactiveElasticsearchClientIntegrationTests.Config.class })
 public class ReactiveElasticsearchClientIntegrationTests {

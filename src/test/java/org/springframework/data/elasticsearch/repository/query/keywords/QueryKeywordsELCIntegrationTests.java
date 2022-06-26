@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.query.keywords;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -27,8 +28,10 @@ import org.springframework.test.context.ContextConfiguration;
  * {@link QueryKeywordsIntegrationTests} using a Repository backed by an ElasticsearchTemplate.
  *
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { QueryKeywordsELCIntegrationTests.Config.class })
 public class QueryKeywordsELCIntegrationTests extends QueryKeywordsIntegrationTests {
 

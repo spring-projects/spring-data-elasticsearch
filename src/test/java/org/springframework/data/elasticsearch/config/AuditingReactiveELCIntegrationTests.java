@@ -16,13 +16,16 @@
 package org.springframework.data.elasticsearch.config;
 
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { AuditingReactiveELCIntegrationTests.Config.class })
 public class AuditingReactiveELCIntegrationTests extends AuditingReactiveIntegrationTest {
 	@Import({ ReactiveElasticsearchTemplateConfiguration.class, AuditingReactiveIntegrationTest.Config.class })

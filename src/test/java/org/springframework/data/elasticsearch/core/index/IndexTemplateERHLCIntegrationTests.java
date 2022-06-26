@@ -15,12 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { ElasticsearchRestTemplateConfiguration.class })
 public class IndexTemplateERHLCIntegrationTests extends IndexTemplateIntegrationTests {
 }

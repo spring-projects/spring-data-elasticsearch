@@ -26,6 +26,7 @@ import org.elasticsearch.search.collapse.CollapseBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -36,8 +37,10 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = ReactiveElasticsearchERHLCIntegrationTests.Config.class)
 public class ReactiveElasticsearchERHLCIntegrationTests extends ReactiveElasticsearchIntegrationTests {
 

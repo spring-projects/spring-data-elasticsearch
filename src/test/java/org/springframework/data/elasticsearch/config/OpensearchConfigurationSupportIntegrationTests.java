@@ -1,0 +1,119 @@
+/*
+ * Copyright 2018-2022 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.springframework.data.elasticsearch.config;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.Collection;
+import java.util.Collections;
+
+import org.opensearch.client.RestHighLevelClient;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.AbstractApplicationContext;
+import org.springframework.data.elasticsearch.EnabledIfOpensearch;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.client.orhlc.AbstractOpensearchConfiguration;
+import org.springframework.data.elasticsearch.client.orhlc.OpensearchRestTemplate;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.junit.jupiter.Tags;
+
+/**
+ * Integration tests for {@link OpensearchConfigurationSupport}.
+ *
+ * @author Christoph Strobl
+ * @author Peter-Josef Meisch
+ * @author Andriy Redko
+ */
+@EnabledIfOpensearch
+@Tag(Tags.INTEGRATION_TEST)
+public class OpensearchConfigurationSupportIntegrationTests {
+
+	@Test // DATAES-504
+	public void usesConfigClassPackageAsBaseMappingPackage() throws ClassNotFoundException {
+
+		ElasticsearchConfigurationSupport configuration = new StubConfig();
+		assertThat(configuration.getMappingBasePackages()).contains(StubConfig.class.getPackage().getName());
+		assertThat(configuration.getInitialEntitySet()).contains(Entity.class);
+	}
+
+	@Test // DATAES-504
+	public void doesNotScanOnEmptyBasePackage() throws ClassNotFoundException {
+
+		ElasticsearchConfigurationSupport configuration = new StubConfig() {
+			@Override
+			protected Collection<String> getMappingBasePackages() {
+				return Collections.emptySet();
+			}
+		};
+
+		assertThat(configuration.getInitialEntitySet()).isEmpty();
+	}
+
+	@Test // DATAES-504
+	public void containsMappingContext() {
+
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(StubConfig.class);
+		assertThat(context.getBean(SimpleElasticsearchMappingContext.class)).isNotNull();
+	}
+
+	@Test // DATAES-504
+	public void containsElasticsearchConverter() {
+
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(StubConfig.class);
+		assertThat(context.getBean(ElasticsearchConverter.class)).isNotNull();
+	}
+
+	@Test // DATAES-504
+	public void restConfigContainsOpensearchTemplate() {
+
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(RestConfig.class);
+		assertThat(context.getBean(OpensearchRestTemplate.class)).isNotNull();
+	}
+
+	@Test // DATAES-563
+	public void restConfigContainsElasticsearchOperationsByNameAndAlias() {
+
+		AbstractApplicationContext context = new AnnotationConfigApplicationContext(RestConfig.class);
+
+		assertThat(context.getBean("elasticsearchOperations")).isNotNull();
+		assertThat(context.getBean("elasticsearchTemplate")).isNotNull();
+	}
+
+	@Configuration
+	static class StubConfig extends ElasticsearchConfigurationSupport {
+
+	}
+
+	@Configuration
+	static class RestConfig extends AbstractOpensearchConfiguration {
+
+		@Override
+		public RestHighLevelClient opensearchClient() {
+			return mock(RestHighLevelClient.class);
+		}
+	}
+
+	@Configuration
+	static class EntityMapperConfig extends ElasticsearchConfigurationSupport {}
+
+	@Document(indexName = "config-support-tests")
+	static class Entity {}
+}

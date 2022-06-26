@@ -20,6 +20,7 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.ElasticsearchPartQueryIntegrationTests;
@@ -27,8 +28,10 @@ import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplat
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.4
  */
+@EnabledIfElasticsearch
 public class ElasticsearchPartQueryELCIntegrationTests extends ElasticsearchPartQueryIntegrationTests {
 
 	@Configuration

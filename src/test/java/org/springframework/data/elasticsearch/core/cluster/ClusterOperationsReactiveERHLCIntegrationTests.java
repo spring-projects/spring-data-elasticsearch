@@ -15,11 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.cluster;
 
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @ContextConfiguration(classes = { ReactiveElasticsearchRestTemplateConfiguration.class })
 public class ClusterOperationsReactiveERHLCIntegrationTests extends ClusterOperationsReactiveIntegrationTests {}

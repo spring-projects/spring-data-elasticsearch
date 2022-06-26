@@ -23,6 +23,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.EnabledIfElasticsearch;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchClientFactoryBean;
 import org.springframework.data.elasticsearch.junit.jupiter.Tags;
@@ -35,8 +36,9 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  * @author Mohsin Husen
  * @author Don Wellington
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
-
+@EnabledIfElasticsearch
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration("namespace.xml")
 @Tag(Tags.INTEGRATION_TEST)

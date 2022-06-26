@@ -1,0 +1,123 @@
+[[opensearch.clients]]
+= Opensearch Clients
+
+This chapter illustrates configuration and usage of supported Opensearch client implementations.
+
+Spring Data Elasticsearch operates upon an Opensearch client that is connected to a single Opensearch node or a cluster.
+Although the Opensearch Client can be used to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
+
+[[opensearch.clients.resthighlevelclient]]
+== High Level REST Client
+
+The Java `RestHighLevelClient` could configured like shown below:
+
+.RestHighLevelClient
+====
+[source,java]
+----
+import org.springframework.data.elasticsearch.client.orhlc.AbstractElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.client.orhlc.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.orhlc.RestClients;
+
+@Configuration
+public class RestClientConfig extends AbstractOpensearchConfiguration {
+
+    @Override
+    @Bean
+    public RestHighLevelClient opensearchClient() {
+
+        final ClientConfiguration clientConfiguration = ClientConfiguration.builder()  <1>
+            .connectedTo("localhost:9200")
+            .build();
+
+        return RestClients.create(clientConfiguration).rest();                         <2>
+    }
+}
+
+// ...
+
+  @Autowired
+  RestHighLevelClient highLevelClient;
+
+  RestClient lowLevelClient = highLevelClient.getLowLevelClient();                        <3>
+
+// ...
+
+IndexRequest request = new IndexRequest("spring-data")
+  .id(randomID())
+  .source(singletonMap("feature", "high-level-rest-client"))
+  .setRefreshPolicy(IMMEDIATE);
+
+IndexResponse response = highLevelClient.index(request,RequestOptions.DEFAULT);
+----
+
+<1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
+<2> Create the `RestHighLevelClient`.
+<3> It is also possible to obtain the `lowLevelRest()` client.
+====
+
+[[opensearchearch.clients.configuration]]
+== Client Configuration
+
+Client behaviour can be changed via the `ClientConfiguration` that allows to set options for SSL, connect and socket timeouts, headers and other parameters.
+
+.Client Configuration
+====
+[source,java]
+----
+HttpHeaders httpHeaders = new HttpHeaders();
+httpHeaders.add("some-header", "on every request")                      <.>
+
+ClientConfiguration clientConfiguration = ClientConfiguration.builder()
+  .connectedTo("localhost:9200", "localhost:9291")                      <.>
+  .usingSsl()                                                           <.>
+  .withProxy("localhost:8888")                                          <.>
+  .withPathPrefix("ola")                                                <.>
+  .withConnectTimeout(Duration.ofSeconds(5))                            <.>
+  .withSocketTimeout(Duration.ofSeconds(3))                             <.>
+  .withDefaultHeaders(defaultHeaders)                                   <.>
+  .withBasicAuth(username, password)                                    <.>
+  .withHeaders(() -> {                                                  <.>
+    HttpHeaders headers = new HttpHeaders();
+    headers.add("currentTime", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+    return headers;
+  })
+  .withClientConfigurer(clientConfigurer -> {                           <.> 
+  	  // ...
+      return clientConfigurer;
+  	}))
+  . // ... other options
+  .build();
+
+----
+
+<.> Define default headers, if they need to be customized
+<.> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
+<.> Optionally enable SSL.
+<.> Optionally set a proxy.
+<.> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
+<.> Set the connection timeout.
+Default is 10 sec.
+<.> Set the socket timeout.
+Default is 5 sec.
+<.> Optionally set headers.
+<.> Add basic authentication.
+<.> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Opensearch - here, as an example, the current time is written in a header.
+<.> a function configuring the low level REST client (the same for the imperative and reactive stack)
+====
+
+IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens.
+If this is used in the reactive setup, the supplier function *must not* block!
+
+[[opensearch.clients.logging]]
+== Client Logging
+
+To see what is actually sent to and received from the server `Request` / `Response` logging on the transport level needs to be turned on as outlined in the snippet below.
+
+.Enable transport layer logging
+[source,xml]
+----
+<logger name="org.springframework.data.elasticsearch.client.WIRE" level="trace"/>
+----
+
+NOTE: The above applies to the `RestHighLevelClient` when obtained via `RestClients`.

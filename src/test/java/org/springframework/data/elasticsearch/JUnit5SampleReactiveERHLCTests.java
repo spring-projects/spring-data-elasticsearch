@@ -31,7 +31,9 @@ import org.springframework.test.context.ContextConfiguration;
  * ContextConfiguration must include the {@link ElasticsearchRestTemplateConfiguration} class.
  *
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
+@EnabledIfElasticsearch
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ReactiveElasticsearchRestTemplateConfiguration.class })
 @DisplayName("a sample JUnit 5 test with reactive rest client")

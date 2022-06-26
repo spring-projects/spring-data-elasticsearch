@@ -66,6 +66,7 @@ import org.springframework.lang.Nullable;
  * @author Roman Puchkovskiy
  * @author Brian Kimmig
  * @author Morgan Lutz
+ * @author Andriy Redko
  */
 @SpringIntegrationTest
 public abstract class MappingBuilderIntegrationTests extends MappingContextBaseTests
@@ -80,7 +81,7 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		}
 	}
 
-	@Autowired private ElasticsearchOperations operations;
+	@Autowired protected ElasticsearchOperations operations;
 	@Autowired protected IndexNameProvider indexNameProvider;
 
 	@BeforeEach
