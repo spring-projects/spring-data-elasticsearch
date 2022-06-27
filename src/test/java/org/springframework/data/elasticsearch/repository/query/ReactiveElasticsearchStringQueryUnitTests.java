@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2021 the original author or authors.
+ * Copyright 2019-2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -144,10 +144,37 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota-Prius' } } } }");
 	}
 
+	@Test // #2135
+	@DisplayName("should handle array-of-strings parameters correctly")
+	void shouldHandleArrayOfStringsParametersCorrectly() throws Exception {
+
+		List<String> otherNames = Arrays.asList("Wesley", "Emmett");
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByOtherNames", otherNames);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'terms' : { 'otherNames' : [\"Wesley\",\"Emmett\"] } } } }");
+	}
+
+	@Test // #2135
+	@DisplayName("should handle array-of-Integers parameters correctly")
+	void shouldHandleArrayOfIntegerParametersCorrectly() throws Exception {
+
+		List<Integer> ages = Arrays.asList(42, 57);
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAges", ages);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'terms' : { 'ages' : [42,57] } } } }");
+	}
+
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
 			throws NoSuchMethodException {
 
-		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
+		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass)
+				.map(clazz -> Collection.class.isAssignableFrom(clazz) ? List.class : clazz).toArray(Class[]::new);
 		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(methodName, argTypes);
 		ReactiveElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
 
@@ -195,6 +222,12 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'car' : '?0' } } } }")
 		Mono<Person> findByCar(Car car);
 
+		@Query("{ 'bool' : { 'must' : { 'terms' : { 'otherNames' : ?0 } } } }")
+		Flux<Person> findByOtherNames(List<String> otherNames);
+
+		@Query("{ 'bool' : { 'must' : { 'terms' : { 'ages' : ?0 } } } }")
+		Flux<Person> findByAges(List<Integer> ages);
+
 	}
 
 	/**
@@ -206,9 +239,12 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 	@Document(indexName = "test-index-person-reactive-repository-string-query")
 	public class Person {
 
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 
 		@Nullable private String name;
+
+		@Nullable private List<String> otherNames;
 
 		@Nullable @Field(type = FieldType.Nested) private List<Car> car;
 
@@ -230,6 +266,15 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		@Nullable
+		public List<String> getOtherNames() {
+			return otherNames;
+		}
+
+		public void setOtherNames(List<String> otherNames) {
+			this.otherNames = otherNames;
 		}
 
 		@Nullable

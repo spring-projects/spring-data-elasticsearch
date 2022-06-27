@@ -82,8 +82,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 
 		ResultProcessor processor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
 
-		Query query = createQuery(
-				new ConvertingParameterAccessor(elasticsearchOperations.getElasticsearchConverter(), parameterAccessor));
+		Query query = createQuery(parameterAccessor);
 
 		if (queryMethod.hasAnnotatedHighlight()) {
 			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
