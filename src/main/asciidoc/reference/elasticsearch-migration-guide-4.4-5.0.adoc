@@ -11,7 +11,7 @@ introduced features.
 
 See <<elasticsearch-migration-guide-4.4-5.0.breaking-changes-packages>>, all classes in this package have been 
 deprecated, as the default client implementations to use are the ones based on the new Java Client from 
-Elasticsearch, se <<elasticsearch-migration-guide-4.4-5.0.new-clients>>
+Elasticsearch, see <<elasticsearch-migration-guide-4.4-5.0.new-clients>>
 
 [[elasticsearch-migration-guide-4.4-5.0.breaking-changes]]
 == Breaking Changes
@@ -92,7 +92,8 @@ When using Spring Boot, it is necessary to set the following property in the _po
 
 ===== Imperative style
 
-In order configure Spring Data Elasticsearch to use the new client, it is necessary to create a configuration bean that derives from `org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration`:
+To configure Spring Data Elasticsearch to use the new client, it is necessary to create a configuration bean that 
+derives from `org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration`:
 
 ====
 [source,java]
