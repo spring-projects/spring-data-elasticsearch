@@ -230,7 +230,7 @@ The following code shows a query that searches for persons having the first name
 [source,java]
 ----
 
-Query query = new SearchQuery("{ \"match\": { \"firstname\": { \"query\": \"Jack\" } } } ");
+Query query = new StringQuery("{ \"match\": { \"firstname\": { \"query\": \"Jack\" } } } ");
 SearchHits<Person> searchHits = operations.search(query, Person.class);
 
 ----
