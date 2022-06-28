@@ -241,8 +241,6 @@ class RequestConverter {
 		builder.index(Arrays.asList(indexCoordinates.getIndexNames()));
 		addPropertiesToMapping(builder, mapping);
 
-		// TODO #2155 what else to add
-
 		return builder.build();
 	}
 
