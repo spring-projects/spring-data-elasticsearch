@@ -49,4 +49,5 @@ built and tested.
 | Ingallsfootnote:oom[] | 2.1.xfootnote:oom[] | 2.4.0 | 4.3.25 | 1.5.x
 |===
 
-Support for upcoming versions of Elasticsearch is being tracked and general compatibility should be given assuming the usage of the <<elasticsearch.clients.rest,high-level REST client>>.
+Support for upcoming versions of Elasticsearch is being tracked and general compatibility should be given assuming 
+the usage of the <<elasticsearch.operations,ElasticsearchOperations interface>>.

@@ -32,6 +32,11 @@ using the old deprecated Elasticsearch libraries, code using the new Elasticsear
 independent of the client implementation. Also the reactive implementation that was provided up to now has been moved
 here, as this implementation contains code that was copied and adapted from Elasticsearch libraries.
 
+If you are using `ElasticsearchRestTemplate` directly and not the `ElasticsearchOperations` interface you'll need to 
+adjust your imports as well.
+
+When working with the `NativeSearchQuery` class, you'll need to switch to the `NativeQuery` class, which can take a 
+`Query` instance comign from the new Elasticsearch client libraries. You'll find plenty of examples in the test code. 
 
 [[elasticsearch-migration-guide-4.4-5.0.new-clients]]
 == New Elasticsearch client
@@ -39,58 +44,7 @@ here, as this implementation contains code that was copied and adapted from Elas
 Spring Data Elasticsearch  now uses the new `ElasticsearchClient` and has 
 deprecated the use of the previous `RestHighLevelClient`.
 
-=== How to use the new client
-
-In order to use the new client the following steps are necessary:
-
-==== Add dependencies
-
-The dependencies for the new Elasticsearch client are still optional in Spring Data Elasticsearch so they need to be added explicitly:
-
-====
-[source,xml]
-----
-<dependencies>
-    <dependency>
-        <groupId>co.elastic.clients</groupId>
-        <artifactId>elasticsearch-java</artifactId>
-        <version>7.17.3</version>
-        <exclusions>
-            <exclusion>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-            </exclusion>
-        </exclusions>
-    </dependency>
-    <dependency>
-        <groupId>org.elasticsearch.client</groupId>
-        <artifactId>elasticsearch-rest-client</artifactId> <!-- is Apache 2-->
-        <version>7.17.3</version>
-        <exclusions>
-            <exclusion>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-            </exclusion>
-        </exclusions>
-    </dependency>
-</dependencies>
-----
-====
-
-When using Spring Boot, it is necessary to set the following property in the _pom.xml_.
-
-====
-[source,xml]
-----
-<properties>
-    <jakarta-json.version>2.0.1</jakarta-json.version>
-</properties>
-----
-====
-
-==== New configuration classes
-
-===== Imperative style
+=== Imperative style configuration
 
 To configure Spring Data Elasticsearch to use the new client, it is necessary to create a configuration bean that 
 derives from `org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration`:
@@ -118,7 +72,7 @@ With this configuration, the following beans will be available in the Spring app
 * an `ElasticsearchClient` bean, this is the new client that uses the `RestClient`
 * an `ElasticsearchOperations` bean, available with the bean names _elasticsearchOperations_ and _elasticsearchTemplate_, this uses the `ElasticsearchClient`
 
-===== Reactive style
+=== Reactive style configuration
 
 To use the new client in a reactive environment the only difference is the class from which to derive the configuration:
 
@@ -143,3 +97,29 @@ With this configuration, the following beans will be available in the Spring app
 * a `RestClient` bean, that is the configured low level `RestClient` that is used by the Elasticsearch client
 * an `ReactiveElasticsearchClient` bean, this is the new reactive client that uses the `RestClient`
 * an `ReactiveElasticsearchOperations` bean, available with the bean names _reactiveElasticsearchOperations_ and _reactiveElasticsearchTemplate_, this uses the `ReactiveElasticsearchClient`
+
+[[elasticsearch-migration-guide-4.4-5.0.old-client]]
+=== Still want to use the old client?
+
+The old deprecated `RestHighLevelClient` can still be used, but you will need to add the dependency explicitly to 
+your application as Spring Data Elasticsearch does not pull it in automatically anymore:
+
+====
+[source,xml]
+----
+<!-- include the RHLC, specify version explicitly	-->
+<dependency>
+	<groupId>org.elasticsearch.client</groupId>
+	<artifactId>elasticsearch-rest-high-level-client</artifactId>
+	<version>7.17.4</version>
+	<exclusions>
+		<exclusion>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+		</exclusion>
+	</exclusions>
+</dependency>
+----
+====
+
+Make sure to specify the version 7.17.4 explicitly, otherwise maven will resolve to 8.2.3, and this does not exist.

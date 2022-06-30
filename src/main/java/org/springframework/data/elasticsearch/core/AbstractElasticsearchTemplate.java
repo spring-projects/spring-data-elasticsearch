@@ -417,29 +417,17 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return search(query, clazz, getIndexCoordinatesFor(clazz));
 	}
 
-	/*
-	 * internal use only, not for public API
-	 */
-	abstract protected <T> SearchScrollHits<T> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
+	abstract public <T> SearchScrollHits<T> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
 			IndexCoordinates index);
 
-	/*
-	 * internal use only, not for public API
-	 */
-	abstract protected <T> SearchScrollHits<T> searchScrollContinue(String scrollId, long scrollTimeInMillis,
-			Class<T> clazz, IndexCoordinates index);
+	abstract public <T> SearchScrollHits<T> searchScrollContinue(String scrollId, long scrollTimeInMillis, Class<T> clazz,
+			IndexCoordinates index);
 
-	/*
-	 * internal use only, not for public API
-	 */
-	protected void searchScrollClear(String scrollId) {
+	public void searchScrollClear(String scrollId) {
 		searchScrollClear(Collections.singletonList(scrollId));
 	}
 
-	/*
-	 * internal use only, not for public API
-	 */
-	abstract protected void searchScrollClear(List<String> scrollIds);
+	abstract public void searchScrollClear(List<String> scrollIds);
 
 	// endregion
 

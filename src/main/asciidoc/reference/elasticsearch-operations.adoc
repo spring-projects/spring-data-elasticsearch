@@ -30,36 +30,10 @@ There is support for automatic creation of indices and writing the mappings when
 
 ====
 
-[[elasticsearch.operations.resttemplate]]
-== ElasticsearchRestTemplate
-
-The `ElasticsearchRestTemplate` is an implementation of the `ElasticsearchOperations` interface using the <<elasticsearch.clients.rest>>.
-
-.ElasticsearchRestTemplate configuration
-====
-[source,java]
-----
-@Configuration
-public class RestClientConfig extends AbstractElasticsearchConfiguration {
-  @Override
-  public RestHighLevelClient elasticsearchClient() {       <1>
-    return RestClients.create(ClientConfiguration.localhost()).rest();
-  }
-
-  // no special bean creation needed                       <2>
-}
-----
-
-<1> Setting up the <<elasticsearch.clients.rest>>.
-<2> The base class `AbstractElasticsearchConfiguration` already provides the `elasticsearchTemplate` bean.
-====
-
 [[elasticsearch.operations.usage]]
 == Usage examples
 
-As both `ElasticsearchTemplate` and `ElasticsearchRestTemplate` implement the `ElasticsearchOperations` interface, the code to use them is not different.
 The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller.
-The decision, if this is using the `TransportClient` or the `RestClient` is made by providing the corresponding Bean with one of the configurations shown above.
 
 .ElasticsearchOperations usage
 ====
@@ -150,7 +124,7 @@ An Iterator returned by the streaming functions of the `SearchOperations` interf
 [[elasticsearch.operations.queries]]
 == Queries
 
-Almost all of the methods defined in the `SearchOperations` and `ReactiveSearchOperations` interface take a `Query` parameter that defines the query to execute for searching. `Query` is an interface and Spring Data Elasticsearch provides three implementations: `CriteriaQuery`, `StringQuery` and `NativeSearchQuery`.
+Almost all of the methods defined in the `SearchOperations` and `ReactiveSearchOperations` interface take a `Query` parameter that defines the query to execute for searching. `Query` is an interface and Spring Data Elasticsearch provides three implementations: `CriteriaQuery`, `StringQuery` and `NativeQuery`.
 
 [[elasticsearch.operations.criteriaquery]]
 === CriteriaQuery
@@ -238,21 +212,28 @@ SearchHits<Person> searchHits = operations.search(query, Person.class);
 
 Using `StringQuery` may be appropriate if you already have an Elasticsearch query to use.
 
-[[elasticsearch.operations.nativesearchquery]]
-=== NativeSearchQuery
+[[elasticsearch.operations.nativequery]]
+=== NativeQuery
 
-`NativeSearchQuery` is the class to use when you have a complex query, or a query that cannot be expressed by using the `Criteria` API, for example when building queries and using aggregates.
-It allows to use all the different `QueryBuilder` implementations from the Elasticsearch library therefore named "native".
+`NativeQuery` is the class to use when you have a complex query, or a query that cannot be expressed by using the `Criteria` API, for example when building queries and using aggregates.
+It allows to use all the different `co.elastic.clients.elasticsearch._types.query_dsl.Query` implementations from the Elasticsearch library therefore named "native".
 
 The following code shows how to search for persons with a given firstname and for the found documents have a terms aggregation that counts the number of occurences of the lastnames for these persons:
 
 ====
 [source,java]
 ----
-Query query = new NativeSearchQueryBuilder()
-    .addAggregation(terms("lastnames").field("lastname").size(10)) //
-    .withQuery(QueryBuilders.matchQuery("firstname", firstName))
-    .build();
+Query query = NativeQuery.builder()
+	.withAggregation("lastNames", Aggregation.of(a -> a
+		.terms(ta -> ta.field("last-name").size(10)))) 
+	.withQuery(q -> q
+		.match(m -> m
+			.field("firstName")
+			.query(firstName)
+		)
+	)
+	.withPageable(pageable)
+	.build();
 
 SearchHits<Person> searchHits = operations.search(query, Person.class);
 ----

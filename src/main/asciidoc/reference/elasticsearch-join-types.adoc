@@ -211,7 +211,7 @@ void init() {
 
 ==  Retrieving data
 
-Currently native search queries must be used to query the data, so there is no support from standard repository methods. <<repositories.custom-implementations>> can be used instead.
+Currently native queries must be used to query the data, so there is no support from standard repository methods. <<repositories.custom-implementations>> can be used instead.
 
 The following code shows as an example how to retrieve all entries that have a _vote_ (which must be _answers_, because only answers can have a vote) using an `ElasticsearchOperations` instance:
 
@@ -219,11 +219,17 @@ The following code shows as an example how to retrieve all entries that have a _
 [source,java]
 ----
 SearchHits<Statement> hasVotes() {
-    NativeSearchQuery query = new NativeSearchQueryBuilder()
-        .withQuery(hasChildQuery("vote", matchAllQuery(), ScoreMode.None))
-        .build();
 
-    return operations.search(query, Statement.class);
+	Query query = NativeQuery.builder()
+		.withQuery(co.elastic.clients.elasticsearch._types.query_dsl.Query.of(qb -> qb //
+			.hasChild(hc -> hc
+				.queryName("vote") //
+				.query(matchAllQueryAsQuery()) //
+				.scoreMode(ChildScoreMode.None)//
+			)))
+		.build();
+
+	return operations.search(query, Statement.class);
 }
 ----
 ====

@@ -19,7 +19,7 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 
 /**
  * Class to combine an Elasticsearch {@link co.elastic.clients.elasticsearch._types.aggregations.Aggregate} with its
- * name. Necessary as the Elasticsearch Aggregate does not know i"s name.
+ * name. Necessary as the Elasticsearch Aggregate does not know its name.
  *
  * @author Peter-Josef Meisch
  * @since 4.4

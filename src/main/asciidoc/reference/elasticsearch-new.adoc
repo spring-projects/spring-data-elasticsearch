@@ -6,6 +6,7 @@
 
 * Upgrade to Java 17 baseline
 * Upgrade to Spring Framework 6
+* Use the new Elasticsearch client library
 
 [[new-features.4-4-0]]
 == New in Spring Data Elasticsearch 4.4

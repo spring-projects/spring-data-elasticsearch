@@ -87,12 +87,19 @@ private ElasticsearchOperations operations;
 
 IndexCoordinates index = IndexCoordinates.of("sample-index");
 
-SearchQuery searchQuery = new NativeSearchQueryBuilder()
-  .withQuery(matchAllQuery())
-  .withFilter(boolFilter().must(termFilter("id", documentId)))
-  .build();
+Query query = NativeQuery.builder()
+	.withQuery(q -> q
+		.matchAll(ma -> ma))
+	.withFilter( q -> q
+		.bool(b -> b
+			.must(m -> m
+				.term(t -> t
+					.field("id")
+					.value(documentId))
+			)))
+	.build();
 
-Page<SampleEntity> sampleEntities = operations.searchForPage(searchQuery, SampleEntity.class, index);
+SearchHits<SampleEntity> sampleEntities = operations.search(query, SampleEntity.class, index);
 ----
 ====
 
@@ -107,13 +114,15 @@ This is internally used by Spring Data Elasticsearch to provide the implementati
 ----
 IndexCoordinates index = IndexCoordinates.of("sample-index");
 
-SearchQuery searchQuery = new NativeSearchQueryBuilder()
-  .withQuery(matchAllQuery())
-  .withFields("message")
-  .withPageable(PageRequest.of(0, 10))
-  .build();
+Query searchQuery = NativeQuery.builder()
+    .withQuery(q -> q
+        .matchAll(ma -> ma))
+    .withFields("message")
+    .withPageable(PageRequest.of(0, 10))
+    .build();
 
-SearchHitsIterator<SampleEntity> stream = elasticsearchTemplate.searchForStream(searchQuery, SampleEntity.class, index);
+SearchHitsIterator<SampleEntity> stream = elasticsearchOperations.searchForStream(searchQuery, SampleEntity.class, 
+index);
 
 List<SampleEntity> sampleEntities = new ArrayList<>();
 while (stream.hasNext()) {
@@ -124,23 +133,28 @@ stream.close();
 ----
 ====
 
-There are no methods in the `SearchOperations` API to access the scroll id, if it should be necessary to access this, the following methods of the `ElasticsearchRestTemplate` can be used:
+There are no methods in the `SearchOperations` API to access the scroll id, if it should be necessary to access this,
+the following methods of the `AbstractElasticsearchTemplate` can be used (this is the base implementation for the 
+different `ElasticsearchOperations` implementations:
 
 ====
 [source,java]
 ----
 
-@Autowired ElasticsearchRestTemplate template;
+@Autowired ElasticsearchOperations operations;
+
+AbstractElasticsearchTemplate template = (AbstractElasticsearchTemplate)operations;
 
 IndexCoordinates index = IndexCoordinates.of("sample-index");
 
-SearchQuery searchQuery = new NativeSearchQueryBuilder()
-  .withQuery(matchAllQuery())
-  .withFields("message")
-  .withPageable(PageRequest.of(0, 10))
-  .build();
+Query query = NativeQuery.builder()
+    .withQuery(q -> q
+        .matchAll(ma -> ma))
+    .withFields("message")
+    .withPageable(PageRequest.of(0, 10))
+    .build();
 
-SearchScrollHits<SampleEntity> scroll = template.searchScrollStart(1000, searchQuery, SampleEntity.class, index);
+SearchScrollHits<SampleEntity> scroll = template.searchScrollStart(1000, query, SampleEntity.class, index);
 
 String scrollId = scroll.getScrollId();
 List<SampleEntity> sampleEntities = new ArrayList<>();
