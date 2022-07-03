@@ -89,16 +89,23 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		return this;
 	}
 
-	public NativeQueryBuilder withFilter(@Nullable Query filter) {
-		this.filter = filter;
-		return this;
-	}
-
 	public NativeQueryBuilder withQuery(Function<Query.Builder, ObjectBuilder<Query>> fn) {
 
 		Assert.notNull(fn, "fn must not be null");
 
 		return withQuery(fn.apply(new Query.Builder()).build());
+	}
+
+	public NativeQueryBuilder withFilter(@Nullable Query filter) {
+		this.filter = filter;
+		return this;
+	}
+
+	public NativeQueryBuilder withFilter(Function<Query.Builder, ObjectBuilder<Query>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return withFilter(fn.apply(new Query.Builder()).build());
 	}
 
 	public NativeQueryBuilder withAggregation(String name, Aggregation aggregation) {

@@ -6,15 +6,104 @@ This chapter illustrates configuration and usage of supported Elasticsearch clie
 Spring Data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster.
 Although the Elasticsearch Client can be used to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
 
-[[elasticsearch.clients.rest]]
-== High Level REST Client
+[[elasticsearch.clients.restclient]]
+== Imperative Rest Client
 
-The Java High Level REST Client is the default client of Elasticsearch, it is configured like shown:
+To use the imperative (non-reactive) client, a configuration bean must be configured like this:
 
-.High Level REST Client
 ====
 [source,java]
 ----
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
+
+@Configuration
+public class MyClientConfig extends ElasticsearchConfiguration {
+
+	@Override
+	public ClientConfiguration clientConfiguration() {
+		return ClientConfiguration.builder() //
+			.connectedTo("localhost:9200") //
+			.build();
+	}
+}
+
+// ...
+
+@Autowired
+ElasticsearchOperations operations;      <.>
+
+@Autowired 
+ElasticsearchClient elasticsearchClient; <.>
+
+@Autowired
+RestClient restClient;                   <.>
+----
+the following can be injected:
+
+<.> an implementation of `ElasticsearchOperations` 
+<.> the `co.elastic.clients.elasticsearch.ElasticsearchClient` that is used. This is new Elasticsearch client 
+implementation.
+<.> the low level `RestClient` from the Elasticsearch libraries
+====
+
+Basically one should just use the `ElasticsearchOperations` to interact with the Elasticsearch cluster. When using 
+repositories, this instance is used under the hood as well.
+
+[[elasticsearch.clients.reactiverestclient]]
+== Reactive Rest Client
+
+When working with the reactive stack, the configuration must be derived from a different class:
+
+====
+[source,java]
+----
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchConfiguration;
+
+@Configuration
+public class MyClientConfig extends ElasticsearchConfiguration {
+
+	@Override
+	public ClientConfiguration clientConfiguration() {
+		return ClientConfiguration.builder() //
+			.connectedTo("localhost:9200") //
+			.build();
+	}
+}
+
+// ...
+
+@Autowired
+ReactiveElasticsearchOperations operations;      <.>
+
+@Autowired 
+ReactiveElasticsearchClient elasticsearchClient; <.>
+
+@Autowired
+RestClient restClient;                           <.>
+----
+the following can be injected:
+
+<.> an implementation of `ElasticsearchOperations`
+<.> the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient` that is used. This is based 
+on the new Elasticsearch client implementation.
+<.> the low level `RestClient` from the Elasticsearch libraries
+====
+
+Basically one should just use the `ReactiveElasticsearchOperations` to interact with the Elasticsearch cluster. When 
+using repositories, this instance is used under the hood as well.
+
+[[elasticsearch.clients.resthighlevelclient]]
+== High Level REST Client (deprecated)
+
+The Java RestHighLevelClient is deprecated, but still can be configured like shown (read 
+<<elasticsearch-migration-guide-4.4-5.0.old-client>> as well):
+
+.RestHighLevelClient
+====
+[source,java]
+----
+import org.springframework.data.elasticsearch.client.erhlc.AbstractElasticsearchConfiguration;
+
 @Configuration
 public class RestClientConfig extends AbstractElasticsearchConfiguration {
 
@@ -53,16 +142,21 @@ IndexResponse response = highLevelClient.index(request,RequestOptions.DEFAULT);
 ====
 
 [[elasticsearch.clients.reactive]]
-== Reactive Client
+== Reactive Client (deprecated)
 
-The `ReactiveElasticsearchClient` is a non official driver based on `WebClient`.
+The `org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchClient` is a non official driver based on `WebClient`.
 It uses the request/response objects provided by the Elasticsearch core project.
 Calls are directly operated on the reactive stack, **not** wrapping async (thread pool bound) responses into reactive types.
 
-.Reactive REST Client
+This was the first reactive implementation Spring Data Elasticsearch provided, but now is deprecated in favour of the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient`
+which uses the functionality offered by the new Elasticsearch client libraries.
+
+.Reactive REST Client (deprecated)
 ====
 [source,java]
 ----
+import org.springframework.data.elasticsearch.client.erhlc.AbstractReactiveElasticsearchConfiguration;
+
 @Configuration
 public class ReactiveRestClientConfig extends AbstractReactiveElasticsearchConfiguration {
 
@@ -88,8 +182,6 @@ Mono<IndexResponse> response = client.index(request ->
 
 <.> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
 ====
-
-NOTE: The ReactiveClient response, especially for search operations, is bound to the `from` (offset) & `size` (limit) options of the request.
 
 [[elasticsearch.clients.configuration]]
 == Client Configuration
@@ -118,12 +210,7 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
     return headers;
   })
   .withClientConfigurer(                                                <.>
-    ReactiveRestClients.WebClientConfigurationCallback.from(webClient -> {
-  	  // ...
-      return webClient;
-  	}))
-  .withClientConfigurer(                                                <.>
-    RestClients.RestClientConfigurationCallback.from(clientBuilder -> {
+    ElasticsearchClients.ElasticsearchClientConfigurationCallback.from(clientBuilder -> {
   	  // ...
       return clientBuilder;
   	}))
@@ -144,8 +231,7 @@ Default is 5 sec.
 <.> Optionally set headers.
 <.> Add basic authentication.
 <.> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
-<.> for reactive setup a function configuring the `WebClient`
-<.> for non-reactive setup a function configuring the REST client
+<.> a function configuring the low level REST client (the same for the imperative and reactive stack)
 ====
 
 IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens.
@@ -153,7 +239,7 @@ If this is used in the reactive setup, the supplier function *must not* block!
 
 === Elasticsearch 7 compatibility headers
 
-When using Spring Data Elasticsearch 4 - which uses the Elasticsearch 7 client libraries - and accessing an Elasticsearch cluster that is running on version 8, it is necessary to set the compatibility headers
+When using the deprecated `RestHighLevelClient` and accessing an Elasticsearch cluster that is running on version 8, it is necessary to set the compatibility headers
 https://www.elastic.co/guide/en/elasticsearch/reference/8.0/rest-api-compatibility.html[see Elasticsearch 
 documentation].
 

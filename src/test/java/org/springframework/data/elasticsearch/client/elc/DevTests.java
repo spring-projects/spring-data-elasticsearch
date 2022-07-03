@@ -87,29 +87,29 @@ public class DevTests {
 
 		ElasticsearchClient client = imperativeElasticsearchClient;
 
-String index = "testindex";
+		String index = "testindex";
 
-var p = new Product("p1", 42.0);
+		var p = new Product("p1", 42.0);
 
-client.index(ir -> ir //
-		.index(index)//
-		.document(p));
+		client.index(ir -> ir //
+				.index(index)//
+				.document(p));
 
-client.indices().flush(f -> f.index(index));
+		client.indices().flush(f -> f.index(index));
 
-RuntimeField runtimeField = RuntimeField.of(rf -> rf //
-		.type(RuntimeFieldType.Double) //
-		.script(Script.of(s -> s //
-				.inline(i -> i. //
-						source("emit(doc['price'].value * 1.19)") //
-				) //
-		)) //
-); //
+		RuntimeField runtimeField = RuntimeField.of(rf -> rf //
+				.type(RuntimeFieldType.Double) //
+				.script(Script.of(s -> s //
+						.inline(i -> i. //
+								source("emit(doc['price'].value * 1.19)") //
+						) //
+				)) //
+		); //
 
-client.search(sr -> sr //
-		.index(index) //
-		.runtimeMappings("priceWithTax", Collections.singletonList(runtimeField)), //
-		Person.class); //
+		client.search(sr -> sr //
+				.index(index) //
+				.runtimeMappings("priceWithTax", Collections.singletonList(runtimeField)), //
+				Person.class); //
 	}
 
 	static class ReactiveClient {

@@ -28,7 +28,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.lucene.queryparser.flexible.standard.QueryParserUtil;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.Field;
@@ -184,7 +183,7 @@ class CriteriaQueryProcessor {
 
 		Criteria.OperationKey key = entry.getKey();
 		Object value = key.hasValue() ? entry.getValue() : null;
-		String searchText = value != null ? QueryParserUtil.escape(value.toString()) : "UNKNOWN_VALUE";
+		String searchText = value != null ? escape(value.toString()) : "UNKNOWN_VALUE";
 
 		Query.Builder queryBuilder = new Query.Builder();
 		switch (key) {
@@ -358,11 +357,32 @@ class CriteriaQueryProcessor {
 					sb.append(' ');
 				}
 				sb.append('"');
-				sb.append(QueryParserUtil.escape(item.toString()));
+				sb.append(escape(item.toString()));
 				sb.append('"');
 			}
 		}
 
 		return sb.toString();
 	}
+
+	/**
+	 * Returns a String where those characters that TextParser expects to be escaped are escaped by a preceding
+	 * <code>\</code>. Copied from Apachae 2 licensed org.apache.lucene.queryparser.flexible.standard.QueryParserUtil
+	 * class
+	 */
+	public static String escape(String s) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < s.length(); i++) {
+			char c = s.charAt(i);
+			// These characters are part of the query syntax and must be escaped
+			if (c == '\\' || c == '+' || c == '-' || c == '!' || c == '(' || c == ')' || c == ':' || c == '^' || c == '['
+					|| c == ']' || c == '\"' || c == '{' || c == '}' || c == '~' || c == '*' || c == '?' || c == '|' || c == '&'
+					|| c == '/') {
+				sb.append('\\');
+			}
+			sb.append(c);
+		}
+		return sb.toString();
+	}
+
 }
