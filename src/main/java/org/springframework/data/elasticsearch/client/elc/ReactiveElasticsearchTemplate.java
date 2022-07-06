@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import static co.elastic.clients.util.ApiTypeHelper.*;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
 import co.elastic.clients.elasticsearch._types.Result;
@@ -422,7 +423,11 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	public Mono<String> getClusterVersion() {
-		return Mono.from(execute(ReactiveElasticsearchClient::info)).map(infoResponse -> infoResponse.version().number());
+		return Mono.from(execute((ReactiveElasticsearchClient reactiveElasticsearchClient) -> {
+			try (var ignored = DANGEROUS_disableRequiredPropertiesCheck(true)) {
+				return reactiveElasticsearchClient.info();
+			}
+		})).map(infoResponse -> infoResponse.version().number());
 	}
 
 	@Override

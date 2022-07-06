@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import static co.elastic.clients.util.ApiTypeHelper.*;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -274,8 +275,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String getClusterVersion() {
-		return execute(client -> client.info().version().number());
-
+		return execute(client -> {
+			try (var ignored = DANGEROUS_disableRequiredPropertiesCheck(true)) {
+				return client.info().version().number();
+			}
+		});
 	}
 
 	@Override
