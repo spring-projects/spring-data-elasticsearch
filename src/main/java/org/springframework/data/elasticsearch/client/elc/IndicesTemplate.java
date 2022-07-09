@@ -277,12 +277,22 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchIndicesClient> i
 
 	@Override
 	public Map<String, Set<AliasData>> getAliases(String... aliasNames) {
-		throw new UnsupportedOperationException("not implemented");
+
+		Assert.notNull(aliasNames, "aliasNames must not be null");
+
+		GetAliasRequest getAliasRequest = requestConverter.indicesGetAliasRequest(aliasNames, null);
+		var getAliasResponse = execute(client -> client.getAlias(getAliasRequest));
+		return responseConverter.indicesGetAliasData(getAliasResponse);
 	}
 
 	@Override
 	public Map<String, Set<AliasData>> getAliasesForIndex(String... indexNames) {
-		throw new UnsupportedOperationException("not implemented");
+
+		Assert.notNull(indexNames, "indexNames must not be null");
+
+		GetAliasRequest getAliasRequest = requestConverter.indicesGetAliasRequest(null, indexNames);
+		var getAliasResponse = execute(client -> client.getAlias(getAliasRequest));
+		return responseConverter.indicesGetAliasData(getAliasResponse);
 	}
 
 	@Override

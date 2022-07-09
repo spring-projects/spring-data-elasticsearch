@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.core.indices;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
@@ -118,6 +120,62 @@ public abstract class IndexOperationsIntegrationTests implements NewElasticsearc
 				"  }\n" + //
 				"}"; //
 		JSONAssert.assertEquals(expectedMappings, indexInformation.getMapping().toJson(), false);
+	}
+
+	@Test // #2209
+	@DisplayName("should return AliasData with getAliases method")
+	void shouldReturnAliasDataWithGetAliasesMethod() {
+
+		String indexName = indexNameProvider.indexName();
+		String aliasName = "testindexinformationindex";
+
+		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(indexName)
+				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")
+				.build();
+		indexOperations.alias(new AliasActions(new AliasAction.Add(parameters)));
+
+		Map<String, Set<AliasData>> aliases = indexOperations.getAliases(aliasName);
+
+		assertThat(aliases).hasSize(1);
+		Set<AliasData> aliasDataSet = aliases.get(indexName);
+		assertThat(aliasDataSet).hasSize(1);
+		AliasData aliasData = aliasDataSet.iterator().next();
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(aliasData.getAlias()).isEqualTo(aliasName);
+		softly.assertThat(aliasData.isHidden()).isEqualTo(false);
+		softly.assertThat(aliasData.isWriteIndex()).isEqualTo(false);
+		softly.assertThat(aliasData.getIndexRouting()).isEqualTo("indexrouting");
+		softly.assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
+		softly.assertAll();
+	}
+
+	@Test // #2209
+	@DisplayName("should return AliasData with getAliasesForIndex method")
+	void shouldReturnAliasDataWithGetAliasesForIndexMethod() {
+
+		String indexName = indexNameProvider.indexName();
+		String aliasName = "testindexinformationindex";
+
+		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(indexName)
+				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")
+				.build();
+		indexOperations.alias(new AliasActions(new AliasAction.Add(parameters)));
+
+		Map<String, Set<AliasData>> aliases = indexOperations.getAliasesForIndex(indexName);
+
+		assertThat(aliases).hasSize(1);
+		Set<AliasData> aliasDataSet = aliases.get(indexName);
+		assertThat(aliasDataSet).hasSize(1);
+		AliasData aliasData = aliasDataSet.iterator().next();
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(aliasData.getAlias()).isEqualTo(aliasName);
+		softly.assertThat(aliasData.isHidden()).isEqualTo(false);
+		softly.assertThat(aliasData.isWriteIndex()).isEqualTo(false);
+		softly.assertThat(aliasData.getIndexRouting()).isEqualTo("indexrouting");
+		softly.assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
+		softly.assertAll();
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
