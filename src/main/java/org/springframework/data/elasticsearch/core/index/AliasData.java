@@ -71,6 +71,6 @@ public class AliasData {
 
 	@Nullable
 	public Boolean isHidden() {
-		return isHidden;
+		return Boolean.TRUE.equals(isHidden);
 	}
 }
