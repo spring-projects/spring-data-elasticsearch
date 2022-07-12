@@ -79,7 +79,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	private final JsonpMapper jsonpMapper;
 	private final ElasticsearchExceptionTranslator exceptionTranslator;
 
-	protected ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client, ElasticsearchConverter converter) {
+	public ReactiveElasticsearchTemplate(ReactiveElasticsearchClient client, ElasticsearchConverter converter) {
 		super(converter);
 
 		Assert.notNull(client, "client must not be null");
