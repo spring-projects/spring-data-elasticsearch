@@ -82,7 +82,7 @@ The dependencies for the new Elasticsearch client are still optional in Spring D
     <dependency>
         <groupId>co.elastic.clients</groupId>
         <artifactId>elasticsearch-java</artifactId>
-        <version>7.17.4</version>
+        <version>7.17.5</version>
         <exclusions>
             <exclusion>
                 <groupId>commons-logging</groupId>
@@ -93,7 +93,7 @@ The dependencies for the new Elasticsearch client are still optional in Spring D
     <dependency>
         <groupId>org.elasticsearch.client</groupId>
         <artifactId>elasticsearch-rest-client</artifactId> <!-- is Apache 2-->
-        <version>7.17.4</version>
+        <version>7.17.5</version>
         <exclusions>
             <exclusion>
                 <groupId>commons-logging</groupId>
