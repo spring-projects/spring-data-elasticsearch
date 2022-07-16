@@ -40,7 +40,7 @@ This means that a switch to this client version can only be done with the next m
 
 === Elasticsearch 8 cluster
 
-It should be possible to use the Elasticsearch 7 client to access a cluster running version 8 by setting the appropriate aompatibility headers (see the documentation at https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#elasticsearch.clients.configuration). but I encountered and heard of cases where the response from the server is not parseable by the client although the headers are set, so use with care.
+It should be possible to use the Elasticsearch 7 client to access a cluster running version 8 by setting the appropriate compatibility headers (see the documentation at https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#elasticsearch.clients.configuration). but I encountered and heard of cases where the response from the server is not parseable by the client although the headers are set, so use with care.
 
 == Code of Conduct
 
