@@ -32,7 +32,16 @@ import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.MgetRequest;
+import co.elastic.clients.elasticsearch.core.MsearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
@@ -42,7 +51,6 @@ import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
-import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
@@ -820,7 +828,11 @@ class RequestConverter {
 				.refresh(reindexRequest.getRefresh()) //
 				.requireAlias(reindexRequest.getRequireAlias()) //
 				.requestsPerSecond(reindexRequest.getRequestsPerSecond()) //
-				.slices(reindexRequest.getSlices());
+		;
+
+		if (reindexRequest.getSlices() != null) {
+			builder.slices(sb -> sb.value(reindexRequest.getSlices().intValue()));
+		}
 
 		return builder.build();
 	}
@@ -963,8 +975,11 @@ class RequestConverter {
 					.pipeline(updateQuery.getPipeline()) //
 					.requestsPerSecond(
 							updateQuery.getRequestsPerSecond() != null ? updateQuery.getRequestsPerSecond().longValue() : null) //
-					.slices(updateQuery.getSlices() != null ? Long.valueOf(updateQuery.getSlices()) : null) //
 			;
+
+			if (updateQuery.getSlices() != null) {
+				ub.slices(sb -> sb.value(updateQuery.getSlices() != null ? updateQuery.getSlices() : null));
+			}
 
 			if (updateQuery.getAbortOnVersionConflict() != null) {
 				ub.conflicts(updateQuery.getAbortOnVersionConflict() ? Conflicts.Abort : Conflicts.Proceed);
