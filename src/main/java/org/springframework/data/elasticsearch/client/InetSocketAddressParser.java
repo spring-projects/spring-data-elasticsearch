@@ -26,7 +26,7 @@ import org.springframework.util.StringUtils;
  * @author Mark Paluch
  * @since 3.2
  */
-class InetSocketAddressParser {
+public class InetSocketAddressParser {
 
 	/**
 	 * Parse a host and port string into a {@link InetSocketAddress}.
@@ -36,7 +36,7 @@ class InetSocketAddressParser {
 	 * @return a {@link InetSocketAddress} that is unresolved to avoid DNS lookups.
 	 * @see InetSocketAddress#createUnresolved(String, int)
 	 */
-	static InetSocketAddress parse(String hostPortString, int defaultPort) {
+	public static InetSocketAddress parse(String hostPortString, int defaultPort) {
 
 		Assert.notNull(hostPortString, "HostPortString must not be null");
 		String host;
