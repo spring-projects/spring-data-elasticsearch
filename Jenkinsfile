@@ -20,8 +20,9 @@ pipeline {
 	stages {
 		stage("test: baseline (main)") {
 			when {
+				beforeAgent(true)
 				anyOf {
-					branch 'main'
+					branch(pattern: "main|(\\d\\.\\d\\.x)", comparator: "REGEXP")
 					not { triggeredBy 'UpstreamCause' }
 				}
 			}
@@ -108,8 +109,9 @@ pipeline {
 
 		stage('Release to artifactory') {
 			when {
+				beforeAgent(true)
 				anyOf {
-					branch 'main'
+					branch(pattern: "main|(\\d\\.\\d\\.x)", comparator: "REGEXP")
 					not { triggeredBy 'UpstreamCause' }
 				}
 			}
