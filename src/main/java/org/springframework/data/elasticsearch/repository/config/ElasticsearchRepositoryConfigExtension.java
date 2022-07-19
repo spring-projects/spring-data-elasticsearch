@@ -19,6 +19,7 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Locale;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.core.annotation.AnnotationAttributes;
@@ -43,6 +44,8 @@ import org.w3c.dom.Element;
  */
 public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurationExtensionSupport {
 
+	private static final String MODULE_NAME = "Elasticsearch";
+
 	/*
 	 * (non-Javadoc)
 	 * @see org.springframework.data.repository.config.RepositoryConfigurationExtension#getRepositoryFactoryBeanClassName()
@@ -58,7 +61,12 @@ public class ElasticsearchRepositoryConfigExtension extends RepositoryConfigurat
 	 */
 	@Override
 	protected String getModulePrefix() {
-		return "elasticsearch";
+		return getModuleIdentifier();
+	}
+
+	@Override
+	public String getModuleName() {
+		return MODULE_NAME;
 	}
 
 	/*
