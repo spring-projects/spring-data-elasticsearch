@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
 public class ReactiveElasticsearchRepositoryConfigurationExtension extends ElasticsearchRepositoryConfigExtension {
 
 	private static final String ELASTICSEARCH_TEMPLATE_REF = "reactive-elasticsearch-template-ref";
+	private static final String MODULE_NAME = "Reactive Elasticsearch";
 
 	/*
 	 * (non-Javadoc)
@@ -42,7 +43,7 @@ public class ReactiveElasticsearchRepositoryConfigurationExtension extends Elast
 	 */
 	@Override
 	public String getModuleName() {
-		return "Reactive Elasticsearch";
+		return MODULE_NAME;
 	}
 
 	/*
