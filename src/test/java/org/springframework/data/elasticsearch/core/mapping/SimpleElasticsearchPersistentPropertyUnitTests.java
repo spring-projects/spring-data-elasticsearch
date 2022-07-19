@@ -41,7 +41,7 @@ import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
@@ -207,8 +207,8 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 				PropertyNameFieldNamingStrategy.INSTANCE, true);
 
 		ElasticsearchPersistentEntity<FieldNamingStrategyEntity> entity = new SimpleElasticsearchPersistentEntity<>(
-				ClassTypeInformation.from(FieldNamingStrategyEntity.class), contextConfiguration);
-		ClassTypeInformation<FieldNamingStrategyEntity> type = ClassTypeInformation.from(FieldNamingStrategyEntity.class);
+				TypeInformation.of(FieldNamingStrategyEntity.class), contextConfiguration);
+		TypeInformation<FieldNamingStrategyEntity> type = TypeInformation.of(FieldNamingStrategyEntity.class);
 
 		java.lang.reflect.Field field = ReflectionUtils.findField(FieldNamingStrategyEntity.class,
 				"withoutCustomFieldName");
@@ -232,8 +232,8 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 				fieldNamingStrategy, true);
 
 		ElasticsearchPersistentEntity<FieldNamingStrategyEntity> entity = new SimpleElasticsearchPersistentEntity<>(
-				ClassTypeInformation.from(FieldNamingStrategyEntity.class), contextConfiguration);
-		ClassTypeInformation<FieldNamingStrategyEntity> type = ClassTypeInformation.from(FieldNamingStrategyEntity.class);
+				TypeInformation.of(FieldNamingStrategyEntity.class), contextConfiguration);
+		TypeInformation<FieldNamingStrategyEntity> type = TypeInformation.of(FieldNamingStrategyEntity.class);
 
 		java.lang.reflect.Field field = ReflectionUtils.findField(FieldNamingStrategyEntity.class,
 				"withoutCustomFieldName");

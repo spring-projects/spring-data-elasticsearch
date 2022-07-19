@@ -53,8 +53,16 @@ import org.springframework.data.mapping.Parameter;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.*;
-import org.springframework.data.util.ClassTypeInformation;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
+import org.springframework.data.mapping.model.EntityInstantiator;
+import org.springframework.data.mapping.model.EntityInstantiators;
+import org.springframework.data.mapping.model.ParameterValueProvider;
+import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
+import org.springframework.data.mapping.model.PropertyValueProvider;
+import org.springframework.data.mapping.model.SpELContext;
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.format.datetime.DateFormatterRegistrar;
 import org.springframework.lang.Nullable;
@@ -213,7 +221,7 @@ public class MappingElasticsearchConverter
 		@SuppressWarnings("unchecked")
 		<R> R read(Class<R> type, Document source) {
 
-			TypeInformation<R> typeHint = ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type));
+			TypeInformation<R> typeHint = TypeInformation.of((Class<R>) ClassUtils.getUserClass(type));
 			R r = read(typeHint, source);
 
 			if (r == null) {
@@ -244,7 +252,7 @@ public class MappingElasticsearchConverter
 				return readMap(typeToUse, source);
 			}
 
-			if (typeToUse.equals(ClassTypeInformation.OBJECT)) {
+			if (typeToUse.equals(TypeInformation.OBJECT)) {
 				return (R) source;
 			}
 			// Retrieve persistent entity info
@@ -286,13 +294,13 @@ public class MappingElasticsearchConverter
 				}
 
 				Object value = entry.getValue();
-				TypeInformation<?> defaultedValueType = valueType != null ? valueType : ClassTypeInformation.OBJECT;
+				TypeInformation<?> defaultedValueType = valueType != null ? valueType : TypeInformation.OBJECT;
 
 				if (value instanceof Map) {
 					map.put(key, read(defaultedValueType, (Map<String, Object>) value));
 				} else if (value instanceof List) {
 					map.put(key,
-							readCollectionOrArray(valueType != null ? valueType : ClassTypeInformation.LIST, (List<Object>) value));
+							readCollectionOrArray(valueType != null ? valueType : TypeInformation.LIST, (List<Object>) value));
 				} else {
 					map.put(key, getPotentiallyConvertedSimpleRead(value, rawValueType));
 				}
@@ -397,7 +405,7 @@ public class MappingElasticsearchConverter
 
 			for (ElasticsearchPersistentProperty prop : entity) {
 
-				if (entity.isConstructorArgument(prop) || !prop.isReadable()) {
+				if (entity.isCreatorArgument(prop) || !prop.isReadable()) {
 					continue;
 				}
 
@@ -504,7 +512,7 @@ public class MappingElasticsearchConverter
 
 			TypeInformation<?> componentType = targetType.getComponentType() != null //
 					? targetType.getComponentType() //
-					: ClassTypeInformation.OBJECT;
+					: TypeInformation.OBJECT;
 			Class<?> rawComponentType = componentType.getType();
 
 			Collection<Object> items = targetType.getType().isArray() //
@@ -649,7 +657,8 @@ public class MappingElasticsearchConverter
 			 * @see org.springframework.data.mapping.model.SpELExpressionParameterValueProvider#potentiallyConvertSpelValue(java.lang.Object, org.springframework.data.mapping.PreferredConstructor.Parameter)
 			 */
 			@Override
-			protected <T> T potentiallyConvertSpelValue(Object object, Parameter<T, ElasticsearchPersistentProperty> parameter) {
+			protected <T> T potentiallyConvertSpelValue(Object object,
+					Parameter<T, ElasticsearchPersistentProperty> parameter) {
 				return readValue(object, parameter.getType());
 			}
 		}
@@ -694,7 +703,7 @@ public class MappingElasticsearchConverter
 				writeTypeHints = entity.writeTypeHints();
 			}
 
-			TypeInformation<?> typeInformation = ClassTypeInformation.from(entityType);
+			TypeInformation<?> typeInformation = TypeInformation.of(entityType);
 
 			if (writeTypeHints && requiresTypeHint(entityType)) {
 				typeMapper.writeType(typeInformation, sink);
@@ -707,7 +716,7 @@ public class MappingElasticsearchConverter
 		 * Internal write conversion method which should be used for nested invocations.
 		 *
 		 * @param source the object to write
-		 * @param sink the write destination
+		 * @param sink the destination
 		 * @param typeInformation type information for the source
 		 */
 		@SuppressWarnings("unchecked")
@@ -731,12 +740,12 @@ public class MappingElasticsearchConverter
 			}
 
 			if (Map.class.isAssignableFrom(entityType)) {
-				writeMapInternal((Map<Object, Object>) source, sink, ClassTypeInformation.MAP);
+				writeMapInternal((Map<Object, Object>) source, sink, TypeInformation.MAP);
 				return;
 			}
 
 			if (Collection.class.isAssignableFrom(entityType)) {
-				writeCollectionInternal((Collection<?>) source, ClassTypeInformation.LIST, (Collection<?>) sink);
+				writeCollectionInternal((Collection<?>) source, TypeInformation.LIST, (Collection<?>) sink);
 				return;
 			}
 
@@ -749,7 +758,7 @@ public class MappingElasticsearchConverter
 		 * Internal write conversion method which should be used for nested invocations.
 		 *
 		 * @param source the object to write
-		 * @param sink the write destination
+		 * @param sink the destination
 		 * @param entity entity for the source
 		 */
 		private void writeInternal(@Nullable Object source, Map<String, Object> sink,
@@ -813,7 +822,7 @@ public class MappingElasticsearchConverter
 					} else {
 						Map<String, Object> document = Document.create();
 						TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType()
-								: ClassTypeInformation.OBJECT;
+								: TypeInformation.OBJECT;
 						writeInternal(value, document, valueTypeInfo);
 
 						sink.put(simpleKey, document);
@@ -923,7 +932,7 @@ public class MappingElasticsearchConverter
 				return;
 			}
 
-			TypeInformation<?> valueType = ClassTypeInformation.from(value.getClass());
+			TypeInformation<?> valueType = TypeInformation.of(value.getClass());
 			TypeInformation<?> type = property.getTypeInformation();
 
 			if (valueType.isCollectionLike()) {
@@ -955,7 +964,7 @@ public class MappingElasticsearchConverter
 			Map<String, Object> document = existingValue instanceof Map ? (Map<String, Object>) existingValue
 					: Document.create();
 
-			addCustomTypeKeyIfNecessary(value, document, ClassTypeInformation.from(property.getRawType()));
+			addCustomTypeKeyIfNecessary(value, document, TypeInformation.of(property.getRawType()));
 			writeInternal(value, document, entity);
 			sink.set(property, document);
 		}
