@@ -37,7 +37,6 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
@@ -62,8 +61,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		public void shouldThrowExceptionGivenVersionPropertyIsNotLong() {
 
-			TypeInformation<EntityWithWrongVersionType> typeInformation = ClassTypeInformation
-					.from(EntityWithWrongVersionType.class);
+			TypeInformation<EntityWithWrongVersionType> typeInformation = TypeInformation
+					.of(EntityWithWrongVersionType.class);
 			SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
@@ -73,8 +72,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		public void shouldThrowExceptionGivenMultipleVersionPropertiesArePresent() {
 
-			TypeInformation<EntityWithMultipleVersionField> typeInformation = ClassTypeInformation
-					.from(EntityWithMultipleVersionField.class);
+			TypeInformation<EntityWithMultipleVersionField> typeInformation = TypeInformation
+					.of(EntityWithMultipleVersionField.class);
 			SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			SimpleElasticsearchPersistentProperty persistentProperty1 = createProperty(entity, "version1");
@@ -102,8 +101,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldReportThatThereIsNoSeqNoPrimaryTermPropertyWhenThereIsNoSuchProperty() {
-			TypeInformation<EntityWithoutSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
-					.from(EntityWithoutSeqNoPrimaryTerm.class);
+			TypeInformation<EntityWithoutSeqNoPrimaryTerm> typeInformation = TypeInformation
+					.of(EntityWithoutSeqNoPrimaryTerm.class);
 			SimpleElasticsearchPersistentEntity<EntityWithoutSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
@@ -113,8 +112,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldReportThatThereIsSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
-			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
-					.from(EntityWithSeqNoPrimaryTerm.class);
+			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+					.of(EntityWithSeqNoPrimaryTerm.class);
 			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
@@ -127,8 +126,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		// DATAES-799
 		void shouldReturnSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
 
-			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
-					.from(EntityWithSeqNoPrimaryTerm.class);
+			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+					.of(EntityWithSeqNoPrimaryTerm.class);
 			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
@@ -146,8 +145,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldNotAllowMoreThanOneSeqNoPrimaryTermProperties() {
-			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = ClassTypeInformation
-					.from(EntityWithSeqNoPrimaryTerm.class);
+			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+					.of(EntityWithSeqNoPrimaryTerm.class);
 			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
@@ -199,7 +198,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 					      ]
 					    }
 					  }
-					}					""";
+					}""";
 
 			ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.get().getMappingContext()
 					.getRequiredPersistentEntity(SettingsValidSortParameterSizes.class);

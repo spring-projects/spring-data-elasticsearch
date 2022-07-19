@@ -26,7 +26,6 @@ import org.springframework.data.convert.TypeInformationMapper;
 import org.springframework.data.mapping.Alias;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 
@@ -41,7 +40,7 @@ public class DefaultElasticsearchTypeMapper extends DefaultTypeMapper<Map<String
 		implements ElasticsearchTypeMapper {
 
 	@SuppressWarnings("rawtypes") //
-	private static final TypeInformation<Map> MAP_TYPE_INFO = ClassTypeInformation.from(Map.class);
+	private static final TypeInformation<Map> MAP_TYPE_INFO = TypeInformation.of(Map.class);
 
 	private final @Nullable String typeKey;
 

@@ -34,7 +34,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -78,7 +77,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	protected void verifyCountQueryTypes() {
 
 		if (hasCountQueryAnnotation()) {
-			TypeInformation<?> returnType = ClassTypeInformation.fromReturnTypeOf(method);
+			TypeInformation<?> returnType = TypeInformation.fromReturnTypeOf(method);
 
 			if (returnType.getType() != long.class && !Long.class.isAssignableFrom(returnType.getType())) {
 				throw new InvalidDataAccessApiUsageException("count query methods must return a Long");

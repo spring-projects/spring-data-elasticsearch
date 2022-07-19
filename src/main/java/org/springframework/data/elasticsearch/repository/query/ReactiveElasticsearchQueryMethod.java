@@ -37,7 +37,6 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.repository.util.ReactiveWrappers;
-import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
@@ -49,8 +48,8 @@ import org.springframework.util.ClassUtils;
  */
 public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 
-	private static final ClassTypeInformation<Page> PAGE_TYPE = ClassTypeInformation.from(Page.class);
-	private static final ClassTypeInformation<Slice> SLICE_TYPE = ClassTypeInformation.from(Slice.class);
+	private static final TypeInformation<Page> PAGE_TYPE = TypeInformation.of(Page.class);
+	private static final TypeInformation<Slice> SLICE_TYPE = TypeInformation.of(Slice.class);
 	private final Lazy<Boolean> isCollectionQuery;
 
 	public ReactiveElasticsearchQueryMethod(Method method, RepositoryMetadata metadata, ProjectionFactory factory,
@@ -60,7 +59,7 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 
 		if (hasParameterOfType(method, Pageable.class)) {
 
-			TypeInformation<?> returnType = ClassTypeInformation.fromReturnTypeOf(method);
+			TypeInformation<?> returnType = TypeInformation.fromReturnTypeOf(method);
 			boolean multiWrapper = ReactiveWrappers.isMultiValueType(returnType.getType());
 			boolean singleWrapperWithWrappedPageableResult = ReactiveWrappers.isSingleValueType(returnType.getType())
 					&& (PAGE_TYPE.isAssignableFrom(returnType.getRequiredComponentType())
@@ -75,12 +74,12 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 			if (!multiWrapper) {
 				throw new IllegalStateException(String.format(
 						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type. Offending method: %s",
-						method.toString()));
+					method));
 			}
 
 			if (hasParameterOfType(method, Sort.class)) {
 				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter. "
-						+ "Use sorting capabilities on Pageble instead! Offending method: %s", method.toString()));
+						+ "Use sorting capabilities on Pageble instead! Offending method: %s", method));
 			}
 		}
 
@@ -91,7 +90,7 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 	@Override
 	protected void verifyCountQueryTypes() {
 		if (hasCountQueryAnnotation()) {
-			TypeInformation<?> returnType = ClassTypeInformation.fromReturnTypeOf(method);
+			TypeInformation<?> returnType = TypeInformation.fromReturnTypeOf(method);
 			List<TypeInformation<?>> typeArguments = returnType.getTypeArguments();
 
 			if (!Mono.class.isAssignableFrom(returnType.getType()) || typeArguments.size() != 1
