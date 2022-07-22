@@ -128,6 +128,9 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 		} else if (tree.isCountProjection()) {
 			result = elasticsearchOperations.count(query, clazz, index);
+		} else if (tree.isExistsProjection()) {
+			long count = elasticsearchOperations.count(query, clazz, index);
+			result = count > 0;
 		} else {
 			result = elasticsearchOperations.searchOne(query, clazz, index);
 		}
