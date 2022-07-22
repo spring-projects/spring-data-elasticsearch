@@ -321,6 +321,17 @@ class QueryKeywordsTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(5);
 	}
 
+	@Test // #2162
+	@DisplayName("should run exists query")
+	void shouldRunExistsQuery() {
+
+		Boolean existsCaneSugar = repository.existsByText("Cane sugar");
+		Boolean existsSand = repository.existsByText("Sand");
+
+		assertThat(existsCaneSugar).isTrue();
+		assertThat(existsSand).isFalse();
+	}
+
 	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-product-query-keywords")
 	static class Product {
@@ -459,6 +470,8 @@ class QueryKeywordsTests {
 		SearchHits<Product> findByNameEmpty();
 
 		SearchHits<Product> findByNameNotEmpty();
+
+		Boolean existsByText(String text);
 	}
 
 }

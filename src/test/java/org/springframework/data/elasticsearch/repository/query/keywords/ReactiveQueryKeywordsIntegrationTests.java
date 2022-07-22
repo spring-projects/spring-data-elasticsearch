@@ -19,7 +19,10 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.lang.Boolean;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -139,6 +142,21 @@ public class ReactiveQueryKeywordsIntegrationTests {
 				}).verifyComplete();
 	}
 
+	@Test // #2162
+	@DisplayName("should run exists query")
+	void shouldRunExistsQuery() {
+
+		loadEntities();
+		repository.existsByMessage("message") //
+				.as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+		repository.existsByMessage("without") //
+				.as(StepVerifier::create) //
+				.expectNext(false) //
+				.verifyComplete();
+	}
+
 	@SuppressWarnings("SpringDataMethodInconsistencyInspection")
 	interface SampleRepository extends ReactiveElasticsearchRepository<SampleEntity, String> {
 		Flux<SearchHit<SampleEntity>> findByMessageExists();
@@ -150,6 +168,8 @@ public class ReactiveQueryKeywordsIntegrationTests {
 		Flux<SearchHit<SampleEntity>> findByMessageIsNotEmpty();
 
 		Flux<SearchHit<SampleEntity>> findByMessageIsEmpty();
+
+		Mono<Boolean> existsByMessage(String message);
 	}
 
 	private void loadEntities() {
