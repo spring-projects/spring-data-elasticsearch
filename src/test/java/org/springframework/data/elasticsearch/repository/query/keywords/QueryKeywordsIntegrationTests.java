@@ -310,6 +310,17 @@ abstract class QueryKeywordsIntegrationTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(5);
 	}
 
+	@Test // #2162
+	@DisplayName("should run exists query")
+	void shouldRunExistsQuery() {
+
+		Boolean existsCaneSugar = repository.existsByText("Cane sugar");
+		Boolean existsSand = repository.existsByText("Sand");
+
+		assertThat(existsCaneSugar).isTrue();
+		assertThat(existsSand).isFalse();
+	}
+
 	@SuppressWarnings("unused")
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class Product {
@@ -452,6 +463,8 @@ abstract class QueryKeywordsIntegrationTests {
 		SearchHits<Product> findByNameEmpty();
 
 		SearchHits<Product> findByNameNotEmpty();
+
+		Boolean existsByText(String text);
 	}
 
 }
