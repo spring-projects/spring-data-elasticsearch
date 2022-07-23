@@ -56,7 +56,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Utility class to create the different Elasticsearch clients
@@ -229,14 +228,20 @@ public final class ElasticsearchClients {
 
 			for (ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer : clientConfiguration
 					.getClientConfigurers()) {
-				if (clientConfigurer instanceof ElasticsearchClientConfigurationCallback) {
-					ElasticsearchClientConfigurationCallback restClientConfigurationCallback = (ElasticsearchClientConfigurationCallback) clientConfigurer;
+				if (clientConfigurer instanceof ElasticsearchHttpClientConfigurationCallback restClientConfigurationCallback) {
 					clientBuilder = restClientConfigurationCallback.configure(clientBuilder);
 				}
 			}
 
 			return clientBuilder;
 		});
+
+		for (ClientConfiguration.ClientConfigurationCallback<?> clientConfigurationCallback : clientConfiguration
+				.getClientConfigurers()) {
+			if (clientConfigurationCallback instanceof ElasticsearchRestClientConfigurationCallback configurationCallback) {
+				builder = configurationCallback.configure(builder);
+			}
+		}
 		return builder;
 	}
 
@@ -360,37 +365,39 @@ public final class ElasticsearchClients {
 
 	/**
 	 * {@link org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationCallback} to configure
-	 * the RestClient with a {@link HttpAsyncClientBuilder}
+	 * the Elasticsearch RestClient's Http client with a {@link HttpAsyncClientBuilder}
 	 *
 	 * @since 4.4
 	 */
-	public interface ElasticsearchClientConfigurationCallback
+	public interface ElasticsearchHttpClientConfigurationCallback
 			extends ClientConfiguration.ClientConfigurationCallback<HttpAsyncClientBuilder> {
 
-		static ElasticsearchClientConfigurationCallback from(
-				Function<HttpAsyncClientBuilder, HttpAsyncClientBuilder> clientBuilderCallback) {
+		static ElasticsearchHttpClientConfigurationCallback from(
+				Function<HttpAsyncClientBuilder, HttpAsyncClientBuilder> httpClientBuilderCallback) {
 
-			Assert.notNull(clientBuilderCallback, "clientBuilderCallback must not be null");
+			Assert.notNull(httpClientBuilderCallback, "httpClientBuilderCallback must not be null");
 
 			// noinspection NullableProblems
-			return clientBuilderCallback::apply;
+			return httpClientBuilderCallback::apply;
 		}
 	}
 
 	/**
 	 * {@link org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationCallback} to configure
-	 * the ReactiveElasticsearchClient with a {@link WebClient}
+	 * the RestClient client with a {@link RestClientBuilder}
 	 *
-	 * @since 4.4
+	 * @since 5.0
 	 */
-	public interface WebClientConfigurationCallback extends ClientConfiguration.ClientConfigurationCallback<WebClient> {
+	public interface ElasticsearchRestClientConfigurationCallback
+			extends ClientConfiguration.ClientConfigurationCallback<RestClientBuilder> {
 
-		static WebClientConfigurationCallback from(Function<WebClient, WebClient> webClientCallback) {
+		static ElasticsearchRestClientConfigurationCallback from(
+				Function<RestClientBuilder, RestClientBuilder> restClientBuilderCallback) {
 
-			Assert.notNull(webClientCallback, "webClientCallback must not be null");
+			Assert.notNull(restClientBuilderCallback, "restClientBuilderCallback must not be null");
 
 			// noinspection NullableProblems
-			return webClientCallback::apply;
+			return restClientBuilderCallback::apply;
 		}
 	}
 }

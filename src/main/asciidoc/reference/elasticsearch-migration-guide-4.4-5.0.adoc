@@ -36,7 +36,7 @@ If you are using `ElasticsearchRestTemplate` directly and not the `Elasticsearch
 adjust your imports as well.
 
 When working with the `NativeSearchQuery` class, you'll need to switch to the `NativeQuery` class, which can take a 
-`Query` instance comign from the new Elasticsearch client libraries. You'll find plenty of examples in the test code. 
+`Query` instance comign from the new Elasticsearch client libraries. You'll find plenty of examples in the test code.
 
 [[elasticsearch-migration-guide-4.4-5.0.new-clients]]
 == New Elasticsearch client

@@ -72,7 +72,9 @@ public final class ReactiveRestClients {
 	 * the ReactiveElasticsearchClient with a {@link WebClient}
 	 *
 	 * @since 4.3
+	 * @deprecated
 	 */
+	@Deprecated
 	public interface WebClientConfigurationCallback extends ClientConfiguration.ClientConfigurationCallback<WebClient> {
 
 		static WebClientConfigurationCallback from(Function<WebClient, WebClient> webClientCallback) {

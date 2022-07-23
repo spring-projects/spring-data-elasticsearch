@@ -35,7 +35,6 @@ import java.util.function.Function;
 import javax.net.ssl.SSLContext;
 
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -238,11 +237,6 @@ public interface WebClientProvider {
 
 				if (clientConfigurer instanceof ReactiveRestClients.WebClientConfigurationCallback) {
 					ReactiveRestClients.WebClientConfigurationCallback webClientConfigurationCallback = (ReactiveRestClients.WebClientConfigurationCallback) clientConfigurer;
-					webClient = webClientConfigurationCallback.configure(webClient);
-				}
-
-				if (clientConfigurer instanceof ElasticsearchClients.WebClientConfigurationCallback) {
-					ElasticsearchClients.WebClientConfigurationCallback webClientConfigurationCallback = (ElasticsearchClients.WebClientConfigurationCallback) clientConfigurer;
 					webClient = webClientConfigurationCallback.configure(webClient);
 				}
 			}
