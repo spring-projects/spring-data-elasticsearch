@@ -252,7 +252,9 @@ public final class RestClients {
 	 * the RestClient with a {@link HttpAsyncClientBuilder}
 	 *
 	 * @since 4.3
+	 * @deprecated since 5.0
 	 */
+	@Deprecated
 	public interface RestClientConfigurationCallback
 			extends ClientConfiguration.ClientConfigurationCallback<HttpAsyncClientBuilder> {
 

@@ -38,16 +38,17 @@ ElasticsearchClient elasticsearchClient; <.>
 @Autowired
 RestClient restClient;                   <.>
 ----
+
 the following can be injected:
 
-<.> an implementation of `ElasticsearchOperations` 
-<.> the `co.elastic.clients.elasticsearch.ElasticsearchClient` that is used. This is new Elasticsearch client 
-implementation.
+<.> an implementation of `ElasticsearchOperations`
+<.> the `co.elastic.clients.elasticsearch.ElasticsearchClient` that is used.
+This is new Elasticsearch client implementation.
 <.> the low level `RestClient` from the Elasticsearch libraries
 ====
 
-Basically one should just use the `ElasticsearchOperations` to interact with the Elasticsearch cluster. When using 
-repositories, this instance is used under the hood as well.
+Basically one should just use the `ElasticsearchOperations` to interact with the Elasticsearch cluster.
+When using repositories, this instance is used under the hood as well.
 
 [[elasticsearch.clients.reactiverestclient]]
 == Reactive Rest Client
@@ -81,21 +82,22 @@ ReactiveElasticsearchClient elasticsearchClient; <.>
 @Autowired
 RestClient restClient;                           <.>
 ----
+
 the following can be injected:
 
 <.> an implementation of `ElasticsearchOperations`
-<.> the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient` that is used. This is based 
-on the new Elasticsearch client implementation.
+<.> the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient` that is used.
+This is based on the new Elasticsearch client implementation.
 <.> the low level `RestClient` from the Elasticsearch libraries
 ====
 
-Basically one should just use the `ReactiveElasticsearchOperations` to interact with the Elasticsearch cluster. When 
-using repositories, this instance is used under the hood as well.
+Basically one should just use the `ReactiveElasticsearchOperations` to interact with the Elasticsearch cluster.
+When using repositories, this instance is used under the hood as well.
 
 [[elasticsearch.clients.resthighlevelclient]]
 == High Level REST Client (deprecated)
 
-The Java RestHighLevelClient is deprecated, but still can be configured like shown (read 
+The Java RestHighLevelClient is deprecated, but still can be configured like shown (read
 <<elasticsearch-migration-guide-4.4-5.0.old-client>> as well):
 
 .RestHighLevelClient
@@ -231,11 +233,48 @@ Default is 5 sec.
 <.> Optionally set headers.
 <.> Add basic authentication.
 <.> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
-<.> a function configuring the low level REST client (the same for the imperative and reactive stack)
+<.> a function to configure the created client (see <<elasticsearch.clients.configuration.callbacks>>), can be added multiple times.
 ====
 
 IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens.
 If this is used in the reactive setup, the supplier function *must not* block!
+
+[[elasticsearch.clients.configuration.callbacks]]
+=== Client configuration callbacks
+
+The `ClientConfiguration` class offers the most common parameters to configure the client. In the case this is not 
+enough, the user can add callback functions by using the `withClientConfigurer(ClientConfigurationCallback<?>)` method.
+
+The following callbacks are provided:
+
+==== Configuration of the low level Elasticsearch `RestClient`:
+
+====
+[source,java]
+----
+ClientConfiguration.builder()
+    .withClientConfigurer(ElasticsearchClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
+        // configure the Elasticsearch RestClient
+        return restClientBuilder;
+    }))
+    .build();
+----
+====
+
+==== Configuration of the HttpAsyncClient used by the low level Elasticsearch `RestClient`:
+
+====
+[source,java]
+----
+ClientConfiguration.builder()
+    .withClientConfigurer(ElasticsearchClients.ElasticsearchHttpClientConfigurationCallback.from(httpAsyncClientBuilder -> {
+        // configure the HttpAsyncClient
+        return httpAsyncClientBuilder;
+    }))
+    .build();
+----
+====
+
 
 === Elasticsearch 7 compatibility headers
 

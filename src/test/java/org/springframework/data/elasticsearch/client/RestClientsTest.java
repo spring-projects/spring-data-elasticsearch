@@ -103,7 +103,8 @@ public class RestClientsTest {
 			defaultHeaders.add("def2", "def2-1");
 
 			AtomicInteger supplierCount = new AtomicInteger(1);
-			AtomicInteger clientConfigurerCount = new AtomicInteger(0);
+			AtomicInteger httpClientConfigurerCount = new AtomicInteger(0);
+			AtomicInteger restClientConfigurerCount = new AtomicInteger(0);
 
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
 			configurationBuilder //
@@ -120,25 +121,35 @@ public class RestClientsTest {
 			if (clientUnderTestFactory instanceof ERHLCUnderTestFactory) {
 				configurationBuilder
 						.withClientConfigurer(RestClients.RestClientConfigurationCallback.from(httpClientBuilder -> {
-							clientConfigurerCount.incrementAndGet();
+							httpClientConfigurerCount.incrementAndGet();
 							return httpClientBuilder;
 						}));
 			} else if (clientUnderTestFactory instanceof ReactiveERHLCUnderTestFactory) {
 				configurationBuilder.withClientConfigurer(ReactiveRestClients.WebClientConfigurationCallback.from(webClient -> {
-					clientConfigurerCount.incrementAndGet();
+					httpClientConfigurerCount.incrementAndGet();
 					return webClient;
 				}));
 			} else if (clientUnderTestFactory instanceof ELCUnderTestFactory) {
 				configurationBuilder.withClientConfigurer(
-						ElasticsearchClients.ElasticsearchClientConfigurationCallback.from(httpClientBuilder -> {
-							clientConfigurerCount.incrementAndGet();
+						ElasticsearchClients.ElasticsearchHttpClientConfigurationCallback.from(httpClientBuilder -> {
+							httpClientConfigurerCount.incrementAndGet();
 							return httpClientBuilder;
+						}));
+				configurationBuilder.withClientConfigurer(
+						ElasticsearchClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
+							restClientConfigurerCount.incrementAndGet();
+							return restClientBuilder;
 						}));
 			} else if (clientUnderTestFactory instanceof ReactiveELCUnderTestFactory) {
 				configurationBuilder
-						.withClientConfigurer(ElasticsearchClients.ElasticsearchClientConfigurationCallback.from(webClient -> {
-							clientConfigurerCount.incrementAndGet();
+						.withClientConfigurer(ElasticsearchClients.ElasticsearchHttpClientConfigurationCallback.from(webClient -> {
+							httpClientConfigurerCount.incrementAndGet();
 							return webClient;
+						}));
+				configurationBuilder.withClientConfigurer(
+						ElasticsearchClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
+							restClientConfigurerCount.incrementAndGet();
+							return restClientBuilder;
 						}));
 			}
 
@@ -162,7 +173,8 @@ public class RestClientsTest {
 				);
 			}
 
-			assertThat(clientConfigurerCount).hasValue(1);
+			assertThat(httpClientConfigurerCount).hasValue(1);
+			assertThat(restClientConfigurerCount).hasValue(clientUnderTestFactory.getExpectedRestClientConfigCalls());
 		});
 	}
 
@@ -328,11 +340,16 @@ public class RestClientsTest {
 		}
 
 		protected abstract String getDisplayName();
+
+		protected Integer getExpectedRestClientConfigCalls() {
+			return 0;
+		}
 	}
 
 	/**
 	 * {@link ClientUnderTestFactory} implementation for the old {@link RestHighLevelClient}.
 	 */
+	@Deprecated
 	static class ERHLCUnderTestFactory extends ClientUnderTestFactory {
 
 		@Override
@@ -363,7 +380,6 @@ public class RestClientsTest {
 				}
 			};
 		}
-
 	}
 
 	/**
@@ -374,6 +390,11 @@ public class RestClientsTest {
 		@Override
 		protected String getDisplayName() {
 			return "ElasticsearchClient";
+		}
+
+		@Override
+		protected Integer getExpectedRestClientConfigCalls() {
+			return 1;
 		}
 
 		@Override
@@ -403,6 +424,7 @@ public class RestClientsTest {
 	 * {@link ClientUnderTestFactory} implementation for the
 	 * {@link org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchClient}.
 	 */
+	@Deprecated
 	static class ReactiveERHLCUnderTestFactory extends ClientUnderTestFactory {
 
 		@Override
@@ -444,6 +466,11 @@ public class RestClientsTest {
 		@Override
 		protected String getDisplayName() {
 			return "ReactiveElasticsearchClient (ELC based)";
+		}
+
+		@Override
+		protected Integer getExpectedRestClientConfigCalls() {
+			return 1;
 		}
 
 		@Override
