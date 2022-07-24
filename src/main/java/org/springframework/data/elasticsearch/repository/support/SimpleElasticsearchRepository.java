@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.springframework.util.CollectionUtils.*;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,11 +26,9 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
@@ -152,24 +148,12 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		Assert.notNull(ids, "ids can't be null.");
 
 		List<T> result = new ArrayList<>();
-		Query idQuery = getIdQuery(ids);
-		if (isEmpty(idQuery.getIds())) {
-			return result;
-		}
+		Query query = getIdQuery(ids);
 
-		List<MultiGetItem<T>> multiGetItems = execute(
-				operations -> operations.multiGet(idQuery, entityClass, getIndexCoordinates()));
-
-		if (multiGetItems != null) {
-			multiGetItems.forEach(multiGetItem -> {
-
-				if (multiGetItem.hasItem()) {
-					result.add(multiGetItem.getItem());
-				}
-			});
-		}
-
-		return result;
+		List<SearchHit<T>> searchHitList = execute(
+				operations -> operations.search(query, entityClass, getIndexCoordinates()).getSearchHits());
+		// noinspection ConstantConditions
+		return (List<T>) SearchHitSupport.unwrapSearchHits(searchHitList);
 	}
 
 	@Override
@@ -339,7 +323,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	private Query getIdQuery(Iterable<? extends ID> ids) {
 		List<String> stringIds = stringIdsRepresentation(ids);
 
-		return new NativeSearchQueryBuilder().withIds(stringIds).build();
+		return operations.idsQuery(stringIds);
 	}
 	// endregion
 
