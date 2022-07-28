@@ -30,6 +30,7 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.expression.MapAccessor;
 import org.springframework.core.CollectionFactory;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.ConverterNotFoundException;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.convert.CustomConversions;
@@ -565,6 +566,29 @@ public class MappingElasticsearchConverter
 
 			if (Enum.class.isAssignableFrom(target)) {
 				return Enum.valueOf((Class<Enum>) target, value.toString());
+			}
+
+			try {
+				return conversionService.convert(value, target);
+			} catch (ConverterNotFoundException e) {
+				return convertFromCollectionToObject(value, target);
+			}
+		}
+
+		/**
+		 * we need the conversion from a collection to the first element for example in the case when reading the
+		 * constructor parameter of an entity from a scripted return. Originally this was handle in the conversionService,
+		 * but will be removed from spring-data-commons, so we do it here
+		 */
+		@Nullable
+		private Object convertFromCollectionToObject(Object value, @Nullable Class<?> target) {
+
+			if (value.getClass().isArray()) {
+				value = Arrays.asList(value);
+			}
+
+			if (value instanceof Collection<?> collection && !collection.isEmpty()) {
+				value = collection.iterator().next();
 			}
 
 			return conversionService.convert(value, target);
