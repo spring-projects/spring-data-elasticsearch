@@ -18,17 +18,21 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
+		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
+
 		<!-- version of the RestHighLevelClient	-->
 		<elasticsearch-rhlc>7.17.5</elasticsearch-rhlc>
 		<!-- version of the new ElasticsearchClient	-->
 		<elasticsearch-java>8.3.3</elasticsearch-java>
 
-		<log4j>2.17.2</log4j>
+		<log4j>2.18.0</log4j>
 		<netty>4.1.65.Final</netty>
 
-		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
-		<testcontainers>1.16.2</testcontainers>
 		<blockhound-junit>1.0.6.RELEASE</blockhound-junit>
+		<hoverfly>0.14.2</hoverfly>
+		<jsonassert>1.5.1</jsonassert>
+		<testcontainers>1.17.3</testcontainers>
+		<wiremock>2.33.2</wiremock>
 
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 
@@ -303,14 +307,14 @@
 		<dependency>
 			<groupId>org.skyscreamer</groupId>
 			<artifactId>jsonassert</artifactId>
-			<version>1.5.0</version>
+			<version>${jsonassert}</version>
 			<scope>test</scope>
 		</dependency>
 
 		<dependency>
 			<groupId>com.github.tomakehurst</groupId>
 			<artifactId>wiremock-jre8</artifactId>
-			<version>2.32.0</version>
+			<version>${wiremock}</version>
 			<scope>test</scope>
 			<exclusions>
 				<!-- these exclusions are needed because of Elasticsearch JarHell-->
@@ -328,7 +332,7 @@
 		<dependency>
 			<groupId>io.specto</groupId>
 			<artifactId>hoverfly-java-junit5</artifactId>
-			<version>0.14.1</version>
+			<version>${hoverfly}</version>
 			<scope>test</scope>
 		</dependency>
 
