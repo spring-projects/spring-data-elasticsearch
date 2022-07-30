@@ -17,7 +17,13 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.*;
+import co.elastic.clients.elasticsearch.core.search.CompletionSuggest;
+import co.elastic.clients.elasticsearch.core.search.CompletionSuggestOption;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
+import co.elastic.clients.elasticsearch.core.search.Suggestion;
+import co.elastic.clients.elasticsearch.core.search.TotalHits;
 import co.elastic.clients.json.JsonpMapper;
 
 import java.util.ArrayList;
@@ -173,12 +179,13 @@ class SearchDocumentResponseBuilder {
 
 		List<TermSuggestion.Entry> entries = new ArrayList<>();
 		suggestionsES.forEach(suggestionES -> {
-			TermSuggest termSuggest = suggestionES.term();
-
-			TermSuggestOption optionES = termSuggest.options();
+			var termSuggest = suggestionES.term();
+			var termSuggestOptions = termSuggest.options();
 			List<TermSuggestion.Entry.Option> options = new ArrayList<>();
-			options.add(new TermSuggestion.Entry.Option(optionES.text(), null, optionES.score(), null,
-					Math.toIntExact(optionES.freq())));
+			termSuggestOptions.forEach(optionES -> {
+				options.add(new TermSuggestion.Entry.Option(optionES.text(), null, optionES.score(), null,
+						Math.toIntExact(optionES.freq())));
+			});
 			entries.add(new TermSuggestion.Entry(termSuggest.text(), termSuggest.offset(), termSuggest.length(), options));
 		});
 		return new TermSuggestion(name, suggestionsES.size(), entries, null);
@@ -188,10 +195,12 @@ class SearchDocumentResponseBuilder {
 
 		List<PhraseSuggestion.Entry> entries = new ArrayList<>();
 		suggestionsES.forEach(suggestionES -> {
-			PhraseSuggest phraseSuggest = suggestionES.phrase();
-			PhraseSuggestOption optionES = phraseSuggest.options();
+			var phraseSuggest = suggestionES.phrase();
+			var phraseSuggestOptions = phraseSuggest.options();
 			List<PhraseSuggestion.Entry.Option> options = new ArrayList<>();
-			options.add(new PhraseSuggestion.Entry.Option(optionES.text(), optionES.highlighted(), null, null));
+			phraseSuggestOptions.forEach(optionES -> {
+				options.add(new PhraseSuggestion.Entry.Option(optionES.text(), optionES.highlighted(), null, null));
+			});
 			entries.add(new PhraseSuggestion.Entry(phraseSuggest.text(), phraseSuggest.offset(), phraseSuggest.length(),
 					options, null));
 		});

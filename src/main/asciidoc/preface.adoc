@@ -29,15 +29,15 @@ Requires an installation of https://www.elastic.co/products/elasticsearch[Elasti
 [[preface.versions]]
 === Versions
 
-The following table shows the Elasticsearch versions that are used by Spring Data release trains and version of 
-Spring Data Elasticsearch included in that, as well as the Spring Boot versions referring to that particular Spring 
-Data release train. The Elasticsearch version given shows with which client libraries Spring Data Elasticsearch was 
+The following table shows the Elasticsearch versions that are used by Spring Data release trains and version of
+Spring Data Elasticsearch included in that, as well as the Spring Boot versions referring to that particular Spring
+Data release train. The Elasticsearch version given shows with which client libraries Spring Data Elasticsearch was
 built and tested.
 
 [cols="^,^,^,^,^",options="header"]
 |===
 | Spring Data Release Train | Spring Data Elasticsearch | Elasticsearch | Spring Framework | Spring Boot
-| 2022.0 (Turing) | 5.0.x | 8.3.2 | 6.0.x | 3.0.x?
+| 2022.0 (Turing) | 5.0.x | 8.3.3 | 6.0.x | 3.0.x?
 | 2021.2 (Raj) | 4.4.x | 7.17.3 | 5.3.x | 2.7.x
 | 2021.1 (Q) | 4.3.x | 7.15.2 | 5.3.x | 2.6.x
 | 2021.0 (Pascal) | 4.2.xfootnote:oom[Out of maintenance] | 7.12.0 | 5.3.x | 2.5.x
@@ -49,5 +49,5 @@ built and tested.
 | Ingallsfootnote:oom[] | 2.1.xfootnote:oom[] | 2.4.0 | 4.3.25 | 1.5.x
 |===
 
-Support for upcoming versions of Elasticsearch is being tracked and general compatibility should be given assuming 
+Support for upcoming versions of Elasticsearch is being tracked and general compatibility should be given assuming
 the usage of the <<elasticsearch.operations,ElasticsearchOperations interface>>.
