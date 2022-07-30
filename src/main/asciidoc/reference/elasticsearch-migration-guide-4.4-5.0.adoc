@@ -1,7 +1,7 @@
 [[elasticsearch-migration-guide-4.4-5.0]]
 = Upgrading from 4.4.x to 5.0.x
 
-This section describes breaking changes from version 4.4.x to 5.0.x and how removed features can be replaced by new 
+This section describes breaking changes from version 4.4.x to 5.0.x and how removed features can be replaced by new
 introduced features.
 
 [[elasticsearch-migration-guide-4.4-4.5.deprecations]]
@@ -9,8 +9,8 @@ introduced features.
 
 === `org.springframework.data.elasticsearch.client.erhlc` package
 
-See <<elasticsearch-migration-guide-4.4-5.0.breaking-changes-packages>>, all classes in this package have been 
-deprecated, as the default client implementations to use are the ones based on the new Java Client from 
+See <<elasticsearch-migration-guide-4.4-5.0.breaking-changes-packages>>, all classes in this package have been
+deprecated, as the default client implementations to use are the ones based on the new Java Client from
 Elasticsearch, see <<elasticsearch-migration-guide-4.4-5.0.new-clients>>
 
 [[elasticsearch-migration-guide-4.4-5.0.breaking-changes]]
@@ -20,33 +20,33 @@ Elasticsearch, see <<elasticsearch-migration-guide-4.4-5.0.new-clients>>
 
 ==== suggest calls in operations interfaces have been removed
 
-Both `SearchOperations` and `ReactiveSearchOperations` had deprecated calls that were using Elasticsearch classes as 
+Both `SearchOperations` and `ReactiveSearchOperations` had deprecated calls that were using Elasticsearch classes as
 parameters. These now have been removed and so the dependency on Elasticsearch classes in these APIs has been cleaned.
 
 [[elasticsearch-migration-guide-4.4-5.0.breaking-changes-packages]]
 === Package changes
 
-All the classes that are using or depend on the deprecated Elasticsearch `RestHighLevelClient` have been moved to the 
-package `org.springframework.data.elasticsearch.client.erhlc`. By this change we now have a clear separation of code 
-using the old deprecated Elasticsearch libraries, code using the new Elasticsearch client and code that is 
+All the classes that are using or depend on the deprecated Elasticsearch `RestHighLevelClient` have been moved to the
+package `org.springframework.data.elasticsearch.client.erhlc`. By this change we now have a clear separation of code
+using the old deprecated Elasticsearch libraries, code using the new Elasticsearch client and code that is
 independent of the client implementation. Also the reactive implementation that was provided up to now has been moved
 here, as this implementation contains code that was copied and adapted from Elasticsearch libraries.
 
-If you are using `ElasticsearchRestTemplate` directly and not the `ElasticsearchOperations` interface you'll need to 
+If you are using `ElasticsearchRestTemplate` directly and not the `ElasticsearchOperations` interface you'll need to
 adjust your imports as well.
 
-When working with the `NativeSearchQuery` class, you'll need to switch to the `NativeQuery` class, which can take a 
+When working with the `NativeSearchQuery` class, you'll need to switch to the `NativeQuery` class, which can take a
 `Query` instance comign from the new Elasticsearch client libraries. You'll find plenty of examples in the test code.
 
 [[elasticsearch-migration-guide-4.4-5.0.new-clients]]
 == New Elasticsearch client
 
-Spring Data Elasticsearch  now uses the new `ElasticsearchClient` and has 
+Spring Data Elasticsearch  now uses the new `ElasticsearchClient` and has
 deprecated the use of the previous `RestHighLevelClient`.
 
 === Imperative style configuration
 
-To configure Spring Data Elasticsearch to use the new client, it is necessary to create a configuration bean that 
+To configure Spring Data Elasticsearch to use the new client, it is necessary to create a configuration bean that
 derives from `org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration`:
 
 ====
@@ -101,7 +101,7 @@ With this configuration, the following beans will be available in the Spring app
 [[elasticsearch-migration-guide-4.4-5.0.old-client]]
 === Still want to use the old client?
 
-The old deprecated `RestHighLevelClient` can still be used, but you will need to add the dependency explicitly to 
+The old deprecated `RestHighLevelClient` can still be used, but you will need to add the dependency explicitly to
 your application as Spring Data Elasticsearch does not pull it in automatically anymore:
 
 ====
@@ -122,4 +122,4 @@ your application as Spring Data Elasticsearch does not pull it in automatically 
 ----
 ====
 
-Make sure to specify the version 7.17.5 explicitly, otherwise maven will resolve to 8.3.2, and this does not exist.
+Make sure to specify the version 7.17.5 explicitly, otherwise maven will resolve to 8.3.3, and this does not exist.
