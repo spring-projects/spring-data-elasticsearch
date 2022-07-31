@@ -275,11 +275,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String getClusterVersion() {
-		return execute(client -> {
-			try (var ignored = DANGEROUS_disableRequiredPropertiesCheck(true)) {
-				return client.info().version().number();
-			}
-		});
+		return execute(client -> client.info().version().number());
 	}
 
 	@Override
