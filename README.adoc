@@ -191,7 +191,7 @@ Attach a link to your code or a compressed file containing your code.
 == Building from Source
 
 You don’t need to build from source to use Spring Data (binaries in https://repo.spring.io[repo.spring.io]), but if you want to try out the latest and greatest, Spring Data can be easily built with the https://github.com/takari/maven-wrapper[maven wrapper].
-You also need JDK 1.8.
+You also need JDK 17 or above.
 
 [source,bash]
 ----
