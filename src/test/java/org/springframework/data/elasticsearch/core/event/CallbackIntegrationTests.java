@@ -241,7 +241,7 @@ abstract class CallbackIntegrationTests {
 		@Id private String id;
 		@Nullable private String text;
 
-		@ReadOnlyProperty
+//		@ReadOnlyProperty
 		@Nullable private String className;
 
 		@Nullable
