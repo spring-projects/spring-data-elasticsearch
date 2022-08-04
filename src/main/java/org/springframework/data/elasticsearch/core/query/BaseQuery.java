@@ -47,8 +47,8 @@ import org.springframework.util.Assert;
  */
 public class BaseQuery implements Query {
 
-	protected Pageable pageable = DEFAULT_PAGE;
 	@Nullable protected Sort sort;
+	protected Pageable pageable = DEFAULT_PAGE;
 	protected List<String> fields = new ArrayList<>();
 	@Nullable protected List<String> storedFields;
 	@Nullable protected SourceFilter sourceFilter;
@@ -67,11 +67,11 @@ public class BaseQuery implements Query {
 	@Nullable protected Duration timeout;
 	private boolean explain = false;
 	@Nullable protected List<Object> searchAfter;
+	@Nullable protected List<IndexBoost> indicesBoost;
 	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
 	@Nullable protected Boolean requestCache;
 	protected List<IdWithRouting> idsWithRouting = Collections.emptyList();
 	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
-	@Nullable protected List<IndexBoost> indicesBoost;
 
 	public BaseQuery() {}
 
@@ -79,17 +79,28 @@ public class BaseQuery implements Query {
 		this.sort = builder.getSort();
 		// do a setPageable after setting the sort, because the pageable may contain an additional sort
 		this.setPageable(builder.getPageable() != null ? builder.getPageable() : DEFAULT_PAGE);
-		this.ids = builder.getIds();
-		this.trackScores = builder.getTrackScores();
-		this.maxResults = builder.getMaxResults();
-		this.indicesOptions = builder.getIndicesOptions();
-		this.minScore = builder.getMinScore();
-		this.preference = builder.getPreference();
-		this.sourceFilter = builder.getSourceFilter();
 		this.fields = builder.getFields();
-		this.highlightQuery = builder.highlightQuery;
+		this.storedFields = builder.getStoredFields();
+		this.sourceFilter = builder.getSourceFilter();
+		this.minScore = builder.getMinScore();
+		this.ids = builder.getIds().isEmpty() ? null : builder.getIds();
 		this.route = builder.getRoute();
+		this.searchType = builder.getSearchType();
+		this.indicesOptions = builder.getIndicesOptions();
+		this.trackScores = builder.getTrackScores();
+		this.preference = builder.getPreference();
+		this.maxResults = builder.getMaxResults();
+		this.highlightQuery = builder.getHighlightQuery();
+		this.trackTotalHits = builder.getTrackTotalHits();
+		this.trackTotalHitsUpTo = builder.getTrackTotalHitsUpTo();
+		this.scrollTime = builder.getScrollTime();
+		this.timeout = builder.getTimeout();
+		this.explain = builder.getExplain();
+		this.searchAfter = builder.getSearchAfter();
 		this.indicesBoost = builder.getIndicesBoost();
+		this.rescorerQueries = builder.getRescorerQueries();
+		this.requestCache = builder.getRequestCache();
+		this.idsWithRouting = builder.getIdsWithRouting();
 	}
 
 	@Override

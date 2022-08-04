@@ -46,7 +46,6 @@ public class NativeQuery extends BaseQuery {
 	@Nullable private Suggester suggester;
 	@Nullable private FieldCollapse fieldCollapse;
 	private List<ScriptedField> scriptedFields = Collections.emptyList();
-	private List<RescorerQuery> rescorerQueries = Collections.emptyList();
 
 	public NativeQuery(NativeQueryBuilder builder) {
 		super(builder);
@@ -56,7 +55,6 @@ public class NativeQuery extends BaseQuery {
 		this.suggester = builder.getSuggester();
 		this.fieldCollapse = builder.getFieldCollapse();
 		this.scriptedFields = builder.getScriptedFields();
-		this.rescorerQueries = builder.getRescorerQueries();
 	}
 
 	public NativeQuery(@Nullable Query query) {
@@ -93,10 +91,5 @@ public class NativeQuery extends BaseQuery {
 
 	public List<ScriptedField> getScriptedFields() {
 		return scriptedFields;
-	}
-
-	@Override
-	public List<RescorerQuery> getRescorerQueries() {
-		return rescorerQueries;
 	}
 }
