@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,7 +24,9 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.RuntimeField;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * base class for query builders. The different implementations of {@link Query} should derive from this class and then
@@ -34,28 +37,51 @@ import org.springframework.lang.Nullable;
  */
 public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQueryBuilder<Q, SELF>> {
 
-	@Nullable private Pageable pageable;
 	@Nullable private Sort sort;
-	@Nullable private Integer maxResults;
-	@Nullable private Collection<String> ids;
-	private boolean trackScores;
-	@Nullable protected IndicesOptions indicesOptions;
-	private float minScore;
-	@Nullable private String preference;
+	@Nullable private Pageable pageable;
+	private final List<String> fields = new ArrayList<>();
+	@Nullable private List<String> storedFields;
 	@Nullable private SourceFilter sourceFilter;
-	private List<String> fields = new ArrayList<>();
-	@Nullable protected HighlightQuery highlightQuery;
+	private float minScore;
+	private final Collection<String> ids = new ArrayList<>();
 	@Nullable private String route;
+	protected Query.SearchType searchType = Query.SearchType.QUERY_THEN_FETCH;
+	@Nullable protected IndicesOptions indicesOptions;
+	private boolean trackScores;
+	@Nullable private String preference;
+	@Nullable private Integer maxResults;
+	@Nullable protected HighlightQuery highlightQuery;
+	@Nullable private Boolean trackTotalHits;
+	@Nullable protected Integer trackTotalHitsUpTo;
+	@Nullable protected Duration scrollTime;
+	@Nullable protected Duration timeout;
+	boolean explain = false;
+	@Nullable protected List<Object> searchAfter;
+
 	@Nullable private List<IndexBoost> indicesBoost;
+	protected final List<RescorerQuery> rescorerQueries = new ArrayList<>();
+
+	@Nullable protected Boolean requestCache;
+	protected final List<Query.IdWithRouting> idsWithRouting = new ArrayList<>();
+	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
+
+	@Nullable
+	public Sort getSort() {
+		return sort;
+	}
 
 	@Nullable
 	public Pageable getPageable() {
 		return pageable;
 	}
 
+	public List<String> getFields() {
+		return fields;
+	}
+
 	@Nullable
-	public Sort getSort() {
-		return sort;
+	public List<String> getStoredFields() {
+		return storedFields;
 	}
 
 	@Nullable
@@ -91,10 +117,6 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return sourceFilter;
 	}
 
-	public List<String> getFields() {
-		return fields;
-	}
-
 	@Nullable
 	public HighlightQuery getHighlightQuery() {
 		return highlightQuery;
@@ -108,6 +130,56 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	@Nullable
 	public List<IndexBoost> getIndicesBoost() {
 		return indicesBoost;
+	}
+
+	public Query.SearchType getSearchType() {
+		return searchType;
+	}
+
+	@Nullable
+	public Boolean getTrackTotalHits() {
+		return trackTotalHits;
+	}
+
+	@Nullable
+	public Integer getTrackTotalHitsUpTo() {
+		return trackTotalHitsUpTo;
+	}
+
+	@Nullable
+	public Duration getScrollTime() {
+		return scrollTime;
+	}
+
+	@Nullable
+	public Duration getTimeout() {
+		return timeout;
+	}
+
+	public boolean getExplain() {
+		return explain;
+	}
+
+	@Nullable
+	public List<Object> getSearchAfter() {
+		return searchAfter;
+	}
+
+	@Nullable
+	public Boolean getRequestCache() {
+		return requestCache;
+	}
+
+	public List<Query.IdWithRouting> getIdsWithRouting() {
+		return idsWithRouting;
+	}
+
+	public List<RuntimeField> getRuntimeFields() {
+		return runtimeFields;
+	}
+
+	public List<RescorerQuery> getRescorerQueries() {
+		return rescorerQueries;
 	}
 
 	public SELF withPageable(Pageable pageable) {
@@ -130,12 +202,18 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	}
 
 	public SELF withIds(String... ids) {
-		this.ids = Arrays.asList(ids);
+
+		this.ids.clear();
+		this.ids.addAll(Arrays.asList(ids));
 		return self();
 	}
 
 	public SELF withIds(Collection<String> ids) {
-		this.ids = ids;
+
+		Assert.notNull(ids, "ids must not be null");
+
+		this.ids.clear();
+		this.ids.addAll(ids);
 		return self();
 	}
 
@@ -165,11 +243,17 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	}
 
 	public SELF withFields(String... fields) {
+
+		this.fields.clear();
 		Collections.addAll(this.fields, fields);
 		return self();
 	}
 
 	public SELF withFields(Collection<String> fields) {
+
+		Assert.notNull(fields, "fields must not be null");
+
+		this.fields.clear();
 		this.fields.addAll(fields);
 		return self();
 	}
@@ -184,13 +268,93 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return self();
 	}
 
-	public SELF withIndicesBoost(List<IndexBoost> indicesBoost) {
+	public SELF withIndicesBoost(@Nullable List<IndexBoost> indicesBoost) {
 		this.indicesBoost = indicesBoost;
+		return self();
+	}
+
+	public SELF withStoredFields(@Nullable List<String> storedFields) {
+		this.storedFields = storedFields;
 		return self();
 	}
 
 	public SELF withIndicesBoost(IndexBoost... indicesBoost) {
 		this.indicesBoost = Arrays.asList(indicesBoost);
+		return self();
+	}
+
+	public SELF withSearchType(Query.SearchType searchType) {
+		this.searchType = searchType;
+		return self();
+	}
+
+	public SELF withTrackTotalHits(@Nullable Boolean trackTotalHits) {
+		this.trackTotalHits = trackTotalHits;
+		return self();
+	}
+
+	public SELF withTrackTotalHitsUpTo(@Nullable Integer trackTotalHitsUpTo) {
+		this.trackTotalHitsUpTo = trackTotalHitsUpTo;
+		return self();
+	}
+
+	public SELF withTimeout(@Nullable Duration timeout) {
+		this.timeout = timeout;
+		return self();
+	}
+
+	public SELF withScrollTime(@Nullable Duration scrollTime) {
+		this.scrollTime = scrollTime;
+		return self();
+	}
+
+	public SELF withExplain(boolean explain) {
+		this.explain = explain;
+		return self();
+	}
+
+	public SELF withSearchAfter(@Nullable List<Object> searchAfter) {
+		this.searchAfter = searchAfter;
+		return self();
+	}
+
+	public SELF withRequestCache(@Nullable Boolean requestCache) {
+		this.requestCache = requestCache;
+		return self();
+	}
+
+	public SELF withIdsWithRouting(List<Query.IdWithRouting> idsWithRouting) {
+
+		Assert.notNull(idsWithRouting, "idsWithRouting must not be null");
+
+		this.idsWithRouting.clear();
+		this.idsWithRouting.addAll(idsWithRouting);
+		return self();
+	}
+
+	public SELF withRuntimeFields(List<RuntimeField> runtimeFields) {
+
+		Assert.notNull(runtimeFields, "runtimeFields must not be null");
+
+		this.runtimeFields.clear();
+		this.runtimeFields.addAll(runtimeFields);
+		return self();
+	}
+
+	public SELF withRescorerQueries(List<RescorerQuery> rescorerQueries) {
+
+		Assert.notNull(rescorerQueries, "rescorerQueries must not be null");
+
+		this.rescorerQueries.clear();
+		this.rescorerQueries.addAll(rescorerQueries);
+		return self();
+	}
+
+	public SELF withRescorerQuery(RescorerQuery rescorerQuery) {
+
+		Assert.notNull(rescorerQuery, "rescorerQuery must not be null");
+
+		this.rescorerQueries.add(rescorerQuery);
 		return self();
 	}
 

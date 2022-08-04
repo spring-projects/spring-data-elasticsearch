@@ -45,8 +45,6 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	@Nullable private Suggester suggester;
 	@Nullable private FieldCollapse fieldCollapse;
 	private final List<ScriptedField> scriptedFields = new ArrayList<>();
-	private List<RescorerQuery> rescorerQueries = new ArrayList<>();
-
 	public NativeQueryBuilder() {}
 
 	@Nullable
@@ -75,10 +73,6 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 
 	public List<ScriptedField> getScriptedFields() {
 		return scriptedFields;
-	}
-
-	public List<RescorerQuery> getRescorerQueries() {
-		return rescorerQueries;
 	}
 
 	public NativeQueryBuilder withQuery(Query query) {
@@ -132,14 +126,6 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		Assert.notNull(scriptedField, "scriptedField must not be null");
 
 		this.scriptedFields.add(scriptedField);
-		return this;
-	}
-
-	public NativeQueryBuilder withResorerQuery(RescorerQuery resorerQuery) {
-
-		Assert.notNull(resorerQuery, "resorerQuery must not be null");
-
-		this.rescorerQueries.add(resorerQuery);
 		return this;
 	}
 

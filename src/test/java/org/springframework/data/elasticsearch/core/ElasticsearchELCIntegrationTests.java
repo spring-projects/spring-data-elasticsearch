@@ -169,7 +169,7 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 								.filter(f -> f.exists(e -> e.field("rate"))) //
 								.should(s -> s.term(t -> t.field("message").value("message"))) //
 						)) //
-				.withResorerQuery( //
+				.withRescorerQuery( //
 						new RescorerQuery(NativeQuery.builder() //
 								.withQuery(q -> q //
 										.functionScore(fs -> fs //
