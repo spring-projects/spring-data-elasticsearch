@@ -15,12 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import java.time.temporal.TemporalAccessor;
-import java.util.*;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -53,7 +47,16 @@ import org.springframework.data.mapping.Parameter;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.*;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
+import org.springframework.data.mapping.model.EntityInstantiator;
+import org.springframework.data.mapping.model.EntityInstantiators;
+import org.springframework.data.mapping.model.ParameterValueProvider;
+import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
+import org.springframework.data.mapping.model.PropertyValueProvider;
+import org.springframework.data.mapping.model.SpELContext;
+import org.springframework.data.mapping.model.SpELExpressionEvaluator;
+import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.format.datetime.DateFormatterRegistrar;
@@ -62,6 +65,12 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
+
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.convert.EntityConverter} implementation based on domain type
@@ -83,12 +92,15 @@ import org.springframework.util.ObjectUtils;
 public class MappingElasticsearchConverter
 		implements ElasticsearchConverter, ApplicationContextAware, InitializingBean {
 
-	private static final String INCOMPATIBLE_TYPES = "Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions.";
-	private static final String INVALID_TYPE_TO_READ = "Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
+	private static final String INCOMPATIBLE_TYPES =
+			"Cannot convert %1$s of type %2$s into an instance of %3$s! Implement a custom Converter<%2$s, %3$s> and register it with the CustomConversions.";
+	private static final String INVALID_TYPE_TO_READ =
+			"Expected to read Document %s into type %s but didn't find a PersistentEntity for the latter!";
 
 	private static final Log LOGGER = LogFactory.getLog(MappingElasticsearchConverter.class);
 
-	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty>
+			mappingContext;
 	private final GenericConversionService conversionService;
 	private CustomConversions conversions = new ElasticsearchCustomConversions(Collections.emptyList());
 	private final SpELContext spELContext = new SpELContext(new MapAccessor());
@@ -130,8 +142,8 @@ public class MappingElasticsearchConverter
 	}
 
 	/**
-	 * Set the {@link CustomConversions} to be applied during the mapping process. <br />
-	 * Conversions are registered after {@link #afterPropertiesSet() bean initialization}.
+	 * Set the {@link CustomConversions} to be applied during the mapping process. <br /> Conversions are registered
+	 * after {@link #afterPropertiesSet() bean initialization}.
 	 *
 	 * @param conversions must not be {@literal null}.
 	 */
@@ -157,7 +169,8 @@ public class MappingElasticsearchConverter
 	@Override
 	public <R> R read(Class<R> type, Document source) {
 
-		Reader reader = new Reader(mappingContext, conversionService, conversions, typeMapper, spELContext, instantiators);
+		Reader reader =
+				new Reader(mappingContext, conversionService, conversions, typeMapper, spELContext, instantiators);
 		return reader.read(type, source);
 	}
 
@@ -175,7 +188,8 @@ public class MappingElasticsearchConverter
 	 */
 	private static class Base {
 
-		protected final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+		protected final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty>
+				mappingContext;
 		protected final ElasticsearchTypeMapper typeMapper;
 		protected final GenericConversionService conversionService;
 		protected final CustomConversions conversions;
@@ -183,7 +197,8 @@ public class MappingElasticsearchConverter
 
 		private Base(
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
-				GenericConversionService conversionService, CustomConversions conversions, ElasticsearchTypeMapper typeMapper) {
+				GenericConversionService conversionService, CustomConversions conversions,
+				ElasticsearchTypeMapper typeMapper) {
 			this.mappingContext = mappingContext;
 			this.conversionService = conversionService;
 			this.conversions = conversions;
@@ -202,7 +217,8 @@ public class MappingElasticsearchConverter
 
 		public Reader(
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
-				GenericConversionService conversionService, CustomConversions conversions, ElasticsearchTypeMapper typeMapper,
+				GenericConversionService conversionService, CustomConversions conversions,
+				ElasticsearchTypeMapper typeMapper,
 				SpELContext spELContext, EntityInstantiators instantiators) {
 
 			super(mappingContext, conversionService, conversions, typeMapper);
@@ -292,7 +308,8 @@ public class MappingElasticsearchConverter
 					map.put(key, read(defaultedValueType, (Map<String, Object>) value));
 				} else if (value instanceof List) {
 					map.put(key,
-							readCollectionOrArray(valueType != null ? valueType : ClassTypeInformation.LIST, (List<Object>) value));
+							readCollectionOrArray(valueType != null ? valueType : ClassTypeInformation.LIST,
+									(List<Object>) value));
 				} else {
 					map.put(key, getPotentiallyConvertedSimpleRead(value, rawValueType));
 				}
@@ -312,18 +329,19 @@ public class MappingElasticsearchConverter
 
 			ParameterValueProvider<ElasticsearchPersistentProperty> propertyValueProvider = creatorMetadata != null
 					&& creatorMetadata.hasParameters() ? getParameterProvider(entity, accessor, evaluator)
-							: NoOpParameterValueProvider.INSTANCE;
+					: NoOpParameterValueProvider.INSTANCE;
 
 			EntityInstantiator instantiator = instantiators.getInstantiatorFor(targetEntity);
 
-			@SuppressWarnings({ "unchecked" })
+			@SuppressWarnings({"unchecked"})
 			R instance = (R) instantiator.createInstance(targetEntity, propertyValueProvider);
 
 			if (!targetEntity.requiresPropertyPopulation()) {
 				return instance;
 			}
 
-			ElasticsearchPropertyValueProvider valueProvider = new ElasticsearchPropertyValueProvider(accessor, evaluator);
+			ElasticsearchPropertyValueProvider valueProvider =
+					new ElasticsearchPropertyValueProvider(accessor, evaluator);
 			R result = readProperties(targetEntity, instance, valueProvider);
 
 			if (source instanceof Document) {
@@ -333,7 +351,8 @@ public class MappingElasticsearchConverter
 					PersistentPropertyAccessor<R> propertyAccessor = new ConvertingPropertyAccessor<>(
 							targetEntity.getPropertyAccessor(result), conversionService);
 					// Only deal with String because ES generated Ids are strings !
-					if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
+					if (idProperty != null && idProperty.isWritable() &&
+							idProperty.getType().isAssignableFrom(String.class)) {
 						propertyAccessor.setProperty(idProperty, document.getId());
 					}
 				}
@@ -352,7 +371,8 @@ public class MappingElasticsearchConverter
 
 				if (targetEntity.hasSeqNoPrimaryTermProperty() && document.hasSeqNo() && document.hasPrimaryTerm()) {
 					if (isAssignedSeqNo(document.getSeqNo()) && isAssignedPrimaryTerm(document.getPrimaryTerm())) {
-						SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm(document.getSeqNo(), document.getPrimaryTerm());
+						SeqNoPrimaryTerm seqNoPrimaryTerm =
+								new SeqNoPrimaryTerm(document.getSeqNo(), document.getPrimaryTerm());
 						ElasticsearchPersistentProperty property = targetEntity.getRequiredSeqNoPrimaryTermProperty();
 						targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
 					}
@@ -375,10 +395,12 @@ public class MappingElasticsearchConverter
 
 			// TODO: Support for non-static inner classes via ObjectPath
 			// noinspection ConstantConditions
-			PersistentEntityParameterValueProvider<ElasticsearchPersistentProperty> parameterProvider = new PersistentEntityParameterValueProvider<>(
-					entity, provider, null);
+			PersistentEntityParameterValueProvider<ElasticsearchPersistentProperty> parameterProvider =
+					new PersistentEntityParameterValueProvider<>(
+							entity, provider, null);
 
-			return new ConverterAwareSpELExpressionParameterValueProvider(evaluator, conversionService, parameterProvider);
+			return new ConverterAwareSpELExpressionParameterValueProvider(evaluator, conversionService,
+					parameterProvider);
 		}
 
 		private boolean isAssignedSeqNo(long seqNo) {
@@ -390,14 +412,15 @@ public class MappingElasticsearchConverter
 		}
 
 		protected <R> R readProperties(ElasticsearchPersistentEntity<?> entity, R instance,
-				ElasticsearchPropertyValueProvider valueProvider) {
+									   ElasticsearchPropertyValueProvider valueProvider) {
 
-			PersistentPropertyAccessor<R> accessor = new ConvertingPropertyAccessor<>(entity.getPropertyAccessor(instance),
-					conversionService);
+			PersistentPropertyAccessor<R> accessor =
+					new ConvertingPropertyAccessor<>(entity.getPropertyAccessor(instance),
+							conversionService);
 
 			for (ElasticsearchPersistentProperty prop : entity) {
 
-				if (entity.isConstructorArgument(prop) || !prop.isReadable()) {
+				if (entity.isConstructorArgument(prop) || !prop.isReadable() || !prop.isWritable()) {
 					continue;
 				}
 
@@ -412,7 +435,7 @@ public class MappingElasticsearchConverter
 
 		@Nullable
 		protected <R> R readValue(@Nullable Object value, ElasticsearchPersistentProperty property,
-				TypeInformation<?> type) {
+								  TypeInformation<?> type) {
 
 			if (value == null) {
 				return null;
@@ -462,7 +485,8 @@ public class MappingElasticsearchConverter
 		}
 
 		private Object propertyConverterRead(ElasticsearchPersistentProperty property, Object source) {
-			PropertyValueConverter propertyValueConverter = Objects.requireNonNull(property.getPropertyValueConverter());
+			PropertyValueConverter propertyValueConverter =
+					Objects.requireNonNull(property.getPropertyValueConverter());
 
 			if (source instanceof String[]) {
 				// convert to a List
@@ -489,7 +513,7 @@ public class MappingElasticsearchConverter
 		 * Reads the given {@link Collection} into a collection of the given {@link TypeInformation}.
 		 *
 		 * @param targetType must not be {@literal null}.
-		 * @param source must not be {@literal null}.
+		 * @param source     must not be {@literal null}.
 		 * @return the converted {@link Collection} or array, will never be {@literal null}.
 		 */
 		@SuppressWarnings("unchecked")
@@ -543,7 +567,7 @@ public class MappingElasticsearchConverter
 			return getPotentiallyConvertedSimpleRead(value, targetType.getType());
 		}
 
-		@SuppressWarnings({ "unchecked", "rawtypes" })
+		@SuppressWarnings({"unchecked", "rawtypes"})
 		@Nullable
 		private Object getPotentiallyConvertedSimpleRead(@Nullable Object value, @Nullable Class<?> target) {
 
@@ -563,7 +587,7 @@ public class MappingElasticsearchConverter
 		}
 
 		private <T> void populateScriptFields(ElasticsearchPersistentEntity<?> entity, T result,
-				SearchDocument searchDocument) {
+											  SearchDocument searchDocument) {
 			Map<String, List<Object>> fields = searchDocument.getFields();
 			entity.doWithProperties((SimplePropertyHandler) property -> {
 				if (property.isAnnotationPresent(ScriptedField.class) && fields.containsKey(property.getName())) {
@@ -581,7 +605,7 @@ public class MappingElasticsearchConverter
 		 * Compute the type to use by checking the given entity against the store type;
 		 */
 		private ElasticsearchPersistentEntity<?> computeClosestEntity(ElasticsearchPersistentEntity<?> entity,
-				Map<String, Object> source) {
+																	  Map<String, Object> source) {
 
 			TypeInformation<?> typeToUse = typeMapper.readType(source);
 
@@ -634,12 +658,13 @@ public class MappingElasticsearchConverter
 			/**
 			 * Creates a new {@link ConverterAwareSpELExpressionParameterValueProvider}.
 			 *
-			 * @param evaluator must not be {@literal null}.
+			 * @param evaluator         must not be {@literal null}.
 			 * @param conversionService must not be {@literal null}.
-			 * @param delegate must not be {@literal null}.
+			 * @param delegate          must not be {@literal null}.
 			 */
 			public ConverterAwareSpELExpressionParameterValueProvider(SpELExpressionEvaluator evaluator,
-					ConversionService conversionService, ParameterValueProvider<ElasticsearchPersistentProperty> delegate) {
+																	  ConversionService conversionService,
+																	  ParameterValueProvider<ElasticsearchPersistentProperty> delegate) {
 
 				super(evaluator, conversionService, delegate);
 			}
@@ -649,7 +674,8 @@ public class MappingElasticsearchConverter
 			 * @see org.springframework.data.mapping.model.SpELExpressionParameterValueProvider#potentiallyConvertSpelValue(java.lang.Object, org.springframework.data.mapping.PreferredConstructor.Parameter)
 			 */
 			@Override
-			protected <T> T potentiallyConvertSpelValue(Object object, Parameter<T, ElasticsearchPersistentProperty> parameter) {
+			protected <T> T potentiallyConvertSpelValue(Object object,
+														Parameter<T, ElasticsearchPersistentProperty> parameter) {
 				return readValue(object, parameter.getType());
 			}
 		}
@@ -675,7 +701,8 @@ public class MappingElasticsearchConverter
 
 		public Writer(
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
-				GenericConversionService conversionService, CustomConversions conversions, ElasticsearchTypeMapper typeMapper) {
+				GenericConversionService conversionService, CustomConversions conversions,
+				ElasticsearchTypeMapper typeMapper) {
 			super(mappingContext, conversionService, conversions, typeMapper);
 		}
 
@@ -706,13 +733,13 @@ public class MappingElasticsearchConverter
 		/**
 		 * Internal write conversion method which should be used for nested invocations.
 		 *
-		 * @param source the object to write
-		 * @param sink the write destination
+		 * @param source          the object to write
+		 * @param sink            the write destination
 		 * @param typeInformation type information for the source
 		 */
 		@SuppressWarnings("unchecked")
 		private void writeInternal(@Nullable Object source, Map<String, Object> sink,
-				@Nullable TypeInformation<?> typeInformation) {
+								   @Nullable TypeInformation<?> typeInformation) {
 
 			if (null == source) {
 				return;
@@ -749,18 +776,19 @@ public class MappingElasticsearchConverter
 		 * Internal write conversion method which should be used for nested invocations.
 		 *
 		 * @param source the object to write
-		 * @param sink the write destination
+		 * @param sink   the write destination
 		 * @param entity entity for the source
 		 */
 		private void writeInternal(@Nullable Object source, Map<String, Object> sink,
-				@Nullable ElasticsearchPersistentEntity<?> entity) {
+								   @Nullable ElasticsearchPersistentEntity<?> entity) {
 
 			if (source == null) {
 				return;
 			}
 
 			if (null == entity) {
-				throw new MappingException("No mapping metadata found for entity of type " + source.getClass().getName());
+				throw new MappingException(
+						"No mapping metadata found for entity of type " + source.getClass().getName());
 			}
 
 			PersistentPropertyAccessor<?> accessor = entity.getPropertyAccessor(source);
@@ -790,12 +818,12 @@ public class MappingElasticsearchConverter
 		/**
 		 * Writes the given {@link Map} to the given {@link Document} considering the given {@link TypeInformation}.
 		 *
-		 * @param source must not be {@literal null}.
-		 * @param sink must not be {@literal null}.
+		 * @param source       must not be {@literal null}.
+		 * @param sink         must not be {@literal null}.
 		 * @param propertyType must not be {@literal null}.
 		 */
 		private Map<String, Object> writeMapInternal(Map<?, ?> source, Map<String, Object> sink,
-				TypeInformation<?> propertyType) {
+													 TypeInformation<?> propertyType) {
 
 			for (Map.Entry<?, ?> entry : source.entrySet()) {
 
@@ -809,7 +837,8 @@ public class MappingElasticsearchConverter
 						sink.put(simpleKey, getPotentiallyConvertedSimpleWrite(value, Object.class));
 					} else if (value instanceof Collection || value.getClass().isArray()) {
 						sink.put(simpleKey,
-								writeCollectionInternal(asCollection(value), propertyType.getMapValueType(), new ArrayList<>()));
+								writeCollectionInternal(asCollection(value), propertyType.getMapValueType(),
+										new ArrayList<>()));
 					} else {
 						Map<String, Object> document = Document.create();
 						TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType()
@@ -830,12 +859,12 @@ public class MappingElasticsearchConverter
 		 * Populates the given {@link Collection sink} with converted values from the given {@link Collection source}.
 		 *
 		 * @param source the collection to create a {@link Collection} for, must not be {@literal null}.
-		 * @param type the {@link TypeInformation} to consider or {@literal null} if unknown.
-		 * @param sink the {@link Collection} to write to.
+		 * @param type   the {@link TypeInformation} to consider or {@literal null} if unknown.
+		 * @param sink   the {@link Collection} to write to.
 		 */
 		@SuppressWarnings("unchecked")
 		private List<Object> writeCollectionInternal(Collection<?> source, @Nullable TypeInformation<?> type,
-				Collection<?> sink) {
+													 Collection<?> sink) {
 
 			TypeInformation<?> componentType = null;
 
@@ -865,7 +894,7 @@ public class MappingElasticsearchConverter
 		}
 
 		private void writeProperties(ElasticsearchPersistentEntity<?> entity, PersistentPropertyAccessor<?> accessor,
-				MapValueAccessor sink) {
+									 MapValueAccessor sink) {
 
 			for (ElasticsearchPersistentProperty property : entity) {
 
@@ -961,16 +990,16 @@ public class MappingElasticsearchConverter
 		}
 
 		/**
-		 * Adds custom typeInformation information to the given {@link Map} if necessary. That is if the value is not the
-		 * same as the one given. This is usually the case if you store a subtype of the actual declared typeInformation of
-		 * the property.
+		 * Adds custom typeInformation information to the given {@link Map} if necessary. That is if the value is not
+		 * the same as the one given. This is usually the case if you store a subtype of the actual declared
+		 * typeInformation of the property.
 		 *
 		 * @param source must not be {@literal null}.
-		 * @param sink must not be {@literal null}.
-		 * @param type type to compare to
+		 * @param sink   must not be {@literal null}.
+		 * @param type   type to compare to
 		 */
 		private void addCustomTypeKeyIfNecessary(Object source, Map<String, Object> sink,
-				@Nullable TypeInformation<?> type) {
+												 @Nullable TypeInformation<?> type) {
 
 			if (!writeTypeHints) {
 				return;
@@ -1015,9 +1044,9 @@ public class MappingElasticsearchConverter
 		}
 
 		/**
-		 * Checks whether we have a custom conversion registered for the given value into an arbitrary simple Elasticsearch
-		 * type. Returns the converted value if so. If not, we perform special enum handling or simply return the value as
-		 * is.
+		 * Checks whether we have a custom conversion registered for the given value into an arbitrary simple
+		 * Elasticsearch type. Returns the converted value if so. If not, we perform special enum handling or simply
+		 * return the value as is.
 		 *
 		 * @param value value to convert
 		 */
@@ -1057,7 +1086,8 @@ public class MappingElasticsearchConverter
 		}
 
 		private Object propertyConverterWrite(ElasticsearchPersistentProperty property, Object value) {
-			PropertyValueConverter propertyValueConverter = Objects.requireNonNull(property.getPropertyValueConverter());
+			PropertyValueConverter propertyValueConverter =
+					Objects.requireNonNull(property.getPropertyValueConverter());
 
 			if (value instanceof List) {
 				value = ((List<?>) value).stream().map(propertyValueConverter::write).collect(Collectors.toList());
@@ -1073,16 +1103,17 @@ public class MappingElasticsearchConverter
 		 * Writes the given {@link Collection} using the given {@link ElasticsearchPersistentProperty} information.
 		 *
 		 * @param collection must not be {@literal null}.
-		 * @param property must not be {@literal null}.
+		 * @param property   must not be {@literal null}.
 		 */
 		protected List<Object> createCollection(Collection<?> collection, ElasticsearchPersistentProperty property) {
-			return writeCollectionInternal(collection, property.getTypeInformation(), new ArrayList<>(collection.size()));
+			return writeCollectionInternal(collection, property.getTypeInformation(),
+					new ArrayList<>(collection.size()));
 		}
 
 		/**
 		 * Writes the given {@link Map} using the given {@link ElasticsearchPersistentProperty} information.
 		 *
-		 * @param map must not {@literal null}.
+		 * @param map      must not {@literal null}.
 		 * @param property must not be {@literal null}.
 		 */
 		protected Map<String, Object> createMap(Map<?, ?> map, ElasticsearchPersistentProperty property) {
@@ -1152,12 +1183,12 @@ public class MappingElasticsearchConverter
 
 				if (sourceFilter.getIncludes() != null) {
 					includes = updateFieldNames(Arrays.asList(sourceFilter.getIncludes()), persistentEntity)
-							.toArray(new String[] {});
+							.toArray(new String[]{});
 				}
 
 				if (sourceFilter.getExcludes() != null) {
 					excludes = updateFieldNames(Arrays.asList(sourceFilter.getExcludes()), persistentEntity)
-							.toArray(new String[] {});
+							.toArray(new String[]{});
 				}
 
 				query.addSourceFilter(new FetchSourceFilter(includes, excludes));

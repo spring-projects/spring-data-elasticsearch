@@ -27,7 +27,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
@@ -119,7 +118,6 @@ public abstract class ReactiveCallbackIntegrationTests {
 		@Id private String id;
 		private String text;
 
-		@ReadOnlyProperty
 		@Nullable private String className;
 
 		public SampleEntity(String id, String text) {

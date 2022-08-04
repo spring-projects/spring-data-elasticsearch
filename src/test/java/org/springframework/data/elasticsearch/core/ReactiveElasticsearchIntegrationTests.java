@@ -49,7 +49,9 @@ import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -1156,6 +1158,23 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.verifyComplete();
 	}
 
+	@Test // #2230
+	@DisplayName("should work with readonly id")
+	void shouldWorkWithReadonlyId() {
+
+		ReadonlyIdEntity entity = new ReadonlyIdEntity();
+		entity.setPart1("foo");
+		entity.setPart2("bar");
+
+		operations.save(entity).block();
+
+		operations.get(entity.getId(), ReadonlyIdEntity.class) //
+				.as(StepVerifier::create) //
+				.assertNext(readEntity -> { //
+					assertThat(readEntity.getPart1()).isEqualTo(entity.getPart1()); //
+					assertThat(readEntity.getPart2()).isEqualTo(entity.getPart2()); //
+				}).verifyComplete();
+	}
 	// endregion
 
 	// region Helper functions
@@ -1487,6 +1506,36 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		public String toString() {
 			return "ImmutableEntity{" + "id='" + id + '\'' + ", text='" + text + '\'' + ", seqNoPrimaryTerm="
 					+ seqNoPrimaryTerm + '}';
+		}
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}-readonly-id")
+	static class ReadonlyIdEntity {
+		@Field(type = FieldType.Keyword) private String part1;
+
+		@Field(type = FieldType.Keyword) private String part2;
+
+		@Id
+		@ReadOnlyProperty
+		@AccessType(AccessType.Type.PROPERTY)
+		public String getId() {
+			return part1 + '-' + part2;
+		}
+
+		public String getPart1() {
+			return part1;
+		}
+
+		public void setPart1(String part1) {
+			this.part1 = part1;
+		}
+
+		public String getPart2() {
+			return part2;
+		}
+
+		public void setPart2(String part2) {
+			this.part2 = part2;
 		}
 	}
 	// endregion
