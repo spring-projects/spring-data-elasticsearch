@@ -342,7 +342,7 @@ public class MappingElasticsearchConverter
 					PersistentPropertyAccessor<R> propertyAccessor = new ConvertingPropertyAccessor<>(
 							targetEntity.getPropertyAccessor(result), conversionService);
 					// Only deal with String because ES generated Ids are strings !
-					if (idProperty != null && idProperty.getType().isAssignableFrom(String.class)) {
+					if (idProperty != null && idProperty.isWritable() && idProperty.getType().isAssignableFrom(String.class)) {
 						propertyAccessor.setProperty(idProperty, document.getId());
 					}
 				}
@@ -406,7 +406,7 @@ public class MappingElasticsearchConverter
 
 			for (ElasticsearchPersistentProperty prop : entity) {
 
-				if (entity.isCreatorArgument(prop) || !prop.isReadable()) {
+				if (entity.isCreatorArgument(prop) || !prop.isReadable() || !prop.isWritable()) {
 					continue;
 				}
 
