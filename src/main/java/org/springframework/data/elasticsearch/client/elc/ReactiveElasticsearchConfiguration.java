@@ -41,7 +41,7 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	 *
 	 * @return configuration, must not be {@literal null}
 	 */
-	@Bean
+	@Bean(name="elasticsearchClientConfiguration")
 	public abstract ClientConfiguration clientConfiguration();
 
 	/**
@@ -51,7 +51,7 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	 * @return RestClient
 	 */
 	@Bean
-	public RestClient restClient(ClientConfiguration clientConfiguration) {
+	public RestClient elasticsearchRestClient(ClientConfiguration clientConfiguration) {
 
 		Assert.notNull(clientConfiguration, "clientConfiguration must not be null");
 
