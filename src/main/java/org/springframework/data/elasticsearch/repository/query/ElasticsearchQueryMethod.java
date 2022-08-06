@@ -17,22 +17,31 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.annotations.SourceFilters;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchPage;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
@@ -49,15 +58,18 @@ import org.springframework.util.ClassUtils;
  * @author Mark Paluch
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Alexander Torres
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
-	private @Nullable ElasticsearchEntityMetadata<?> metadata;
+	@Nullable private ElasticsearchEntityMetadata<?> metadata;
 	protected final Method method; // private in base class, but needed here and in derived classes as well
 	@Nullable private final Query queryAnnotation;
 	@Nullable private final Highlight highlightAnnotation;
 	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
+
+	@Nullable private final SourceFilters sourceFilters;
 
 	public ElasticsearchQueryMethod(Method method, RepositoryMetadata repositoryMetadata, ProjectionFactory factory,
 			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
@@ -70,6 +82,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		this.mappingContext = mappingContext;
 		this.queryAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
 		this.highlightAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Highlight.class);
+		this.sourceFilters = AnnotatedElementUtils.findMergedAnnotation(method, SourceFilters.class);
 
 		verifyCountQueryTypes();
 	}
@@ -92,8 +105,9 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	/**
 	 * @return the query String. Must not be {@literal null} when {@link #hasAnnotatedQuery()} returns true
 	 */
+	@Nullable
 	public String getAnnotatedQuery() {
-		return queryAnnotation.value();
+		return queryAnnotation != null ? queryAnnotation.value() : null;
 	}
 
 	/**
@@ -246,4 +260,86 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		return queryAnnotation != null && queryAnnotation.count();
 	}
 
+	/**
+	 * @return {@literal true} if the method is annotated with {@link SourceFilters}.
+	 * @since 5.0
+	 */
+	public boolean hasSourceFilters() {
+		return sourceFilters != null;
+	}
+
+	/**
+	 * @return the {@link SourceFilters} annotation for this method.
+	 * @since 5.0
+	 */
+	@Nullable
+	public SourceFilters getSourceFilters() {
+		return sourceFilters;
+	}
+
+	/**
+	 * Uses the sourceFilters property to create a {@link SourceFilter} to be added to a
+	 * {@link org.springframework.data.elasticsearch.core.query.Query}
+	 *
+	 * @param parameterAccessor the accessor with the query method parameter details
+	 * @param converter {@link ElasticsearchConverter} needed to convert entity property names to the Elasticsearch field
+	 *          names and for parameter conversion when the includes or excludes are defined as parameters
+	 * @return source filter with includes and excludes for a query, {@literal null} when no {@link SourceFilters}
+	 *         annotation was set on the method.
+	 * @since 5.0
+	 */
+	@Nullable
+	SourceFilter getSourceFilter(ParameterAccessor parameterAccessor, ElasticsearchConverter converter) {
+
+		if (sourceFilters == null || (sourceFilters.includes().length == 0 && sourceFilters.excludes().length == 0)) {
+			return null;
+		}
+
+		ElasticsearchPersistentEntity<?> persistentEntity = converter.getMappingContext()
+				.getPersistentEntity(getEntityInformation().getJavaType());
+
+		StringQueryUtil stringQueryUtil = new StringQueryUtil(converter.getConversionService());
+		FetchSourceFilterBuilder fetchSourceFilterBuilder = new FetchSourceFilterBuilder();
+
+		if (sourceFilters.includes().length > 0) {
+			fetchSourceFilterBuilder
+					.withIncludes(mapParameters(sourceFilters.includes(), parameterAccessor, stringQueryUtil, persistentEntity));
+		}
+
+		if (sourceFilters.excludes().length > 0) {
+			fetchSourceFilterBuilder
+					.withExcludes(mapParameters(sourceFilters.excludes(), parameterAccessor, stringQueryUtil, persistentEntity));
+		}
+
+		return fetchSourceFilterBuilder.build();
+	}
+
+	private String[] mapParameters(String[] source, ParameterAccessor parameterAccessor, StringQueryUtil stringQueryUtil,
+			@Nullable ElasticsearchPersistentEntity<?> persistentEntity) {
+
+		List<String> unmappedFieldNames = new ArrayList<>();
+
+		for (String s : source) {
+
+			if (!s.isBlank()) {
+				String fieldName = stringQueryUtil.replacePlaceholders(s, parameterAccessor);
+				// this could be "[\"foo\",\"bar\"]", must be split
+				if (fieldName.startsWith("[") && fieldName.endsWith("]")) {
+					unmappedFieldNames.addAll( //
+							Arrays.asList(fieldName.substring(1, fieldName.length() - 2) //
+									.replaceAll("\\\"", "") //
+									.split(","))); //
+				} else {
+					unmappedFieldNames.add(fieldName);
+				}
+			}
+		}
+
+		return unmappedFieldNames.stream().map(fieldName -> {
+			ElasticsearchPersistentProperty property = persistentEntity != null
+					? persistentEntity.getPersistentProperty(fieldName)
+					: null;
+			return property != null ? property.getFieldName() : fieldName;
+		}).toArray(String[]::new);
+	}
 }

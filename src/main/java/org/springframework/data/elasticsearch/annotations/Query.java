@@ -15,8 +15,14 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.QueryAnnotation;
-import java.lang.annotation.*;
 
 /**
  * Query
@@ -34,9 +40,17 @@ import java.lang.annotation.*;
 public @interface Query {
 
 	/**
-	 * @return Elasticsearch query to be used when executing query. May contain placeholders eg. ?0
+	 * @return Elasticsearch query to be used when executing query. May contain placeholders eg. ?0. Alias for query.
 	 */
+	@AliasFor("query")
 	String value() default "";
+
+	/**
+	 * @return Elasticsearch query to be used when executing query. May contain placeholders eg. ?0. Alias for value
+	 * @since 5.0
+	 */
+	@AliasFor("value")
+	String query() default "";
 
 	/**
 	 * Named Query Named looked up by repository.
