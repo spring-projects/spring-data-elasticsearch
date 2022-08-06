@@ -129,12 +129,6 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return webClientConfigurer;
 	}
 
-	@Deprecated
-	@Override
-	public HttpClientConfigCallback getHttpClientConfigurer() {
-		return httpClientConfigurer;
-	}
-
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T> List<ClientConfigurationCallback<?>> getClientConfigurers() {

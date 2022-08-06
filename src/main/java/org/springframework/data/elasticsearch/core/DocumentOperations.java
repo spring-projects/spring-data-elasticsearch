@@ -248,20 +248,6 @@ public interface DocumentOperations {
 	/**
 	 * Delete the one object with provided id.
 	 *
-	 * @param id the document to delete
-	 * @param routing the optional routing for the document to be deleted
-	 * @param index the index from which to delete
-	 * @return documentId of the document deleted
-	 * @since 4.1
-	 * @deprecated since 4.2, use {@link ElasticsearchOperations#withRouting(RoutingResolver)} and
-	 *             {@link #delete(String, IndexCoordinates)}
-	 */
-	@Deprecated
-	String delete(String id, @Nullable String routing, IndexCoordinates index);
-
-	/**
-	 * Delete the one object with provided id.
-	 *
 	 * @param id the document ot delete
 	 * @param entityType must not be {@literal null}.
 	 * @return documentId of the document deleted

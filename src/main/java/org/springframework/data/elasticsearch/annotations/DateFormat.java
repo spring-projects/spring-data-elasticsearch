@@ -18,7 +18,9 @@ package org.springframework.data.elasticsearch.annotations;
 /**
  * Values based on reference doc - https://www.elastic.co/guide/reference/mapping/date-format/. The patterns are taken
  * from this documentation and slightly adapted so that a Java {@link java.time.format.DateTimeFormatter} produces the
- * same values as the Elasticsearch formatter.
+ * same values as the Elasticsearch formatter. Use <code>format = {}</code> to disable built-in date * formats in
+ * the @Field annotation. If you want to use only a custom date format pattern, you must set the <code>format</code> *
+ * property to empty <code>{}</code>.
  *
  * @author Jakub Vavrik
  * @author Tim te Beek
@@ -26,19 +28,6 @@ package org.springframework.data.elasticsearch.annotations;
  * @author Sascha Woo
  */
 public enum DateFormat {
-	/**
-	 * @deprecated since 4.2, will be removed in a future version. Use <code>format = {}</code> to disable built-in date
-	 *             formats in the @Field annotation.
-	 */
-	@Deprecated
-	none(""), //
-	/**
-	 * @deprecated since 4.2, will be removed in a future version.It is no longer required for using a custom date format
-	 *             pattern. If you want to use only a custom date format pattern, you must set the <code>format</code>
-	 *             property to empty <code>{}</code>.
-	 */
-	@Deprecated
-	custom(""), //
 	basic_date("uuuuMMdd"), //
 	basic_date_time("uuuuMMdd'T'HHmmss.SSSXXX"), //
 	basic_date_time_no_millis("uuuuMMdd'T'HHmmssXXX"), //

@@ -53,13 +53,6 @@ public @interface Query {
 	String query() default "";
 
 	/**
-	 * Named Query Named looked up by repository.
-	 *
-	 * @deprecated since 4.2, not implemented and used anywhere
-	 */
-	String name() default "";
-
-	/**
 	 * Returns whether the query defined should be executed as count projection.
 	 *
 	 * @return {@literal false} by default.

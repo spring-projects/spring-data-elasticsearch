@@ -13,6 +13,15 @@ See <<elasticsearch-migration-guide-4.4-5.0.breaking-changes-packages>>, all cla
 deprecated, as the default client implementations to use are the ones based on the new Java Client from
 Elasticsearch, see <<elasticsearch-migration-guide-4.4-5.0.new-clients>>
 
+=== Removal of deprecated code
+
+`DateFormat.none` and `DateFormat.custom` had been deprecated since version 4.2 and have been removed.
+
+The properties of `@Document` that were deprecated since 4.2 have been removed. Use the `@Settings` annotation for
+these.
+
+`@DynamicMapping` and `@DynamicMappingValue` have been removed. Use `@Document.dynamic` or `@Field.dynamic` instead.
+
 [[elasticsearch-migration-guide-4.4-5.0.breaking-changes]]
 == Breaking Changes
 

@@ -313,12 +313,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		return doDelete(id, routingResolver.getRouting(), index);
 	}
 
-	@Override
-	@Deprecated
-	final public String delete(String id, @Nullable String routing, IndexCoordinates index) {
-		return doDelete(id, routing, index);
-	}
-
 	protected abstract String doDelete(String id, @Nullable String routing, IndexCoordinates index);
 
 	@Override

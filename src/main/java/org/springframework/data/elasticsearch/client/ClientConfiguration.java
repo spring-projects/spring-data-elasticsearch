@@ -172,14 +172,6 @@ public interface ClientConfiguration {
 	Function<WebClient, WebClient> getWebClientConfigurer();
 
 	/**
-	 * @return the Rest Client configuration callback.
-	 * @since 4.2
-	 * @deprecated since 4.3 use {@link #getClientConfigurers()}
-	 */
-	@Deprecated
-	HttpClientConfigCallback getHttpClientConfigurer();
-
-	/**
 	 * @return the client configuration callbacks
 	 * @since 4.3
 	 */
@@ -346,29 +338,6 @@ public interface ClientConfiguration {
 		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 */
 		TerminalClientConfigurationBuilder withProxy(String proxy);
-
-		/**
-		 * set customization hook in case of a reactive configuration
-		 *
-		 * @param webClientConfigurer function to configure the WebClient
-		 * @return the {@link TerminalClientConfigurationBuilder}.
-		 * @deprecated since 4.3, use {@link #withClientConfigurer(ClientConfigurationCallback)} with
-		 *             {@link ReactiveRestClients.WebClientConfigurationCallback}
-		 */
-		@Deprecated
-		TerminalClientConfigurationBuilder withWebClientConfigurer(Function<WebClient, WebClient> webClientConfigurer);
-
-		/**
-		 * Register a {HttpClientConfigCallback} to configure the non-reactive REST client.
-		 *
-		 * @param httpClientConfigurer configuration callback, must not be null.
-		 * @return the {@link TerminalClientConfigurationBuilder}.
-		 * @since 4.2
-		 * @deprecated since 4.3, use {@link #withClientConfigurer(ClientConfigurationCallback)} with
-		 *             {@link RestClients.RestClientConfigurationCallback}
-		 */
-		@Deprecated
-		TerminalClientConfigurationBuilder withHttpClientConfigurer(HttpClientConfigCallback httpClientConfigurer);
 
 		/**
 		 * Register a {@link ClientConfigurationCallback} to configure the client.

@@ -1655,19 +1655,15 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = Wildcard, nullValue = "WILD", ignoreAbove = 42) private String wildcardWithParams;
 	}
 
-	@Document(indexName = "test-index-configure-dynamic-mapping")
-	@DynamicMapping(DynamicMappingValue.False)
+	@Document(indexName = "test-index-configure-dynamic-mapping", dynamic = Dynamic.FALSE)
 	static class DynamicMappingAnnotationEntity {
 
 		@Nullable
-		@DynamicMapping(DynamicMappingValue.Strict)
-		@Field(type = FieldType.Object) private Author author;
+		@Field(type = FieldType.Object, dynamic = Dynamic.STRICT) private Author author;
 		@Nullable
-		@DynamicMapping(DynamicMappingValue.False)
-		@Field(type = FieldType.Object) private Map<String, Object> objectMap;
+		@Field(type = FieldType.Object, dynamic = Dynamic.FALSE) private Map<String, Object> objectMap;
 		@Nullable
-		@DynamicMapping(DynamicMappingValue.False)
-		@Field(type = FieldType.Nested) private List<Map<String, Object>> nestedObjectMap;
+		@Field(type = FieldType.Nested, dynamic = Dynamic.FALSE) private List<Map<String, Object>> nestedObjectMap;
 
 		@Nullable
 		public Author getAuthor() {

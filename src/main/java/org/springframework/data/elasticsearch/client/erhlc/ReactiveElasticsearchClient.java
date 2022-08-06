@@ -81,7 +81,9 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @since 3.2
  * @see ClientConfiguration
  * @see ReactiveRestClients
+ * @deprecated since 5.0
  */
+@Deprecated
 public interface ReactiveElasticsearchClient {
 
 	/**

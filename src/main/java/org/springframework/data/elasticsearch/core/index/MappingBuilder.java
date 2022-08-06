@@ -157,7 +157,7 @@ public class MappingBuilder {
 	private class InternalBuilder {
 
 		private boolean writeTypeHints = true;
-		private List<String> excludeFromSource = new ArrayList<>();
+		private final List<String> excludeFromSource = new ArrayList<>();
 		private String nestedPropertyPrefix = "";
 
 		protected String buildPropertyMapping(ElasticsearchPersistentEntity<?> entity,
@@ -172,8 +172,11 @@ public class MappingBuilder {
 				// Dynamic templates
 				addDynamicTemplatesMapping(objectNode, entity);
 
-				mapEntity(objectNode, entity, true, "", false, FieldType.Auto, null,
-						entity.findAnnotation(DynamicMapping.class), runtimeFields);
+				org.springframework.data.elasticsearch.annotations.Document docAnnotation = entity
+						.findAnnotation(org.springframework.data.elasticsearch.annotations.Document.class);
+				var dynamicMapping = docAnnotation != null ? docAnnotation.dynamic() : null;
+
+				mapEntity(objectNode, entity, true, "", false, FieldType.Auto, null, dynamicMapping, runtimeFields);
 
 				if (!excludeFromSource.isEmpty()) {
 					ObjectNode sourceNode = objectNode.putObject(SOURCE);
@@ -209,8 +212,8 @@ public class MappingBuilder {
 
 		private void mapEntity(ObjectNode objectNode, @Nullable ElasticsearchPersistentEntity<?> entity,
 				boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType,
-				@Nullable Field parentFieldAnnotation, @Nullable DynamicMapping dynamicMapping,
-				@Nullable Document runtimeFields) throws IOException {
+				@Nullable Field parentFieldAnnotation, @Nullable Dynamic dynamicMapping, @Nullable Document runtimeFields)
+				throws IOException {
 
 			if (entity != null && entity.isAnnotationPresent(Mapping.class)) {
 				Mapping mappingAnnotation = entity.getRequiredAnnotation(Mapping.class);
@@ -258,8 +261,8 @@ public class MappingBuilder {
 
 			if (entity != null && entity.dynamic() != Dynamic.INHERIT) {
 				objectNode.put(TYPE_DYNAMIC, entity.dynamic().getMappedName());
-			} else if (dynamicMapping != null) {
-				objectNode.put(TYPE_DYNAMIC, dynamicMapping.value().getMappedName());
+			} else if (dynamicMapping != null && dynamicMapping != Dynamic.INHERIT) {
+				objectNode.put(TYPE_DYNAMIC, dynamicMapping.getMappedName());
 			}
 
 			ObjectNode propertiesNode = objectNode.putObject(FIELD_PROPERTIES);
@@ -339,7 +342,7 @@ public class MappingBuilder {
 
 			boolean isCompletionProperty = property.isCompletionProperty();
 			boolean isNestedOrObjectProperty = isNestedOrObjectProperty(property);
-			DynamicMapping dynamicMapping = property.findAnnotation(DynamicMapping.class);
+			Dynamic dynamicMapping = fieldAnnotation != null ? fieldAnnotation.dynamic() : null;
 
 			if (!isCompletionProperty && property.isEntity() && hasRelevantAnnotation(property)) {
 
@@ -475,7 +478,7 @@ public class MappingBuilder {
 		 * @throws IOException
 		 */
 		private void addSingleFieldMapping(ObjectNode propertiesNode, ElasticsearchPersistentProperty property,
-				Field annotation, boolean nestedOrObjectField, @Nullable DynamicMapping dynamicMapping) throws IOException {
+				Field annotation, boolean nestedOrObjectField, @Nullable Dynamic dynamicMapping) throws IOException {
 
 			// build the property json, if empty skip it as this is no valid mapping
 			ObjectNode fieldNode = objectMapper.createObjectNode();
@@ -490,8 +493,8 @@ public class MappingBuilder {
 			if (nestedOrObjectField) {
 				if (annotation.dynamic() != Dynamic.INHERIT) {
 					fieldNode.put(TYPE_DYNAMIC, annotation.dynamic().getMappedName());
-				} else if (dynamicMapping != null) {
-					fieldNode.put(TYPE_DYNAMIC, dynamicMapping.value().getMappedName());
+				} else if (dynamicMapping != null && dynamicMapping != Dynamic.INHERIT) {
+					fieldNode.put(TYPE_DYNAMIC, dynamicMapping.getMappedName());
 				}
 			}
 		}
@@ -531,8 +534,7 @@ public class MappingBuilder {
 		 * @throws IOException
 		 */
 		private void addMultiFieldMapping(ObjectNode propertyNode, ElasticsearchPersistentProperty property,
-				MultiField annotation, boolean nestedOrObjectField, @Nullable DynamicMapping dynamicMapping)
-				throws IOException {
+				MultiField annotation, boolean nestedOrObjectField, @Nullable Dynamic dynamicMapping) throws IOException {
 
 			// main field
 			ObjectNode mainFieldNode = objectMapper.createObjectNode();
@@ -541,8 +543,8 @@ public class MappingBuilder {
 			if (nestedOrObjectField) {
 				if (annotation.mainField().dynamic() != Dynamic.INHERIT) {
 					mainFieldNode.put(TYPE_DYNAMIC, annotation.mainField().dynamic().getMappedName());
-				} else if (dynamicMapping != null) {
-					mainFieldNode.put(TYPE_DYNAMIC, dynamicMapping.value().getMappedName());
+				} else if (dynamicMapping != null && dynamicMapping != Dynamic.INHERIT) {
+					mainFieldNode.put(TYPE_DYNAMIC, dynamicMapping.getMappedName());
 				}
 			}
 

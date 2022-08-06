@@ -50,16 +50,6 @@ public class SearchHit<T> {
 	@Nullable private final Explanation explanation;
 	private final List<String> matchedQueries = new ArrayList<>();
 
-	/**
-	 * @deprecated since 4.2 use
-	 *             {@link #SearchHit(String, String, String, float, Object[], Map, Map, NestedMetaData, Explanation, List, Object)}.
-	 */
-	@Deprecated
-	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
-			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields, T content) {
-		this(index, id, routing, score, sortValues, highlightFields, null, null, null, null, content);
-	}
-
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
 			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields,
 			@Nullable Map<String, SearchHits<?>> innerHits, @Nullable NestedMetaData nestedMetaData,

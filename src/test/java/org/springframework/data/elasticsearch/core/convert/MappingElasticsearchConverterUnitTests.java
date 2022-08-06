@@ -1730,8 +1730,7 @@ public class MappingElasticsearchConverterUnitTests {
 		@Nullable
 		@Id private String id;
 		@Nullable
-		@Field(name = "dates", type = FieldType.Date, format = DateFormat.custom,
-				pattern = "dd.MM.uuuu") private List<LocalDate> dates;
+		@Field(name = "dates", type = FieldType.Date, format = {}, pattern = "dd.MM.uuuu") private List<LocalDate> dates;
 
 		@Nullable
 		public String getId() {
