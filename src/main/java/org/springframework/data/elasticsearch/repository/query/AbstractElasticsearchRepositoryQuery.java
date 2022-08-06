@@ -16,6 +16,9 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 
@@ -31,12 +34,14 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 	protected static final int DEFAULT_STREAM_BATCH_SIZE = 500;
 	protected ElasticsearchQueryMethod queryMethod;
-	protected ElasticsearchOperations elasticsearchOperations;
+	protected final ElasticsearchOperations elasticsearchOperations;
+	protected final ElasticsearchConverter elasticsearchConverter;
 
 	public AbstractElasticsearchRepositoryQuery(ElasticsearchQueryMethod queryMethod,
 			ElasticsearchOperations elasticsearchOperations) {
 		this.queryMethod = queryMethod;
 		this.elasticsearchOperations = elasticsearchOperations;
+		this.elasticsearchConverter = elasticsearchOperations.getElasticsearchConverter();
 	}
 
 	@Override
@@ -49,4 +54,19 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	 * @since 4.2
 	 */
 	public abstract boolean isCountQuery();
+
+	protected void prepareQuery(Query query, Class<?> clazz, ParameterAccessor parameterAccessor) {
+
+		elasticsearchConverter.updateQuery(query, clazz);
+
+		if (queryMethod.hasAnnotatedHighlight()) {
+			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
+		}
+
+		var sourceFilter = queryMethod.getSourceFilter(parameterAccessor,
+				elasticsearchOperations.getElasticsearchConverter());
+		if (sourceFilter != null) {
+			query.addSourceFilter(sourceFilter);
+		}
+	}
 }

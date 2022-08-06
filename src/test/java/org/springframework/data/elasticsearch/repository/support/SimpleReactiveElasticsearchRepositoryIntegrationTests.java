@@ -23,6 +23,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,6 +48,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.annotations.SourceFilters;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -634,6 +636,98 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 	}
 
+	@Test // #2146
+	@DisplayName("should use sourceIncludes from annotation")
+	void shouldUseSourceIncludesFromAnnotation() {
+
+		var entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity).block();
+
+		repository.searchWithSourceFilterIncludesAnnotation() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(foundEntity -> { //
+					assertThat(foundEntity.getMessage()).isEqualTo("message"); //
+					assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage"); //
+					assertThat(foundEntity.getType()).isNull(); //
+					assertThat(foundEntity.getKeyword()).isNull(); //
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // #2146
+	@DisplayName("should use sourceIncludes from parameter")
+	void shouldUseSourceIncludesFromParameter() {
+
+		var entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity).block();
+
+		repository.searchBy(List.of("message", "customFieldNameMessage")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(foundEntity -> { //
+					assertThat(foundEntity.getMessage()).isEqualTo("message"); //
+					assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage"); //
+					assertThat(foundEntity.getType()).isNull(); //
+					assertThat(foundEntity.getKeyword()).isNull(); //
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // #2146
+	@DisplayName("should use sourceExcludes from annotation")
+	void shouldUseSourceExcludesFromAnnotation() {
+
+		var entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity).block();
+
+		repository.searchWithSourceFilterExcludesAnnotation() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(foundEntity -> { //
+					assertThat(foundEntity.getMessage()).isEqualTo("message"); //
+					assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage"); //
+					assertThat(foundEntity.getType()).isNull(); //
+					assertThat(foundEntity.getKeyword()).isNull(); //
+				}) //
+				.verifyComplete();
+	}
+
+	@Test // #2146
+	@DisplayName("should use source excludes from parameter")
+	void shouldUseSourceExcludesFromParameter() {
+
+		var entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity).block();
+
+		repository.findBy(List.of("type", "keyword")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(foundEntity -> { //
+					assertThat(foundEntity.getMessage()).isEqualTo("message"); //
+					assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage"); //
+					assertThat(foundEntity.getType()).isNull(); //
+					assertThat(foundEntity.getKeyword()).isNull(); //
+				}) //
+				.verifyComplete();
+	}
+
 	Mono<Void> bulkIndex(SampleEntity... entities) {
 		return operations.saveAll(Arrays.asList(entities), IndexCoordinates.of(indexNameProvider.indexName())).then();
 	}
@@ -683,6 +777,27 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		@Query("{\"bool\": {\"must\": [{ \"terms\": { \"message\": ?0 } }, { \"terms\": { \"rate\": ?1 } }] } }")
 		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageInAndRatesIn(List<String> messages, List<Integer> rates);
 
+		@Query(query = """
+				{
+					"match_all": {}
+				}
+				""")
+		@SourceFilters(includes = { "message", "customFieldNameMessage" })
+		Flux<SampleEntity> searchWithSourceFilterIncludesAnnotation();
+
+		@SourceFilters(includes = "?0")
+		Flux<SampleEntity> searchBy(Collection<String> sourceIncludes);
+
+		@Query("""
+				{
+					"match_all": {}
+				}
+				""")
+		@SourceFilters(excludes = { "type", "keyword" })
+		Flux<SampleEntity> searchWithSourceFilterExcludesAnnotation();
+
+		@SourceFilters(excludes = "?0")
+		Flux<SampleEntity> findBy(Collection<String> sourceExcludes);
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
@@ -693,10 +808,15 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		@Field(type = FieldType.Text, store = true, fielddata = true) private String type;
 		@Nullable
 		@Field(type = FieldType.Text, store = true, fielddata = true) private String message;
+		@Nullable
+		@Field(type = FieldType.Keyword) private String keyword;
+
 		@Nullable private int rate;
 		@Nullable private boolean available;
 		@Nullable
 		@Version private Long version;
+		@Field(name = "custom_field_name", type = FieldType.Text)
+		@Nullable private String customFieldNameMessage;
 
 		public SampleEntity() {}
 
@@ -734,6 +854,15 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		}
 
 		@Nullable
+		public String getKeyword() {
+			return keyword;
+		}
+
+		public void setKeyword(@Nullable String keyword) {
+			this.keyword = keyword;
+		}
+
+		@Nullable
 		public String getMessage() {
 			return message;
 		}
@@ -765,6 +894,15 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 		public void setVersion(@Nullable java.lang.Long version) {
 			this.version = version;
+		}
+
+		@Nullable
+		public String getCustomFieldNameMessage() {
+			return customFieldNameMessage;
+		}
+
+		public void setCustomFieldNameMessage(@Nullable String customFieldNameMessage) {
+			this.customFieldNameMessage = customFieldNameMessage;
 		}
 	}
 }

@@ -23,7 +23,6 @@ import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchHitsImpl;
 import org.springframework.data.elasticsearch.core.TotalHitsRelation;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -49,13 +48,11 @@ import org.springframework.util.ClassUtils;
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
 	private final PartTree tree;
-	private final ElasticsearchConverter elasticsearchConverter;
 	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
 
 	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations) {
 		super(method, elasticsearchOperations);
 		this.tree = new PartTree(queryMethod.getName(), queryMethod.getResultProcessor().getReturnedType().getDomainType());
-		this.elasticsearchConverter = elasticsearchOperations.getElasticsearchConverter();
 		this.mappingContext = elasticsearchConverter.getMappingContext();
 	}
 
@@ -66,18 +63,16 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 
 	@Override
 	public Object execute(Object[] parameters) {
-		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
-		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
 
-		CriteriaQuery query = createQuery(accessor);
+		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
+		ParametersParameterAccessor parameterAccessor = new ParametersParameterAccessor(queryMethod.getParameters(),
+				parameters);
+
+		CriteriaQuery query = createQuery(parameterAccessor);
 
 		Assert.notNull(query, "unsupported query");
 
-		elasticsearchConverter.updateQuery(query, clazz);
-
-		if (queryMethod.hasAnnotatedHighlight()) {
-			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
-		}
+		prepareQuery(query, clazz, parameterAccessor);
 
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 
@@ -89,11 +84,11 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		}
 
 		if (tree.isDelete()) {
-			result = countOrGetDocumentsForDelete(query, accessor);
+			result = countOrGetDocumentsForDelete(query, parameterAccessor);
 			elasticsearchOperations.delete(query, clazz, index);
 			elasticsearchOperations.indexOps(index).refresh();
 		} else if (queryMethod.isPageQuery()) {
-			query.setPageable(accessor.getPageable());
+			query.setPageable(parameterAccessor.getPageable());
 			SearchHits<?> searchHits = elasticsearchOperations.search(query, clazz, index);
 			if (queryMethod.isSearchPageMethod()) {
 				result = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
@@ -101,15 +96,15 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 				result = SearchHitSupport.unwrapSearchHits(SearchHitSupport.searchPageFor(searchHits, query.getPageable()));
 			}
 		} else if (queryMethod.isStreamQuery()) {
-			if (accessor.getPageable().isUnpaged()) {
+			if (parameterAccessor.getPageable().isUnpaged()) {
 				query.setPageable(PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
 			} else {
-				query.setPageable(accessor.getPageable());
+				query.setPageable(parameterAccessor.getPageable());
 			}
 			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.searchForStream(query, clazz, index));
 		} else if (queryMethod.isCollectionQuery()) {
 
-			if (accessor.getPageable().isUnpaged()) {
+			if (parameterAccessor.getPageable().isUnpaged()) {
 				int itemCount = (int) elasticsearchOperations.count(query, clazz, index);
 
 				if (itemCount == 0) {
@@ -119,7 +114,7 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 					query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 				}
 			} else {
-				query.setPageable(accessor.getPageable());
+				query.setPageable(parameterAccessor.getPageable());
 			}
 
 			if (result == null) {

@@ -48,6 +48,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
 import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.annotations.SourceFilters;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -80,11 +81,10 @@ import org.springframework.lang.Nullable;
 @SpringIntegrationTest
 public abstract class CustomMethodRepositoryIntegrationTests implements NewElasticsearchClientDevelopment {
 
+	@Autowired ElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
 	@Autowired private SampleCustomMethodRepository repository;
 	@Autowired private SampleStreamingCustomMethodRepository streamingRepository;
-
-	@Autowired ElasticsearchOperations operations;
 
 	boolean rhlcWithCluster8() {
 		var clusterVersion = ((AbstractElasticsearchTemplate) operations).getClusterVersion();
@@ -1675,6 +1675,94 @@ public abstract class CustomMethodRepositoryIntegrationTests implements NewElast
 		assertThat(returnedIds).containsAll(ids);
 	}
 
+	@Test // #2146
+	@DisplayName("should use sourceIncludes from annotation")
+	void shouldUseSourceIncludesFromAnnotation() {
+
+		SampleEntity entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity);
+
+		var searchHits = repository.searchWithSourceFilterIncludesAnnotation();
+
+		assertThat(searchHits.hasSearchHits()).isTrue();
+		var foundEntity = searchHits.getSearchHit(0).getContent();
+		assertThat(foundEntity.getMessage()).isEqualTo("message");
+		assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage");
+		assertThat(foundEntity.getType()).isNull();
+		assertThat(foundEntity.getKeyword()).isNull();
+	}
+
+	@Test // #2146
+	@DisplayName("should use sourceIncludes from parameter")
+	void shouldUseSourceIncludesFromParameter() {
+
+		SampleEntity entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity);
+
+		var searchHits = repository.searchBy(List.of("message", "customFieldNameMessage"));
+
+		assertThat(searchHits.hasSearchHits()).isTrue();
+		var foundEntity = searchHits.getSearchHit(0).getContent();
+		assertThat(foundEntity.getMessage()).isEqualTo("message");
+		assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage");
+		assertThat(foundEntity.getType()).isNull();
+		assertThat(foundEntity.getKeyword()).isNull();
+	}
+
+	@Test // #2146
+	@DisplayName("should use sourceExcludes from annotation")
+	void shouldUseSourceExcludesFromAnnotation() {
+
+		SampleEntity entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity);
+
+		var searchHits = repository.searchWithSourceFilterExcludesAnnotation();
+
+		assertThat(searchHits.hasSearchHits()).isTrue();
+		var foundEntity = searchHits.getSearchHit(0).getContent();
+		assertThat(foundEntity.getMessage()).isEqualTo("message");
+		assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage");
+		assertThat(foundEntity.getType()).isNull();
+		assertThat(foundEntity.getKeyword()).isNull();
+	}
+
+	@Test // #2146
+	@DisplayName("should use source excludes from parameter")
+	void shouldUseSourceExcludesFromParameter() {
+
+		SampleEntity entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity);
+
+		var searchHits = repository.findBy(List.of("type", "keyword"));
+
+		assertThat(searchHits.hasSearchHits()).isTrue();
+		var foundEntity = searchHits.getSearchHit(0).getContent();
+		assertThat(foundEntity.getMessage()).isEqualTo("message");
+		assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage");
+		assertThat(foundEntity.getType()).isNull();
+		assertThat(foundEntity.getKeyword()).isNull();
+	}
+
 	private List<SampleEntity> createSampleEntities(String type, int numberOfEntities) {
 
 		List<SampleEntity> entities = new ArrayList<>();
@@ -1688,93 +1776,6 @@ public abstract class CustomMethodRepositoryIntegrationTests implements NewElast
 		}
 
 		return entities;
-	}
-
-	@Document(indexName = "#{@indexNameProvider.indexName()}")
-	static class SampleEntity {
-		@Nullable
-		@Id private String id;
-		@Nullable
-		@Field(type = Text, store = true, fielddata = true) private String type;
-		@Nullable
-		@Field(type = Text, store = true, fielddata = true) private String message;
-		@Nullable
-		@Field(type = Keyword) private String keyword;
-		@Nullable private int rate;
-		@Nullable private boolean available;
-		@Nullable private GeoPoint location;
-		@Nullable
-		@Version private Long version;
-
-		@Nullable
-		public String getId() {
-			return id;
-		}
-
-		public void setId(@Nullable String id) {
-			this.id = id;
-		}
-
-		@Nullable
-		public String getType() {
-			return type;
-		}
-
-		public void setType(@Nullable String type) {
-			this.type = type;
-		}
-
-		@Nullable
-		public String getMessage() {
-			return message;
-		}
-
-		public void setMessage(@Nullable String message) {
-			this.message = message;
-		}
-
-		@Nullable
-		public String getKeyword() {
-			return keyword;
-		}
-
-		public void setKeyword(@Nullable String keyword) {
-			this.keyword = keyword;
-		}
-
-		public int getRate() {
-			return rate;
-		}
-
-		public void setRate(int rate) {
-			this.rate = rate;
-		}
-
-		public boolean isAvailable() {
-			return available;
-		}
-
-		public void setAvailable(boolean available) {
-			this.available = available;
-		}
-
-		@Nullable
-		public GeoPoint getLocation() {
-			return location;
-		}
-
-		public void setLocation(@Nullable GeoPoint location) {
-			this.location = location;
-		}
-
-		@Nullable
-		public java.lang.Long getVersion() {
-			return version;
-		}
-
-		public void setVersion(@Nullable java.lang.Long version) {
-			this.version = version;
-		}
 	}
 
 	/**
@@ -1911,11 +1912,30 @@ public abstract class CustomMethodRepositoryIntegrationTests implements NewElast
 
 		@Query("{\"ids\" : {\"values\" : ?0 }}")
 		List<SampleEntity> getByIds(Collection<String> ids);
+
+		@Query("""
+				{
+					"match_all": {}
+				}
+				""")
+		@SourceFilters(includes = { "message", "customFieldNameMessage" })
+		SearchHits<SampleEntity> searchWithSourceFilterIncludesAnnotation();
+
+		@SourceFilters(includes = "?0")
+		SearchHits<SampleEntity> searchBy(Collection<String> sourceIncludes);
+
+		@Query("""
+				{
+					"match_all": {}
+				}
+				""")
+		@SourceFilters(excludes = { "type", "keyword" })
+		SearchHits<SampleEntity> searchWithSourceFilterExcludesAnnotation();
+
+		@SourceFilters(excludes = "?0")
+		SearchHits<SampleEntity> findBy(Collection<String> sourceExcludes);
 	}
 
-	/**
-	 * @author Rasmus Faber-Espensen
-	 */
 	public interface SampleStreamingCustomMethodRepository extends ElasticsearchRepository<SampleEntity, String> {
 		Stream<SampleEntity> findByType(String type);
 
@@ -1927,5 +1947,104 @@ public abstract class CustomMethodRepositoryIntegrationTests implements NewElast
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
 		Stream<SearchHit<SampleEntity>> streamSearchHitsByType(String type);
 
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	static class SampleEntity {
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String type;
+		@Nullable
+		@Field(type = Text, store = true, fielddata = true) private String message;
+		@Nullable
+		@Field(type = Keyword) private String keyword;
+		@Nullable private int rate;
+		@Nullable private boolean available;
+		@Nullable private GeoPoint location;
+		@Nullable
+		@Version private Long version;
+
+		@Field(name = "custom_field_name", type = Text)
+		@Nullable private String customFieldNameMessage;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getType() {
+			return type;
+		}
+
+		public void setType(@Nullable String type) {
+			this.type = type;
+		}
+
+		@Nullable
+		public String getMessage() {
+			return message;
+		}
+
+		public void setMessage(@Nullable String message) {
+			this.message = message;
+		}
+
+		@Nullable
+		public String getCustomFieldNameMessage() {
+			return customFieldNameMessage;
+		}
+
+		public void setCustomFieldNameMessage(@Nullable String customFieldNameMessage) {
+			this.customFieldNameMessage = customFieldNameMessage;
+		}
+
+		@Nullable
+		public String getKeyword() {
+			return keyword;
+		}
+
+		public void setKeyword(@Nullable String keyword) {
+			this.keyword = keyword;
+		}
+
+		public int getRate() {
+			return rate;
+		}
+
+		public void setRate(int rate) {
+			this.rate = rate;
+		}
+
+		public boolean isAvailable() {
+			return available;
+		}
+
+		public void setAvailable(boolean available) {
+			this.available = available;
+		}
+
+		@Nullable
+		public GeoPoint getLocation() {
+			return location;
+		}
+
+		public void setLocation(@Nullable GeoPoint location) {
+			this.location = location;
+		}
+
+		@Nullable
+		public java.lang.Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable java.lang.Long version) {
+			this.version = version;
+		}
 	}
 }
