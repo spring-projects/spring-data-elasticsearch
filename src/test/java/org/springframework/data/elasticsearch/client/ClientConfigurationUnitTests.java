@@ -168,10 +168,10 @@ public class ClientConfigurationUnitTests {
 
 		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
 				.connectedTo("foo", "bar") //
-				.withHttpClientConfigurer(httpClientBuilder -> {
+				.withClientConfigurer(RestClients.RestClientConfigurationCallback.from(httpClientBuilder -> {
 					callCounter.incrementAndGet();
 					return httpClientBuilder;
-				}) //
+				})) //
 				.build();
 
 		ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = clientConfiguration.getClientConfigurers()
@@ -189,10 +189,10 @@ public class ClientConfigurationUnitTests {
 
 		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
 				.connectedTo("foo", "bar") //
-				.withWebClientConfigurer(webClientConfigurer -> {
+				.withClientConfigurer(ReactiveRestClients.WebClientConfigurationCallback.from(webClient -> {
 					callCounter.incrementAndGet();
-					return webClientConfigurer;
-				}) //
+					return webClient;
+				})) //
 				.build();
 
 		ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = clientConfiguration.getClientConfigurers()

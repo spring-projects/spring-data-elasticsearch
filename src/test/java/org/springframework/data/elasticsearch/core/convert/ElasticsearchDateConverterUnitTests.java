@@ -34,8 +34,6 @@ class ElasticsearchDateConverterUnitTests {
 	void shouldCreateConvertersForAllKnownFormats(DateFormat dateFormat) {
 
 		switch (dateFormat) {
-			case none:
-			case custom:
 			case weekyear:
 			case weekyear_week:
 			case weekyear_week_day:

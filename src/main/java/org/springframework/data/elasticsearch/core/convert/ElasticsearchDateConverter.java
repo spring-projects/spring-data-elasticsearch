@@ -157,7 +157,6 @@ final public class ElasticsearchDateConverter {
 				case weekyear:
 				case weekyear_week:
 				case weekyear_week_day:
-				case custom:
 					continue;
 			}
 

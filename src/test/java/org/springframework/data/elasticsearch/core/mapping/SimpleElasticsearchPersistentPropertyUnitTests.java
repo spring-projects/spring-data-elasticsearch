@@ -315,7 +315,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	}
 
 	static class DateFieldWithCustomFormatAndNoPattern {
-		@Nullable private @Field(type = FieldType.Date, format = DateFormat.custom, pattern = "") LocalDateTime datetime;
+		@Nullable private @Field(type = FieldType.Date, format = {}, pattern = "") LocalDateTime datetime;
 
 		@Nullable
 		public LocalDateTime getDatetime() {

@@ -23,8 +23,10 @@ import org.springframework.web.reactive.function.client.WebClientException;
  * @author Christoph Strobl
  * @author Mark Paluch
  * @since 3.2
+ * @deprecated since 5.0
  */
-public class RequestBodyEncodingException extends WebClientException {
+
+@Deprecated public class RequestBodyEncodingException extends WebClientException {
 
 	private static final long serialVersionUID = 472776714118912855L;
 

@@ -395,16 +395,14 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private SettingsParameter buildSettingsParameter(Class<?> clazz) {
 
 		SettingsParameter settingsParameter = new SettingsParameter();
-		Document documentAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Document.class);
 		Setting settingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Setting.class);
 
-		if (documentAnnotation != null) {
-			settingsParameter.useServerConfiguration = documentAnnotation.useServerConfiguration();
-			settingsParameter.shards = documentAnnotation.shards();
-			settingsParameter.replicas = documentAnnotation.replicas();
-			settingsParameter.refreshIntervall = documentAnnotation.refreshInterval();
-			settingsParameter.indexStoreType = documentAnnotation.indexStoreType();
-		}
+		// default values
+		settingsParameter.useServerConfiguration = false;
+		settingsParameter.shards = 1;
+		settingsParameter.replicas = 1;
+		settingsParameter.refreshIntervall = "1s";
+		settingsParameter.indexStoreType = "fs";
 
 		if (settingAnnotation != null) {
 			processSettingAnnotation(settingAnnotation, settingsParameter);

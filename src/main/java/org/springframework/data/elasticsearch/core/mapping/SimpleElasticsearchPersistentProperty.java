@@ -261,9 +261,6 @@ public class SimpleElasticsearchPersistentProperty extends
 		// register converters for built-in formats
 		for (DateFormat dateFormat : dateFormats) {
 			switch (dateFormat) {
-				case none:
-				case custom:
-					break;
 				case weekyear:
 				case weekyear_week:
 				case weekyear_week_day:

@@ -203,28 +203,6 @@ class ClientConfigurationBuilder
 	}
 
 	@Override
-	public TerminalClientConfigurationBuilder withWebClientConfigurer(
-			Function<WebClient, WebClient> webClientConfigurer) {
-
-		Assert.notNull(webClientConfigurer, "webClientConfigurer must not be null");
-
-		this.webClientConfigurer = webClientConfigurer;
-		this.clientConfigurers.add(ReactiveRestClients.WebClientConfigurationCallback.from(webClientConfigurer));
-		return this;
-	}
-
-	@Override
-	public TerminalClientConfigurationBuilder withHttpClientConfigurer(HttpClientConfigCallback httpClientConfigurer) {
-
-		Assert.notNull(httpClientConfigurer, "httpClientConfigurer must not be null");
-
-		this.httpClientConfigurer = httpClientConfigurer;
-		this.clientConfigurers
-				.add(RestClients.RestClientConfigurationCallback.from(httpClientConfigurer::customizeHttpClient));
-		return this;
-	}
-
-	@Override
 	public TerminalClientConfigurationBuilder withClientConfigurer(
 			ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer) {
 

@@ -244,9 +244,6 @@ public final class MappingParameters {
 
 				// built-in formats
 				for (DateFormat dateFormat : dateFormats) {
-					if (dateFormat == DateFormat.none || dateFormat == DateFormat.custom) {
-						continue;
-					}
 					formats.add(dateFormat.toString());
 				}
 
