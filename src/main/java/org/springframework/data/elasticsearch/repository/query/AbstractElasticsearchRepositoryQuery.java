@@ -57,7 +57,6 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 	protected void prepareQuery(Query query, Class<?> clazz, ParameterAccessor parameterAccessor) {
 
-		elasticsearchConverter.updateQuery(query, clazz);
 
 		if (queryMethod.hasAnnotatedHighlight()) {
 			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
@@ -68,5 +67,7 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 		if (sourceFilter != null) {
 			query.addSourceFilter(sourceFilter);
 		}
+
+		elasticsearchConverter.updateQuery(query, clazz);
 	}
 }

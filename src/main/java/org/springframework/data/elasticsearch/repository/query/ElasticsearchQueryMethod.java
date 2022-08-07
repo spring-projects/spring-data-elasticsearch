@@ -131,6 +131,9 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	private HighlightQuery createAnnotatedHighlightQuery() {
+
+		Assert.notNull(highlightAnnotation, "highlightAnnotation must not be null");
+
 		return new HighlightQuery(
 				org.springframework.data.elasticsearch.core.query.highlight.Highlight.of(highlightAnnotation),
 				getDomainClass());
@@ -140,6 +143,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @return the {@link ElasticsearchEntityMetadata} for the query methods {@link #getReturnedObjectType() return type}.
 	 * @since 3.2
 	 */
+	@SuppressWarnings("unchecked")
 	@Override
 	public ElasticsearchEntityMetadata<?> getEntityInformation() {
 
@@ -261,23 +265,6 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	/**
-	 * @return {@literal true} if the method is annotated with {@link SourceFilters}.
-	 * @since 5.0
-	 */
-	public boolean hasSourceFilters() {
-		return sourceFilters != null;
-	}
-
-	/**
-	 * @return the {@link SourceFilters} annotation for this method.
-	 * @since 5.0
-	 */
-	@Nullable
-	public SourceFilters getSourceFilters() {
-		return sourceFilters;
-	}
-
-	/**
 	 * Uses the sourceFilters property to create a {@link SourceFilter} to be added to a
 	 * {@link org.springframework.data.elasticsearch.core.query.Query}
 	 *
@@ -295,29 +282,25 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 			return null;
 		}
 
-		ElasticsearchPersistentEntity<?> persistentEntity = converter.getMappingContext()
-				.getPersistentEntity(getEntityInformation().getJavaType());
-
 		StringQueryUtil stringQueryUtil = new StringQueryUtil(converter.getConversionService());
 		FetchSourceFilterBuilder fetchSourceFilterBuilder = new FetchSourceFilterBuilder();
 
 		if (sourceFilters.includes().length > 0) {
 			fetchSourceFilterBuilder
-					.withIncludes(mapParameters(sourceFilters.includes(), parameterAccessor, stringQueryUtil, persistentEntity));
+					.withIncludes(mapParameters(sourceFilters.includes(), parameterAccessor, stringQueryUtil));
 		}
 
 		if (sourceFilters.excludes().length > 0) {
 			fetchSourceFilterBuilder
-					.withExcludes(mapParameters(sourceFilters.excludes(), parameterAccessor, stringQueryUtil, persistentEntity));
+					.withExcludes(mapParameters(sourceFilters.excludes(), parameterAccessor, stringQueryUtil));
 		}
 
 		return fetchSourceFilterBuilder.build();
 	}
 
-	private String[] mapParameters(String[] source, ParameterAccessor parameterAccessor, StringQueryUtil stringQueryUtil,
-			@Nullable ElasticsearchPersistentEntity<?> persistentEntity) {
+	private String[] mapParameters(String[] source, ParameterAccessor parameterAccessor, StringQueryUtil stringQueryUtil) {
 
-		List<String> unmappedFieldNames = new ArrayList<>();
+		List<String> fieldNames = new ArrayList<>();
 
 		for (String s : source) {
 
@@ -325,21 +308,17 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 				String fieldName = stringQueryUtil.replacePlaceholders(s, parameterAccessor);
 				// this could be "[\"foo\",\"bar\"]", must be split
 				if (fieldName.startsWith("[") && fieldName.endsWith("]")) {
-					unmappedFieldNames.addAll( //
+					//noinspection RegExpRedundantEscape
+					fieldNames.addAll( //
 							Arrays.asList(fieldName.substring(1, fieldName.length() - 2) //
 									.replaceAll("\\\"", "") //
 									.split(","))); //
 				} else {
-					unmappedFieldNames.add(fieldName);
+					fieldNames.add(fieldName);
 				}
 			}
 		}
 
-		return unmappedFieldNames.stream().map(fieldName -> {
-			ElasticsearchPersistentProperty property = persistentEntity != null
-					? persistentEntity.getPersistentProperty(fieldName)
-					: null;
-			return property != null ? property.getFieldName() : fieldName;
-		}).toArray(String[]::new);
+		return fieldNames.toArray(new String[0]);
 	}
 }

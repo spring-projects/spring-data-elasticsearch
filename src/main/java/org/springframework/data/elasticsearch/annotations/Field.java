@@ -53,9 +53,8 @@ public @interface Field {
 	String value() default "";
 
 	/**
-	 * The <em>name</em> to be used to store the field inside the document.
-	 * <p>
-	 * √5 If not set, the name of the annotated property is used.
+	 * The <em>name</em> to be used to store the field inside the document. If not set, the name of the annotated property
+	 * is used.
 	 *
 	 * @since 3.2
 	 */

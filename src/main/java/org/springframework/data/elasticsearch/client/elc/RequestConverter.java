@@ -1031,6 +1031,7 @@ class RequestConverter {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
+		elasticsearchConverter.updateQuery(query, clazz);
 		SearchRequest.Builder builder = new SearchRequest.Builder();
 		prepareSearchRequest(query, clazz, indexCoordinates, builder, forCount, useScroll);
 
