@@ -16,11 +16,11 @@
 package org.springframework.data.elasticsearch.annotations;
 
 /**
- * Values based on reference doc - https://www.elastic.co/guide/reference/mapping/date-format/. The patterns are taken
- * from this documentation and slightly adapted so that a Java {@link java.time.format.DateTimeFormatter} produces the
- * same values as the Elasticsearch formatter. Use <code>format = {}</code> to disable built-in date * formats in
- * the @Field annotation. If you want to use only a custom date format pattern, you must set the <code>format</code> *
- * property to empty <code>{}</code>.
+ * Values based on <a href="https://www.elastic.co/guide/reference/mapping/date-format/">Elasticsearch reference
+ * documentation</a>. The patterns are taken from this documentation and slightly adapted so that a Java
+ * {@link java.time.format.DateTimeFormatter} produces the same values as the Elasticsearch formatter. Use
+ * <code>format = {}</code> to disable built-in date formats in the {@link Field} annotation. If you want to use only a
+ * custom date format pattern, you must set the <code>format</code> property to empty <code>{}</code>.
  *
  * @author Jakub Vavrik
  * @author Tim te Beek
@@ -49,7 +49,7 @@ public enum DateFormat {
 	date_hour_minute_second_millis("uuuu-MM-dd'T'HH:mm:ss.SSS"), //
 	date_optional_time("uuuu-MM-dd['T'HH:mm:ss.SSSXXX]"), //
 	date_time("uuuu-MM-dd'T'HH:mm:ss.SSSXXX"), //
-	date_time_no_millis("uuuu-MM-dd'T'HH:mm:ssVV"), // here Elasticsearch uses the zone-id in it's implementation
+	date_time_no_millis("uuuu-MM-dd'T'HH:mm:ssVV"), // here Elasticsearch uses the zone-id in its implementation
 	epoch_millis("epoch_millis"), //
 	epoch_second("epoch_second"), //
 	hour("HH"), //
