@@ -41,4 +41,9 @@ public class CustomMethodRepositoryELCIntegrationTests extends CustomMethodRepos
 			return new IndexNameProvider("custom-method-repository");
 		}
 	}
+
+	@Override
+	public boolean newElasticsearchClient() {
+		return true;
+	}
 }
