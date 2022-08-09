@@ -38,6 +38,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
+ * @author cdalxndr
  */
 @SpringIntegrationTest
 public abstract class RuntimeFieldsIntegrationTests implements NewElasticsearchClientDevelopment {
@@ -75,6 +76,22 @@ public abstract class RuntimeFieldsIntegrationTests implements NewElasticsearchC
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("2");
+	}
+
+	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2171, ES issue 298")
+	@Test // #2267
+	@DisplayName("should use runtime-field without script")
+	void shouldUseRuntimeFieldWithoutScript() {
+
+		insert("1", "11", 10);
+		Query query = new CriteriaQuery(new Criteria("description").matches(11.0));
+		RuntimeField runtimeField = new RuntimeField("description", "double");
+		query.addRuntimeField(runtimeField);
+
+		SearchHits<SomethingToBuy> searchHits = operations.search(query, SomethingToBuy.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("1");
 	}
 
 	private void insert(String id, String description, double price) {

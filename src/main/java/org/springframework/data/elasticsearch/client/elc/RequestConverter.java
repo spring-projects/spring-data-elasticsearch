@@ -101,6 +101,7 @@ import org.springframework.util.StringUtils;
  * Class to create Elasticsearch request and request builders.
  *
  * @author Peter-Josef Meisch
+ * @author cdalxndr
  * @since 4.4
  */
 class RequestConverter {
@@ -1129,12 +1130,16 @@ class RequestConverter {
 							});
 
 							if (!query.getRuntimeFields().isEmpty()) {
-
 								Map<String, List<RuntimeField>> runtimeMappings = new HashMap<>();
 								query.getRuntimeFields().forEach(runtimeField -> {
-									runtimeMappings.put(runtimeField.getName(), Collections.singletonList(RuntimeField.of(rt -> rt //
-											.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType())) //
-											.script(s -> s.inline(is -> is.source(runtimeField.getScript()))))));
+									RuntimeField esRuntimeField = RuntimeField.of(rt -> {
+										RuntimeField.Builder builder = rt.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
+										String script = runtimeField.getScript();
+										if (script != null)
+											builder = builder.script(s -> s.inline(is -> is.source(script)));
+										return builder;
+									});
+									runtimeMappings.put(runtimeField.getName(), Collections.singletonList(esRuntimeField));
 								});
 								bb.runtimeMappings(runtimeMappings);
 							}
