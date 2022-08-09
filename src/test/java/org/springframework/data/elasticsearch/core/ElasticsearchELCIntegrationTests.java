@@ -15,25 +15,34 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.client.elc.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
+import co.elastic.clients.elasticsearch._types.SortOptionsBuilders;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScoreMode;
 import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 import co.elastic.clients.json.JsonData;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.ELCQueries;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery;
 import org.springframework.data.elasticsearch.core.query.ScriptData;
@@ -45,6 +54,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Farid Faoudi
+ * @author Sascha Woo
  * @since 4.4
  */
 @ContextConfiguration(classes = { ElasticsearchELCIntegrationTests.Config.class })
@@ -58,6 +68,33 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 		IndexNameProvider indexNameProvider() {
 			return new IndexNameProvider("integration");
 		}
+	}
+
+	@Test // #2263
+	public void shouldSortResultsBySortOptions() {
+
+		List<IndexQuery> indexQueries = new ArrayList<>();
+
+		indexQueries.add(buildIndex(SampleEntity.builder().id("1").message("ab xz").build()));
+		indexQueries.add(buildIndex(SampleEntity.builder().id("2").message("bc").build()));
+		indexQueries.add(buildIndex(SampleEntity.builder().id("3").message("ac xz hi").build()));
+
+		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
+
+		NativeQuery query = NativeQuery.builder()
+				.withSort(b -> b.field(fb -> fb.field("message").order(SortOrder.Asc))).build();
+
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
+				IndexCoordinates.of(indexNameProvider.indexName()));
+
+		assertThat(searchHits.getSearchHits()) //
+				.satisfiesExactly(e -> {
+					assertThat(e.getId()).isEqualTo("1");
+				}, e -> {
+					assertThat(e.getId()).isEqualTo("3");
+				}, e -> {
+					assertThat(e.getId()).isEqualTo("2");
+				});
 	}
 
 	@Override
