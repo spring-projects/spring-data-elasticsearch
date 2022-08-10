@@ -63,8 +63,8 @@ public class ElasticsearchAggregations implements AggregationsContainer<List<Ela
 	/**
 	 * Returns the aggregation that is associated with the specified name.
 	 *
-	 * @param the name
-	 * @return the aggregation
+	 * @param name the name of the aggregation
+	 * @return the aggregation or {@literal null} if not found
 	 */
 	public ElasticsearchAggregation get(String name) {
 		return aggregationsAsMap.get(name);
