@@ -41,11 +41,10 @@ public class ElasticsearchAggregations implements AggregationsContainer<List<Ela
 
 		Assert.notNull(aggregations, "aggregations must not be null");
 
-		Map<String, ElasticsearchAggregation> elasticsearchAggregationsAsMap = new HashMap<>(aggregations.size());
-		aggregations.forEach((name, aggregate) -> elasticsearchAggregationsAsMap //
+		aggregationsAsMap = new HashMap<>();
+		aggregations.forEach((name, aggregate) -> aggregationsAsMap //
 				.put(name, new ElasticsearchAggregation(new Aggregation(name, aggregate))));
 
-		this.aggregationsAsMap = elasticsearchAggregationsAsMap;
 		this.aggregations = new ArrayList<>(aggregationsAsMap.values());
 	}
 
@@ -63,7 +62,7 @@ public class ElasticsearchAggregations implements AggregationsContainer<List<Ela
 
 	/**
 	 * Returns the aggregation that is associated with the specified name.
-	 * 
+	 *
 	 * @param the name
 	 * @return the aggregation
 	 */
