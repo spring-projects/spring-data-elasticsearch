@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,35 +29,46 @@ import org.springframework.util.Assert;
  * AggregationsContainer implementation for the Elasticsearch aggregations.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.4
  */
 public class ElasticsearchAggregations implements AggregationsContainer<List<ElasticsearchAggregation>> {
 
 	private final List<ElasticsearchAggregation> aggregations;
+	private final Map<String, ElasticsearchAggregation> aggregationsAsMap;
 
-	public ElasticsearchAggregations(List<ElasticsearchAggregation> aggregations) {
+	public ElasticsearchAggregations(Map<String, Aggregate> aggregations) {
 
 		Assert.notNull(aggregations, "aggregations must not be null");
 
-		this.aggregations = aggregations;
-	}
+		Map<String, ElasticsearchAggregation> elasticsearchAggregationsAsMap = new HashMap<>(aggregations.size());
+		aggregations.forEach((name, aggregate) -> elasticsearchAggregationsAsMap //
+				.put(name, new ElasticsearchAggregation(new Aggregation(name, aggregate))));
 
-	/**
-	 * convenience constructor taking a map as it is returned from the new Elasticsearch client.
-	 *
-	 * @param aggregationsMap aggregate map
-	 */
-	public ElasticsearchAggregations(Map<String, Aggregate> aggregationsMap) {
-
-		Assert.notNull(aggregationsMap, "aggregationsMap must not be null");
-
-		aggregations = new ArrayList<>(aggregationsMap.size());
-		aggregationsMap
-				.forEach((name, aggregate) -> aggregations.add(new ElasticsearchAggregation(new Aggregation(name, aggregate))));
+		this.aggregationsAsMap = elasticsearchAggregationsAsMap;
+		this.aggregations = new ArrayList<>(aggregationsAsMap.values());
 	}
 
 	@Override
 	public List<ElasticsearchAggregation> aggregations() {
 		return aggregations;
 	}
+
+	/**
+	 * @return the {@link ElasticsearchAggregation}s keyed by aggregation name.
+	 */
+	public Map<String, ElasticsearchAggregation> aggregationsAsMap() {
+		return aggregationsAsMap;
+	}
+
+	/**
+	 * Returns the aggregation that is associated with the specified name.
+	 * 
+	 * @param the name
+	 * @return the aggregation
+	 */
+	public ElasticsearchAggregation get(String name) {
+		return aggregationsAsMap.get(name);
+	}
+
 }
