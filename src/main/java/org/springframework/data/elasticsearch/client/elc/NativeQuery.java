@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
@@ -26,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
-import org.springframework.data.elasticsearch.core.query.RescorerQuery;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.lang.Nullable;
 
@@ -35,6 +35,7 @@ import org.springframework.lang.Nullable;
  * Elasticsearch Client library.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.4
  */
 public class NativeQuery extends BaseQuery {
@@ -46,6 +47,7 @@ public class NativeQuery extends BaseQuery {
 	@Nullable private Suggester suggester;
 	@Nullable private FieldCollapse fieldCollapse;
 	private List<ScriptedField> scriptedFields = Collections.emptyList();
+	private List<SortOptions> sortOptions = Collections.emptyList();
 
 	public NativeQuery(NativeQueryBuilder builder) {
 		super(builder);
@@ -55,6 +57,7 @@ public class NativeQuery extends BaseQuery {
 		this.suggester = builder.getSuggester();
 		this.fieldCollapse = builder.getFieldCollapse();
 		this.scriptedFields = builder.getScriptedFields();
+		this.sortOptions = builder.getSortOptions();
 	}
 
 	public NativeQuery(@Nullable Query query) {
@@ -91,5 +94,9 @@ public class NativeQuery extends BaseQuery {
 
 	public List<ScriptedField> getScriptedFields() {
 		return scriptedFields;
+	}
+
+	public List<SortOptions> getSortOptions() {
+		return sortOptions;
 	}
 }

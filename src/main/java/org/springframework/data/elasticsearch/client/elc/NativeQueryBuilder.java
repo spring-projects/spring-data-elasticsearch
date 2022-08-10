@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
@@ -22,19 +23,21 @@ import co.elastic.clients.elasticsearch.core.search.Suggester;
 import co.elastic.clients.util.ObjectBuilder;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.RescorerQuery;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @since 4.4
  */
 public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQueryBuilder> {
@@ -45,7 +48,10 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	@Nullable private Suggester suggester;
 	@Nullable private FieldCollapse fieldCollapse;
 	private final List<ScriptedField> scriptedFields = new ArrayList<>();
-	public NativeQueryBuilder() {}
+	private List<SortOptions> sortOptions = new ArrayList<>();
+
+	public NativeQueryBuilder() {
+	}
 
 	@Nullable
 	public Query getQuery() {
@@ -73,6 +79,10 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 
 	public List<ScriptedField> getScriptedFields() {
 		return scriptedFields;
+	}
+
+	public List<SortOptions> getSortOptions() {
+		return sortOptions;
 	}
 
 	public NativeQueryBuilder withQuery(Query query) {
@@ -126,6 +136,34 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		Assert.notNull(scriptedField, "scriptedField must not be null");
 
 		this.scriptedFields.add(scriptedField);
+		return this;
+	}
+
+	public NativeQueryBuilder withSort(List<SortOptions> values) {
+
+		Assert.notEmpty(values, "values must not be empty");
+		sortOptions.clear();
+		sortOptions.addAll(values);
+
+		return this;
+	}
+
+	public NativeQueryBuilder withSort(SortOptions value, SortOptions... values) {
+
+		Assert.notNull(value, "value must not be null");
+		sortOptions.add(value);
+		if (values.length > 0) {
+			sortOptions.addAll(Arrays.asList(values));
+		}
+
+		return this;
+	}
+
+	public NativeQueryBuilder withSort(Function<SortOptions.Builder, ObjectBuilder<SortOptions>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+		withSort(fn.apply(new SortOptions.Builder()).build());
+
 		return this;
 	}
 
