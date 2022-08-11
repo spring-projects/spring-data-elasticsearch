@@ -32,10 +32,9 @@ public class RuntimeField {
 
 	private final String name;
 	private final String type;
-	@Nullable
-	private final String script;
+	@Nullable private final String script;
 
-	public RuntimeField(String name, String type){
+	public RuntimeField(String name, String type) {
 		this(name, type, null);
 	}
 
@@ -59,6 +58,7 @@ public class RuntimeField {
 	public Map<String, Object> getMapping() {
 		Map<String, Object> map = new HashMap<>();
 		map.put("type", type);
+
 		if (script != null) {
 			map.put("script", script);
 		}

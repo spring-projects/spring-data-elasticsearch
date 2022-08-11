@@ -32,16 +32,7 @@ import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
-import co.elastic.clients.elasticsearch.core.DeleteRequest;
-import co.elastic.clients.elasticsearch.core.GetRequest;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.MgetRequest;
-import co.elastic.clients.elasticsearch.core.MsearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
-import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
@@ -52,6 +43,7 @@ import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
@@ -1134,10 +1126,13 @@ class RequestConverter {
 								Map<String, List<RuntimeField>> runtimeMappings = new HashMap<>();
 								query.getRuntimeFields().forEach(runtimeField -> {
 									RuntimeField esRuntimeField = RuntimeField.of(rt -> {
-										RuntimeField.Builder builder = rt.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
+										RuntimeField.Builder builder = rt
+												.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
 										String script = runtimeField.getScript();
-										if (script != null)
+
+										if (script != null) {
 											builder = builder.script(s -> s.inline(is -> is.source(script)));
+										}
 										return builder;
 									});
 									runtimeMappings.put(runtimeField.getName(), Collections.singletonList(esRuntimeField));
@@ -1167,7 +1162,6 @@ class RequestConverter {
 			return mrb;
 		});
 	}
-
 
 	private <T> void prepareSearchRequest(Query query, @Nullable Class<T> clazz, IndexCoordinates indexCoordinates,
 			SearchRequest.Builder builder, boolean forCount, boolean useScroll) {
@@ -1330,9 +1324,9 @@ class RequestConverter {
 	private void addHighlight(Query query, MultisearchBody.Builder builder) {
 
 		Highlight highlight = query.getHighlightQuery()
-			.map(highlightQuery -> new HighlightQueryBuilder(elasticsearchConverter.getMappingContext())
-				.getHighlight(highlightQuery.getHighlight(), highlightQuery.getType()))
-			.orElse(null);
+				.map(highlightQuery -> new HighlightQueryBuilder(elasticsearchConverter.getMappingContext())
+						.getHighlight(highlightQuery.getHighlight(), highlightQuery.getType()))
+				.orElse(null);
 
 		builder.highlight(highlight);
 	}
@@ -1428,9 +1422,9 @@ class RequestConverter {
 		});
 
 		builder //
-			.suggest(query.getSuggester()) //
-			.collapse(query.getFieldCollapse()) //
-			.sort(query.getSortOptions());
+				.suggest(query.getSuggester()) //
+				.collapse(query.getFieldCollapse()) //
+				.sort(query.getSortOptions());
 
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
