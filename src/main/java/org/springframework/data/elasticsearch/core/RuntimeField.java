@@ -18,25 +18,31 @@ package org.springframework.data.elasticsearch.core;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
  * Defines a runtime field to be added to a Query
  *
  * @author Peter-Josef Meisch
+ * @author cdalxndr
  * @since 4.3
  */
 public class RuntimeField {
 
 	private final String name;
 	private final String type;
+	@Nullable
 	private final String script;
 
-	public RuntimeField(String name, String type, String script) {
+	public RuntimeField(String name, String type){
+		this(name, type, null);
+	}
+
+	public RuntimeField(String name, String type, @Nullable String script) {
 
 		Assert.notNull(name, "name must not be null");
 		Assert.notNull(type, "type must not be null");
-		Assert.notNull(script, "script must not be null");
 
 		this.name = name;
 		this.type = type;
@@ -51,10 +57,11 @@ public class RuntimeField {
 	 * @return the mapping as a Map like it is needed for the Elasticsearch client
 	 */
 	public Map<String, Object> getMapping() {
-
 		Map<String, Object> map = new HashMap<>();
 		map.put("type", type);
-		map.put("script", script);
+		if (script != null) {
+			map.put("script", script);
+		}
 		return map;
 	}
 
@@ -68,7 +75,7 @@ public class RuntimeField {
 	/**
 	 * @since 4.4
 	 */
-	public String getScript() {
+	public @Nullable String getScript() {
 		return script;
 	}
 }
