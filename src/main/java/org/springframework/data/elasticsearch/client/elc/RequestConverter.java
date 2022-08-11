@@ -101,6 +101,7 @@ import org.springframework.util.StringUtils;
  * Class to create Elasticsearch request and request builders.
  *
  * @author Peter-Josef Meisch
+ * @author Sascha Woo
  * @author cdalxndr
  * @since 4.4
  */
@@ -1410,7 +1411,7 @@ class RequestConverter {
 		builder //
 				.suggest(query.getSuggester()) //
 				.collapse(query.getFieldCollapse()) //
-		;
+				.sort(query.getSortOptions());
 
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
@@ -1429,7 +1430,7 @@ class RequestConverter {
 		builder //
 			.suggest(query.getSuggester()) //
 			.collapse(query.getFieldCollapse()) //
-		;
+			.sort(query.getSortOptions());
 
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
