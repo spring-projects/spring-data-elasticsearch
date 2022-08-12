@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.elasticsearch.core.AggregationsContainer;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -66,7 +67,11 @@ public class ElasticsearchAggregations implements AggregationsContainer<List<Ela
 	 * @param name the name of the aggregation
 	 * @return the aggregation or {@literal null} if not found
 	 */
+	@Nullable
 	public ElasticsearchAggregation get(String name) {
+
+		Assert.notNull(name, "name must not be null");
+
 		return aggregationsAsMap.get(name);
 	}
 
