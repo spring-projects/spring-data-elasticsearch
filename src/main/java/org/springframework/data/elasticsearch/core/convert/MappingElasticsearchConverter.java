@@ -335,8 +335,7 @@ public class MappingElasticsearchConverter
 			ElasticsearchPropertyValueProvider valueProvider = new ElasticsearchPropertyValueProvider(accessor, evaluator);
 			R result = readProperties(targetEntity, instance, valueProvider);
 
-			if (source instanceof Document) {
-				Document document = (Document) source;
+			if (source instanceof Document document) {
 				if (document.hasId()) {
 					ElasticsearchPersistentProperty idProperty = targetEntity.getIdProperty();
 					PersistentPropertyAccessor<R> propertyAccessor = new ConvertingPropertyAccessor<>(
@@ -368,8 +367,7 @@ public class MappingElasticsearchConverter
 				}
 			}
 
-			if (source instanceof SearchDocument) {
-				SearchDocument searchDocument = (SearchDocument) source;
+			if (source instanceof SearchDocument searchDocument) {
 				populateScriptFields(targetEntity, result, searchDocument);
 			}
 
@@ -1321,10 +1319,9 @@ public class MappingElasticsearchConverter
 
 			String fieldName = property.getFieldName();
 
-			if (target instanceof Document) {
+			if (target instanceof Document document) {
 				// nested objects may have properties like 'id' which are recognized as isIdProperty() but they are not
 				// Documents
-				Document document = (Document) target;
 
 				if (property.isIdProperty() && document.hasId()) {
 					Object id = null;

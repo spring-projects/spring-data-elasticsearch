@@ -122,7 +122,7 @@ public abstract class GeoIntegrationTests implements NewElasticsearchClientDevel
 		LocationMarkerEntity location4 = new LocationMarkerEntity();
 		location4.setId("4");
 		location4.setName("location 4");
-		location4.setLocationAsArray(new double[] { -9.09882204680034d, 38.77353441278326d });
+		location4.setLocationAsArray(-9.09882204680034d, 38.77353441278326d);
 
 		indexQueries.add(buildIndex(location1));
 		indexQueries.add(buildIndex(location2));
@@ -471,7 +471,7 @@ public abstract class GeoIntegrationTests implements NewElasticsearchClientDevel
 			return locationAsArray;
 		}
 
-		public void setLocationAsArray(double[] locationAsArray) {
+		public void setLocationAsArray(double... locationAsArray) {
 			this.locationAsArray = locationAsArray;
 		}
 

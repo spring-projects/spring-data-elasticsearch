@@ -32,7 +32,6 @@ import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
@@ -217,12 +216,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		void shouldReturnFieldNamingStrategyFromContextConfiguration() {
 
 			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
-			FieldNamingStrategy fieldNamingStrategy = new FieldNamingStrategy() {
-				@Override
-				public String getFieldName(PersistentProperty<?> property) {
-					return property.getName() + "foo";
-				}
-			};
+			FieldNamingStrategy fieldNamingStrategy = property -> property.getName() + "foo";
 			context.setFieldNamingStrategy(fieldNamingStrategy);
 			SimpleElasticsearchPersistentEntity<?> persistentEntity = context
 					.getRequiredPersistentEntity(FieldNameEntity.class);

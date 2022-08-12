@@ -21,6 +21,7 @@ import static org.elasticsearch.index.query.QueryBuilders.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -635,29 +636,26 @@ public abstract class UUIDElasticsearchRepositoryIntegrationTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof SampleEntityUUIDKeyed))
+			if (!(o instanceof SampleEntityUUIDKeyed that))
 				return false;
-
-			SampleEntityUUIDKeyed that = (SampleEntityUUIDKeyed) o;
 
 			if (rate != that.rate)
 				return false;
 			if (available != that.available)
 				return false;
-			if (id != null ? !id.equals(that.id) : that.id != null)
+			if (!Objects.equals(id, that.id))
 				return false;
-			if (type != null ? !type.equals(that.type) : that.type != null)
+			if (!Objects.equals(type, that.type))
 				return false;
-			if (message != null ? !message.equals(that.message) : that.message != null)
+			if (!Objects.equals(message, that.message))
 				return false;
-			if (scriptedRate != null ? !scriptedRate.equals(that.scriptedRate) : that.scriptedRate != null)
+			if (!Objects.equals(scriptedRate, that.scriptedRate))
 				return false;
-			if (highlightedMessage != null ? !highlightedMessage.equals(that.highlightedMessage)
-					: that.highlightedMessage != null)
+			if (!Objects.equals(highlightedMessage, that.highlightedMessage))
 				return false;
-			if (location != null ? !location.equals(that.location) : that.location != null)
+			if (!Objects.equals(location, that.location))
 				return false;
-			return version != null ? version.equals(that.version) : that.version == null;
+			return Objects.equals(version, that.version);
 		}
 
 		@Override

@@ -84,9 +84,8 @@ public class AggregationERHLCIntegrationTests extends AggregationIntegrationTest
 		assertThat(aggregations.asMap().get(aggsName)).isNotNull();
 		Aggregation keyword_bucket_stats = aggregations.asMap().get(pipelineAggsName);
 		assertThat(keyword_bucket_stats).isInstanceOf(StatsBucket.class);
-		if (keyword_bucket_stats instanceof ParsedStatsBucket) {
+		if (keyword_bucket_stats instanceof ParsedStatsBucket statsBucket) {
 			// Rest client
-			ParsedStatsBucket statsBucket = (ParsedStatsBucket) keyword_bucket_stats;
 			assertThat(statsBucket.getMin()).isEqualTo(1.0);
 			assertThat(statsBucket.getMax()).isEqualTo(3.0);
 			assertThat(statsBucket.getAvg()).isEqualTo(2.0);

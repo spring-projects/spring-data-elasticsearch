@@ -194,12 +194,12 @@ public abstract class HighlightCommonParameters {
 			return (SELF) this;
 		}
 
-		public SELF withPreTags(String[] preTags) {
+		public SELF withPreTags(String... preTags) {
 			this.preTags = preTags;
 			return (SELF) this;
 		}
 
-		public SELF withPostTags(String[] postTags) {
+		public SELF withPostTags(String... postTags) {
 			this.postTags = postTags;
 			return (SELF) this;
 		}

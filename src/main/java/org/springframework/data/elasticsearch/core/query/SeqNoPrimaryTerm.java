@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import java.util.Objects;
-
 /**
  * <p>
  * A container for seq_no and primary_term values. When an entity class contains a field of this type, it will be
@@ -42,10 +40,7 @@ import java.util.Objects;
  * @author Roman Puchkovskiy
  * @since 4.0
  */
-public final class SeqNoPrimaryTerm {
-	private final long sequenceNumber;
-	private final long primaryTerm;
-
+public record SeqNoPrimaryTerm(long sequenceNumber, long primaryTerm) {
 	/**
 	 * Creates an instance of SeqNoPrimaryTerm with the given seq_no and primary_term. The passed values are validated:
 	 * sequenceNumber must be non-negative, primaryTerm must be positive. If validation fails, an IllegalArgumentException
@@ -55,7 +50,7 @@ public final class SeqNoPrimaryTerm {
 	 * @param primaryTerm primary_term, must be positive
 	 * @throws IllegalArgumentException if seq_no or primary_term is not valid
 	 */
-	public SeqNoPrimaryTerm(long sequenceNumber, long primaryTerm) {
+	public SeqNoPrimaryTerm {
 		if (sequenceNumber < 0) {
 			throw new IllegalArgumentException("seq_no should not be negative, but it's " + sequenceNumber);
 		}
@@ -63,37 +58,10 @@ public final class SeqNoPrimaryTerm {
 			throw new IllegalArgumentException("primary_term should be positive, but it's " + primaryTerm);
 		}
 
-		this.sequenceNumber = sequenceNumber;
-		this.primaryTerm = primaryTerm;
-	}
-
-	public long getSequenceNumber() {
-		return sequenceNumber;
-	}
-
-	public long getPrimaryTerm() {
-		return primaryTerm;
 	}
 
 	@Override
 	public String toString() {
 		return "SeqNoPrimaryTerm{" + "sequenceNumber=" + sequenceNumber + ", primaryTerm=" + primaryTerm + '}';
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) {
-			return true;
-		}
-		if (o == null || getClass() != o.getClass()) {
-			return false;
-		}
-		SeqNoPrimaryTerm that = (SeqNoPrimaryTerm) o;
-		return sequenceNumber == that.sequenceNumber && primaryTerm == that.primaryTerm;
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(sequenceNumber, primaryTerm);
 	}
 }

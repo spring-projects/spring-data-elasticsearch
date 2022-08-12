@@ -56,17 +56,14 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			return new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict", ex);
 		}
 
-		if (ex instanceof ElasticsearchException) {
-
-			ElasticsearchException elasticsearchException = (ElasticsearchException) ex;
+		if (ex instanceof ElasticsearchException elasticsearchException) {
 
 			if (!indexAvailable(elasticsearchException)) {
 				return new NoSuchIndexException(ObjectUtils.nullSafeToString(elasticsearchException.getMetadata("es.index")),
 						ex);
 			}
 
-			if (elasticsearchException instanceof ElasticsearchStatusException) {
-				ElasticsearchStatusException elasticsearchStatusException = (ElasticsearchStatusException) elasticsearchException;
+			if (elasticsearchException instanceof ElasticsearchStatusException elasticsearchStatusException) {
 				return new RestStatusException(elasticsearchStatusException.status().getStatus(),
 						elasticsearchStatusException.getMessage(), elasticsearchStatusException);
 			}
@@ -74,11 +71,9 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			return new UncategorizedElasticsearchException(ex.getMessage(), ex);
 		}
 
-		if (ex instanceof RestStatusException) {
-			RestStatusException restStatusException = (RestStatusException) ex;
+		if (ex instanceof RestStatusException restStatusException) {
 			Throwable cause = restStatusException.getCause();
-			if (cause instanceof ElasticsearchException) {
-				ElasticsearchException elasticsearchException = (ElasticsearchException) cause;
+			if (cause instanceof ElasticsearchException elasticsearchException) {
 
 				if (!indexAvailable(elasticsearchException)) {
 					return new NoSuchIndexException(ObjectUtils.nullSafeToString(elasticsearchException.getMetadata("es.index")),
@@ -104,16 +99,14 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		Integer status = null;
 		String message = null;
 
-		if (exception instanceof ElasticsearchStatusException) {
+		if (exception instanceof ElasticsearchStatusException statusException) {
 
-			ElasticsearchStatusException statusException = (ElasticsearchStatusException) exception;
 			status = statusException.status().getStatus();
 			message = statusException.getMessage();
 		}
 
-		if (exception instanceof RestStatusException) {
+		if (exception instanceof RestStatusException statusException) {
 
-			RestStatusException statusException = (RestStatusException) exception;
 			status = statusException.getStatus();
 			message = statusException.getMessage();
 		}
@@ -123,9 +116,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 					&& message.contains("version conflict, required seqNo");
 		}
 
-		if (exception instanceof VersionConflictEngineException) {
-
-			VersionConflictEngineException versionConflictEngineException = (VersionConflictEngineException) exception;
+		if (exception instanceof VersionConflictEngineException versionConflictEngineException) {
 
 			return versionConflictEngineException.getMessage() != null
 					&& versionConflictEngineException.getMessage().contains("version conflict, required seqNo");

@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -142,13 +143,13 @@ class AuditingEntityCallbackTests {
 
 			Sample sample = (Sample) o;
 
-			if (id != null ? !id.equals(sample.id) : sample.id != null)
+			if (!Objects.equals(id, sample.id))
 				return false;
-			if (createdDate != null ? !createdDate.equals(sample.createdDate) : sample.createdDate != null)
+			if (!Objects.equals(createdDate, sample.createdDate))
 				return false;
-			if (createdBy != null ? !createdBy.equals(sample.createdBy) : sample.createdBy != null)
+			if (!Objects.equals(createdBy, sample.createdBy))
 				return false;
-			return modified != null ? modified.equals(sample.modified) : sample.modified == null;
+			return Objects.equals(modified, sample.modified);
 		}
 
 		@Override

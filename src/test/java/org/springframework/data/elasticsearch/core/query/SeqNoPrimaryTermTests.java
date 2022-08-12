@@ -28,8 +28,8 @@ class SeqNoPrimaryTermTests {
 	void shouldConstructInstanceWithAssignedSeqNoAndPrimaryTerm() {
 		SeqNoPrimaryTerm instance = new SeqNoPrimaryTerm(1, 2);
 
-		assertThat(instance.getSequenceNumber()).isEqualTo(1);
-		assertThat(instance.getPrimaryTerm()).isEqualTo(2);
+		assertThat(instance.sequenceNumber()).isEqualTo(1);
+		assertThat(instance.primaryTerm()).isEqualTo(2);
 	}
 
 	@Test

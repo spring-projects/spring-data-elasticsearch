@@ -65,7 +65,6 @@ class SearchDocumentResponseBuilder {
 	 * @param jsonpMapper to map JsonData objects
 	 * @return the SearchDocumentResponse
 	 */
-	@SuppressWarnings("DuplicatedCode")
 	public static <T> SearchDocumentResponse from(ResponseBody<EntityAsMap> responseBody,
 			SearchDocumentResponse.EntityCreator<T> entityCreator, JsonpMapper jsonpMapper) {
 
@@ -105,16 +104,11 @@ class SearchDocumentResponseBuilder {
 		TotalHits responseTotalHits = hitsMetadata.total();
 		if (responseTotalHits != null) {
 			totalHits = responseTotalHits.value();
-			switch (responseTotalHits.relation().jsonValue()) {
-				case "eq":
-					totalHitsRelation = TotalHitsRelation.EQUAL_TO.name();
-					break;
-				case "gte":
-					totalHitsRelation = TotalHitsRelation.GREATER_THAN_OR_EQUAL_TO.name();
-					break;
-				default:
-					totalHitsRelation = TotalHitsRelation.OFF.name();
-			}
+			totalHitsRelation = switch (responseTotalHits.relation().jsonValue()) {
+				case "eq" -> TotalHitsRelation.EQUAL_TO.name();
+				case "gte" -> TotalHitsRelation.GREATER_THAN_OR_EQUAL_TO.name();
+				default -> TotalHitsRelation.OFF.name();
+			};
 		} else {
 			totalHits = hitsMetadata.hits().size();
 			totalHitsRelation = "OFF";
@@ -151,20 +145,19 @@ class SearchDocumentResponseBuilder {
 			if (!suggestionsES.isEmpty()) {
 				// take the type from the first entry
 				switch (suggestionsES.get(0)._kind()) {
-					case Term: {
+					case Term -> {
 						suggestions.add(getTermSuggestion(name, suggestionsES));
 						break;
 					}
-					case Phrase: {
+					case Phrase -> {
 						suggestions.add(getPhraseSuggestion(name, suggestionsES));
 						break;
 					}
-					case Completion: {
+					case Completion -> {
 						suggestions.add(getCompletionSuggestion(name, suggestionsES, entityCreator));
 						break;
 					}
-					default:
-						break;
+					default -> {}
 				}
 			}
 		});
@@ -182,10 +175,8 @@ class SearchDocumentResponseBuilder {
 			var termSuggest = suggestionES.term();
 			var termSuggestOptions = termSuggest.options();
 			List<TermSuggestion.Entry.Option> options = new ArrayList<>();
-			termSuggestOptions.forEach(optionES -> {
-				options.add(new TermSuggestion.Entry.Option(optionES.text(), null, optionES.score(), null,
-						Math.toIntExact(optionES.freq())));
-			});
+			termSuggestOptions.forEach(optionES -> options.add(new TermSuggestion.Entry.Option(optionES.text(), null,
+					optionES.score(), null, Math.toIntExact(optionES.freq()))));
 			entries.add(new TermSuggestion.Entry(termSuggest.text(), termSuggest.offset(), termSuggest.length(), options));
 		});
 		return new TermSuggestion(name, suggestionsES.size(), entries, null);
@@ -198,9 +189,8 @@ class SearchDocumentResponseBuilder {
 			var phraseSuggest = suggestionES.phrase();
 			var phraseSuggestOptions = phraseSuggest.options();
 			List<PhraseSuggestion.Entry.Option> options = new ArrayList<>();
-			phraseSuggestOptions.forEach(optionES -> {
-				options.add(new PhraseSuggestion.Entry.Option(optionES.text(), optionES.highlighted(), null, null));
-			});
+			phraseSuggestOptions.forEach(optionES -> options
+					.add(new PhraseSuggestion.Entry.Option(optionES.text(), optionES.highlighted(), null, null)));
 			entries.add(new PhraseSuggestion.Entry(phraseSuggest.text(), phraseSuggest.offset(), phraseSuggest.length(),
 					options, null));
 		});

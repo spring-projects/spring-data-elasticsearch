@@ -109,8 +109,8 @@ public abstract class CompletionWithContextsIntegrationTests {
 
 		// given
 		loadContextCompletionObjectEntities();
-		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m",
-				Fuzziness.AUTO);
+		CompletionSuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest")
+				.prefix("m", Fuzziness.AUTO);
 
 		Map<String, List<? extends ToXContent>> contextMap = new HashMap<>();
 		List<CategoryQueryContext> contexts = new ArrayList<>(1);
@@ -121,7 +121,7 @@ public abstract class CompletionWithContextsIntegrationTests {
 		contexts.add(queryContext);
 		contextMap.put(ContextCompletionEntity.LANGUAGE_CATEGORY, contexts);
 
-		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
+		completionSuggestionFuzzyBuilder.contexts(contextMap);
 
 		// when
 		SearchResponse suggestResponse = ((ElasticsearchRestTemplate) operations).suggest(

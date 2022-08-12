@@ -125,7 +125,7 @@ public class SearchHitMapping<T> {
 		Assert.notNull(searchDocument, "searchDocument is null");
 		Assert.notNull(content, "content is null");
 
-		return new SearchHit<T>(searchDocument.getIndex(), //
+		return new SearchHit<>(searchDocument.getIndex(), //
 				searchDocument.hasId() ? searchDocument.getId() : null, //
 				searchDocument.getRouting(), //
 				searchDocument.getScore(), //
@@ -210,7 +210,7 @@ public class SearchHitMapping<T> {
 					SearchDocument searchDocument = searchHit.getContent();
 
 					Object targetObject = converter.read(targetType, searchDocument);
-					convertedSearchHits.add(new SearchHit<Object>(searchDocument.getIndex(), //
+					convertedSearchHits.add(new SearchHit<>(searchDocument.getIndex(), //
 							searchDocument.getId(), //
 							searchDocument.getRouting(), //
 							searchDocument.getScore(), //

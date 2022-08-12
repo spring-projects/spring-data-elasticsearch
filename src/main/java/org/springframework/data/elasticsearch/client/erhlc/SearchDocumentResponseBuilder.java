@@ -129,8 +129,7 @@ public class SearchDocumentResponseBuilder {
 
 		for (org.elasticsearch.search.suggest.Suggest.Suggestion<? extends org.elasticsearch.search.suggest.Suggest.Suggestion.Entry<? extends org.elasticsearch.search.suggest.Suggest.Suggestion.Entry.Option>> suggestionES : suggestES) {
 
-			if (suggestionES instanceof org.elasticsearch.search.suggest.term.TermSuggestion) {
-				org.elasticsearch.search.suggest.term.TermSuggestion termSuggestionES = (org.elasticsearch.search.suggest.term.TermSuggestion) suggestionES;
+			if (suggestionES instanceof org.elasticsearch.search.suggest.term.TermSuggestion termSuggestionES) {
 
 				List<TermSuggestion.Entry> entries = new ArrayList<>();
 				for (org.elasticsearch.search.suggest.term.TermSuggestion.Entry entryES : termSuggestionES) {
@@ -150,8 +149,7 @@ public class SearchDocumentResponseBuilder {
 						suggestFrom(termSuggestionES.getSort())));
 			}
 
-			if (suggestionES instanceof org.elasticsearch.search.suggest.phrase.PhraseSuggestion) {
-				org.elasticsearch.search.suggest.phrase.PhraseSuggestion phraseSuggestionES = (org.elasticsearch.search.suggest.phrase.PhraseSuggestion) suggestionES;
+			if (suggestionES instanceof org.elasticsearch.search.suggest.phrase.PhraseSuggestion phraseSuggestionES) {
 
 				List<PhraseSuggestion.Entry> entries = new ArrayList<>();
 				for (org.elasticsearch.search.suggest.phrase.PhraseSuggestion.Entry entryES : phraseSuggestionES) {
@@ -169,8 +167,7 @@ public class SearchDocumentResponseBuilder {
 				suggestions.add(new PhraseSuggestion(phraseSuggestionES.getName(), phraseSuggestionES.getSize(), entries));
 			}
 
-			if (suggestionES instanceof org.elasticsearch.search.suggest.completion.CompletionSuggestion) {
-				org.elasticsearch.search.suggest.completion.CompletionSuggestion completionSuggestionES = (org.elasticsearch.search.suggest.completion.CompletionSuggestion) suggestionES;
+			if (suggestionES instanceof org.elasticsearch.search.suggest.completion.CompletionSuggestion completionSuggestionES) {
 
 				List<CompletionSuggestion.Entry<T>> entries = new ArrayList<>();
 				for (org.elasticsearch.search.suggest.completion.CompletionSuggestion.Entry entryES : completionSuggestionES) {

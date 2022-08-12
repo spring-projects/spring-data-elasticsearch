@@ -305,9 +305,9 @@ public final class ElasticsearchClients {
 							+ ((header.getName().equals("Authorization")) ? ": *****" : ": " + header.getValue()))
 					.collect(Collectors.joining(", ", "[", "]"));
 
-			if (request instanceof HttpEntityEnclosingRequest && ((HttpEntityEnclosingRequest) request).getEntity() != null) {
+			if (request instanceof HttpEntityEnclosingRequest entityRequest
+					&& ((HttpEntityEnclosingRequest) request).getEntity() != null) {
 
-				HttpEntityEnclosingRequest entityRequest = (HttpEntityEnclosingRequest) request;
 				HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
 				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 				entity.writeTo(buffer);
@@ -377,7 +377,6 @@ public final class ElasticsearchClients {
 
 			Assert.notNull(httpClientBuilderCallback, "httpClientBuilderCallback must not be null");
 
-			// noinspection NullableProblems
 			return httpClientBuilderCallback::apply;
 		}
 	}
@@ -396,7 +395,6 @@ public final class ElasticsearchClients {
 
 			Assert.notNull(restClientBuilderCallback, "restClientBuilderCallback must not be null");
 
-			// noinspection NullableProblems
 			return restClientBuilderCallback::apply;
 		}
 	}

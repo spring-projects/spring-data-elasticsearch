@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static co.elastic.clients.util.ApiTypeHelper.*;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -476,16 +475,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	/**
 	 * value class combining the information needed for a single query in a multisearch request.
 	 */
-	static class MultiSearchQueryParameter {
-		final Query query;
-		final Class<?> clazz;
-		final IndexCoordinates index;
-
-		public MultiSearchQueryParameter(Query query, Class<?> clazz, IndexCoordinates index) {
-			this.query = query;
-			this.clazz = clazz;
-			this.index = index;
-		}
+		record MultiSearchQueryParameter(Query query, Class<?> clazz, IndexCoordinates index) {
 	}
 	// endregion
 

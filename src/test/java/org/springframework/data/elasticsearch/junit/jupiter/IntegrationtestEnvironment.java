@@ -27,13 +27,10 @@ public enum IntegrationtestEnvironment {
 	public static IntegrationtestEnvironment get() {
 
 		String property = System.getProperty(SYSTEM_PROPERTY, "elasticsearch");
-		switch (property.toUpperCase()) {
-			case "ELASTICSEARCH":
-				return ELASTICSEARCH;
-			case "OPENSEARCH":
-				return OPENSEARCH;
-			default:
-				return UNDEFINED;
-		}
+		return switch (property.toUpperCase()) {
+			case "ELASTICSEARCH" -> ELASTICSEARCH;
+			case "OPENSEARCH" -> OPENSEARCH;
+			default -> UNDEFINED;
+		};
 	}
 }

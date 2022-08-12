@@ -288,8 +288,7 @@ class CriteriaQueryProcessor {
 
 				break;
 			case IN:
-				if (value instanceof Iterable) {
-					Iterable<?> iterable = (Iterable<?>) value;
+				if (value instanceof Iterable<?> iterable) {
 					if (isKeywordField) {
 						queryBuilder.bool(bb -> bb //
 								.must(mb -> mb //
@@ -310,8 +309,7 @@ class CriteriaQueryProcessor {
 				}
 				break;
 			case NOT_IN:
-				if (value instanceof Iterable) {
-					Iterable<?> iterable = (Iterable<?>) value;
+				if (value instanceof Iterable<?> iterable) {
 					if (isKeywordField) {
 						queryBuilder.bool(bb -> bb //
 								.mustNot(mnb -> mnb //

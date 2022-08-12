@@ -171,24 +171,16 @@ public class GeoConverters {
 
 			String type = GeoConverters.getGeoJsonType(source);
 
-			switch (type) {
-				case "point":
-					return MapToGeoJsonPointConverter.INSTANCE.convert(source);
-				case "multipoint":
-					return MapToGeoJsonMultiPointConverter.INSTANCE.convert(source);
-				case "linestring":
-					return MapToGeoJsonLineStringConverter.INSTANCE.convert(source);
-				case "multilinestring":
-					return MapToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
-				case "polygon":
-					return MapToGeoJsonPolygonConverter.INSTANCE.convert(source);
-				case "multipolygon":
-					return MapToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
-				case "geometrycollection":
-					return MapToGeoJsonGeometryCollectionConverter.INSTANCE.convert(source);
-				default:
-					throw new IllegalArgumentException("unknown GeoJson type " + type);
-			}
+			return switch (type) {
+				case "point" -> MapToGeoJsonPointConverter.INSTANCE.convert(source);
+				case "multipoint" -> MapToGeoJsonMultiPointConverter.INSTANCE.convert(source);
+				case "linestring" -> MapToGeoJsonLineStringConverter.INSTANCE.convert(source);
+				case "multilinestring" -> MapToGeoJsonMultiLineStringConverter.INSTANCE.convert(source);
+				case "polygon" -> MapToGeoJsonPolygonConverter.INSTANCE.convert(source);
+				case "multipolygon" -> MapToGeoJsonMultiPolygonConverter.INSTANCE.convert(source);
+				case "geometrycollection" -> MapToGeoJsonGeometryCollectionConverter.INSTANCE.convert(source);
+				default -> throw new IllegalArgumentException("unknown GeoJson type " + type);
+			};
 		}
 	}
 	// endregion

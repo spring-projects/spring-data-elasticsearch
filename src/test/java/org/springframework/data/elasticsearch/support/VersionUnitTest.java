@@ -46,9 +46,9 @@ class VersionUnitTest {
 
 		Version version = Version.fromString("12");
 
-		assertThat(version.getMajor()).isEqualTo(12);
-		assertThat(version.getMinor()).isEqualTo(0);
-		assertThat(version.getRevision()).isEqualTo(0);
+		assertThat(version.major()).isEqualTo(12);
+		assertThat(version.minor()).isEqualTo(0);
+		assertThat(version.revision()).isEqualTo(0);
 	}
 
 	@Test // #1885
@@ -57,9 +57,9 @@ class VersionUnitTest {
 
 		Version version = Version.fromString("12-alpha");
 
-		assertThat(version.getMajor()).isEqualTo(12);
-		assertThat(version.getMinor()).isEqualTo(0);
-		assertThat(version.getRevision()).isEqualTo(0);
+		assertThat(version.major()).isEqualTo(12);
+		assertThat(version.minor()).isEqualTo(0);
+		assertThat(version.revision()).isEqualTo(0);
 	}
 
 	@Test // #1885
@@ -68,9 +68,9 @@ class VersionUnitTest {
 
 		Version version = Version.fromString("12.34");
 
-		assertThat(version.getMajor()).isEqualTo(12);
-		assertThat(version.getMinor()).isEqualTo(34);
-		assertThat(version.getRevision()).isEqualTo(0);
+		assertThat(version.major()).isEqualTo(12);
+		assertThat(version.minor()).isEqualTo(34);
+		assertThat(version.revision()).isEqualTo(0);
 	}
 
 	@Test // #1885
@@ -79,9 +79,9 @@ class VersionUnitTest {
 
 		Version version = Version.fromString("12.34-alpha");
 
-		assertThat(version.getMajor()).isEqualTo(12);
-		assertThat(version.getMinor()).isEqualTo(34);
-		assertThat(version.getRevision()).isEqualTo(0);
+		assertThat(version.major()).isEqualTo(12);
+		assertThat(version.minor()).isEqualTo(34);
+		assertThat(version.revision()).isEqualTo(0);
 	}
 
 	@Test // #1885
@@ -90,9 +90,9 @@ class VersionUnitTest {
 
 		Version version = Version.fromString("12.34.56");
 
-		assertThat(version.getMajor()).isEqualTo(12);
-		assertThat(version.getMinor()).isEqualTo(34);
-		assertThat(version.getRevision()).isEqualTo(56);
+		assertThat(version.major()).isEqualTo(12);
+		assertThat(version.minor()).isEqualTo(34);
+		assertThat(version.revision()).isEqualTo(56);
 	}
 
 	@Test // #1885
@@ -101,8 +101,8 @@ class VersionUnitTest {
 
 		Version version = Version.fromString("12.34.56-alpha");
 
-		assertThat(version.getMajor()).isEqualTo(12);
-		assertThat(version.getMinor()).isEqualTo(34);
-		assertThat(version.getRevision()).isEqualTo(56);
+		assertThat(version.major()).isEqualTo(12);
+		assertThat(version.minor()).isEqualTo(34);
+		assertThat(version.revision()).isEqualTo(56);
 	}
 }

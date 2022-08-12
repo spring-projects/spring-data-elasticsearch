@@ -105,37 +105,37 @@ class CriteriaFilterProcessor {
 		QueryBuilder filter = null;
 
 		switch (key) {
-			case WITHIN:
+			case WITHIN -> {
 				Assert.isTrue(value instanceof Object[], "Value of a geo distance filter should be an array of two values.");
 				filter = withinQuery(fieldName, (Object[]) value);
-				break;
-			case BBOX:
+			}
+			case BBOX -> {
 				Assert.isTrue(value instanceof Object[],
 						"Value of a boundedBy filter should be an array of one or two values.");
 				filter = boundingBoxQuery(fieldName, (Object[]) value);
-				break;
-			case GEO_INTERSECTS:
+			}
+			case GEO_INTERSECTS -> {
 				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_INTERSECTS filter must be a GeoJson object");
 				filter = geoJsonQuery(fieldName, (GeoJson<?>) value, "intersects");
-				break;
-			case GEO_IS_DISJOINT:
+			}
+			case GEO_IS_DISJOINT -> {
 				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_IS_DISJOINT filter must be a GeoJson object");
 				filter = geoJsonQuery(fieldName, (GeoJson<?>) value, "disjoint");
-				break;
-			case GEO_WITHIN:
+			}
+			case GEO_WITHIN -> {
 				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_WITHIN filter must be a GeoJson object");
 				filter = geoJsonQuery(fieldName, (GeoJson<?>) value, "within");
-				break;
-			case GEO_CONTAINS:
+			}
+			case GEO_CONTAINS -> {
 				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_CONTAINS filter must be a GeoJson object");
 				filter = geoJsonQuery(fieldName, (GeoJson<?>) value, "contains");
-				break;
+			}
 		}
 
 		return filter;
 	}
 
-	private QueryBuilder withinQuery(String fieldName, Object[] valArray) {
+	private QueryBuilder withinQuery(String fieldName, Object... valArray) {
 
 		GeoDistanceQueryBuilder filter = QueryBuilders.geoDistanceQuery(fieldName);
 
@@ -154,8 +154,7 @@ class CriteriaFilterProcessor {
 			dist.append((String) valArray[1]);
 		}
 
-		if (valArray[0] instanceof GeoPoint) {
-			GeoPoint loc = (GeoPoint) valArray[0];
+		if (valArray[0]instanceof GeoPoint loc) {
 			filter.point(loc.getLat(), loc.getLon()).distance(dist.toString()).geoDistance(GeoDistance.PLANE);
 		} else if (valArray[0] instanceof Point) {
 			GeoPoint loc = GeoPoint.fromPoint((Point) valArray[0]);
@@ -174,7 +173,7 @@ class CriteriaFilterProcessor {
 		return filter;
 	}
 
-	private QueryBuilder boundingBoxQuery(String fieldName, Object[] valArray) {
+	private QueryBuilder boundingBoxQuery(String fieldName, Object... valArray) {
 
 		Assert.noNullElements(valArray, "Geo boundedBy filter takes a not null element array as parameter.");
 
@@ -217,12 +216,8 @@ class CriteriaFilterProcessor {
 		Metrics metric = (Metrics) distance.getMetric();
 
 		switch (metric) {
-			case KILOMETERS:
-				sb.append("km");
-				break;
-			case MILES:
-				sb.append("mi");
-				break;
+			case KILOMETERS -> sb.append("km");
+			case MILES -> sb.append("mi");
 		}
 	}
 
@@ -250,11 +245,10 @@ class CriteriaFilterProcessor {
 		return true;
 	}
 
-	private void twoParameterBBox(GeoBoundingBoxQueryBuilder filter, Object[] values) {
+	private void twoParameterBBox(GeoBoundingBoxQueryBuilder filter, Object... values) {
 		Assert.isTrue(isType(values, GeoPoint.class) || isType(values, String.class),
 				" both elements of boundedBy filter must be type of GeoPoint or text(format lat,lon or geohash)");
-		if (values[0] instanceof GeoPoint) {
-			GeoPoint topLeft = (GeoPoint) values[0];
+		if (values[0]instanceof GeoPoint topLeft) {
 			GeoPoint bottomRight = (GeoPoint) values[1];
 			filter.setCorners(topLeft.getLat(), topLeft.getLon(), bottomRight.getLat(), bottomRight.getLon());
 		} else {

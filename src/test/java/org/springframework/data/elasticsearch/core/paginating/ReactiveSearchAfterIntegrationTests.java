@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -88,7 +89,7 @@ public abstract class ReactiveSearchAfterIntegrationTests {
 			if (searchHits.size() == 0) {
 				break;
 			}
-			foundEntities.addAll(searchHits.stream().map(searchHit -> searchHit.getContent()).collect(Collectors.toList()));
+			foundEntities.addAll(searchHits.stream().map(SearchHit::getContent).collect(Collectors.toList()));
 			searchAfter = searchHits.get((int) (searchHits.size() - 1)).getSortValues();
 
 			if (++loop > 10) {
@@ -133,14 +134,12 @@ public abstract class ReactiveSearchAfterIntegrationTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof Entity))
+			if (!(o instanceof Entity entity))
 				return false;
 
-			Entity entity = (Entity) o;
-
-			if (id != null ? !id.equals(entity.id) : entity.id != null)
+			if (!Objects.equals(id, entity.id))
 				return false;
-			return message != null ? message.equals(entity.message) : entity.message == null;
+			return Objects.equals(message, entity.message);
 		}
 
 		@Override

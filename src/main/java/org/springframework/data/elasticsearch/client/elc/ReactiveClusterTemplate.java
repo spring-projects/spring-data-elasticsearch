@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.transport.ElasticsearchTransport;
 import reactor.core.publisher.Mono;
 
 import org.springframework.data.elasticsearch.client.erhlc.ReactiveClusterOperations;
@@ -27,7 +28,8 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-public class ReactiveClusterTemplate extends ReactiveChildTemplate<ReactiveElasticsearchClusterClient>
+public class ReactiveClusterTemplate
+		extends ReactiveChildTemplate<ElasticsearchTransport, ReactiveElasticsearchClusterClient>
 		implements ReactiveClusterOperations {
 
 	public ReactiveClusterTemplate(ReactiveElasticsearchClusterClient client,

@@ -38,7 +38,7 @@ class ReactiveElasticsearchParametersParameterAccessor extends ElasticsearchPara
 	 * @param method must not be {@literal null}.
 	 * @param values must not be {@literal null}.
 	 */
-	ReactiveElasticsearchParametersParameterAccessor(ReactiveElasticsearchQueryMethod method, Object[] values) {
+	ReactiveElasticsearchParametersParameterAccessor(ReactiveElasticsearchQueryMethod method, Object... values) {
 		super(method, values);
 
 		this.subscriptions = new ArrayList<>(values.length);

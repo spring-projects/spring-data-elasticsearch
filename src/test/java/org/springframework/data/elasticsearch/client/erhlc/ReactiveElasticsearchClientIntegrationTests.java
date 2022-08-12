@@ -889,9 +889,8 @@ public class ReactiveElasticsearchClientIntegrationTests {
 
 		client.indices().getMapping(getMappingsRequest) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(it -> {
-					assertThat(it.mappings().get(INDEX_I).getSourceAsMap()).isEqualTo(jsonMap);
-				}).verifyComplete();
+				.consumeNextWith(it -> assertThat(it.mappings().get(INDEX_I).getSourceAsMap()).isEqualTo(jsonMap))
+				.verifyComplete();
 	}
 
 	@Test // #1640
@@ -1067,9 +1066,7 @@ public class ReactiveElasticsearchClientIntegrationTests {
 		client.indices().putMapping(putMappingRequest).block();
 
 		client.indices().getFieldMapping(request -> request.indices(INDEX_I).fields("message1")).as(StepVerifier::create)
-				.consumeNextWith(it -> {
-					assertThat(it.mappings().get(INDEX_I).keySet().size()).isZero();
-				}).verifyComplete();
+				.consumeNextWith(it -> assertThat(it.mappings().get(INDEX_I).keySet().size()).isZero()).verifyComplete();
 	}
 
 	@Test // #1640

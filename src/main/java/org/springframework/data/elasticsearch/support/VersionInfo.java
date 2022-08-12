@@ -110,7 +110,7 @@ public final class VersionInfo {
 	}
 
 	private static boolean differInMajorOrMinor(Version version1, Version version2) {
-		return version1.getMajor() != version2.getMajor() || version1.getMinor() != version2.getMinor();
+		return version1.major() != version2.major() || version1.minor() != version2.minor();
 	}
 
 	private VersionInfo() {}

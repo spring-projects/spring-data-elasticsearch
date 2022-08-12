@@ -111,8 +111,7 @@ public class WellKnownText {
 	}
 
 	public Geometry fromWKT(String wkt) throws IOException, ParseException {
-		StringReader reader = new StringReader(wkt);
-		try {
+		try (StringReader reader = new StringReader(wkt)) {
 			// setup the tokenizer; configured to read words w/o numbers
 			StreamTokenizer tokenizer = new StreamTokenizer(reader);
 			tokenizer.resetSyntax();
@@ -131,8 +130,6 @@ public class WellKnownText {
 			Geometry geometry = parseGeometry(tokenizer);
 			validator.validate(geometry);
 			return geometry;
-		} finally {
-			reader.close();
 		}
 	}
 
@@ -236,17 +233,13 @@ public class WellKnownText {
 	}
 
 	private String tokenString(StreamTokenizer stream) {
-		switch (stream.ttype) {
-			case StreamTokenizer.TT_WORD:
-				return stream.sval;
-			case StreamTokenizer.TT_EOF:
-				return EOF;
-			case StreamTokenizer.TT_EOL:
-				return EOL;
-			case StreamTokenizer.TT_NUMBER:
-				return NUMBER;
-		}
-		return "'" + (char) stream.ttype + "'";
+		return switch (stream.ttype) {
+			case StreamTokenizer.TT_WORD -> stream.sval;
+			case StreamTokenizer.TT_EOF -> EOF;
+			case StreamTokenizer.TT_EOL -> EOL;
+			case StreamTokenizer.TT_NUMBER -> NUMBER;
+			default -> "'" + (char) stream.ttype + "'";
+		};
 	}
 
 	private boolean isNumberNext(StreamTokenizer stream) throws IOException {
@@ -294,6 +287,7 @@ public class WellKnownText {
 				stream.lineno());
 	}
 
+	@SuppressWarnings("Convert2Diamond")
 	private static String getWKTName(Geometry geometry) {
 		return geometry.visit(new GeometryVisitor<String, RuntimeException>() {
 

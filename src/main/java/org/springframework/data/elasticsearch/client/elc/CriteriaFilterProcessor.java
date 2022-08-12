@@ -130,37 +130,37 @@ class CriteriaFilterProcessor {
 		ObjectBuilder<? extends QueryVariant> queryBuilder = null;
 
 		switch (key) {
-			case WITHIN:
+			case WITHIN -> {
 				Assert.isTrue(value instanceof Object[], "Value of a geo distance filter should be an array of two values.");
 				queryBuilder = withinQuery(fieldName, (Object[]) value);
-				break;
-			case BBOX:
+			}
+			case BBOX -> {
 				Assert.isTrue(value instanceof Object[],
 						"Value of a boundedBy filter should be an array of one or two values.");
 				queryBuilder = boundingBoxQuery(fieldName, (Object[]) value);
-				break;
-			case GEO_INTERSECTS:
+			}
+			case GEO_INTERSECTS -> {
 				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_INTERSECTS filter must be a GeoJson object");
 				queryBuilder = geoJsonQuery(fieldName, (GeoJson<?>) value, "intersects");
-				break;
-			case GEO_IS_DISJOINT:
+			}
+			case GEO_IS_DISJOINT -> {
 				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_IS_DISJOINT filter must be a GeoJson object");
 				queryBuilder = geoJsonQuery(fieldName, (GeoJson<?>) value, "disjoint");
-				break;
-			case GEO_WITHIN:
+			}
+			case GEO_WITHIN -> {
 				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_WITHIN filter must be a GeoJson object");
 				queryBuilder = geoJsonQuery(fieldName, (GeoJson<?>) value, "within");
-				break;
-			case GEO_CONTAINS:
+			}
+			case GEO_CONTAINS -> {
 				Assert.isTrue(value instanceof GeoJson<?>, "value of a GEO_CONTAINS filter must be a GeoJson object");
 				queryBuilder = geoJsonQuery(fieldName, (GeoJson<?>) value, "contains");
-				break;
+			}
 		}
 
 		return Optional.ofNullable(queryBuilder != null ? queryBuilder.build()._toQuery() : null);
 	}
 
-	private static ObjectBuilder<GeoDistanceQuery> withinQuery(String fieldName, Object[] values) {
+	private static ObjectBuilder<GeoDistanceQuery> withinQuery(String fieldName, Object... values) {
 
 		Assert.noNullElements(values, "Geo distance filter takes 2 not null elements array as parameter.");
 		Assert.isTrue(values.length == 2, "Geo distance filter takes a 2-elements array as parameter.");
@@ -176,8 +176,7 @@ class CriteriaFilterProcessor {
 				.distance(dist) //
 				.distanceType(GeoDistanceType.Plane) //
 				.location(location -> {
-					if (values[0] instanceof GeoPoint) {
-						GeoPoint loc = (GeoPoint) values[0];
+					if (values[0]instanceof GeoPoint loc) {
 						location.latlon(latlon -> latlon.lat(loc.getLat()).lon(loc.getLon()));
 					} else if (values[0] instanceof Point) {
 						GeoPoint loc = GeoPoint.fromPoint((Point) values[0]);
@@ -195,7 +194,7 @@ class CriteriaFilterProcessor {
 				});
 	}
 
-	private static ObjectBuilder<GeoBoundingBoxQuery> boundingBoxQuery(String fieldName, Object[] values) {
+	private static ObjectBuilder<GeoBoundingBoxQuery> boundingBoxQuery(String fieldName, Object... values) {
 
 		Assert.noNullElements(values, "Geo boundedBy filter takes a not null element array as parameter.");
 
@@ -240,13 +239,12 @@ class CriteriaFilterProcessor {
 										)))));
 	}
 
-	private static void twoParameterBBox(GeoBoundingBoxQuery.Builder queryBuilder, Object[] values) {
+	private static void twoParameterBBox(GeoBoundingBoxQuery.Builder queryBuilder, Object... values) {
 
 		Assert.isTrue(allElementsAreOfType(values, GeoPoint.class) || allElementsAreOfType(values, String.class),
 				" both elements of boundedBy filter must be type of GeoPoint or text(format lat,lon or geohash)");
 
-		if (values[0] instanceof GeoPoint) {
-			GeoPoint topLeft = (GeoPoint) values[0];
+		if (values[0]instanceof GeoPoint topLeft) {
 			GeoPoint bottomRight = (GeoPoint) values[1];
 			queryBuilder.boundingBox(bb -> bb //
 					.tlbr(tlbr -> tlbr //
@@ -329,12 +327,8 @@ class CriteriaFilterProcessor {
 		StringBuilder sb = new StringBuilder();
 		sb.append((int) distance.getValue());
 		switch ((Metrics) distance.getMetric()) {
-			case KILOMETERS:
-				sb.append("km");
-				break;
-			case MILES:
-				sb.append("mi");
-				break;
+			case KILOMETERS -> sb.append("km");
+			case MILES -> sb.append("mi");
 		}
 
 		return sb.toString();

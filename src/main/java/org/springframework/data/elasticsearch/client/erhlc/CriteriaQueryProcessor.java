@@ -175,17 +175,10 @@ class CriteriaQueryProcessor {
 
 		// operations without a value
 		switch (key) {
-			case EXISTS:
-				query = existsQuery(fieldName);
-				break;
-			case EMPTY:
-				query = boolQuery().must(existsQuery(fieldName)).mustNot(wildcardQuery(fieldName, "*"));
-				break;
-			case NOT_EMPTY:
-				query = wildcardQuery(fieldName, "*");
-				break;
-			default:
-				break;
+			case EXISTS -> query = existsQuery(fieldName);
+			case EMPTY -> query = boolQuery().must(existsQuery(fieldName)).mustNot(wildcardQuery(fieldName, "*"));
+			case NOT_EMPTY -> query = wildcardQuery(fieldName, "*");
+			default -> {}
 		}
 
 		if (query != null) {
@@ -238,8 +231,7 @@ class CriteriaQueryProcessor {
 				query = matchQuery(fieldName, value).operator(org.elasticsearch.index.query.Operator.AND);
 				break;
 			case IN:
-				if (value instanceof Iterable) {
-					Iterable<?> iterable = (Iterable<?>) value;
+				if (value instanceof Iterable<?> iterable) {
 					if (isKeywordField) {
 						query = boolQuery().must(termsQuery(fieldName, toStringList(iterable)));
 					} else {
@@ -248,8 +240,7 @@ class CriteriaQueryProcessor {
 				}
 				break;
 			case NOT_IN:
-				if (value instanceof Iterable) {
-					Iterable<?> iterable = (Iterable<?>) value;
+				if (value instanceof Iterable<?> iterable) {
 					if (isKeywordField) {
 						query = boolQuery().mustNot(termsQuery(fieldName, toStringList(iterable)));
 					} else {

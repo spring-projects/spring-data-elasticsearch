@@ -109,28 +109,29 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Test // DATAES-285
 	public void shouldMapBooks() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"author\": {\n" + //
-				"      \"type\": \"object\",\n" + //
-				"      \"properties\": {}\n" + //
-				"    },\n" + //
-				"    \"buckets\": {\n" + //
-				"      \"type\": \"nested\"\n" + //
-				"    },\n" + //
-				"    \"description\": {\n" + //
-				"      \"type\": \"text\",\n" + //
-				"      \"analyzer\": \"whitespace\",\n" + //
-				"      \"fields\": {\n" + //
-				"        \"prefix\": {\n" + //
-				"          \"type\": \"text\",\n" + //
-				"          \"analyzer\": \"stop\",\n" + //
-				"          \"search_analyzer\": \"standard\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "properties": {
+				    "author": {
+				      "type": "object",
+				      "properties": {}
+				    },
+				    "buckets": {
+				      "type": "nested"
+				    },
+				    "description": {
+				      "type": "text",
+				      "analyzer": "whitespace",
+				      "fields": {
+				        "prefix": {
+				          "type": "text",
+				          "analyzer": "stop",
+				          "search_analyzer": "standard"
+				        }
+				      }
+				    }
+				  }
+				}"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(Book.class);
 
@@ -142,32 +143,34 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	void shouldBuildMappingsForGeoTypes() throws JSONException {
 
 		// given
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"pointA\": {\n" + //
-				"      \"type\": \"geo_point\"\n" + //
-				"    },\n" + //
-				"    \"pointB\": {\n" + //
-				"      \"type\": \"geo_point\"\n" + //
-				"    },\n" + //
-				"    \"pointC\": {\n" + //
-				"      \"type\": \"geo_point\"\n" + //
-				"    },\n" + //
-				"    \"pointD\": {\n" + //
-				"      \"type\": \"geo_point\"\n" + //
-				"    },\n" + //
-				"    \"shape1\": {\n" + //
-				"      \"type\": \"geo_shape\"\n" + //
-				"    },\n" + //
-				"    \"shape2\": {\n" + //
-				"      \"type\": \"geo_shape\",\n" + //
-				"      \"orientation\": \"clockwise\",\n" + //
-				"      \"ignore_malformed\": true,\n" + //
-				"      \"ignore_z_value\": false,\n" + //
-				"      \"coerce\": true\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "pointA": {
+				      "type": "geo_point"
+				    },
+				    "pointB": {
+				      "type": "geo_point"
+				    },
+				    "pointC": {
+				      "type": "geo_point"
+				    },
+				    "pointD": {
+				      "type": "geo_point"
+				    },
+				    "shape1": {
+				      "type": "geo_shape"
+				    },
+				    "shape2": {
+				      "type": "geo_shape",
+				      "orientation": "clockwise",
+				      "ignore_malformed": true,
+				      "ignore_z_value": false,
+				      "coerce": true
+				    }
+				  }
+				}
+				"""; //
 
 		// when
 		String mapping;
@@ -266,25 +269,27 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	public void shouldUseFieldNameOnMultiField() throws JSONException {
 
 		// given
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"id-property\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": true\n" + //
-				"    },\n" + //
-				"    \"main-field\": {\n" + //
-				"      \"type\": \"text\",\n" + //
-				"      \"analyzer\": \"whitespace\",\n" + //
-				"      \"fields\": {\n" + //
-				"        \"suff-ix\": {\n" + //
-				"          \"type\": \"text\",\n" + //
-				"          \"analyzer\": \"stop\",\n" + //
-				"          \"search_analyzer\": \"standard\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "id-property": {
+				      "type": "keyword",
+				      "index": true
+				    },
+				    "main-field": {
+				      "type": "text",
+				      "analyzer": "whitespace",
+				      "fields": {
+				        "suff-ix": {
+				          "type": "text",
+				          "analyzer": "stop",
+				          "search_analyzer": "standard"
+				        }
+				      }
+				    }
+				  }
+				}
+				"""; //
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.MultiFieldEntity.class);
@@ -308,109 +313,109 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 	@Test // DATAES-621, DATAES-943, DATAES-946
 	public void shouldSetFieldMappingProperties() throws JSONException {
-		String expected = "{\n" + //
-				"        \"properties\": {\n" + //
-				"            \"storeTrue\": {\n" + //
-				"                \"store\": true\n" + //
-				"            },\n" + //
-				"            \"indexFalse\": {\n" + //
-				"                \"index\": false\n" + //
-				"            },\n" + //
-				"            \"coerceFalse\": {\n" + //
-				"                \"coerce\": false\n" + //
-				"            },\n" + //
-				"            \"fielddataTrue\": {\n" + //
-				"                \"fielddata\": true\n" + //
-				"            },\n" + //
-				"            \"type\": {\n" + //
-				"                \"type\": \"integer\"\n" + //
-				"            },\n" + //
-				"            \"ignoreAbove\": {\n" + //
-				"                \"ignore_above\": 42\n" + //
-				"            },\n" + //
-				"            \"copyTo\": {\n" + //
-				"                \"copy_to\": [\"foo\", \"bar\"]\n" + //
-				"            },\n" + //
-				"            \"date\": {\n" + //
-				"                \"type\": \"date\",\n" + //
-				"                \"format\": \"YYYYMMDD\"\n" + //
-				"            },\n" + //
-				"            \"analyzers\": {\n" + //
-				"                \"analyzer\": \"ana\",\n" + //
-				"                \"search_analyzer\": \"sana\",\n" + //
-				"                \"normalizer\": \"norma\"\n" + //
-				"            },\n" + //
-				"            \"docValuesTrue\": {\n" + //
-				"                \"type\": \"keyword\"\n" + //
-				"            },\n" + //
-				"            \"docValuesFalse\": {\n" + //
-				"                \"type\": \"keyword\",\n" + //
-				"                \"doc_values\": false\n" + //
-				"            },\n" + //
-				"            \"ignoreMalformedTrue\": {\n" + //
-				"                \"ignore_malformed\": true\n" + //
-				"            },\n" + //
-				"            \"indexPhrasesTrue\": {\n" + //
-				"                \"index_phrases\": true\n" + //
-				"            },\n" + //
-				"            \"indexOptionsPositions\": {\n" + //
-				"                \"index_options\": \"positions\"\n" + //
-				"            },\n" + //
-				"            \"defaultIndexPrefixes\": {\n" + //
-				"                \"index_prefixes\":{}" + //
-				"            },\n" + //
-				"            \"customIndexPrefixes\": {\n" + //
-				"                \"index_prefixes\":{\"min_chars\":1,\"max_chars\":10}" + //
-				"            },\n" + //
-				"            \"normsFalse\": {\n" + //
-				"                \"norms\": false\n" + //
-				"            },\n" + //
-				"            \"nullValueString\": {\n" + //
-				"                \"null_value\": \"NULLNULL\"\n" + //
-				"            },\n" + //
-				"            \"nullValueInteger\": {\n" + //
-				"                \"null_value\": 42\n" + //
-				"            },\n" + //
-				"            \"nullValueDouble\": {\n" + //
-				"                \"null_value\": 42.0\n" + //
-				"            },\n" + //
-				"            \"positionIncrementGap\": {\n" + //
-				"                \"position_increment_gap\": 42\n" + //
-				"            },\n" + //
-				"            \"similarityBoolean\": {\n" + //
-				"                \"similarity\": \"boolean\"\n" + //
-				"            },\n" + //
-				"            \"termVectorWithOffsets\": {\n" + //
-				"                \"term_vector\": \"with_offsets\"\n" + //
-				"            },\n" + //
-				"            \"scaledFloat\": {\n" + //
-				"                \"type\": \"scaled_float\",\n" + //
-				"                \"scaling_factor\": 100.0\n" + //
-				"            },\n" + //
-				"            \"enabledObject\": {\n" + //
-				"                \"type\": \"object\"\n" + //
-				"            },\n" + //
-				"            \"disabledObject\": {\n" + //
-				"                \"type\": \"object\",\n" + //
-				"                \"enabled\": false\n" + //
-				"            },\n" + //
-				"            \"eagerGlobalOrdinalsTrue\": {\n" + //
-				"                \"type\": \"text\",\n" + //
-				"                \"eager_global_ordinals\": true\n" + //
-				"            },\n" + //
-				"            \"eagerGlobalOrdinalsFalse\": {\n" + //
-				"                \"type\": \"text\"\n" + //
-				"            },\n" + //
-				"            \"wildcardWithoutParams\": {\n" + //
-				"                \"type\": \"wildcard\"\n" + //
-				"            },\n" + //
-				"            \"wildcardWithParams\": {\n" + //
-				"                \"type\": \"wildcard\",\n" + //
-				"                \"null_value\": \"WILD\",\n" + //
-				"                \"ignore_above\": 42\n" + //
-				"            }\n" + //
-				"        }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				        "properties": {
+				            "storeTrue": {
+				                "store": true
+				            },
+				            "indexFalse": {
+				                "index": false
+				            },
+				            "coerceFalse": {
+				                "coerce": false
+				            },
+				            "fielddataTrue": {
+				                "fielddata": true
+				            },
+				            "type": {
+				                "type": "integer"
+				            },
+				            "ignoreAbove": {
+				                "ignore_above": 42
+				            },
+				            "copyTo": {
+				                "copy_to": ["foo", "bar"]
+				            },
+				            "date": {
+				                "type": "date",
+				                "format": "YYYYMMDD"
+				            },
+				            "analyzers": {
+				                "analyzer": "ana",
+				                "search_analyzer": "sana",
+				                "normalizer": "norma"
+				            },
+				            "docValuesTrue": {
+				                "type": "keyword"
+				            },
+				            "docValuesFalse": {
+				                "type": "keyword",
+				                "doc_values": false
+				            },
+				            "ignoreMalformedTrue": {
+				                "ignore_malformed": true
+				            },
+				            "indexPhrasesTrue": {
+				                "index_phrases": true
+				            },
+				            "indexOptionsPositions": {
+				                "index_options": "positions"
+				            },
+				            "defaultIndexPrefixes": {
+				                "index_prefixes":{}            },
+				            "customIndexPrefixes": {
+				                "index_prefixes":{"min_chars":1,"max_chars":10}            },
+				            "normsFalse": {
+				                "norms": false
+				            },
+				            "nullValueString": {
+				                "null_value": "NULLNULL"
+				            },
+				            "nullValueInteger": {
+				                "null_value": 42
+				            },
+				            "nullValueDouble": {
+				                "null_value": 42.0
+				            },
+				            "positionIncrementGap": {
+				                "position_increment_gap": 42
+				            },
+				            "similarityBoolean": {
+				                "similarity": "boolean"
+				            },
+				            "termVectorWithOffsets": {
+				                "term_vector": "with_offsets"
+				            },
+				            "scaledFloat": {
+				                "type": "scaled_float",
+				                "scaling_factor": 100.0
+				            },
+				            "enabledObject": {
+				                "type": "object"
+				            },
+				            "disabledObject": {
+				                "type": "object",
+				                "enabled": false
+				            },
+				            "eagerGlobalOrdinalsTrue": {
+				                "type": "text",
+				                "eager_global_ordinals": true
+				            },
+				            "eagerGlobalOrdinalsFalse": {
+				                "type": "text"
+				            },
+				            "wildcardWithoutParams": {
+				                "type": "wildcard"
+				            },
+				            "wildcardWithParams": {
+				                "type": "wildcard",
+				                "null_value": "WILD",
+				                "ignore_above": 42
+				            }
+				        }
+				}
+				"""; //
 
 		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldMappingParameters.class);
@@ -422,35 +427,36 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Test // DATAES-148, #1767
 	void shouldWriteDynamicMappingFromAnnotation() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"dynamic\": \"false\",\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"author\": {\n" + //
-				"      \"type\": \"object\",\n" + //
-				"      \"dynamic\": \"strict\",\n" + //
-				"      \"properties\": {\n" + //
-				"        \"_class\": {\n" + //
-				"          \"type\": \"keyword\",\n" + //
-				"          \"index\": false,\n" + //
-				"          \"doc_values\": false\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    \"objectMap\": {\n" + //
-				"      \"type\": \"object\",\n" + //
-				"      \"dynamic\": \"false\"\n" + //
-				"    },\n" + //
-				"    \"nestedObjectMap\": {\n" + //
-				"      \"type\": \"nested\",\n" + //
-				"      \"dynamic\": \"false\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "dynamic": "false",
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "author": {
+				      "type": "object",
+				      "dynamic": "strict",
+				      "properties": {
+				        "_class": {
+				          "type": "keyword",
+				          "index": false,
+				          "doc_values": false
+				        }
+				      }
+				    },
+				    "objectMap": {
+				      "type": "object",
+				      "dynamic": "false"
+				    },
+				    "nestedObjectMap": {
+				      "type": "nested",
+				      "dynamic": "false"
+				    }
+				  }
+				}"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DynamicMappingAnnotationEntity.class);
 
@@ -460,55 +466,56 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Test // #1871
 	void shouldWriteDynamicMapping() throws JSONException {
 
-		String expected = "{\n" //
-				+ "  \"dynamic\": \"false\",\n" //
-				+ "  \"properties\": {\n" //
-				+ "    \"_class\": {\n" //
-				+ "      \"type\": \"keyword\",\n" //
-				+ "      \"index\": false,\n" //
-				+ "      \"doc_values\": false\n" //
-				+ "    },\n" //
-				+ "    \"objectInherit\": {\n" //
-				+ "      \"type\": \"object\"\n" //
-				+ "    },\n" //
-				+ "    \"objectFalse\": {\n" //
-				+ "      \"dynamic\": \"false\",\n" //
-				+ "      \"type\": \"object\"\n" //
-				+ "    },\n" //
-				+ "    \"objectTrue\": {\n" //
-				+ "      \"dynamic\": \"true\",\n" //
-				+ "      \"type\": \"object\"\n" //
-				+ "    },\n" //
-				+ "    \"objectStrict\": {\n" //
-				+ "      \"dynamic\": \"strict\",\n" //
-				+ "      \"type\": \"object\"\n" //
-				+ "    },\n" //
-				+ "    \"objectRuntime\": {\n" //
-				+ "      \"dynamic\": \"runtime\",\n" //
-				+ "      \"type\": \"object\"\n" //
-				+ "    },\n" //
-				+ "    \"nestedObjectInherit\": {\n" //
-				+ "      \"type\": \"nested\"\n" //
-				+ "    },\n" //
-				+ "    \"nestedObjectFalse\": {\n" //
-				+ "      \"dynamic\": \"false\",\n" //
-				+ "      \"type\": \"nested\"\n" //
-				+ "    },\n" //
-				+ "    \"nestedObjectTrue\": {\n" //
-				+ "      \"dynamic\": \"true\",\n" //
-				+ "      \"type\": \"nested\"\n" //
-				+ "    },\n" //
-				+ "    \"nestedObjectStrict\": {\n" //
-				+ "      \"dynamic\": \"strict\",\n" //
-				+ "      \"type\": \"nested\"\n" //
-				+ "    },\n" //
-				+ "    \"nestedObjectRuntime\": {\n" //
-				+ "      \"dynamic\": \"runtime\",\n" //
-				+ "      \"type\": \"nested\"\n" //
-				+ "    }\n" //
-				+ "  }\n" //
-				+ "}\n" //
-				+ "";
+		String expected = """
+				{
+				  "dynamic": "false",
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "objectInherit": {
+				      "type": "object"
+				    },
+				    "objectFalse": {
+				      "dynamic": "false",
+				      "type": "object"
+				    },
+				    "objectTrue": {
+				      "dynamic": "true",
+				      "type": "object"
+				    },
+				    "objectStrict": {
+				      "dynamic": "strict",
+				      "type": "object"
+				    },
+				    "objectRuntime": {
+				      "dynamic": "runtime",
+				      "type": "object"
+				    },
+				    "nestedObjectInherit": {
+				      "type": "nested"
+				    },
+				    "nestedObjectFalse": {
+				      "dynamic": "false",
+				      "type": "nested"
+				    },
+				    "nestedObjectTrue": {
+				      "dynamic": "true",
+				      "type": "nested"
+				    },
+				    "nestedObjectStrict": {
+				      "dynamic": "strict",
+				      "type": "nested"
+				    },
+				    "nestedObjectRuntime": {
+				      "dynamic": "runtime",
+				      "type": "nested"
+				    }
+				  }
+				}
+				""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DynamicMappingEntity.class);
 
@@ -517,13 +524,14 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 	@Test // DATAES-784
 	void shouldMapPropertyObjectsToFieldDefinition() throws JSONException {
-		String expected = "{\n" + //
-				"  properties: {\n" + //
-				"    valueObject: {\n" + //
-				"      type: \"text\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}";
+		String expected = """
+				{
+				  properties: {
+				    valueObject: {
+				      type: "text"
+				    }
+				  }
+				}""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ValueDoc.class);
 
@@ -532,20 +540,21 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 	@Test // DATAES-788
 	void shouldWriteCompletionContextInfo() throws JSONException {
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"suggest\": {\n" + //
-				"      \"type\": \"completion\",\n" + //
-				"      \"contexts\": [\n" + //
-				"        {\n" + //
-				"          \"name\": \"location\",\n" + //
-				"          \"type\": \"geo\",\n" + //
-				"          \"path\": \"proppath\"\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}";
+		String expected = """
+				{
+				  "properties": {
+				    "suggest": {
+				      "type": "completion",
+				      "contexts": [
+				        {
+				          "name": "location",
+				          "type": "geo",
+				          "path": "proppath"
+				        }
+				      ]
+				    }
+				  }
+				}""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(CompletionDocument.class);
 
@@ -562,20 +571,22 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Test // DATAES-854
 	@DisplayName("should write rank_feature properties")
 	void shouldWriteRankFeatureProperties() throws JSONException {
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"pageRank\": {\n" + //
-				"      \"type\": \"rank_feature\"\n" + //
-				"    },\n" + //
-				"    \"urlLength\": {\n" + //
-				"      \"type\": \"rank_feature\",\n" + //
-				"      \"positive_score_impact\": false\n" + //
-				"    },\n" + //
-				"    \"topics\": {\n" + //
-				"      \"type\": \"rank_features\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "pageRank": {
+				      "type": "rank_feature"
+				    },
+				    "urlLength": {
+				      "type": "rank_feature",
+				      "positive_score_impact": false
+				    },
+				    "topics": {
+				      "type": "rank_features"
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(RankFeatureEntity.class);
 
@@ -585,14 +596,16 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Test // #1700
 	@DisplayName("should write dense_vector properties")
 	void shouldWriteDenseVectorProperties() throws JSONException {
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"my_vector\": {\n" + //
-				"      \"type\": \"dense_vector\",\n" + //
-				"      \"dims\": 16\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "my_vector": {
+				      "type": "dense_vector",
+				      "dims": 16
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DenseVectorEntity.class);
 
@@ -616,17 +629,19 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should write disabled property mapping")
 	void shouldWriteDisabledPropertyMapping() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"properties\":{\n" + //
-				"    \"text\": {\n" + //
-				"      \"type\": \"text\"\n" + //
-				"    },\n" + //
-				"    \"object\": {\n" + //
-				"      \"type\": \"object\",\n" + //
-				"      \"enabled\": false\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties":{
+				    "text": {
+				      "type": "text"
+				    },
+				    "object": {
+				      "type": "object",
+				      "enabled": false
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DisabledMappingProperty.class);
 
@@ -645,44 +660,46 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should write typeHint entries")
 	void shouldWriteTypeHintEntries() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"id\": {\n" + //
-				"      \"type\": \"keyword\"\n" + //
-				"    },\n" + //
-				"    \"nestedEntity\": {\n" + //
-				"      \"type\": \"nested\",\n" + //
-				"      \"properties\": {\n" + //
-				"        \"_class\": {\n" + //
-				"          \"type\": \"keyword\",\n" + //
-				"          \"index\": false,\n" + //
-				"          \"doc_values\": false\n" + //
-				"        },\n" + //
-				"        \"nestedField\": {\n" + //
-				"          \"type\": \"text\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    \"objectEntity\": {\n" + //
-				"      \"type\": \"object\",\n" + //
-				"      \"properties\": {\n" + //
-				"        \"_class\": {\n" + //
-				"          \"type\": \"keyword\",\n" + //
-				"          \"index\": false,\n" + //
-				"          \"doc_values\": false\n" + //
-				"        },\n" + //
-				"        \"objectField\": {\n" + //
-				"          \"type\": \"text\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "id": {
+				      "type": "keyword"
+				    },
+				    "nestedEntity": {
+				      "type": "nested",
+				      "properties": {
+				        "_class": {
+				          "type": "keyword",
+				          "index": false,
+				          "doc_values": false
+				        },
+				        "nestedField": {
+				          "type": "text"
+				        }
+				      }
+				    },
+				    "objectEntity": {
+				      "type": "object",
+				      "properties": {
+				        "_class": {
+				          "type": "keyword",
+				          "index": false,
+				          "doc_values": false
+				        },
+				        "objectField": {
+				          "type": "text"
+				        }
+				      }
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(TypeHintEntity.class);
 
@@ -693,29 +710,31 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should map according to the annotated properties")
 	void shouldMapAccordingToTheAnnotatedProperties() throws JSONException {
 
-		String expected = "{\n" + "    \"properties\": {\n" + //
-				"        \"field1\": {\n" + //
-				"            \"type\": \"date\",\n" + //
-				"            \"format\": \"date_optional_time||epoch_millis\"\n" + //
-				"        },\n" + //
-				"        \"field2\": {\n" + //
-				"            \"type\": \"date\",\n" + //
-				"            \"format\": \"basic_date\"\n" + //
-				"        },\n" + //
-				"        \"field3\": {\n" + //
-				"            \"type\": \"date\",\n" + //
-				"            \"format\": \"basic_date||basic_time\"\n" + //
-				"        },\n" + //
-				"        \"field4\": {\n" + //
-				"            \"type\": \"date\",\n" + //
-				"            \"format\": \"date_optional_time||epoch_millis||dd.MM.uuuu\"\n" + //
-				"        },\n" + //
-				"        \"field5\": {\n" + //
-				"            \"type\": \"date\",\n" + //
-				"            \"format\": \"dd.MM.uuuu\"\n" + //
-				"        }\n" + //
-				"    }\n" + //
-				"}"; //
+		String expected = """
+				{
+				    "properties": {
+				        "field1": {
+				            "type": "date",
+				            "format": "date_optional_time||epoch_millis"
+				        },
+				        "field2": {
+				            "type": "date",
+				            "format": "basic_date"
+				        },
+				        "field3": {
+				            "type": "date",
+				            "format": "basic_date||basic_time"
+				        },
+				        "field4": {
+				            "type": "date",
+				            "format": "date_optional_time||epoch_millis||dd.MM.uuuu"
+				        },
+				        "field5": {
+				            "type": "date",
+				            "format": "dd.MM.uuuu"
+				        }
+				    }
+				}"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DateFormatsEntity.class);
 
@@ -726,19 +745,21 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should write date formats for date range fields")
 	void shouldWriteDateFormatsForDateRangeFields() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"field2\": {\n" + //
-				"      \"type\": \"date_range\",\n" + //
-				"      \"format\": \"date\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "field2": {
+				      "type": "date_range",
+				      "format": "date"
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DateRangeEntity.class);
 
@@ -750,28 +771,30 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	void shouldWriteTypeHintsWhenContextIsConfiguredToDoSo() throws JSONException {
 
 		((SimpleElasticsearchMappingContext) (elasticsearchConverter.get().getMappingContext())).setWriteTypeHints(true);
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"title\": {\n" + //
-				"      \"type\": \"text\"\n" + //
-				"    },\n" + //
-				"    \"authors\": {\n" + //
-				"      \"type\": \"nested\",\n" + //
-				"      \"properties\": {\n" + //
-				"        \"_class\": {\n" + //
-				"          \"type\": \"keyword\",\n" + //
-				"          \"index\": false,\n" + //
-				"          \"doc_values\": false\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "title": {
+				      "type": "text"
+				    },
+				    "authors": {
+				      "type": "nested",
+				      "properties": {
+				        "_class": {
+				          "type": "keyword",
+				          "index": false,
+				          "doc_values": false
+				        }
+				      }
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(Magazine.class);
 
@@ -783,18 +806,20 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	void shouldNotWriteTypeHintsWhenContextIsConfiguredToNotDoSo() throws JSONException {
 
 		((SimpleElasticsearchMappingContext) (elasticsearchConverter.get().getMappingContext())).setWriteTypeHints(false);
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"title\": {\n" + //
-				"      \"type\": \"text\"\n" + //
-				"    },\n" + //
-				"    \"authors\": {\n" + //
-				"      \"type\": \"nested\",\n" + //
-				"      \"properties\": {\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "title": {
+				      "type": "text"
+				    },
+				    "authors": {
+				      "type": "nested",
+				      "properties": {
+				      }
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(Magazine.class);
 
@@ -806,28 +831,30 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	void shouldWriteTypeHintsWhenContextIsConfiguredToNotDoSoButEntityShould() throws JSONException {
 
 		((SimpleElasticsearchMappingContext) (elasticsearchConverter.get().getMappingContext())).setWriteTypeHints(false);
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"title\": {\n" + //
-				"      \"type\": \"text\"\n" + //
-				"    },\n" + //
-				"    \"authors\": {\n" + //
-				"      \"type\": \"nested\",\n" + //
-				"      \"properties\": {\n" + //
-				"        \"_class\": {\n" + //
-				"          \"type\": \"keyword\",\n" + //
-				"          \"index\": false,\n" + //
-				"          \"doc_values\": false\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "title": {
+				      "type": "text"
+				    },
+				    "authors": {
+				      "type": "nested",
+				      "properties": {
+				        "_class": {
+				          "type": "keyword",
+				          "index": false,
+				          "doc_values": false
+				        }
+				      }
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(MagazineWithTypeHints.class);
 
@@ -839,18 +866,20 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	void shouldNotWriteTypeHintsWhenContextIsConfiguredToDoSoButEntityShouldNot() throws JSONException {
 
 		((SimpleElasticsearchMappingContext) (elasticsearchConverter.get().getMappingContext())).setWriteTypeHints(true);
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"title\": {\n" + //
-				"      \"type\": \"text\"\n" + //
-				"    },\n" + //
-				"    \"authors\": {\n" + //
-				"      \"type\": \"nested\",\n" + //
-				"      \"properties\": {\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "title": {
+				      "type": "text"
+				    },
+				    "authors": {
+				      "type": "nested",
+				      "properties": {
+				      }
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(MagazineWithoutTypeHints.class);
 
@@ -861,15 +890,16 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should not write dynamic detection mapping entries in default setting")
 	void shouldNotWriteDynamicDetectionMappingEntriesInDefaultSetting() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    }
+				  }
+				}"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DynamicDetectionMappingDefault.class);
 
@@ -880,17 +910,16 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should write dynamic detection mapping entries when set to false")
 	void shouldWriteDynamicDetectionMappingEntriesWhenSetToFalse() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"date_detection\": false," + //
-				"  \"numeric_detection\": false," + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "date_detection": false,  "numeric_detection": false,  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    }
+				  }
+				}"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DynamicDetectionMappingFalse.class);
 
@@ -901,17 +930,16 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should write dynamic detection mapping entries when set to true")
 	void shouldWriteDynamicDetectionMappingEntriesWhenSetToTrue() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"date_detection\": true," + //
-				"  \"numeric_detection\": true," + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "date_detection": true,  "numeric_detection": true,  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    }
+				  }
+				}"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DynamicDetectionMappingTrue.class);
 
@@ -922,16 +950,16 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should write dynamic date formats")
 	void shouldWriteDynamicDateFormats() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"dynamic_date_formats\": [\"date1\",\"date2\"]," + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "dynamic_date_formats": ["date1","date2"],  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    }
+				  }
+				}"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DynamicDateFormatsMapping.class);
 
@@ -942,28 +970,29 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should write runtime fields")
 	void shouldWriteRuntimeFields() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"runtime\": {\n" + //
-				"    \"day_of_week\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"script\": {\n" + //
-				"        \"source\": \"emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))\"\n"
-				+ //
-				"      }\n" + //
-				"    }\n" + //
-				"  },\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"@timestamp\": {\n" + //
-				"      \"type\": \"date\",\n" + //
-				"      \"format\": \"epoch_millis\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "runtime": {
+				    "day_of_week": {
+				      "type": "keyword",
+				      "script": {
+				        "source": "emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))"
+				      }
+				    }
+				  },
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "@timestamp": {
+				      "type": "date",
+				      "format": "epoch_millis"
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(RuntimeFieldEntity.class);
 
@@ -974,38 +1003,40 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should add fields that are excluded from source")
 	void shouldAddFieldsThatAreExcludedFromSource() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"excluded-date\": {\n" + //
-				"      \"type\": \"date\",\n" + //
-				"      \"format\": \"date\"\n" + //
-				"    },\n" + //
-				"    \"nestedEntity\": {\n" + //
-				"      \"type\": \"nested\",\n" + //
-				"      \"properties\": {\n" + //
-				"        \"_class\": {\n" + //
-				"          \"type\": \"keyword\",\n" + //
-				"          \"index\": false,\n" + //
-				"          \"doc_values\": false\n" + //
-				"        },\n" + //
-				"        \"excluded-text\": {\n" + //
-				"          \"type\": \"text\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  },\n" + //
-				"  \"_source\": {\n" + //
-				"    \"excludes\": [\n" + //
-				"      \"excluded-date\",\n" + //
-				"      \"nestedEntity.excluded-text\"\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "excluded-date": {
+				      "type": "date",
+				      "format": "date"
+				    },
+				    "nestedEntity": {
+				      "type": "nested",
+				      "properties": {
+				        "_class": {
+				          "type": "keyword",
+				          "index": false,
+				          "doc_values": false
+				        },
+				        "excluded-text": {
+				          "type": "text"
+				        }
+				      }
+				    }
+				  },
+				  "_source": {
+				    "excludes": [
+				      "excluded-date",
+				      "nestedEntity.excluded-text"
+				    ]
+				  }
+				}
+				"""; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ExcludedFieldEntity.class);
 
@@ -1711,16 +1742,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 	}
 
-	static class ValueObject {
-		private final String value;
-
-		public ValueObject(String value) {
-			this.value = value;
-		}
-
-		public String getValue() {
-			return value;
-		}
+	record ValueObject(String value) {
 	}
 
 	@Document(indexName = "valueDoc")

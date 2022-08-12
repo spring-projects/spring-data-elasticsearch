@@ -33,28 +33,29 @@ class CriteriaQueryProcessorUnitTests {
 	@Test // DATAES-706
 	void shouldProcessTwoCriteriaWithAnd() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"must\": [\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"value1\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"field1^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"value2\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"field2^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool": {
+				    "must": [
+				      {
+				        "query_string": {
+				          "query": "value1",
+				          "fields": [
+				            "field1^1.0"
+				          ]
+				        }
+				      },
+				      {
+				        "query_string": {
+				          "query": "value2",
+				          "fields": [
+				            "field2^1.0"
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}"""; //
 
 		Criteria criteria = new Criteria("field1").is("value1").and("field2").is("value2");
 
@@ -66,28 +67,29 @@ class CriteriaQueryProcessorUnitTests {
 	@Test // DATAES-706
 	void shouldProcessTwoCriteriaWithOr() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"should\": [\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"value1\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"field1^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"value2\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"field2^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool": {
+				    "should": [
+				      {
+				        "query_string": {
+				          "query": "value1",
+				          "fields": [
+				            "field1^1.0"
+				          ]
+				        }
+				      },
+				      {
+				        "query_string": {
+				          "query": "value2",
+				          "fields": [
+				            "field2^1.0"
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}"""; //
 
 		Criteria criteria = new Criteria("field1").is("value1").or("field2").is("value2");
 
@@ -99,46 +101,48 @@ class CriteriaQueryProcessorUnitTests {
 	@Test // DATAES-706
 	void shouldProcessMixedCriteriaWithOrAnd() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"must\": [\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"value1\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"field1^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"value3\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"field3^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ],\n" + //
-				"    \"should\": [\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"value2\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"field2^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"value4\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"field4^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool": {
+				    "must": [
+				      {
+				        "query_string": {
+				          "query": "value1",
+				          "fields": [
+				            "field1^1.0"
+				          ]
+				        }
+				      },
+				      {
+				        "query_string": {
+				          "query": "value3",
+				          "fields": [
+				            "field3^1.0"
+				          ]
+				        }
+				      }
+				    ],
+				    "should": [
+				      {
+				        "query_string": {
+				          "query": "value2",
+				          "fields": [
+				            "field2^1.0"
+				          ]
+				        }
+				      },
+				      {
+				        "query_string": {
+				          "query": "value4",
+				          "fields": [
+				            "field4^1.0"
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		Criteria criteria = new Criteria("field1").is("value1") //
 				.or("field2").is("value2") //
@@ -153,42 +157,43 @@ class CriteriaQueryProcessorUnitTests {
 	@Test // DATAES-706
 	void shouldAddSubQuery() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"must\": [\n" + //
-				"      {\n" + //
-				"        \"query_string\": {\n" + //
-				"          \"query\": \"Miller\",\n" + //
-				"          \"fields\": [\n" + //
-				"            \"lastName^1.0\"\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"bool\": {\n" + //
-				"          \"should\": [\n" + //
-				"            {\n" + //
-				"              \"query_string\": {\n" + //
-				"                \"query\": \"John\",\n" + //
-				"                \"fields\": [\n" + //
-				"                  \"firstName^1.0\"\n" + //
-				"                ]\n" + //
-				"              }\n" + //
-				"            },\n" + //
-				"            {\n" + //
-				"              \"query_string\": {\n" + //
-				"                \"query\": \"Jack\",\n" + //
-				"                \"fields\": [\n" + //
-				"                  \"firstName^1.0\"\n" + //
-				"                ]\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool": {
+				    "must": [
+				      {
+				        "query_string": {
+				          "query": "Miller",
+				          "fields": [
+				            "lastName^1.0"
+				          ]
+				        }
+				      },
+				      {
+				        "bool": {
+				          "should": [
+				            {
+				              "query_string": {
+				                "query": "John",
+				                "fields": [
+				                  "firstName^1.0"
+				                ]
+				              }
+				            },
+				            {
+				              "query_string": {
+				                "query": "Jack",
+				                "fields": [
+				                  "firstName^1.0"
+				                ]
+				              }
+				            }
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}"""; //
 
 		Criteria criteria = new Criteria("lastName").is("Miller")
 				.subCriteria(new Criteria().or("firstName").is("John").or("firstName").is("Jack"));
@@ -201,84 +206,85 @@ class CriteriaQueryProcessorUnitTests {
 	@Test // DATAES-706
 	void shouldProcessNestedSubCriteria() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"should\": [\n" + //
-				"      {\n" + //
-				"        \"bool\": {\n" + //
-				"          \"must\": [\n" + //
-				"            {\n" + //
-				"              \"query_string\": {\n" + //
-				"                \"query\": \"Miller\",\n" + //
-				"                \"fields\": [\n" + //
-				"                  \"lastName^1.0\"\n" + //
-				"                ]\n" + //
-				"              }\n" + //
-				"            },\n" + //
-				"            {\n" + //
-				"              \"bool\": {\n" + //
-				"                \"should\": [\n" + //
-				"                  {\n" + //
-				"                    \"query_string\": {\n" + //
-				"                      \"query\": \"Jack\",\n" + //
-				"                      \"fields\": [\n" + //
-				"                        \"firstName^1.0\"\n" + //
-				"                      ]\n" + //
-				"                    }\n" + //
-				"                  },\n" + //
-				"                  {\n" + //
-				"                    \"query_string\": {\n" + //
-				"                      \"query\": \"John\",\n" + //
-				"                      \"fields\": [\n" + //
-				"                        \"firstName^1.0\"\n" + //
-				"                      ]\n" + //
-				"                    }\n" + //
-				"                  }\n" + //
-				"                ]\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"bool\": {\n" + //
-				"          \"must\": [\n" + //
-				"            {\n" + //
-				"              \"query_string\": {\n" + //
-				"                \"query\": \"Smith\",\n" + //
-				"                \"fields\": [\n" + //
-				"                  \"lastName^1.0\"\n" + //
-				"                ]\n" + //
-				"              }\n" + //
-				"            },\n" + //
-				"            {\n" + //
-				"              \"bool\": {\n" + //
-				"                \"should\": [\n" + //
-				"                  {\n" + //
-				"                    \"query_string\": {\n" + //
-				"                      \"query\": \"Emma\",\n" + //
-				"                      \"fields\": [\n" + //
-				"                        \"firstName^1.0\"\n" + //
-				"                      ]\n" + //
-				"                    }\n" + //
-				"                  },\n" + //
-				"                  {\n" + //
-				"                    \"query_string\": {\n" + //
-				"                      \"query\": \"Lucy\",\n" + //
-				"                      \"fields\": [\n" + //
-				"                        \"firstName^1.0\"\n" + //
-				"                      ]\n" + //
-				"                    }\n" + //
-				"                  }\n" + //
-				"                ]\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool": {
+				    "should": [
+				      {
+				        "bool": {
+				          "must": [
+				            {
+				              "query_string": {
+				                "query": "Miller",
+				                "fields": [
+				                  "lastName^1.0"
+				                ]
+				              }
+				            },
+				            {
+				              "bool": {
+				                "should": [
+				                  {
+				                    "query_string": {
+				                      "query": "Jack",
+				                      "fields": [
+				                        "firstName^1.0"
+				                      ]
+				                    }
+				                  },
+				                  {
+				                    "query_string": {
+				                      "query": "John",
+				                      "fields": [
+				                        "firstName^1.0"
+				                      ]
+				                    }
+				                  }
+				                ]
+				              }
+				            }
+				          ]
+				        }
+				      },
+				      {
+				        "bool": {
+				          "must": [
+				            {
+				              "query_string": {
+				                "query": "Smith",
+				                "fields": [
+				                  "lastName^1.0"
+				                ]
+				              }
+				            },
+				            {
+				              "bool": {
+				                "should": [
+				                  {
+				                    "query_string": {
+				                      "query": "Emma",
+				                      "fields": [
+				                        "firstName^1.0"
+				                      ]
+				                    }
+				                  },
+				                  {
+				                    "query_string": {
+				                      "query": "Lucy",
+				                      "fields": [
+				                        "firstName^1.0"
+				                      ]
+				                    }
+				                  }
+				                ]
+				              }
+				            }
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}"""; //
 
 		Criteria criteria = Criteria.or()
 				.subCriteria(new Criteria("lastName").is("Miller")
@@ -294,20 +300,22 @@ class CriteriaQueryProcessorUnitTests {
 	@Test // DATAES-706
 	void shouldBuildMatchQuery() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"must\" : [\n" + //
-				"      {\n" + //
-				"        \"match\" : {\n" + //
-				"          \"field1\" : {\n" + //
-				"            \"query\" : \"value1 value2\",\n" + //
-				"            \"operator\" : \"OR\"\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "must" : [
+				      {
+				        "match" : {
+				          "field1" : {
+				            "query" : "value1 value2",
+				            "operator" : "OR"
+				          }
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		Criteria criteria = new Criteria("field1").matches("value1 value2");
 
@@ -319,20 +327,22 @@ class CriteriaQueryProcessorUnitTests {
 	@Test // DATAES-706
 	void shouldBuildMatchAllQuery() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"must\" : [\n" + //
-				"      {\n" + //
-				"        \"match\" : {\n" + //
-				"          \"field1\" : {\n" + //
-				"            \"query\" : \"value1 value2\",\n" + //
-				"            \"operator\" : \"AND\"\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "must" : [
+				      {
+				        "match" : {
+				          "field1" : {
+				            "query" : "value1 value2",
+				            "operator" : "AND"
+				          }
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		Criteria criteria = new Criteria("field1").matchesAll("value1 value2");
 
@@ -345,25 +355,26 @@ class CriteriaQueryProcessorUnitTests {
 	@DisplayName("should build nested query")
 	void shouldBuildNestedQuery() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"must\" : [\n" + //
-				"      {\n" + //
-				"        \"nested\" : {\n" + //
-				"          \"query\" : {\n" + //
-				"            \"query_string\" : {\n" + //
-				"              \"query\" : \"murphy\",\n" + //
-				"              \"fields\" : [\n" + //
-				"                \"houses.inhabitants.lastName^1.0\"\n" + //
-				"              ]\n" + //
-				"            }\n" + //
-				"          },\n" + //
-				"          \"path\" : \"houses.inhabitants\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "must" : [
+				      {
+				        "nested" : {
+				          "query" : {
+				            "query_string" : {
+				              "query" : "murphy",
+				              "fields" : [
+				                "houses.inhabitants.lastName^1.0"
+				              ]
+				            }
+				          },
+				          "path" : "houses.inhabitants"
+				        }
+				      }
+				    ]
+				  }
+				}"""; //
 
 		Criteria criteria = new Criteria("houses.inhabitants.lastName").is("murphy");
 		criteria.getField().setPath("houses.inhabitants");
@@ -377,32 +388,31 @@ class CriteriaQueryProcessorUnitTests {
 	@DisplayName("should build query for empty property")
 	void shouldBuildQueryForEmptyProperty() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"must\" : [\n" + //
-				"      {\n" + //
-				"        \"bool\" : {\n" + //
-				"          \"must\" : [\n" + //
-				"            {\n" + //
-				"              \"exists\" : {\n" + //
-				"                \"field\" : \"lastName\"" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ],\n" + //
-				"          \"must_not\" : [\n" + //
-				"            {\n" + //
-				"              \"wildcard\" : {\n" + //
-				"                \"lastName\" : {\n" + //
-				"                  \"wildcard\" : \"*\"" + //
-				"                }\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "must" : [
+				      {
+				        "bool" : {
+				          "must" : [
+				            {
+				              "exists" : {
+				                "field" : "lastName"              }
+				            }
+				          ],
+				          "must_not" : [
+				            {
+				              "wildcard" : {
+				                "lastName" : {
+				                  "wildcard" : "*"                }
+				              }
+				            }
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}"""; //
 
 		Criteria criteria = new Criteria("lastName").empty();
 
@@ -415,19 +425,21 @@ class CriteriaQueryProcessorUnitTests {
 	@DisplayName("should build query for non-empty property")
 	void shouldBuildQueryForNonEmptyProperty() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"must\" : [\n" + //
-				"      {\n" + //
-				"        \"wildcard\" : {\n" + //
-				"          \"lastName\" : {\n" + //
-				"            \"wildcard\" : \"*\"\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "must" : [
+				      {
+				        "wildcard" : {
+				          "lastName" : {
+				            "wildcard" : "*"
+				          }
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		Criteria criteria = new Criteria("lastName").notEmpty();
 

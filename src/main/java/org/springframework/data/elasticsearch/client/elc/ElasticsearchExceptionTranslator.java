@@ -72,14 +72,14 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			return new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict", ex);
 		}
 
-		if (ex instanceof ElasticsearchException) {
-			ElasticsearchException elasticsearchException = (ElasticsearchException) ex;
+		if (ex instanceof ElasticsearchException elasticsearchException) {
 
 			ErrorResponse response = elasticsearchException.response();
 
 			if (response.status() == HttpStatus.NOT_FOUND.value()
 					&& "index_not_found_exception".equals(response.error().type())) {
 
+				// noinspection RegExpRedundantEscape
 				Pattern pattern = Pattern.compile(".*no such index \\[(.*)\\]");
 				String index = "";
 				Matcher matcher = pattern.matcher(response.error().reason());
@@ -109,9 +109,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		Integer status = null;
 		String message = null;
 
-
-		if (exception instanceof ResponseException) {
-			ResponseException responseException = (ResponseException) exception;
+		if (exception instanceof ResponseException responseException) {
 			status = responseException.getResponse().getStatusLine().getStatusCode();
 			message = responseException.getMessage();
 		} else if (exception.getCause() != null) {

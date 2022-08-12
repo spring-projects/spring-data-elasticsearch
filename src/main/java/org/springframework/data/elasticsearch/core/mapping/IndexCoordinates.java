@@ -39,7 +39,7 @@ public class IndexCoordinates {
 		return new IndexCoordinates(indexNames);
 	}
 
-	private IndexCoordinates(String[] indexNames) {
+	private IndexCoordinates(String... indexNames) {
 		Assert.notEmpty(indexNames, "indexNames may not be null or empty");
 		this.indexNames = indexNames;
 	}

@@ -598,8 +598,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	protected void maybeCallbackBeforeConvertWithQuery(Object query, IndexCoordinates index) {
 
-		if (query instanceof IndexQuery) {
-			IndexQuery indexQuery = (IndexQuery) query;
+		if (query instanceof IndexQuery indexQuery) {
 			Object queryObject = indexQuery.getObject();
 
 			if (queryObject != null) {
@@ -640,8 +639,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	protected void maybeCallbackAfterSaveWithQuery(Object query, IndexCoordinates index) {
 
-		if (query instanceof IndexQuery) {
-			IndexQuery indexQuery = (IndexQuery) query;
+		if (query instanceof IndexQuery indexQuery) {
 			Object queryObject = indexQuery.getObject();
 
 			if (queryObject != null) {
@@ -683,8 +681,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		for (int i = 0; i < queries.size(); i++) {
 			Object query = queries.get(i);
 
-			if (query instanceof IndexQuery) {
-				IndexQuery indexQuery = (IndexQuery) query;
+			if (query instanceof IndexQuery indexQuery) {
 				Object queryObject = indexQuery.getObject();
 
 				if (queryObject != null) {

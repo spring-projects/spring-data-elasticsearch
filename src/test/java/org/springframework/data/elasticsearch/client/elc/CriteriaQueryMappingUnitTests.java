@@ -18,15 +18,14 @@ package org.springframework.data.elasticsearch.client.elc;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.client.elc.JsonUtils.*;
 
-import java.io.ByteArrayOutputStream;
-import java.nio.charset.StandardCharsets;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import co.elastic.clients.json.JsonpMapper;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
@@ -222,7 +221,7 @@ public class CriteriaQueryMappingUnitTests {
 							}
 						]
 					}
-				}			""";
+				}""";
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
 		var queryString = queryToJson(CriteriaQueryProcessor.createQuery(criteriaQuery.getCriteria()), mapper);
@@ -275,7 +274,7 @@ public class CriteriaQueryMappingUnitTests {
 							}
 						]
 					}
-				}			""";
+				}""";
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
 		var queryString = queryToJson(CriteriaQueryProcessor.createQuery(criteriaQuery.getCriteria()), mapper);
@@ -373,7 +372,7 @@ public class CriteriaQueryMappingUnitTests {
 							}
 						]
 					}
-				}			""";
+				}""";
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("persons.nickName.keyword").is("Foobar"));
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, House.class);
@@ -401,7 +400,7 @@ public class CriteriaQueryMappingUnitTests {
 							}
 						]
 					}
-				}			""";
+				}""";
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("persons.birthDate").is(LocalDate.of(1999, 10, 3)));
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, ObjectWithPerson.class);
@@ -448,7 +447,6 @@ public class CriteriaQueryMappingUnitTests {
 
 	// endregion
 	// region helper functions
-
 
 	// endregion
 

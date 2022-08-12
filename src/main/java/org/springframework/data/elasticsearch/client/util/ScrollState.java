@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.util;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -52,7 +50,7 @@ public class ScrollState {
 	public List<String> getScrollIds() {
 
 		synchronized (lock) {
-			return Collections.unmodifiableList(new ArrayList<>(pastIds));
+			return List.copyOf(pastIds);
 		}
 	}
 

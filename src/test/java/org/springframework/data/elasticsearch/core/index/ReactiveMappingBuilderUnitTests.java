@@ -49,28 +49,29 @@ public class ReactiveMappingBuilderUnitTests extends MappingContextBaseTests {
 
 		ReactiveMappingBuilder mappingBuilder = getReactiveMappingBuilder();
 
-		String expected = "{\n" + //
-				"  \"runtime\": {\n" + //
-				"    \"day_of_week\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"script\": {\n" + //
-				"        \"source\": \"emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))\"\n"
-				+ //
-				"      }\n" + //
-				"    }\n" + //
-				"  },\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"@timestamp\": {\n" + //
-				"      \"type\": \"date\",\n" + //
-				"      \"format\": \"epoch_millis\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "runtime": {
+				    "day_of_week": {
+				      "type": "keyword",
+				      "script": {
+				        "source": "emit(doc['@timestamp'].value.dayOfWeekEnum.getDisplayName(TextStyle.FULL, Locale.ROOT))"
+				      }
+				    }
+				  },
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "@timestamp": {
+				      "type": "date",
+				      "format": "epoch_millis"
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = Mono.defer(() -> mappingBuilder.buildReactivePropertyMapping(RuntimeFieldEntity.class))
 				.subscribeOn(Schedulers.parallel()).block();

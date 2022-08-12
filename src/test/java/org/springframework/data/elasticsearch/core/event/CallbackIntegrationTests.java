@@ -29,7 +29,6 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
 import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
@@ -136,8 +135,8 @@ abstract class CallbackIntegrationTests {
 		assertThat(joinField.getName()).isEqualTo("answer");
 		assertThat(joinField.getParent()).isEqualTo("42");
 		assertThat(capturedIndexQuery.getRouting()).isEqualTo("42");
-		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTerm.getSequenceNumber());
-		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.getPrimaryTerm());
+		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTerm.sequenceNumber());
+		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.primaryTerm());
 	}
 
 	@Test // DATAES-972
@@ -158,8 +157,8 @@ abstract class CallbackIntegrationTests {
 		assertThat(joinField.getName()).isEqualTo("answer");
 		assertThat(joinField.getParent()).isEqualTo("42");
 		assertThat(capturedIndexQuery.getRouting()).isEqualTo("42");
-		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTerm.getSequenceNumber());
-		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.getPrimaryTerm());
+		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTerm.sequenceNumber());
+		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.primaryTerm());
 	}
 
 	@Test // DATAES-972
@@ -175,8 +174,8 @@ abstract class CallbackIntegrationTests {
 		indexQuery.setId(entity.getId());
 		indexQuery.setObject(entity);
 		indexQuery.setRouting("12");
-		indexQuery.setSeqNo(seqNoPrimaryTermOriginal.getSequenceNumber());
-		indexQuery.setPrimaryTerm(seqNoPrimaryTermOriginal.getPrimaryTerm());
+		indexQuery.setSeqNo(seqNoPrimaryTermOriginal.sequenceNumber());
+		indexQuery.setPrimaryTerm(seqNoPrimaryTermOriginal.primaryTerm());
 
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
@@ -190,8 +189,8 @@ abstract class CallbackIntegrationTests {
 		assertThat(joinField.getName()).isEqualTo("answer");
 		assertThat(joinField.getParent()).isEqualTo("42");
 		assertThat(capturedIndexQuery.getRouting()).isEqualTo("12");
-		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTermOriginal.getSequenceNumber());
-		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTermOriginal.getPrimaryTerm());
+		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTermOriginal.sequenceNumber());
+		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTermOriginal.primaryTerm());
 	}
 
 	@Test // DATAES-972
@@ -218,8 +217,8 @@ abstract class CallbackIntegrationTests {
 		assertThat(joinField.getName()).isEqualTo("answer");
 		assertThat(joinField.getParent()).isEqualTo("42");
 		assertThat(capturedIndexQuery.getRouting()).isEqualTo("42");
-		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTerm.getSequenceNumber());
-		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.getPrimaryTerm());
+		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTerm.sequenceNumber());
+		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.primaryTerm());
 	}
 
 	@Test // #2009

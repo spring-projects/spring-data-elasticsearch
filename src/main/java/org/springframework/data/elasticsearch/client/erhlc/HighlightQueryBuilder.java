@@ -133,9 +133,8 @@ public class HighlightQueryBuilder {
 			builder.highlighterType(parameters.getType());
 		}
 
-		if (builder instanceof HighlightBuilder && parameters instanceof HighlightParameters) {
-			HighlightBuilder highlightBuilder = (HighlightBuilder) builder;
-			HighlightParameters highlightParameters = (HighlightParameters) parameters;
+		if (builder instanceof HighlightBuilder highlightBuilder
+				&& parameters instanceof HighlightParameters highlightParameters) {
 
 			if (StringUtils.hasLength(highlightParameters.getEncoder())) {
 				highlightBuilder.encoder(highlightParameters.getEncoder());
@@ -146,9 +145,8 @@ public class HighlightQueryBuilder {
 			}
 		}
 
-		if (builder instanceof HighlightBuilder.Field && parameters instanceof HighlightFieldParameters) {
-			HighlightBuilder.Field field = (HighlightBuilder.Field) builder;
-			HighlightFieldParameters fieldParameters = (HighlightFieldParameters) parameters;
+		if (builder instanceof HighlightBuilder.Field field
+				&& parameters instanceof HighlightFieldParameters fieldParameters) {
 
 			if ((fieldParameters).getFragmentOffset() > -1) {
 				field.fragmentOffset(fieldParameters.getFragmentOffset());

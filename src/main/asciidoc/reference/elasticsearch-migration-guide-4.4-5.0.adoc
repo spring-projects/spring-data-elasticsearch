@@ -47,6 +47,19 @@ adjust your imports as well.
 When working with the `NativeSearchQuery` class, you'll need to switch to the `NativeQuery` class, which can take a
 `Query` instance comign from the new Elasticsearch client libraries. You'll find plenty of examples in the test code.
 
+=== Conversion to Java 17 records
+
+The following classes have been converted to `Record`, you might need to adjust the use of getter methods from 
+`getProp()` to `prop()`:
+
+* `org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate.IndexResponseMetaData`
+* `org.springframework.data.elasticsearch.core.ActiveShardCount`
+* `org.springframework.data.elasticsearch.support.Version`
+* `org.springframework.data.elasticsearch.support.ScoreDoc`
+* `org.springframework.data.elasticsearch.core.query.ScriptData`
+* `org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm`
+
+
 [[elasticsearch-migration-guide-4.4-5.0.new-clients]]
 == New Elasticsearch client
 

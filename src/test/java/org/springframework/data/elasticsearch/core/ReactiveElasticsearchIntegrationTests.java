@@ -35,6 +35,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -186,16 +187,12 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 
 		operations.save(map, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(actual -> {
-					assertThat(map).containsKey("id");
-				}).verifyComplete();
+				.consumeNextWith(actual -> assertThat(map).containsKey("id")).verifyComplete();
 	}
 
 	@Test // DATAES-504
 	public void insertShouldErrorOnNullEntity() {
-		assertThatThrownBy(() -> {
-			operations.save(null);
-		}).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> operations.save(null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-519, DATAES-767, DATAES-822
@@ -247,9 +244,7 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 
 	@Test // DATAES-504
 	public void getByIdShouldErrorForNullId() {
-		assertThatThrownBy(() -> {
-			operations.get(null, SampleEntity.class);
-		}).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> operations.get(null, SampleEntity.class)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test // DATAES-504
@@ -369,9 +364,7 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 		operations.search(query, SampleEntity.class) //
 				.map(SearchHit::getContent) //
 				.as(StepVerifier::create) //
-				.assertNext(next -> {
-					assertThat(next.getMessage()).isEqualTo("test message");
-				}) //
+				.assertNext(next -> assertThat(next.getMessage()).isEqualTo("test message")) //
 				.verifyComplete();
 	}
 
@@ -494,9 +487,7 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 
 		operations.aggregate(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(aggregationContainer -> {
-					assertThatAggregationsAreCorrect(aggregationContainer);
-				}).verifyComplete();
+				.consumeNextWith(this::assertThatAggregationsAreCorrect).verifyComplete();
 	}
 
 	protected abstract <A extends AggregationContainer<?>> void assertThatAggregationsAreCorrect(A aggregationContainer);
@@ -603,9 +594,7 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 
 		operations.delete(query, SampleEntity.class) //
 				.as(StepVerifier::create) //
-				.consumeNextWith(byQueryResponse -> {
-					assertThat(byQueryResponse.getDeleted()).isEqualTo(0L);
-				}).verifyComplete();
+				.consumeNextWith(byQueryResponse -> assertThat(byQueryResponse.getDeleted()).isEqualTo(0L)).verifyComplete();
 	}
 
 	@Test // DATAES-547
@@ -721,11 +710,9 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 					assertThat(sortValues).hasSize(1);
 					// old client returns Integer, new ElasticsearchClient String
 					java.lang.Object o = sortValues.get(0);
-					if (o instanceof Integer) {
-						Integer i = (Integer) o;
+					if (o instanceof Integer i) {
 						assertThat(o).isInstanceOf(Integer.class).isEqualTo(42);
-					} else if (o instanceof Long) {
-						Long l = (Long) o;
+					} else if (o instanceof Long l) {
 						assertThat(o).isInstanceOf(Long.class).isEqualTo(42L);
 					} else if (o instanceof String) {
 						assertThat(o).isInstanceOf(String.class).isEqualTo("42");
@@ -849,10 +836,10 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 
 	private void assertThatSeqNoPrimaryTermIsFilled(OptimisticEntity retrieved) {
 		assertThat(retrieved.seqNoPrimaryTerm).isNotNull();
-		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNull();
-		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNegative();
-		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isNotNull();
-		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isPositive();
+		assertThat(retrieved.seqNoPrimaryTerm.sequenceNumber()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.sequenceNumber()).isNotNegative();
+		assertThat(retrieved.seqNoPrimaryTerm.primaryTerm()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.primaryTerm()).isPositive();
 	}
 
 	@Test // DATAES-799, #1678
@@ -1134,9 +1121,7 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 		}).verifyComplete();
 
 		operations.get(savedEntity.get().getId(), ImmutableEntity.class).as(StepVerifier::create)
-				.consumeNextWith(retrieved -> {
-					assertThat(retrieved).isEqualTo(savedEntity.get());
-				}).verifyComplete();
+				.consumeNextWith(retrieved -> assertThat(retrieved).isEqualTo(savedEntity.get())).verifyComplete();
 	}
 
 	@Test // #2015
@@ -1243,7 +1228,7 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 
 			Message message1 = (Message) o;
 
-			return message != null ? message.equals(message1.message) : message1.message == null;
+			return Objects.equals(message, message1.message);
 		}
 
 		@Override
@@ -1311,13 +1296,13 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 			if (rate != that.rate) {
 				return false;
 			}
-			if (id != null ? !id.equals(that.id) : that.id != null) {
+			if (!Objects.equals(id, that.id)) {
 				return false;
 			}
-			if (message != null ? !message.equals(that.message) : that.message != null) {
+			if (!Objects.equals(message, that.message)) {
 				return false;
 			}
-			return version != null ? version.equals(that.version) : that.version == null;
+			return Objects.equals(version, that.version);
 		}
 
 		@Override
@@ -1496,7 +1481,7 @@ public abstract class ReactiveElasticsearchIntegrationTests implements NewElasti
 			if (!text.equals(that.text)) {
 				return false;
 			}
-			return seqNoPrimaryTerm != null ? seqNoPrimaryTerm.equals(that.seqNoPrimaryTerm) : that.seqNoPrimaryTerm == null;
+			return Objects.equals(seqNoPrimaryTerm, that.seqNoPrimaryTerm);
 		}
 
 		@Override

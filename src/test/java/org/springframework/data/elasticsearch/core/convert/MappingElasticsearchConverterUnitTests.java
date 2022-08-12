@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,7 +75,6 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -237,7 +237,7 @@ public class MappingElasticsearchConverterUnitTests {
 	public void shouldReturnMappingContextWithWhichItWasInitialized() {
 
 		// given
-		MappingContext mappingContext = new SimpleElasticsearchMappingContext();
+		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
 
 		// then
@@ -292,21 +292,23 @@ public class MappingElasticsearchConverterUnitTests {
 		String pointAsString = lat + "," + lon;
 		double[] pointAsArray = { lon, lat };
 
-		String expected = "{\n" + //
-				"  \"pointA\": {\n" + //
-				"    \"lon\": 5.0,\n" + //
-				"    \"lat\": 48.0\n" + //
-				"  },\n" + //
-				"  \"pointB\": {\n" + //
-				"    \"lon\": 5.0,\n" + //
-				"    \"lat\": 48.0\n" + //
-				"  },\n" + //
-				"  \"pointC\": \"48.0,5.0\",\n" + //
-				"  \"pointD\": [\n" + //
-				"    5.0,\n" + //
-				"    48.0\n" + //
-				"  ]\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "pointA": {
+				    "lon": 5.0,
+				    "lat": 48.0
+				  },
+				  "pointB": {
+				    "lon": 5.0,
+				    "lat": 48.0
+				  },
+				  "pointC": "48.0,5.0",
+				  "pointD": [
+				    5.0,
+				    48.0
+				  ]
+				}
+				"""; //
 
 		GeoEntity geoEntity = new GeoEntity();
 		geoEntity.setPointA(point);
@@ -362,7 +364,7 @@ public class MappingElasticsearchConverterUnitTests {
 		sarahConnor.coWorkers = Arrays.asList(kyleReese, ginger);
 
 		Map<String, Object> target = writeToMap(sarahConnor);
-		assertThat((List) target.get("coWorkers")).hasSize(2).contains(kyleAsMap);
+		assertThat((List<Document>) target.get("coWorkers")).hasSize(2).contains(kyleAsMap);
 	}
 
 	@Test // DATAES-530
@@ -374,7 +376,7 @@ public class MappingElasticsearchConverterUnitTests {
 		sarahConnor.inventoryList = Arrays.asList(gun, grenade);
 
 		Map<String, Object> target = writeToMap(sarahConnor);
-		assertThat((List) target.get("inventoryList")).containsExactly(gunAsMap, grenadeAsMap);
+		assertThat((List<Document>) target.get("inventoryList")).containsExactly(gunAsMap, grenadeAsMap);
 	}
 
 	@Test // DATAES-530
@@ -425,8 +427,8 @@ public class MappingElasticsearchConverterUnitTests {
 
 		Map<String, Object> target = writeToMap(sarahConnor);
 		assertThat(target.get("inventoryMap")).isInstanceOf(Map.class);
-		assertThat((Map) target.get("inventoryMap")).containsEntry("glock19", gunAsMap).containsEntry("40 mm grenade",
-				grenadeAsMap);
+		assertThat((Map<String, Document>) target.get("inventoryMap")).containsEntry("glock19", gunAsMap)
+				.containsEntry("40 mm grenade", grenadeAsMap);
 	}
 
 	@Test // DATAES-530
@@ -577,7 +579,7 @@ public class MappingElasticsearchConverterUnitTests {
 		t800.inventoryList = Collections.singletonList(rifle);
 		Map<String, Object> target = writeToMap(t800);
 
-		assertThat((List) target.get("inventoryList")).contains(rifleAsMap);
+		assertThat((List<Document>) target.get("inventoryList")).contains(rifleAsMap);
 	}
 
 	@Test // DATAES-530
@@ -653,10 +655,12 @@ public class MappingElasticsearchConverterUnitTests {
 		LocalDatesEntity entity = new LocalDatesEntity();
 		entity.setId("4711");
 		entity.setDates(Arrays.asList(LocalDate.of(2020, 9, 15), LocalDate.of(2019, 5, 1)));
-		String expected = "{\n" + //
-				"  \"id\": \"4711\",\n" + //
-				"  \"dates\": [\"15.09.2020\", \"01.05.2019\"]\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "id": "4711",
+				  "dates": ["15.09.2020", "01.05.2019"]
+				}
+				"""; //
 
 		Document document = Document.create();
 		mappingElasticsearchConverter.write(entity, document);
@@ -806,19 +810,20 @@ public class MappingElasticsearchConverterUnitTests {
 		List<GeoPoint> locations = Arrays.asList(new GeoPoint(12.34, 23.45), new GeoPoint(34.56, 45.67));
 		entity.setLocations(locations);
 
-		String expected = "{\n" + //
-				"  \"id\": \"42\",\n" + //
-				"  \"locations\": [\n" + //
-				"    {\n" + //
-				"      \"lat\": 12.34,\n" + //
-				"      \"lon\": 23.45\n" + //
-				"    },\n" + //
-				"    {\n" + //
-				"      \"lat\": 34.56,\n" + //
-				"      \"lon\": 45.67\n" + //
-				"    }\n" + //
-				"  ]\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "id": "42",
+				  "locations": [
+				    {
+				      "lat": 12.34,
+				      "lon": 23.45
+				    },
+				    {
+				      "lat": 34.56,
+				      "lon": 45.67
+				    }
+				  ]
+				}"""; //
 		Document document = Document.create();
 
 		mappingElasticsearchConverter.write(entity, document);
@@ -830,19 +835,20 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-857
 	void shouldReadEntityWithListOfGeoPoints() {
 
-		String json = "{\n" + //
-				"  \"id\": \"42\",\n" + //
-				"  \"locations\": [\n" + //
-				"    {\n" + //
-				"      \"lat\": 12.34,\n" + //
-				"      \"lon\": 23.45\n" + //
-				"    },\n" + //
-				"    {\n" + //
-				"      \"lat\": 34.56,\n" + //
-				"      \"lon\": 45.67\n" + //
-				"    }\n" + //
-				"  ]\n" + //
-				"}"; //
+		String json = """
+				{
+				  "id": "42",
+				  "locations": [
+				    {
+				      "lat": 12.34,
+				      "lon": 23.45
+				    },
+				    {
+				      "lat": 34.56,
+				      "lon": 45.67
+				    }
+				  ]
+				}"""; //
 
 		Document document = Document.parse(json);
 
@@ -862,12 +868,14 @@ public class MappingElasticsearchConverterUnitTests {
 		entity.setId("42");
 		entity.setContent(map);
 
-		String expected = "{\n" + //
-				"  \"id\": \"42\",\n" + //
-				"  \"content\": {\n" + //
-				"    \"foo\": \"bar\"\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "id": "42",
+				  "content": {
+				    "foo": "bar"
+				  }
+				}
+				"""; //
 
 		Document document = Document.create();
 
@@ -883,10 +891,12 @@ public class MappingElasticsearchConverterUnitTests {
 		EntityWithNullField entity = new EntityWithNullField();
 		entity.setId("42");
 
-		String expected = "{\n" + //
-				"  \"id\": \"42\",\n" + //
-				"  \"saved\": null\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "id": "42",
+				  "saved": null
+				}
+				"""; //
 
 		Document document = Document.create();
 
@@ -1132,121 +1142,123 @@ public class MappingElasticsearchConverterUnitTests {
 		@DisplayName("should write GeoJson properties")
 		void shouldWriteGeoJsonProperties() throws JSONException {
 
-			String json = "{\n" + //
-					"  \"id\": \"42\",\n" + //
-					"  \"point1\": {\n" + //
-					"    \"type\": \"Point\",\n" + //
-					"    \"coordinates\": [12.0, 34.0]\n" + //
-					"  },\n" + //
-					"  \"point2\": {\n" + //
-					"    \"type\": \"Point\",\n" + //
-					"    \"coordinates\": [56.0, 78.0]\n" + //
-					"  },\n" + //
-					"  \"multiPoint1\": {\n" + //
-					"    \"type\": \"MultiPoint\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [12.0, 34.0],\n" + //
-					"      [56.0, 78.0],\n" + //
-					"      [90.0, 12.0]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiPoint2\": {\n" + //
-					"    \"type\": \"MultiPoint\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [90.0, 12.0],\n" + //
-					"      [56.0, 78.0],\n" + //
-					"      [12.0, 34.0]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"lineString1\": {\n" + //
-					"    \"type\": \"LineString\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [12.0, 34.0],\n" + //
-					"      [56.0, 78.0],\n" + //
-					"      [90.0, 12.0]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"lineString2\": {\n" + //
-					"    \"type\": \"LineString\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [90.0, 12.0],\n" + //
-					"      [56.0, 78.0],\n" + //
-					"      [12.0, 34.0]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiLineString1\":{\n" + //
-					"    \"type\": \"MultiLineString\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[12.0, 34.0], [56.0, 78.0]],\n" + //
-					"      [[90.0, 12.0], [34.0, 56.0]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiLineString2\":{\n" + //
-					"    \"type\": \"MultiLineString\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[12.0, 34.0], [56.0, 78.0]],\n" + //
-					"      [[90.0, 12.0], [34.0, 56.0]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"polygon1\":{\n" + //
-					"    \"type\": \"Polygon\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]],\n" + //
-					"      [[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"polygon2\":{\n" + //
-					"    \"type\": \"Polygon\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]],\n" + //
-					"      [[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiPolygon1\":{\n" + //
-					"    \"type\": \"MultiPolygon\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]]],\n" + //
-					"      [[[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiPolygon2\":{\n" + //
-					"    \"type\": \"MultiPolygon\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]]],\n" + //
-					"      [[[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"geometryCollection1\": {\n" + //
-					"    \"type\": \"GeometryCollection\",\n" + //
-					"    \"geometries\": [\n" + //
-					"      {\n" + //
-					"        \"type\": \"Point\",\n" + //
-					"        \"coordinates\": [12.0, 34.0]\n" + //
-					"      },\n" + //
-					"      {\n" + //
-					"        \"type\": \"Polygon\",\n" + //
-					"        \"coordinates\": [\n" + //
-					"          [[12.0, 34.0], [56.0, 78.0], [90.0, 12.0], [12.0, 34.0]]\n" + //
-					"        ]\n" + //
-					"      }\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"geometryCollection2\": {\n" + //
-					"    \"type\": \"GeometryCollection\",\n" + //
-					"    \"geometries\": [\n" + //
-					"      {\n" + //
-					"        \"type\": \"Point\",\n" + //
-					"        \"coordinates\": [12.0, 34.0]\n" + //
-					"      },\n" + //
-					"      {\n" + //
-					"        \"type\": \"Polygon\",\n" + //
-					"        \"coordinates\": [\n" + //
-					"          [[12.0, 34.0], [56.0, 78.0], [90.0, 12.0], [12.0, 34.0]]\n" + //
-					"        ]\n" + //
-					"      }\n" + //
-					"    ]\n" + //
-					"  }\n" + //
-					"}\n"; //
+			String json = """
+					{
+					  "id": "42",
+					  "point1": {
+					    "type": "Point",
+					    "coordinates": [12.0, 34.0]
+					  },
+					  "point2": {
+					    "type": "Point",
+					    "coordinates": [56.0, 78.0]
+					  },
+					  "multiPoint1": {
+					    "type": "MultiPoint",
+					    "coordinates": [
+					      [12.0, 34.0],
+					      [56.0, 78.0],
+					      [90.0, 12.0]
+					    ]
+					  },
+					  "multiPoint2": {
+					    "type": "MultiPoint",
+					    "coordinates": [
+					      [90.0, 12.0],
+					      [56.0, 78.0],
+					      [12.0, 34.0]
+					    ]
+					  },
+					  "lineString1": {
+					    "type": "LineString",
+					    "coordinates": [
+					      [12.0, 34.0],
+					      [56.0, 78.0],
+					      [90.0, 12.0]
+					    ]
+					  },
+					  "lineString2": {
+					    "type": "LineString",
+					    "coordinates": [
+					      [90.0, 12.0],
+					      [56.0, 78.0],
+					      [12.0, 34.0]
+					    ]
+					  },
+					  "multiLineString1":{
+					    "type": "MultiLineString",
+					    "coordinates": [
+					      [[12.0, 34.0], [56.0, 78.0]],
+					      [[90.0, 12.0], [34.0, 56.0]]
+					    ]
+					  },
+					  "multiLineString2":{
+					    "type": "MultiLineString",
+					    "coordinates": [
+					      [[12.0, 34.0], [56.0, 78.0]],
+					      [[90.0, 12.0], [34.0, 56.0]]
+					    ]
+					  },
+					  "polygon1":{
+					    "type": "Polygon",
+					    "coordinates": [
+					      [[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]],
+					      [[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]
+					    ]
+					  },
+					  "polygon2":{
+					    "type": "Polygon",
+					    "coordinates": [
+					      [[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]],
+					      [[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]
+					    ]
+					  },
+					  "multiPolygon1":{
+					    "type": "MultiPolygon",
+					    "coordinates": [
+					      [[[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]]],
+					      [[[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]]
+					    ]
+					  },
+					  "multiPolygon2":{
+					    "type": "MultiPolygon",
+					    "coordinates": [
+					      [[[12.0, 34.0],[56.0, 78.0],[90.0, 12.0],[12.0, 34.0]]],
+					      [[[21.0, 43.0],[65.0, 87.0],[9.0, 21.0],[21.0, 43.0]]]
+					    ]
+					  },
+					  "geometryCollection1": {
+					    "type": "GeometryCollection",
+					    "geometries": [
+					      {
+					        "type": "Point",
+					        "coordinates": [12.0, 34.0]
+					      },
+					      {
+					        "type": "Polygon",
+					        "coordinates": [
+					          [[12.0, 34.0], [56.0, 78.0], [90.0, 12.0], [12.0, 34.0]]
+					        ]
+					      }
+					    ]
+					  },
+					  "geometryCollection2": {
+					    "type": "GeometryCollection",
+					    "geometries": [
+					      {
+					        "type": "Point",
+					        "coordinates": [12.0, 34.0]
+					      },
+					      {
+					        "type": "Polygon",
+					        "coordinates": [
+					          [[12.0, 34.0], [56.0, 78.0], [90.0, 12.0], [12.0, 34.0]]
+					        ]
+					      }
+					    ]
+					  }
+					}
+					"""; //
 
 			Document document = Document.create();
 
@@ -1260,121 +1272,123 @@ public class MappingElasticsearchConverterUnitTests {
 		void shouldReadGeoJsonProperties() {
 
 			// make sure we can read int values as well
-			String json = "{\n" + //
-					"  \"id\": \"42\",\n" + //
-					"  \"point1\": {\n" + //
-					"    \"type\": \"Point\",\n" + //
-					"    \"coordinates\": [12, 34]\n" + //
-					"  },\n" + //
-					"  \"point2\": {\n" + //
-					"    \"type\": \"Point\",\n" + //
-					"    \"coordinates\": [56, 78]\n" + //
-					"  },\n" + //
-					"  \"multiPoint1\": {\n" + //
-					"    \"type\": \"MultiPoint\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [12.0, 34],\n" + //
-					"      [56, 78.0],\n" + //
-					"      [90, 12.0]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiPoint2\": {\n" + //
-					"    \"type\": \"MultiPoint\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [90, 12.0],\n" + //
-					"      [56, 78.0],\n" + //
-					"      [12.0, 34]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"lineString1\": {\n" + //
-					"    \"type\": \"LineString\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [12.0, 34],\n" + //
-					"      [56, 78.0],\n" + //
-					"      [90, 12.0]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"lineString2\": {\n" + //
-					"    \"type\": \"LineString\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [90, 12.0],\n" + //
-					"      [56, 78.0],\n" + //
-					"      [12.0, 34]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiLineString1\":{\n" + //
-					"    \"type\": \"MultiLineString\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[12, 34.0], [56, 78.0]],\n" + //
-					"      [[90.0, 12], [34.0, 56]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiLineString2\":{\n" + //
-					"    \"type\": \"MultiLineString\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[12.0, 34], [56.0, 78]],\n" + //
-					"      [[90, 12.0], [34, 56.0]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"polygon1\":{\n" + //
-					"    \"type\": \"Polygon\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]],\n" + //
-					"      [[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"polygon2\":{\n" + //
-					"    \"type\": \"Polygon\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]],\n" + //
-					"      [[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiPolygon1\":{\n" + //
-					"    \"type\": \"MultiPolygon\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]]],\n" + //
-					"      [[[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"multiPolygon2\":{\n" + //
-					"    \"type\": \"MultiPolygon\",\n" + //
-					"    \"coordinates\": [\n" + //
-					"      [[[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]]],\n" + //
-					"      [[[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]]\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"geometryCollection1\": {\n" + //
-					"    \"type\": \"GeometryCollection\",\n" + //
-					"    \"geometries\": [\n" + //
-					"      {\n" + //
-					"        \"type\": \"Point\",\n" + //
-					"        \"coordinates\": [12, 34.0]\n" + //
-					"      },\n" + //
-					"      {\n" + //
-					"        \"type\": \"Polygon\",\n" + //
-					"        \"coordinates\": [\n" + //
-					"          [[12.0, 34], [56, 78.0], [90.0, 12], [12, 34.0]]\n" + //
-					"        ]\n" + //
-					"      }\n" + //
-					"    ]\n" + //
-					"  },\n" + //
-					"  \"geometryCollection2\": {\n" + //
-					"    \"type\": \"GeometryCollection\",\n" + //
-					"    \"geometries\": [\n" + //
-					"      {\n" + //
-					"        \"type\": \"Point\",\n" + //
-					"        \"coordinates\": [12, 34.0]\n" + //
-					"      },\n" + //
-					"      {\n" + //
-					"        \"type\": \"Polygon\",\n" + //
-					"        \"coordinates\": [\n" + //
-					"          [[12.0, 34], [56, 78.0], [90.0, 12], [12, 34.0]]\n" + //
-					"        ]\n" + //
-					"      }\n" + //
-					"    ]\n" + //
-					"  }\n" + //
-					"}\n"; //
+			String json = """
+					{
+					  "id": "42",
+					  "point1": {
+					    "type": "Point",
+					    "coordinates": [12, 34]
+					  },
+					  "point2": {
+					    "type": "Point",
+					    "coordinates": [56, 78]
+					  },
+					  "multiPoint1": {
+					    "type": "MultiPoint",
+					    "coordinates": [
+					      [12.0, 34],
+					      [56, 78.0],
+					      [90, 12.0]
+					    ]
+					  },
+					  "multiPoint2": {
+					    "type": "MultiPoint",
+					    "coordinates": [
+					      [90, 12.0],
+					      [56, 78.0],
+					      [12.0, 34]
+					    ]
+					  },
+					  "lineString1": {
+					    "type": "LineString",
+					    "coordinates": [
+					      [12.0, 34],
+					      [56, 78.0],
+					      [90, 12.0]
+					    ]
+					  },
+					  "lineString2": {
+					    "type": "LineString",
+					    "coordinates": [
+					      [90, 12.0],
+					      [56, 78.0],
+					      [12.0, 34]
+					    ]
+					  },
+					  "multiLineString1":{
+					    "type": "MultiLineString",
+					    "coordinates": [
+					      [[12, 34.0], [56, 78.0]],
+					      [[90.0, 12], [34.0, 56]]
+					    ]
+					  },
+					  "multiLineString2":{
+					    "type": "MultiLineString",
+					    "coordinates": [
+					      [[12.0, 34], [56.0, 78]],
+					      [[90, 12.0], [34, 56.0]]
+					    ]
+					  },
+					  "polygon1":{
+					    "type": "Polygon",
+					    "coordinates": [
+					      [[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]],
+					      [[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]
+					    ]
+					  },
+					  "polygon2":{
+					    "type": "Polygon",
+					    "coordinates": [
+					      [[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]],
+					      [[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]
+					    ]
+					  },
+					  "multiPolygon1":{
+					    "type": "MultiPolygon",
+					    "coordinates": [
+					      [[[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]]],
+					      [[[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]]
+					    ]
+					  },
+					  "multiPolygon2":{
+					    "type": "MultiPolygon",
+					    "coordinates": [
+					      [[[12, 34.0],[56.0, 78],[90, 12.0],[12.0, 34]]],
+					      [[[21.0, 43],[65, 87.0],[9.0, 21],[21, 43.0]]]
+					    ]
+					  },
+					  "geometryCollection1": {
+					    "type": "GeometryCollection",
+					    "geometries": [
+					      {
+					        "type": "Point",
+					        "coordinates": [12, 34.0]
+					      },
+					      {
+					        "type": "Polygon",
+					        "coordinates": [
+					          [[12.0, 34], [56, 78.0], [90.0, 12], [12, 34.0]]
+					        ]
+					      }
+					    ]
+					  },
+					  "geometryCollection2": {
+					    "type": "GeometryCollection",
+					    "geometries": [
+					      {
+					        "type": "Point",
+					        "coordinates": [12, 34.0]
+					      },
+					      {
+					        "type": "Polygon",
+					        "coordinates": [
+					          [[12.0, 34], [56, 78.0], [90.0, 12], [12, 34.0]]
+					        ]
+					      }
+					    ]
+					  }
+					}
+					"""; //
 
 			GeoJsonEntity mapped = mappingElasticsearchConverter.read(GeoJsonEntity.class, Document.parse(json));
 
@@ -1396,20 +1410,22 @@ public class MappingElasticsearchConverterUnitTests {
 		car2.setModel("Porsche Taycan");
 		person.setCars(Arrays.asList(car1, car2));
 
-		String expected = "{\n" + //
-				"  \"_class\": \"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$PersonWithCars\",\n"
-				+ "  \"id\": \"42\",\n" + //
-				"  \"name\": \"Smith\",\n" + //
-				"  \"cars\": [\n" + //
-				"    {\n" + //
-				"      \"model\": \"Ford Mustang\"\n" + //
-				"    },\n" + //
-				"    {\n" + //
-				"      \"_class\": \"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$ElectricCar\",\n"
-				+ "      \"model\": \"Porsche Taycan\"\n" + //
-				"    }\n" + //
-				"  ]\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$PersonWithCars",
+				  "id": "42",
+				  "name": "Smith",
+				  "cars": [
+				    {
+				      "model": "Ford Mustang"
+				    },
+				    {
+				      "_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$ElectricCar",
+				      "model": "Porsche Taycan"
+				    }
+				  ]
+				}
+				"""; //
 
 		Document document = Document.create();
 
@@ -1432,18 +1448,20 @@ public class MappingElasticsearchConverterUnitTests {
 		car2.setModel("Porsche Taycan");
 		person.setCars(Arrays.asList(car1, car2));
 
-		String expected = "{\n" + //
-				"  \"id\": \"42\",\n" + //
-				"  \"name\": \"Smith\",\n" + //
-				"  \"cars\": [\n" + //
-				"    {\n" + //
-				"      \"model\": \"Ford Mustang\"\n" + //
-				"    },\n" + //
-				"    {\n" + //
-				"      \"model\": \"Porsche Taycan\"\n" + //
-				"    }\n" + //
-				"  ]\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "id": "42",
+				  "name": "Smith",
+				  "cars": [
+				    {
+				      "model": "Ford Mustang"
+				    },
+				    {
+				      "model": "Porsche Taycan"
+				    }
+				  ]
+				}
+				"""; //
 
 		Document document = Document.create();
 
@@ -1462,12 +1480,14 @@ public class MappingElasticsearchConverterUnitTests {
 		entity.setFieldWithEnumBasedConverter("enumbased");
 		entity.setDontConvert("Monty Python's Flying Circus");
 
-		String expected = "{\n" + //
-				"  \"id\": \"42\",\n" + //
-				"  \"fieldWithClassBasedConverter\": \"desabssalc\",\n" + //
-				"  \"fieldWithEnumBasedConverter\": \"desabmune\",\n" + //
-				"  \"dontConvert\": \"Monty Python's Flying Circus\"\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "id": "42",
+				  "fieldWithClassBasedConverter": "desabssalc",
+				  "fieldWithEnumBasedConverter": "desabmune",
+				  "dontConvert": "Monty Python's Flying Circus"
+				}
+				"""; //
 
 		Document document = Document.create();
 
@@ -1480,12 +1500,14 @@ public class MappingElasticsearchConverterUnitTests {
 	@DisplayName("should read using ValueConverters")
 	void shouldReadUsingValueConverters() throws JSONException {
 
-		String json = "{\n" + //
-				"  \"id\": \"42\",\n" + //
-				"  \"fieldWithClassBasedConverter\": \"desabssalc\",\n" + //
-				"  \"fieldWithEnumBasedConverter\": \"desabmune\",\n" + //
-				"  \"dontConvert\": \"Monty Python's Flying Circus\"\n" + //
-				"}\n"; //
+		String json = """
+				{
+				  "id": "42",
+				  "fieldWithClassBasedConverter": "desabssalc",
+				  "fieldWithEnumBasedConverter": "desabmune",
+				  "dontConvert": "Monty Python's Flying Circus"
+				}
+				"""; //
 
 		Document source = Document.parse(json);
 
@@ -1685,28 +1707,27 @@ public class MappingElasticsearchConverterUnitTests {
 
 			Person person = (Person) o;
 
-			if (id != null ? !id.equals(person.id) : person.id != null)
+			if (!Objects.equals(id, person.id))
 				return false;
-			if (name != null ? !name.equals(person.name) : person.name != null)
+			if (!Objects.equals(name, person.name))
 				return false;
-			if (firstName != null ? !firstName.equals(person.firstName) : person.firstName != null)
+			if (!Objects.equals(firstName, person.firstName))
 				return false;
-			if (lastName != null ? !lastName.equals(person.lastName) : person.lastName != null)
+			if (!Objects.equals(lastName, person.lastName))
 				return false;
-			if (birthDate != null ? !birthDate.equals(person.birthDate) : person.birthDate != null)
+			if (!Objects.equals(birthDate, person.birthDate))
 				return false;
 			if (gender != person.gender)
 				return false;
-			if (address != null ? !address.equals(person.address) : person.address != null)
+			if (!Objects.equals(address, person.address))
 				return false;
-			if (coWorkers != null ? !coWorkers.equals(person.coWorkers) : person.coWorkers != null)
+			if (!Objects.equals(coWorkers, person.coWorkers))
 				return false;
-			if (inventoryList != null ? !inventoryList.equals(person.inventoryList) : person.inventoryList != null)
+			if (!Objects.equals(inventoryList, person.inventoryList))
 				return false;
-			if (shippingAddresses != null ? !shippingAddresses.equals(person.shippingAddresses)
-					: person.shippingAddresses != null)
+			if (!Objects.equals(shippingAddresses, person.shippingAddresses))
 				return false;
-			return inventoryMap != null ? inventoryMap.equals(person.inventoryMap) : person.inventoryMap == null;
+			return Objects.equals(inventoryMap, person.inventoryMap);
 		}
 
 		@Override
@@ -1827,10 +1848,8 @@ public class MappingElasticsearchConverterUnitTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof Grenade))
+			if (!(o instanceof Grenade grenade))
 				return false;
-
-			Grenade grenade = (Grenade) o;
 
 			return label.equals(grenade.label);
 		}
@@ -1863,10 +1882,8 @@ public class MappingElasticsearchConverterUnitTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof Rifle))
+			if (!(o instanceof Rifle rifle))
 				return false;
-
-			Rifle rifle = (Rifle) o;
 
 			if (Double.compare(rifle.weight, weight) != 0)
 				return false;
@@ -1904,10 +1921,8 @@ public class MappingElasticsearchConverterUnitTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof ShotGun))
+			if (!(o instanceof ShotGun shotGun))
 				return false;
-
-			ShotGun shotGun = (ShotGun) o;
 
 			return label.equals(shotGun.label);
 		}
@@ -1954,16 +1969,14 @@ public class MappingElasticsearchConverterUnitTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof Address))
+			if (!(o instanceof Address address))
 				return false;
 
-			Address address = (Address) o;
-
-			if (location != null ? !location.equals(address.location) : address.location != null)
+			if (!Objects.equals(location, address.location))
 				return false;
-			if (street != null ? !street.equals(address.street) : address.street != null)
+			if (!Objects.equals(street, address.street))
 				return false;
-			return city != null ? city.equals(address.city) : address.city == null;
+			return Objects.equals(city, address.city);
 		}
 
 		@Override
@@ -1991,12 +2004,10 @@ public class MappingElasticsearchConverterUnitTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof Place))
+			if (!(o instanceof Place place))
 				return false;
 
-			Place place = (Place) o;
-
-			return name != null ? name.equals(place.name) : place.name == null;
+			return Objects.equals(name, place.name);
 		}
 
 		@Override

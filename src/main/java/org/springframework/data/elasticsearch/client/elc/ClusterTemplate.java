@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.elasticsearch.cluster.ElasticsearchClusterClient;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.transport.ElasticsearchTransport;
 
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
 import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
@@ -29,7 +30,8 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-public class ClusterTemplate extends ChildTemplate<ElasticsearchClusterClient> implements ClusterOperations {
+public class ClusterTemplate extends ChildTemplate<ElasticsearchTransport, ElasticsearchClusterClient>
+		implements ClusterOperations {
 
 	public ClusterTemplate(ElasticsearchClusterClient client, ElasticsearchConverter elasticsearchConverter) {
 		super(client, elasticsearchConverter);

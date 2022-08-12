@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.routing;
 import static org.assertj.core.api.Assertions.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -154,14 +155,12 @@ public abstract class ReactiveRoutingTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof RoutingEntity))
+			if (!(o instanceof RoutingEntity that))
 				return false;
 
-			RoutingEntity that = (RoutingEntity) o;
-
-			if (id != null ? !id.equals(that.id) : that.id != null)
+			if (!Objects.equals(id, that.id))
 				return false;
-			return routing != null ? routing.equals(that.routing) : that.routing == null;
+			return Objects.equals(routing, that.routing);
 		}
 
 		@Override

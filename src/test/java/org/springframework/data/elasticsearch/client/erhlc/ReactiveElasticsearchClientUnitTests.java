@@ -170,9 +170,8 @@ public class ReactiveElasticsearchClientUnitTests {
 	@Test // DATAES-488
 	public void getShouldHitGetEndpoint() {
 
-		hostProvider.when(HOST).receive(clientResponse -> {
-			when(clientResponse.statusCode()).thenReturn(HttpStatus.ACCEPTED, HttpStatus.NOT_FOUND);
-		});
+		hostProvider.when(HOST).receive(
+				clientResponse -> when(clientResponse.statusCode()).thenReturn(HttpStatus.ACCEPTED, HttpStatus.NOT_FOUND));
 
 		hostProvider.when(HOST) //
 				.receiveGetByIdNotFound();
@@ -234,9 +233,8 @@ public class ReactiveElasticsearchClientUnitTests {
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.POST);
 
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).body(any(Publisher.class), any(Class.class));
-		});
+		hostProvider.when(HOST)
+				.exchange(requestBodyUriSpec -> verify(requestBodyUriSpec).body(any(Publisher.class), any(Class.class)));
 
 		URI uri = hostProvider.when(HOST).captureUri();
 		assertThat(uri.getRawPath()).isEqualTo("/_mget");
@@ -370,9 +368,8 @@ public class ReactiveElasticsearchClientUnitTests {
 				.verifyComplete();
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.PUT);
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
-		});
+		hostProvider.when(HOST)
+				.exchange(requestBodyUriSpec -> verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON));
 
 		URI uri = hostProvider.when(HOST).captureUri();
 		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/10/_create");
@@ -389,9 +386,8 @@ public class ReactiveElasticsearchClientUnitTests {
 				.verifyComplete();
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.PUT);
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
-		});
+		hostProvider.when(HOST)
+				.exchange(requestBodyUriSpec -> verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON));
 
 		URI uri = hostProvider.when(HOST).captureUri();
 		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/10");
@@ -444,9 +440,8 @@ public class ReactiveElasticsearchClientUnitTests {
 				.verifyComplete();
 
 		verify(hostProvider.client(HOST)).method(HttpMethod.POST);
-		hostProvider.when(HOST).exchange(requestBodyUriSpec -> {
-			verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON);
-		});
+		hostProvider.when(HOST)
+				.exchange(requestBodyUriSpec -> verify(requestBodyUriSpec).contentType(MediaType.APPLICATION_JSON));
 
 		URI uri = hostProvider.when(HOST).captureUri();
 		assertThat(uri.getRawPath()).isEqualTo("/twitter/doc/1/_update");
@@ -689,9 +684,7 @@ public class ReactiveElasticsearchClientUnitTests {
 				.expectNextCount(4) //
 				.verifyComplete();
 
-		hostProvider.when(HOST).receive(response -> {
-			verify(response, times(4)).body(any());
-		});
+		hostProvider.when(HOST).receive(response -> verify(response, times(4)).body(any()));
 	}
 
 	@Test // DATAES-510
@@ -711,9 +704,7 @@ public class ReactiveElasticsearchClientUnitTests {
 				.expectNextCount(2) //
 				.verifyError();
 
-		hostProvider.when(HOST).receive(response -> {
-			verify(response, times(3)).body(any());
-		});
+		hostProvider.when(HOST).receive(response -> verify(response, times(3)).body(any()));
 	}
 
 	@Test // DATAES-684

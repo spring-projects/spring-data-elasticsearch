@@ -86,7 +86,7 @@ public class TemplateData {
 
 		private TemplateDataBuilder() {}
 
-		public TemplateDataBuilder withIndexPatterns(String[] indexPatterns) {
+		public TemplateDataBuilder withIndexPatterns(String... indexPatterns) {
 			this.indexPatterns = indexPatterns;
 			return this;
 		}

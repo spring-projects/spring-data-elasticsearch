@@ -71,8 +71,8 @@ public class IndexQueryBuilder {
 	}
 
 	public IndexQueryBuilder withSeqNoPrimaryTerm(SeqNoPrimaryTerm seqNoPrimaryTerm) {
-		this.seqNo = seqNoPrimaryTerm.getSequenceNumber();
-		this.primaryTerm = seqNoPrimaryTerm.getPrimaryTerm();
+		this.seqNo = seqNoPrimaryTerm.sequenceNumber();
+		this.primaryTerm = seqNoPrimaryTerm.primaryTerm();
 		return this;
 	}
 

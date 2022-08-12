@@ -51,7 +51,7 @@ public class HighlightFieldParameters extends HighlightCommonParameters {
 			return this;
 		}
 
-		public HighlightFieldParametersBuilder withMatchedFields(String[] matchedFields) {
+		public HighlightFieldParametersBuilder withMatchedFields(String... matchedFields) {
 			this.matchedFields = matchedFields;
 			return this;
 		}

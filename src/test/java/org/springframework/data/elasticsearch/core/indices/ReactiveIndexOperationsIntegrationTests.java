@@ -44,7 +44,16 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
-import org.springframework.data.elasticsearch.core.index.*;
+import org.springframework.data.elasticsearch.core.index.AliasAction;
+import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.Settings;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -218,17 +227,19 @@ public abstract class ReactiveIndexOperationsIntegrationTests implements NewElas
 	@Test // DATAES-678
 	void shouldCreateMappingForEntityFromProperties() {
 
-		String expected = "{\n" + //
-				"  \"properties\":{\n" + //
-				"    \"text\": {\n" + //
-				"      \"type\": \"text\"\n" + //
-				"    },\n" + //
-				"    \"publication-date\": {\n" + //
-				"      \"type\": \"date\",\n" + //
-				"      \"format\": \"basic_date\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties":{
+				    "text": {
+				      "type": "text"
+				    },
+				    "publication-date": {
+				      "type": "date",
+				      "format": "basic_date"
+				    }
+				  }
+				}
+				"""; //
 
 		indexOperations.createMapping(Entity.class) //
 				.as(StepVerifier::create) //
@@ -245,14 +256,16 @@ public abstract class ReactiveIndexOperationsIntegrationTests implements NewElas
 	@Test // DATAES-678
 	void shouldCreateMappingForEntityFromMappingAnnotation() {
 
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"email\": {\n" + //
-				"      \"type\": \"text\",\n" + //
-				"      \"analyzer\": \"emailAnalyzer\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "email": {
+				      "type": "text",
+				      "analyzer": "emailAnalyzer"
+				    }
+				  }
+				}
+				"""; //
 
 		indexOperations.createMapping(EntityWithAnnotatedSettingsAndMappings.class) //
 				.as(StepVerifier::create) //
@@ -270,17 +283,19 @@ public abstract class ReactiveIndexOperationsIntegrationTests implements NewElas
 	void shouldCreateMappingBoundEntity() {
 		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
 
-		String expected = "{\n" + //
-				"  \"properties\":{\n" + //
-				"    \"text\": {\n" + //
-				"      \"type\": \"text\"\n" + //
-				"    },\n" + //
-				"    \"publication-date\": {\n" + //
-				"      \"type\": \"date\",\n" + //
-				"      \"format\": \"basic_date\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties":{
+				    "text": {
+				      "type": "text"
+				    },
+				    "publication-date": {
+				      "type": "date",
+				      "format": "basic_date"
+				    }
+				  }
+				}
+				"""; //
 
 		indexOps.createMapping() //
 				.as(StepVerifier::create) //
@@ -299,17 +314,19 @@ public abstract class ReactiveIndexOperationsIntegrationTests implements NewElas
 
 		ReactiveIndexOperations indexOps = operations.indexOps(Entity.class);
 
-		String expected = "{\n" + //
-				"  \"properties\":{\n" + //
-				"    \"text\": {\n" + //
-				"      \"type\": \"text\"\n" + //
-				"    },\n" + //
-				"    \"publication-date\": {\n" + //
-				"      \"type\": \"date\",\n" + //
-				"      \"format\": \"basic_date\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties":{
+				    "text": {
+				      "type": "text"
+				    },
+				    "publication-date": {
+				      "type": "date",
+				      "format": "basic_date"
+				    }
+				  }
+				}
+				"""; //
 
 		indexOps.create() //
 				.then(indexOps.putMapping()) //

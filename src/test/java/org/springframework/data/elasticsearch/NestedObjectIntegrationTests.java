@@ -162,7 +162,7 @@ public abstract class NestedObjectIntegrationTests {
 		assertThat(mapping).isNotNull();
 		Map<String, Object> propertyMap = (Map<String, Object>) mapping.get("properties");
 		assertThat(propertyMap).isNotNull();
-		Map bestCarsAttributes = (Map) propertyMap.get("bestCars");
+		Map<String, Object> bestCarsAttributes = (Map<String, Object>) propertyMap.get("bestCars");
 		assertThat(bestCarsAttributes.get("include_in_parent")).isNotNull();
 	}
 

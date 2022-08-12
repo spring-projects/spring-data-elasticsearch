@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -202,13 +203,13 @@ public abstract class SearchAsYouTypeIntegrationTests {
 
 			SearchAsYouTypeEntity that = (SearchAsYouTypeEntity) o;
 
-			if (id != null ? !id.equals(that.id) : that.id != null) {
+			if (!Objects.equals(id, that.id)) {
 				return false;
 			}
-			if (name != null ? !name.equals(that.name) : that.name != null) {
+			if (!Objects.equals(name, that.name)) {
 				return false;
 			}
-			return suggest != null ? suggest.equals(that.suggest) : that.suggest == null;
+			return Objects.equals(suggest, that.suggest);
 		}
 
 		@Override

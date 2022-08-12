@@ -97,7 +97,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 	@Test // #1858
 	@DisplayName("should only quote String query parameters")
 	void shouldOnlyEscapeStringQueryParameters() throws Exception {
-		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAge", Integer.valueOf(30));
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAge", 30);
 
 		assertThat(query).isInstanceOf(StringQuery.class);
 		assertThat(((StringQuery) query).getSource()).isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : 30 } } } }");

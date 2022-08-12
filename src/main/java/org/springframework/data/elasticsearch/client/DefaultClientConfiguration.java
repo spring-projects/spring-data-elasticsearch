@@ -17,8 +17,6 @@ package org.springframework.data.elasticsearch.client;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -63,7 +61,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 			Function<WebClient, WebClient> webClientConfigurer, HttpClientConfigCallback httpClientConfigurer,
 			List<ClientConfigurationCallback<?>> clientConfigurers, Supplier<HttpHeaders> headersSupplier) {
 
-		this.hosts = Collections.unmodifiableList(new ArrayList<>(hosts));
+		this.hosts = List.copyOf(hosts);
 		this.headers = new HttpHeaders(headers);
 		this.useSsl = useSsl;
 		this.sslContext = sslContext;

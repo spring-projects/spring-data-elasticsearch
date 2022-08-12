@@ -56,7 +56,7 @@ public abstract class AuditingIntegrationTests {
 	}
 
 	public static AuditorAware<String> auditorProvider() {
-		return new AuditorAware<String>() {
+		return new AuditorAware<>() {
 			int count = 0;
 
 			@Override

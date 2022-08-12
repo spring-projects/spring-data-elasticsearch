@@ -49,64 +49,38 @@ final class TypeUtils {
 	static BoundaryScanner boundaryScanner(@Nullable String value) {
 
 		if (value != null) {
-			switch (value.toLowerCase()) {
-				case "chars":
-					return BoundaryScanner.Chars;
-				case "sentence":
-					return BoundaryScanner.Sentence;
-				case "word":
-					return BoundaryScanner.Word;
-				default:
-					return null;
-			}
+			return switch (value.toLowerCase()) {
+				case "chars" -> BoundaryScanner.Chars;
+				case "sentence" -> BoundaryScanner.Sentence;
+				case "word" -> BoundaryScanner.Word;
+				default -> null;
+			};
 		}
 		return null;
 	}
 
 	static Conflicts conflicts(ReindexRequest.Conflicts conflicts) {
-		switch (conflicts) {
-			case ABORT:
-				return Conflicts.Abort;
-			case PROCEED:
-				return Conflicts.Proceed;
-		}
-
-		throw new IllegalArgumentException("Cannot map conflicts value " + conflicts.name());
+		return switch (conflicts) {
+			case ABORT -> Conflicts.Abort;
+			case PROCEED -> Conflicts.Proceed;
+		};
 	}
 
 	@Nullable
 	static DistanceUnit distanceUnit(String unit) {
 
-		switch (unit.toLowerCase()) {
-			case "in":
-			case "inch":
-				return DistanceUnit.Inches;
-			case "yd":
-			case "yards":
-				return DistanceUnit.Yards;
-			case "ft":
-			case "feet":
-				return DistanceUnit.Feet;
-			case "km":
-			case "kilometers":
-				return DistanceUnit.Kilometers;
-			case "nm":
-			case "nmi":
-				return DistanceUnit.NauticMiles;
-			case "mm":
-			case "millimeters":
-				return DistanceUnit.Millimeters;
-			case "cm":
-			case "centimeters":
-				return DistanceUnit.Centimeters;
-			case "mi":
-			case "miles":
-				return DistanceUnit.Miles;
-			case "m":
-			case "meters":
-				return DistanceUnit.Meters;
-		}
-		return null;
+		return switch (unit.toLowerCase()) {
+			case "in", "inch" -> DistanceUnit.Inches;
+			case "yd", "yards" -> DistanceUnit.Yards;
+			case "ft", "feet" -> DistanceUnit.Feet;
+			case "km", "kilometers" -> DistanceUnit.Kilometers;
+			case "nm", "nmi" -> DistanceUnit.NauticMiles;
+			case "mm", "millimeters" -> DistanceUnit.Millimeters;
+			case "cm", "centimeters" -> DistanceUnit.Centimeters;
+			case "mi", "miles" -> DistanceUnit.Miles;
+			case "m", "meters" -> DistanceUnit.Meters;
+			default -> null;
+		};
 	}
 
 	@Nullable
@@ -124,28 +98,22 @@ final class TypeUtils {
 	@Nullable
 	static GeoDistanceType geoDistanceType(GeoDistanceOrder.DistanceType distanceType) {
 
-		switch (distanceType) {
-			case arc:
-				return GeoDistanceType.Arc;
-			case plane:
-				return GeoDistanceType.Plane;
-		}
+		return switch (distanceType) {
+			case arc -> GeoDistanceType.Arc;
+			case plane -> GeoDistanceType.Plane;
+		};
 
-		return null;
 	}
 
 	@Nullable
 	static HighlighterFragmenter highlighterFragmenter(@Nullable String value) {
 
 		if (value != null) {
-			switch (value.toLowerCase()) {
-				case "simple":
-					return HighlighterFragmenter.Simple;
-				case "span":
-					return HighlighterFragmenter.Span;
-				default:
-					return null;
-			}
+			return switch (value.toLowerCase()) {
+				case "simple" -> HighlighterFragmenter.Simple;
+				case "span" -> HighlighterFragmenter.Span;
+				default -> null;
+			};
 		}
 
 		return null;
@@ -167,16 +135,12 @@ final class TypeUtils {
 	static HighlighterType highlighterType(@Nullable String value) {
 
 		if (value != null) {
-			switch (value.toLowerCase()) {
-				case "unified":
-					return HighlighterType.Unified;
-				case "plain":
-					return HighlighterType.Plain;
-				case "fvh":
-					return HighlighterType.FastVector;
-				default:
-					return null;
-			}
+			return switch (value.toLowerCase()) {
+				case "unified" -> HighlighterType.Unified;
+				case "plain" -> HighlighterType.Plain;
+				case "fvh" -> HighlighterType.FastVector;
+				default -> null;
+			};
 		}
 
 		return null;
@@ -186,14 +150,11 @@ final class TypeUtils {
 	static HighlighterEncoder highlighterEncoder(@Nullable String value) {
 
 		if (value != null) {
-			switch (value.toLowerCase()) {
-				case "default":
-					return HighlighterEncoder.Default;
-				case "html":
-					return HighlighterEncoder.Html;
-				default:
-					return null;
-			}
+			return switch (value.toLowerCase()) {
+				case "default" -> HighlighterEncoder.Default;
+				case "html" -> HighlighterEncoder.Html;
+				default -> null;
+			};
 		}
 
 		return null;
@@ -215,12 +176,10 @@ final class TypeUtils {
 	static OpType opType(@Nullable IndexQuery.OpType opType) {
 
 		if (opType != null) {
-			switch (opType) {
-				case INDEX:
-					return OpType.Index;
-				case CREATE:
-					return OpType.Create;
-			}
+			return switch (opType) {
+				case INDEX -> OpType.Index;
+				case CREATE -> OpType.Create;
+			};
 		}
 		return null;
 	}
@@ -231,15 +190,11 @@ final class TypeUtils {
 			return Refresh.False;
 		}
 
-		switch (refreshPolicy) {
-			case IMMEDIATE:
-				return Refresh.True;
-			case WAIT_UNTIL:
-				return Refresh.WaitFor;
-			case NONE:
-			default:
-				return Refresh.False;
-		}
+		return switch (refreshPolicy) {
+			case IMMEDIATE -> Refresh.True;
+			case WAIT_UNTIL -> Refresh.WaitFor;
+			case NONE -> Refresh.False;
+		};
 	}
 
 	@Nullable
@@ -249,20 +204,14 @@ final class TypeUtils {
 			return null;
 		}
 
-		switch (result) {
-			case Created:
-				return UpdateResponse.Result.CREATED;
-			case Updated:
-				return UpdateResponse.Result.UPDATED;
-			case Deleted:
-				return UpdateResponse.Result.DELETED;
-			case NotFound:
-				return UpdateResponse.Result.NOT_FOUND;
-			case NoOp:
-				return UpdateResponse.Result.NOOP;
-		}
+		return switch (result) {
+			case Created -> UpdateResponse.Result.CREATED;
+			case Updated -> UpdateResponse.Result.UPDATED;
+			case Deleted -> UpdateResponse.Result.DELETED;
+			case NotFound -> UpdateResponse.Result.NOT_FOUND;
+			case NoOp -> UpdateResponse.Result.NOOP;
+		};
 
-		return null;
 	}
 
 	@Nullable
@@ -272,22 +221,15 @@ final class TypeUtils {
 			return null;
 		}
 
-		switch (scoreMode) {
-			case Default:
-				return null;
-			case Avg:
-				return ScoreMode.Avg;
-			case Max:
-				return ScoreMode.Max;
-			case Min:
-				return ScoreMode.Min;
-			case Total:
-				return ScoreMode.Total;
-			case Multiply:
-				return ScoreMode.Multiply;
-		}
+		return switch (scoreMode) {
+			case Default -> null;
+			case Avg -> ScoreMode.Avg;
+			case Max -> ScoreMode.Max;
+			case Min -> ScoreMode.Min;
+			case Total -> ScoreMode.Total;
+			case Multiply -> ScoreMode.Multiply;
+		};
 
-		return null;
 	}
 
 	@Nullable
@@ -297,14 +239,11 @@ final class TypeUtils {
 			return null;
 		}
 
-		switch (searchType) {
-			case QUERY_THEN_FETCH:
-				return SearchType.QueryThenFetch;
-			case DFS_QUERY_THEN_FETCH:
-				return SearchType.DfsQueryThenFetch;
-		}
+		return switch (searchType) {
+			case QUERY_THEN_FETCH -> SearchType.QueryThenFetch;
+			case DFS_QUERY_THEN_FETCH -> SearchType.DfsQueryThenFetch;
+		};
 
-		return null;
 	}
 
 	@Nullable
@@ -320,18 +259,13 @@ final class TypeUtils {
 	@Nullable
 	static SortMode sortMode(Order.Mode mode) {
 
-		switch (mode) {
-			case min:
-				return SortMode.Min;
-			case max:
-				return SortMode.Max;
-			case median:
-				return SortMode.Median;
-			case avg:
-				return SortMode.Avg;
-		}
+		return switch (mode) {
+			case min -> SortMode.Min;
+			case max -> SortMode.Max;
+			case median -> SortMode.Median;
+			case avg -> SortMode.Avg;
+		};
 
-		return null;
 	}
 
 	@Nullable
@@ -359,16 +293,12 @@ final class TypeUtils {
 			@Nullable org.springframework.data.elasticsearch.annotations.Document.VersionType versionType) {
 
 		if (versionType != null) {
-			switch (versionType) {
-				case INTERNAL:
-					return VersionType.Internal;
-				case EXTERNAL:
-					return VersionType.External;
-				case EXTERNAL_GTE:
-					return VersionType.ExternalGte;
-				case FORCE:
-					return VersionType.Force;
-			}
+			return switch (versionType) {
+				case INTERNAL -> VersionType.Internal;
+				case EXTERNAL -> VersionType.External;
+				case EXTERNAL_GTE -> VersionType.ExternalGte;
+				case FORCE -> VersionType.Force;
+			};
 		}
 
 		return null;

@@ -19,6 +19,7 @@ import static org.springframework.util.StringUtils.*;
 
 import co.elastic.clients.elasticsearch._types.AcknowledgedResponseBase;
 import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -53,7 +54,8 @@ import org.springframework.util.Assert;
 /**
  * @author Peter-Josef Meisch
  */
-public class ReactiveIndicesTemplate extends ReactiveChildTemplate<ReactiveElasticsearchIndicesClient>
+public class ReactiveIndicesTemplate
+		extends ReactiveChildTemplate<ElasticsearchTransport, ReactiveElasticsearchIndicesClient>
 		implements ReactiveIndexOperations {
 
 	@Nullable private final Class<?> boundClass;
@@ -152,7 +154,7 @@ public class ReactiveIndicesTemplate extends ReactiveChildTemplate<ReactiveElast
 
 	@Override
 	public Mono<Void> refresh() {
-		return Mono.from(execute(client1 -> client1.refresh())).then();
+		return Mono.from(execute(ReactiveElasticsearchIndicesClient::refresh)).then();
 	}
 
 	@Override

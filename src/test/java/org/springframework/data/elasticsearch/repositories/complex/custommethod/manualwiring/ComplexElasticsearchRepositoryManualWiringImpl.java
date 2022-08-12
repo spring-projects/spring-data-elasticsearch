@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repositories.complex.custommethod.manualwiring;
 
+import static org.assertj.core.api.AssertionsForClassTypes.*;
+
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repositories.complex.custommethod.autowiring.ComplexElasticsearchRepositoryCustom;
 
@@ -33,7 +35,9 @@ public class ComplexElasticsearchRepositoryManualWiringImpl implements ComplexEl
 
 	@Override
 	public String doSomethingSpecial() {
-		assert (operations.getElasticsearchConverter() != null);
+
+		assertThat(operations.getElasticsearchConverter()).isNotNull();
+
 		return "3+3=6";
 	}
 }

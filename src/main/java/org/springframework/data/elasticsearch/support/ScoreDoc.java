@@ -21,29 +21,5 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @since 4.3
  */
-public class ScoreDoc {
-
-	private final double score;
-	@Nullable private final Integer doc;
-	@Nullable private final Integer shardIndex;
-
-	public ScoreDoc(double score, @Nullable Integer doc, @Nullable Integer shardIndex) {
-		this.score = score;
-		this.doc = doc;
-		this.shardIndex = shardIndex;
-	}
-
-	public double getScore() {
-		return score;
-	}
-
-	@Nullable
-	public Integer getDoc() {
-		return doc;
-	}
-
-	@Nullable
-	public Integer getShardIndex() {
-		return shardIndex;
-	}
+public record ScoreDoc(double score, @Nullable Integer doc, @Nullable Integer shardIndex) {
 }

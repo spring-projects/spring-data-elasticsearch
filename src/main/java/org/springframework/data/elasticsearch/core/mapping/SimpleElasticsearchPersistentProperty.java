@@ -261,16 +261,10 @@ public class SimpleElasticsearchPersistentProperty extends
 		// register converters for built-in formats
 		for (DateFormat dateFormat : dateFormats) {
 			switch (dateFormat) {
-				case weekyear:
-				case weekyear_week:
-				case weekyear_week_day:
-					LOGGER.warn(String.format(
-							"No default converter available for '%s' and date format '%s'. Use a custom converter instead.",
-							actualType.getName(), dateFormat.name()));
-					break;
-				default:
-					converters.add(ElasticsearchDateConverter.of(dateFormat));
-					break;
+				case weekyear, weekyear_week, weekyear_week_day -> LOGGER.warn(String.format(
+						"No default converter available for '%s' and date format '%s'. Use a custom converter instead.",
+						actualType.getName(), dateFormat.name()));
+				default -> converters.add(ElasticsearchDateConverter.of(dateFormat));
 			}
 		}
 
