@@ -327,26 +327,25 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Time scrollTimeout = searchRequest.scroll() != null ? searchRequest.scroll() : Time.of(t -> t.time("1m"));
 
 		Flux<ResponseBody<EntityAsMap>> searchResponses = Flux.usingWhen(Mono.fromSupplier(ScrollState::new), //
-				state -> {
-					return Mono
-							.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client1 -> client1
-									.search(searchRequest, EntityAsMap.class))) //
-							.expand(entityAsMapSearchResponse -> {
+				state -> Mono
+						.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client1 -> client1
+								.search(searchRequest, EntityAsMap.class))) //
+						.expand(entityAsMapSearchResponse -> {
 
-								state.updateScrollId(entityAsMapSearchResponse.scrollId());
+							state.updateScrollId(entityAsMapSearchResponse.scrollId());
 
-								if (entityAsMapSearchResponse.hits() == null
-										|| CollectionUtils.isEmpty(entityAsMapSearchResponse.hits().hits())) {
-									return Mono.empty();
-								}
+							if (entityAsMapSearchResponse.hits() == null
+									|| CollectionUtils.isEmpty(entityAsMapSearchResponse.hits().hits())) {
+								return Mono.empty();
+							}
 
-								return Mono.from(execute((ClientCallback<Publisher<ScrollResponse<EntityAsMap>>>) client1 -> {
-									ScrollRequest scrollRequest = ScrollRequest
-											.of(sr -> sr.scrollId(state.getScrollId()).scroll(scrollTimeout));
-									return client1.scroll(scrollRequest, EntityAsMap.class);
-								}));
-							});
-				}, this::cleanupScroll, (state, ex) -> cleanupScroll(state), this::cleanupScroll);
+							return Mono.from(execute((ClientCallback<Publisher<ScrollResponse<EntityAsMap>>>) client1 -> {
+								ScrollRequest scrollRequest = ScrollRequest
+										.of(sr -> sr.scrollId(state.getScrollId()).scroll(scrollTimeout));
+								return client1.scroll(scrollRequest, EntityAsMap.class);
+							}));
+						}),
+				this::cleanupScroll, (state, ex) -> cleanupScroll(state), this::cleanupScroll);
 
 		return searchResponses.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits())
 				.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));

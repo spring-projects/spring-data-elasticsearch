@@ -596,7 +596,7 @@ public class MappingBuilder {
 			}
 		}
 
-		private boolean isAnyPropertyAnnotatedWithField(@Nullable ElasticsearchPersistentEntity entity) {
+		private boolean isAnyPropertyAnnotatedWithField(@Nullable ElasticsearchPersistentEntity<?> entity) {
 
 			return entity != null && entity.getPersistentProperty(Field.class) != null;
 		}

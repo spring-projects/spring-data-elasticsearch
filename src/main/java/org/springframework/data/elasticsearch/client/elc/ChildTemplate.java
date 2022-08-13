@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.ApiClient;
 import co.elastic.clients.elasticsearch.cluster.ElasticsearchClusterClient;
 import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.transport.Transport;
 
 import java.io.IOException;
 
@@ -32,7 +33,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-public abstract class ChildTemplate<CLIENT extends ApiClient> {
+public abstract class ChildTemplate<T extends Transport, CLIENT extends ApiClient<T, CLIENT>> {
 
 	protected final CLIENT client;
 	protected final RequestConverter requestConverter;

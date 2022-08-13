@@ -187,20 +187,22 @@ public class RestClientsTest {
 
 			String urlPattern = "^/index/_doc/42(\\?.*)?$";
 			stubFor(put(urlMatching(urlPattern)) //
-					.willReturn(jsonResponse("{\n" + //
-			"  \"_id\": \"42\",\n" + //
-			"  \"_index\": \"test\",\n" + //
-			"  \"_primary_term\": 1,\n" + //
-			"  \"_seq_no\": 0,\n" + //
-			"  \"_shards\": {\n" + //
-			"    \"failed\": 0,\n" + //
-			"    \"successful\": 1,\n" + //
-			"    \"total\": 2\n" + //
-			"  },\n" + //
-			"  \"_type\": \"_doc\",\n" + //
-			"  \"_version\": 1,\n" + //
-			"  \"result\": \"created\"\n" + //
-			"}\n" //
+					.willReturn(jsonResponse("""
+							{
+							  "_id": "42",
+							  "_index": "test",
+							  "_primary_term": 1,
+							  "_seq_no": 0,
+							  "_shards": {
+							    "failed": 0,
+							    "successful": 1,
+							    "total": 2
+							  },
+							  "_type": "_doc",
+							  "_version": 1,
+							  "result": "created"
+							}
+							""" //
 			, 201) //
 					.withHeader("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7") //
 					.withHeader("X-Elastic-Product", "Elasticsearch")));
@@ -238,25 +240,26 @@ public class RestClientsTest {
 
 	private StubMapping stubForElasticsearchVersionCheck() {
 		return stubFor(get(urlEqualTo("/")) //
-				.willReturn(okJson("{\n" + //
-						"    \"cluster_name\": \"docker-cluster\",\n" + //
-						"    \"cluster_uuid\": \"nKasrfHjRo6ge0eBmMUuAQ\",\n" + //
-						"    \"name\": \"c1a6e517d001\",\n" + //
-						"    \"tagline\": \"You Know, for Search\",\n" + //
-						"    \"version\": {\n" + //
-						"        \"build_date\": \"2021-08-26T09:01:05.390870785Z\",\n" + //
-						"        \"build_flavor\": \"default\",\n" + //
-						"        \"build_hash\": \"66b55ebfa59c92c15db3f69a335d500018b3331e\",\n" + //
-						"        \"build_snapshot\": false,\n" + //
-						"        \"build_type\": \"docker\",\n" + //
-						"        \"lucene_version\": \"8.9.0\",\n" + //
-						"        \"minimum_index_compatibility_version\": \"6.0.0-beta1\",\n" + //
-						"        \"minimum_wire_compatibility_version\": \"6.8.0\",\n" + //
-						"        \"number\": \"7.14.1\"\n" + //
-						"    }\n" + //
-						"}") //
-								.withHeader("Content-Type", "application/json; charset=UTF-8") //
-								.withHeader("X-Elastic-Product", "Elasticsearch")));
+				.willReturn(okJson("""
+						{
+						    "cluster_name": "docker-cluster",
+						    "cluster_uuid": "nKasrfHjRo6ge0eBmMUuAQ",
+						    "name": "c1a6e517d001",
+						    "tagline": "You Know, for Search",
+						    "version": {
+						        "build_date": "2021-08-26T09:01:05.390870785Z",
+						        "build_flavor": "default",
+						        "build_hash": "66b55ebfa59c92c15db3f69a335d500018b3331e",
+						        "build_snapshot": false,
+						        "build_type": "docker",
+						        "lucene_version": "8.9.0",
+						        "minimum_index_compatibility_version": "6.0.0-beta1",
+						        "minimum_wire_compatibility_version": "6.8.0",
+						        "number": "7.14.1"
+						    }
+						}""") //
+						.withHeader("Content-Type", "application/json; charset=UTF-8") //
+						.withHeader("X-Elastic-Product", "Elasticsearch")));
 	}
 
 	private StubMapping stubForHead() {

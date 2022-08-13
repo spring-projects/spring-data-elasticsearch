@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.lucene.search.TotalHits;
@@ -415,9 +416,9 @@ public class ReactiveElasticsearchTemplateCallbackTests {
 
 			Person person = (Person) o;
 
-			if (id != null ? !id.equals(person.id) : person.id != null)
+			if (!Objects.equals(id, person.id))
 				return false;
-			return firstname != null ? firstname.equals(person.firstname) : person.firstname == null;
+			return Objects.equals(firstname, person.firstname);
 		}
 
 		@Override

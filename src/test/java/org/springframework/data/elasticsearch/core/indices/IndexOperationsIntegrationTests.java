@@ -111,14 +111,15 @@ public abstract class IndexOperationsIntegrationTests implements NewElasticsearc
 		softly.assertThat(aliasData.getSearchRouting()).isEqualTo("searchrouting");
 		softly.assertAll();
 
-		String expectedMappings = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"email\": {\n" + //
-				"      \"type\": \"text\",\n" + //
-				"      \"analyzer\": \"emailAnalyzer\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expectedMappings = """
+				{
+				  "properties": {
+				    "email": {
+				      "type": "text",
+				      "analyzer": "emailAnalyzer"
+				    }
+				  }
+				}"""; //
 		JSONAssert.assertEquals(expectedMappings, indexInformation.getMapping().toJson(), false);
 	}
 

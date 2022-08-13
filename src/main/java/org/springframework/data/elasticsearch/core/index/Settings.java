@@ -114,8 +114,7 @@ public class Settings extends DefaultStringObjectMap<Settings> {
 	 */
 	static private Stream<Map.Entry<String, Object>> doFlatten(Map.Entry<String, Object> entry) {
 
-		if (entry.getValue() instanceof Map<?, ?>) {
-			Map<?, ?> nested = (Map<?, ?>) entry.getValue();
+		if (entry.getValue()instanceof Map<?, ?> nested) {
 
 			// noinspection unchecked
 			return nested.entrySet().stream() //

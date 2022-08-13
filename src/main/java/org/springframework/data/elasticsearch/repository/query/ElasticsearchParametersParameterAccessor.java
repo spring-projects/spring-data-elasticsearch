@@ -35,7 +35,7 @@ class ElasticsearchParametersParameterAccessor extends ParametersParameterAccess
 	 * @param method must not be {@literal null}.
 	 * @param values must not be {@literal null}.
 	 */
-	ElasticsearchParametersParameterAccessor(ElasticsearchQueryMethod method, Object[] values) {
+	ElasticsearchParametersParameterAccessor(ElasticsearchQueryMethod method, Object... values) {
 
 		super(method.getParameters(), values);
 		this.values = Arrays.asList(values);

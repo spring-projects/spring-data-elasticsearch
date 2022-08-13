@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.ApiClient;
 import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.transport.Transport;
 import reactor.core.publisher.Flux;
 
 import org.reactivestreams.Publisher;
@@ -29,18 +30,17 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-public class ReactiveChildTemplate<CLIENT extends ApiClient> {
+public class ReactiveChildTemplate<T extends Transport, CLIENT extends ApiClient<T, CLIENT>> {
 	protected final CLIENT client;
 	protected final ElasticsearchConverter elasticsearchConverter;
 	protected final RequestConverter requestConverter;
 	protected final ResponseConverter responseConverter;
-	private final JsonpMapper jsonpMapper;
 	protected final ElasticsearchExceptionTranslator exceptionTranslator;
 
 	public ReactiveChildTemplate(CLIENT client, ElasticsearchConverter elasticsearchConverter) {
 		this.client = client;
 		this.elasticsearchConverter = elasticsearchConverter;
-		jsonpMapper = client._transport().jsonpMapper();
+		JsonpMapper jsonpMapper = client._transport().jsonpMapper();
 		requestConverter = new RequestConverter(elasticsearchConverter, jsonpMapper);
 		responseConverter = new ResponseConverter(jsonpMapper);
 		exceptionTranslator = new ElasticsearchExceptionTranslator(jsonpMapper);

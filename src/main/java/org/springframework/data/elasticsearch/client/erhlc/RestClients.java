@@ -128,8 +128,7 @@ public final class RestClients {
 
 			for (ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer : clientConfiguration
 					.getClientConfigurers()) {
-				if (clientConfigurer instanceof RestClientConfigurationCallback) {
-					RestClientConfigurationCallback restClientConfigurationCallback = (RestClientConfigurationCallback) clientConfigurer;
+				if (clientConfigurer instanceof RestClientConfigurationCallback restClientConfigurationCallback) {
 					clientBuilder = restClientConfigurationCallback.configure(clientBuilder);
 				}
 			}
@@ -199,9 +198,9 @@ public final class RestClients {
 				context.setAttribute(RestClients.LOG_ID_ATTRIBUTE, logId);
 			}
 
-			if (request instanceof HttpEntityEnclosingRequest && ((HttpEntityEnclosingRequest) request).getEntity() != null) {
+			if (request instanceof HttpEntityEnclosingRequest entityRequest
+					&& ((HttpEntityEnclosingRequest) request).getEntity() != null) {
 
-				HttpEntityEnclosingRequest entityRequest = (HttpEntityEnclosingRequest) request;
 				HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
 				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 				entity.writeTo(buffer);

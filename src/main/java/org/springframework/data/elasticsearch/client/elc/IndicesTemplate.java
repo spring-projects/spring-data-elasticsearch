@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import static org.springframework.util.StringUtils.*;
 
 import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 
 import java.util.List;
@@ -56,7 +57,8 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-public class IndicesTemplate extends ChildTemplate<ElasticsearchIndicesClient> implements IndexOperations {
+public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, ElasticsearchIndicesClient>
+		implements IndexOperations {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IndicesTemplate.class);
 
@@ -187,7 +189,6 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchIndicesClient> i
 		Assert.notNull(clazz, "clazz must not be null");
 
 		// load mapping specified in Mapping annotation if present
-		// noinspection DuplicatedCode
 		Mapping mappingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Mapping.class);
 
 		if (mappingAnnotation != null) {

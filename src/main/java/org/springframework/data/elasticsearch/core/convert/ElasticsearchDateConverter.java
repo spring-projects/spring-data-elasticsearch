@@ -87,8 +87,7 @@ final public class ElasticsearchDateConverter {
 
 		Assert.notNull(accessor, "accessor must not be null");
 
-		if (accessor instanceof Instant) {
-			Instant instant = (Instant) accessor;
+		if (accessor instanceof Instant instant) {
 			ZonedDateTime zonedDateTime = ZonedDateTime.ofInstant(instant, ZoneId.of("UTC"));
 			return dateFormatter.format(zonedDateTime);
 		}

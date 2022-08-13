@@ -119,12 +119,12 @@ public class UpdateQuery {
 
 	@Nullable
 	public String getScript() {
-		return scriptData != null ? scriptData.getScript() : null;
+		return scriptData != null ? scriptData.script() : null;
 	}
 
 	@Nullable
 	public Map<String, Object> getParams() {
-		return scriptData != null ? scriptData.getParams() : null;
+		return scriptData != null ? scriptData.params() : null;
 	}
 
 	@Nullable
@@ -139,7 +139,7 @@ public class UpdateQuery {
 
 	@Nullable
 	public String getLang() {
-		return scriptData != null ? scriptData.getLanguage() : null;
+		return scriptData != null ? scriptData.language() : null;
 	}
 
 	@Nullable
@@ -249,12 +249,12 @@ public class UpdateQuery {
 
 	@Nullable
 	public ScriptType getScriptType() {
-		return scriptData != null ? scriptData.getType() : null;
+		return scriptData != null ? scriptData.type() : null;
 	}
 
 	@Nullable
 	public String getScriptName() {
-		return scriptData != null ? scriptData.getScriptName() : null;
+		return scriptData != null ? scriptData.scriptName() : null;
 	}
 
 	/**

@@ -27,7 +27,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingConverter;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingExecution;
 import org.springframework.data.mapping.context.MappingContext;
@@ -133,8 +132,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 			return (query, type, targetType, indexCoordinates) -> operations.search(query.setPageable(accessor.getPageable()),
 					type, targetType, indexCoordinates);
 		} else {
-			return (query, type, targetType, indexCoordinates) -> operations.search(query, type, targetType,
-					indexCoordinates);
+			return operations::search;
 		}
 	}
 

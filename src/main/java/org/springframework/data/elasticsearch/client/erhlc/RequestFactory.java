@@ -166,8 +166,7 @@ class RequestFactory {
 
 			IndicesAliasesRequest.AliasActions aliasActionsES = null;
 
-			if (aliasAction instanceof AliasAction.Add) {
-				AliasAction.Add add = (AliasAction.Add) aliasAction;
+			if (aliasAction instanceof AliasAction.Add add) {
 				IndicesAliasesRequest.AliasActions addES = IndicesAliasesRequest.AliasActions.add();
 
 				AliasActionParameters parameters = add.getParameters();
@@ -193,8 +192,7 @@ class RequestFactory {
 				}
 
 				aliasActionsES = addES;
-			} else if (aliasAction instanceof AliasAction.Remove) {
-				AliasAction.Remove remove = (AliasAction.Remove) aliasAction;
+			} else if (aliasAction instanceof AliasAction.Remove remove) {
 				IndicesAliasesRequest.AliasActions removeES = IndicesAliasesRequest.AliasActions.remove();
 
 				AliasActionParameters parameters = remove.getParameters();
@@ -202,8 +200,7 @@ class RequestFactory {
 				removeES.aliases(parameters.getAliases());
 
 				aliasActionsES = removeES;
-			} else if (aliasAction instanceof AliasAction.RemoveIndex) {
-				AliasAction.RemoveIndex removeIndex = (AliasAction.RemoveIndex) aliasAction;
+			} else if (aliasAction instanceof AliasAction.RemoveIndex removeIndex) {
 				IndicesAliasesRequest.AliasActions removeIndexES = IndicesAliasesRequest.AliasActions.removeIndex();
 
 				AliasActionParameters parameters = removeIndex.getParameters();
@@ -235,7 +232,7 @@ class RequestFactory {
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
-			bulkRequest.waitForActiveShards(ActiveShardCount.from(bulkOptions.getWaitForActiveShards().getValue()));
+			bulkRequest.waitForActiveShards(ActiveShardCount.from(bulkOptions.getWaitForActiveShards().value()));
 		}
 
 		if (bulkOptions.getPipeline() != null) {
@@ -590,9 +587,9 @@ class RequestFactory {
 			String indexName = index.getIndexName();
 
 			for (Query.IdWithRouting idWithRouting : searchQuery.getIdsWithRouting()) {
-				MultiGetRequest.Item item = new MultiGetRequest.Item(indexName, idWithRouting.getId());
-				if (idWithRouting.getRouting() != null) {
-					item = item.routing(idWithRouting.getRouting());
+				MultiGetRequest.Item item = new MultiGetRequest.Item(indexName, idWithRouting.id());
+				if (idWithRouting.routing() != null) {
+					item = item.routing(idWithRouting.routing());
 				}
 
 				// note: multiGet does not have fields, need to set sourceContext to filter
@@ -653,6 +650,7 @@ class RequestFactory {
 		}
 
 		if (query.getOpType() != null) {
+
 			switch (query.getOpType()) {
 				case INDEX:
 					indexRequest.opType(DocWriteRequest.OpType.INDEX);
@@ -677,8 +675,7 @@ class RequestFactory {
 
 		if (highlightBuilder == null) {
 
-			if (query instanceof NativeSearchQuery) {
-				NativeSearchQuery searchQuery = (NativeSearchQuery) query;
+			if (query instanceof NativeSearchQuery searchQuery) {
 
 				if ((searchQuery.getHighlightFields() != null && searchQuery.getHighlightFields().length > 0)
 						|| searchQuery.getHighlightBuilder() != null) {
@@ -868,9 +865,8 @@ class RequestFactory {
 		if (!query.getRuntimeFields().isEmpty()) {
 
 			Map<String, Object> runtimeMappings = new HashMap<>();
-			query.getRuntimeFields().forEach(runtimeField -> {
-				runtimeMappings.put(runtimeField.getName(), runtimeField.getMapping());
-			});
+			query.getRuntimeFields()
+					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(), runtimeField.getMapping()));
 			sourceBuilder.runtimeMappings(runtimeMappings);
 		}
 
@@ -925,8 +921,7 @@ class RequestFactory {
 			query.getSort().forEach(order -> sourceBuilder.sort(getSortBuilder(order, entity)));
 		}
 
-		if (query instanceof NativeSearchQuery) {
-			NativeSearchQuery nativeSearchQuery = (NativeSearchQuery) query;
+		if (query instanceof NativeSearchQuery nativeSearchQuery) {
 			List<SortBuilder<?>> sorts = nativeSearchQuery.getElasticsearchSorts();
 			if (sorts != null) {
 				sorts.forEach(sourceBuilder::sort);
@@ -940,8 +935,7 @@ class RequestFactory {
 		Order.Mode mode = Order.DEFAULT_MODE;
 		String unmappedType = null;
 
-		if (order instanceof Order) {
-			Order o = (Order) order;
+		if (order instanceof Order o) {
 			mode = o.getMode();
 			unmappedType = o.getUnmappedType();
 		}
@@ -956,8 +950,7 @@ class RequestFactory {
 					: null;
 			String fieldName = property != null ? property.getFieldName() : order.getProperty();
 
-			if (order instanceof GeoDistanceOrder) {
-				GeoDistanceOrder geoDistanceOrder = (GeoDistanceOrder) order;
+			if (order instanceof GeoDistanceOrder geoDistanceOrder) {
 
 				GeoDistanceSortBuilder sort = SortBuilders.geoDistanceSort(fieldName, geoDistanceOrder.getGeoPoint().getLat(),
 						geoDistanceOrder.getGeoPoint().getLon());
@@ -1171,14 +1164,11 @@ class RequestFactory {
 	private QueryBuilder getQuery(Query query) {
 		QueryBuilder elasticsearchQuery;
 
-		if (query instanceof NativeSearchQuery) {
-			NativeSearchQuery searchQuery = (NativeSearchQuery) query;
+		if (query instanceof NativeSearchQuery searchQuery) {
 			elasticsearchQuery = searchQuery.getQuery();
-		} else if (query instanceof CriteriaQuery) {
-			CriteriaQuery criteriaQuery = (CriteriaQuery) query;
+		} else if (query instanceof CriteriaQuery criteriaQuery) {
 			elasticsearchQuery = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria());
-		} else if (query instanceof StringQuery) {
-			StringQuery stringQuery = (StringQuery) query;
+		} else if (query instanceof StringQuery stringQuery) {
 			elasticsearchQuery = wrapperQuery(stringQuery.getSource());
 		} else {
 			throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
@@ -1191,11 +1181,9 @@ class RequestFactory {
 	private QueryBuilder getFilter(Query query) {
 		QueryBuilder elasticsearchFilter;
 
-		if (query instanceof NativeSearchQuery) {
-			NativeSearchQuery searchQuery = (NativeSearchQuery) query;
+		if (query instanceof NativeSearchQuery searchQuery) {
 			elasticsearchFilter = searchQuery.getFilter();
-		} else if (query instanceof CriteriaQuery) {
-			CriteriaQuery criteriaQuery = (CriteriaQuery) query;
+		} else if (query instanceof CriteriaQuery criteriaQuery) {
 			elasticsearchFilter = new CriteriaFilterProcessor().createFilter(criteriaQuery.getCriteria());
 		} else if (query instanceof StringQuery) {
 			elasticsearchFilter = null;
@@ -1207,15 +1195,11 @@ class RequestFactory {
 	}
 
 	public static WriteRequest.RefreshPolicy toElasticsearchRefreshPolicy(RefreshPolicy refreshPolicy) {
-		switch (refreshPolicy) {
-			case IMMEDIATE:
-				return WriteRequest.RefreshPolicy.IMMEDIATE;
-			case WAIT_UNTIL:
-				return WriteRequest.RefreshPolicy.WAIT_UNTIL;
-			case NONE:
-			default:
-				return WriteRequest.RefreshPolicy.NONE;
-		}
+		return switch (refreshPolicy) {
+			case IMMEDIATE -> WriteRequest.RefreshPolicy.IMMEDIATE;
+			case WAIT_UNTIL -> WriteRequest.RefreshPolicy.WAIT_UNTIL;
+			case NONE -> WriteRequest.RefreshPolicy.NONE;
+		};
 	}
 
 	@Nullable

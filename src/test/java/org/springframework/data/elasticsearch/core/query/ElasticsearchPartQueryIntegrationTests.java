@@ -186,22 +186,24 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 
 		String query = getQueryString(methodName, parameterClasses, parameters);
 
-		String expected = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"query_string\": {\n" + //
-				"            \"query\": \"\\\"Title\\\" \\\"Title2\\\"\",\n" + //
-				"            \"fields\": [\n" + //
-				"              \"name\"\n" + //
-				"            ]\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "query_string": {
+				            "query": "\\"Title\\" \\"Title2\\"",
+				            "fields": [
+				              "name"
+				            ]
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}
+				"""; //
 
 		assertEquals(expected, query, false);
 	}
@@ -217,22 +219,24 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 
 		String query = getQueryString(methodName, parameterClasses, parameters);
 
-		String expected = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"query_string\": {\n" + //
-				"            \"query\": \"NOT(\\\"Title\\\" \\\"Title2\\\")\",\n" + //
-				"            \"fields\": [\n" + //
-				"              \"name\"\n" + //
-				"            ]\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "query_string": {
+				            "query": "NOT(\\"Title\\" \\"Title2\\")",
+				            "fields": [
+				              "name"
+				            ]
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}
+				"""; //
 
 		assertEquals(expected, query, false);
 	}
@@ -313,22 +317,24 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 				"  }" + //
 				"}}"; //
 
-		String expectedELC = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"range\": {\n" + //
-				"            \"price\": {\n" + //
-				"              \"gte\": 32,\n" + //
-				"              \"lte\": 52\n" + //
-				"            }\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expectedELC = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "range": {
+				            "price": {
+				              "gte": 32,
+				              "lte": 52
+				            }
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}
+				"""; //
 
 		assertAny( //
 				() -> assertEquals(expectedERHLC, query, false) //
@@ -353,21 +359,22 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 				"  }" + //
 				"}}"; //
 
-		String expectedELC = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"range\": {\n" + //
-				"            \"price\": {\n" + //
-				"              \"lt\": 42\n" + //
-				"            }\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expectedELC = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "range": {
+				            "price": {
+				              "lt": 42
+				            }
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}"""; //
 
 		assertAny( //
 				() -> assertEquals(expectedERHLC, query, false) //
@@ -392,21 +399,22 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 				"  }" + //
 				"}}"; //
 
-		String expectedELC = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"range\": {\n" + //
-				"            \"price\": {\n" + //
-				"              \"lte\": 42\n" + //
-				"            }\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expectedELC = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "range": {
+				            "price": {
+				              "lte": 42
+				            }
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}"""; //
 
 		assertAny( //
 				() -> assertEquals(expectedERHLC, query, false) //
@@ -431,21 +439,22 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 				"  }" + //
 				"}}"; //
 
-		String expectedELC = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"range\": {\n" + //
-				"            \"price\": {\n" + //
-				"              \"gt\": 42\n" + //
-				"            }\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expectedELC = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "range": {
+				            "price": {
+				              "gt": 42
+				            }
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}"""; //
 
 		assertAny( //
 				() -> assertEquals(expectedERHLC, query, false) //
@@ -470,21 +479,22 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 				"  }" + //
 				"}}"; //
 
-		String expectedELC = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"range\": {\n" + //
-				"            \"price\": {\n" + //
-				"              \"gte\": 42\n" + //
-				"            }\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expectedELC = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "range": {
+				            "price": {
+				              "gte": 42
+				            }
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}"""; //
 
 		assertAny( //
 				() -> assertEquals(expectedERHLC, query, false) //
@@ -509,21 +519,22 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 				"  }" + //
 				"}}"; //
 
-		String expectedELC = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"range\": {\n" + //
-				"            \"price\": {\n" + //
-				"              \"lte\": 42\n" + //
-				"            }\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expectedELC = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "range": {
+				            "price": {
+				              "lte": 42
+				            }
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}"""; //
 
 		assertAny( //
 				() -> assertEquals(expectedERHLC, query, false) //
@@ -548,21 +559,22 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 				"  }" + //
 				"}}"; //
 
-		String expectedELC = "{\n" + //
-				"  \"query\": {\n" + //
-				"    \"bool\": {\n" + //
-				"      \"must\": [\n" + //
-				"        {\n" + //
-				"          \"range\": {\n" + //
-				"            \"price\": {\n" + //
-				"              \"gte\": 42\n" + //
-				"            }\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      ]\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}"; //
+		String expectedELC = """
+				{
+				  "query": {
+				    "bool": {
+				      "must": [
+				        {
+				          "range": {
+				            "price": {
+				              "gte": 42
+				            }
+				          }
+				        }
+				      ]
+				    }
+				  }
+				}"""; //
 
 		assertAny( //
 				() -> assertEquals(expectedERHLC, query, false) //

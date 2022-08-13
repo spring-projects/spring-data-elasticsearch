@@ -68,10 +68,9 @@ public class JoinField<ID> {
 		if (this == obj) {
 			return true;
 		}
-		if (!(obj instanceof JoinField)) {
+		if (!(obj instanceof JoinField<?> other)) {
 			return false;
 		}
-		JoinField other = (JoinField) obj;
 		return Objects.equals(name, other.name) && Objects.equals(parent, other.parent);
 	}
 }

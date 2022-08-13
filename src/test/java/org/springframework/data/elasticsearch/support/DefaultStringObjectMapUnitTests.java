@@ -32,17 +32,19 @@ class DefaultStringObjectMapUnitTests {
 
 	@BeforeEach
 	void setUp() {
-		String json = "{\n" + //
-				"  \"index\": {\n" + //
-				"    \"some\": {\n" + //
-				"      \"deeply\": {\n" + //
-				"        \"nested\": {\n" + //
-				"          \"answer\": 42\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n";
+		String json = """
+				{
+				  "index": {
+				    "some": {
+				      "deeply": {
+				        "nested": {
+				          "answer": 42
+				        }
+				      }
+				    }
+				  }
+				}
+				""";
 		stringObjectMap.fromJson(json);
 	}
 

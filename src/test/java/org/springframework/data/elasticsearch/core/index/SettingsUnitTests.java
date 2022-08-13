@@ -32,45 +32,75 @@ class SettingsUnitTests {
 	@DisplayName("should merge other Settings on this settings")
 	void shouldMergeOtherSettingsOnThisSettings() throws JSONException {
 
-		String thisSettingsJson = "{\n" + //
-				"  \"index\": {\n" + //
-				"    \"weather\": \"sunny\",\n" + //
-				"    \"backup\": {\n" + //
-				"      \"interval\": 5,\n" + //
-				"      \"target\": {\n" + //
-				"        \"type\":\"cloud\",\n" + //
-				"        \"provider\": \"prov1\"\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    \"music\": \"The Eagles\"\n" + //
-				"  }\n" + //
-				"}\n"; //
-		String otherSettingsJson = "{\n" + //
-				"  \"index\": {\n" + //
-				"    \"weather\": \"rainy\",\n" + //
-				"    \"backup\": {\n" + //
-				"      \"interval\": 13,\n" + //
-				"      \"target\": {\n" + // " \"type\":\"cloud\",\n" + //
-				"        \"provider\": \"prov2\"\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    \"drink\": \"wine\"\n" + //
-				"  }\n" + //
-				"}\n"; //
-		String mergedSettingsJson = "{\n" + //
-				"  \"index\": {\n" + //
-				"    \"weather\": \"rainy\",\n" + //
-				"    \"backup\": {\n" + //
-				"      \"interval\": 13,\n" + //
-				"      \"target\": {\n" + //
-				"        \"type\":\"cloud\",\n" + //
-				"        \"provider\": \"prov2\"\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    \"music\": \"The Eagles\",\n" + //
-				"    \"drink\": \"wine\"\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String thisSettingsJson = """
+				{
+				  "index": {
+				    "weather": "sunny",
+				    "backup": {
+				      "interval": 5,
+				      "target": {
+				        "type":"cloud",
+				        "provider": "prov1"
+				      }
+				    },
+				    "music": "The Eagles"
+				  }
+				}
+				"""; //
+		//
+		//
+		//
+		//
+		//
+		// " \"type\":\"cloud\",\n" + //
+		//
+		//
+		//
+		//
+		//
+		String otherSettingsJson = """
+				{
+				  "index": {
+				    "weather": "rainy",
+				    "backup": {
+				      "interval": 13,
+				      "target": {
+				        "provider": "prov2"
+				      }
+				    },
+				    "drink": "wine"
+				  }
+				}
+				"""; //
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		//
+		String mergedSettingsJson = """
+				{
+				  "index": {
+				    "weather": "rainy",
+				    "backup": {
+				      "interval": 13,
+				      "target": {
+				        "type":"cloud",
+				        "provider": "prov2"
+				      }
+				    },
+				    "music": "The Eagles",
+				    "drink": "wine"
+				  }
+				}
+				"""; //
 
 		Settings thisSettings = Settings.parse(thisSettingsJson);
 		Settings otherSettings = Settings.parse(otherSettingsJson);
@@ -84,19 +114,21 @@ class SettingsUnitTests {
 	@DisplayName("should flatten its content")
 	void shouldFlattenItsContent() {
 
-		String settingsJson = "{\n" + //
-				"  \"index\": {\n" + //
-				"    \"weather\": \"sunny\",\n" + //
-				"    \"backup\": {\n" + //
-				"      \"interval\": 5,\n" + //
-				"      \"target\": {\n" + //
-				"        \"type\":\"cloud\",\n" + //
-				"        \"provider\": \"prov1\"\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    \"music\": \"The Eagles\"\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String settingsJson = """
+				{
+				  "index": {
+				    "weather": "sunny",
+				    "backup": {
+				      "interval": 5,
+				      "target": {
+				        "type":"cloud",
+				        "provider": "prov1"
+				      }
+				    },
+				    "music": "The Eagles"
+				  }
+				}
+				"""; //
 
 		Settings settings = Settings.parse(settingsJson);
 

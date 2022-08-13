@@ -269,7 +269,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		deleteAllById(ids);
 	}
 
-	private void doDelete(@Nullable ID id,IndexCoordinates indexCoordinates) {
+	private void doDelete(@Nullable ID id, IndexCoordinates indexCoordinates) {
 
 		if (id != null) {
 			executeAndRefresh(operations -> operations.delete(stringIdRepresentation(id), indexCoordinates));
@@ -308,7 +308,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(ids, "ids can't be null.");
 
-		return StreamUtils.createStreamFromIterator(ids.iterator()).map(id -> stringIdRepresentation(id))
+		return StreamUtils.createStreamFromIterator(ids.iterator()).map(this::stringIdRepresentation)
 				.collect(Collectors.toList());
 	}
 

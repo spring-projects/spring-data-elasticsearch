@@ -451,25 +451,13 @@ public interface Query {
 	 *
 	 * @since 4.3
 	 */
-	final class IdWithRouting {
-		private final String id;
-		@Nullable private final String routing;
-
-		public IdWithRouting(String id, @Nullable String routing) {
+		record IdWithRouting(String id, @Nullable String routing) {
+		public IdWithRouting {
 
 			Assert.notNull(id, "id must not be null");
 
-			this.id = id;
-			this.routing = routing;
 		}
 
-		public String getId() {
-			return id;
-		}
 
-		@Nullable
-		public String getRouting() {
-			return routing;
-		}
 	}
 }

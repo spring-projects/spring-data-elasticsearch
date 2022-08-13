@@ -204,7 +204,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 		return Flux.fromIterable(ids) //
 				.map(this::convertId) //
 				.collectList() //
-				.map(idList -> operations.idsQuery(idList)) //
+				.map(operations::idsQuery) //
 				.flatMap(
 						query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());
@@ -225,7 +225,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				.map(entityInformation::getRequiredId) //
 				.map(this::convertId) //
 				.collectList() //
-				.map(idList -> operations.idsQuery(idList))
+				.map(operations::idsQuery)
 				.flatMap(
 						query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());

@@ -302,91 +302,92 @@ class RequestFactoryTests {
 		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder().withIndices("index5").withAliases("alias5")
 				.withFilterQuery(query, Person.class).build()));
 
-		String expected = "{\n" + //
-				"  \"actions\": [\n" + //
-				"    {\n" + //
-				"      \"add\": {\n" + //
-				"        \"indices\": [\n" + //
-				"          \"index1\",\n" + //
-				"          \"index2\"\n" + //
-				"        ],\n" + //
-				"        \"aliases\": [\n" + //
-				"          \"alias1\"\n" + //
-				"        ]\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    {\n" + //
-				"      \"remove\": {\n" + //
-				"        \"indices\": [\n" + //
-				"          \"index3\"\n" + //
-				"        ],\n" + //
-				"        \"aliases\": [\n" + //
-				"          \"alias1\"\n" + //
-				"        ]\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    {\n" + //
-				"      \"remove_index\": {\n" + //
-				"        \"indices\": [\n" + //
-				"          \"index3\"\n" + //
-				"        ]\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    {\n" + //
-				"      \"add\": {\n" + //
-				"        \"indices\": [\n" + //
-				"          \"index4\"\n" + //
-				"        ],\n" + //
-				"        \"aliases\": [\n" + //
-				"          \"alias4\"\n" + //
-				"        ],\n" + //
-				"        \"routing\": \"routing\",\n" + //
-				"        \"index_routing\": \"indexRouting\",\n" + //
-				"        \"search_routing\": \"searchRouting\",\n" + //
-				"        \"is_write_index\": true,\n" + //
-				"        \"is_hidden\": true\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    {\n" + //
-				"      \"add\": {\n" + //
-				"        \"indices\": [\n" + //
-				"          \"index5\"\n" + //
-				"        ],\n" + //
-				"        \"aliases\": [\n" + //
-				"          \"alias5\"\n" + //
-				"        ],\n" + //
-				"        \"filter\": {\n" + //
-				"          \"bool\": {\n" + //
-				"            \"must\": [\n" + //
-				"              {\n" + //
-				"                \"query_string\": {\n" + //
-				"                  \"query\": \"Smith\",\n" + //
-				"                  \"fields\": [\n" + //
-				"                    \"last-name^1.0\"\n" + //
-				"                  ],\n" + //
-				"                  \"type\": \"best_fields\",\n" + //
-				"                  \"default_operator\": \"and\",\n" + //
-				"                  \"max_determinized_states\": 10000,\n" + //
-				"                  \"enable_position_increments\": true,\n" + //
-				"                  \"fuzziness\": \"AUTO\",\n" + //
-				"                  \"fuzzy_prefix_length\": 0,\n" + //
-				"                  \"fuzzy_max_expansions\": 50,\n" + //
-				"                  \"phrase_slop\": 0,\n" + //
-				"                  \"escape\": false,\n" + //
-				"                  \"auto_generate_synonyms_phrase_query\": true,\n" + //
-				"                  \"fuzzy_transpositions\": true,\n" + //
-				"                  \"boost\": 1.0\n" + //
-				"                }\n" + //
-				"              }\n" + //
-				"            ],\n" + //
-				"            \"adjust_pure_negative\": true,\n" + //
-				"            \"boost\": 1.0\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  ]\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "actions": [
+				    {
+				      "add": {
+				        "indices": [
+				          "index1",
+				          "index2"
+				        ],
+				        "aliases": [
+				          "alias1"
+				        ]
+				      }
+				    },
+				    {
+				      "remove": {
+				        "indices": [
+				          "index3"
+				        ],
+				        "aliases": [
+				          "alias1"
+				        ]
+				      }
+				    },
+				    {
+				      "remove_index": {
+				        "indices": [
+				          "index3"
+				        ]
+				      }
+				    },
+				    {
+				      "add": {
+				        "indices": [
+				          "index4"
+				        ],
+				        "aliases": [
+				          "alias4"
+				        ],
+				        "routing": "routing",
+				        "index_routing": "indexRouting",
+				        "search_routing": "searchRouting",
+				        "is_write_index": true,
+				        "is_hidden": true
+				      }
+				    },
+				    {
+				      "add": {
+				        "indices": [
+				          "index5"
+				        ],
+				        "aliases": [
+				          "alias5"
+				        ],
+				        "filter": {
+				          "bool": {
+				            "must": [
+				              {
+				                "query_string": {
+				                  "query": "Smith",
+				                  "fields": [
+				                    "last-name^1.0"
+				                  ],
+				                  "type": "best_fields",
+				                  "default_operator": "and",
+				                  "max_determinized_states": 10000,
+				                  "enable_position_increments": true,
+				                  "fuzziness": "AUTO",
+				                  "fuzzy_prefix_length": 0,
+				                  "fuzzy_max_expansions": 50,
+				                  "phrase_slop": 0,
+				                  "escape": false,
+				                  "auto_generate_synonyms_phrase_query": true,
+				                  "fuzzy_transpositions": true,
+				                  "boost": 1.0
+				                }
+				              }
+				            ],
+				            "adjust_pure_negative": true,
+				            "boost": 1.0
+				          }
+				        }
+				      }
+				    }
+				  ]
+				}"""; //
 
 		IndicesAliasesRequest indicesAliasesRequest = requestFactory.indicesAliasesRequest(aliasActions);
 
@@ -399,37 +400,39 @@ class RequestFactoryTests {
 	// DATAES-612
 	void shouldCreatePutIndexTemplateRequest() throws JSONException, IOException {
 
-		String expected = "{\n" + //
-				"  \"index_patterns\": [\n" + //
-				"    \"test-*\"\n" + //
-				"  ],\n" + //
-				"  \"order\": 42,\n" + //
-				"  \"version\": 7,\n" + //
-				"  \"settings\": {\n" + //
-				"    \"index\": {\n" + //
-				"      \"number_of_replicas\": \"2\",\n" + //
-				"      \"number_of_shards\": \"3\",\n" + //
-				"      \"refresh_interval\": \"7s\",\n" + //
-				"      \"store\": {\n" + //
-				"        \"type\": \"oops\"\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  },\n" + //
-				"  \"mappings\": {\n" + //
-				"    \"properties\": {\n" + //
-				"      \"price\": {\n" + //
-				"        \"type\": \"double\"\n" + //
-				"      }\n" + //
-				"    }\n" + //
-				"  },\n" + //
-				"  \"aliases\":{\n" + //
-				"    \"alias1\": {},\n" + //
-				"    \"alias2\": {},\n" + //
-				"    \"alias3\": {\n" + //
-				"      \"routing\": \"11\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "index_patterns": [
+				    "test-*"
+				  ],
+				  "order": 42,
+				  "version": 7,
+				  "settings": {
+				    "index": {
+				      "number_of_replicas": "2",
+				      "number_of_shards": "3",
+				      "refresh_interval": "7s",
+				      "store": {
+				        "type": "oops"
+				      }
+				    }
+				  },
+				  "mappings": {
+				    "properties": {
+				      "price": {
+				        "type": "double"
+				      }
+				    }
+				  },
+				  "aliases":{
+				    "alias1": {},
+				    "alias2": {},
+				    "alias3": {
+				      "routing": "11"
+				    }
+				  }
+				}
+				"""; //
 
 		org.springframework.data.elasticsearch.core.document.Document settings = org.springframework.data.elasticsearch.core.document.Document
 				.create();
@@ -535,56 +538,77 @@ class RequestFactoryTests {
 
 		converter.updateQuery(query, Person.class);
 
-		String expected = '{' + //
-				"  \"query\": {" + //
-				"    \"bool\": {" + //
-				"      \"must\": [" + //
-				"        {" + //
-				"          \"query_string\": {" + //
-				"            \"query\": \"Smith\"," + //
-				"            \"fields\": [" + //
-				"              \"last-name^1.0\"" + //
-				"            ]" + //
-				"          }" + //
-				"        }" + //
-				"      ]" + //
-				"    }" + //
-				"  }," + //
-				"  \"rescore\": [{\n" + "      \"window_size\" : 100,\n" + "      \"query\" : {\n"
-				+ "         \"rescore_query\" : {\n" + "            \"match_phrase\" : {\n" + "               \"message\" : {\n"
-				+ "                  \"query\" : \"the quick brown\",\n" + "                  \"slop\" : 2\n"
-				+ "               }\n" + "            }\n" + "         },\n" + "         \"query_weight\" : 0.7,\n"
-				+ "         \"rescore_query_weight\" : 1.2\n" + "      }\n" + "   }," + "  {\n" + "     \"window_size\": 50,\n"
-				+ "     \"query\": {\n" + "      				\"rescore_query\": {\n" + "      							\"function_score\": {\n"
-				+ "                        \"query\": {\n" + "                            \"match_all\": {\n"
-				+ "                                \"boost\": 1.0\n" + "                            }\n"
-				+ "                        },\n" + "                        \"functions\": [\n"
-				+ "                            {\n" + "                                \"filter\": {\n"
-				+ "                                    \"exists\": {\n"
-				+ "                                        \"field\": \"someField\",\n"
-				+ "                                        \"boost\": 1.0\n" + "                                    }\n"
-				+ "                                },\n" + "                                \"weight\": 5.022317,\n"
-				+ "                                \"gauss\": {\n" + "                                    \"someField\": {\n"
-				+ "                                        \"origin\": 0.0,\n"
-				+ "                                        \"scale\": 100000.0,\n"
-				+ "                                        \"decay\": 0.683\n" + "                                    },\n"
-				+ "                                    \"multi_value_mode\": \"MIN\"\n" + "                                }\n"
-				+ "                            },\n" + "                            {\n"
-				+ "                                \"filter\": {\n" + "                                    \"exists\": {\n"
-				+ "                                        \"field\": \"anotherField\",\n"
-				+ "                                        \"boost\": 1.0\n" + "                                    }\n"
-				+ "                                },\n" + "                                \"weight\": 4.170836,\n"
-				+ "                                \"gauss\": {\n" + "                                    \"anotherField\": {\n"
-				+ "                                        \"origin\": \"202102\",\n"
-				+ "                                        \"scale\": \"31536000s\",\n"
-				+ "                                        \"decay\": 0.683\n" + "                                    },\n"
-				+ "                                    \"multi_value_mode\": \"MIN\"\n" + "                                }\n"
-				+ "                            }\n" + "                        ],\n"
-				+ "                        \"score_mode\": \"sum\",\n" + "                        \"boost_mode\": \"avg\",\n"
-				+ "                        \"max_boost\": 50.0,\n" + "                        \"boost\": 1.5\n"
-				+ "                    }\n" + "             },\n" + "      \"query_weight\": 2.0,"
-				+ "      \"rescore_query_weight\": 5.0," + "      \"score_mode\": \"multiply\"" + "   }\n" + " }\n" + " ]\n"
-				+ '}';
+		String expected = """
+				{  "query": {    "bool": {      "must": [        {          "query_string": {            "query": "Smith",            "fields": [              "last-name^1.0"            ]          }        }      ]    }  },  "rescore": [{
+				      "window_size" : 100,
+				      "query" : {
+				         "rescore_query" : {
+				            "match_phrase" : {
+				               "message" : {
+				                  "query" : "the quick brown",
+				                  "slop" : 2
+				               }
+				            }
+				         },
+				         "query_weight" : 0.7,
+				         "rescore_query_weight" : 1.2
+				      }
+				   },  {
+				     "window_size": 50,
+				     "query": {
+				      				"rescore_query": {
+				      							"function_score": {
+				                        "query": {
+				                            "match_all": {
+				                                "boost": 1.0
+				                            }
+				                        },
+				                        "functions": [
+				                            {
+				                                "filter": {
+				                                    "exists": {
+				                                        "field": "someField",
+				                                        "boost": 1.0
+				                                    }
+				                                },
+				                                "weight": 5.022317,
+				                                "gauss": {
+				                                    "someField": {
+				                                        "origin": 0.0,
+				                                        "scale": 100000.0,
+				                                        "decay": 0.683
+				                                    },
+				                                    "multi_value_mode": "MIN"
+				                                }
+				                            },
+				                            {
+				                                "filter": {
+				                                    "exists": {
+				                                        "field": "anotherField",
+				                                        "boost": 1.0
+				                                    }
+				                                },
+				                                "weight": 4.170836,
+				                                "gauss": {
+				                                    "anotherField": {
+				                                        "origin": "202102",
+				                                        "scale": "31536000s",
+				                                        "decay": 0.683
+				                                    },
+				                                    "multi_value_mode": "MIN"
+				                                }
+				                            }
+				                        ],
+				                        "score_mode": "sum",
+				                        "boost_mode": "avg",
+				                        "max_boost": 50.0,
+				                        "boost": 1.5
+				                    }
+				             },
+				      "query_weight": 2.0,      "rescore_query_weight": 5.0,      "score_mode": "multiply"   }
+				 }
+				 ]
+				}""";
 
 		String searchRequest = requestFactory.searchRequest(query, Person.class, IndexCoordinates.of("persons")).source()
 				.toString();
@@ -644,32 +668,33 @@ class RequestFactoryTests {
 	@Test
 	// #1529
 	void shouldCreateReindexRequest() throws IOException, JSONException {
-		final String expected = "{\n" + //
-				"    \"source\":{\n" + //
-				"        \"remote\":{\n" + //
-				"                \"username\":\"admin\",\n" + //
-				"                \"password\":\"password\",\n" + //
-				"                \"host\":\"http://localhost:9200/elasticsearch\",\n" + //
-				"                \"socket_timeout\":\"30s\",\n" + //
-				"                \"connect_timeout\":\"30s\"\n" + //
-				"            },\n" + //
-				"        \"index\":[\"source_1\",\"source_2\"],\n" + //
-				"        \"size\":5,\n" + //
-				"        \"query\":{\"match_all\":{}},\n" + //
-				"        \"_source\":{\"includes\":[\"name\"],\"excludes\":[]},\n" + //
-				"        \"slice\":{\"id\":1,\"max\":20}\n" + //
-				"    },\n" + //
-				"    \"dest\":{\n" + //
-				"        \"index\":\"destination\",\n" + //
-				"        \"routing\":\"routing\",\n" + //
-				"        \"op_type\":\"create\",\n" + //
-				"        \"pipeline\":\"pipeline\",\n" + //
-				"        \"version_type\":\"external\"\n" + //
-				"    },\n" + //
-				"    \"max_docs\":10,\n" + //
-				"    \"script\":{\"source\":\"Math.max(1,2)\",\"lang\":\"java\"},\n" + //
-				"    \"conflicts\":\"proceed\"\n" + //
-				"}";
+		final String expected = """
+				{
+				    "source":{
+				        "remote":{
+				                "username":"admin",
+				                "password":"password",
+				                "host":"http://localhost:9200/elasticsearch",
+				                "socket_timeout":"30s",
+				                "connect_timeout":"30s"
+				            },
+				        "index":["source_1","source_2"],
+				        "size":5,
+				        "query":{"match_all":{}},
+				        "_source":{"includes":["name"],"excludes":[]},
+				        "slice":{"id":1,"max":20}
+				    },
+				    "dest":{
+				        "index":"destination",
+				        "routing":"routing",
+				        "op_type":"create",
+				        "pipeline":"pipeline",
+				        "version_type":"external"
+				    },
+				    "max_docs":10,
+				    "script":{"source":"Math.max(1,2)","lang":"java"},
+				    "conflicts":"proceed"
+				}""";
 
 		Remote remote = Remote.builder("http", "localhost", 9200).withPathPrefix("elasticsearch").withUsername("admin")
 				.withPassword("password").withConnectTimeout(Duration.ofSeconds(30)).withSocketTimeout(Duration.ofSeconds(30))
@@ -692,17 +717,18 @@ class RequestFactoryTests {
 	@Test
 	// #1529
 	void shouldAllowSourceQueryForReindexWithoutRemote() throws IOException, JSONException {
-		final String expected = "{\n" + //
-				"    \"source\":{\n" + //
-				"        \"index\":[\"source\"],\n" + //
-				"        \"query\":{\"match_all\":{}}\n" + //
-				"    },\n" + //
-				"    \"dest\":{\n" + //
-				"        \"index\":\"destination\",\n" + //
-				"        \"op_type\":\"index\",\n" + //
-				"        \"version_type\":\"internal\"\n" + //
-				"    }\n" + //
-				"}";
+		final String expected = """
+				{
+				    "source":{
+				        "index":["source"],
+				        "query":{"match_all":{}}
+				    },
+				    "dest":{
+				        "index":"destination",
+				        "op_type":"index",
+				        "version_type":"internal"
+				    }
+				}""";
 
 		ReindexRequest reindexRequest = ReindexRequest
 				.builder(IndexCoordinates.of("source"), IndexCoordinates.of("destination"))

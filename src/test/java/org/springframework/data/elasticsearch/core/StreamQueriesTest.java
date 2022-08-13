@@ -85,7 +85,7 @@ public class StreamQueriesTest {
 	}
 
 	private SearchHit<String> getOneSearchHit() {
-		return new SearchHit<String>(null, null, null, 0, null, null, null, null, null, null, "one");
+		return new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "one");
 	}
 
 	@Test // DATAES-766
@@ -125,7 +125,7 @@ public class StreamQueriesTest {
 				0, //
 				searchScrollHitsIterator.next(), //
 				scrollId -> searchScrollHitsIterator.next(), //
-				scrollIds -> clearedScrollIds.addAll(scrollIds));
+				clearedScrollIds::addAll);
 
 		while (iterator.hasNext()) {
 			iterator.next();
@@ -180,6 +180,6 @@ public class StreamQueriesTest {
 	}
 
 	private SearchScrollHits<String> newSearchScrollHits(List<SearchHit<String>> hits, String scrollId) {
-		return new SearchHitsImpl<String>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, scrollId, hits, null, null);
+		return new SearchHitsImpl<>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, scrollId, hits, null, null);
 	}
 }

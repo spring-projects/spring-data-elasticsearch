@@ -67,8 +67,7 @@ public final class SearchHitSupport {
 			return ((Stream<?>) result).map(SearchHitSupport::unwrapSearchHits);
 		}
 
-		if (result instanceof SearchHits<?>) {
-			SearchHits<?> searchHits = (SearchHits<?>) result;
+		if (result instanceof SearchHits<?> searchHits) {
 			return unwrapSearchHits(searchHits.getSearchHits());
 		}
 
@@ -76,16 +75,14 @@ public final class SearchHitSupport {
 			return unwrapSearchHitsIterator((SearchHitsIterator<?>) result);
 		}
 
-		if (result instanceof SearchPage<?>) {
-			SearchPage<?> searchPage = (SearchPage<?>) result;
+		if (result instanceof SearchPage<?> searchPage) {
 			List<?> content = (List<?>) SearchHitSupport.unwrapSearchHits(searchPage.getSearchHits());
 			return new PageImpl<>(content, searchPage.getPageable(), searchPage.getTotalElements());
 		}
 
 		if (ReactiveWrappers.isAvailable(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR)) {
 
-			if (result instanceof Flux) {
-				Flux<?> flux = (Flux<?>) result;
+			if (result instanceof Flux<?> flux) {
 				return flux.map(SearchHitSupport::unwrapSearchHits);
 			}
 		}
@@ -95,7 +92,7 @@ public final class SearchHitSupport {
 
 	private static CloseableIterator<?> unwrapSearchHitsIterator(SearchHitsIterator<?> iterator) {
 
-		return new CloseableIterator<Object>() {
+		return new CloseableIterator<>() {
 			@Override
 			public boolean hasNext() {
 				return iterator.hasNext();

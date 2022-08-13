@@ -267,29 +267,33 @@ public class DevTests {
 			indicesClient.delete(drb -> drb.index(index));
 		}
 
-		String jsonSettings = "{\n" + //
-				"    \"index\": {\n" + //
-				"        \"number_of_shards\": \"1\",\n" + //
-				"        \"number_of_replicas\": \"0\",\n" + //
-				"        \"analysis\": {\n" + //
-				"            \"analyzer\": {\n" + //
-				"                \"emailAnalyzer\": {\n" + //
-				"                    \"type\": \"custom\",\n" + //
-				"                    \"tokenizer\": \"uax_url_email\"\n" + //
-				"                }\n" + //
-				"            }\n" + //
-				"        }\n" + //
-				"    }\n" + //
-				"}\n";
+		String jsonSettings = """
+				{
+				    "index": {
+				        "number_of_shards": "1",
+				        "number_of_replicas": "0",
+				        "analysis": {
+				            "analyzer": {
+				                "emailAnalyzer": {
+				                    "type": "custom",
+				                    "tokenizer": "uax_url_email"
+				                }
+				            }
+				        }
+				    }
+				}
+				""";
 
-		String jsonMapping = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"email\": {\n" + //
-				"      \"type\": \"text\",\n" + //
-				"      \"analyzer\": \"emailAnalyzer\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n";
+		String jsonMapping = """
+				{
+				  "properties": {
+				    "email": {
+				      "type": "text",
+				      "analyzer": "emailAnalyzer"
+				    }
+				  }
+				}
+				""";
 
 		indicesClient.create(crb -> crb //
 				.index(index) //

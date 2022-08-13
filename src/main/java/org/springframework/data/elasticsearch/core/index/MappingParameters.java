@@ -318,19 +318,11 @@ public final class MappingParameters {
 
 		if (StringUtils.hasLength(nullValue)) {
 			switch (nullValueType) {
-				case Integer:
-					objectNode.put(FIELD_PARAM_NULL_VALUE, Integer.valueOf(nullValue));
-					break;
-				case Long:
-					objectNode.put(FIELD_PARAM_NULL_VALUE, Long.valueOf(nullValue));
-					break;
-				case Double:
-					objectNode.put(FIELD_PARAM_NULL_VALUE, Double.valueOf(nullValue));
-					break;
-				case String:
-				default:
-					objectNode.put(FIELD_PARAM_NULL_VALUE, nullValue);
-					break;
+				case Integer -> objectNode.put(FIELD_PARAM_NULL_VALUE, Integer.valueOf(nullValue));
+				case Long -> objectNode.put(FIELD_PARAM_NULL_VALUE, Long.valueOf(nullValue));
+				case Double -> objectNode.put(FIELD_PARAM_NULL_VALUE, Double.valueOf(nullValue));
+				case String -> objectNode.put(FIELD_PARAM_NULL_VALUE, nullValue);
+				default -> objectNode.put(FIELD_PARAM_NULL_VALUE, nullValue);
 			}
 		}
 

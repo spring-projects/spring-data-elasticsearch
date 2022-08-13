@@ -191,11 +191,9 @@ public class Range<T> {
 			return true;
 		}
 
-		if (!(o instanceof Range)) {
+		if (!(o instanceof Range<?> range)) {
 			return false;
 		}
-
-		Range<?> range = (Range<?>) o;
 
 		if (!ObjectUtils.nullSafeEquals(lowerBound, range.lowerBound)) {
 			return false;
@@ -375,11 +373,9 @@ public class Range<T> {
 				return true;
 			}
 
-			if (!(o instanceof Bound)) {
+			if (!(o instanceof Bound<?> bound)) {
 				return false;
 			}
-
-			Bound<?> bound = (Bound<?>) o;
 
 			if (inclusive != bound.inclusive)
 				return false;

@@ -129,61 +129,62 @@ public class CriteriaQueryMappingUnitTests {
 		);
 
 		// mapped field name and converted parameter
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"should\" : [\n" + //
-				"      {\n" + //
-				"        \"bool\" : {\n" + //
-				"          \"must\" : [\n" + //
-				"            {\n" + //
-				"              \"range\" : {\n" + //
-				"                \"birth-date\" : {\n" + //
-				"                  \"from\" : \"09.11.1989\",\n" + //
-				"                  \"to\" : \"09.11.1990\",\n" + //
-				"                  \"include_lower\" : true,\n" + //
-				"                  \"include_upper\" : true,\n" + //
-				"                  \"boost\" : 1.0\n" + //
-				"                }\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ],\n" + //
-				"          \"adjust_pure_negative\" : true,\n" + //
-				"          \"boost\" : 1.0\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"bool\" : {\n" + //
-				"          \"must\" : [\n" + //
-				"            {\n" + //
-				"              \"query_string\" : {\n" + //
-				"                \"query\" : \"28.12.2019\",\n" + //
-				"                \"fields\" : [\n" + //
-				"                  \"birth-date^1.0\"\n" + //
-				"                ],\n" + //
-				"                \"type\" : \"best_fields\",\n" + //
-				"                \"default_operator\" : \"and\",\n" + //
-				"                \"max_determinized_states\" : 10000,\n" + //
-				"                \"enable_position_increments\" : true,\n" + //
-				"                \"fuzziness\" : \"AUTO\",\n" + //
-				"                \"fuzzy_prefix_length\" : 0,\n" + //
-				"                \"fuzzy_max_expansions\" : 50,\n" + //
-				"                \"phrase_slop\" : 0,\n" + //
-				"                \"escape\" : false,\n" + //
-				"                \"auto_generate_synonyms_phrase_query\" : true,\n" + //
-				"                \"fuzzy_transpositions\" : true,\n" + //
-				"                \"boost\" : 1.0\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ],\n" + //
-				"          \"adjust_pure_negative\" : true,\n" + //
-				"          \"boost\" : 1.0\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ],\n" + //
-				"    \"adjust_pure_negative\" : true,\n" + //
-				"    \"boost\" : 1.0\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "should" : [
+				      {
+				        "bool" : {
+				          "must" : [
+				            {
+				              "range" : {
+				                "birth-date" : {
+				                  "from" : "09.11.1989",
+				                  "to" : "09.11.1990",
+				                  "include_lower" : true,
+				                  "include_upper" : true,
+				                  "boost" : 1.0
+				                }
+				              }
+				            }
+				          ],
+				          "adjust_pure_negative" : true,
+				          "boost" : 1.0
+				        }
+				      },
+				      {
+				        "bool" : {
+				          "must" : [
+				            {
+				              "query_string" : {
+				                "query" : "28.12.2019",
+				                "fields" : [
+				                  "birth-date^1.0"
+				                ],
+				                "type" : "best_fields",
+				                "default_operator" : "and",
+				                "max_determinized_states" : 10000,
+				                "enable_position_increments" : true,
+				                "fuzziness" : "AUTO",
+				                "fuzzy_prefix_length" : 0,
+				                "fuzzy_max_expansions" : 50,
+				                "phrase_slop" : 0,
+				                "escape" : false,
+				                "auto_generate_synonyms_phrase_query" : true,
+				                "fuzzy_transpositions" : true,
+				                "boost" : 1.0
+				              }
+				            }
+				          ],
+				          "adjust_pure_negative" : true,
+				          "boost" : 1.0
+				        }
+				      }
+				    ],
+				    "adjust_pure_negative" : true,
+				    "boost" : 1.0
+				  }
+				}"""; //
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
 		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
@@ -201,61 +202,62 @@ public class CriteriaQueryMappingUnitTests {
 		);
 
 		// mapped field name and converted parameter
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"should\" : [\n" + //
-				"      {\n" + //
-				"        \"bool\" : {\n" + //
-				"          \"must\" : [\n" + //
-				"            {\n" + //
-				"              \"range\" : {\n" + //
-				"                \"birth-date\" : {\n" + //
-				"                  \"from\" : \"09.11.1989\",\n" + //
-				"                  \"to\" : \"09.11.1990\",\n" + //
-				"                  \"include_lower\" : true,\n" + //
-				"                  \"include_upper\" : true,\n" + //
-				"                  \"boost\" : 1.0\n" + //
-				"                }\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ],\n" + //
-				"          \"adjust_pure_negative\" : true,\n" + //
-				"          \"boost\" : 1.0\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"bool\" : {\n" + //
-				"          \"must\" : [\n" + //
-				"            {\n" + //
-				"              \"query_string\" : {\n" + //
-				"                \"query\" : \"383745721653\",\n" + //
-				"                \"fields\" : [\n" + //
-				"                  \"created-date^1.0\"\n" + //
-				"                ],\n" + //
-				"                \"type\" : \"best_fields\",\n" + //
-				"                \"default_operator\" : \"and\",\n" + //
-				"                \"max_determinized_states\" : 10000,\n" + //
-				"                \"enable_position_increments\" : true,\n" + //
-				"                \"fuzziness\" : \"AUTO\",\n" + //
-				"                \"fuzzy_prefix_length\" : 0,\n" + //
-				"                \"fuzzy_max_expansions\" : 50,\n" + //
-				"                \"phrase_slop\" : 0,\n" + //
-				"                \"escape\" : false,\n" + //
-				"                \"auto_generate_synonyms_phrase_query\" : true,\n" + //
-				"                \"fuzzy_transpositions\" : true,\n" + //
-				"                \"boost\" : 1.0\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ],\n" + //
-				"          \"adjust_pure_negative\" : true,\n" + //
-				"          \"boost\" : 1.0\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ],\n" + //
-				"    \"adjust_pure_negative\" : true,\n" + //
-				"    \"boost\" : 1.0\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "should" : [
+				      {
+				        "bool" : {
+				          "must" : [
+				            {
+				              "range" : {
+				                "birth-date" : {
+				                  "from" : "09.11.1989",
+				                  "to" : "09.11.1990",
+				                  "include_lower" : true,
+				                  "include_upper" : true,
+				                  "boost" : 1.0
+				                }
+				              }
+				            }
+				          ],
+				          "adjust_pure_negative" : true,
+				          "boost" : 1.0
+				        }
+				      },
+				      {
+				        "bool" : {
+				          "must" : [
+				            {
+				              "query_string" : {
+				                "query" : "383745721653",
+				                "fields" : [
+				                  "created-date^1.0"
+				                ],
+				                "type" : "best_fields",
+				                "default_operator" : "and",
+				                "max_determinized_states" : 10000,
+				                "enable_position_increments" : true,
+				                "fuzziness" : "AUTO",
+				                "fuzzy_prefix_length" : 0,
+				                "fuzzy_max_expansions" : 50,
+				                "phrase_slop" : 0,
+				                "escape" : false,
+				                "auto_generate_synonyms_phrase_query" : true,
+				                "fuzzy_transpositions" : true,
+				                "boost" : 1.0
+				              }
+				            }
+				          ],
+				          "adjust_pure_negative" : true,
+				          "boost" : 1.0
+				        }
+				      }
+				    ],
+				    "adjust_pure_negative" : true,
+				    "boost" : 1.0
+				  }
+				}"""; //
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
 		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
@@ -272,43 +274,45 @@ public class CriteriaQueryMappingUnitTests {
 								.between(LocalDate.of(1989, 11, 9), LocalDate.of(1990, 11, 9)) //
 								.or("birthDate").is(LocalDate.of(2019, 12, 28))));
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"must\": [\n" + //
-				"      {\n" + //
-				"        \"match\": {\n" + //
-				"          \"first-name\": {\n" + //
-				"            \"query\": \"John\"\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      },\n" + //
-				"      {\n" + //
-				"        \"bool\": {\n" + //
-				"          \"should\": [\n" + //
-				"            {\n" + //
-				"              \"range\": {\n" + //
-				"                \"birth-date\": {\n" + //
-				"                  \"from\": \"09.11.1989\",\n" + //
-				"                  \"to\": \"09.11.1990\",\n" + //
-				"                  \"include_lower\": true,\n" + //
-				"                  \"include_upper\": true\n" + //
-				"                }\n" + //
-				"              }\n" + //
-				"            },\n" + //
-				"            {\n" + //
-				"              \"query_string\": {\n" + //
-				"                \"query\": \"28.12.2019\",\n" + //
-				"                \"fields\": [\n" + //
-				"                  \"birth-date^1.0\"\n" + //
-				"                ]\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool": {
+				    "must": [
+				      {
+				        "match": {
+				          "first-name": {
+				            "query": "John"
+				          }
+				        }
+				      },
+				      {
+				        "bool": {
+				          "should": [
+				            {
+				              "range": {
+				                "birth-date": {
+				                  "from": "09.11.1989",
+				                  "to": "09.11.1990",
+				                  "include_lower": true,
+				                  "include_upper": true
+				                }
+				              }
+				            },
+				            {
+				              "query_string": {
+				                "query": "28.12.2019",
+				                "fields": [
+				                  "birth-date^1.0"
+				                ]
+				              }
+				            }
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
 		String queryString = new CriteriaQueryProcessor().createQuery(criteriaQuery.getCriteria()).toString();
@@ -340,25 +344,27 @@ public class CriteriaQueryMappingUnitTests {
 	@DisplayName("should map names and value in nested entities")
 	void shouldMapNamesAndValueInNestedEntities() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"must\": [\n" + //
-				"      {\n" + //
-				"        \"nested\": {\n" + //
-				"          \"query\": {\n" + //
-				"            \"query_string\": {\n" + //
-				"              \"query\": \"03.10.1999\",\n" + //
-				"              \"fields\": [\n" + //
-				"                \"per-sons.birth-date^1.0\"\n" + //
-				"              ]\n" + //
-				"            }\n" + //
-				"          },\n" + //
-				"          \"path\": \"per-sons\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool": {
+				    "must": [
+				      {
+				        "nested": {
+				          "query": {
+				            "query_string": {
+				              "query": "03.10.1999",
+				              "fields": [
+				                "per-sons.birth-date^1.0"
+				              ]
+				            }
+				          },
+				          "path": "per-sons"
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("persons.birthDate").is(LocalDate.of(1999, 10, 3)));
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, House.class);
@@ -371,25 +377,27 @@ public class CriteriaQueryMappingUnitTests {
 	@DisplayName("should map names and value in nested entities with sub-fields")
 	void shouldMapNamesAndValueInNestedEntitiesWithSubfields() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"must\": [\n" + //
-				"      {\n" + //
-				"        \"nested\": {\n" + //
-				"          \"query\": {\n" + //
-				"            \"query_string\": {\n" + //
-				"              \"query\": \"Foobar\",\n" + //
-				"              \"fields\": [\n" + //
-				"                \"per-sons.nick-name.keyword^1.0\"\n" + //
-				"              ]\n" + //
-				"            }\n" + //
-				"          },\n" + //
-				"          \"path\": \"per-sons\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool": {
+				    "must": [
+				      {
+				        "nested": {
+				          "query": {
+				            "query_string": {
+				              "query": "Foobar",
+				              "fields": [
+				                "per-sons.nick-name.keyword^1.0"
+				              ]
+				            }
+				          },
+				          "path": "per-sons"
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("persons.nickName.keyword").is("Foobar"));
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, House.class);
@@ -402,20 +410,22 @@ public class CriteriaQueryMappingUnitTests {
 	@DisplayName("should map names and value in object entities")
 	void shouldMapNamesAndValueInObjectEntities() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\": {\n" + //
-				"    \"must\": [\n" + //
-				"      {\n" + //
-				"         \"query_string\": {\n" + //
-				"              \"query\": \"03.10.1999\",\n" + //
-				"              \"fields\": [\n" + //
-				"                \"per-sons.birth-date^1.0\"\n" + //
-				"              ]\n" + //
-				"            }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool": {
+				    "must": [
+				      {
+				         "query_string": {
+				              "query": "03.10.1999",
+				              "fields": [
+				                "per-sons.birth-date^1.0"
+				              ]
+				            }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		CriteriaQuery criteriaQuery = new CriteriaQuery(new Criteria("persons.birthDate").is(LocalDate.of(1999, 10, 3)));
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, ObjectWithPerson.class);

@@ -23,7 +23,6 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
@@ -70,14 +69,11 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 	private void loadCompletionObjectEntities() {
 
 		List<IndexQuery> indexQueries = new ArrayList<>();
-		indexQueries.add(
-				new CompletionEntityBuilder("1").name("Rizwan Idrees").suggest(new String[] { "Rizwan Idrees" }).buildIndex());
-		indexQueries.add(new CompletionEntityBuilder("2").name("Franck Marchand")
-				.suggest(new String[] { "Franck", "Marchand" }).buildIndex());
-		indexQueries.add(
-				new CompletionEntityBuilder("3").name("Mohsin Husen").suggest(new String[] { "Mohsin", "Husen" }).buildIndex());
-		indexQueries.add(new CompletionEntityBuilder("4").name("Artur Konczak").suggest(new String[] { "Artur", "Konczak" })
-				.buildIndex());
+		indexQueries.add(new CompletionEntityBuilder("1").name("Rizwan Idrees").suggest("Rizwan Idrees").buildIndex());
+		indexQueries
+				.add(new CompletionEntityBuilder("2").name("Franck Marchand").suggest("Franck", "Marchand").buildIndex());
+		indexQueries.add(new CompletionEntityBuilder("3").name("Mohsin Husen").suggest("Mohsin", "Husen").buildIndex());
+		indexQueries.add(new CompletionEntityBuilder("4").name("Artur Konczak").suggest("Artur", "Konczak").buildIndex());
 
 		operations.bulkIndex(indexQueries, CompletionEntity.class);
 	}
@@ -89,14 +85,14 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 		nonDocumentEntity.setSomeField2("bar");
 
 		List<IndexQuery> indexQueries = new ArrayList<>();
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("1").name("Franck Marchand")
-				.suggest(new String[] { "Franck", "Marchand" }).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("2").name("Mohsin Husen")
-				.suggest(new String[] { "Mohsin", "Husen" }).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("3").name("Rizwan Idrees")
-				.suggest(new String[] { "Rizwan", "Idrees" }).buildIndex());
-		indexQueries.add(new AnnotatedCompletionEntityBuilder("4").name("Artur Konczak")
-				.suggest(new String[] { "Artur", "Konczak" }).buildIndex());
+		indexQueries.add(
+				new AnnotatedCompletionEntityBuilder("1").name("Franck Marchand").suggest("Franck", "Marchand").buildIndex());
+		indexQueries
+				.add(new AnnotatedCompletionEntityBuilder("2").name("Mohsin Husen").suggest("Mohsin", "Husen").buildIndex());
+		indexQueries
+				.add(new AnnotatedCompletionEntityBuilder("3").name("Rizwan Idrees").suggest("Rizwan", "Idrees").buildIndex());
+		indexQueries
+				.add(new AnnotatedCompletionEntityBuilder("4").name("Artur Konczak").suggest("Artur", "Konczak").buildIndex());
 
 		operations.bulkIndex(indexQueries, AnnotatedCompletionEntity.class);
 	}
@@ -195,21 +191,11 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 		assertThat(options).hasSize(4);
 		for (CompletionSuggestion.Entry.Option<AnnotatedCompletionEntity> option : options) {
 			switch (option.getText()) {
-				case "Mewes Kochheim1":
-					assertThat(option.getScore()).isEqualTo(4);
-					break;
-				case "Mewes Kochheim2":
-					assertThat(option.getScore()).isEqualTo(1);
-					break;
-				case "Mewes Kochheim3":
-					assertThat(option.getScore()).isEqualTo(2);
-					break;
-				case "Mewes Kochheim4":
-					assertThat(option.getScore()).isEqualTo(4444);
-					break;
-				default:
-					fail("Unexpected option");
-					break;
+				case "Mewes Kochheim1" -> assertThat(option.getScore()).isEqualTo(4);
+				case "Mewes Kochheim2" -> assertThat(option.getScore()).isEqualTo(1);
+				case "Mewes Kochheim3" -> assertThat(option.getScore()).isEqualTo(2);
+				case "Mewes Kochheim4" -> assertThat(option.getScore()).isEqualTo(4444);
+				default -> fail("Unexpected option");
 			}
 		}
 	}
@@ -298,7 +284,7 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 			return this;
 		}
 
-		public CompletionEntityBuilder suggest(String[] input) {
+		public CompletionEntityBuilder suggest(String... input) {
 			return suggest(input, null);
 		}
 
@@ -383,7 +369,7 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 			return this;
 		}
 
-		public AnnotatedCompletionEntityBuilder suggest(String[] input) {
+		public AnnotatedCompletionEntityBuilder suggest(String... input) {
 			return suggest(input, null);
 		}
 

@@ -173,9 +173,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		return getVendor() //
 				.zipWith(getRuntimeLibraryVersion()) //
 				.zipWith(getClusterVersion()) //
-				.doOnNext(objects -> {
-					VersionInfo.logVersions(objects.getT1().getT1(), objects.getT1().getT2(), objects.getT2());
-				}).then();
+				.doOnNext(objects -> VersionInfo.logVersions(objects.getT1().getT1(), objects.getT1().getT2(), objects.getT2()))
+				.then();
 	}
 
 	// endregion
@@ -228,8 +227,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 			SeqNoPrimaryTerm seqNoPrimaryTerm = entity.getSeqNoPrimaryTerm();
 
 			if (seqNoPrimaryTerm != null) {
-				query.setSeqNo(seqNoPrimaryTerm.getSequenceNumber());
-				query.setPrimaryTerm(seqNoPrimaryTerm.getPrimaryTerm());
+				query.setSeqNo(seqNoPrimaryTerm.sequenceNumber());
+				query.setPrimaryTerm(seqNoPrimaryTerm.primaryTerm());
 				usingSeqNo = true;
 			}
 		}
@@ -316,10 +315,10 @@ abstract public class AbstractReactiveElasticsearchTemplate
 					T savedEntity = it.getT1();
 					IndexResponseMetaData indexResponseMetaData = it.getT2();
 					return updateIndexedObject(savedEntity, IndexedObjectInformation.of( //
-							indexResponseMetaData.getId(), //
-							indexResponseMetaData.getSeqNo(), //
-							indexResponseMetaData.getPrimaryTerm(), //
-							indexResponseMetaData.getVersion()));
+							indexResponseMetaData.id(), //
+							indexResponseMetaData.seqNo(), //
+							indexResponseMetaData.primaryTerm(), //
+							indexResponseMetaData.version()));
 				}).flatMap(saved -> maybeCallAfterSave(saved, index));
 	}
 
@@ -624,34 +623,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	/**
 	 * Value class to capture client independent information from a response to an index request.
 	 */
-	public static class IndexResponseMetaData {
-		private final String id;
-		private final long seqNo;
-		private final long primaryTerm;
-		private final long version;
-
-		public IndexResponseMetaData(String id, long seqNo, long primaryTerm, long version) {
-			this.id = id;
-			this.seqNo = seqNo;
-			this.primaryTerm = primaryTerm;
-			this.version = version;
-		}
-
-		public String getId() {
-			return id;
-		}
-
-		public long getSeqNo() {
-			return seqNo;
-		}
-
-		public long getPrimaryTerm() {
-			return primaryTerm;
-		}
-
-		public long getVersion() {
-			return version;
-		}
+	public record IndexResponseMetaData(String id, long seqNo, long primaryTerm, long version) {
 	}
 	// endregion
 
@@ -670,7 +642,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		}
 
 		public List<IndexQuery> indexQueries() {
-			return entities.stream().map(value -> getIndexQuery(value)).collect(Collectors.toList());
+			return entities.stream().map(AbstractReactiveElasticsearchTemplate.this::getIndexQuery)
+					.collect(Collectors.toList());
 		}
 
 		public T entityAt(long index) {

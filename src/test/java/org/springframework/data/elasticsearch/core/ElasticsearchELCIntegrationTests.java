@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.client.elc.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
-import co.elastic.clients.elasticsearch._types.SortOptionsBuilders;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
@@ -81,20 +80,15 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		NativeQuery query = NativeQuery.builder()
-				.withSort(b -> b.field(fb -> fb.field("message").order(SortOrder.Asc))).build();
+		NativeQuery query = NativeQuery.builder().withSort(b -> b.field(fb -> fb.field("message").order(SortOrder.Asc)))
+				.build();
 
 		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
 		assertThat(searchHits.getSearchHits()) //
-				.satisfiesExactly(e -> {
-					assertThat(e.getId()).isEqualTo("1");
-				}, e -> {
-					assertThat(e.getId()).isEqualTo("3");
-				}, e -> {
-					assertThat(e.getId()).isEqualTo("2");
-				});
+				.satisfiesExactly(e -> assertThat(e.getId()).isEqualTo("1"), e -> assertThat(e.getId()).isEqualTo("3"),
+						e -> assertThat(e.getId()).isEqualTo("2"));
 	}
 
 	@Override

@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -34,6 +35,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -86,7 +88,7 @@ public abstract class SearchAfterIntegrationTests {
 			if (searchHits.getSearchHits().size() == 0) {
 				break;
 			}
-			foundEntities.addAll(searchHits.stream().map(searchHit -> searchHit.getContent()).collect(Collectors.toList()));
+			foundEntities.addAll(searchHits.stream().map(SearchHit::getContent).collect(Collectors.toList()));
 			searchAfter = searchHits.getSearchHit((int) (searchHits.getSearchHits().size() - 1)).getSortValues();
 
 			if (++loop > 10) {
@@ -131,14 +133,12 @@ public abstract class SearchAfterIntegrationTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof Entity))
+			if (!(o instanceof Entity entity))
 				return false;
 
-			Entity entity = (Entity) o;
-
-			if (id != null ? !id.equals(entity.id) : entity.id != null)
+			if (!Objects.equals(id, entity.id))
 				return false;
-			return message != null ? message.equals(entity.message) : entity.message == null;
+			return Objects.equals(message, entity.message);
 		}
 
 		@Override

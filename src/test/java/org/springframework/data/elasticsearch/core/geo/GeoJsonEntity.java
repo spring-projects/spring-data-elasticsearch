@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.geo;
 
+import java.util.Objects;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.geo.Point;
@@ -209,42 +211,38 @@ public class GeoJsonEntity {
 	public boolean equals(Object o) {
 		if (this == o)
 			return true;
-		if (!(o instanceof GeoJsonEntity))
+		if (!(o instanceof GeoJsonEntity that))
 			return false;
 
-		GeoJsonEntity that = (GeoJsonEntity) o;
-
-		if (id != null ? !id.equals(that.id) : that.id != null)
+		if (!Objects.equals(id, that.id))
 			return false;
-		if (point1 != null ? !point1.equals(that.point1) : that.point1 != null)
+		if (!Objects.equals(point1, that.point1))
 			return false;
-		if (point2 != null ? !point2.equals(that.point2) : that.point2 != null)
+		if (!Objects.equals(point2, that.point2))
 			return false;
-		if (multiPoint1 != null ? !multiPoint1.equals(that.multiPoint1) : that.multiPoint1 != null)
+		if (!Objects.equals(multiPoint1, that.multiPoint1))
 			return false;
-		if (multiPoint2 != null ? !multiPoint2.equals(that.multiPoint2) : that.multiPoint2 != null)
+		if (!Objects.equals(multiPoint2, that.multiPoint2))
 			return false;
-		if (lineString1 != null ? !lineString1.equals(that.lineString1) : that.lineString1 != null)
+		if (!Objects.equals(lineString1, that.lineString1))
 			return false;
-		if (lineString2 != null ? !lineString2.equals(that.lineString2) : that.lineString2 != null)
+		if (!Objects.equals(lineString2, that.lineString2))
 			return false;
-		if (multiLineString1 != null ? !multiLineString1.equals(that.multiLineString1) : that.multiLineString1 != null)
+		if (!Objects.equals(multiLineString1, that.multiLineString1))
 			return false;
-		if (multiLineString2 != null ? !multiLineString2.equals(that.multiLineString2) : that.multiLineString2 != null)
+		if (!Objects.equals(multiLineString2, that.multiLineString2))
 			return false;
-		if (polygon1 != null ? !polygon1.equals(that.polygon1) : that.polygon1 != null)
+		if (!Objects.equals(polygon1, that.polygon1))
 			return false;
-		if (polygon2 != null ? !polygon2.equals(that.polygon2) : that.polygon2 != null)
+		if (!Objects.equals(polygon2, that.polygon2))
 			return false;
-		if (multiPolygon1 != null ? !multiPolygon1.equals(that.multiPolygon1) : that.multiPolygon1 != null)
+		if (!Objects.equals(multiPolygon1, that.multiPolygon1))
 			return false;
-		if (multiPolygon2 != null ? !multiPolygon2.equals(that.multiPolygon2) : that.multiPolygon2 != null)
+		if (!Objects.equals(multiPolygon2, that.multiPolygon2))
 			return false;
-		if (geometryCollection1 != null ? !geometryCollection1.equals(that.geometryCollection1)
-				: that.geometryCollection1 != null)
+		if (!Objects.equals(geometryCollection1, that.geometryCollection1))
 			return false;
-		return geometryCollection2 != null ? geometryCollection2.equals(that.geometryCollection2)
-				: that.geometryCollection2 == null;
+		return Objects.equals(geometryCollection2, that.geometryCollection2);
 	}
 
 	@Override

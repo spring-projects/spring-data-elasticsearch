@@ -59,7 +59,7 @@ abstract class StreamQueries {
 		long totalHits = searchHits.getTotalHits();
 		TotalHitsRelation totalHitsRelation = searchHits.getTotalHitsRelation();
 
-		return new SearchHitsIterator<T>() {
+		return new SearchHitsIterator<>() {
 
 			private volatile AtomicInteger currentCount = new AtomicInteger();
 			private volatile Iterator<SearchHit<T>> currentScrollHits = searchHits.iterator();

@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -1722,9 +1721,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class);
 
-		searchHits.forEach(searchHit -> {
-			assertThat(searchHit.getIndex()).isEqualTo(indexName);
-		});
+		searchHits.forEach(searchHit -> assertThat(searchHit.getIndex()).isEqualTo(indexName));
 	}
 
 	@Test
@@ -1868,6 +1865,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		// then
 		Query searchQuery = operations.matchAllQuery();
+		// noinspection rawtypes
 		SearchHits<Map> searchHits = operations.search(searchQuery, Map.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
@@ -2216,20 +2214,21 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 	@Test // DATAES-71
 	public void shouldCreateIndexWithGivenSettings() {
 
-		String settings = "{\n" //
-				+ "    \"index\": {\n" //
-				+ "        \"number_of_shards\": \"1\",\n" //
-				+ "        \"number_of_replicas\": \"0\",\n" //
-				+ "        \"analysis\": {\n" //
-				+ "            \"analyzer\": {\n" //
-				+ "                \"emailAnalyzer\": {\n" //
-				+ "                    \"type\": \"custom\",\n" //
-				+ "                    \"tokenizer\": \"uax_url_email\"\n" //
-				+ "                }\n" //
-				+ "            }\n" //
-				+ "        }\n" //
-				+ "    }\n" //
-				+ '}'; //
+		String settings = """
+				{
+				    "index": {
+				        "number_of_shards": "1",
+				        "number_of_replicas": "0",
+				        "analysis": {
+				            "analyzer": {
+				                "emailAnalyzer": {
+				                    "type": "custom",
+				                    "tokenizer": "uax_url_email"
+				                }
+				            }
+				        }
+				    }
+				}"""; //
 
 		indexOperations.delete();
 		indexOperations.create(parse(settings));
@@ -2258,20 +2257,21 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 	@Test // DATAES-88
 	public void shouldCreateIndexWithGivenClassAndSettings() {
 
-		String settings = "{\n" //
-				+ "    \"index\": {\n" //
-				+ "        \"number_of_shards\": \"1\",\n" //
-				+ "        \"number_of_replicas\": \"0\",\n" //
-				+ "        \"analysis\": {\n" //
-				+ "            \"analyzer\": {\n" //
-				+ "                \"emailAnalyzer\": {\n" //
-				+ "                    \"type\": \"custom\",\n" //
-				+ "                    \"tokenizer\": \"uax_url_email\"\n" //
-				+ "                }\n" //
-				+ "            }\n" //
-				+ "        }\n" //
-				+ "    }\n" //
-				+ '}'; //
+		String settings = """
+				{
+				    "index": {
+				        "number_of_shards": "1",
+				        "number_of_replicas": "0",
+				        "analysis": {
+				            "analyzer": {
+				                "emailAnalyzer": {
+				                    "type": "custom",
+				                    "tokenizer": "uax_url_email"
+				                }
+				            }
+				        }
+				    }
+				}"""; //
 
 		indexOperations.delete();
 		indexOperations.create(parse(settings));
@@ -2822,11 +2822,9 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(sortValues.get(0)).isInstanceOf(String.class).isEqualTo("thousands");
 		// transport client returns Long, RestHighlevelClient Integer, new ElasticsearchClient String
 		java.lang.Object o = sortValues.get(1);
-		if (o instanceof Integer) {
-			Integer i = (Integer) o;
+		if (o instanceof Integer i) {
 			assertThat(o).isInstanceOf(Integer.class).isEqualTo(1000);
-		} else if (o instanceof Long) {
-			Long l = (Long) o;
+		} else if (o instanceof Long l) {
 			assertThat(o).isInstanceOf(Long.class).isEqualTo(1000L);
 		} else if (o instanceof String) {
 			assertThat(o).isInstanceOf(String.class).isEqualTo("1000");
@@ -3015,9 +3013,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 		Iterable<OptimisticEntity> saved = operations.save(Arrays.asList(original1, original2));
 
-		saved.forEach(optimisticEntity -> {
-			assertThatSeqNoPrimaryTermIsFilled(optimisticEntity);
-		});
+		saved.forEach(this::assertThatSeqNoPrimaryTermIsFilled);
 	}
 
 	@Test // DATAES-799
@@ -3033,10 +3029,10 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 
 	private void assertThatSeqNoPrimaryTermIsFilled(OptimisticEntity retrieved) {
 		assertThat(retrieved.seqNoPrimaryTerm).isNotNull();
-		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNull();
-		assertThat(retrieved.seqNoPrimaryTerm.getSequenceNumber()).isNotNegative();
-		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isNotNull();
-		assertThat(retrieved.seqNoPrimaryTerm.getPrimaryTerm()).isPositive();
+		assertThat(retrieved.seqNoPrimaryTerm.sequenceNumber()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.sequenceNumber()).isNotNegative();
+		assertThat(retrieved.seqNoPrimaryTerm.primaryTerm()).isNotNull();
+		assertThat(retrieved.seqNoPrimaryTerm.primaryTerm()).isPositive();
 	}
 
 	@Test // DATAES-799
@@ -3197,15 +3193,12 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		Query query = getQueryForParentId("answer", qId1, null);
 		SearchHits<SampleJoinEntity> hits = operations.search(query, SampleJoinEntity.class);
 
-		List<String> hitIds = hits.getSearchHits().stream()
-				.map(sampleJoinEntitySearchHit -> sampleJoinEntitySearchHit.getId()).collect(Collectors.toList());
+		List<String> hitIds = hits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
 
 		assertThat(hitIds.size()).isEqualTo(2);
 		assertThat(hitIds.containsAll(Arrays.asList(aId1, aId2))).isTrue();
 
-		hits.forEach(searchHit -> {
-			assertThat(searchHit.getRouting()).isEqualTo(qId1);
-		});
+		hits.forEach(searchHit -> assertThat(searchHit.getRouting()).isEqualTo(qId1));
 	}
 
 	private void shouldUpdateEntityWithJoinFields(String qId1, String qId2, String aId1, String aId2) throws Exception {
@@ -3225,23 +3218,13 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		SearchHits<SampleJoinEntity> updatedHits = operations.search(getQueryForParentId("answer", qId2, null),
 				SampleJoinEntity.class);
 
-		List<String> hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
-			@Override
-			public String apply(SearchHit<SampleJoinEntity> sampleJoinEntitySearchHit) {
-				return sampleJoinEntitySearchHit.getId();
-			}
-		}).collect(Collectors.toList());
+		List<String> hitIds = updatedHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
 		assertThat(hitIds.size()).isEqualTo(1);
 		assertThat(hitIds.get(0)).isEqualTo(aId2);
 
 		updatedHits = operations.search(getQueryForParentId("answer", qId1, null), SampleJoinEntity.class);
 
-		hitIds = updatedHits.getSearchHits().stream().map(new Function<SearchHit<SampleJoinEntity>, String>() {
-			@Override
-			public String apply(SearchHit<SampleJoinEntity> sampleJoinEntitySearchHit) {
-				return sampleJoinEntitySearchHit.getId();
-			}
-		}).collect(Collectors.toList());
+		hitIds = updatedHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
 		assertThat(hitIds.size()).isEqualTo(1);
 		assertThat(hitIds.get(0)).isEqualTo(aId1);
 	}
@@ -3254,12 +3237,11 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		SearchHits<SampleJoinEntity> deletedHits = operations.search(getQueryForParentId("answer", qId2, null),
 				SampleJoinEntity.class);
 
-		List<String> hitIds = deletedHits.getSearchHits().stream()
-				.map(sampleJoinEntitySearchHit -> sampleJoinEntitySearchHit.getId()).collect(Collectors.toList());
+		List<String> hitIds = deletedHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
 		assertThat(hitIds.size()).isEqualTo(0);
 	}
 
-	private org.springframework.data.elasticsearch.core.document.Document toDocument(JoinField joinField) {
+	private org.springframework.data.elasticsearch.core.document.Document toDocument(JoinField<?> joinField) {
 		org.springframework.data.elasticsearch.core.document.Document document = create();
 		document.put("name", joinField.getName());
 		document.put("parent", joinField.getParent());
@@ -3487,9 +3469,10 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 	@DisplayName("should index document from source with version")
 	void shouldIndexDocumentFromSourceWithVersion() {
 
-		String source = "{\n" + //
-				"  \"answer\": 42\n" + //
-				"}";
+		String source = """
+				{
+				  "answer": 42
+				}""";
 		IndexQuery query = new IndexQueryBuilder() //
 				.withId("42") //
 				.withSource(source) //
@@ -3506,9 +3489,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		Sort.Order order = new Sort.Order(Sort.Direction.ASC, "unmappedField");
 		Query query = operations.matchAllQuery().addSort(Sort.by(order));
 
-		assertThatThrownBy(() -> {
-			operations.search(query, SampleEntity.class);
-		});
+		assertThatThrownBy(() -> operations.search(query, SampleEntity.class));
 	}
 
 	@Test // #1945
@@ -3680,17 +3661,17 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 				return false;
 			if (available != that.available)
 				return false;
-			if (id != null ? !id.equals(that.id) : that.id != null)
+			if (!Objects.equals(id, that.id))
 				return false;
-			if (type != null ? !type.equals(that.type) : that.type != null)
+			if (!Objects.equals(type, that.type))
 				return false;
-			if (message != null ? !message.equals(that.message) : that.message != null)
+			if (!Objects.equals(message, that.message))
 				return false;
-			if (scriptedRate != null ? !scriptedRate.equals(that.scriptedRate) : that.scriptedRate != null)
+			if (!Objects.equals(scriptedRate, that.scriptedRate))
 				return false;
-			if (location != null ? !location.equals(that.location) : that.location != null)
+			if (!Objects.equals(location, that.location))
 				return false;
-			return version != null ? version.equals(that.version) : that.version == null;
+			return Objects.equals(version, that.version);
 		}
 
 		@Override
@@ -4392,7 +4373,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 				return false;
 			if (!text.equals(that.text))
 				return false;
-			return seqNoPrimaryTerm != null ? seqNoPrimaryTerm.equals(that.seqNoPrimaryTerm) : that.seqNoPrimaryTerm == null;
+			return Objects.equals(seqNoPrimaryTerm, that.seqNoPrimaryTerm);
 		}
 
 		@Override
@@ -4450,7 +4431,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 				return false;
 			if (!id.equals(that.id))
 				return false;
-			return scriptedRate != null ? scriptedRate.equals(that.scriptedRate) : that.scriptedRate == null;
+			return Objects.equals(scriptedRate, that.scriptedRate);
 		}
 
 		@Override

@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -129,14 +130,12 @@ public abstract class EntityCustomConversionIntegrationTests {
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof Entity))
+			if (!(o instanceof Entity entity))
 				return false;
 
-			Entity entity = (Entity) o;
-
-			if (value != null ? !value.equals(entity.value) : entity.value != null)
+			if (!Objects.equals(value, entity.value))
 				return false;
-			return location != null ? location.equals(entity.location) : entity.location == null;
+			return Objects.equals(location, entity.location);
 		}
 
 		@Override

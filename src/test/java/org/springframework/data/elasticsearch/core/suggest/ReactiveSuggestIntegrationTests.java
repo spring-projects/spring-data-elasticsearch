@@ -28,7 +28,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
@@ -67,7 +66,7 @@ public abstract class ReactiveSuggestIntegrationTests implements NewElasticsearc
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
 	}
 
-//	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
+	// @DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
 	@Test // #1302
 	@DisplayName("should find suggestions for given prefix completion")
 	void shouldFindSuggestionsForGivenPrefixCompletion() {
@@ -99,14 +98,14 @@ public abstract class ReactiveSuggestIntegrationTests implements NewElasticsearc
 	// region helper functions
 	private Mono<CompletionEntity> loadCompletionObjectEntities() {
 
-		CompletionEntity rizwan_idrees = new CompletionEntityBuilder("1").name("Rizwan Idrees")
-				.suggest(new String[] { "Rizwan Idrees" }).build();
+		CompletionEntity rizwan_idrees = new CompletionEntityBuilder("1").name("Rizwan Idrees").suggest("Rizwan Idrees")
+				.build();
 		CompletionEntity franck_marchand = new CompletionEntityBuilder("2").name("Franck Marchand")
-				.suggest(new String[] { "Franck", "Marchand" }).build();
-		CompletionEntity mohsin_husen = new CompletionEntityBuilder("3").name("Mohsin Husen")
-				.suggest(new String[] { "Mohsin", "Husen" }).build();
-		CompletionEntity artur_konczak = new CompletionEntityBuilder("4").name("Artur Konczak")
-				.suggest(new String[] { "Artur", "Konczak" }).build();
+				.suggest("Franck", "Marchand").build();
+		CompletionEntity mohsin_husen = new CompletionEntityBuilder("3").name("Mohsin Husen").suggest("Mohsin", "Husen")
+				.build();
+		CompletionEntity artur_konczak = new CompletionEntityBuilder("4").name("Artur Konczak").suggest("Artur", "Konczak")
+				.build();
 		List<CompletionEntity> entities = new ArrayList<>(
 				Arrays.asList(rizwan_idrees, franck_marchand, mohsin_husen, artur_konczak));
 		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.indexName());
@@ -173,7 +172,7 @@ public abstract class ReactiveSuggestIntegrationTests implements NewElasticsearc
 			return this;
 		}
 
-		public CompletionEntityBuilder suggest(String[] input) {
+		public CompletionEntityBuilder suggest(String... input) {
 			return suggest(input, null);
 		}
 

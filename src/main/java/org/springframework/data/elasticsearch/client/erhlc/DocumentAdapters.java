@@ -717,10 +717,9 @@ public final class DocumentAdapters {
 			if (this == o) {
 				return true;
 			}
-			if (!(o instanceof SearchDocumentAdapter)) {
+			if (!(o instanceof SearchDocumentAdapter that)) {
 				return false;
 			}
-			SearchDocumentAdapter that = (SearchDocumentAdapter) o;
 			return Float.compare(that.score, score) == 0 && delegate.equals(that.delegate);
 		}
 

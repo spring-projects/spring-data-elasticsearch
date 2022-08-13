@@ -32,7 +32,16 @@ import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
+import co.elastic.clients.elasticsearch.core.DeleteRequest;
+import co.elastic.clients.elasticsearch.core.GetRequest;
+import co.elastic.clients.elasticsearch.core.IndexRequest;
+import co.elastic.clients.elasticsearch.core.MgetRequest;
+import co.elastic.clients.elasticsearch.core.MsearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
@@ -43,7 +52,6 @@ import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
-import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
@@ -176,8 +184,7 @@ class RequestConverter {
 
 			Action.Builder actionBuilder = new Action.Builder();
 
-			if (aliasAction instanceof AliasAction.Add) {
-				AliasAction.Add add = (AliasAction.Add) aliasAction;
+			if (aliasAction instanceof AliasAction.Add add) {
 				AliasActionParameters parameters = add.getParameters();
 				actionBuilder.add(addActionBuilder -> {
 					addActionBuilder //
@@ -206,8 +213,7 @@ class RequestConverter {
 				});
 			}
 
-			if (aliasAction instanceof AliasAction.Remove) {
-				AliasAction.Remove remove = (AliasAction.Remove) aliasAction;
+			if (aliasAction instanceof AliasAction.Remove remove) {
 				AliasActionParameters parameters = remove.getParameters();
 				actionBuilder.remove(removeActionBuilder -> {
 					removeActionBuilder.indices(Arrays.asList(parameters.getIndices()));
@@ -220,8 +226,7 @@ class RequestConverter {
 				});
 			}
 
-			if (aliasAction instanceof AliasAction.RemoveIndex) {
-				AliasAction.RemoveIndex removeIndex = (AliasAction.RemoveIndex) aliasAction;
+			if (aliasAction instanceof AliasAction.RemoveIndex removeIndex) {
 				AliasActionParameters parameters = removeIndex.getParameters();
 				actionBuilder.removeIndex(
 						removeIndexActionBuilder -> removeIndexActionBuilder.indices(Arrays.asList(parameters.getIndices())));
@@ -429,7 +434,6 @@ class RequestConverter {
 	 * so the code needs to be duplicated.
 	 */
 
-	@SuppressWarnings("DuplicatedCode")
 	public IndexRequest<?> documentIndexRequest(IndexQuery query, IndexCoordinates indexCoordinates,
 			@Nullable RefreshPolicy refreshPolicy) {
 
@@ -469,12 +473,8 @@ class RequestConverter {
 
 		if (query.getOpType() != null) {
 			switch (query.getOpType()) {
-				case INDEX:
-					builder.opType(OpType.Index);
-					break;
-				case CREATE:
-					builder.opType(OpType.Create);
-					break;
+				case INDEX -> builder.opType(OpType.Index);
+				case CREATE -> builder.opType(OpType.Create);
 			}
 		}
 
@@ -617,20 +617,18 @@ class RequestConverter {
 
 		Map<String, JsonData> params = new HashMap<>();
 
-		if (scriptData.getParams() != null) {
-			scriptData.getParams().forEach((key, value) -> {
-				params.put(key, JsonData.of(value, jsonpMapper));
-			});
+		if (scriptData.params() != null) {
+			scriptData.params().forEach((key, value) -> params.put(key, JsonData.of(value, jsonpMapper)));
 		}
 		return co.elastic.clients.elasticsearch._types.Script.of(sb -> {
-			if (scriptData.getType() == ScriptType.INLINE) {
+			if (scriptData.type() == ScriptType.INLINE) {
 				sb.inline(is -> is //
-						.lang(scriptData.getLanguage()) //
-						.source(scriptData.getScript()) //
+						.lang(scriptData.language()) //
+						.source(scriptData.script()) //
 						.params(params)); //
-			} else if (scriptData.getType() == ScriptType.STORED) {
+			} else if (scriptData.type() == ScriptType.STORED) {
 				sb.stored(ss -> ss //
-						.id(scriptData.getScript()) //
+						.id(scriptData.script()) //
 						.params(params) //
 				);
 			}
@@ -653,7 +651,7 @@ class RequestConverter {
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
-			builder.waitForActiveShards(wasb -> wasb.count(bulkOptions.getWaitForActiveShards().getValue()));
+			builder.waitForActiveShards(wasb -> wasb.count(bulkOptions.getWaitForActiveShards().value()));
 		}
 
 		if (bulkOptions.getPipeline() != null) {
@@ -666,16 +664,14 @@ class RequestConverter {
 
 		List<BulkOperation> operations = queries.stream().map(query -> {
 			BulkOperation.Builder ob = new BulkOperation.Builder();
-			if (query instanceof IndexQuery) {
-				IndexQuery indexQuery = (IndexQuery) query;
+			if (query instanceof IndexQuery indexQuery) {
 
 				if (indexQuery.getOpType() == IndexQuery.OpType.CREATE) {
 					ob.create(bulkCreateOperation(indexQuery, indexCoordinates, refreshPolicy));
 				} else {
 					ob.index(bulkIndexOperation(indexQuery, indexCoordinates, refreshPolicy));
 				}
-			} else if (query instanceof UpdateQuery) {
-				UpdateQuery updateQuery = (UpdateQuery) query;
+			} else if (query instanceof UpdateQuery updateQuery) {
 				ob.update(bulkUpdateOperation(updateQuery, indexCoordinates, refreshPolicy));
 			}
 			return ob.build();
@@ -724,8 +720,8 @@ class RequestConverter {
 		List<MultiGetOperation> multiGetOperations = query.getIdsWithRouting().stream()
 				.map(idWithRouting -> MultiGetOperation.of(mgo -> mgo //
 						.index(index.getIndexName()) //
-						.id(idWithRouting.getId()) //
-						.routing(idWithRouting.getRouting()) //
+						.id(idWithRouting.id()) //
+						.routing(idWithRouting.routing()) //
 						.source(sourceConfig)))
 				.collect(Collectors.toList());
 
@@ -880,9 +876,7 @@ class RequestConverter {
 				Map<String, JsonData> params = new HashMap<>();
 
 				if (query.getParams() != null) {
-					query.getParams().forEach((key, value) -> {
-						params.put(key, JsonData.of(value, jsonpMapper));
-					});
+					query.getParams().forEach((key, value) -> params.put(key, JsonData.of(value, jsonpMapper)));
 				}
 
 				uqb.script(sb -> {
@@ -1047,13 +1041,13 @@ class RequestConverter {
 		// normal search and msearch
 		return MsearchRequest.of(mrb -> {
 			multiSearchQueryParameters.forEach(param -> {
-				ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(param.clazz);
+				ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(param.clazz());
 
-				var query = param.query;
+				var query = param.query();
 				mrb.searches(sb -> sb //
 						.header(h -> {
 							h //
-									.index(Arrays.asList(param.index.getIndexNames())) //
+									.index(Arrays.asList(param.index().getIndexNames())) //
 									.routing(query.getRoute()) //
 									.searchType(searchType(query.getSearchType())) //
 									.requestCache(query.getRequestCache()) //
@@ -1067,7 +1061,7 @@ class RequestConverter {
 						}) //
 						.body(bb -> {
 							bb //
-									.query(getQuery(query, param.clazz))//
+									.query(getQuery(query, param.clazz()))//
 									.seqNoPrimaryTerm(persistentEntity != null ? persistentEntity.hasSeqNoPrimaryTermProperty() : null) //
 									.version(true) //
 									.trackScores(query.getTrackScores()) //
@@ -1118,9 +1112,7 @@ class RequestConverter {
 								bb.searchAfter(query.getSearchAfter().stream().map(Object::toString).collect(Collectors.toList()));
 							}
 
-							query.getRescorerQueries().forEach(rescorerQuery -> {
-								bb.rescore(getRescore(rescorerQuery));
-							});
+							query.getRescorerQueries().forEach(rescorerQuery -> bb.rescore(getRescore(rescorerQuery)));
 
 							if (!query.getRuntimeFields().isEmpty()) {
 								Map<String, List<RuntimeField>> runtimeMappings = new HashMap<>();
@@ -1142,9 +1134,8 @@ class RequestConverter {
 
 							if (!isEmpty(query.getIndicesBoost())) {
 								Map<String, Double> boosts = new LinkedHashMap<>();
-								query.getIndicesBoost().forEach(indexBoost -> {
-									boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost());
-								});
+								query.getIndicesBoost()
+										.forEach(indexBoost -> boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost()));
 								// noinspection unchecked
 								bb.indicesBoost(boosts);
 							}
@@ -1256,20 +1247,18 @@ class RequestConverter {
 			builder.searchAfter(query.getSearchAfter().stream().map(Object::toString).collect(Collectors.toList()));
 		}
 
-		query.getRescorerQueries().forEach(rescorerQuery -> {
-			builder.rescore(getRescore(rescorerQuery));
-		});
+		query.getRescorerQueries().forEach(rescorerQuery -> builder.rescore(getRescore(rescorerQuery)));
 
 		builder.requestCache(query.getRequestCache());
 
 		if (!query.getRuntimeFields().isEmpty()) {
 
 			Map<String, List<RuntimeField>> runtimeMappings = new HashMap<>();
-			query.getRuntimeFields().forEach(runtimeField -> {
-				runtimeMappings.put(runtimeField.getName(), Collections.singletonList(RuntimeField.of(rt -> rt //
-						.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType())) //
-						.script(s -> s.inline(is -> is.source(runtimeField.getScript()))))));
-			});
+			query.getRuntimeFields()
+					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(),
+							Collections.singletonList(RuntimeField.of(rt -> rt //
+									.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType())) //
+									.script(s -> s.inline(is -> is.source(runtimeField.getScript())))))));
 			builder.runtimeMappings(runtimeMappings);
 		}
 
@@ -1288,9 +1277,8 @@ class RequestConverter {
 
 		if (!isEmpty(query.getIndicesBoost())) {
 			Map<String, Double> boosts = new LinkedHashMap<>();
-			query.getIndicesBoost().forEach(indexBoost -> {
-				boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost());
-			});
+			query.getIndicesBoost()
+					.forEach(indexBoost -> boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost()));
 			// noinspection unchecked
 			builder.indicesBoost(boosts);
 		}
@@ -1341,8 +1329,7 @@ class RequestConverter {
 		Order.Mode mode = Order.DEFAULT_MODE;
 		String unmappedType = null;
 
-		if (order instanceof Order) {
-			Order o = (Order) order;
+		if (order instanceof Order o) {
 			mode = o.getMode();
 			unmappedType = o.getUnmappedType();
 		}
@@ -1356,8 +1343,7 @@ class RequestConverter {
 			String fieldName = property != null ? property.getFieldName() : order.getProperty();
 
 			Order.Mode finalMode = mode;
-			if (order instanceof GeoDistanceOrder) {
-				GeoDistanceOrder geoDistanceOrder = (GeoDistanceOrder) order;
+			if (order instanceof GeoDistanceOrder geoDistanceOrder) {
 
 				return SortOptions.of(so -> so //
 						.geoDistance(gd -> gd //
@@ -1398,9 +1384,8 @@ class RequestConverter {
 	@SuppressWarnings("DuplicatedCode")
 	private void prepareNativeSearch(NativeQuery query, SearchRequest.Builder builder) {
 
-		query.getScriptedFields().forEach(scriptedField -> {
-			builder.scriptFields(scriptedField.getFieldName(), sf -> sf.script(getScript(scriptedField.getScriptData())));
-		});
+		query.getScriptedFields().forEach(scriptedField -> builder.scriptFields(scriptedField.getFieldName(),
+				sf -> sf.script(getScript(scriptedField.getScriptData()))));
 
 		builder //
 				.suggest(query.getSuggester()) //
@@ -1417,9 +1402,8 @@ class RequestConverter {
 	@SuppressWarnings("DuplicatedCode")
 	private void prepareNativeSearch(NativeQuery query, MultisearchBody.Builder builder) {
 
-		query.getScriptedFields().forEach(scriptedField -> {
-			builder.scriptFields(scriptedField.getFieldName(), sf -> sf.script(getScript(scriptedField.getScriptData())));
-		});
+		query.getScriptedFields().forEach(scriptedField -> builder.scriptFields(scriptedField.getFieldName(),
+				sf -> sf.script(getScript(scriptedField.getScriptData()))));
 
 		builder //
 				.suggest(query.getSuggester()) //
@@ -1449,8 +1433,7 @@ class RequestConverter {
 			esQuery = CriteriaQueryProcessor.createQuery(((CriteriaQuery) query).getCriteria());
 		} else if (query instanceof StringQuery) {
 			esQuery = QueryBuilders.wrapperQueryAsQuery(((StringQuery) query).getSource());
-		} else if (query instanceof NativeQuery) {
-			NativeQuery nativeQuery = (NativeQuery) query;
+		} else if (query instanceof NativeQuery nativeQuery) {
 
 			if (nativeQuery.getQuery() != null) {
 				esQuery = nativeQuery.getQuery();
@@ -1584,20 +1567,12 @@ class RequestConverter {
 					.getVersionType();
 
 			if (entityVersionType != null) {
-				switch (entityVersionType) {
-					case INTERNAL:
-						versionType = VersionType.Internal;
-						break;
-					case EXTERNAL:
-						versionType = VersionType.External;
-						break;
-					case EXTERNAL_GTE:
-						versionType = VersionType.ExternalGte;
-						break;
-					case FORCE:
-						versionType = VersionType.Force;
-						break;
-				}
+				versionType = switch (entityVersionType) {
+					case INTERNAL -> VersionType.Internal;
+					case EXTERNAL -> VersionType.External;
+					case EXTERNAL_GTE -> VersionType.ExternalGte;
+					case FORCE -> VersionType.Force;
+				};
 			}
 		}
 
@@ -1636,15 +1611,11 @@ class RequestConverter {
 			return null;
 		}
 
-		switch (refreshPolicy) {
-			case IMMEDIATE:
-				return true;
-			case WAIT_UNTIL:
-				return null;
-			case NONE:
-			default:
-				return false;
-		}
+		return switch (refreshPolicy) {
+			case IMMEDIATE -> true;
+			case WAIT_UNTIL -> null;
+			case NONE -> false;
+		};
 	}
 
 	// endregion

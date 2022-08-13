@@ -235,8 +235,7 @@ public interface WebClientProvider {
 			for (ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer : clientConfiguration
 					.getClientConfigurers()) {
 
-				if (clientConfigurer instanceof ReactiveRestClients.WebClientConfigurationCallback) {
-					ReactiveRestClients.WebClientConfigurationCallback webClientConfigurationCallback = (ReactiveRestClients.WebClientConfigurationCallback) clientConfigurer;
+				if (clientConfigurer instanceof ReactiveRestClients.WebClientConfigurationCallback webClientConfigurationCallback) {
 					webClient = webClientConfigurationCallback.configure(webClient);
 				}
 			}

@@ -132,12 +132,12 @@ public abstract class DynamicSettingAndMappingEntityRepositoryIntegrationTests {
 		indexOperations.create();
 		indexOperations.refresh();
 
-		// when
-		String mappings = "{\n" + //
-				"        \"properties\" : {\n" + //
-				"            \"email\" : {\"type\" : \"text\", \"analyzer\" : \"emailAnalyzer\" }\n" + //
-				"        }\n" + //
-				'}';
+		String mappings = """
+				{
+				        "properties" : {
+				            "email" : {"type" : "text", "analyzer" : "emailAnalyzer" }
+				        }
+				}""";
 		indexOperations.putMapping(parse(mappings));
 		indexOperations.refresh();
 

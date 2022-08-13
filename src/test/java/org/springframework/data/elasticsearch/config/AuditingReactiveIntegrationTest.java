@@ -57,7 +57,7 @@ public abstract class AuditingReactiveIntegrationTest {
 	}
 
 	public static ReactiveAuditorAware<String> auditorProvider() {
-		return new ReactiveAuditorAware<String>() {
+		return new ReactiveAuditorAware<>() {
 			int count = 0;
 
 			@Override

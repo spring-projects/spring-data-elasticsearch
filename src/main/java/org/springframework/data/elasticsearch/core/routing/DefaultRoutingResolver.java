@@ -29,10 +29,10 @@ import org.springframework.lang.Nullable;
  */
 public class DefaultRoutingResolver implements RoutingResolver {
 
-	private final MappingContext<? extends ElasticsearchPersistentEntity, ? extends ElasticsearchPersistentProperty> mappingContext;
+	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ? extends ElasticsearchPersistentProperty> mappingContext;
 
 	public DefaultRoutingResolver(
-			MappingContext<? extends ElasticsearchPersistentEntity, ? extends ElasticsearchPersistentProperty> mappingContext) {
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ? extends ElasticsearchPersistentProperty> mappingContext) {
 		this.mappingContext = mappingContext;
 	}
 

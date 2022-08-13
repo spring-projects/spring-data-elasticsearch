@@ -101,12 +101,12 @@ final class DocumentAdapters {
 		EntityAsMap hitFieldsAsMap = fromFields.apply(hit.fields());
 
 		Map<String, List<Object>> documentFields = new LinkedHashMap<>();
-		hitFieldsAsMap.entrySet().forEach(entry -> {
-			if (entry.getValue() instanceof List) {
+		hitFieldsAsMap.forEach((key, value) -> {
+			if (value instanceof List) {
 				// noinspection unchecked
-				documentFields.put(entry.getKey(), (List<Object>) entry.getValue());
+				documentFields.put(key, (List<Object>) value);
 			} else {
-				documentFields.put(entry.getKey(), Collections.singletonList(entry.getValue()));
+				documentFields.put(key, Collections.singletonList(value));
 			}
 		});
 
@@ -117,8 +117,7 @@ final class DocumentAdapters {
 		} else {
 			if (source instanceof EntityAsMap) {
 				document = Document.from((EntityAsMap) source);
-			} else if (source instanceof JsonData) {
-				JsonData jsonData = (JsonData) source;
+			} else if (source instanceof JsonData jsonData) {
 				document = Document.from(jsonData.to(EntityAsMap.class));
 			} else {
 

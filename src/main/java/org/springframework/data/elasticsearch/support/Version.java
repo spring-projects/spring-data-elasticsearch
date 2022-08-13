@@ -26,28 +26,17 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.3
  */
-public class Version {
+public record Version(int major, int minor, int revision) {
 
 	private static final Pattern PATTERN = Pattern.compile("^(\\d+)(\\.(\\d+))?(\\.(\\d+))?.*$");
 
-	private final int major;
-	private final int minor;
-	private final int revision;
-
-	public Version(int major, int minor, int revision) {
-		this.major = major;
-		this.minor = minor;
-		this.revision = revision;
-	}
-
 	@Override
 	public String toString() {
-		return "" + major + "." + minor + "." + revision;
+		return major + "." + minor + '.' + revision;
 	}
 
 	/**
-	 * Creates a version from a String that matches {@link #PATTERN}; major, minor and revision numbers separated by dots
-	 * with optional trailing characters. A missing revision is treated as 0.
+	 * Creates a version from a String that matches {@link #PATTERN}; major, minor and revision numbers separated by dots with optional trailing characters. A missing revision is treated as 0.
 	 *
 	 * @param s the String to parse
 	 * @return the Version
@@ -68,17 +57,5 @@ public class Version {
 		int revision = matcher.group(5) != null ? Integer.parseInt(matcher.group(5)) : 0;
 
 		return new Version(major, minor, revision);
-	}
-
-	public int getMajor() {
-		return major;
-	}
-
-	public int getMinor() {
-		return minor;
-	}
-
-	public int getRevision() {
-		return revision;
 	}
 }

@@ -20,6 +20,7 @@ import static org.springframework.data.elasticsearch.client.elc.JsonUtils.*;
 
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -201,7 +202,7 @@ class CriteriaQueryProcessorUnitTests {
 							}
 						]
 					}
-				}			""";
+				}""";
 
 		Criteria criteria = new Criteria("lastName").is("Miller")
 				.subCriteria(new Criteria().or("firstName").is("John").or("firstName").is("Jack"));
@@ -350,7 +351,7 @@ class CriteriaQueryProcessorUnitTests {
 							}
 						]
 					}
-				}			""";
+				}""";
 
 		Criteria criteria = new Criteria("field1").matchesAll("value1 value2");
 
@@ -382,7 +383,7 @@ class CriteriaQueryProcessorUnitTests {
 							}
 						]
 					}
-				}			""";
+				}""";
 
 		Criteria criteria = new Criteria("houses.inhabitants.lastName").is("murphy");
 		criteria.getField().setPath("houses.inhabitants");
@@ -396,32 +397,31 @@ class CriteriaQueryProcessorUnitTests {
 	@DisplayName("should build query for empty property")
 	void shouldBuildQueryForEmptyProperty() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"must\" : [\n" + //
-				"      {\n" + //
-				"        \"bool\" : {\n" + //
-				"          \"must\" : [\n" + //
-				"            {\n" + //
-				"              \"exists\" : {\n" + //
-				"                \"field\" : \"lastName\"" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ],\n" + //
-				"          \"must_not\" : [\n" + //
-				"            {\n" + //
-				"              \"wildcard\" : {\n" + //
-				"                \"lastName\" : {\n" + //
-				"                  \"wildcard\" : \"*\"" + //
-				"                }\n" + //
-				"              }\n" + //
-				"            }\n" + //
-				"          ]\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "must" : [
+				      {
+				        "bool" : {
+				          "must" : [
+				            {
+				              "exists" : {
+				                "field" : "lastName"              }
+				            }
+				          ],
+				          "must_not" : [
+				            {
+				              "wildcard" : {
+				                "lastName" : {
+				                  "wildcard" : "*"                }
+				              }
+				            }
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}"""; //
 
 		Criteria criteria = new Criteria("lastName").empty();
 
@@ -434,19 +434,21 @@ class CriteriaQueryProcessorUnitTests {
 	@DisplayName("should build query for non-empty property")
 	void shouldBuildQueryForNonEmptyProperty() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"bool\" : {\n" + //
-				"    \"must\" : [\n" + //
-				"      {\n" + //
-				"        \"wildcard\" : {\n" + //
-				"          \"lastName\" : {\n" + //
-				"            \"wildcard\" : \"*\"\n" + //
-				"          }\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    ]\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "bool" : {
+				    "must" : [
+				      {
+				        "wildcard" : {
+				          "lastName" : {
+				            "wildcard" : "*"
+				          }
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""; //
 
 		Criteria criteria = new Criteria("lastName").notEmpty();
 

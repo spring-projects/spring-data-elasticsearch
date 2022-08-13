@@ -1,10 +1,13 @@
 package org.springframework.data.elasticsearch.repositories.complex.custommethod.autowiring;
 
+import static org.assertj.core.api.AssertionsForClassTypes.*;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 
 /**
  * @author Artur Konczak
+ * @author Peter-Josef Meisch
  */
 public class ComplexElasticsearchRepositoryImpl implements ComplexElasticsearchRepositoryCustom {
 
@@ -12,7 +15,9 @@ public class ComplexElasticsearchRepositoryImpl implements ComplexElasticsearchR
 
 	@Override
 	public String doSomethingSpecial() {
-		assert (operations.getElasticsearchConverter() != null);
+
+		assertThat(operations.getElasticsearchConverter()).isNotNull();
+
 		return "2+2=4";
 	}
 }

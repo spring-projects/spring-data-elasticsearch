@@ -816,7 +816,7 @@ public class RequestConverters {
 	}
 
 	public static Request indexCreate(org.elasticsearch.client.indices.CreateIndexRequest createIndexRequest) {
-		String endpoint = RequestConverters.endpoint(new String[] { createIndexRequest.index() });
+		String endpoint = RequestConverters.endpoint(createIndexRequest.index());
 		Request request = new Request(HttpMethod.PUT.name(), endpoint);
 
 		Params parameters = new Params(request);
@@ -1048,7 +1048,7 @@ public class RequestConverters {
 		return new EndpointBuilder().addPathPart(index, type, id).addPathPartAsIs(endpoint).build();
 	}
 
-	static String endpoint(String[] indices) {
+	static String endpoint(String... indices) {
 		return new EndpointBuilder().addCommaSeparatedPathParts(indices).build();
 	}
 
@@ -1061,7 +1061,7 @@ public class RequestConverters {
 				.addPathPartAsIs(endpoint).build();
 	}
 
-	static String endpoint(String[] indices, String endpoint, String[] suffixes) {
+	static String endpoint(String[] indices, String endpoint, String... suffixes) {
 		return new EndpointBuilder().addCommaSeparatedPathParts(indices).addPathPartAsIs(endpoint)
 				.addCommaSeparatedPathParts(suffixes).build();
 	}
@@ -1129,7 +1129,7 @@ public class RequestConverters {
 			return this;
 		}
 
-		Params withFields(String[] fields) {
+		Params withFields(String... fields) {
 			if (fields != null && fields.length > 0) {
 				return putParam("fields", String.join(",", fields));
 			}
@@ -1190,7 +1190,7 @@ public class RequestConverters {
 			return putParam("routing", routing);
 		}
 
-		Params withStoredFields(String[] storedFields) {
+		Params withStoredFields(String... storedFields) {
 			if (storedFields != null && storedFields.length > 0) {
 				return putParam("stored_fields", String.join(",", storedFields));
 			}
@@ -1313,14 +1313,14 @@ public class RequestConverters {
 			return putParam("wait_for_completion", waitForCompletion.toString());
 		}
 
-		Params withNodes(String[] nodes) {
+		Params withNodes(String... nodes) {
 			if (nodes != null && nodes.length > 0) {
 				return putParam("nodes", String.join(",", nodes));
 			}
 			return this;
 		}
 
-		Params withActions(String[] actions) {
+		Params withActions(String... actions) {
 			if (actions != null && actions.length > 0) {
 				return putParam("actions", String.join(",", actions));
 			}
@@ -1423,7 +1423,7 @@ public class RequestConverters {
 			return this;
 		}
 
-		EndpointBuilder addCommaSeparatedPathParts(String[] parts) {
+		EndpointBuilder addCommaSeparatedPathParts(String... parts) {
 			addPathPart(String.join(",", parts));
 			return this;
 		}

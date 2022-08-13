@@ -32,13 +32,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.annotation.AliasFor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.core.suggest.Completion;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchPersistentEntity;
+import org.springframework.data.elasticsearch.core.suggest.Completion;
 import org.springframework.lang.Nullable;
 
 /**
@@ -78,38 +78,40 @@ public class ComposableAnnotationsUnitTest {
 	@DisplayName("should use composed Field annotations in MappingBuilder")
 	void shouldUseComposedFieldAnnotationsInMappingBuilder() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"properties\": {\n" + //
-				"    \"_class\": {\n" + //
-				"      \"type\": \"keyword\",\n" + //
-				"      \"index\": false,\n" + //
-				"      \"doc_values\": false\n" + //
-				"    },\n" + //
-				"    \"null-value\": {\n" + //
-				"      \"null_value\": \"NULL\"\n" + //
-				"    },\n" + //
-				"    \"theDate\": {\n" + //
-				"      \"type\": \"date\",\n" + //
-				"      \"format\": \"date\"\n" + //
-				"    },\n" + //
-				"    \"multiField\": {\n" + //
-				"      \"type\": \"text\",\n" + //
-				"      \"fields\": {\n" + //
-				"        \"keyword\": {\n" + //
-				"          \"type\": \"keyword\"\n" + //
-				"        }\n" + //
-				"      }\n" + //
-				"    },\n" + //
-				"    \"suggest\": {\n" + //
-				"      \"type\": \"completion\",\n" + //
-				"      \"max_input_length\": 50,\n" + //
-				"      \"preserve_position_increments\": true,\n" + //
-				"      \"preserve_separators\": true,\n" + //
-				"      \"search_analyzer\": \"myAnalyzer\",\n" + //
-				"      \"analyzer\": \"myAnalyzer\"\n" + //
-				"    }\n" + //
-				"  }\n" + //
-				"}\n"; //
+		String expected = """
+				{
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "null-value": {
+				      "null_value": "NULL"
+				    },
+				    "theDate": {
+				      "type": "date",
+				      "format": "date"
+				    },
+				    "multiField": {
+				      "type": "text",
+				      "fields": {
+				        "keyword": {
+				          "type": "keyword"
+				        }
+				      }
+				    },
+				    "suggest": {
+				      "type": "completion",
+				      "max_input_length": 50,
+				      "preserve_position_increments": true,
+				      "preserve_separators": true,
+				      "search_analyzer": "myAnalyzer",
+				      "analyzer": "myAnalyzer"
+				    }
+				  }
+				}
+				"""; //
 
 		String mapping = mappingBuilder.buildPropertyMapping(ComposedAnnotationEntity.class);
 
