@@ -72,6 +72,7 @@ public class BaseQuery implements Query {
 	@Nullable protected Boolean requestCache;
 	protected List<IdWithRouting> idsWithRouting = Collections.emptyList();
 	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
+	@Nullable protected PointInTime pointInTime;
 
 	public BaseQuery() {}
 
@@ -83,7 +84,7 @@ public class BaseQuery implements Query {
 		this.storedFields = builder.getStoredFields();
 		this.sourceFilter = builder.getSourceFilter();
 		this.minScore = builder.getMinScore();
-		this.ids = builder.getIds().isEmpty() ? null : builder.getIds();
+		this.ids = builder.getIds() == null ? null : builder.getIds();
 		this.route = builder.getRoute();
 		this.searchType = builder.getSearchType();
 		this.indicesOptions = builder.getIndicesOptions();
@@ -101,6 +102,7 @@ public class BaseQuery implements Query {
 		this.rescorerQueries = builder.getRescorerQueries();
 		this.requestCache = builder.getRequestCache();
 		this.idsWithRouting = builder.getIdsWithRouting();
+		this.pointInTime = builder.getPointInTime();
 	}
 
 	@Override
@@ -285,7 +287,6 @@ public class BaseQuery implements Query {
 	/**
 	 * Configures whether to track scores.
 	 *
-	 * @param trackScores
 	 * @since 3.1
 	 */
 	public void setTrackScores(boolean trackScores) {
@@ -370,7 +371,6 @@ public class BaseQuery implements Query {
 	/**
 	 * set the query timeout
 	 *
-	 * @param timeout
 	 * @since 4.2
 	 */
 	public void setTimeout(@Nullable Duration timeout) {
@@ -450,5 +450,20 @@ public class BaseQuery implements Query {
 	@Nullable
 	public List<IndexBoost> getIndicesBoost() {
 		return indicesBoost;
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	@Nullable
+	public PointInTime getPointInTime() {
+		return pointInTime;
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	public void setPointInTime(@Nullable PointInTime pointInTime) {
+		this.pointInTime = pointInTime;
 	}
 }

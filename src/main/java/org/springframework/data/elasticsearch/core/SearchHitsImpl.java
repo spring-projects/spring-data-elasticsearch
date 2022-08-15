@@ -41,6 +41,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	private final Lazy<List<SearchHit<T>>> unmodifiableSearchHits;
 	@Nullable private final AggregationsContainer<?> aggregations;
 	@Nullable private final Suggest suggest;
+	@Nullable private String pointInTimeId;
 
 	/**
 	 * @param totalHits the number of total hits for the search
@@ -51,8 +52,8 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	 * @param aggregations the aggregations if available
 	 */
 	public SearchHitsImpl(long totalHits, TotalHitsRelation totalHitsRelation, float maxScore, @Nullable String scrollId,
-			List<? extends SearchHit<T>> searchHits, @Nullable AggregationsContainer<?> aggregations,
-			@Nullable Suggest suggest) {
+			@Nullable String pointInTimeId, List<? extends SearchHit<T>> searchHits,
+			@Nullable AggregationsContainer<?> aggregations, @Nullable Suggest suggest) {
 
 		Assert.notNull(searchHits, "searchHits must not be null");
 
@@ -60,6 +61,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 		this.totalHitsRelation = totalHitsRelation;
 		this.maxScore = maxScore;
 		this.scrollId = scrollId;
+		this.pointInTimeId = pointInTimeId;
 		this.searchHits = searchHits;
 		this.aggregations = aggregations;
 		this.suggest = suggest;
@@ -110,6 +112,12 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 		return suggest;
 	}
 
+	@Nullable
+	@Override
+	public String getPointInTimeId() {
+		return pointInTimeId;
+	}
+
 	@Override
 	public String toString() {
 		return "SearchHits{" + //
@@ -117,6 +125,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 				", totalHitsRelation=" + totalHitsRelation + //
 				", maxScore=" + maxScore + //
 				", scrollId='" + scrollId + '\'' + //
+				", pointInTimeId='" + pointInTimeId + '\'' + //
 				", searchHits={" + searchHits.size() + " elements}" + //
 				", aggregations=" + aggregations + //
 				'}';

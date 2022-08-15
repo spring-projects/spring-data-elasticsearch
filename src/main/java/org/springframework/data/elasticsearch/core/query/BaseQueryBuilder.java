@@ -64,6 +64,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	@Nullable protected Boolean requestCache;
 	protected final List<Query.IdWithRouting> idsWithRouting = new ArrayList<>();
 	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
+	@Nullable protected Query.PointInTime pointInTime;
 
 	@Nullable
 	public Sort getSort() {
@@ -180,6 +181,14 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 
 	public List<RescorerQuery> getRescorerQueries() {
 		return rescorerQueries;
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	@Nullable
+	public Query.PointInTime getPointInTime() {
+		return pointInTime;
 	}
 
 	public SELF withPageable(Pageable pageable) {
@@ -355,6 +364,14 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		Assert.notNull(rescorerQuery, "rescorerQuery must not be null");
 
 		this.rescorerQueries.add(rescorerQuery);
+		return self();
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	public SELF withPointInTime(@Nullable Query.PointInTime pointInTime) {
+		this.pointInTime = pointInTime;
 		return self();
 	}
 

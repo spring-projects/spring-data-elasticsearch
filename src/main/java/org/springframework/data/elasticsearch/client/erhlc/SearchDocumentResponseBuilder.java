@@ -113,7 +113,8 @@ public class SearchDocumentResponseBuilder {
 				: null;
 		Suggest suggest = suggestFrom(suggestES, entityCreator);
 
-		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments,
+		// no pointInTimeId for the deprecated implementation
+		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, null, searchDocuments,
 				aggregationsContainer, suggest);
 	}
 

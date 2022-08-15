@@ -440,6 +440,15 @@ public interface Query {
 	List<IndexBoost> getIndicesBoost();
 
 	/**
+	 * @return the point in time id to use in the query
+	 * @since 5.0
+	 */
+	@Nullable
+	default PointInTime getPointInTime() {
+		return null;
+	};
+
+	/**
 	 * @since 4.3
 	 */
 	enum SearchType {
@@ -451,13 +460,22 @@ public interface Query {
 	 *
 	 * @since 4.3
 	 */
-		record IdWithRouting(String id, @Nullable String routing) {
+	record IdWithRouting(String id, @Nullable String routing) {
 		public IdWithRouting {
 
 			Assert.notNull(id, "id must not be null");
 
 		}
 
+	}
 
+	/**
+	 * Desscribes the point in time parameters for a query
+	 *
+	 * @param id the point in time id
+	 * @param keepAlive the new keep alive value to be sent with the query
+	 * @since 5.0
+	 */
+	record PointInTime(String id, Duration keepAlive) {
 	}
 }

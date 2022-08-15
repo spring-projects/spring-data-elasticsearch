@@ -73,7 +73,7 @@ final class DocumentAdapters {
 		Map<String, SearchDocumentResponse> innerHits = new LinkedHashMap<>();
 		hit.innerHits().forEach((name, innerHitsResult) -> {
 			// noinspection ReturnOfNull
-			innerHits.put(name, SearchDocumentResponseBuilder.from(innerHitsResult.hits(), null, null, null,
+			innerHits.put(name, SearchDocumentResponseBuilder.from(innerHitsResult.hits(), null, null, null, null,
 					searchDocument -> null, jsonpMapper));
 		});
 
