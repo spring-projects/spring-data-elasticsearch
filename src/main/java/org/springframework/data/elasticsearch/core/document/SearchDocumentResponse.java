@@ -39,13 +39,16 @@ public class SearchDocumentResponse {
 	@Nullable private final AggregationsContainer<?> aggregations;
 	@Nullable private final Suggest suggest;
 
+	@Nullable String pointInTimeId;
+
 	public SearchDocumentResponse(long totalHits, String totalHitsRelation, float maxScore, @Nullable String scrollId,
-			List<SearchDocument> searchDocuments, @Nullable AggregationsContainer<?> aggregationsContainer,
-			@Nullable Suggest suggest) {
+			@Nullable String pointInTimeId, List<SearchDocument> searchDocuments,
+			@Nullable AggregationsContainer<?> aggregationsContainer, @Nullable Suggest suggest) {
 		this.totalHits = totalHits;
 		this.totalHitsRelation = totalHitsRelation;
 		this.maxScore = maxScore;
 		this.scrollId = scrollId;
+		this.pointInTimeId = pointInTimeId;
 		this.searchDocuments = searchDocuments;
 		this.aggregations = aggregationsContainer;
 		this.suggest = suggest;
@@ -80,6 +83,14 @@ public class SearchDocumentResponse {
 	@Nullable
 	public Suggest getSuggest() {
 		return suggest;
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	@Nullable
+	public String getPointInTimeId() {
+		return pointInTimeId;
 	}
 
 	/**

@@ -33,7 +33,7 @@ import org.springframework.test.context.ContextCustomizerFactory;
 import org.springframework.test.context.MergedContextConfiguration;
 
 /**
- * This extension class check in the {@link #beforeAll(ExtensionContext)} call if there is already a Elasticsearch
+ * This extension class check in the {@link #beforeAll(ExtensionContext)} call if there is already an Elasticsearch
  * cluster connection defined in the root store. If no, the connection to the cluster is defined according to the
  * configuration, starting a local node if necessary. The connection is stored and will be closed when the store is
  * shutdown at the end of all tests.

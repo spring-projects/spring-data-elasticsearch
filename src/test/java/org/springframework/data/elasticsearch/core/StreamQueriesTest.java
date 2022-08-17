@@ -180,6 +180,6 @@ public class StreamQueriesTest {
 	}
 
 	private SearchScrollHits<String> newSearchScrollHits(List<SearchHit<String>> hits, String scrollId) {
-		return new SearchHitsImpl<>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, scrollId, hits, null, null);
+		return new SearchHitsImpl<>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, scrollId, null, hits, null, null);
 	}
 }

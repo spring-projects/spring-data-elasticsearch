@@ -27,6 +27,7 @@ import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -475,8 +476,30 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	/**
 	 * value class combining the information needed for a single query in a multisearch request.
 	 */
-		record MultiSearchQueryParameter(Query query, Class<?> clazz, IndexCoordinates index) {
+	record MultiSearchQueryParameter(Query query, Class<?> clazz, IndexCoordinates index) {
 	}
+
+	@Override
+	public String openPointInTime(IndexCoordinates index, Duration keepAlive, Boolean ignoreUnavailable) {
+
+		Assert.notNull(index, "index must not be null");
+		Assert.notNull(keepAlive, "keepAlive must not be null");
+		Assert.notNull(ignoreUnavailable, "ignoreUnavailable must not be null");
+
+		var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
+		return execute(client -> client.openPointInTime(request)).id();
+	}
+
+	@Override
+	public Boolean closePointInTime(String pit) {
+
+		Assert.notNull(pit, "pit must not be null");
+
+		ClosePointInTimeRequest request = requestConverter.searchClosePointInTime(pit);
+		var response = execute(client -> client.closePointInTime(request));
+		return response.succeeded();
+	}
+
 	// endregion
 
 	// region client callback

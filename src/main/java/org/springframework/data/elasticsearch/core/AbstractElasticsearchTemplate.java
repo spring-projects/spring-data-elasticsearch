@@ -28,6 +28,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.convert.EntityReader;
+import org.springframework.data.elasticsearch.client.UnsupportedClientOperationException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -422,6 +423,16 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	abstract public void searchScrollClear(List<String> scrollIds);
+
+	@Override
+	public String openPointInTime(IndexCoordinates index, Duration keepAlive, Boolean ignoreUnavailable) {
+		throw new UnsupportedClientOperationException(getClass(), "openPointInTime");
+	}
+
+	@Override
+	public Boolean closePointInTime(String pit) {
+		throw new UnsupportedClientOperationException(getClass(), "closePointInTime");
+	}
 
 	// endregion
 

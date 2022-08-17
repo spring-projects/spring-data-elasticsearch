@@ -32,16 +32,7 @@ import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
-import co.elastic.clients.elasticsearch.core.DeleteRequest;
-import co.elastic.clients.elasticsearch.core.GetRequest;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.MgetRequest;
-import co.elastic.clients.elasticsearch.core.MsearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
-import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
@@ -52,6 +43,7 @@ import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
@@ -1164,9 +1156,23 @@ class RequestConverter {
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(clazz);
 
 		builder //
-				.index(Arrays.asList(indexNames)) //
 				.version(true) //
 				.trackScores(query.getTrackScores());
+
+		var pointInTime = query.getPointInTime();
+		if (pointInTime != null) {
+			builder.pit(pb -> pb.id(pointInTime.id()).keepAlive(time(pointInTime.keepAlive())));
+		} else {
+			builder.index(Arrays.asList(indexNames));
+
+			if (query.getRoute() != null) {
+				builder.routing(query.getRoute());
+			}
+
+			if (query.getPreference() != null) {
+				builder.preference(query.getPreference());
+			}
+		}
 
 		if (persistentEntity != null && persistentEntity.hasSeqNoPrimaryTermProperty()) {
 			builder.seqNoPrimaryTerm(true);
@@ -1205,10 +1211,6 @@ class RequestConverter {
 			builder.minScore((double) query.getMinScore());
 		}
 
-		if (query.getPreference() != null) {
-			builder.preference(query.getPreference());
-		}
-
 		builder.searchType(searchType(query.getSearchType()));
 
 		if (query.getSort() != null) {
@@ -1231,10 +1233,6 @@ class RequestConverter {
 			builder.trackTotalHits(th -> th.count(value));
 		} else if (query.getTrackTotalHitsUpTo() != null) {
 			builder.trackTotalHits(th -> th.count(query.getTrackTotalHitsUpTo()));
-		}
-
-		if (query.getRoute() != null) {
-			builder.routing(query.getRoute());
 		}
 
 		builder.timeout(timeStringMs(query.getTimeout()));
@@ -1505,6 +1503,27 @@ class RequestConverter {
 				});
 
 		return moreLikeThisQuery;
+	}
+
+	public OpenPointInTimeRequest searchOpenPointInTimeRequest(IndexCoordinates index, Duration keepAlive,
+			Boolean ignoreUnavailable) {
+
+		Assert.notNull(index, "index must not be null");
+		Assert.notNull(keepAlive, "keepAlive must not be null");
+		Assert.notNull(ignoreUnavailable, "ignoreUnavailable must not be null");
+
+		return OpenPointInTimeRequest.of(opit -> opit //
+				.index(Arrays.asList(index.getIndexNames())) //
+				.ignoreUnavailable(ignoreUnavailable) //
+				.keepAlive(time(keepAlive)) //
+		);
+	}
+
+	public ClosePointInTimeRequest searchClosePointInTime(String pit) {
+
+		Assert.notNull(pit, "pit must not be null");
+
+		return ClosePointInTimeRequest.of(cpit -> cpit.id(pit));
 	}
 
 	// endregion

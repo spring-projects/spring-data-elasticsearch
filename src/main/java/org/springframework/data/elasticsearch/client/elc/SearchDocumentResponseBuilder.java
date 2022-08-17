@@ -75,8 +75,9 @@ class SearchDocumentResponseBuilder {
 		String scrollId = responseBody.scrollId();
 		Map<String, Aggregate> aggregations = responseBody.aggregations();
 		Map<String, List<Suggestion<EntityAsMap>>> suggest = responseBody.suggest();
+		var pointInTimeId = responseBody.pitId();
 
-		return from(hitsMetadata, scrollId, aggregations, suggest, entityCreator, jsonpMapper);
+		return from(hitsMetadata, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
 	}
 
 	/**
@@ -93,8 +94,9 @@ class SearchDocumentResponseBuilder {
 	 * @return the {@link SearchDocumentResponse}
 	 */
 	public static <T> SearchDocumentResponse from(HitsMetadata<?> hitsMetadata, @Nullable String scrollId,
-			@Nullable Map<String, Aggregate> aggregations, Map<String, List<Suggestion<EntityAsMap>>> suggestES,
-			SearchDocumentResponse.EntityCreator<T> entityCreator, JsonpMapper jsonpMapper) {
+			@Nullable String pointInTimeId, @Nullable Map<String, Aggregate> aggregations,
+			Map<String, List<Suggestion<EntityAsMap>>> suggestES, SearchDocumentResponse.EntityCreator<T> entityCreator,
+			JsonpMapper jsonpMapper) {
 
 		Assert.notNull(hitsMetadata, "hitsMetadata must not be null");
 
@@ -126,7 +128,7 @@ class SearchDocumentResponseBuilder {
 
 		Suggest suggest = suggestFrom(suggestES, entityCreator);
 
-		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, searchDocuments,
+		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, pointInTimeId, searchDocuments,
 				aggregationsContainer, suggest);
 	}
 

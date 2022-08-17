@@ -121,7 +121,7 @@ Query searchQuery = NativeQuery.builder()
     .withPageable(PageRequest.of(0, 10))
     .build();
 
-SearchHitsIterator<SampleEntity> stream = elasticsearchOperations.searchForStream(searchQuery, SampleEntity.class, 
+SearchHitsIterator<SampleEntity> stream = elasticsearchOperations.searchForStream(searchQuery, SampleEntity.class,
 index);
 
 List<SampleEntity> sampleEntities = new ArrayList<>();
@@ -134,7 +134,7 @@ stream.close();
 ====
 
 There are no methods in the `SearchOperations` API to access the scroll id, if it should be necessary to access this,
-the following methods of the `AbstractElasticsearchTemplate` can be used (this is the base implementation for the 
+the following methods of the `AbstractElasticsearchTemplate` can be used (this is the base implementation for the
 different `ElasticsearchOperations` implementations:
 
 ====
@@ -275,3 +275,42 @@ SearchHits<SomethingToBuy> searchHits = operations.search(query, SomethingToBuy.
 ====
 
 This works with every implementation of the `Query` interface.
+
+[[elasticsearch.misc.point-in-time]]
+== Point In Time (PIT) API
+
+`ElasticsearchOperations` supports the point in time API of Elasticsearch (see https://www.elastic
+.co/guide/en/elasticsearch/reference/8.3/point-in-time-api.html). The following code snippet shows how to use this
+feature with a fictional `Person` class:
+
+====
+[source,java]
+----
+ElasticsearchOperations operations; // autowired
+Duration tenSeconds = Duration.ofSeconds(10);
+
+String pit = operations.openPointInTime(IndexCoordinates.of("person"), tenSeconds); <.>
+
+// create query for the pit
+Query query1 = new CriteriaQueryBuilder(Criteria.where("lastName").is("Smith"))
+    .withPointInTime(new Query.PointInTime(pit, tenSeconds))                        <.>
+    .build();
+SearchHits<Person> searchHits1 = operations.search(query1, Person.class);
+// do something with the data
+
+// create 2nd query for the pit, use the id returned in the previous result
+Query query2 = new CriteriaQueryBuilder(Criteria.where("lastName").is("Miller"))
+    .withPointInTime(
+        new Query.PointInTime(searchHits1.getPointInTimeId(), tenSeconds))          <.>
+    .build();
+SearchHits<Person> searchHits2 = operations.search(query2, Person.class);
+// do something with the data
+
+operations.closePointInTime(searchHits2.getPointInTimeId());                        <.>
+
+----
+<.> create a point in time for an index (can be multiple names) and a keep-alive duration and retrieve its id
+<.> pass that id into the query to search together with the next keep-alive value
+<.> for the next query, use the id returned from the previous search
+<.> when done, close the point in time using the last returned id
+====

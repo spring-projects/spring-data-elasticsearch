@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the original author or authors.
+ * Copyright 2022 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,39 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.utils;
+package org.springframework.data.elasticsearch.client;
 
 /**
- * Class providing an index name witInCo
- *
  * @author Peter-Josef Meisch
  */
-public class IndexNameProvider {
-	private final String prefix;
-	private int idx = -1;
-	private String indexName;
-
-	public IndexNameProvider() {
-		this("index-default");
-	}
-
-	public IndexNameProvider(String prefix) {
-		this.prefix = prefix;
-		increment();
-	}
-
-	public void increment() {
-		indexName = prefix + '-' + ++idx;
-	}
-
-	public String indexName() {
-		return indexName;
-	}
-
-	/**
-	 * @since 4.4
-	 */
-	public String getPrefix() {
-		return prefix;
+public class UnsupportedClientOperationException extends RuntimeException {
+	public UnsupportedClientOperationException(Class<?> clientClass, String operation) {
+		super("Client %1$s does not support the operation %2$s".formatted(clientClass, operation));
 	}
 }

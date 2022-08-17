@@ -108,8 +108,8 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 				int itemCount = (int) elasticsearchOperations.count(query, clazz, index);
 
 				if (itemCount == 0) {
-					result = new SearchHitsImpl<>(0, TotalHitsRelation.EQUAL_TO, Float.NaN, null, Collections.emptyList(), null,
-							null);
+					result = new SearchHitsImpl<>(0, TotalHitsRelation.EQUAL_TO, Float.NaN, null,
+							query.getPointInTime() != null ? query.getPointInTime().id() : null, Collections.emptyList(), null, null);
 				} else {
 					query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 				}
