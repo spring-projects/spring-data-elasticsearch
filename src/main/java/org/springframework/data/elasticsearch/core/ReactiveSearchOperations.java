@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Duration;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -270,6 +271,38 @@ public interface ReactiveSearchOperations {
 	 * @since 4.3
 	 */
 	Mono<Suggest> suggest(Query query, Class<?> entityType, IndexCoordinates index);
+
+	/**
+	 * Opens a point in time (pit) in Elasticsearch.
+	 *
+	 * @param index the index name(s) to use
+	 * @param keepAlive the duration the pit shoult be kept alive
+	 * @return the pit identifier
+	 * @since 5.0
+	 */
+	default Mono<String> openPointInTime(IndexCoordinates index, Duration keepAlive) {
+		return openPointInTime(index, keepAlive, false);
+	}
+
+	/**
+	 * Opens a point in time (pit) in Elasticsearch.
+	 *
+	 * @param index the index name(s) to use
+	 * @param keepAlive the duration the pit shoult be kept alive
+	 * @param ignoreUnavailable if {$literal true} the call will fail if any of the indices is missing or closed
+	 * @return the pit identifier
+	 * @since 5.0
+	 */
+	Mono<String> openPointInTime(IndexCoordinates index, Duration keepAlive, Boolean ignoreUnavailable);
+
+	/**
+	 * Closes a point in time
+	 *
+	 * @param pit the pit identifier as returned by {@link #openPointInTime(IndexCoordinates, Duration, Boolean)}
+	 * @return {@literal true} on success
+	 * @since 5.0
+	 */
+	Mono<Boolean> closePointInTime(String pit);
 
 	// region helper
 	/**
