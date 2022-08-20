@@ -30,6 +30,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -406,6 +407,30 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 			ElasticsearchAggregations aggregations = (ElasticsearchAggregations) searchDocumentResponse.getAggregations();
 			return aggregations == null ? Flux.empty() : Flux.fromIterable(aggregations.aggregations());
 		});
+	}
+
+	@Override
+	public Mono<String> openPointInTime(IndexCoordinates index, Duration keepAlive, Boolean ignoreUnavailable) {
+
+		Assert.notNull(index, "index must not be null");
+		Assert.notNull(keepAlive, "keepAlive must not be null");
+		Assert.notNull(ignoreUnavailable, "ignoreUnavailable must not be null");
+
+		var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
+		return Mono
+				.from(execute((ClientCallback<Publisher<OpenPointInTimeResponse>>) client -> client.openPointInTime(request)))
+				.map(OpenPointInTimeResponse::id);
+	}
+
+	@Override
+	public Mono<Boolean> closePointInTime(String pit) {
+
+		Assert.notNull(pit, "pit must not be null");
+
+		ClosePointInTimeRequest request = requestConverter.searchClosePointInTime(pit);
+		return Mono
+				.from(execute((ClientCallback<Publisher<ClosePointInTimeResponse>>) client -> client.closePointInTime(request)))
+				.map(ClosePointInTimeResponse::succeeded);
 	}
 
 	// endregion

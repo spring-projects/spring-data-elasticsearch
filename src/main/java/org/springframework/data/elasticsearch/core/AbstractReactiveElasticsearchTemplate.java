@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.data.convert.EntityReader;
+import org.springframework.data.elasticsearch.client.UnsupportedClientOperationException;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -476,6 +478,17 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	}
 
 	abstract protected Mono<Long> doCount(Query query, Class<?> entityType, IndexCoordinates index);
+
+	@Override
+	public Mono<String> openPointInTime(IndexCoordinates index, Duration keepAlive, Boolean ignoreUnavailable) {
+		throw new UnsupportedClientOperationException(getClass(), "openPointInTime");
+	}
+
+	@Override
+	public Mono<Boolean> closePointInTime(String pit) {
+		throw new UnsupportedClientOperationException(getClass(), "closePointInTime");
+	}
+
 	// endregion
 
 	// region callbacks

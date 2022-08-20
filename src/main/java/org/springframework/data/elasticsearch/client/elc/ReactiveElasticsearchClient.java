@@ -276,6 +276,48 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 
 		return clearScroll(fn.apply(new ClearScrollRequest.Builder()).build());
 	}
+
+	/**
+	 * @since 5.0
+	 */
+	public Mono<OpenPointInTimeResponse> openPointInTime(OpenPointInTimeRequest request) {
+
+		Assert.notNull(request, "request must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request, OpenPointInTimeRequest._ENDPOINT, transportOptions));
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	public Mono<OpenPointInTimeResponse> openPointInTime(
+			Function<OpenPointInTimeRequest.Builder, ObjectBuilder<OpenPointInTimeRequest>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return openPointInTime(fn.apply(new OpenPointInTimeRequest.Builder()).build());
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	public Mono<ClosePointInTimeResponse> closePointInTime(ClosePointInTimeRequest request) {
+
+		Assert.notNull(request, "request must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request, ClosePointInTimeRequest._ENDPOINT, transportOptions));
+	}
+
+	/**
+	 * @since 5.0
+	 */
+	public Mono<ClosePointInTimeResponse> closePointInTime(
+			Function<ClosePointInTimeRequest.Builder, ObjectBuilder<ClosePointInTimeRequest>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return closePointInTime(fn.apply(new ClosePointInTimeRequest.Builder()).build());
+	}
 	// endregion
 
 }

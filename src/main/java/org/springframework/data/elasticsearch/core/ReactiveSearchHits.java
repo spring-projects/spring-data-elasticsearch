@@ -72,4 +72,14 @@ public interface ReactiveSearchHits<T> {
 	 * @return wether the {@link SearchHits} has a suggest response.
 	 */
 	boolean hasSuggest();
+
+	/**
+	 * When doing a search with a point in time, the response contains a new point in time id value.
+	 *
+	 * @return the new point in time id, if one was returned from Elasticsearch
+	 * @since 5.0
+	 */
+	@Nullable
+	String getPointInTimeId();
+
 }

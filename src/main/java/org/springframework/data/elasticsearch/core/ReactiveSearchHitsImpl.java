@@ -78,4 +78,13 @@ public class ReactiveSearchHitsImpl<T> implements ReactiveSearchHits<T> {
 	public boolean hasSuggest() {
 		return delegate.hasSuggest();
 	}
+
+	/**
+	 * @since 5.0
+	 */
+	@Nullable
+	@Override
+	public String getPointInTimeId() {
+		return delegate.getPointInTimeId();
+	}
 }
