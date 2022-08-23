@@ -24,7 +24,7 @@ import java.util.function.Supplier;
 
 import org.springframework.data.elasticsearch.client.ElasticsearchHost;
 import org.springframework.data.elasticsearch.client.NoReachableHostException;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
 

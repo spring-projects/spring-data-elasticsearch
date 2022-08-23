@@ -31,7 +31,6 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
-import org.springframework.http.HttpStatus;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Elasticsearch. Convert the given runtime exception to an
@@ -76,8 +75,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 
 			ErrorResponse response = elasticsearchException.response();
 
-			if (response.status() == HttpStatus.NOT_FOUND.value()
-					&& "index_not_found_exception".equals(response.error().type())) {
+			if (response.status() == 404 && "index_not_found_exception".equals(response.error().type())) {
 
 				// noinspection RegExpRedundantEscape
 				Pattern pattern = Pattern.compile(".*no such index \\[(.*)\\]");

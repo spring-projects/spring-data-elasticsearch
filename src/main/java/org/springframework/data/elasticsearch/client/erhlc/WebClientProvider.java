@@ -243,11 +243,12 @@ public interface WebClientProvider {
 		};
 
 		provider = provider //
-				.withDefaultHeaders(clientConfiguration.getDefaultHeaders()) //
+				.withDefaultHeaders(HttpHeaders.readOnlyHttpHeaders(clientConfiguration.getDefaultHeaders())) //
 				.withWebClientConfigurer(webClientConfigurer) //
 				.withRequestConfigurer(requestHeadersSpec -> requestHeadersSpec //
 						.headers(httpHeaders -> {
-							HttpHeaders suppliedHeaders = clientConfiguration.getHeadersSupplier().get();
+							HttpHeaders suppliedHeaders = HttpHeaders
+									.readOnlyHttpHeaders(clientConfiguration.getHeadersSupplier().get());
 
 							if (suppliedHeaders != null && suppliedHeaders != HttpHeaders.EMPTY) {
 								httpHeaders.addAll(suppliedHeaders);

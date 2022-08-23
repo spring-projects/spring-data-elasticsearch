@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
@@ -31,7 +30,7 @@ import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.ClientConfigurationBuilderWithRequiredEndpoint;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.MaybeSecureClientConfigurationBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -50,7 +49,7 @@ class ClientConfigurationBuilder
 		implements ClientConfigurationBuilderWithRequiredEndpoint, MaybeSecureClientConfigurationBuilder {
 
 	private final List<InetSocketAddress> hosts = new ArrayList<>();
-	private HttpHeaders headers = HttpHeaders.EMPTY;
+	private HttpHeaders headers = new HttpHeaders();
 	private boolean useSsl;
 	private @Nullable SSLContext sslContext;
 	private @Nullable HostnameVerifier hostnameVerifier;
@@ -60,10 +59,10 @@ class ClientConfigurationBuilder
 	private @Nullable String password;
 	private @Nullable String pathPrefix;
 	private @Nullable String proxy;
-	private Function<WebClient, WebClient> webClientConfigurer = Function.identity();
-	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
-	@Deprecated private HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
-	private List<ClientConfiguration.ClientConfigurationCallback<?>> clientConfigurers = new ArrayList<>();
+	private final Function<WebClient, WebClient> webClientConfigurer = Function.identity();
+	private Supplier<HttpHeaders> headersSupplier = HttpHeaders::new;
+	@Deprecated private final HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
+	private final List<ClientConfiguration.ClientConfigurationCallback<?>> clientConfigurers = new ArrayList<>();
 
 	/*
 	 * (non-Javadoc)
@@ -74,7 +73,7 @@ class ClientConfigurationBuilder
 
 		Assert.notEmpty(hostAndPorts, "At least one host is required");
 
-		this.hosts.addAll(Arrays.stream(hostAndPorts).map(ClientConfigurationBuilder::parse).collect(Collectors.toList()));
+		this.hosts.addAll(Arrays.stream(hostAndPorts).map(ClientConfigurationBuilder::parse).toList());
 		return this;
 	}
 
@@ -227,9 +226,6 @@ class ClientConfigurationBuilder
 	public ClientConfiguration build() {
 
 		if (username != null && password != null) {
-			if (HttpHeaders.EMPTY.equals(headers)) {
-				headers = new HttpHeaders();
-			}
 			headers.setBasicAuth(username, password);
 		}
 

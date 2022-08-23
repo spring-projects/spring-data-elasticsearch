@@ -46,8 +46,7 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.RestHighLevelClientBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.util.Assert;
 
 /**
@@ -219,7 +218,7 @@ public final class RestClients {
 		@Override
 		public void process(HttpResponse response, HttpContext context) {
 			String logId = (String) context.getAttribute(RestClients.LOG_ID_ATTRIBUTE);
-			ClientLogger.logRawResponse(logId, HttpStatus.resolve(response.getStatusLine().getStatusCode()));
+			ClientLogger.logRawResponse(logId, response.getStatusLine().getStatusCode());
 		}
 	}
 
@@ -240,7 +239,7 @@ public final class RestClients {
 		public void process(HttpRequest request, HttpContext context) {
 			HttpHeaders httpHeaders = headersSupplier.get();
 
-			if (httpHeaders != null && httpHeaders != HttpHeaders.EMPTY) {
+			if (httpHeaders != null && !httpHeaders.isEmpty()) {
 				Arrays.stream(toHeaderArray(httpHeaders)).forEach(request::addHeader);
 			}
 		}
