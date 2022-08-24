@@ -31,7 +31,7 @@ import org.springframework.data.elasticsearch.client.erhlc.RestClients;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.elasticsearch.support.HttpHeaders;
 
 /**
  * Configuration for Spring Data Elasticsearch using {@link ElasticsearchRestTemplate}.
@@ -77,7 +77,7 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 		defaultHeaders.add("Accept", "application/vnd.elasticsearch+json;compatible-with=7");
 		defaultHeaders.add("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7");
 
-		//noinspection resource
+		// noinspection resource
 		return RestClients.create(configurationBuilder //
 				.withDefaultHeaders(defaultHeaders) //
 				.withConnectTimeout(Duration.ofSeconds(20)) //

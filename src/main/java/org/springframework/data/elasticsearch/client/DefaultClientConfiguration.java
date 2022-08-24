@@ -26,7 +26,7 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -62,7 +62,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 			List<ClientConfigurationCallback<?>> clientConfigurers, Supplier<HttpHeaders> headersSupplier) {
 
 		this.hosts = List.copyOf(hosts);
-		this.headers = new HttpHeaders(headers);
+		this.headers = headers;
 		this.useSsl = useSsl;
 		this.sslContext = sslContext;
 		this.soTimeout = soTimeout;
@@ -127,7 +127,6 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return webClientConfigurer;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public <T> List<ClientConfigurationCallback<?>> getClientConfigurers() {
 		return clientConfigurers;

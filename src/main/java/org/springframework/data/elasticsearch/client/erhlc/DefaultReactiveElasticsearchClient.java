@@ -139,7 +139,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 	private final HostProvider<?> hostProvider;
 	private final RequestCreator requestCreator;
-	private Supplier<HttpHeaders> headersSupplier = () -> HttpHeaders.EMPTY;
+	private Supplier<org.springframework.data.elasticsearch.support.HttpHeaders> headersSupplier = org.springframework.data.elasticsearch.support.HttpHeaders::new;
 
 	/**
 	 * Create a new {@link DefaultReactiveElasticsearchClient} using the given {@link HostProvider} to obtain server
@@ -181,8 +181,10 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		Assert.notNull(headers, "HttpHeaders must not be null");
 		Assert.notEmpty(hosts, "Elasticsearch Cluster needs to consist of at least one host");
 
+		var httpHeaders = new org.springframework.data.elasticsearch.support.HttpHeaders();
+		httpHeaders.addAll(headers);
 		ClientConfiguration clientConfiguration = ClientConfiguration.builder().connectedTo(hosts)
-				.withDefaultHeaders(headers).build();
+				.withDefaultHeaders(httpHeaders).build();
 		return create(clientConfiguration);
 	}
 
@@ -226,7 +228,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		return client;
 	}
 
-	public void setHeadersSupplier(Supplier<HttpHeaders> headersSupplier) {
+	public void setHeadersSupplier(Supplier<org.springframework.data.elasticsearch.support.HttpHeaders> headersSupplier) {
 
 		Assert.notNull(headersSupplier, "headersSupplier must not be null");
 
@@ -716,25 +718,25 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 
 		if (RawActionResponse.class.equals(responseType)) {
 
-			ClientLogger.logRawResponse(logId, response.statusCode());
+			ClientLogger.logRawResponse(logId, response.statusCode().value());
 			return Mono.just(responseType.cast(RawActionResponse.create(response)));
 		}
 
 		if (response.statusCode().is5xxServerError()) {
 
-			ClientLogger.logRawResponse(logId, response.statusCode());
+			ClientLogger.logRawResponse(logId, response.statusCode().value());
 			return handleServerError(request, response);
 		}
 
 		if (response.statusCode().is4xxClientError()) {
 
-			ClientLogger.logRawResponse(logId, response.statusCode());
+			ClientLogger.logRawResponse(logId, response.statusCode().value());
 			return handleClientError(logId, response, responseType);
 		}
 
 		return response.body(BodyExtractors.toMono(byte[].class)) //
 				.map(it -> new String(it, StandardCharsets.UTF_8)) //
-				.doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode(), it)) //
+				.doOnNext(it -> ClientLogger.logResponse(logId, response.statusCode().value(), it)) //
 				.flatMap(content -> doDecode(response, responseType, content));
 	}
 
@@ -811,7 +813,7 @@ public class DefaultReactiveElasticsearchClient implements ReactiveElasticsearch
 		return response.body(BodyExtractors.toMono(byte[].class)) //
 				.map(bytes -> new String(bytes, StandardCharsets.UTF_8)) //
 				.flatMap(content -> contentOrError(content, mediaType, status)) //
-				.doOnNext(content -> ClientLogger.logResponse(logId, response.statusCode(), content)) //
+				.doOnNext(content -> ClientLogger.logResponse(logId, response.statusCode().value(), content)) //
 				.flatMap(content -> doDecode(response, responseType, content));
 	}
 

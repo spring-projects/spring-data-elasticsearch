@@ -17,10 +17,10 @@ package org.springframework.data.elasticsearch.client;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.springframework.data.elasticsearch.support.HttpHeaders.*;
 
 import java.net.InetSocketAddress;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
@@ -32,7 +32,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.client.erhlc.ReactiveRestClients;
 import org.springframework.data.elasticsearch.client.erhlc.RestClients;
-import org.springframework.http.HttpHeaders;
+import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.web.reactive.function.client.WebClient;
 
 /**
@@ -44,6 +44,8 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Henrique Amaral
  */
 public class ClientConfigurationUnitTests {
+
+	private static final String AUTHORIZATION = "Authorization";
 
 	@Test // DATAES-488
 	public void shouldCreateSimpleConfiguration() {
@@ -106,8 +108,8 @@ public class ClientConfigurationUnitTests {
 				.withBasicAuth(username, password) //
 				.build();
 
-		assertThat(clientConfiguration.getDefaultHeaders().get(HttpHeaders.AUTHORIZATION))
-				.containsOnly(buildBasicAuth(username, password));
+		assertThat(clientConfiguration.getDefaultHeaders().get(AUTHORIZATION))
+				.containsOnly("Basic " + encodeBasicAuth(username, password));
 	}
 
 	@Test // DATAES-607
@@ -127,9 +129,9 @@ public class ClientConfigurationUnitTests {
 
 		HttpHeaders httpHeaders = clientConfiguration.getDefaultHeaders();
 
-		assertThat(httpHeaders.get(HttpHeaders.AUTHORIZATION)).containsOnly(buildBasicAuth(username, password));
+		assertThat(httpHeaders.get(AUTHORIZATION)).containsOnly("Basic " + encodeBasicAuth(username, password));
 		assertThat(httpHeaders.getFirst("foo")).isEqualTo("bar");
-		assertThat(defaultHeaders.get(HttpHeaders.AUTHORIZATION)).isNull();
+		assertThat(defaultHeaders.get(AUTHORIZATION)).isNull();
 	}
 
 	@Test // DATAES-673
@@ -219,14 +221,8 @@ public class ClientConfigurationUnitTests {
 		ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = clientConfiguration.getClientConfigurers()
 				.get(0);
 
+		// noinspection unchecked
 		((ClientConfiguration.ClientConfigurationCallback<Object>) clientConfigurer).configure(new Object());
 		assertThat(callCounter.get()).isEqualTo(1);
-	}
-
-	private static String buildBasicAuth(String username, String password) {
-
-		HttpHeaders headers = new HttpHeaders();
-		headers.setBasicAuth(username, password);
-		return Objects.requireNonNull(headers.getFirst(HttpHeaders.AUTHORIZATION));
 	}
 }

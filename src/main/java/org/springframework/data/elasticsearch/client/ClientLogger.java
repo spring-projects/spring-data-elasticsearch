@@ -19,8 +19,6 @@ import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.lang.Nullable;
 import org.springframework.util.ObjectUtils;
 
@@ -127,10 +125,10 @@ public abstract class ClientLogger {
 	 * @param logId the correlation id, see {@link #newLogId()}.
 	 * @param statusCode the HTTP status code.
 	 */
-	public static void logRawResponse(String logId, @Nullable HttpStatusCode statusCode) {
+	public static void logRawResponse(String logId, @Nullable Integer statusCode) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace(String.format("[%s] Received raw response: %s", logId, statusCode));
+			WIRE_LOGGER.trace(String.format("[%s] Received raw response: %d", logId, statusCode));
 		}
 	}
 
@@ -141,10 +139,10 @@ public abstract class ClientLogger {
 	 * @param statusCode the HTTP status code.
 	 * @param headers a String containing the headers
 	 */
-	public static void logRawResponse(String logId, @Nullable HttpStatus statusCode, String headers) {
+	public static void logRawResponse(String logId, @Nullable Integer statusCode, String headers) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace(String.format("[%s] Received response: %s%n%s", logId, statusCode, headers));
+			WIRE_LOGGER.trace(String.format("[%s] Received response: %d%n%s", logId, statusCode, headers));
 		}
 	}
 
@@ -155,10 +153,10 @@ public abstract class ClientLogger {
 	 * @param statusCode the HTTP status code.
 	 * @param body body content.
 	 */
-	public static void logResponse(String logId, HttpStatusCode statusCode, String body) {
+	public static void logResponse(String logId, Integer statusCode, String body) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace(String.format("[%s] Received response: %s%nResponse body: %s", logId, statusCode, body));
+			WIRE_LOGGER.trace(String.format("[%s] Received response: %d%nResponse body: %s", logId, statusCode, body));
 		}
 	}
 
@@ -171,10 +169,10 @@ public abstract class ClientLogger {
 	 * @param body body content.
 	 * @since 4.4
 	 */
-	public static void logResponse(String logId, @Nullable HttpStatus statusCode, String headers, String body) {
+	public static void logResponse(String logId, @Nullable Integer statusCode, String headers, String body) {
 
 		if (isEnabled()) {
-			WIRE_LOGGER.trace(String.format("[%s] Received response: %s%nHeaders: %s%nResponse body: %s", logId, statusCode,
+			WIRE_LOGGER.trace(String.format("[%s] Received response: %d%nHeaders: %s%nResponse body: %s", logId, statusCode,
 					headers, body));
 		}
 	}

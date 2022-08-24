@@ -52,8 +52,7 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -336,7 +335,7 @@ public final class ElasticsearchClients {
 
 			// no way of logging the body, in this callback, it is not read yset, later there is no callback possibility in
 			// RestClient or RestClientTransport
-			ClientLogger.logRawResponse(logId, HttpStatus.resolve(response.getStatusLine().getStatusCode()), headers);
+			ClientLogger.logRawResponse(logId, response.getStatusLine().getStatusCode(), headers);
 		}
 	}
 
@@ -357,7 +356,7 @@ public final class ElasticsearchClients {
 		public void process(HttpRequest request, HttpContext context) {
 			HttpHeaders httpHeaders = headersSupplier.get();
 
-			if (httpHeaders != null && httpHeaders != HttpHeaders.EMPTY) {
+			if (httpHeaders != null && !httpHeaders.isEmpty()) {
 				Arrays.stream(toHeaderArray(httpHeaders)).forEach(request::addHeader);
 			}
 		}
