@@ -375,7 +375,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		});
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/_doc/10/_create");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_create/10");
 	}
 
 	@Test // DATAES-488
@@ -439,7 +439,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		hostProvider.when(HOST) //
 				.receiveUpdateOk();
 
-		client.update(new UpdateRequest("twitter", "doc", "1").doc(Collections.singletonMap("user", "cstrobl"))).then() //
+		client.update(new UpdateRequest("twitter", "1").doc(Collections.singletonMap("user", "cstrobl"))).then() //
 				.as(StepVerifier::create) //
 				.verifyComplete();
 
@@ -449,7 +449,7 @@ public class ReactiveElasticsearchClientUnitTests {
 		});
 
 		URI uri = hostProvider.when(HOST).captureUri();
-		assertThat(uri.getRawPath()).isEqualTo("/twitter/doc/1/_update");
+		assertThat(uri.getRawPath()).isEqualTo("/twitter/_update/1");
 	}
 
 	@Test // DATAES-488

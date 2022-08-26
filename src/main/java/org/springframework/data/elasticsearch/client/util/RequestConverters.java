@@ -336,8 +336,13 @@ public class RequestConverters {
 	public static Request index(IndexRequest indexRequest) {
 		String method = Strings.hasLength(indexRequest.id()) ? HttpMethod.PUT.name() : HttpMethod.POST.name();
 		boolean isCreate = (indexRequest.opType() == DocWriteRequest.OpType.CREATE);
-		String endpoint = endpoint(indexRequest.index(), indexRequest.type(), indexRequest.id(),
-				isCreate ? "_create" : null);
+		String endpoint;
+		if (indexRequest.opType() == DocWriteRequest.OpType.CREATE) {
+			endpoint = indexRequest.type().equals("_doc") ? endpoint(indexRequest.index(), "_create", indexRequest.id())
+					: endpoint(indexRequest.index(), indexRequest.type(), indexRequest.id(), "_create");
+		} else {
+			endpoint = endpoint(indexRequest.index(), indexRequest.type(), indexRequest.id());
+		}
 		Request request = new Request(method, endpoint);
 
 		Params parameters = new Params(request);
@@ -362,7 +367,9 @@ public class RequestConverters {
 	}
 
 	public static Request update(UpdateRequest updateRequest) {
-		String endpoint = endpoint(updateRequest.index(), updateRequest.type(), updateRequest.id(), "_update");
+		String endpoint = updateRequest.type().equals("_doc")
+				? endpoint(updateRequest.index(), "_update", updateRequest.id())
+				: endpoint(updateRequest.index(), updateRequest.type(), updateRequest.id(), "_update");
 		Request request = new Request(HttpMethod.POST.name(), endpoint);
 
 		Params parameters = new Params(request);
@@ -500,8 +507,11 @@ public class RequestConverters {
 	}
 
 	public static Request explain(ExplainRequest explainRequest) {
+		String endpoint = explainRequest.type().equals("_doc")
+				? endpoint(explainRequest.index(), "_explain", explainRequest.id())
+				: endpoint(explainRequest.index(), explainRequest.type(), explainRequest.id(), "_explain");
 		Request request = new Request(HttpMethod.GET.name(),
-				endpoint(explainRequest.index(), explainRequest.type(), explainRequest.id(), "_explain"));
+				endpoint(explainRequest.index(), explainRequest.type(), explainRequest.id(), endpoint));
 
 		Params params = new Params(request);
 		params.withStoredFields(explainRequest.storedFields());
