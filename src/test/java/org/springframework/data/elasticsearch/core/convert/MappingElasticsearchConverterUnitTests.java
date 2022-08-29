@@ -34,7 +34,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.intellij.lang.annotations.Language;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -1531,6 +1534,336 @@ public class MappingElasticsearchConverterUnitTests {
 		mappingElasticsearchConverter.updateQuery(query, EntityWithCustomValueConverters.class);
 	}
 
+	@Test // #2280
+	@DisplayName("should read a single String into a List property")
+	void shouldReadASingleStringIntoAListProperty() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"stringList": "foo"
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getStringList()).containsExactly("foo");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a String array into a List property")
+	void shouldReadAStringArrayIntoAListProperty() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"stringList": ["foo", "bar"]
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getStringList()).containsExactly("foo", "bar");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single String into a Set property")
+	void shouldReadASingleStringIntoASetProperty() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"stringSet": "foo"
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getStringSet()).containsExactly("foo");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a String array into a Set property")
+	void shouldReadAStringArrayIntoASetProperty() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"stringSet": ["foo", "bar"]
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getStringSet()).containsExactly("foo", "bar");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single object into a List property")
+	void shouldReadASingleObjectIntoAListProperty() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"childrenList": {
+						"name": "child"
+					}
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenList()).hasSize(1);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child");
+	}
+
+	@Test // #2280
+	@DisplayName("should read an object array into a List property")
+	void shouldReadAnObjectArrayIntoAListProperty() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"childrenList": [
+						{
+							"name": "child1"
+						},
+						{
+							"name": "child2"
+						}
+					]
+				}
+								""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenList()).hasSize(2);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child1");
+		assertThat(entity.getChildrenList().get(1).getName()).isEqualTo("child2");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single object into a Set property")
+	void shouldReadASingleObjectIntoASetProperty() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"childrenSet": {
+						"name": "child"
+					}
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenSet()).hasSize(1);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenSet().iterator().next().getName()).isEqualTo("child");
+	}
+
+	@Test // #2280
+	@DisplayName("should read an object array into a Set property")
+	void shouldReadAnObjectArrayIntoASetProperty() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"childrenSet": [
+						{
+							"name": "child1"
+						},
+						{
+							"name": "child2"
+						}
+					]
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenSet()).hasSize(2);
+		// noinspection ConstantConditions
+		List<String> names = entity.getChildrenSet().stream().map(EntityWithCollections.Child::getName)
+				.collect(Collectors.toList());
+		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single String into a List property immutable")
+	void shouldReadASingleStringIntoAListPropertyImmutable() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"stringList": "foo"
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
+
+		assertThat(entity.getStringList()).containsExactly("foo");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a String array into a List property immutable")
+	void shouldReadAStringArrayIntoAListPropertyImmutable() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"stringList": ["foo", "bar"]
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
+
+		assertThat(entity.getStringList()).containsExactly("foo", "bar");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single String into a Set property immutable")
+	void shouldReadASingleStringIntoASetPropertyImmutable() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"stringSet": "foo"
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
+
+		assertThat(entity.getStringSet()).containsExactly("foo");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a String array into a Set property immutable")
+	void shouldReadAStringArrayIntoASetPropertyImmutable() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"stringSet": ["foo", "bar"]
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
+
+		assertThat(entity.getStringSet()).containsExactly("foo", "bar");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single object into a List property immutable")
+	void shouldReadASingleObjectIntoAListPropertyImmutable() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"childrenList": {
+						"name": "child"
+					}
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenList()).hasSize(1);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child");
+	}
+
+	@Test // #2280
+	@DisplayName("should read an object array into a List property immutable")
+	void shouldReadAnObjectArrayIntoAListPropertyImmutable() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"childrenList": [
+						{
+							"name": "child1"
+						},
+						{
+							"name": "child2"
+						}
+					]
+				}
+								""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenList()).hasSize(2);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child1");
+		assertThat(entity.getChildrenList().get(1).getName()).isEqualTo("child2");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single object into a Set property immutable")
+	void shouldReadASingleObjectIntoASetPropertyImmutable() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"childrenSet": {
+						"name": "child"
+					}
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenSet()).hasSize(1);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenSet().iterator().next().getName()).isEqualTo("child");
+	}
+
+	@Test // #2280
+	@DisplayName("should read an object array into a Set property immutable")
+	void shouldReadAnObjectArrayIntoASetPropertyImmutable() {
+
+		@Language("JSON")
+		var json = """
+				{
+					"childrenSet": [
+						{
+							"name": "child1"
+						},
+						{
+							"name": "child2"
+						}
+					]
+				}
+				""";
+		Document source = Document.parse(json);
+
+		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenSet()).hasSize(2);
+		// noinspection ConstantConditions
+		List<String> names = entity.getChildrenSet().stream().map(ImmutableEntityWithCollections.Child::getName)
+				.collect(Collectors.toList());
+		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
+	}
+
 	private Map<String, Object> writeToMap(Object source) {
 
 		Document sink = Document.create();
@@ -2470,6 +2803,128 @@ public class MappingElasticsearchConverterUnitTests {
 		@Override
 		public Object read(Object value) {
 			return reverse(value);
+		}
+	}
+
+	private static class EntityWithCollections {
+		@Field(type = FieldType.Keyword)
+		@Nullable private List<String> stringList;
+
+		@Field(type = FieldType.Keyword)
+		@Nullable private Set<String> stringSet;
+
+		@Field(type = FieldType.Object)
+		@Nullable private List<Child> childrenList;
+
+		@Field(type = FieldType.Object)
+		@Nullable private Set<Child> childrenSet;
+
+		@Nullable
+		public List<String> getStringList() {
+			return stringList;
+		}
+
+		public void setStringList(@Nullable List<String> stringList) {
+			this.stringList = stringList;
+		}
+
+		@Nullable
+		public Set<String> getStringSet() {
+			return stringSet;
+		}
+
+		public void setStringSet(@Nullable Set<String> stringSet) {
+			this.stringSet = stringSet;
+		}
+
+		@Nullable
+		public List<Child> getChildrenList() {
+			return childrenList;
+		}
+
+		public void setChildrenList(@Nullable List<Child> childrenList) {
+			this.childrenList = childrenList;
+		}
+
+		@Nullable
+		public Set<Child> getChildrenSet() {
+			return childrenSet;
+		}
+
+		public void setChildrenSet(@Nullable Set<Child> childrenSet) {
+			this.childrenSet = childrenSet;
+		}
+
+		public static class Child {
+
+			@Field(type = FieldType.Keyword)
+			@Nullable private String name;
+
+			@Nullable
+			public String getName() {
+				return name;
+			}
+
+			public void setName(String name) {
+				this.name = name;
+			}
+		}
+	}
+
+	private static final class ImmutableEntityWithCollections {
+		@Field(type = FieldType.Keyword)
+		@Nullable private List<String> stringList;
+
+		@Field(type = FieldType.Keyword)
+		@Nullable private Set<String> stringSet;
+
+		@Field(type = FieldType.Object)
+		@Nullable private List<Child> childrenList;
+
+		@Field(type = FieldType.Object)
+		@Nullable private Set<Child> childrenSet;
+
+		public ImmutableEntityWithCollections(@Nullable List<String> stringList, @Nullable Set<String> stringSet,
+																					@Nullable List<Child> childrenList, @Nullable Set<Child> childrenSet) {
+			this.stringList = stringList;
+			this.stringSet = stringSet;
+			this.childrenList = childrenList;
+			this.childrenSet = childrenSet;
+		}
+
+		@Nullable
+		public List<String> getStringList() {
+			return stringList;
+		}
+
+		@Nullable
+		public Set<String> getStringSet() {
+			return stringSet;
+		}
+
+		@Nullable
+		public List<Child> getChildrenList() {
+			return childrenList;
+		}
+
+		@Nullable
+		public Set<Child> getChildrenSet() {
+			return childrenSet;
+		}
+
+		public static class Child {
+
+			@Field(type = FieldType.Keyword)
+			@Nullable private String name;
+
+			public Child(@Nullable String name) {
+				this.name = name;
+			}
+
+			@Nullable
+			public String getName() {
+				return name;
+			}
 		}
 	}
 	// endregion
