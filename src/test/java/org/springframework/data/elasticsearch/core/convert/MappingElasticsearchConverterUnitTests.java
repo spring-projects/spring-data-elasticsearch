@@ -33,7 +33,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import org.intellij.lang.annotations.Language;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -623,7 +626,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(target.address).isEqualTo(bigBunsCafe);
 	}
 
-	@Test // DATAES-716
+	@Test
+	// DATAES-716
 	void shouldWriteLocalDate() throws JSONException {
 		Person person = new Person();
 		person.setId("4711");
@@ -665,7 +669,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, false);
 	}
 
-	@Test // DATAES-716
+	@Test
+	// DATAES-716
 	void shouldReadLocalDate() {
 		Document document = Document.create();
 		document.put("id", "4711");
@@ -695,7 +700,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(entity.getDates()).hasSize(2).containsExactly(LocalDate.of(2020, 9, 15), LocalDate.of(2019, 5, 1));
 	}
 
-	@Test // DATAES-763
+	@Test
+	// DATAES-763
 	void writeEntityWithMapDataType() {
 
 		Notification notification = new Notification();
@@ -712,7 +718,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(document).isEqualTo(notificationAsMap);
 	}
 
-	@Test // DATAES-763
+	@Test
+	// DATAES-763
 	void readEntityWithMapDataType() {
 
 		Document document = Document.create();
@@ -729,7 +736,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(notification.params.get("content")).isNull();
 	}
 
-	@Test // DATAES-795
+	@Test
+	// DATAES-795
 	void readGenericMapWithSimpleTypes() {
 		Map<String, Object> mapWithSimpleValues = new HashMap<>();
 		mapWithSimpleValues.put("int", 1);
@@ -743,7 +751,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(wrapper.getSchemaLessObject()).isEqualTo(mapWithSimpleValues);
 	}
 
-	@Test // DATAES-797
+	@Test
+	// DATAES-797
 	void readGenericListWithMaps() {
 		Map<String, Object> simpleMap = new HashMap<>();
 		simpleMap.put("int", 1);
@@ -761,7 +770,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(wrapper.getSchemaLessObject()).isEqualTo(mapWithSimpleList);
 	}
 
-	@Test // DATAES-799
+	@Test
+	// DATAES-799
 	void shouldNotWriteSeqNoPrimaryTermProperty() {
 		EntityWithSeqNoPrimaryTerm entity = new EntityWithSeqNoPrimaryTerm();
 		entity.seqNoPrimaryTerm = new SeqNoPrimaryTerm(1L, 2L);
@@ -772,7 +782,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(document).doesNotContainKey("seqNoPrimaryTerm");
 	}
 
-	@Test // DATAES-799
+	@Test
+	// DATAES-799
 	void shouldNotReadSeqNoPrimaryTermProperty() {
 		Document document = Document.create().append("seqNoPrimaryTerm", emptyMap());
 
@@ -781,7 +792,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(entity.seqNoPrimaryTerm).isNull();
 	}
 
-	@Test // DATAES-845
+	@Test
+	// DATAES-845
 	void shouldWriteCollectionsWithNullValues() throws JSONException {
 		EntityWithListProperty entity = new EntityWithListProperty();
 		entity.setId("42");
@@ -798,7 +810,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, false);
 	}
 
-	@Test // DATAES-857
+	@Test
+	// DATAES-857
 	void shouldWriteEntityWithListOfGeoPoints() throws JSONException {
 
 		GeoPointListEntity entity = new GeoPointListEntity();
@@ -827,7 +840,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, false);
 	}
 
-	@Test // DATAES-857
+	@Test
+	// DATAES-857
 	void shouldReadEntityWithListOfGeoPoints() {
 
 		String json = "{\n" + //
@@ -852,7 +866,8 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(entity.locations).containsExactly(new GeoPoint(12.34, 23.45), new GeoPoint(34.56, 45.67));
 	}
 
-	@Test // DATAES-865
+	@Test
+	// DATAES-865
 	void shouldWriteEntityWithMapAsObject() throws JSONException {
 
 		Map<String, Object> map = new LinkedHashMap<>();
@@ -1509,6 +1524,305 @@ public class MappingElasticsearchConverterUnitTests {
 		mappingElasticsearchConverter.updateQuery(query, EntityWithCustomValueConverters.class);
 	}
 
+	@Test // #2280
+	@DisplayName("should read a single String into a List property")
+	void shouldReadASingleStringIntoAListProperty() {
+
+		String json = "{\n" + //
+				"  \"stringList\": \"foo\"\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		EntityWithCollections entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getStringList()).containsExactly("foo");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a String array into a List property")
+	void shouldReadAStringArrayIntoAListProperty() {
+
+		String json = "{\n" + //
+				"  \"stringList\": [\"foo\", \"bar\"]\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		EntityWithCollections entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getStringList()).containsExactly("foo", "bar");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single String into a Set property")
+	void shouldReadASingleStringIntoASetProperty() {
+
+		String json = "{\n" + //
+				"  \"stringSet\": \"foo\"\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		EntityWithCollections entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getStringSet()).containsExactly("foo");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a String array into a Set property")
+	void shouldReadAStringArrayIntoASetProperty() {
+
+		String json = "{\n" + //
+				"  \"stringSet\": [\n" + //
+				"    \"foo\",\n" + //
+				"    \"bar\"\n" + //
+				"  ]\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		EntityWithCollections entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getStringSet()).containsExactly("foo", "bar");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single object into a List property")
+	void shouldReadASingleObjectIntoAListProperty() {
+
+		String json = "{\n" + //
+				"  \"childrenList\": {\n" + //
+				"    \"name\": \"child\"\n" + //
+				"  }\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		EntityWithCollections entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenList()).hasSize(1);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child");
+	}
+
+	@Test // #2280
+	@DisplayName("should read an object array into a List property")
+	void shouldReadAnObjectArrayIntoAListProperty() {
+
+		String json = "        {\n" + //
+				"          \"childrenList\": [\n" + //
+				"            {\n" + //
+				"              \"name\": \"child1\"\n" + //
+				"            },\n" + //
+				"            {\n" + //
+				"              \"name\": \"child2\"\n" + //
+				"            }\n" + //
+				"          ]\n" + //
+				"        }\n"; //
+		Document source = Document.parse(json);
+
+		EntityWithCollections entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenList()).hasSize(2);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child1");
+		assertThat(entity.getChildrenList().get(1).getName()).isEqualTo("child2");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single object into a Set property")
+	void shouldReadASingleObjectIntoASetProperty() {
+
+		String json = "{\n" + //
+				"  \"childrenSet\": {\n" + //
+				"    \"name\": \"child\"\n" + //
+				"  }\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		EntityWithCollections entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenSet()).hasSize(1);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenSet().iterator().next().getName()).isEqualTo("child");
+	}
+
+	@Test // #2280
+	@DisplayName("should read an object array into a Set property")
+	void shouldReadAnObjectArrayIntoASetProperty() {
+
+		String json = "{\n" + //
+				"  \"childrenSet\": [\n" + //
+				"    {\n" + //
+				"      \"name\": \"child1\"\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"name\": \"child2\"\n" + //
+				"    }\n" + //
+				"  ]\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		EntityWithCollections entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
+
+		assertThat(entity.getChildrenSet()).hasSize(2);
+		// noinspection ConstantConditions
+		List<String> names = entity.getChildrenSet().stream().map(EntityWithCollections.Child::getName)
+				.collect(Collectors.toList());
+		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single String into a List property immutable")
+	void shouldReadASingleStringIntoAListPropertyImmutable() {
+
+		String json = "{\n" + //
+				"  \"stringList\": \"foo\"\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		ImmutableEntityWithCollections entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class,
+				source);
+
+		assertThat(entity.getStringList()).containsExactly("foo");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a String array into a List property immutable")
+	void shouldReadAStringArrayIntoAListPropertyImmutable() {
+
+		String json = "{\n" + //
+				"  \"stringList\": [\n" + //
+				"    \"foo\",\n" + //
+				"    \"bar\"\n" + //
+				"  ]\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		ImmutableEntityWithCollections entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class,
+				source);
+
+		assertThat(entity.getStringList()).containsExactly("foo", "bar");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single String into a Set property immutable")
+	void shouldReadASingleStringIntoASetPropertyImmutable() {
+
+		String json = "{\n" + //
+				"  \"stringSet\": \"foo\"\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		ImmutableEntityWithCollections entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class,
+				source);
+
+		assertThat(entity.getStringSet()).containsExactly("foo");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a String array into a Set property immutable")
+	void shouldReadAStringArrayIntoASetPropertyImmutable() {
+
+		String json = "{\n" + //
+				"  \"stringSet\": [\n" + //
+				"    \"foo\",\n" + //
+				"    \"bar\"\n" + //
+				"  ]\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		ImmutableEntityWithCollections entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class,
+				source);
+
+		assertThat(entity.getStringSet()).containsExactly("foo", "bar");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single object into a List property immutable")
+	void shouldReadASingleObjectIntoAListPropertyImmutable() {
+
+		String json = "{\n" + //
+				"  \"childrenList\": {\n" + //
+				"    \"name\": \"child\"\n" + //
+				"  }\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		ImmutableEntityWithCollections entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class,
+				source);
+
+		assertThat(entity.getChildrenList()).hasSize(1);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child");
+	}
+
+	@Test // #2280
+	@DisplayName("should read an object array into a List property immutable")
+	void shouldReadAnObjectArrayIntoAListPropertyImmutable() {
+
+		String json = "{\n" + //
+				"  \"childrenList\": [\n" + //
+				"    {\n" + //
+				"      \"name\": \"child1\"\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"name\": \"child2\"\n" + //
+				"    }\n" + //
+				"  ]\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		ImmutableEntityWithCollections entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class,
+				source);
+
+		assertThat(entity.getChildrenList()).hasSize(2);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child1");
+		assertThat(entity.getChildrenList().get(1).getName()).isEqualTo("child2");
+	}
+
+	@Test // #2280
+	@DisplayName("should read a single object into a Set property immutable")
+	void shouldReadASingleObjectIntoASetPropertyImmutable() {
+
+		String json = "{\n" + //
+				"  \"childrenSet\": {\n" + //
+				"    \"name\": \"child\"\n" + //
+				"  }\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		ImmutableEntityWithCollections entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class,
+				source);
+
+		assertThat(entity.getChildrenSet()).hasSize(1);
+		// noinspection ConstantConditions
+		assertThat(entity.getChildrenSet().iterator().next().getName()).isEqualTo("child");
+	}
+
+	@Test // #2280
+	@DisplayName("should read an object array into a Set property immutable")
+	void shouldReadAnObjectArrayIntoASetPropertyImmutable() {
+
+		String json = "{\n" + //
+				"  \"childrenSet\": [\n" + //
+				"    {\n" + //
+				"      \"name\": \"child1\"\n" + //
+				"    },\n" + //
+				"    {\n" + //
+				"      \"name\": \"child2\"\n" + //
+				"    }\n" + //
+				"  ]\n" + //
+				"}\n"; //
+		Document source = Document.parse(json);
+
+		ImmutableEntityWithCollections entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class,
+				source);
+
+		assertThat(entity.getChildrenSet()).hasSize(2);
+		// noinspection ConstantConditions
+		List<String> names = entity.getChildrenSet().stream().map(ImmutableEntityWithCollections.Child::getName)
+				.collect(Collectors.toList());
+		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
+	}
+
 	private Map<String, Object> writeToMap(Object source) {
 
 		Document sink = Document.create();
@@ -1678,34 +1992,46 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (o == null || getClass() != o.getClass())
+			}
+			if (o == null || getClass() != o.getClass()) {
 				return false;
+			}
 
 			Person person = (Person) o;
 
-			if (id != null ? !id.equals(person.id) : person.id != null)
+			if (id != null ? !id.equals(person.id) : person.id != null) {
 				return false;
-			if (name != null ? !name.equals(person.name) : person.name != null)
+			}
+			if (name != null ? !name.equals(person.name) : person.name != null) {
 				return false;
-			if (firstName != null ? !firstName.equals(person.firstName) : person.firstName != null)
+			}
+			if (firstName != null ? !firstName.equals(person.firstName) : person.firstName != null) {
 				return false;
-			if (lastName != null ? !lastName.equals(person.lastName) : person.lastName != null)
+			}
+			if (lastName != null ? !lastName.equals(person.lastName) : person.lastName != null) {
 				return false;
-			if (birthDate != null ? !birthDate.equals(person.birthDate) : person.birthDate != null)
+			}
+			if (birthDate != null ? !birthDate.equals(person.birthDate) : person.birthDate != null) {
 				return false;
-			if (gender != person.gender)
+			}
+			if (gender != person.gender) {
 				return false;
-			if (address != null ? !address.equals(person.address) : person.address != null)
+			}
+			if (address != null ? !address.equals(person.address) : person.address != null) {
 				return false;
-			if (coWorkers != null ? !coWorkers.equals(person.coWorkers) : person.coWorkers != null)
+			}
+			if (coWorkers != null ? !coWorkers.equals(person.coWorkers) : person.coWorkers != null) {
 				return false;
-			if (inventoryList != null ? !inventoryList.equals(person.inventoryList) : person.inventoryList != null)
+			}
+			if (inventoryList != null ? !inventoryList.equals(person.inventoryList) : person.inventoryList != null) {
 				return false;
+			}
 			if (shippingAddresses != null ? !shippingAddresses.equals(person.shippingAddresses)
-					: person.shippingAddresses != null)
+					: person.shippingAddresses != null) {
 				return false;
+			}
 			return inventoryMap != null ? inventoryMap.equals(person.inventoryMap) : person.inventoryMap == null;
 		}
 
@@ -1792,15 +2118,18 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (o == null || getClass() != o.getClass())
+			}
+			if (o == null || getClass() != o.getClass()) {
 				return false;
+			}
 
 			Gun gun = (Gun) o;
 
-			if (shotsPerMagazine != gun.shotsPerMagazine)
+			if (shotsPerMagazine != gun.shotsPerMagazine) {
 				return false;
+			}
 			return label.equals(gun.label);
 		}
 
@@ -1826,10 +2155,12 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (!(o instanceof Grenade))
+			}
+			if (!(o instanceof Grenade)) {
 				return false;
+			}
 
 			Grenade grenade = (Grenade) o;
 
@@ -1862,17 +2193,21 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (!(o instanceof Rifle))
+			}
+			if (!(o instanceof Rifle)) {
 				return false;
+			}
 
 			Rifle rifle = (Rifle) o;
 
-			if (Double.compare(rifle.weight, weight) != 0)
+			if (Double.compare(rifle.weight, weight) != 0) {
 				return false;
-			if (maxShotsPerMagazine != rifle.maxShotsPerMagazine)
+			}
+			if (maxShotsPerMagazine != rifle.maxShotsPerMagazine) {
 				return false;
+			}
 			return label.equals(rifle.label);
 		}
 
@@ -1903,10 +2238,12 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (!(o instanceof ShotGun))
+			}
+			if (!(o instanceof ShotGun)) {
 				return false;
+			}
 
 			ShotGun shotGun = (ShotGun) o;
 
@@ -1953,17 +2290,21 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (!(o instanceof Address))
+			}
+			if (!(o instanceof Address)) {
 				return false;
+			}
 
 			Address address = (Address) o;
 
-			if (location != null ? !location.equals(address.location) : address.location != null)
+			if (location != null ? !location.equals(address.location) : address.location != null) {
 				return false;
-			if (street != null ? !street.equals(address.street) : address.street != null)
+			}
+			if (street != null ? !street.equals(address.street) : address.street != null) {
 				return false;
+			}
 			return city != null ? city.equals(address.city) : address.city == null;
 		}
 
@@ -1990,10 +2331,12 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (this == o)
+			if (this == o) {
 				return true;
-			if (!(o instanceof Place))
+			}
+			if (!(o instanceof Place)) {
 				return false;
+			}
 
 			Place place = (Place) o;
 
@@ -2460,6 +2803,128 @@ public class MappingElasticsearchConverterUnitTests {
 		@Override
 		public Object read(Object value) {
 			return reverse(value);
+		}
+	}
+
+	private static class EntityWithCollections {
+		@Field(type = FieldType.Keyword)
+		@Nullable private List<String> stringList;
+
+		@Field(type = FieldType.Keyword)
+		@Nullable private Set<String> stringSet;
+
+		@Field(type = FieldType.Object)
+		@Nullable private List<Child> childrenList;
+
+		@Field(type = FieldType.Object)
+		@Nullable private Set<Child> childrenSet;
+
+		@Nullable
+		public List<String> getStringList() {
+			return stringList;
+		}
+
+		public void setStringList(@Nullable List<String> stringList) {
+			this.stringList = stringList;
+		}
+
+		@Nullable
+		public Set<String> getStringSet() {
+			return stringSet;
+		}
+
+		public void setStringSet(@Nullable Set<String> stringSet) {
+			this.stringSet = stringSet;
+		}
+
+		@Nullable
+		public List<Child> getChildrenList() {
+			return childrenList;
+		}
+
+		public void setChildrenList(@Nullable List<Child> childrenList) {
+			this.childrenList = childrenList;
+		}
+
+		@Nullable
+		public Set<Child> getChildrenSet() {
+			return childrenSet;
+		}
+
+		public void setChildrenSet(@Nullable Set<Child> childrenSet) {
+			this.childrenSet = childrenSet;
+		}
+
+		public static class Child {
+
+			@Field(type = FieldType.Keyword)
+			@Nullable private String name;
+
+			@Nullable
+			public String getName() {
+				return name;
+			}
+
+			public void setName(String name) {
+				this.name = name;
+			}
+		}
+	}
+
+	private static final class ImmutableEntityWithCollections {
+		@Field(type = FieldType.Keyword)
+		@Nullable private List<String> stringList;
+
+		@Field(type = FieldType.Keyword)
+		@Nullable private Set<String> stringSet;
+
+		@Field(type = FieldType.Object)
+		@Nullable private List<Child> childrenList;
+
+		@Field(type = FieldType.Object)
+		@Nullable private Set<Child> childrenSet;
+
+		public ImmutableEntityWithCollections(@Nullable List<String> stringList, @Nullable Set<String> stringSet,
+				@Nullable List<Child> childrenList, @Nullable Set<Child> childrenSet) {
+			this.stringList = stringList;
+			this.stringSet = stringSet;
+			this.childrenList = childrenList;
+			this.childrenSet = childrenSet;
+		}
+
+		@Nullable
+		public List<String> getStringList() {
+			return stringList;
+		}
+
+		@Nullable
+		public Set<String> getStringSet() {
+			return stringSet;
+		}
+
+		@Nullable
+		public List<Child> getChildrenList() {
+			return childrenList;
+		}
+
+		@Nullable
+		public Set<Child> getChildrenSet() {
+			return childrenSet;
+		}
+
+		public static class Child {
+
+			@Field(type = FieldType.Keyword)
+			@Nullable private String name;
+
+			public Child(@Nullable String name) {
+				this.name = name;
+			}
+
+			@Nullable
+			public String getName() {
+				return name;
+			}
 		}
 	}
 	// endregion
