@@ -21,6 +21,14 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -51,16 +59,7 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.PreferredConstructor;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
-import org.springframework.data.mapping.model.EntityInstantiator;
-import org.springframework.data.mapping.model.EntityInstantiators;
-import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
-import org.springframework.data.mapping.model.PropertyValueProvider;
-import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
-import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
+import org.springframework.data.mapping.model.*;
 import org.springframework.data.util.ClassTypeInformation;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.format.datetime.DateFormatterRegistrar;
@@ -196,7 +195,7 @@ public class MappingElasticsearchConverter
 	}
 
 	/**
-	 * Class to do the actual writing. The methods originally were in the MappingElasticsearchConverter class, but are
+	 * Class to do the actual reading. The methods originally were in the MappingElasticsearchConverter class, but are
 	 * refactored to allow for keeping state during the conversion of an object.
 	 */
 	private static class Reader extends Base {
@@ -215,10 +214,17 @@ public class MappingElasticsearchConverter
 		}
 
 		@SuppressWarnings("unchecked")
+		/**
+		 * Reads the given source into the given type.
+		 *
+		 * @param type they type to convert the given source to.
+		 * @param source the source to create an object of the given type from.
+		 * @return the object that was read
+		 */
 		<R> R read(Class<R> type, Document source) {
 
-			TypeInformation<R> typeHint = ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type));
-			R r = read(typeHint, source);
+			TypeInformation<R> typeInformation = ClassTypeInformation.from((Class<R>) ClassUtils.getUserClass(type));
+			R r = read(typeInformation, source);
 
 			if (r == null) {
 				throw new ConversionException("could not convert into object of class " + type);
@@ -229,11 +235,11 @@ public class MappingElasticsearchConverter
 
 		@Nullable
 		@SuppressWarnings("unchecked")
-		private <R> R read(TypeInformation<R> type, Map<String, Object> source) {
+		private <R> R read(TypeInformation<R> typeInformation, Map<String, Object> source) {
 
 			Assert.notNull(source, "Source must not be null!");
 
-			TypeInformation<? extends R> typeToUse = typeMapper.readType(source, type);
+			TypeInformation<? extends R> typeToUse = typeMapper.readType(source, typeInformation);
 			Class<? extends R> rawType = typeToUse.getType();
 
 			if (conversions.hasCustomReadTarget(source.getClass(), rawType)) {
@@ -251,8 +257,8 @@ public class MappingElasticsearchConverter
 			if (typeToUse.equals(ClassTypeInformation.OBJECT)) {
 				return (R) source;
 			}
-			// Retrieve persistent entity info
 
+			// Retrieve persistent entity info
 			ElasticsearchPersistentEntity<?> entity = mappingContext.getPersistentEntity(typeToUse);
 
 			if (entity == null) {
@@ -370,7 +376,6 @@ public class MappingElasticsearchConverter
 			}
 
 			return result;
-
 		}
 
 		private ParameterValueProvider<ElasticsearchPersistentProperty> getParameterProvider(
@@ -460,10 +465,42 @@ public class MappingElasticsearchConverter
 			} else if (value.getClass().isArray()) {
 				return (T) readCollectionOrArray(type, Arrays.asList((Object[]) value));
 			} else if (value instanceof Map) {
+
+				TypeInformation<?> collectionComponentType = getCollectionComponentType(type);
+				if (collectionComponentType != null) {
+					Object o = read(collectionComponentType, (Map<String, Object>) value);
+					return getCollectionWithSingleElement(type, collectionComponentType, o);
+				}
 				return (T) read(type, (Map<String, Object>) value);
 			} else {
+
+				TypeInformation<?> collectionComponentType = getCollectionComponentType(type);
+				if (collectionComponentType != null
+						&& collectionComponentType.isAssignableFrom(ClassTypeInformation.from(value.getClass()))) {
+					Object o = getPotentiallyConvertedSimpleRead(value, collectionComponentType);
+					return getCollectionWithSingleElement(type, collectionComponentType, o);
+				}
+
 				return (T) getPotentiallyConvertedSimpleRead(value, rawType);
 			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private static <T> T getCollectionWithSingleElement(TypeInformation<?> collectionType,
+				TypeInformation<?> componentType, Object element) {
+			Collection<Object> collection = CollectionFactory.createCollection(collectionType.getType(),
+					componentType.getType(), 1);
+			collection.add(element);
+			return (T) collection;
+		}
+
+		/**
+		 * @param type the type to check
+		 * @return true if type is a collectoin, null otherwise,
+		 */
+		@Nullable
+		TypeInformation<?> getCollectionComponentType(TypeInformation<?> type) {
+			return type.isCollectionLike() ? type.getComponentType() : null;
 		}
 
 		private Object propertyConverterRead(ElasticsearchPersistentProperty property, Object source) {
@@ -1131,17 +1168,18 @@ public class MappingElasticsearchConverter
 
 		Assert.notNull(query, "query must not be null");
 
-		if (domainClass != null) {
+		if (domainClass == null) {
+			return;
+		}
 
-			updateFieldsAndSourceFilter(query, domainClass);
+		updatePropertiesInFieldsAndSourceFilter(query, domainClass);
 
-			if (query instanceof CriteriaQuery) {
-				updateCriteriaQuery((CriteriaQuery) query, domainClass);
-			}
+		if (query instanceof CriteriaQuery) {
+			updatePropertiesInCriteriaQuery((CriteriaQuery) query, domainClass);
 		}
 	}
 
-	private void updateFieldsAndSourceFilter(Query query, Class<?> domainClass) {
+	private void updatePropertiesInFieldsAndSourceFilter(Query query, Class<?> domainClass) {
 
 		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
 
@@ -1174,14 +1212,22 @@ public class MappingElasticsearchConverter
 		}
 	}
 
-	private List<String> updateFieldNames(List<String> fields, ElasticsearchPersistentEntity<?> persistentEntity) {
-		return fields.stream().map(fieldName -> {
+	/**
+	 * relaces the fieldName with the property name of a property of the persistentEntity with the corresponding
+	 * fieldname. If no such property exists, the original fieldName is kept.
+	 *
+	 * @param fieldNames list of fieldnames
+	 * @param persistentEntity the persistent entity to check
+	 * @return an updated list of field names
+	 */
+	private List<String> updateFieldNames(List<String> fieldNames, ElasticsearchPersistentEntity<?> persistentEntity) {
+		return fieldNames.stream().map(fieldName -> {
 			ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(fieldName);
 			return persistentProperty != null ? persistentProperty.getFieldName() : fieldName;
 		}).collect(Collectors.toList());
 	}
 
-	private void updateCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
+	private void updatePropertiesInCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
 
 		Assert.notNull(criteriaQuery, "criteriaQuery must not be null");
 		Assert.notNull(domainClass, "domainClass must not be null");
@@ -1190,17 +1236,17 @@ public class MappingElasticsearchConverter
 
 		if (persistentEntity != null) {
 			for (Criteria chainedCriteria : criteriaQuery.getCriteria().getCriteriaChain()) {
-				updateCriteria(chainedCriteria, persistentEntity);
+				updatePropertiesInCriteria(chainedCriteria, persistentEntity);
 			}
 			for (Criteria subCriteria : criteriaQuery.getCriteria().getSubCriteria()) {
 				for (Criteria chainedCriteria : subCriteria.getCriteriaChain()) {
-					updateCriteria(chainedCriteria, persistentEntity);
+					updatePropertiesInCriteria(chainedCriteria, persistentEntity);
 				}
 			}
 		}
 	}
 
-	private void updateCriteria(Criteria criteria, ElasticsearchPersistentEntity<?> persistentEntity) {
+	private void updatePropertiesInCriteria(Criteria criteria, ElasticsearchPersistentEntity<?> persistentEntity) {
 
 		Field field = criteria.getField();
 
