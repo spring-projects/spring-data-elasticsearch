@@ -613,7 +613,7 @@ class RequestFactory {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			String id = StringUtils.isEmpty(query.getId()) ? getPersistentEntityId(queryObject) : query.getId();
+			String id = StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject);
 			// If we have a query id and a document id, do not ask ES to generate one.
 			if (id != null) {
 				indexRequest = new IndexRequest(indexName).id(id);
@@ -1027,7 +1027,14 @@ class RequestFactory {
 			if (params == null) {
 				params = new HashMap<>();
 			}
-			Script script = new Script(getScriptType(query.getScriptType()), query.getLang(), query.getScript(), params);
+			org.elasticsearch.script.ScriptType scriptType = getScriptType(query.getScriptType());
+			String lang = query.getLang();
+
+			if (scriptType == org.elasticsearch.script.ScriptType.INLINE && lang == null) {
+				lang = "painless";
+			}
+
+			Script script = new Script(scriptType, lang, query.getScript(), params);
 			updateRequest.script(script);
 		}
 
