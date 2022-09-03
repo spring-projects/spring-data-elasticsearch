@@ -140,6 +140,18 @@ class RequestFactoryTests {
 		assertThat(request.upsertRequest()).isNotNull();
 	}
 
+	@Test // #2287
+	@DisplayName("should create update query when script language is not set")
+	void shouldCreateUpdateQueryWhenScriptTypeIsSetToNull() {
+
+		UpdateQuery updateQuery = UpdateQuery.builder("1") //
+				.withScript("script").build();
+
+		UpdateRequest request = requestFactory.updateRequest(updateQuery, IndexCoordinates.of("index"));
+
+		assertThat(request).isNotNull();
+	}
+
 	@Test // DATAES-693
 	public void shouldReturnSourceWhenRequested() {
 		// given
