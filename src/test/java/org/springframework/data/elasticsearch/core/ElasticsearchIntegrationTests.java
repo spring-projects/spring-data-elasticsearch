@@ -2785,6 +2785,7 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(settings).doesNotContainKey("index.max_result_window");
 	}
 
+	@DisabledIf(value = "newElasticsearchClient", disabledReason = "ES 7.17.6 returns a null storage type that the new client cannot handle")
 	@Test // DATAES-709
 	public void shouldIncludeDefaultsOnGetIndexSettings() {
 
