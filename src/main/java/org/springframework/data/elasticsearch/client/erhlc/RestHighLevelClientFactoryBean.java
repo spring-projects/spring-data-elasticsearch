@@ -31,16 +31,17 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * RestClientFactoryBean
+ * RestHighLevelClientFactoryBean
  *
  * @author Don Wellington
  * @author Peter-Josef Meisch
  * @deprecated since 5.0
  */
 @Deprecated
-public class RestClientFactoryBean implements FactoryBean<RestHighLevelClient>, InitializingBean, DisposableBean {
+public class RestHighLevelClientFactoryBean
+		implements FactoryBean<RestHighLevelClient>, InitializingBean, DisposableBean {
 
-	private static final Log LOGGER = LogFactory.getLog(RestClientFactoryBean.class);
+	private static final Log LOGGER = LogFactory.getLog(RestHighLevelClientFactoryBean.class);
 
 	private @Nullable RestHighLevelClient client;
 	private String hosts = "http://localhost:9200";

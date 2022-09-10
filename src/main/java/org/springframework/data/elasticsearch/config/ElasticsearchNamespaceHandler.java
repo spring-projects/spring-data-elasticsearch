@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.config;
 
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchClientBeanDefinitionParser;
 import org.springframework.data.elasticsearch.repository.config.ElasticsearchRepositoryConfigExtension;
 import org.springframework.data.repository.config.RepositoryBeanDefinitionParser;
 import org.springframework.data.repository.config.RepositoryConfigurationExtension;
@@ -35,6 +36,6 @@ public class ElasticsearchNamespaceHandler extends NamespaceHandlerSupport {
 		RepositoryBeanDefinitionParser parser = new RepositoryBeanDefinitionParser(extension);
 
 		registerBeanDefinitionParser("repositories", parser);
-		registerBeanDefinitionParser("rest-client", new RestClientBeanDefinitionParser());
+		registerBeanDefinitionParser("elasticsearch-client", new ElasticsearchClientBeanDefinitionParser());
 	}
 }
