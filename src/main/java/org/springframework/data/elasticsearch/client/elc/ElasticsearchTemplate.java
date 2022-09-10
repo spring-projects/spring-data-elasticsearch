@@ -80,6 +80,17 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	private final ElasticsearchExceptionTranslator exceptionTranslator;
 
 	// region _initialization
+	public ElasticsearchTemplate(ElasticsearchClient client) {
+
+		Assert.notNull(client, "client must not be null");
+
+		this.client = client;
+		this.jsonpMapper = client._transport().jsonpMapper();
+		requestConverter = new RequestConverter(elasticsearchConverter, jsonpMapper);
+		responseConverter = new ResponseConverter(jsonpMapper);
+		exceptionTranslator = new ElasticsearchExceptionTranslator(jsonpMapper);
+	}
+
 	public ElasticsearchTemplate(ElasticsearchClient client, ElasticsearchConverter elasticsearchConverter) {
 		super(elasticsearchConverter);
 
