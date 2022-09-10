@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.config;
+package org.springframework.data.elasticsearch.client.erhlc;
 
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.AbstractBeanDefinitionParser;
 import org.springframework.beans.factory.xml.ParserContext;
-import org.springframework.data.elasticsearch.client.erhlc.RestClientFactoryBean;
 import org.w3c.dom.Element;
 
 /**
  * @author Don Wellington
+ * @deprecated since 5.0
  */
-public class RestClientBeanDefinitionParser extends AbstractBeanDefinitionParser {
+@Deprecated
+public class RestHighLevelClientBeanDefinitionParser extends AbstractBeanDefinitionParser {
 
 	@Override
 	protected AbstractBeanDefinition parseInternal(Element element, ParserContext parserContext) {
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(RestClientFactoryBean.class);
+		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(RestHighLevelClientFactoryBean.class);
 		setConfigurations(element, builder);
 		return getSourcedBeanDefinition(builder, element, parserContext);
 	}

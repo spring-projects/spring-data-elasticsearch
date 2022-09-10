@@ -24,7 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.client.erhlc.RestClientFactoryBean;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchClientFactoryBean;
 import org.springframework.data.elasticsearch.junit.jupiter.Tags;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.test.context.ContextConfiguration;
@@ -50,10 +50,11 @@ public class ElasticsearchNamespaceHandlerTests {
 	}
 
 	@Test
-	public void shouldCreateRestClient() {
+	public void shouldCreateElasticsearchClient() {
 
-		assertThat(context.getBean(RestClientFactoryBean.class)).isNotNull();
-		assertThat(context.getBean(RestClientFactoryBean.class)).isInstanceOf(RestClientFactoryBean.class);
+		assertThat(context.getBean(ElasticsearchClientFactoryBean.class)).isNotNull();
+		assertThat(context.getBean(ElasticsearchClientFactoryBean.class))
+				.isInstanceOf(ElasticsearchClientFactoryBean.class);
 	}
 
 	@Document(indexName = "test-index-config-namespace", createIndex = false)
