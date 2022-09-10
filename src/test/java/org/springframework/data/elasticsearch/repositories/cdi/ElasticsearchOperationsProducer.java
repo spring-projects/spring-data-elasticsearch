@@ -17,15 +17,15 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 
 import static org.springframework.util.StringUtils.*;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import jakarta.annotation.PreDestroy;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Produces;
 
-import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.erhlc.RestClients;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.client.erhlc.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.junit.jupiter.ClusterConnection;
 import org.springframework.data.elasticsearch.junit.jupiter.ClusterConnectionInfo;
 
@@ -36,17 +36,16 @@ import org.springframework.data.elasticsearch.junit.jupiter.ClusterConnectionInf
 @ApplicationScoped
 class ElasticsearchOperationsProducer {
 
-	// todo #1973 switch to use the new client
 	@Produces
-	public ElasticsearchOperations createElasticsearchTemplate(RestHighLevelClient restHighLevelClient) {
-		return new ElasticsearchRestTemplate(restHighLevelClient);
+	public ElasticsearchOperations createElasticsearchTemplate(ElasticsearchClient elasticsearchClient) {
+		return new ElasticsearchTemplate(elasticsearchClient);
 	}
 
 	@Produces
 	@OtherQualifier
 	@PersonDB
-	public ElasticsearchOperations createQualifiedElasticsearchTemplate(RestHighLevelClient restHighLevelClient) {
-		return new ElasticsearchRestTemplate(restHighLevelClient);
+	public ElasticsearchOperations createQualifiedElasticsearchTemplate(ElasticsearchClient elasticsearchClient) {
+		return new ElasticsearchTemplate(elasticsearchClient);
 	}
 
 	@PreDestroy
@@ -55,7 +54,7 @@ class ElasticsearchOperationsProducer {
 	}
 
 	@Produces
-	public RestHighLevelClient elasticsearchClient() {
+	public ElasticsearchClient elasticsearchClient() {
 		// we rely on the tests being run with the SpringDataElasticsearchExtension class that sets up a containerized ES.
 		ClusterConnectionInfo connectionInfo = ClusterConnection.clusterConnectionInfo();
 
@@ -72,6 +71,6 @@ class ElasticsearchOperationsProducer {
 		ClientConfiguration clientConfiguration = configurationBuilder //
 				.build();
 
-		return RestClients.create(clientConfiguration).rest();
+		return ElasticsearchClients.createImperative(clientConfiguration);
 	}
 }
