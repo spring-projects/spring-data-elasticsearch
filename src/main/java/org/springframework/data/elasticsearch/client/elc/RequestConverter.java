@@ -1252,9 +1252,15 @@ class RequestConverter {
 
 			Map<String, RuntimeField> runtimeMappings = new HashMap<>();
 			query.getRuntimeFields()
-					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(), RuntimeField.of(rt -> rt //
-							.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType())) //
-							.script(s -> s.inline(is -> is.source(runtimeField.getScript()))))));
+					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(), RuntimeField.of(runtimeFieldBuilder -> {
+						runtimeFieldBuilder.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
+						String script = runtimeField.getScript();
+
+						if (script != null) {
+							runtimeFieldBuilder.script(s -> s.inline(is -> is.source(script)));
+						}
+						return runtimeFieldBuilder;
+					})));
 			builder.runtimeMappings(runtimeMappings);
 		}
 
