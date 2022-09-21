@@ -57,18 +57,18 @@ The following classes have been converted to `Record`, you might need to adjust 
 
 === New HttpHeaders class
 
-Until version 4.4 the client configuration used the `HttpHeaders` class from the `org.springframework:spring-web` 
+Until version 4.4 the client configuration used the `HttpHeaders` class from the `org.springframework:spring-web`
 project.
 This introduces a dependency on that artifact.
 Users that do not use spring-web then face an error as this class cannot be found.
 
 In version 5.0 we introduce our own `HttpHeaders` to configure the clients.
 
-So if you are using headers in the client configuration, you need to replace `org.springframework.http.HttpHeaders` 
-with `org.springframework.data.elasticsearch.support.HttpHeaders`. 
+So if you are using headers in the client configuration, you need to replace `org.springframework.http.HttpHeaders`
+with `org.springframework.data.elasticsearch.support.HttpHeaders`.
 
 Hint: You can pass a `org.springframework.http
-.HttpHeaders` to the `addAll()` method of `org.springframework.data.elasticsearch.support.HttpHeaders`. 
+.HttpHeaders` to the `addAll()` method of `org.springframework.data.elasticsearch.support.HttpHeaders`.
 
 [[elasticsearch-migration-guide-4.4-5.0.new-clients]]
 == New Elasticsearch client
@@ -151,4 +151,4 @@ The old deprecated `RestHighLevelClient` can still be used, but you will need to
 ----
 ====
 
-Make sure to specify the version 7.17.5 explicitly, otherwise maven will resolve to 8.3.3, and this does not exist.
+Make sure to specify the version 7.17.6 explicitly, otherwise maven will resolve to 8.4.2, and this does not exist.

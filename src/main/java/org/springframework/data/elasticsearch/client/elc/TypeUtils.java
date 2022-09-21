@@ -319,4 +319,15 @@ final class TypeUtils {
 		}
 	}
 
+	/**
+	 * Converts a Long to a Float, returning null if the input is null.
+	 *
+	 * @param value the long value
+	 * @return a FLoat with the given value
+	 * @since 5.0
+	 */
+	@Nullable
+	static Float toFloat(@Nullable Long value) {
+		return value != null ? Float.valueOf(value) : null;
+	}
 }

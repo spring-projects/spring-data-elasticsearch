@@ -808,7 +808,7 @@ class RequestConverter {
 				.maxDocs(reindexRequest.getMaxDocs()).waitForCompletion(waitForCompletion) //
 				.refresh(reindexRequest.getRefresh()) //
 				.requireAlias(reindexRequest.getRequireAlias()) //
-				.requestsPerSecond(reindexRequest.getRequestsPerSecond()) //
+				.requestsPerSecond(toFloat(reindexRequest.getRequestsPerSecond())) //
 				.slices(slices(reindexRequest.getSlices()));
 
 		return builder.build();
@@ -948,8 +948,7 @@ class RequestConverter {
 					.script(getScript(updateQuery.getScriptData())) //
 					.maxDocs(updateQuery.getMaxDocs() != null ? Long.valueOf(updateQuery.getMaxDocs()) : null) //
 					.pipeline(updateQuery.getPipeline()) //
-					.requestsPerSecond(
-							updateQuery.getRequestsPerSecond() != null ? updateQuery.getRequestsPerSecond().longValue() : null) //
+					.requestsPerSecond(updateQuery.getRequestsPerSecond()) //
 					.slices(slices(updateQuery.getSlices() != null ? Long.valueOf(updateQuery.getSlices()) : null));
 
 			if (updateQuery.getAbortOnVersionConflict() != null) {
@@ -1107,7 +1106,7 @@ class RequestConverter {
 							query.getRescorerQueries().forEach(rescorerQuery -> bb.rescore(getRescore(rescorerQuery)));
 
 							if (!query.getRuntimeFields().isEmpty()) {
-								Map<String, List<RuntimeField>> runtimeMappings = new HashMap<>();
+								Map<String, RuntimeField> runtimeMappings = new HashMap<>();
 								query.getRuntimeFields().forEach(runtimeField -> {
 									RuntimeField esRuntimeField = RuntimeField.of(rt -> {
 										RuntimeField.Builder builder = rt
@@ -1119,7 +1118,7 @@ class RequestConverter {
 										}
 										return builder;
 									});
-									runtimeMappings.put(runtimeField.getName(), Collections.singletonList(esRuntimeField));
+									runtimeMappings.put(runtimeField.getName(), esRuntimeField);
 								});
 								bb.runtimeMappings(runtimeMappings);
 							}
@@ -1251,12 +1250,11 @@ class RequestConverter {
 
 		if (!query.getRuntimeFields().isEmpty()) {
 
-			Map<String, List<RuntimeField>> runtimeMappings = new HashMap<>();
+			Map<String, RuntimeField> runtimeMappings = new HashMap<>();
 			query.getRuntimeFields()
-					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(),
-							Collections.singletonList(RuntimeField.of(rt -> rt //
-									.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType())) //
-									.script(s -> s.inline(is -> is.source(runtimeField.getScript())))))));
+					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(), RuntimeField.of(rt -> rt //
+							.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType())) //
+							.script(s -> s.inline(is -> is.source(runtimeField.getScript()))))));
 			builder.runtimeMappings(runtimeMappings);
 		}
 
