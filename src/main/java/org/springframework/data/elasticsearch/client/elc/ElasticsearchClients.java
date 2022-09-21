@@ -29,6 +29,7 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -250,23 +251,26 @@ public final class ElasticsearchClients {
 		TransportOptions.Builder transportOptionsBuilder = transportOptions != null ? transportOptions.toBuilder()
 				: new RestClientOptions(RequestOptions.DEFAULT).toBuilder();
 
-		// need to add the compatibility header, this is only done automatically when not passing in custom options.
-		// code copied from RestClientTransport as it is not available outside the package
-		ContentType jsonContentType = null;
-		if (Version.VERSION == null) {
-			jsonContentType = ContentType.APPLICATION_JSON;
-		} else {
-			jsonContentType = ContentType.create("application/vnd.elasticsearch+json",
-					new BasicNameValuePair("compatible-with", String.valueOf(Version.VERSION.major())));
-		}
-		transportOptionsBuilder.addHeader("Accept", jsonContentType.toString());
+		ContentType jsonContentType = Version.VERSION == null ? ContentType.APPLICATION_JSON
+				: ContentType.create("application/vnd.elasticsearch+json",
+						new BasicNameValuePair("compatible-with", String.valueOf(Version.VERSION.major())));
+
+		Consumer<String> setHeaderIfNotPresent = header -> {
+			if (transportOptionsBuilder.build().headers().stream() //
+					.noneMatch((h) -> h.getKey().equalsIgnoreCase(header))) {
+				// need to add the compatibility header, this is only done automatically when not passing in custom options.
+				// code copied from RestClientTransport as it is not available outside the package
+				transportOptionsBuilder.addHeader(header, jsonContentType.toString());
+			}
+		};
+
+		setHeaderIfNotPresent.accept("Content-Type");
+		setHeaderIfNotPresent.accept("Accept");
 
 		TransportOptions transportOptionsWithHeader = transportOptionsBuilder
 				.addHeader(X_SPRING_DATA_ELASTICSEARCH_CLIENT, clientType).build();
 
-		ElasticsearchTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper(),
-				transportOptionsWithHeader);
-		return transport;
+		return new RestClientTransport(restClient, new JacksonJsonpMapper(), transportOptionsWithHeader);
 	}
 
 	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
@@ -333,7 +337,7 @@ public final class ElasticsearchClients {
 							+ ((header.getName().equals("Authorization")) ? ": *****" : ": " + header.getValue()))
 					.collect(Collectors.joining(", ", "[", "]"));
 
-			// no way of logging the body, in this callback, it is not read yset, later there is no callback possibility in
+			// no way of logging the body, in this callback, it is not read yet, later there is no callback possibility in
 			// RestClient or RestClientTransport
 			ClientLogger.logRawResponse(logId, response.getStatusLine().getStatusCode(), headers);
 		}

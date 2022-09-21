@@ -39,7 +39,6 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -108,7 +107,7 @@ public class DevTests {
 
 		client.search(sr -> sr //
 				.index(index) //
-				.runtimeMappings("priceWithTax", Collections.singletonList(runtimeField)), //
+				.runtimeMappings("priceWithTax", runtimeField), //
 				Person.class); //
 	}
 

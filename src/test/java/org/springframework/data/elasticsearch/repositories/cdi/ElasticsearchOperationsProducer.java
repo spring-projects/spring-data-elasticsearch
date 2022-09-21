@@ -68,6 +68,12 @@ class ElasticsearchOperationsProducer {
 			configurationBuilder.withBasicAuth(user, password);
 		}
 
+		String proxy = System.getenv("DATAES_ELASTICSEARCH_PROXY");
+
+		if (hasText(proxy)) {
+			configurationBuilder.withProxy(proxy);
+		}
+
 		ClientConfiguration clientConfiguration = configurationBuilder //
 				.build();
 
