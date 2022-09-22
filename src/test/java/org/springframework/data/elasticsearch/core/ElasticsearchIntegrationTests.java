@@ -112,6 +112,7 @@ import org.springframework.lang.Nullable;
  * @author Farid Faoudi
  * @author Peer Mueller
  * @author Sijia Liu
+ * @author Haibo Liu
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests {
@@ -185,6 +186,20 @@ public abstract class ElasticsearchIntegrationTests {
 			String fieldName, String script, Map<String, java.lang.Object> params);
 
 	protected abstract Query getQueryWithRescorer();
+
+	@Test
+	public void shouldThrowDataAccessExceptionIfDocumentDoesNotExistWhileDoingPartialUpdateByEntity() {
+
+		// given
+		String documentId = nextIdAsString();
+		String messageBeforeUpdate = "some test message";
+
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(messageBeforeUpdate)
+				.version(System.currentTimeMillis()).build();
+
+		assertThatThrownBy(() -> operations.update(sampleEntity))
+				.isInstanceOf(DataAccessException.class);
+	}
 
 	@Test
 	public void shouldThrowDataAccessExceptionIfDocumentDoesNotExistWhileDoingPartialUpdate() {
@@ -1503,6 +1518,33 @@ public abstract class ElasticsearchIntegrationTests {
 
 		// then
 		assertThat(indexOperations.exists()).isFalse();
+	}
+
+	@Test
+	public void shouldDoPartialUpdateBySuppliedEntityForExistingDocument() {
+
+		// given
+		String documentId = nextIdAsString();
+		String messageBeforeUpdate = "some test message";
+		String messageAfterUpdate = "test message";
+
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(messageBeforeUpdate)
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+
+		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
+
+		// modify the entity
+		sampleEntity.setMessage(messageAfterUpdate);
+
+		// when
+		operations.update(sampleEntity);
+
+		// then
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class,
+				IndexCoordinates.of(indexNameProvider.indexName()));
+		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
 	@Test
