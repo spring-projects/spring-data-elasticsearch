@@ -36,9 +36,4 @@ public class IndexOperationsELCIntegrationTests extends IndexOperationsIntegrati
 			return new IndexNameProvider("indexoperations");
 		}
 	}
-
-	@Override
-	public boolean newElasticsearchClient() {
-		return true;
-	}
 }

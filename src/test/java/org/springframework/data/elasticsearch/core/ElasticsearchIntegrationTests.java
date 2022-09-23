@@ -48,7 +48,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -60,7 +59,6 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -116,7 +114,7 @@ import org.springframework.lang.Nullable;
  * @author Sijia Liu
  */
 @SpringIntegrationTest
-public abstract class ElasticsearchIntegrationTests implements NewElasticsearchClientDevelopment {
+public abstract class ElasticsearchIntegrationTests {
 
 	static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
 
@@ -2782,7 +2780,6 @@ public abstract class ElasticsearchIntegrationTests implements NewElasticsearchC
 		assertThat(settings).doesNotContainKey("index.max_result_window");
 	}
 
-	@DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2165, ES issue 286")
 	@Test // DATAES-709
 	public void shouldIncludeDefaultsOnGetIndexSettings() {
 

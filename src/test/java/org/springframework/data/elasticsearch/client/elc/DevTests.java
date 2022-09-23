@@ -19,9 +19,6 @@ import static org.assertj.core.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.Script;
-import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
-import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
@@ -30,6 +27,8 @@ import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
+import co.elastic.clients.elasticsearch.indices.GetIndicesSettingsRequest;
+import co.elastic.clients.elasticsearch.indices.GetIndicesSettingsResponse;
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
@@ -85,30 +84,12 @@ public class DevTests {
 	void someTest() throws IOException {
 
 		ElasticsearchClient client = imperativeElasticsearchClient;
+		ElasticsearchIndicesClient indicesClient = client.indices();
 
-		String index = "testindex";
+		indicesClient.create(b -> b.index("testindex"));
 
-		var p = new Product("p1", 42.0);
-
-		client.index(ir -> ir //
-				.index(index)//
-				.document(p));
-
-		client.indices().flush(f -> f.index(index));
-
-		RuntimeField runtimeField = RuntimeField.of(rf -> rf //
-				.type(RuntimeFieldType.Double) //
-				.script(Script.of(s -> s //
-						.inline(i -> i. //
-								source("emit(doc['price'].value * 1.19)") //
-						) //
-				)) //
-		); //
-
-		client.search(sr -> sr //
-				.index(index) //
-				.runtimeMappings("priceWithTax", runtimeField), //
-				Person.class); //
+		GetIndicesSettingsResponse getIndicesSettingsResponse = indicesClient
+				.getSettings(GetIndicesSettingsRequest.of(b -> b.index("testindex").includeDefaults(true)));
 	}
 
 	static class ReactiveClient {
@@ -371,7 +352,7 @@ public class DevTests {
 
 	private ClientConfiguration clientConfiguration() {
 		return ClientConfiguration.builder() //
-				.connectedTo("thranduil.local.:9200")//
+				.connectedTo("localhost:9200")//
 				.withBasicAuth("elastic", "hcraescitsale").withProxy("localhost:8080") //
 				.withHeaders(() -> {
 					HttpHeaders headers = new HttpHeaders();

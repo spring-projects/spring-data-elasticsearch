@@ -58,11 +58,6 @@ public class ReactiveElasticsearchELCIntegrationTests extends ReactiveElasticsea
 	}
 
 	@Override
-	public boolean newElasticsearchClient() {
-		return true;
-	}
-
-	@Override
 	protected Query getTermsAggsQuery(String aggsName, String aggsField) {
 		return ELCQueries.getTermsAggsQuery(aggsName, aggsField);
 	}
