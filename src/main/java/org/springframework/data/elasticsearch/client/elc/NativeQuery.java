@@ -20,6 +20,7 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 import co.elastic.clients.elasticsearch.core.search.Suggester;
+import co.elastic.clients.json.JsonData;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -49,6 +50,8 @@ public class NativeQuery extends BaseQuery {
 	private List<ScriptedField> scriptedFields = Collections.emptyList();
 	private List<SortOptions> sortOptions = Collections.emptyList();
 
+	private Map<String, JsonData> searchExtensions = Collections.emptyMap();
+
 	public NativeQuery(NativeQueryBuilder builder) {
 		super(builder);
 		this.query = builder.getQuery();
@@ -58,6 +61,7 @@ public class NativeQuery extends BaseQuery {
 		this.fieldCollapse = builder.getFieldCollapse();
 		this.scriptedFields = builder.getScriptedFields();
 		this.sortOptions = builder.getSortOptions();
+		this.searchExtensions = builder.getSearchExtensions();
 	}
 
 	public NativeQuery(@Nullable Query query) {
@@ -98,5 +102,9 @@ public class NativeQuery extends BaseQuery {
 
 	public List<SortOptions> getSortOptions() {
 		return sortOptions;
+	}
+
+	public Map<String, JsonData> getSearchExtensions() {
+		return searchExtensions;
 	}
 }

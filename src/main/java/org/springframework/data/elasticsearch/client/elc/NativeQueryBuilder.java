@@ -20,11 +20,11 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 import co.elastic.clients.elasticsearch.core.search.Suggester;
+import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -49,9 +49,9 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	@Nullable private FieldCollapse fieldCollapse;
 	private final List<ScriptedField> scriptedFields = new ArrayList<>();
 	private List<SortOptions> sortOptions = new ArrayList<>();
+	private Map<String, JsonData> searchExtensions = new LinkedHashMap<>();
 
-	public NativeQueryBuilder() {
-	}
+	public NativeQueryBuilder() {}
 
 	@Nullable
 	public Query getQuery() {
@@ -83,6 +83,10 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 
 	public List<SortOptions> getSortOptions() {
 		return sortOptions;
+	}
+
+	public Map<String, JsonData> getSearchExtensions() {
+		return this.searchExtensions;
 	}
 
 	public NativeQueryBuilder withQuery(Query query) {
@@ -164,6 +168,23 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		Assert.notNull(fn, "fn must not be null");
 		withSort(fn.apply(new SortOptions.Builder()).build());
 
+		return this;
+	}
+
+	public NativeQueryBuilder withSearchExtension(String key, JsonData value) {
+
+		Assert.notNull(key, "key must not be null");
+		Assert.notNull(value, "value must not be null");
+
+		searchExtensions.put(key, value);
+		return this;
+	}
+
+	public NativeQueryBuilder withSearchExtensions(Map<String, JsonData> searchExtensions) {
+
+		Assert.notNull(searchExtensions, "searchExtensions must not be null");
+
+		searchExtensions.putAll(searchExtensions);
 		return this;
 	}
 

@@ -1398,7 +1398,9 @@ class RequestConverter {
 			builder.aggregations(query.getAggregations());
 		}
 
-		// todo #2150 searchExt, currently not supported by the new client
+		if (!isEmpty(query.getSearchExtensions())) {
+			builder.ext(query.getSearchExtensions());
+		}
 	}
 
 	@SuppressWarnings("DuplicatedCode")
@@ -1416,7 +1418,9 @@ class RequestConverter {
 			builder.aggregations(query.getAggregations());
 		}
 
-		// todo #2150 searchExt, currently not supported by the new client
+		if (!isEmpty(query.getSearchExtensions())) {
+			builder.ext(query.getSearchExtensions());
+		}
 	}
 
 	@Nullable
