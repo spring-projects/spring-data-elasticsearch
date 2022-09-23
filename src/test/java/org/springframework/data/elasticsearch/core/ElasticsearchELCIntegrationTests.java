@@ -92,11 +92,6 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 	}
 
 	@Override
-	public boolean newElasticsearchClient() {
-		return true;
-	}
-
-	@Override
 	protected Query queryWithIds(String... ids) {
 		return ELCQueries.queryWithIds(ids);
 	}

@@ -402,7 +402,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		settingsParameter.shards = 1;
 		settingsParameter.replicas = 1;
 		settingsParameter.refreshIntervall = "1s";
-		settingsParameter.indexStoreType = "fs";
 
 		if (settingAnnotation != null) {
 			processSettingAnnotation(settingAnnotation, settingsParameter);
@@ -516,7 +515,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 				index.append("refresh_interval", refreshIntervall);
 			}
 
-			if (indexStoreType != null) {
+			if (indexStoreType != null && !"fs".equals(indexStoreType)) {
 				index.append("store", new Settings().append("type", indexStoreType));
 			}
 
