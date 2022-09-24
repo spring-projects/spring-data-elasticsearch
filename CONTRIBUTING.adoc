@@ -8,4 +8,4 @@ In order to run the tests locally with `./mvnw test` you need to have docker run
 
 == Class names of the test classes
 
-Tset classes that do depend on the client have either `ERHLC` (when using the deprecated Elasticsearch  `RestHighLevelClient`) or `ELC` (the new `ElasticsearchClient`) in their name.
+Test classes that do depend on the client have either `ERHLC` (when using the deprecated Elasticsearch  `RestHighLevelClient`) or `ELC` (the new `ElasticsearchClient`) in their name.
