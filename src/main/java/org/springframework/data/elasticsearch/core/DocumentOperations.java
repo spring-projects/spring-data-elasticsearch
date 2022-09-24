@@ -37,7 +37,6 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Farid Faoudi
  * @author Sijia Liu
- * @author Haibo Liu
  * @since 4.0
  */
 public interface DocumentOperations {
@@ -307,15 +306,6 @@ public interface DocumentOperations {
 	 * @return response with detailed information
 	 */
 	ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index);
-
-	/**
-	 * Partially update a document by the given entity.
-	 *
-	 * @param entity the entity to update partially
-	 * @return the update response
-	 * @param <T> the entity type
-	 */
-	<T> UpdateResponse update(T entity);
 
 	/**
 	 * Partial update of the document.
