@@ -464,17 +464,19 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	@Override
 	public <T> UpdateResponse update(T entity) {
-		return update(this.buildUpdateQueryByEntity(entity), this.getIndexCoordinatesFor(entity.getClass()));
+		return update(buildUpdateQueryByEntity(entity), getIndexCoordinatesFor(entity.getClass()));
 	}
 
 	protected <T> UpdateQuery buildUpdateQueryByEntity(T entity) {
-		String id = this.getEntityId(entity);
+		Assert.notNull(entity, "entity must not be null");
+
+		String id = getEntityId(entity);
 		Assert.notNull(entity, "entity must have an id that is notnull");
 
 		UpdateQuery.Builder updateQueryBuilder = UpdateQuery.builder(id)
 				.withDocument(elasticsearchConverter.mapObject(entity));
 
-		String routing = this.getEntityRouting(entity);
+		String routing = getEntityRouting(entity);
 		if (Objects.nonNull(routing)) {
 			updateQueryBuilder.withRouting(routing);
 		}
@@ -521,7 +523,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Nullable
-	public String getEntityId(Object entity) {
+	private String getEntityId(Object entity) {
 
 		Object id = entityOperations.forEntity(entity, elasticsearchConverter.getConversionService(), routingResolver)
 				.getId();

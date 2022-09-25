@@ -187,7 +187,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 	protected abstract Query getQueryWithRescorer();
 
-	@Test
+	@Test // #2304
 	public void shouldThrowDataAccessExceptionIfDocumentDoesNotExistWhileDoingPartialUpdateByEntity() {
 
 		// given
@@ -1520,30 +1520,29 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThat(indexOperations.exists()).isFalse();
 	}
 
-	@Test
+	@Test // #2304
 	public void shouldDoPartialUpdateBySuppliedEntityForExistingDocument() {
 
 		// given
 		String documentId = nextIdAsString();
 		String messageBeforeUpdate = "some test message";
 		String messageAfterUpdate = "test message";
+		String originalTypeInfo = "some type";
 
-		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(messageBeforeUpdate)
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(messageBeforeUpdate).type(originalTypeInfo)
 				.version(System.currentTimeMillis()).build();
-
-		IndexQuery indexQuery = getIndexQuery(sampleEntity);
-
-		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
+		operations.save(sampleEntity);
 
 		// modify the entity
 		sampleEntity.setMessage(messageAfterUpdate);
+		sampleEntity.setType(null);
 
 		// when
 		operations.update(sampleEntity);
 
 		// then
-		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class,
-				IndexCoordinates.of(indexNameProvider.indexName()));
+		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class);
+		assertThat(indexedEntity.getType()).isEqualTo(originalTypeInfo);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
