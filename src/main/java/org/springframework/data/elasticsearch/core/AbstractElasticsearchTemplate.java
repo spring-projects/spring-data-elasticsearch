@@ -49,6 +49,7 @@ import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.support.VersionInfo;
@@ -75,6 +76,7 @@ import org.springframework.util.Assert;
  * @author Subhobrata Dey
  * @author Steven Pearce
  * @author Anton Naydenov
+ * @author Haibo Liu
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -305,7 +307,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public String delete(Object entity, IndexCoordinates index) {
 		String entityId = getEntityId(entity);
-		Assert.notNull(entityId, "entity must have an if that is notnull");
+		Assert.notNull(entityId, "entity must have an id that is notnull");
 		return this.delete(entityId, index);
 	}
 
@@ -458,6 +460,27 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
 		return getRequiredPersistentEntity(clazz).getIndexCoordinates();
+	}
+
+	@Override
+	public <T> UpdateResponse update(T entity) {
+		return update(buildUpdateQueryByEntity(entity), getIndexCoordinatesFor(entity.getClass()));
+	}
+
+	protected <T> UpdateQuery buildUpdateQueryByEntity(T entity) {
+		Assert.notNull(entity, "entity must not be null");
+
+		String id = getEntityId(entity);
+		Assert.notNull(entity, "entity must have an id that is notnull");
+
+		UpdateQuery.Builder updateQueryBuilder = UpdateQuery.builder(id)
+				.withDocument(elasticsearchConverter.mapObject(entity));
+
+		String routing = getEntityRouting(entity);
+		if (Objects.nonNull(routing)) {
+			updateQueryBuilder.withRouting(routing);
+		}
+		return updateQueryBuilder.build();
 	}
 
 	protected <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
