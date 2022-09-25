@@ -27,7 +27,6 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
-import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.lang.Nullable;
 
 /**
@@ -297,9 +296,10 @@ public interface DocumentOperations {
 	/**
 	 * Partially update a document by the given entity.
 	 *
-	 * @param entity the entity to update partially
+	 * @param entity the entity to update partially, must not be {@literal null}.
 	 * @return the update response
 	 * @param <T> the entity type
+	 * @since 5.0
 	 */
 	<T> UpdateResponse update(T entity);
 

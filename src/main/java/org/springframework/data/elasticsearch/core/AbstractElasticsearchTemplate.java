@@ -60,6 +60,7 @@ import org.springframework.data.util.Streamable;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * This class contains methods that are common to different implementations of the {@link ElasticsearchOperations}
@@ -468,18 +469,20 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	protected <T> UpdateQuery buildUpdateQueryByEntity(T entity) {
+
 		Assert.notNull(entity, "entity must not be null");
 
 		String id = getEntityId(entity);
-		Assert.notNull(entity, "entity must have an id that is notnull");
+		Assert.notNull(id, "entity must have an id that is notnull");
 
 		UpdateQuery.Builder updateQueryBuilder = UpdateQuery.builder(id)
 				.withDocument(elasticsearchConverter.mapObject(entity));
 
 		String routing = getEntityRouting(entity);
-		if (Objects.nonNull(routing)) {
+		if (StringUtils.hasText(routing)) {
 			updateQueryBuilder.withRouting(routing);
 		}
+
 		return updateQueryBuilder.build();
 	}
 
