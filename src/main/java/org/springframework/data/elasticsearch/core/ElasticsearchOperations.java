@@ -80,12 +80,27 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * gets the String representation for an id.
 	 *
 	 * @param id
-	 * @return
+	 * @return String representation
 	 * @since 4.0
+	 * @deprecated since 5.0, use {@link ElasticsearchOperations#convertId(Object)}.
 	 */
+	@Deprecated
 	@Nullable
 	default String stringIdRepresentation(@Nullable Object id) {
 		return Objects.toString(id, null);
+	}
+
+	/**
+	 * Converts an idValue to a String representation. The default implementation calls
+	 * {@link ElasticsearchConverter#convertId(Object)}
+	 *
+	 * @param idValue the value to convert
+	 * @return the converted value or {@literal null} if idValue is null
+	 * @since 5.0
+	 */
+	@Nullable
+	default String convertId(@Nullable Object idValue) {
+		return idValue != null ? getElasticsearchConverter().convertId(idValue) : null;
 	}
 	// endregion
 

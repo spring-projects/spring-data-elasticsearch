@@ -531,11 +531,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		Object id = entityOperations.forEntity(entity, elasticsearchConverter.getConversionService(), routingResolver)
 				.getId();
 
-		if (id != null) {
-			return stringIdRepresentation(id);
-		}
-
-		return null;
+		return convertId(id);
 	}
 
 	@Nullable

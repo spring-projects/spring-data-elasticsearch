@@ -313,7 +313,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	}
 
 	protected @Nullable String stringIdRepresentation(@Nullable ID id) {
-		return operations.stringIdRepresentation(id);
+		return operations.convertId(id);
 	}
 
 	private IndexCoordinates getIndexCoordinates() {
