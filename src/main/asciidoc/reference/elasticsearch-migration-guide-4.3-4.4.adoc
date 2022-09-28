@@ -6,6 +6,7 @@ This section describes breaking changes from version 4.3.x to 4.4.x and how remo
 [[elasticsearch-migration-guide-4.3-4.4.deprecations]]
 == Deprecations
 
+[[elasticsearch-migration-guide-4.3-4.4.deprecations.reactive-operations]]
 === org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations
 
 The method `<T> Publisher<T> execute(ClientCallback<Publisher<T>> callback)` has been deprecated.
@@ -14,6 +15,7 @@ As there now are multiple implementations using different client libraries the `
 [[elasticsearch-migration-guide-4.3-4.4.breaking-changes]]
 == Breaking Changes
 
+[[elasticsearch-migration-guide-4.3-4.4.breaking-changes.1]]
 === Removal of deprecated classes
 
 ==== `org.springframework.data.elasticsearch.core.ElasticsearchTemplate` has been removed
@@ -23,11 +25,13 @@ This means that the `org.springframework.data.elasticsearch.core.ElasticsearchTe
 This was the implementation of the `ElasticsearchOperations` interface that was using the `TransportClient`.
 Connections to Elasticsearch must be made using either the imperative `ElasticsearchRestTemplate` or the reactive `ReactiveElasticsearchTemplate`.
 
+[[elasticsearch-migration-guide-4.3-4.4.breaking-changes.2]]
 === Package changes
 
 In 4.3 two classes (`ElasticsearchAggregations` and `ElasticsearchAggregation`) had been moved to the `org.springframework.data.elasticsearch.core.clients.elasticsearch7` package in preparation for the integration of the new Elasticsearch client.
 The were moved back to the `org.springframework.data.elasticsearch.core` package as we keep the classes use the old Elasticsearch client where they were.
 
+[[elasticsearch-migration-guide-4.3-4.4.breaking-changes.3]]
 === Behaviour change
 
 The `ReactiveElasticsearchTemplate`, when created directly or by Spring Boot configuration had a default refresh policy of IMMEDIATE.
@@ -46,6 +50,7 @@ Spring Data Elasticsearch 4.4 still uses the old client as the default client fo
 * There are still some bugs in the Elasticsearch client which need to be resolved
 * The implementation using the new client in Spring Data Elasticsearch is not yet complete, due to limited resources working on that - remember Spring Data Elasticsearch is a community driven project that lives from public contributions.
 
+[[elasticsearch-migration-guide-4.3-4.4.new-clients.how-to]]
 === How to use the new client
 
 CAUTION: The implementation using the new client is not complete, some operations will throw a `java.lang.UnsupportedOperationException` or might throw NPE (for example when the Elasticsearch cannot parse a response from the server, this still happens sometimes) +
@@ -53,6 +58,7 @@ Use the new client to test the implementations but do not use it in productive c
 
 In order to try and use the new client the following steps are necessary:
 
+[[elasticsearch-migration-guide-4.3-4.4.new-clients.how-to.not]]
 ==== Make sure not to configure the existing default client
 
 If using Spring Boot, exclude Spring Data Elasticsearch from the autoconfiguration
@@ -71,6 +77,7 @@ public class SpringdataElasticTestApplication {
 Remove Spring Data Elasticsearch related properties from your application configuration.
 If Spring Data Elasticsearch was configured using a programmatic configuration (see <<elasticsearch.clients>>), remove these beans from the Spring application context.
 
+[[elasticsearch-migration-guide-4.3-4.4.new-clients.how-to.dependencies]]
 ==== Add dependencies
 
 The dependencies for the new Elasticsearch client are still optional in Spring Data Elasticsearch so they need to be added explicitly:
@@ -116,8 +123,10 @@ When using Spring Boot, it is necessary to set the following property in the _po
 ----
 ====
 
+[[elasticsearch-migration-guide-4.3-4.4.new-clients.how-to.configuration]]
 ==== New configuration classes
 
+[[elasticsearch-migration-guide-4.3-4.4.new-clients.how-to.configuration.imperative]]
 ===== Imperative style
 
 In order configure Spring Data Elasticsearch to use the new client, it is necessary to create a configuration bean that derives from `org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration`:
@@ -145,6 +154,7 @@ With this configuration, the following beans will be available in the Spring app
 * an `ElasticsearchClient` bean, this is the new client that uses the `RestClient`
 * an `ElasticsearchOperations` bean, available with the bean names _elasticsearchOperations_ and _elasticsearchTemplate_, this uses the `ElasticsearchClient`
 
+[[elasticsearch-migration-guide-4.3-4.4.new-clients.how-to.configuration.reactive]]
 ===== Reactive style
 
 To use the new client in a reactive environment the only difference is the class from which to derive the configuration:

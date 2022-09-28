@@ -32,6 +32,7 @@ They had been deprecated in Spring Data Elasticsearch 4.0 and their values weren
 [[elasticsearch-migration-guide-4.0-4.1.breaking-changes]]
 == Breaking Changes
 
+[[elasticsearch-migration-guide-4.0-4.1.breaking-changes.returntypes-1]]
 === Return types of ReactiveElasticsearchClient.Indices methods
 
 The methods in the `ReactiveElasticsearchClient.Indices` were not used up to now.
@@ -40,7 +41,8 @@ With the introduction of the `ReactiveIndexOperations` it became necessary to ch
 * the `createIndex`  variants now return a `Mono<Boolean>` instead of a `Mono<Void>` to signal successful index creation.
 * the `updateMapping`  variants now return a `Mono<Boolean>` instead of a `Mono<Void>` to signal successful mappings storage.
 
-=== Return types of DocumentOperartions.bulkIndex methods
+[[elasticsearch-migration-guide-4.0-4.1.breaking-changes.returntypes-2]]
+=== Return types of DocumentOperations.bulkIndex methods
 
 These methods were returing a `List<String>` containing the ids of the new indexed records.
 Now they return a `List<IndexedObjectInformation>`; these objects contain the id and information about optimistic locking (seq_no and primary_term)

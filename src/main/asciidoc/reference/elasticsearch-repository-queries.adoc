@@ -6,6 +6,7 @@
 
 The Elasticsearch module supports all basic query building feature as string queries, native search queries, criteria based queries or have it being derived from the method name.
 
+[[elasticsearch.query-methods.finders.declared]]
 === Declared queries
 
 Deriving the query from the method name is not always sufficient and/or may result in unreadable method names.
@@ -298,6 +299,7 @@ A list of supported keywords for Elasticsearch is shown below.
 NOTE: Methods names to build Geo-shape queries taking `GeoJson` parameters are not supported.
 Use `ElasticsearchOperations` with `CriteriaQuery` in a custom repository implementation if you need to have such a function in a repository.
 
+[[elasticsearch.query-methods.return-types]]
 == Method return types
 
 Repository methods can be defined to have the following return types for returning multiple Elements:
@@ -359,4 +361,3 @@ would make an https://www.elastic.co/guide/en/elasticsearch/reference/current/qu
 }
 ----
 ====
-

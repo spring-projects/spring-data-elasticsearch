@@ -204,6 +204,7 @@ Sort.by(new GeoDistanceOrder("location", new GeoPoint(48.137154, 11.5761247)))
 From version 7.12 on Elasticsearch has added the feature of runtime fields (https://www.elastic.co/guide/en/elasticsearch/reference/7.12/runtime.html).
 Spring Data Elasticsearch supports this in two ways:
 
+[[elasticsearch.misc.runtime-fields.index-mappings]]
 === Runtime field definitions in the index mappings
 
 The first way to define runtime fields is by adding the definitions to the index mappings (see https://www.elastic.co/guide/en/elasticsearch/reference/7.12/runtime-mapping-fields.html).
@@ -238,6 +239,7 @@ public class RuntimeFieldEntity {
 ----
 ====
 
+[[elasticsearch.misc.runtime-fields.query]]
 === Runtime fields definitions set on a Query
 
 The second way to define runtime fields is by adding the definitions to a search query (see https://www.elastic.co/guide/en/elasticsearch/reference/7.12/runtime-search-request.html).
