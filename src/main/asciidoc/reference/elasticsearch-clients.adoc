@@ -233,7 +233,8 @@ Default is 5 sec.
 <.> Optionally set headers.
 <.> Add basic authentication.
 <.> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
-<.> a function to configure the created client (see <<elasticsearch.clients.configuration.callbacks>>), can be added multiple times.
+<.> a function to configure the created client (see <<elasticsearch.clients.configuration.callbacks>>), can be added 
+multiple times.
 ====
 
 IMPORTANT: Adding a Header supplier as shown in above example allows to inject headers that may change over the time, like authentication JWT tokens.
@@ -247,6 +248,7 @@ enough, the user can add callback functions by using the `withClientConfigurer(C
 
 The following callbacks are provided:
 
+[[elasticsearch.clients.configuration.callbacks.rest]]
 ==== Configuration of the low level Elasticsearch `RestClient`:
 
 ====
@@ -261,6 +263,7 @@ ClientConfiguration.builder()
 ----
 ====
 
+[[elasticsearch.clients.configurationcallbacks.httpasync]]
 ==== Configuration of the HttpAsyncClient used by the low level Elasticsearch `RestClient`:
 
 ====
@@ -275,7 +278,7 @@ ClientConfiguration.builder()
 ----
 ====
 
-
+[[elasticsearch.clients.configuration.headers]]
 === Elasticsearch 7 compatibility headers
 
 When using the deprecated `RestHighLevelClient` and accessing an Elasticsearch cluster that is running on version 8, it is necessary to set the compatibility headers

@@ -95,6 +95,7 @@ default boolean createIndex(String indexName) {
 [[elasticsearch-migration-guide-3.2-4.0.deprecations]]
 == Deprecations
 
+[[elasticsearch-migration-guide-3.2-4.0.deprecations.methods-classes]]
 === Methods and classes
 
 Many functions and classes have been deprecated. These functions still work, but the Javadocs show with what they should be replaced.
@@ -115,6 +116,7 @@ Many functions and classes have been deprecated. These functions still work, but
 <T> T queryForObject(GetQuery query, Class<T> clazz);
 ----
 
+[[elasticsearch-migration-guide-3.2-4.0.deprecations.elasticsearch]]
 === Elasticsearch deprecations
 
 Since version 7 the Elasticsearch `TransportClient` is deprecated, it will be removed with Elasticsearch version 8. Spring Data Elasticsearch deprecates the `ElasticsearchTemplate` class which uses the `TransportClient` in version 4.0.

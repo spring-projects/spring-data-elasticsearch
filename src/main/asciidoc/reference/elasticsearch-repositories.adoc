@@ -40,6 +40,7 @@ include::reactive-elasticsearch-repositories.adoc[leveloffset=+1]
 [[elasticsearch.repositories.annotations]]
 == Annotations for repository methods
 
+[[elasticsearch.repositories.annotations.highlight]]
 === @Highlight
 
 The `@Highlight` annotation on a repository method defines for which fields of the returned entity highlighting should be included. To search for some text in a `Book` 's name or summary and have the found data highlighted, the following repository method can be used:
@@ -62,6 +63,7 @@ It is possible to define multiple fields to be highlighted like above, and both 
 
 In the search results the highlight data can be retrieved from the `SearchHit` class.
 
+[[elasticsearch.repositories.annotations.sourcefilters]]
 === @SourceFilters
 
 Sometimes the user does not need to have all the properties of an entity returned from a search but only a subset.

@@ -50,8 +50,8 @@ Constructor arguments are mapped by name to the key values in the retrieved Docu
 See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types].
 If the field type is not specified, it defaults to `FieldType.Auto`.
 This means, that no mapping entry is written for the property and that Elasticsearch will add a mapping entry dynamically when the first data for this property is stored (check the Elasticsearch documentation for dynamic mapping rules).
-** `format`: One or more built-in date formats, see the next section <<elasticsearch.mapping.meta-model.date-formats>>.
-** `pattern`: One or more custom date formats, see the next section <<elasticsearch.mapping.meta-model.date-formats>>.
+** `format`: One or more built-in date formats, see the next section <<elasticsearch.mapping.meta-model.annotations.date-formats>>.
+** `pattern`: One or more custom date formats, see the next section <<elasticsearch.mapping.meta-model.annotations.date-formats>>.
 ** `store`: Flag whether the original field value should be store in Elasticsearch, default value is _false_.
 ** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom analyzers and normalizer.
 * `@GeoPoint`: Marks a field as _geo_point_ datatype.
@@ -61,7 +61,7 @@ In difference to a registered Spring `Converter` this only converts the annotate
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
 
-[[elasticsearch.mapping.meta-model.date-formats]]
+[[elasticsearch.mapping.meta-model.annotations.date-formats]]
 ==== Date format mapping
 
 Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation of type `FieldType.Date` or a custom converter must be registered for this type.
@@ -103,6 +103,7 @@ The following table shows the different attributes and the mapping created from 
 NOTE: If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_.
 This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
 
+[[elasticsearch.mapping.meta-model.annotations.range]]
 ==== Range types
 
 When a field is annotated with a type of one of _Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range,_ or _Ip_Range_ the field must be an instance of a class that will be mapped to an Elasticsearch range, for example:
@@ -148,6 +149,7 @@ class SomePersonData {
 Supported classes for the type `<T>` are `Integer`, `Long`, `Float`, `Double`, `Date` and classes that implement the
 `TemporalAccessor` interface.
 
+[[elasticsearch.mapping.meta-model.annotations.mapped-names]]
 ==== Mapped field names
 
 Without further configuration, Spring Data Elasticsearch will use the property name of an object as field name in Elasticsearch.
@@ -160,6 +162,7 @@ A `FieldNamingStrategy` applies to all entities; it can be overwritten by settin
 [[elasticsearch.mapping.meta-model.rules]]
 === Mapping Rules
 
+[[elasticsearch.mapping.meta-model.rules.typehints]]
 ==== Type Hints
 
 Mapping uses _type hints_ embedded in the document sent to the server to allow generic type mapping.
@@ -240,6 +243,7 @@ WARNING: We strongly advise against disabling Type Hints.
 Only do this if you are forced to.
 Disabling type hints can lead to documents not being retrieved correctly from Elasticsearch in case of polymorphic data or document retrieval may fail completely.
 
+[[elasticsearch.mapping.meta-model.rules.geospatial]]
 ==== Geospatial Types
 
 Geospatial types like `Point` & `GeoPoint` are converted into _lat/lon_ pairs.
@@ -265,6 +269,7 @@ public class Address {
 ----
 ====
 
+[[elasticsearch.mapping.meta-model.rules.geojson]]
 ==== GeoJson Types
 
 Spring Data Elasticsearch supports the GeoJson types by providing an interface `GeoJson` and implementations for the different geometries.
@@ -305,6 +310,7 @@ The following GeoJson types are implemented:
 * `GeoJsonMultiPolygon`
 * `GeoJsonGeometryCollection`
 
+[[elasticsearch.mapping.meta-model.rules.collections]]
 ==== Collections
 
 For values inside Collections apply the same mapping rules as for aggregate roots when it comes to _type hints_ and <<elasticsearch.mapping.meta-model.conversions>>.
@@ -332,6 +338,7 @@ public class Person {
 ----
 ====
 
+[[elasticsearch.mapping.meta-model.rules.maps]]
 ==== Maps
 
 For values inside Maps apply the same mapping rules as for aggregate roots when it comes to _type hints_ and <<elasticsearch.mapping.meta-model.conversions>>.

@@ -3,6 +3,7 @@
 
 Spring Data Elasticsearch supports the https://www.elastic.co/guide/en/elasticsearch/reference/current/parent-join.html[Join data type] for creating the corresponding index mappings and for storing the relevant information.
 
+[[elasticsearch.jointype.setting-up]]
 == Setting up the data
 
 For an entity to be used in a parent child join relationship, it must have a property of type `JoinField` which must be annotated.
@@ -160,6 +161,7 @@ Spring Data Elasticsearch will build the following mapping for this class:
 ----
 ====
 
+[[elasticsearch.jointype.storing]]
 ==  Storing data
 
 Given a repository for this class the following code inserts a question, two answers, a comment and a vote:
@@ -209,6 +211,7 @@ void init() {
 <5> a vote for the first answer, this needs to have the routing set to the weather document, see <<elasticsearch.routing>>.
 ====
 
+[[elasticsearch.jointype.retrieving]]
 ==  Retrieving data
 
 Currently native queries must be used to query the data, so there is no support from standard repository methods. <<repositories.custom-implementations>> can be used instead.
