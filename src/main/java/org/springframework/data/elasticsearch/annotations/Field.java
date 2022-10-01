@@ -39,7 +39,7 @@ import org.springframework.core.annotation.AliasFor;
  * @author Sascha Woo
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE })
+@Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.METHOD })
 @Documented
 @Inherited
 public @interface Field {

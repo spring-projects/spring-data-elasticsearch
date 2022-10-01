@@ -159,6 +159,27 @@ It is also possible to define a `FieldNamingStrategy` in the configuration of th
 If for example a `SnakeCaseFieldNamingStrategy` is configured, the property _sampleProperty_ of the object would be mapped to _sample_property_ in Elasticsearch.
 A `FieldNamingStrategy` applies to all entities; it can be overwritten by setting a specific name with `@Field` on a property.
 
+[[elasticsearch.mapping.meta-model.annotations.non-field-backed-properties]]
+==== Non-field-backed properties
+
+Normally the properties used in an entity are fields of the entity class. There might be cases, when a property value
+is calculated in the entity and should be stored in Elasticsearch. In this case, the getter method (`getProperty()`) can be 
+annotated 
+with the `@Field` annotation, in addition to that the method must be annotated with `@AccessType(AccessType.Type
+.PROPERTY)`. The third annotation that is needed in such a case is `@WriteOnlyProperty`, as such a value is only 
+written to Elasticsearch. A full example:
+====
+[source,java]
+----
+@Field(type = Keyword)
+@WriteOnlyProperty
+@AccessType(AccessType.Type.PROPERTY)
+public String getProperty() {
+	return "some value that is calculated here";
+}
+----
+====
+
 [[elasticsearch.mapping.meta-model.rules]]
 === Mapping Rules
 

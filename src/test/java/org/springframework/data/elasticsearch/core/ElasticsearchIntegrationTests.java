@@ -68,6 +68,7 @@ import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.WriteOnlyProperty;
 import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -197,8 +198,7 @@ public abstract class ElasticsearchIntegrationTests {
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(messageBeforeUpdate)
 				.version(System.currentTimeMillis()).build();
 
-		assertThatThrownBy(() -> operations.update(sampleEntity))
-				.isInstanceOf(DataAccessException.class);
+		assertThatThrownBy(() -> operations.update(sampleEntity)).isInstanceOf(DataAccessException.class);
 	}
 
 	@Test
@@ -1529,8 +1529,8 @@ public abstract class ElasticsearchIntegrationTests {
 		String messageAfterUpdate = "test message";
 		String originalTypeInfo = "some type";
 
-		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(messageBeforeUpdate).type(originalTypeInfo)
-				.version(System.currentTimeMillis()).build();
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message(messageBeforeUpdate)
+				.type(originalTypeInfo).version(System.currentTimeMillis()).build();
 		operations.save(sampleEntity);
 
 		// modify the entity
@@ -3741,6 +3741,26 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThat(readEntity.getPart2()).isEqualTo(entity.getPart2());
 	}
 
+	@Test // #1489
+	@DisplayName("should handle non-field-backed properties")
+	void shouldHandleNonFieldBackedProperties() {
+
+		operations.indexOps(NonFieldBackedPropertyClass.class).createWithMapping();
+
+		var entity = new NonFieldBackedPropertyClass();
+		entity.setId("007");
+		entity.setFirstName("James");
+		entity.setLastName("Bond");
+
+		operations.save(entity);
+
+		var searchHits = operations.search(new CriteriaQuery(Criteria.where("fullName").is("jamesbond")),
+				NonFieldBackedPropertyClass.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getContent()).isEqualTo(entity);
+	}
+
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	private static class SampleEntityUUIDKeyed {
 		@Nullable
@@ -4517,5 +4537,78 @@ public abstract class ElasticsearchIntegrationTests {
 		}
 	}
 
+	@Document(indexName = "#{@indexNameProvider.indexName()}-readonly-id")
+	static class NonFieldBackedPropertyClass {
+		@Id
+		@Nullable private String id;
+
+		@Nullable
+		@Field(type = Text) private String firstName;
+
+		@Nullable
+		@Field(type = Text) private String lastName;
+
+@Field(type = Keyword)
+@WriteOnlyProperty
+@AccessType(AccessType.Type.PROPERTY)
+public String getFullName() {
+	return sanitize(firstName) + sanitize(lastName);
+}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public void setFirstName(@Nullable String firstName) {
+			this.firstName = firstName;
+		}
+
+		@Nullable
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(@Nullable String lastName) {
+			this.lastName = lastName;
+		}
+
+		private String sanitize(@Nullable String s) {
+			return s == null ? "" : s.replaceAll("\\s", "").toLowerCase();
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			NonFieldBackedPropertyClass that = (NonFieldBackedPropertyClass) o;
+
+			if (!Objects.equals(id, that.id))
+				return false;
+			if (!Objects.equals(firstName, that.firstName))
+				return false;
+			return Objects.equals(lastName, that.lastName);
+		}
+
+		@Override
+		public int hashCode() {
+			int result = id != null ? id.hashCode() : 0;
+			result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
+			result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
+			return result;
+		}
+	}
 	// endregion
 }

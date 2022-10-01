@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ValueConverter;
+import org.springframework.data.elasticsearch.annotations.WriteOnlyProperty;
 import org.springframework.data.elasticsearch.core.convert.DatePropertyValueConverter;
 import org.springframework.data.elasticsearch.core.convert.DateRangePropertyValueConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
@@ -123,7 +124,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	@Override
 	public boolean isReadable() {
-		return !isTransient() && !isSeqNoPrimaryTermProperty();
+		return !isTransient() && !isSeqNoPrimaryTermProperty() && !isAnnotationPresent(WriteOnlyProperty.class);
 	}
 
 	@Override
