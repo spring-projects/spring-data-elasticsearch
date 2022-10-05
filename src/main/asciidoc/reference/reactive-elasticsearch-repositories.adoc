@@ -79,7 +79,7 @@ interface ReactivePersonRepository extends ReactiveSortingRepository<Person, Str
 parameters.
 <9> Count all entities with matching `firstname`.
 <10> Check if at least one entity with matching `firstname` exists.
-<11> Delete all entites with matching `firstname`.
+<11> Delete all entities with matching `firstname`.
 ====
 
 [[elasticsearch.reactive.repositories.configuration]]
