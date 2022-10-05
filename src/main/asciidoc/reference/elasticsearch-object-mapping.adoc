@@ -251,7 +251,7 @@ In this case, writing the type hint will produce an error, as the field cannot b
 
 Type hints can be disabled for the whole application by overriding the method `writeTypeHints()` in a configuration class derived from `AbstractElasticsearchConfiguration` (see <<elasticsearch.clients>>).
 
-As an alternativ they can be disabled for a single index with the `@Document` annotation:
+As an alternative they can be disabled for a single index with the `@Document` annotation:
 
 ====
 [source,java]
