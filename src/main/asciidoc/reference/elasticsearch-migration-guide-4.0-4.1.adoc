@@ -9,7 +9,7 @@ This section describes breaking changes from version 4.0.x to 4.1.x and how remo
 .Definition of the id property
 It is possible to define a property of en entity as the id property by naming it either `id` or  `document`.
 This behaviour is now deprecated and will produce a warning.
-PLease us the `@Id` annotation to mark a property as being the id property.
+Please use the `@Id` annotation to mark a property as being the id property.
 
 .Index mappings
 In the `ReactiveElasticsearchClient.Indices` interface the `updateMapping` methods are deprecated in favour of the `putMapping` methods.
@@ -44,5 +44,5 @@ With the introduction of the `ReactiveIndexOperations` it became necessary to ch
 [[elasticsearch-migration-guide-4.0-4.1.breaking-changes.returntypes-2]]
 === Return types of DocumentOperations.bulkIndex methods
 
-These methods were returing a `List<String>` containing the ids of the new indexed records.
+These methods were returning a `List<String>` containing the ids of the new indexed records.
 Now they return a `List<IndexedObjectInformation>`; these objects contain the id and information about optimistic locking (seq_no and primary_term)
