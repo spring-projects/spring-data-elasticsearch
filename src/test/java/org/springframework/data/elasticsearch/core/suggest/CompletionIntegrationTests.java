@@ -54,7 +54,7 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
-	private void setup() {
+	void setup() {
 		indexNameProvider.increment();
 		operations.indexOps(CompletionEntity.class).createWithMapping();
 		operations.indexOps(AnnotatedCompletionEntity.class).createWithMapping();
