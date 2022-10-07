@@ -49,7 +49,7 @@ public abstract class SearchAsYouTypeIntegrationTests {
 	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
-	private void setup() {
+	void setup() {
 		indexNameProvider.increment();
 		operations.indexOps(SearchAsYouTypeEntity.class).createWithMapping();
 	}
