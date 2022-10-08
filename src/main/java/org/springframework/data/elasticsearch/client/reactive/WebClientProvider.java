@@ -256,6 +256,15 @@ public interface WebClientProvider {
 							HttpHeaders suppliedHeaders = clientConfiguration.getHeadersSupplier().get();
 
 							if (suppliedHeaders != null && suppliedHeaders != HttpHeaders.EMPTY) {
+
+								// remove content-type and accept if they are provided by the client configuration (ES7 compatibility headers)
+								if (suppliedHeaders.containsKey(HttpHeaders.CONTENT_TYPE)) {
+									httpHeaders.remove(HttpHeaders.CONTENT_TYPE);
+								}
+								if (suppliedHeaders.containsKey(HttpHeaders.ACCEPT)) {
+									httpHeaders.remove(HttpHeaders.ACCEPT);
+								}
+
 								httpHeaders.addAll(suppliedHeaders);
 							}
 						}));
