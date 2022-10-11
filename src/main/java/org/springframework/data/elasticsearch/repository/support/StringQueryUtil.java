@@ -46,7 +46,11 @@ final public class StringQueryUtil {
 
 			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
 			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
-			result = result.replaceAll(placeholder, Matcher.quoteReplacement(getParameterWithIndex(accessor, index)));
+			String replacement = Matcher.quoteReplacement(getParameterWithIndex(accessor, index));
+			result = result.replaceAll(placeholder, replacement);
+			// need to escape backslashes that are not escapes for quotes so that they are sent as double-backslashes
+			// to Elasticsearch
+			result = result.replaceAll("\\\\([^\"'])", "\\\\\\\\$1");
 		}
 		return result;
 	}
@@ -56,7 +60,6 @@ final public class StringQueryUtil {
 		Object parameter = accessor.getBindableValue(index);
 		String parameterValue = "null";
 
-		// noinspection ConstantConditions
 		if (parameter != null) {
 
 			parameterValue = convert(parameter);
