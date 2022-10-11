@@ -129,6 +129,18 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"hello \\\"Stranger\\\"\",\"Another string\"] } } } }");
 	}
 
+	@Test // #2326
+	@DisplayName("should escape backslashes in collection query parameters")
+	void shouldEscapeBackslashesInCollectionQueryParameters() throws NoSuchMethodException {
+
+		final List<String> parameters = Arrays.asList("param\\1", "param\\2");
+		List<String> params = new ArrayList<>(parameters);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameIn", params);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource()).isEqualTo(
+			"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"param\\\\1\",\"param\\\\2\"] } } } }");
+	}
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
 			throws NoSuchMethodException {
 
