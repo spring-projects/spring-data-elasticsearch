@@ -21,8 +21,8 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.ElasticsearchPartQueryIntegrationTests;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 
 /**
@@ -36,12 +36,11 @@ public class ElasticsearchPartQueryELCIntegrationTests extends ElasticsearchPart
 	static class Config {}
 
 	@Override
-	protected String buildQueryString(CriteriaQuery criteriaQuery, Class<?> clazz) {
+	protected String buildQueryString(Query query, Class<?> clazz) {
 
 		JacksonJsonpMapper jsonpMapper = new JacksonJsonpMapper();
 		RequestConverter requestConverter = new RequestConverter(operations.getElasticsearchConverter(), jsonpMapper);
-		SearchRequest request = requestConverter.searchRequest(criteriaQuery, clazz, IndexCoordinates.of("dummy"), false,
-				false);
+		SearchRequest request = requestConverter.searchRequest(query, clazz, IndexCoordinates.of("dummy"), false, false);
 
 		return JsonUtils.toJson(request, jsonpMapper);
 		// return "{\"query\":" + JsonUtils.toJson(request.query(), jsonpMapper) + "}";
