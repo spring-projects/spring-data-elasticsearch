@@ -73,6 +73,8 @@ public class BaseQuery implements Query {
 	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
 	@Nullable protected List<IndexBoost> indicesBoost;
 
+	private boolean queryIsUpdatedByConverter = false;
+
 	public BaseQuery() {}
 
 	public <Q extends BaseQuery, B extends BaseQueryBuilder<Q, B>> BaseQuery(BaseQueryBuilder<Q, B> builder) {
@@ -440,4 +442,23 @@ public class BaseQuery implements Query {
 	public List<IndexBoost> getIndicesBoost() {
 		return indicesBoost;
 	}
+
+	/**
+	 * used internally. Not considered part of the API.
+	 *
+	 * @since 5.0
+	 */
+	public boolean queryIsUpdatedByConverter() {
+		return queryIsUpdatedByConverter;
+	}
+
+	/**
+	 * used internally. Not considered part of the API.
+	 *
+	 * @since 5.0
+	 */
+	public void setQueryIsUpdatedByConverter(boolean queryIsUpdatedByConverter) {
+		this.queryIsUpdatedByConverter = queryIsUpdatedByConverter;
+	}
+
 }

@@ -40,6 +40,7 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
@@ -1156,6 +1157,13 @@ public class MappingElasticsearchConverter
 
 		Assert.notNull(query, "query must not be null");
 
+		if (query instanceof BaseQuery) {
+
+			if (((BaseQuery) query).queryIsUpdatedByConverter()) {
+				return;
+			}
+		}
+
 		if (domainClass == null) {
 			return;
 		}
@@ -1164,6 +1172,10 @@ public class MappingElasticsearchConverter
 
 		if (query instanceof CriteriaQuery) {
 			updatePropertiesInCriteriaQuery((CriteriaQuery) query, domainClass);
+		}
+
+		if (query instanceof BaseQuery) {
+			((BaseQuery) query).setQueryIsUpdatedByConverter(true);
 		}
 	}
 

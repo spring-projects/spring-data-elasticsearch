@@ -15,16 +15,11 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHitSupport;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
 
 /**
@@ -38,13 +33,13 @@ import org.springframework.util.Assert;
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
-	private String query;
+	private final String queryString;
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
-			String query) {
+			String queryString) {
 		super(queryMethod, elasticsearchOperations);
-		Assert.notNull(query, "Query cannot be empty");
-		this.query = query;
+		Assert.notNull(queryString, "Query cannot be empty");
+		this.queryString = queryString;
 	}
 
 	@Override
@@ -53,54 +48,20 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	@Override
-	public Object execute(Object[] parameters) {
-
-		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
-		ParametersParameterAccessor accessor = new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
-
-		StringQuery stringQuery = createQuery(accessor);
-
-		Assert.notNull(stringQuery, "unsupported query");
-
-		if (queryMethod.hasAnnotatedHighlight()) {
-			stringQuery.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
-		}
-
-		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
-
-		Object result = null;
-
-		if (isCountQuery()) {
-			result = elasticsearchOperations.count(stringQuery, clazz, index);
-		} else if (queryMethod.isPageQuery()) {
-			stringQuery.setPageable(accessor.getPageable());
-			SearchHits<?> searchHits = elasticsearchOperations.search(stringQuery, clazz, index);
-			if (queryMethod.isSearchPageMethod()) {
-				result = SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable());
-			} else {
-				result = SearchHitSupport
-						.unwrapSearchHits(SearchHitSupport.searchPageFor(searchHits, stringQuery.getPageable()));
-			}
-		} else if (queryMethod.isStreamQuery()) {
-			stringQuery.setPageable(
-					accessor.getPageable().isPaged() ? accessor.getPageable() : PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
-			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.searchForStream(stringQuery, clazz, index));
-		} else if (queryMethod.isCollectionQuery()) {
-			stringQuery.setPageable(accessor.getPageable().isPaged() ? accessor.getPageable() : Pageable.unpaged());
-			result = elasticsearchOperations.search(stringQuery, clazz, index);
-		} else {
-			result = elasticsearchOperations.searchOne(stringQuery, clazz, index);
-		}
-
-		return (queryMethod.isNotSearchHitMethod() && queryMethod.isNotSearchPageMethod())
-				? SearchHitSupport.unwrapSearchHits(result)
-				: result;
+	protected boolean isDeleteQuery() {
+		return false;
 	}
 
-	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
+	@Override
+	protected boolean isExistsQuery() {
+		return false;
+	}
+
+	protected Query createQuery(ParametersParameterAccessor parameterAccessor) {
+
 		String queryString = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService())
-				.replacePlaceholders(this.query, parameterAccessor);
+				.replacePlaceholders(this.queryString, parameterAccessor);
+
 		return new StringQuery(queryString);
 	}
-
 }

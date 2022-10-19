@@ -19,8 +19,8 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.ElasticsearchPartQueryIntegrationTests;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -38,9 +38,9 @@ public class ElasticsearchPartQueryERHLCIntegrationTests extends ElasticsearchPa
 	@Import({ ElasticsearchRestTemplateConfiguration.class })
 	static class Config {}
 
-	protected String buildQueryString(CriteriaQuery criteriaQuery, Class<?> clazz) {
+	protected String buildQueryString(Query query, Class<?> clazz) {
 		SearchSourceBuilder source = new RequestFactory(operations.getElasticsearchConverter())
-				.searchRequest(criteriaQuery, clazz, IndexCoordinates.of("dummy")).source();
+				.searchRequest(query, clazz, IndexCoordinates.of("dummy")).source();
 		// remove defaultboost values
 		return source.toString().replaceAll("(\\^\\d+\\.\\d+)", "");
 	}

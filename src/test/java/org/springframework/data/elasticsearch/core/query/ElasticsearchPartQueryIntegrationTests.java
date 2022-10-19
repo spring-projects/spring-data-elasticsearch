@@ -36,7 +36,6 @@ import org.springframework.data.elasticsearch.repository.query.ElasticsearchPart
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchQueryMethod;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.lang.Nullable;
 
 /**
@@ -637,19 +636,18 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 				new DefaultRepositoryMetadata(SampleRepository.class), new SpelAwareProxyProjectionFactory(),
 				operations.getElasticsearchConverter().getMappingContext());
 		ElasticsearchPartQuery partQuery = new ElasticsearchPartQuery(queryMethod, operations);
-		CriteriaQuery criteriaQuery = partQuery
-				.createQuery(new ParametersParameterAccessor(queryMethod.getParameters(), parameters));
-		return buildQueryString(criteriaQuery, Book.class);
+		Query query = partQuery.createQuery(parameters);
+		return buildQueryString(query, Book.class);
 	}
 
 	/**
 	 * builds the query String that would be sent to Elasticsearch
 	 *
-	 * @param criteriaQuery the {@link CriteriaQuery}
+	 * @param query the {@link Query}
 	 * @param clazz the entity class
 	 * @return the created query string
 	 */
-	abstract protected String buildQueryString(CriteriaQuery criteriaQuery, Class<?> clazz);
+	abstract protected String buildQueryString(Query query, Class<?> clazz);
 
 	@FunctionalInterface
 	interface AssertFunction {
