@@ -61,7 +61,6 @@ final public class StringQueryUtil {
 		String parameterValue = "null";
 
 		if (parameter != null) {
-
 			parameterValue = convert(parameter);
 		}
 

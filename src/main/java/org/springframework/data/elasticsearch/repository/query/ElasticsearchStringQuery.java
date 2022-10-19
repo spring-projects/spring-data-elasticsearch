@@ -15,17 +15,11 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHitSupport;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
-import org.springframework.data.util.StreamUtils;
 import org.springframework.util.Assert;
 
 /**
@@ -54,56 +48,20 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	@Override
-	public Object execute(Object[] parameters) {
-
-		Class<?> clazz = queryMethod.getResultProcessor().getReturnedType().getDomainType();
-		ParametersParameterAccessor parameterAccessor = new ParametersParameterAccessor(queryMethod.getParameters(),
-				parameters);
-
-		Query query = createQuery(parameterAccessor);
-		Assert.notNull(query, "unsupported query");
-
-		if (queryMethod.hasAnnotatedHighlight()) {
-			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
-		}
-
-		prepareQuery(query, clazz, parameterAccessor);
-
-		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
-
-		Object result;
-
-		if (isCountQuery()) {
-			result = elasticsearchOperations.count(query, clazz, index);
-		} else if (queryMethod.isPageQuery()) {
-			query.setPageable(parameterAccessor.getPageable());
-			SearchHits<?> searchHits = elasticsearchOperations.search(query, clazz, index);
-			if (queryMethod.isSearchPageMethod()) {
-				result = SearchHitSupport.searchPageFor(searchHits, query.getPageable());
-			} else {
-				result = SearchHitSupport.unwrapSearchHits(SearchHitSupport.searchPageFor(searchHits, query.getPageable()));
-			}
-		} else if (queryMethod.isStreamQuery()) {
-			query.setPageable(parameterAccessor.getPageable().isPaged() ? parameterAccessor.getPageable()
-					: PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
-			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.searchForStream(query, clazz, index));
-		} else if (queryMethod.isCollectionQuery()) {
-			query.setPageable(
-					parameterAccessor.getPageable().isPaged() ? parameterAccessor.getPageable() : Pageable.unpaged());
-			result = elasticsearchOperations.search(query, clazz, index);
-		} else {
-			result = elasticsearchOperations.searchOne(query, clazz, index);
-		}
-
-		return (queryMethod.isNotSearchHitMethod() && queryMethod.isNotSearchPageMethod())
-				? SearchHitSupport.unwrapSearchHits(result)
-				: result;
+	protected boolean isDeleteQuery() {
+		return false;
 	}
 
-	protected StringQuery createQuery(ParametersParameterAccessor parameterAccessor) {
+	@Override
+	protected boolean isExistsQuery() {
+		return false;
+	}
+
+	protected Query createQuery(ParametersParameterAccessor parameterAccessor) {
+
 		String queryString = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService())
 				.replacePlaceholders(this.queryString, parameterAccessor);
+
 		return new StringQuery(queryString);
 	}
-
 }

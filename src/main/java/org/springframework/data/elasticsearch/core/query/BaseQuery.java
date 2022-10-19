@@ -74,6 +74,8 @@ public class BaseQuery implements Query {
 	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
 	@Nullable protected PointInTime pointInTime;
 
+	private boolean queryIsUpdatedByConverter = false;
+
 	public BaseQuery() {}
 
 	public <Q extends BaseQuery, B extends BaseQueryBuilder<Q, B>> BaseQuery(BaseQueryBuilder<Q, B> builder) {
@@ -465,5 +467,21 @@ public class BaseQuery implements Query {
 	 */
 	public void setPointInTime(@Nullable PointInTime pointInTime) {
 		this.pointInTime = pointInTime;
+	}
+
+	/**
+	 * used internally. Not considered part of the API.
+	 * @since 5.0
+	 */
+	public boolean queryIsUpdatedByConverter() {
+		return queryIsUpdatedByConverter;
+	}
+
+	/**
+	 * used internally. Not considered part of the API.
+	 * @since 5.0
+	 */
+	public void setQueryIsUpdatedByConverter(boolean queryIsUpdatedByConverter) {
+		this.queryIsUpdatedByConverter = queryIsUpdatedByConverter;
 	}
 }
