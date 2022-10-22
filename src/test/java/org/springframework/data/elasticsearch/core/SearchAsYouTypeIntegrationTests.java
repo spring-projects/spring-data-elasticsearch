@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javax.annotation.Nonnull;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -140,7 +138,7 @@ public abstract class SearchAsYouTypeIntegrationTests {
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SearchAsYouTypeEntity {
 
-		public SearchAsYouTypeEntity(@Nonnull String id) {
+		public SearchAsYouTypeEntity(String id) {
 			this.id = id;
 		}
 
