@@ -18,7 +18,6 @@ package org.springframework.data.elasticsearch.config;
 import java.lang.annotation.Annotation;
 
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
@@ -48,17 +47,18 @@ class ReactiveElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegis
 	}
 
 	@Override
+	protected void postProcess(BeanDefinitionBuilder builder, AuditingConfiguration configuration,
+			BeanDefinitionRegistry registry) {
+		builder.setFactoryMethod("from").addConstructorArgReference("elasticsearchMappingContext");
+	}
+
+	@Override
 	protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(AuditingConfiguration configuration) {
 
 		Assert.notNull(configuration, "AuditingConfiguration must not be null!");
 
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(ReactiveIsNewAwareAuditingHandler.class);
-
-		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(PersistentEntitiesFactoryBean.class);
-		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
-
-		builder.addConstructorArgValue(definition.getBeanDefinition());
-		return configureDefaultAuditHandlerAttributes(configuration, builder);
+		return configureDefaultAuditHandlerAttributes(configuration,
+				BeanDefinitionBuilder.rootBeanDefinition(ReactiveIsNewAwareAuditingHandler.class));
 	}
 
 	@Override

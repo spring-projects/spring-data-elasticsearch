@@ -28,8 +28,8 @@ import org.springframework.data.auditing.config.IsNewAwareAuditingHandlerBeanDef
 import org.springframework.data.elasticsearch.core.event.AuditingEntityCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAuditingEntityCallback;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;
 
@@ -41,7 +41,9 @@ import org.w3c.dom.Element;
  */
 public class ElasticsearchAuditingBeanDefinitionParser extends AbstractSingleBeanDefinitionParser {
 
-	private static String MAPPING_CONTEXT_BEAN_NAME = "simpleElasticsearchMappingContext";
+	private static final String MAPPING_CONTEXT_BEAN_NAME = "simpleElasticsearchMappingContext";
+	private static final boolean PROJECT_REACTOR_AVAILABLE = ClassUtils.isPresent("reactor.core.publisher.Mono",
+			ElasticsearchAuditingRegistrar.class.getClassLoader());
 
 	/*
 	 * (non-Javadoc)
@@ -90,7 +92,7 @@ public class ElasticsearchAuditingBeanDefinitionParser extends AbstractSingleBea
 				parserContext.extractSource(element));
 		builder.addConstructorArgValue(isNewAwareAuditingHandler);
 
-		if (ReactiveWrappers.isAvailable(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR)) {
+		if (PROJECT_REACTOR_AVAILABLE) {
 			registerReactiveAuditingEntityCallback(parserContext.getRegistry(), isNewAwareAuditingHandler,
 					parserContext.extractSource(element));
 		}

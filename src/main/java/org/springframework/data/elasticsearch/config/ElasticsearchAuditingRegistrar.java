@@ -18,10 +18,10 @@ package org.springframework.data.elasticsearch.config;
 import java.lang.annotation.Annotation;
 
 import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.core.Ordered;
 import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.auditing.config.AuditingBeanDefinitionRegistrarSupport;
 import org.springframework.data.auditing.config.AuditingConfiguration;
@@ -35,7 +35,8 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.0
  */
-class ElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport {
+class ElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupport implements Ordered
+{
 
 	@Override
 	protected Class<? extends Annotation> getAnnotation() {
@@ -48,17 +49,19 @@ class ElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupp
 	}
 
 	@Override
+	protected void postProcess(BeanDefinitionBuilder builder, AuditingConfiguration configuration,
+			BeanDefinitionRegistry registry) {
+
+		builder.setFactoryMethod("from").addConstructorArgReference("elasticsearchMappingContext");
+	}
+
+	@Override
 	protected BeanDefinitionBuilder getAuditHandlerBeanDefinitionBuilder(AuditingConfiguration configuration) {
 
 		Assert.notNull(configuration, "AuditingConfiguration must not be null!");
 
-		BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class);
-
-		BeanDefinitionBuilder definition = BeanDefinitionBuilder.genericBeanDefinition(PersistentEntitiesFactoryBean.class);
-		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_CONSTRUCTOR);
-
-		builder.addConstructorArgValue(definition.getBeanDefinition());
-		return configureDefaultAuditHandlerAttributes(configuration, builder);
+		return configureDefaultAuditHandlerAttributes(configuration,
+				BeanDefinitionBuilder.rootBeanDefinition(IsNewAwareAuditingHandler.class));
 	}
 
 	@Override
@@ -72,5 +75,10 @@ class ElasticsearchAuditingRegistrar extends AuditingBeanDefinitionRegistrarSupp
 		builder.addConstructorArgValue(ParsingUtils.getObjectFactoryBeanDefinition(getAuditingHandlerBeanName(), registry));
 
 		registerInfrastructureBeanWithId(builder.getBeanDefinition(), AuditingEntityCallback.class.getName(), registry);
+	}
+
+	@Override
+	public int getOrder() {
+		return Ordered.LOWEST_PRECEDENCE;
 	}
 }
