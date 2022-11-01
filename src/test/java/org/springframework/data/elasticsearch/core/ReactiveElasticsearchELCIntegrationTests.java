@@ -103,15 +103,15 @@ public class ReactiveElasticsearchELCIntegrationTests extends ReactiveElasticsea
 		assertThat(bucketList.size()).isEqualTo(3);
 		AtomicInteger count = new AtomicInteger();
 		bucketList.forEach(stringTermsBucket -> {
-			if ("message".equals(stringTermsBucket.key())) {
+			if ("message".equals(stringTermsBucket.key().stringValue())) {
 				count.getAndIncrement();
 				assertThat(stringTermsBucket.docCount()).isEqualTo(3);
 			}
-			if ("some".equals(stringTermsBucket.key())) {
+			if ("some".equals(stringTermsBucket.key().stringValue())) {
 				count.getAndIncrement();
 				assertThat(stringTermsBucket.docCount()).isEqualTo(2);
 			}
-			if ("other".equals(stringTermsBucket.key())) {
+			if ("other".equals(stringTermsBucket.key().stringValue())) {
 				count.getAndIncrement();
 				assertThat(stringTermsBucket.docCount()).isEqualTo(1);
 			}
