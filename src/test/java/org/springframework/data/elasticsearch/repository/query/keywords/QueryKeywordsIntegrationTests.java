@@ -266,7 +266,6 @@ abstract class QueryKeywordsIntegrationTests {
 		assertThat(products).isEmpty();
 	}
 
-	@Disabled("issue #2300, Elasticsearch bug https://github.com/elastic/elasticsearch/issues/89760")
 	@Test // #1909
 	@DisplayName("should find by property exists")
 	void shouldFindByPropertyExists() {
@@ -276,7 +275,6 @@ abstract class QueryKeywordsIntegrationTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(6);
 	}
 
-	@Disabled("issue #2300, Elasticsearch bug https://github.com/elastic/elasticsearch/issues/89760")
 	@Test // #1909
 	@DisplayName("should find by property is not null")
 	void shouldFindByPropertyIsNotNull() {

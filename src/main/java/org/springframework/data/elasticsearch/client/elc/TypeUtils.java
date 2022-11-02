@@ -96,6 +96,37 @@ final class TypeUtils {
 	}
 
 	@Nullable
+	static String toString(@Nullable FieldValue fieldValue) {
+
+		if (fieldValue == null) {
+			return null;
+		}
+
+		switch (fieldValue._kind()) {
+			case Double -> {
+				return String.valueOf(fieldValue.doubleValue());
+			}
+			case Long -> {
+				return String.valueOf(fieldValue.longValue());
+			}
+			case Boolean -> {
+				return String.valueOf(fieldValue.booleanValue());
+			}
+			case String -> {
+				return fieldValue.stringValue();
+			}
+			case Null -> {
+				return null;
+			}
+			case Any -> {
+				return fieldValue.anyValue().toString();
+			}
+
+			default -> throw new IllegalStateException("Unexpected value: " + fieldValue._kind());
+		}
+	}
+
+	@Nullable
 	static GeoDistanceType geoDistanceType(GeoDistanceOrder.DistanceType distanceType) {
 
 		return switch (distanceType) {
