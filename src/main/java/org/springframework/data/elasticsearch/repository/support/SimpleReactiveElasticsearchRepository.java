@@ -15,13 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
@@ -158,7 +158,11 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 		return Flux.from(idStream) //
 				.map(this::convertId) //
 				.collectList() //
-				.map(ids -> new NativeSearchQueryBuilder().withIds(ids).build()) //
+				.map(ids -> {
+					var query = new BaseQuery();
+					query.setIds(ids);
+					return query;
+				}) //
 				.flatMapMany(query -> {
 					IndexCoordinates index = entityInformation.getIndexCoordinates();
 					return operations.multiGet(query, entityInformation.getJavaType(), index) //
