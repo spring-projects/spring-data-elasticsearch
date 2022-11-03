@@ -22,7 +22,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
@@ -245,8 +245,8 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	private Mono<Void> doRefresh() {
 		RefreshPolicy refreshPolicy = null;
 
-		if (operations instanceof ReactiveElasticsearchTemplate) {
-			refreshPolicy = ((ReactiveElasticsearchTemplate) operations).getRefreshPolicy();
+		if (operations instanceof AbstractReactiveElasticsearchTemplate template) {
+			refreshPolicy = template.getRefreshPolicy();
 		}
 
 		if (refreshPolicy == null) {
