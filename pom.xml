@@ -10,7 +10,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>3.0.0-RC2</version>
+		<version>3.0.0-SNAPSHOT</version>
 	</parent>
 
 	<name>Spring Data Elasticsearch</name>
@@ -18,7 +18,7 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<springdata.commons>3.0.0-RC2</springdata.commons>
+		<springdata.commons>3.0.0-SNAPSHOT</springdata.commons>
 
 		<!-- version of the RestHighLevelClient	-->
 		<elasticsearch-rhlc>7.17.7</elasticsearch-rhlc>
@@ -527,8 +527,8 @@
 
 	<repositories>
 		<repository>
-			<id>spring-libs-milestone</id>
-			<url>https://repo.spring.io/libs-milestone</url>
+			<id>spring-libs-snapshot</id>
+			<url>https://repo.spring.io/libs-snapshot</url>
 		</repository>
 
 		<repository>
