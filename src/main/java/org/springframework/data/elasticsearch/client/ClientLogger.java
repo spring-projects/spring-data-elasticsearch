@@ -31,7 +31,9 @@ import org.springframework.util.ObjectUtils;
  * @author Peter-Josef Meisch
  * @author Oliver Drotbohm
  * @since 3.2
+ * @deprecated since 5.0, Elasticsearch's RestClient has a trace level logging available.
  */
+@Deprecated
 public abstract class ClientLogger {
 
 	private static final Log WIRE_LOGGER = LogFactory.getLog("org.springframework.data.elasticsearch.client.WIRE");
