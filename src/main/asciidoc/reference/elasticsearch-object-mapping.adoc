@@ -1,20 +1,9 @@
 [[elasticsearch.mapping]]
 = Elasticsearch Object Mapping
 
-Spring Data Elasticsearch Object Mapping is the process that maps a Java object - the domain entity - into the JSON representation that is stored in Elasticsearch and back.
-
-Earlier versions of Spring Data Elasticsearch used a Jackson based conversion, Spring Data Elasticsearch 3.2.x introduced the <<elasticsearch.mapping.meta-model>>.
-As of version 4.0 only the Meta Object Mapping is used, the Jackson based mapper is not available anymore and the `MappingElasticsearchConverter` is used.
-
-The main reasons for the removal of the Jackson based mapper are:
-
-* Custom mappings of fields needed to be done with annotations like `@JsonFormat` or `@JsonInclude`.
-This often caused problems when the same object was used in different JSON based datastores or sent over a JSON based API.
-* Custom field types and formats also need to be stored into the Elasticsearch index mappings.
-The Jackson based annotations did not fully provide all the information that is necessary to represent the types of Elasticsearch.
-* Fields must be mapped not only when converting from and to entities, but also in query argument, returned data and on other places.
-
-Using the `MappingElasticsearchConverter` now covers all these cases.
+Spring Data Elasticsearch Object Mapping is the process that maps a Java object - the domain entity - into the JSON 
+representation that is stored in Elasticsearch and back. The class that is internally used for this mapping is the 
+`MappingElasticsearcvhConverter`.
 
 [[elasticsearch.mapping.meta-model]]
 == Meta Model Object Mapping
@@ -31,14 +20,13 @@ The metadata is taken from the entity's properties which can be annotated.
 The following annotations are available:
 
 * `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database.
-The most important attributes are:
+The most important attributes are (check the API documentation for the complete list of attributes):
 ** `indexName`: the name of the index to store this entity in.
 This can contain a SpEL template expression like `"log-#{T(java.time.LocalDate).now().toString()}"`
 ** `createIndex`: flag whether to create an index on repository bootstrapping.
 Default value is _true_.
 See <<elasticsearch.repositories.autocreation>>
-** `versionType`: Configuration of version management.
-Default value is _EXTERNAL_.
+
 
 * `@Id`: Applied at the field level to mark the field used for identity purpose.
 * `@Transient`: By default all fields are mapped to the document when it is stored or retrieved, this annotation excludes the field.
@@ -102,6 +90,9 @@ The following table shows the different attributes and the mapping created from 
 
 NOTE: If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_.
 This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
+
+Check the code of the `org.springframework.data.elasticsearch.annotations.DateFormat` enum for a complete list of 
+predefined values and their patterns.
 
 [[elasticsearch.mapping.meta-model.annotations.range]]
 ==== Range types
@@ -194,7 +185,6 @@ Those type hints are represented as `_class` attributes within the document and 
 [source,java]
 ----
 public class Person {              <1>
-
   @Id String id;
   String firstname;
   String lastname;
@@ -274,7 +264,6 @@ Geospatial types like `Point` & `GeoPoint` are converted into _lat/lon_ pairs.
 [source,java]
 ----
 public class Address {
-
   String city, street;
   Point location;
 }
