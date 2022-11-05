@@ -184,7 +184,9 @@ public final class RestClients {
 	 *
 	 * @see ClientLogger
 	 * @since 3.2
+	 * @deprecated since 5.0
 	 */
+	@Deprecated
 	private static class HttpLoggingInterceptor implements HttpResponseInterceptor, HttpRequestInterceptor {
 
 		@Override

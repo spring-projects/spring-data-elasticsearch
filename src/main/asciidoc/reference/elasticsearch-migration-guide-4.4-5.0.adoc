@@ -6,6 +6,12 @@ This section describes breaking changes from version 4.4.x to 5.0.x and how remo
 [[elasticsearch-migration-guide-4.4-4.5.deprecations]]
 == Deprecations
 
+=== Custom trace level logging
+
+Logging by setting the property `logging.level.org.springframework.data.elasticsearch.client.WIRE=trace` is 
+deprecated now, the Elasticsearch `RestClient` provides a better solution that can be activated by setting the 
+logging level of the `tracer` package to "trace".
+
 [[elasticsearch-migration-guide-4.4-4.5.deprecations.package]]
 === `org.springframework.data.elasticsearch.client.erhlc` package
 

@@ -290,7 +290,9 @@ public final class ElasticsearchClients {
 	 *
 	 * @see ClientLogger
 	 * @since 4.4
+	 * @deprecated since 5.0
 	 */
+	@Deprecated
 	private static class HttpLoggingInterceptor implements HttpResponseInterceptor, HttpRequestInterceptor {
 
 		@Override
