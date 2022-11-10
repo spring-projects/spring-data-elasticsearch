@@ -46,7 +46,7 @@ public enum Dynamic {
 	/**
 	 * Inherit the dynamic setting from their parent object or from the mapping type.
 	 */
-	INHERIT("nherit");
+	INHERIT("inherit");
 
 	private final String mappedName;
 
