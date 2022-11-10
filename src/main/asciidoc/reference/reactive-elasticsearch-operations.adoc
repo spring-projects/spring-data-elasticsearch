@@ -5,80 +5,22 @@
 
 The `ReactiveElasticsearchTemplate` is the default implementation of `ReactiveElasticsearchOperations`.
 
-[[elasticsearch.reactive.template]]
-== Reactive Elasticsearch Template
+[[elasticsearch.reactive.operations]]
+== Reactive Elasticsearch Operations
 
-To get started the `ReactiveElasticsearchTemplate` needs to know about the actual client to work with.
-Please see <<elasticsearch.clients.reactive>> for details on the client.
+To get started the `ReactiveElasticsearchOperations` needs to know about the actual client to work with.
+Please see <<elasticsearch.clients.reactiverestclient>> for details on the client and how to configure it.
 
-[[elasticsearch.reactive.template.configuration]]
-=== Reactive Template Configuration
+[[elasticsearch.reactive.operations.usage]]
+=== Reactive Operations Usage
 
-The easiest way of setting up the `ReactiveElasticsearchTemplate` is via `AbstractReactiveElasticsearchConfiguration` providing
-dedicated configuration method hooks for `base package`, the `initial entity set` etc.
-
-.The AbstractReactiveElasticsearchConfiguration
-====
-[source,java]
-----
-@Configuration
-public class Config extends AbstractReactiveElasticsearchConfiguration {
-
-  @Bean <1>
-  @Override
-  public ReactiveElasticsearchClient reactiveElasticsearchClient() {
-      // ...
-  }
-}
-----
-<1> Configure the client to use. This can be done by `ReactiveRestClients` or directly via `DefaultReactiveElasticsearchClient`.
-====
-
-NOTE: If applicable set default `HttpHeaders` via the `ClientConfiguration` of the `ReactiveElasticsearchClient`. See <<elasticsearch.clients.configuration>>.
-
-TIP: If needed the `ReactiveElasticsearchTemplate` can be configured with default `RefreshPolicy` and `IndicesOptions` that get applied to the related requests by overriding the defaults of `refreshPolicy()` and `indicesOptions()`.
-
-However one might want to be more in control over the actual components and use a more verbose approach.
-
-.Configure the ReactiveElasticsearchTemplate
-====
-[source,java]
-----
-@Configuration
-public class Config {
-
-  @Bean <1>
-  public ReactiveElasticsearchClient reactiveElasticsearchClient() {
-    // ...
-  }
-  @Bean <2>
-  public ElasticsearchConverter elasticsearchConverter() {
-    return new MappingElasticsearchConverter(elasticsearchMappingContext());
-  }
-  @Bean <3>
-  public SimpleElasticsearchMappingContext elasticsearchMappingContext() {
-    return new SimpleElasticsearchMappingContext();
-  }
-  @Bean <4>
-  public ReactiveElasticsearchOperations reactiveElasticsearchOperations() {
-    return new ReactiveElasticsearchTemplate(reactiveElasticsearchClient(), elasticsearchConverter());
-  }
-}
-----
-<1> Configure the client to use. This can be done by `ReactiveRestClients` or directly via `DefaultReactiveElasticsearchClient`.
-<2> Set up the `ElasticsearchConverter` used for domain type mapping utilizing metadata provided by the mapping context.
-<3> The Elasticsearch specific mapping context for domain type metadata.
-<4> The actual template based on the client and conversion infrastructure.
-====
-
-[[elasticsearch.reactive.template.usage]]
-=== Reactive Template Usage
-
-`ReactiveElasticsearchTemplate` lets you save, find and delete your domain objects and map those objects to documents stored in Elasticsearch.
+`ReactiveElasticsearchOperations` lets you save, find and delete your domain objects and map those objects to documents 
+stored
+in Elasticsearch.
 
 Consider the following:
 
-.Use the ReactiveElasticsearchTemplate
+.Use the ReactiveElasticsearchOperations
 ====
 [source,java]
 ----
@@ -94,15 +36,20 @@ public class Person {
 
 [source,java]
 ----
-template.save(new Person("Bruce Banner", 42))                    <1>
+
+ReactiveELasticsearchOperations operations;                        <.>
+
+// ...
+
+operations.save(new Person("Bruce Banner", 42))                    <.>
   .doOnNext(System.out::println)
-  .flatMap(person -> template.findById(person.id, Person.class)) <2>
+  .flatMap(person -> operations.get(person.id, Person.class))      <.>
   .doOnNext(System.out::println)
-  .flatMap(person -> template.delete(person))                    <3>
+  .flatMap(person -> operations.delete(person))                    <.>
   .doOnNext(System.out::println)
-  .flatMap(id -> template.count(Person.class))                   <4>
+  .flatMap(id -> operations.count(Person.class))                   <.>
   .doOnNext(System.out::println)
-  .subscribe(); <5>
+  .subscribe();                                                    <.>
 ----
 
 The above outputs the following sequence on the console.
@@ -114,11 +61,10 @@ The above outputs the following sequence on the console.
 > QjWCWWcBXiLAnp77ksfR
 > 0
 ----
-<1> Insert a new `Person` document into the _marvel_ index under type _characters_. The `id` is generated on server side and set into the instance returned.
-<2> Lookup the `Person` with matching `id` in the _marvel_ index under type _characters_.
-<3> Delete the `Person` with matching `id`, extracted from the given instance, in the _marvel_ index under type _characters_.
-<4> Count the total number of documents in the _marvel_ index under type _characters_.
-<5> Don't forget to _subscribe()_.
+<.> Insert a new `Person` document into the _marvel_ index . The `id` is generated on server 
+side and set into the instance returned.
+<.> Lookup the `Person` with matching `id` in the _marvel_ index.
+<.> Delete the `Person` with matching `id`, extracted from the given instance, in the _marvel_ index.
+<.> Count the total number of documents in the _marvel_ index.
+<.> Don't forget to _subscribe()_.
 ====
-
-

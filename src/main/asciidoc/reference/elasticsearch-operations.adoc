@@ -34,7 +34,7 @@ There is support for automatic creation of indices and writing the mappings when
 == Usage examples
 
 The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller.
-
+The example assumes that `Person` is a class that is annotated with `@Document`, `@Id` etc (see <<elasticsearch.mapping.meta-model.annotations>>).
 .ElasticsearchOperations usage
 ====
 [source,java]
@@ -45,34 +45,29 @@ public class TestController {
 
   private  ElasticsearchOperations elasticsearchOperations;
 
-  public TestController(ElasticsearchOperations elasticsearchOperations) { <1>
+  public TestController(ElasticsearchOperations elasticsearchOperations) { <.>
     this.elasticsearchOperations = elasticsearchOperations;
   }
 
   @PostMapping("/person")
-  public String save(@RequestBody Person person) {                         <2>
-
-    IndexQuery indexQuery = new IndexQueryBuilder()
-      .withId(person.getId().toString())
-      .withObject(person)
-      .build();
-    String documentId = elasticsearchOperations.index(indexQuery);
-    return documentId;
+  public String save(@RequestBody Person person) {                         <.>
+    Person savedEntity = elasticsearchOperations.save(person);
+    return savedEntity.getId();
   }
 
   @GetMapping("/person/{id}")
-  public Person findById(@PathVariable("id")  Long id) {                   <3>
-    Person person = elasticsearchOperations
-      .queryForObject(GetQuery.getById(id.toString()), Person.class);
+  public Person findById(@PathVariable("id")  Long id) {                   <.>
+    Person person = elasticsearchOperations.get(id.toString(), Person.class);
     return person;
   }
 }
 
 ----
 
-<1> Let Spring inject the provided `ElasticsearchOperations` bean in the constructor.
-<2> Store some entity in the Elasticsearch cluster.
-<3> Retrieve the entity with a query by id.
+<.> Let Spring inject the provided `ElasticsearchOperations` bean in the constructor.
+<.> Store some entity in the Elasticsearch cluster. The id is read from the returned entity, as it might have been 
+null in the `person` object and been created by Elasticsearch.
+<.> Retrieve the entity with a get by id.
 ====
 
 To see the full possibilities of `ElasticsearchOperations` please refer to the API documentation.

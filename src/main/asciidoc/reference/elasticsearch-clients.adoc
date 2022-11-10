@@ -3,8 +3,10 @@
 
 This chapter illustrates configuration and usage of supported Elasticsearch client implementations.
 
-Spring Data Elasticsearch operates upon an Elasticsearch client that is connected to a single Elasticsearch node or a cluster.
-Although the Elasticsearch Client can be used to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
+Spring Data Elasticsearch operates upon an Elasticsearch client (provided by Elasticsearch client libraries) that is 
+connected to a single Elasticsearch node or a cluster. 
+Although the Elasticsearch Client can be used directly to work with the cluster, applications using Spring Data 
+Elasticsearch normally use the higher level abstractions of <<elasticsearch.operations>> and <<elasticsearch.repositories>>.
 
 [[elasticsearch.clients.restclient]]
 == Imperative Rest Client
@@ -21,14 +23,20 @@ public class MyClientConfig extends ElasticsearchConfiguration {
 
 	@Override
 	public ClientConfiguration clientConfiguration() {
-		return ClientConfiguration.builder() //
-			.connectedTo("localhost:9200") //
+		return ClientConfiguration.builder()           <.> 
+			.connectedTo("localhost:9200") 
 			.build();
 	}
 }
+----
+<.> for a detailed description of the builder methods see <<elasticsearch.clients.configuration>>
+====
 
-// ...
+The following beans can then be injected in other Spring components:
 
+====
+[source,java]
+----
 @Autowired
 ElasticsearchOperations operations;      <.>
 
@@ -39,11 +47,8 @@ ElasticsearchClient elasticsearchClient; <.>
 RestClient restClient;                   <.>
 ----
 
-the following can be injected:
-
 <.> an implementation of `ElasticsearchOperations`
 <.> the `co.elastic.clients.elasticsearch.ElasticsearchClient` that is used.
-This is new Elasticsearch client implementation.
 <.> the low level `RestClient` from the Elasticsearch libraries
 ====
 
@@ -61,18 +66,24 @@ When working with the reactive stack, the configuration must be derived from a d
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchConfiguration;
 
 @Configuration
-public class MyClientConfig extends ElasticsearchConfiguration {
+public class MyClientConfig extends ReactiveElasticsearchConfiguration {
 
 	@Override
 	public ClientConfiguration clientConfiguration() {
-		return ClientConfiguration.builder() //
-			.connectedTo("localhost:9200") //
+		return ClientConfiguration.builder()           <.>
+			.connectedTo("localhost:9200") 
 			.build();
 	}
 }
+----
+<.> for a detailed description of the builder methods see <<elasticsearch.clients.configuration>>
+====
 
-// ...
+The following beans can then be injected in other Spring components:
 
+====
+[source,java]
+----
 @Autowired
 ReactiveElasticsearchOperations operations;      <.>
 
@@ -85,9 +96,9 @@ RestClient restClient;                           <.>
 
 the following can be injected:
 
-<.> an implementation of `ElasticsearchOperations`
+<.> an implementation of `ReactiveElasticsearchOperations`
 <.> the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient` that is used.
-This is based on the new Elasticsearch client implementation.
+This is a reactive implementation based on the Elasticsearch client implementation.
 <.> the low level `RestClient` from the Elasticsearch libraries
 ====
 
@@ -97,8 +108,14 @@ When using repositories, this instance is used under the hood as well.
 [[elasticsearch.clients.resthighlevelclient]]
 == High Level REST Client (deprecated)
 
-The Java RestHighLevelClient is deprecated, but still can be configured like shown (read
-<<elasticsearch-migration-guide-4.4-5.0.old-client>> as well):
+[CAUTION]
+====
+The Elasticsearch Java RestHighLevelClient is deprecated, but still can be configured like shown (make sure to read
+<<elasticsearch-migration-guide-4.4-5.0.old-client>> as well). 
+
+It should only be used to access an Elasticsearch cluster running version 7, even with the compatibility headers set 
+there are cases where the `RestHighLevelClient` cannot read the responses sent from a version 8 cluster. 
+====
 
 .RestHighLevelClient
 ====
@@ -127,15 +144,6 @@ public class RestClientConfig extends AbstractElasticsearchConfiguration {
   RestHighLevelClient highLevelClient;
 
   RestClient lowLevelClient = highLevelClient.lowLevelClient();                        <3>
-
-// ...
-
-IndexRequest request = new IndexRequest("spring-data")
-  .id(randomID())
-  .source(singletonMap("feature", "high-level-rest-client"))
-  .setRefreshPolicy(IMMEDIATE);
-
-IndexResponse response = highLevelClient.index(request,RequestOptions.DEFAULT);
 ----
 
 <1> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
@@ -150,8 +158,12 @@ The `org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchCl
 It uses the request/response objects provided by the Elasticsearch core project.
 Calls are directly operated on the reactive stack, **not** wrapping async (thread pool bound) responses into reactive types.
 
-This was the first reactive implementation Spring Data Elasticsearch provided, but now is deprecated in favour of the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient`
+[CAUTION]
+====
+This was the first reactive implementation Spring Data Elasticsearch provided, but now is deprecated in favour
+of the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient`
 which uses the functionality offered by the new Elasticsearch client libraries.
+====
 
 .Reactive REST Client (deprecated)
 ====
@@ -194,6 +206,11 @@ Client behaviour can be changed via the `ClientConfiguration` that allows to set
 ====
 [source,java]
 ----
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.support.HttpHeaders;
+
+import static org.springframework.data.elasticsearch.client.elc.ElasticsearchClients.*;
+
 HttpHeaders httpHeaders = new HttpHeaders();
 httpHeaders.add("some-header", "on every request")                      <.>
 
@@ -212,7 +229,7 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
     return headers;
   })
   .withClientConfigurer(                                                <.>
-    ElasticsearchClients.ElasticsearchClientConfigurationCallback.from(clientBuilder -> {
+    ElasticsearchClientConfigurationCallback.from(clientBuilder -> {
   	  // ...
       return clientBuilder;
   	}))
@@ -227,12 +244,10 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
 <.> Optionally set a proxy.
 <.> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
 <.> Set the connection timeout.
-Default is 10 sec.
 <.> Set the socket timeout.
-Default is 5 sec.
 <.> Optionally set headers.
 <.> Add basic authentication.
-<.> A `Supplier<Header>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
+<.> A `Supplier<HttpHeaders>` function can be specified which is called every time before a request is sent to Elasticsearch - here, as an example, the current time is written in a header.
 <.> a function to configure the created client (see <<elasticsearch.clients.configuration.callbacks>>), can be added 
 multiple times.
 ====
@@ -251,6 +266,8 @@ The following callbacks are provided:
 [[elasticsearch.clients.configuration.callbacks.rest]]
 ==== Configuration of the low level Elasticsearch `RestClient`:
 
+This callback provides a `org.elasticsearch.client.RestClientBuilder` that can be used to configure the Elasticsearch
+`RestClient`:
 ====
 [source,java]
 ----
@@ -265,6 +282,9 @@ ClientConfiguration.builder()
 
 [[elasticsearch.clients.configurationcallbacks.httpasync]]
 ==== Configuration of the HttpAsyncClient used by the low level Elasticsearch `RestClient`:
+
+This callback provides a `org.apache.http.impl.nio.client.HttpAsyncClientBuilder` to configure the HttpCLient that is
+used by the `RestClient`.
 
 ====
 [source,java]
@@ -286,6 +306,9 @@ https://www.elastic.co/guide/en/elasticsearch/reference/8.0/rest-api-compatibili
 documentation].
 
 For the imperative client this must be done by setting the default headers, for the reactive code this must be done using a header supplier:
+
+CAUTION: Even when these headers are set, there are cases where the response returned from the cluster cannot be 
+parsed with the client. This is not an error in Spring Data Elasticsearch.
 
 ====
 [source,java]
@@ -310,12 +333,13 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
 [[elasticsearch.clients.logging]]
 == Client Logging
 
-To see what is actually sent to and received from the server `Request` / `Response` logging on the transport level needs to be turned on as outlined in the snippet below.
+To see what is actually sent to and received from the server `Request` / `Response` logging on the transport level 
+needs to be turned on as outlined in the snippet below. This can be enabled in the Elasticsearch client by setting 
+the level of the `tracer` package to "trace" (see 
+https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/java-rest-low-usage-logging.html)
 
 .Enable transport layer logging
 [source,xml]
 ----
-<logger name="org.springframework.data.elasticsearch.client.WIRE" level="trace"/>
+<logger name="tracer" level="trace"/>
 ----
-
-NOTE: The above applies to both the `RestHighLevelClient` and `ReactiveElasticsearchClient` when obtained via `RestClients` respectively `ReactiveRestClients`.
