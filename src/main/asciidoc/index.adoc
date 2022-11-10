@@ -12,6 +12,8 @@ NOTE: Copies of this document may be made for your own use and for distribution 
 toc::[]
 
 include::preface.adoc[]
+include::{spring-data-commons-docs}/upgrade.adoc[leveloffset=+1]
+
 
 :leveloffset: +1
 include::{spring-data-commons-docs}/repositories.adoc[]
