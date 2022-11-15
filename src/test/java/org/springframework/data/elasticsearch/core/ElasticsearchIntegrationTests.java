@@ -15,20 +15,21 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static java.util.Collections.*;
-import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.annotations.Document.VersionType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
+import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.springframework.data.elasticsearch.annotations.Document.VersionType.EXTERNAL_GTE;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
-import static org.springframework.data.elasticsearch.core.document.Document.*;
-import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Keyword;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
+import static org.springframework.data.elasticsearch.core.document.Document.create;
+import static org.springframework.data.elasticsearch.core.document.Document.parse;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.nextIdAsString;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
 
-import java.lang.Double;
-import java.lang.Integer;
-import java.lang.Long;
-import java.lang.Object;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -78,7 +79,20 @@ import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
+import org.springframework.data.elasticsearch.core.query.HighlightQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.IndicesOptions;
+import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
+import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -478,6 +492,39 @@ public abstract class ElasticsearchIntegrationTests {
 
 		// then
 		assertThat(searchHits.getTotalHits()).isEqualTo(2);
+	}
+
+	@Test // #2362
+	@DisplayName("should do bulk index into different indices")
+	void shouldDoBulkIndexIntoDifferentIndices() {
+
+		var indexName = indexNameProvider.indexName();
+		var documentId1 = "1";
+		var sampleEntity1 = SampleEntity.builder().id(documentId1).message("some message").build();
+		var indexQuery1 = new IndexQueryBuilder() //
+				.withId(documentId1) //
+				.withObject(sampleEntity1) //
+				.withIndex(indexName + "-" + documentId1) //
+				.build();
+		var documentId2 = "2";
+		var sampleEntity2 = SampleEntity.builder().id(documentId2).message("some message").build();
+		var indexQuery2 = new IndexQueryBuilder() //
+				.withId(documentId2) //
+				.withObject(sampleEntity2) //
+				.withIndex(indexName + "-" + documentId2) //
+				.build();
+
+		var indexQueries = Arrays.asList(indexQuery1, indexQuery2);
+
+		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexName));
+
+		var searchHits = operations.search(operations.matchAllQuery(), SampleEntity.class,
+				IndexCoordinates.of(indexName + "*"));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(2);
+		searchHits.forEach(searchHit -> {
+			assertThat(searchHit.getIndex()).isEqualTo(indexName + "-" + searchHit.getId());
+		});
 	}
 
 	@Test
@@ -4548,12 +4595,12 @@ public abstract class ElasticsearchIntegrationTests {
 		@Nullable
 		@Field(type = Text) private String lastName;
 
-@Field(type = Keyword)
-@WriteOnlyProperty
-@AccessType(AccessType.Type.PROPERTY)
-public String getFullName() {
-	return sanitize(firstName) + sanitize(lastName);
-}
+		@Field(type = Keyword)
+		@WriteOnlyProperty
+		@AccessType(AccessType.Type.PROPERTY)
+		public String getFullName() {
+			return sanitize(firstName) + sanitize(lastName);
+		}
 
 		@Nullable
 		public String getId() {
