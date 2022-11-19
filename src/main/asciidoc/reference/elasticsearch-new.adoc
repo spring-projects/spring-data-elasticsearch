@@ -1,12 +1,17 @@
 [[new-features]]
 = What's new
 
+[[new-features.5-0-1]]
+== New in Spring Data Elasticsearch 5.0.1
+
+* Upgrade to Elasticsearch 8.5.1
+
 [[new-features.5-0-0]]
 == New in Spring Data Elasticsearch 5.0
 
 * Upgrade to Java 17 baseline
 * Upgrade to Spring Framework 6
-* Upograde to Elasticsearch 8.5.0
+* Upgrade to Elasticsearch 8.5.0
 * Use the new Elasticsearch client library
 
 [[new-features.4-4-0]]
