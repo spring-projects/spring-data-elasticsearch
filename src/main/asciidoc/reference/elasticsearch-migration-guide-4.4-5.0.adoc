@@ -165,4 +165,4 @@ The old deprecated `RestHighLevelClient` can still be used, but you will need to
 ----
 ====
 
-Make sure to specify the version 7.17.6 explicitly, otherwise maven will resolve to 8.5.0, and this does not exist.
+Make sure to specify the version 7.17.6 explicitly, otherwise maven will resolve to 8.5.1, and this does not exist.
