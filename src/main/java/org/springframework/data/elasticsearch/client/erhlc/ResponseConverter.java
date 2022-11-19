@@ -48,6 +48,8 @@ import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -78,14 +80,12 @@ public class ResponseConverter {
 	}
 
 	public static AliasData toAliasData(AliasMetadata aliasMetaData) {
-		Document filter = null;
-		CompressedXContent aliasMetaDataFilter = aliasMetaData.getFilter();
 
-		if (aliasMetaDataFilter != null) {
-			filter = Document.parse(aliasMetaDataFilter.string());
-		}
-		return AliasData.of(aliasMetaData.alias(), filter, aliasMetaData.indexRouting(), aliasMetaData.getSearchRouting(),
-				aliasMetaData.writeIndex(), aliasMetaData.isHidden());
+		CompressedXContent aliasMetaDataFilter = aliasMetaData.getFilter();
+		Query filterQuery = (aliasMetaDataFilter != null) ? StringQuery.builder(aliasMetaDataFilter.string()).build()
+				: null;
+		return AliasData.of(aliasMetaData.alias(), filterQuery, aliasMetaData.indexRouting(),
+				aliasMetaData.getSearchRouting(), aliasMetaData.writeIndex(), aliasMetaData.isHidden());
 	}
 	// endregion
 

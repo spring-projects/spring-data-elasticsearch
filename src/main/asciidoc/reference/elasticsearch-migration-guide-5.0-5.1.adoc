@@ -1,0 +1,11 @@
+[[elasticsearch-migration-guide-5.0-5.1]]
+= Upgrading from 5.0.x to 5.1.x
+
+This section describes breaking changes from version 5.0.x to 5.1.x and how removed features can be replaced by new introduced features.
+
+[[elasticsearch-migration-guide-5.0-5.1.breaking-changes]]
+== Breaking Changes
+
+In the `org.springframework.data.elasticsearch.core.index.AliasData` class, which is used for alias information 
+returned from Elasticsearch, the property `filter` (of type `Document`) is replaced by `filterQuery` which is of type
+`org.springframework.data.elasticsearch.core.query.Query`.

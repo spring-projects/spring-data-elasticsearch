@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.data.elasticsearch.client.elc.JsonUtils.*;
+import static org.springframework.data.elasticsearch.client.elc.JsonUtils.toJson;
 
 import co.elastic.clients.elasticsearch._types.BulkIndexByScrollFailure;
 import co.elastic.clients.elasticsearch._types.ErrorCause;
@@ -26,7 +26,16 @@ import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
 import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetError;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
-import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.elasticsearch.indices.Alias;
+import co.elastic.clients.elasticsearch.indices.AliasDefinition;
+import co.elastic.clients.elasticsearch.indices.GetAliasResponse;
+import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
+import co.elastic.clients.elasticsearch.indices.GetIndicesSettingsResponse;
+import co.elastic.clients.elasticsearch.indices.GetMappingResponse;
+import co.elastic.clients.elasticsearch.indices.GetTemplateResponse;
+import co.elastic.clients.elasticsearch.indices.IndexSettings;
+import co.elastic.clients.elasticsearch.indices.IndexState;
+import co.elastic.clients.elasticsearch.indices.TemplateMapping;
 import co.elastic.clients.elasticsearch.indices.get_mapping.IndexMappingRecord;
 import co.elastic.clients.json.JsonpMapper;
 
@@ -51,6 +60,7 @@ import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
 import org.springframework.lang.Nullable;
@@ -190,18 +200,19 @@ class ResponseConverter {
 	}
 
 	private AliasData indicesGetAliasData(String aliasName, Alias alias) {
+
 		Query filter = alias.filter();
 		String filterJson = filter != null ? toJson(filter, jsonpMapper) : null;
-		Document filterDocument = filterJson != null ? Document.parse(filterJson) : null;
-		return AliasData.of(aliasName, filterDocument, alias.indexRouting(), alias.searchRouting(), alias.isWriteIndex(),
+		var filterQuery = filterJson != null ? StringQuery.builder(filterJson).build() : null;
+		return AliasData.of(aliasName, filterQuery, alias.indexRouting(), alias.searchRouting(), alias.isWriteIndex(),
 				alias.isHidden());
 	}
 
 	private AliasData indicesGetAliasData(String aliasName, AliasDefinition alias) {
 		Query filter = alias.filter();
 		String filterJson = filter != null ? toJson(filter, jsonpMapper) : null;
-		Document filterDocument = filterJson != null ? Document.parse(filterJson) : null;
-		return AliasData.of(aliasName, filterDocument, alias.indexRouting(), alias.searchRouting(), alias.isWriteIndex(),
+		var filterQuery = filterJson != null ? StringQuery.builder(filterJson).build() : null;
+		return AliasData.of(aliasName, filterQuery, alias.indexRouting(), alias.searchRouting(), alias.isWriteIndex(),
 				null);
 	}
 
@@ -280,7 +291,7 @@ class ResponseConverter {
 				.withThrottledMillis(reindexResponse.throttledMillis()) //
 				.withRequestsPerSecond(reindexResponse.requestsPerSecond()) //
 				.withThrottledUntilMillis(reindexResponse.throttledUntilMillis()) //
-			.withFailures(failures) //
+				.withFailures(failures) //
 				.build();
 	}
 

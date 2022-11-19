@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.lang.Nullable;
 
 /**
@@ -24,34 +24,35 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 public class AliasData {
-	private String alias;
-	@Nullable Document filter;
-	@Nullable private String indexRouting;
-	@Nullable private String searchRouting;
-	@Nullable private Boolean isWriteIndex;
-	@Nullable private Boolean isHidden;
+	private final String alias;
+	@Nullable private final Query filterQuery;
+	@Nullable private final String indexRouting;
+	@Nullable private final String searchRouting;
+	@Nullable private final Boolean isWriteIndex;
+	@Nullable private final Boolean isHidden;
 
-	private AliasData(String alias, @Nullable Document filter, @Nullable String indexRouting,
-			@Nullable String searchRouting, Boolean isWriteIndex, Boolean isHidden) {
+	private AliasData(String alias, @Nullable Query filterQuery, @Nullable String indexRouting,
+			@Nullable String searchRouting, @Nullable Boolean isWriteIndex, @Nullable Boolean isHidden) {
 		this.alias = alias;
-		this.filter = filter;
+		this.filterQuery = filterQuery;
 		this.indexRouting = indexRouting;
 		this.searchRouting = searchRouting;
 		this.isWriteIndex = isWriteIndex;
 		this.isHidden = isHidden;
 	}
 
-	public static AliasData of(String alias, @Nullable Document filter, @Nullable String indexRouting,
+	public static AliasData of(String alias, @Nullable Query filterQuery, @Nullable String indexRouting,
 			@Nullable String searchRouting, @Nullable Boolean isWriteIndex, @Nullable Boolean isHidden) {
-		return new AliasData(alias, filter, indexRouting, searchRouting, isWriteIndex, isHidden);
+		return new AliasData(alias, filterQuery, indexRouting, searchRouting, isWriteIndex, isHidden);
 	}
 
 	public String getAlias() {
 		return alias;
 	}
 
-	public Document getFilter() {
-		return filter;
+	@Nullable
+	public Query getFilterQuery() {
+		return filterQuery;
 	}
 
 	@Nullable
