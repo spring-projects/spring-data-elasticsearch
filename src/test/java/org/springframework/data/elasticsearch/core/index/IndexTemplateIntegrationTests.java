@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.skyscreamer.jsonassert.JSONAssert.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.skyscreamer.jsonassert.JSONAssert.assertEquals;
 
 import java.util.Map;
 import java.util.UUID;
@@ -35,6 +35,8 @@ import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
 
@@ -86,15 +88,19 @@ public abstract class IndexTemplateIntegrationTests implements NewElasticsearchC
 	}
 
 	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
-	@Test // DATAES-612
+	@Test // DATAES-612, #2073
 	void shouldGetTemplate() throws JSONException {
 		IndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
 
 		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class);
 		Settings settings = indexOps.createSettings(TemplateClass.class);
 
-		AliasActions aliasActions = new AliasActions(
-				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
+		var filterQuery = CriteriaQuery.builder(Criteria.where("message").is("foo")).build();
+		AliasActions aliasActions = new AliasActions(new AliasAction.Add(AliasActionParameters.builderForTemplate() //
+				.withAliases("alias1", "alias2") //
+				.withFilterQuery(filterQuery, TemplateClass.class)//
+				.build()));
+
 		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder("test-template", "log-*") //
 				.withSettings(settings) //
 				.withMappings(mapping) //
@@ -117,7 +123,9 @@ public abstract class IndexTemplateIntegrationTests implements NewElasticsearchC
 		assertThat(aliases).hasSize(2);
 		AliasData alias1 = aliases.get("alias1");
 		assertThat(alias1.getAlias()).isEqualTo("alias1");
+		assertThat(alias1.getFilterQuery()).isNotNull();
 		AliasData alias2 = aliases.get("alias2");
+		assertThat(alias2.getFilterQuery()).isNotNull();
 		assertThat(alias2.getAlias()).isEqualTo("alias2");
 		assertThat(templateData.getOrder()).isEqualTo(putTemplateRequest.getOrder());
 		assertThat(templateData.getVersion()).isEqualTo(putTemplateRequest.getVersion());
