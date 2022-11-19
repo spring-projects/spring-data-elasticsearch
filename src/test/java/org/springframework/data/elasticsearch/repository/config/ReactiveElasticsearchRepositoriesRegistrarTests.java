@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.config;
 
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
@@ -36,6 +37,7 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @SpringIntegrationTest
 @ContextConfiguration(classes = { ReactiveElasticsearchRepositoriesRegistrarTests.Config.class })
 public class ReactiveElasticsearchRepositoriesRegistrarTests {
@@ -45,6 +47,7 @@ public class ReactiveElasticsearchRepositoriesRegistrarTests {
 	@EnableReactiveElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 
+	@Autowired ReactiveElasticsearchOperations operations;
 	@Autowired ReactiveSampleEntityRepository repository;
 	@Autowired ApplicationContext context;
 
@@ -54,6 +57,9 @@ public class ReactiveElasticsearchRepositoriesRegistrarTests {
 		Assertions.assertThat(context).isNotNull();
 		Assertions.assertThat(repository).isNotNull();
 
+		// there is an index to delete after this test
+		operations.indexOps(ReactiveElasticsearchRepositoryConfigurationExtensionUnitTests.SwCharacter.class).delete()
+				.block();
 	}
 
 	interface ReactiveSampleEntityRepository extends ReactiveElasticsearchRepository<SampleEntity, String> {}
