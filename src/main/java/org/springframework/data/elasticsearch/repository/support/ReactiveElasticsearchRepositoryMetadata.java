@@ -15,9 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import reactor.core.publisher.Flux;
-
 import java.lang.reflect.ParameterizedType;
+
+import org.springframework.data.util.ReactiveWrappers;
 
 /**
  * @author Peter-Josef Meisch
@@ -32,6 +32,6 @@ public class ReactiveElasticsearchRepositoryMetadata extends ElasticsearchReposi
 	@Override
 	protected boolean isAllowedGenericType(ParameterizedType methodGenericReturnType) {
 		return super.isAllowedGenericType(methodGenericReturnType)
-				|| Flux.class.isAssignableFrom((Class<?>) methodGenericReturnType.getRawType());
+				|| ReactiveWrappers.supports((Class<?>) methodGenericReturnType.getRawType());
 	}
 }

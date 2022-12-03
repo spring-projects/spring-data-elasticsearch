@@ -94,14 +94,14 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 			query.addSourceFilter(sourceFilter);
 		}
 
-		Class<?> targetType = processor.getReturnedType().getTypeToRead();
 		String indexName = queryMethod.getEntityInformation().getIndexName();
 		IndexCoordinates index = IndexCoordinates.of(indexName);
 
 		ReactiveElasticsearchQueryExecution execution = getExecution(parameterAccessor,
 				new ResultProcessingConverter(processor));
 
-		return execution.execute(query, processor.getReturnedType().getDomainType(), targetType, index);
+		var returnedType = processor.getReturnedType();
+		return execution.execute(query, returnedType.getDomainType(), returnedType.getTypeToRead(), index);
 	}
 
 	private ReactiveElasticsearchQueryExecution getExecution(ElasticsearchParameterAccessor accessor,
