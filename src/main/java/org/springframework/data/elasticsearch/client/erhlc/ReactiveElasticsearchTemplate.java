@@ -139,7 +139,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		return entitiesPublisher //
 				.flatMapMany(entities -> Flux.fromIterable(entities) //
-						.concatMap(entity -> maybeCallBeforeConvert(entity, index)) //
+						.concatMap(entity -> maybeCallbackBeforeConvert(entity, index)) //
 				).collectList() //
 				.map(Entities::new) //
 				.flatMapMany(entities -> {
@@ -158,7 +158,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 								updateIndexedObject(savedEntity, IndexedObjectInformation.of(response.getId(), response.getSeqNo(),
 										response.getPrimaryTerm(), response.getVersion()));
 
-								return maybeCallAfterSave(savedEntity, index);
+								return maybeCallbackAfterSave(savedEntity, index);
 							});
 				});
 	}

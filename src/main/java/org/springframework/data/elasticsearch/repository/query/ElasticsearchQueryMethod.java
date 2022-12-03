@@ -184,7 +184,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * {@link org.springframework.data.elasticsearch.core.SearchHits} or a collection of
 	 * {@link org.springframework.data.elasticsearch.core.SearchHit}.
 	 *
-	 * @return true if the method has a {@link org.springframework.data.elasticsearch.core.SearchHit}t related return type
+	 * @return true if the method has a {@link org.springframework.data.elasticsearch.core.SearchHit} related return type
 	 * @since 4.0
 	 */
 	public boolean isSearchHitMethod() {
@@ -298,7 +298,8 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		return fetchSourceFilterBuilder.build();
 	}
 
-	private String[] mapParameters(String[] source, ParameterAccessor parameterAccessor, StringQueryUtil stringQueryUtil) {
+	private String[] mapParameters(String[] source, ParameterAccessor parameterAccessor,
+			StringQueryUtil stringQueryUtil) {
 
 		List<String> fieldNames = new ArrayList<>();
 
@@ -308,7 +309,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 				String fieldName = stringQueryUtil.replacePlaceholders(s, parameterAccessor);
 				// this could be "[\"foo\",\"bar\"]", must be split
 				if (fieldName.startsWith("[") && fieldName.endsWith("]")) {
-					//noinspection RegExpRedundantEscape
+					// noinspection RegExpRedundantEscape
 					fieldNames.addAll( //
 							Arrays.asList(fieldName.substring(1, fieldName.length() - 2) //
 									.replaceAll("\\\"", "") //

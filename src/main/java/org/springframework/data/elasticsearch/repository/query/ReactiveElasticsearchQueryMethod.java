@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import static org.springframework.data.repository.util.ClassUtils.*;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
@@ -36,8 +35,8 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
-import org.springframework.data.repository.util.ReactiveWrappers;
 import org.springframework.data.util.Lazy;
+import org.springframework.data.util.ReactiveWrappers;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
@@ -74,17 +73,19 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 			if (!multiWrapper) {
 				throw new IllegalStateException(String.format(
 						"Method has to use a either multi-item reactive wrapper return type or a wrapped Page/Slice type. Offending method: %s",
-					method));
+						method));
 			}
 
 			if (hasParameterOfType(method, Sort.class)) {
 				throw new IllegalStateException(String.format("Method must not have Pageable *and* Sort parameter. "
-						+ "Use sorting capabilities on Pageble instead! Offending method: %s", method));
+						+ "Use sorting capabilities on Pageable instead! Offending method: %s", method));
 			}
 		}
 
-		this.isCollectionQuery = Lazy.of(() -> (!(isPageQuery() || isSliceQuery())
-				&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery()));
+		this.isCollectionQuery = Lazy.of(() -> {
+			return (!(isPageQuery() || isSliceQuery())
+					&& ReactiveWrappers.isMultiValueType(metadata.getReturnType(method).getType()) || super.isCollectionQuery());
+		});
 	}
 
 	@Override
@@ -150,7 +151,7 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 	@Override
 	protected boolean isAllowedGenericType(ParameterizedType methodGenericReturnType) {
 		return super.isAllowedGenericType(methodGenericReturnType)
-				|| Flux.class.isAssignableFrom((Class<?>) methodGenericReturnType.getRawType());
+				|| ReactiveWrappers.supports((Class<?>) methodGenericReturnType.getRawType());
 	}
 
 }
