@@ -311,7 +311,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		Assert.notNull(entity, "Entity must not be null!");
 		Assert.notNull(index, "index must not be null");
 
-		return maybeCallBeforeConvert(entity, index)
+		return maybeCallbackBeforeConvert(entity, index)
 				.flatMap(entityAfterBeforeConversionCallback -> doIndex(entityAfterBeforeConversionCallback, index)) //
 				.map(it -> {
 					T savedEntity = it.getT1();
@@ -321,7 +321,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 							indexResponseMetaData.seqNo(), //
 							indexResponseMetaData.primaryTerm(), //
 							indexResponseMetaData.version()));
-				}).flatMap(saved -> maybeCallAfterSave(saved, index));
+				}).flatMap(saved -> maybeCallbackAfterSave(saved, index));
 	}
 
 	abstract protected <T> Mono<Tuple2<T, IndexResponseMetaData>> doIndex(T entity, IndexCoordinates index);
@@ -493,7 +493,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	// region callbacks
 
-	protected <T> Mono<T> maybeCallBeforeConvert(T entity, IndexCoordinates index) {
+	protected <T> Mono<T> maybeCallbackBeforeConvert(T entity, IndexCoordinates index) {
 
 		if (null != entityCallbacks) {
 			return entityCallbacks.callback(ReactiveBeforeConvertCallback.class, entity, index);
@@ -502,7 +502,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		return Mono.just(entity);
 	}
 
-	protected <T> Mono<T> maybeCallAfterSave(T entity, IndexCoordinates index) {
+	protected <T> Mono<T> maybeCallbackAfterSave(T entity, IndexCoordinates index) {
 
 		if (null != entityCallbacks) {
 			return entityCallbacks.callback(ReactiveAfterSaveCallback.class, entity, index);
@@ -511,7 +511,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		return Mono.just(entity);
 	}
 
-	protected <T> Mono<T> maybeCallAfterConvert(T entity, Document document, IndexCoordinates index) {
+	protected <T> Mono<T> maybeCallbackAfterConvert(T entity, Document document, IndexCoordinates index) {
 
 		if (null != entityCallbacks) {
 			return entityCallbacks.callback(ReactiveAfterConvertCallback.class, entity, document, index);
@@ -528,8 +528,19 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		return Mono.just(document);
 	}
 
+	/**
+	 * Callback to convert {@link Document} into an entity of type T
+	 *
+	 * @param <T> the entity type
+	 */
 	protected interface DocumentCallback<T> {
 
+		/**
+		 * Convert a document into an entity
+		 *
+		 * @param document the document to convert
+		 * @return a Mono of the entity
+		 */
 		@NonNull
 		Mono<T> toEntity(@Nullable Document document);
 	}
@@ -566,16 +577,30 @@ abstract public class AbstractReactiveElasticsearchTemplate
 								documentAfterLoad.hasVersion() ? documentAfterLoad.getVersion() : null); //
 						entity = updateIndexedObject(entity, indexedObjectInformation);
 
-						return maybeCallAfterConvert(entity, documentAfterLoad, index);
+						return maybeCallbackAfterConvert(entity, documentAfterLoad, index);
 					});
 		}
 	}
 
+	/**
+	 * Callback to convert a {@link SearchDocument} into different other classes
+	 * @param <T> the entity type
+	 */
 	protected interface SearchDocumentCallback<T> {
 
-		Mono<T> toEntity(SearchDocument response);
+		/**
+		 * converts a {@link SearchDocument} to an entity
+		 * @param searchDocument
+		 * @return the entity in a MOno
+		 */
+		Mono<T> toEntity(SearchDocument searchDocument);
 
-		Mono<SearchHit<T>> toSearchHit(SearchDocument response);
+		/**
+		 * converts a {@link SearchDocument} into a SearchHit
+		 * @param searchDocument
+		 * @return
+		 */
+		Mono<SearchHit<T>> toSearchHit(SearchDocument searchDocument);
 	}
 
 	protected class ReadSearchDocumentCallback<T> implements SearchDocumentCallback<T> {

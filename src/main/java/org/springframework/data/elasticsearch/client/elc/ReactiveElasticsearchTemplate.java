@@ -115,7 +115,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		return entitiesPublisher //
 				.flatMapMany(entities -> Flux.fromIterable(entities) //
-						.concatMap(entity -> maybeCallBeforeConvert(entity, index)) //
+						.concatMap(entity -> maybeCallbackBeforeConvert(entity, index)) //
 				).collectList() //
 				.map(Entities::new) //
 				.flatMapMany(entities -> {
@@ -131,7 +131,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 								BulkResponseItem response = indexAndResponse.getT2();
 								updateIndexedObject(savedEntity, IndexedObjectInformation.of(response.id(), response.seqNo(),
 										response.primaryTerm(), response.version()));
-								return maybeCallAfterSave(savedEntity, index);
+								return maybeCallbackAfterSave(savedEntity, index);
 							});
 				});
 	}
@@ -329,8 +329,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Flux<ResponseBody<EntityAsMap>> searchResponses = Flux.usingWhen(Mono.fromSupplier(ScrollState::new), //
 				state -> Mono
-						.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client1 -> client1
-								.search(searchRequest, EntityAsMap.class))) //
+						.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
+								EntityAsMap.class))) //
 						.expand(entityAsMapSearchResponse -> {
 
 							state.updateScrollId(entityAsMapSearchResponse.scrollId());
@@ -353,6 +353,10 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	}
 
 	private Publisher<?> cleanupScroll(ScrollState state) {
+
+		if (state.getScrollIds().isEmpty()) {
+			return Mono.empty();
+		}
 
 		return execute((ClientCallback<Publisher<ClearScrollResponse>>) client -> client
 				.clearScroll(ClearScrollRequest.of(csr -> csr.scrollId(state.getScrollIds()))));
