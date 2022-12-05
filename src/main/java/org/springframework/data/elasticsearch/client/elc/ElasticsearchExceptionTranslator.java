@@ -74,13 +74,15 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		if (ex instanceof ElasticsearchException elasticsearchException) {
 
 			ErrorResponse response = elasticsearchException.response();
+			var errorType = response.error().type();
+			var errorReason = response.error().reason() != null ? response.error().reason() : "undefined reason";
 
-			if (response.status() == 404 && "index_not_found_exception".equals(response.error().type())) {
+			if (response.status() == 404 && "index_not_found_exception".equals(errorType)) {
 
 				// noinspection RegExpRedundantEscape
 				Pattern pattern = Pattern.compile(".*no such index \\[(.*)\\]");
 				String index = "";
-				Matcher matcher = pattern.matcher(response.error().reason());
+				Matcher matcher = pattern.matcher(errorReason);
 				if (matcher.matches()) {
 					index = matcher.group(1);
 				}
@@ -88,8 +90,8 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			}
 			String body = JsonUtils.toJson(response, jsonpMapper);
 
-			if (response.error().type().contains("validation_exception")) {
-				return new DataIntegrityViolationException(response.error().reason());
+			if (errorType != null && errorType.contains("validation_exception")) {
+				return new DataIntegrityViolationException(errorReason);
 			}
 
 			return new UncategorizedElasticsearchException(ex.getMessage(), response.status(), body, ex);
