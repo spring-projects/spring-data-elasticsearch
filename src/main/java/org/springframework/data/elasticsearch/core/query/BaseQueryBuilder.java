@@ -66,6 +66,8 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
 	@Nullable protected Query.PointInTime pointInTime;
 
+	@Nullable Integer reactiveBatchSize;
+
 	@Nullable
 	public Sort getSort() {
 		return sort;
@@ -189,6 +191,13 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	@Nullable
 	public Query.PointInTime getPointInTime() {
 		return pointInTime;
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public Integer getReactiveBatchSize() {
+		return reactiveBatchSize;
 	}
 
 	public SELF withPageable(Pageable pageable) {
@@ -372,6 +381,14 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	 */
 	public SELF withPointInTime(@Nullable Query.PointInTime pointInTime) {
 		this.pointInTime = pointInTime;
+		return self();
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public SELF withReactiveBatchSize(@Nullable Integer reactiveBatchSize) {
+		this.reactiveBatchSize = reactiveBatchSize;
 		return self();
 	}
 

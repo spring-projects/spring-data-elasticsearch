@@ -47,6 +47,8 @@ import org.springframework.util.Assert;
  */
 public class BaseQuery implements Query {
 
+	private static final int DEFAULT_REACTIVE_BATCH_SIZE = 500;
+
 	@Nullable protected Sort sort;
 	protected Pageable pageable = DEFAULT_PAGE;
 	protected List<String> fields = new ArrayList<>();
@@ -75,6 +77,7 @@ public class BaseQuery implements Query {
 	@Nullable protected PointInTime pointInTime;
 
 	private boolean queryIsUpdatedByConverter = false;
+	@Nullable private Integer reactiveBatchSize = null;
 
 	public BaseQuery() {}
 
@@ -105,6 +108,7 @@ public class BaseQuery implements Query {
 		this.requestCache = builder.getRequestCache();
 		this.idsWithRouting = builder.getIdsWithRouting();
 		this.pointInTime = builder.getPointInTime();
+		this.reactiveBatchSize = builder.getReactiveBatchSize();
 	}
 
 	@Override
@@ -471,6 +475,7 @@ public class BaseQuery implements Query {
 
 	/**
 	 * used internally. Not considered part of the API.
+	 *
 	 * @since 5.0
 	 */
 	public boolean queryIsUpdatedByConverter() {
@@ -479,9 +484,22 @@ public class BaseQuery implements Query {
 
 	/**
 	 * used internally. Not considered part of the API.
+	 *
 	 * @since 5.0
 	 */
 	public void setQueryIsUpdatedByConverter(boolean queryIsUpdatedByConverter) {
 		this.queryIsUpdatedByConverter = queryIsUpdatedByConverter;
+	}
+
+	@Override
+	public Integer getReactiveBatchSize() {
+		return reactiveBatchSize != null ? reactiveBatchSize : DEFAULT_REACTIVE_BATCH_SIZE;
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public void setReactiveBatchSize(Integer reactiveBatchSize) {
+		this.reactiveBatchSize = reactiveBatchSize;
 	}
 }
