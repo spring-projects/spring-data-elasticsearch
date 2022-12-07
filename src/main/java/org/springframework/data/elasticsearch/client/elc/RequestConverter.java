@@ -1313,7 +1313,7 @@ class RequestConverter {
 			Duration scrollTimeout = query.getScrollTime() != null ? query.getScrollTime() : Duration.ofMinutes(1);
 			builder.scroll(time(scrollTimeout));
 			// limit the number of documents in a batch
-			builder.size(500);
+			builder.size(query.getReactiveBatchSize());
 		}
 
 		if (!isEmpty(query.getIndicesBoost())) {

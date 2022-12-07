@@ -449,6 +449,17 @@ public interface Query {
 	};
 
 	/**
+	 * returns the number of documents that are requested when the reactive code does a batched search operation. This is
+	 * the case when a query has no limit and no Pageable set.
+	 *
+	 * @return the batch size, defaults to 500 in {@link BaseQuery}
+	 * @since 5.1
+	 */
+	default Integer getReactiveBatchSize() {
+		return 500;
+	}
+
+	/**
 	 * @since 4.3
 	 */
 	enum SearchType {
