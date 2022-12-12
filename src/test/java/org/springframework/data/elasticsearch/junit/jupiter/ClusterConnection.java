@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.junit.jupiter;
 import static org.springframework.util.StringUtils.*;
 
 import java.io.InputStream;
+import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -131,7 +132,7 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 			DockerImageName dockerImageName = getDockerImageName(testcontainersProperties);
 
 			ElasticsearchContainer elasticsearchContainer = new SpringDataElasticsearchContainer(dockerImageName)
-					.withEnv(testcontainersProperties);
+					.withEnv(testcontainersProperties).withStartupTimeout(Duration.ofMinutes(2));
 			elasticsearchContainer.start();
 
 			return ClusterConnectionInfo.builder() //

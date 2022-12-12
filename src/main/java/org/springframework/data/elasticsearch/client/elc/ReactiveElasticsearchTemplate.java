@@ -19,7 +19,6 @@ import static co.elastic.clients.util.ApiTypeHelper.*;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
 import co.elastic.clients.elasticsearch._types.Result;
-import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.get.GetResult;
@@ -35,14 +34,19 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.UnsupportedBackendOperation;
 import org.springframework.data.elasticsearch.client.erhlc.ReactiveClusterOperations;
-import org.springframework.data.elasticsearch.client.util.ScrollState;
 import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.AggregationContainer;
 import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
@@ -54,6 +58,7 @@ import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -64,6 +69,7 @@ import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.StringUtils;
 
 /**
  * Implementation of {@link org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations} using the new
@@ -73,6 +79,8 @@ import org.springframework.util.CollectionUtils;
  * @since 4.4
  */
 public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearchTemplate {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveElasticsearchTemplate.class);
 
 	private final ReactiveElasticsearchClient client;
 	private final RequestConverter requestConverter;
@@ -137,6 +145,32 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	}
 
 	@Override
+	protected Mono<Boolean> doExists(String id, IndexCoordinates index) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index, true);
+
+		return Mono.from(execute(
+				((ClientCallback<Publisher<GetResponse<EntityAsMap>>>) client -> client.get(getRequest, EntityAsMap.class))))
+				.map(GetResult::found) //
+				.onErrorReturn(NoSuchIndexException.class, false);
+	}
+
+	@Override
+	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index) {
+
+		Assert.notNull(query, "query must not be null");
+
+		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, entityType, index,
+				getRefreshPolicy());
+		return Mono
+				.from(execute((ClientCallback<Publisher<DeleteByQueryResponse>>) client -> client.deleteByQuery(request)))
+				.map(responseConverter::byQueryResponse);
+	}
+
+	@Override
 	public <T> Mono<T> get(String id, Class<T> entityType, IndexCoordinates index) {
 
 		Assert.notNull(id, "id must not be null");
@@ -181,6 +215,29 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 						? Mono.error(
 								new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
 						: Mono.just(response.task()));
+	}
+
+	@Override
+	public Mono<UpdateResponse> update(UpdateQuery updateQuery, IndexCoordinates index) {
+
+		Assert.notNull(updateQuery, "UpdateQuery must not be null");
+		Assert.notNull(index, "Index must not be null");
+
+		UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index, getRefreshPolicy(),
+				routingResolver.getRouting());
+
+		return Mono.from(execute(
+				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.UpdateResponse<Document>>>) client -> client
+						.update(request, Document.class)))
+				.flatMap(response -> {
+					UpdateResponse.Result result = result(response.result());
+					return result == null ? Mono.empty() : Mono.just(UpdateResponse.of(result));
+				});
+	}
+
+	@Override
+	public Mono<ByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
+		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override
@@ -279,87 +336,108 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		return new ReactiveElasticsearchTemplate(client, converter);
 	}
 
-	@Override
-	protected Mono<Boolean> doExists(String id, IndexCoordinates index) {
-
-		Assert.notNull(id, "id must not be null");
-		Assert.notNull(index, "index must not be null");
-
-		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index, true);
-
-		return Mono.from(execute(
-				((ClientCallback<Publisher<GetResponse<EntityAsMap>>>) client -> client.get(getRequest, EntityAsMap.class))))
-				.map(GetResult::found) //
-				.onErrorReturn(NoSuchIndexException.class, false);
-	}
-
-	@Override
-	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index) {
-
-		Assert.notNull(query, "query must not be null");
-
-		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, entityType, index,
-				getRefreshPolicy());
-		return Mono
-				.from(execute((ClientCallback<Publisher<DeleteByQueryResponse>>) client -> client.deleteByQuery(request)))
-				.map(responseConverter::byQueryResponse);
-	}
-
 	// region search operations
 
 	@Override
 	protected Flux<SearchDocument> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		return Flux.defer(() -> {
-			boolean useScroll = !(query.getPageable().isPaged() || query.isLimiting());
-			SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false, useScroll);
+			boolean queryIsUnbounded = !(query.getPageable().isPaged() || query.isLimiting());
 
-			if (useScroll) {
-				return doScroll(searchRequest);
-			} else {
-				return doFind(searchRequest);
-			}
+			return queryIsUnbounded ? doFindUnbounded(query, clazz, index) : doFindBounded(query, clazz, index);
 		});
 
 	}
 
-	private Flux<SearchDocument> doScroll(SearchRequest searchRequest) {
+	private Flux<SearchDocument> doFindUnbounded(Query query, Class<?> clazz, IndexCoordinates index) {
 
-		Time scrollTimeout = searchRequest.scroll() != null ? searchRequest.scroll() : Time.of(t -> t.time("1m"));
+		if (query instanceof BaseQuery baseQuery) {
+			var pitKeepAlive = Duration.ofMinutes(5);
+			// setup functions for Flux.usingWhen()
+			Mono<PitSearchAfter> resourceSupplier = openPointInTime(index, pitKeepAlive, true)
+					.map(pit -> new PitSearchAfter(baseQuery, pit));
 
-		Flux<ResponseBody<EntityAsMap>> searchResponses = Flux.usingWhen(Mono.fromSupplier(ScrollState::new), //
-				state -> Mono
-						.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
-								EntityAsMap.class))) //
-						.expand(entityAsMapSearchResponse -> {
+			Function<PitSearchAfter, Publisher<?>> asyncComplete = this::cleanupPit;
 
-							state.updateScrollId(entityAsMapSearchResponse.scrollId());
+			BiFunction<PitSearchAfter, Throwable, Publisher<?>> asyncError = (psa, ex) -> {
+				if (LOGGER.isErrorEnabled()) {
+					LOGGER.error(String.format("Error during pit/search_after"), ex);
+				}
+				return cleanupPit(psa);
+			};
 
-							if (entityAsMapSearchResponse.hits() == null
-									|| CollectionUtils.isEmpty(entityAsMapSearchResponse.hits().hits())) {
+			Function<PitSearchAfter, Publisher<?>> asyncCancel = psa -> {
+				if (LOGGER.isWarnEnabled()) {
+					LOGGER.warn(String.format("pit/search_after was cancelled"));
+				}
+				return cleanupPit(psa);
+			};
+
+			Function<PitSearchAfter, Publisher<? extends ResponseBody<EntityAsMap>>> resourceClosure = psa -> {
+
+				baseQuery.setPointInTime(new Query.PointInTime(psa.getPit(), pitKeepAlive));
+				baseQuery.addSort(Sort.by("_shard_doc"));
+				SearchRequest firstSearchRequest = requestConverter.searchRequest(baseQuery, clazz, index, false, true);
+
+				return Mono.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client
+						.search(firstSearchRequest, EntityAsMap.class))).expand(entityAsMapSearchResponse -> {
+
+							var hits = entityAsMapSearchResponse.hits().hits();
+							if (CollectionUtils.isEmpty(hits)) {
 								return Mono.empty();
 							}
 
-							return Mono.from(execute((ClientCallback<Publisher<ScrollResponse<EntityAsMap>>>) client1 -> {
-								ScrollRequest scrollRequest = ScrollRequest
-										.of(sr -> sr.scrollId(state.getScrollId()).scroll(scrollTimeout));
-								return client1.scroll(scrollRequest, EntityAsMap.class);
-							}));
-						}),
-				this::cleanupScroll, (state, ex) -> cleanupScroll(state), this::cleanupScroll);
+							List<Object> sortOptions = hits.get(hits.size() - 1).sort().stream().map(TypeUtils::toObject)
+									.collect(Collectors.toList());
+							baseQuery.setSearchAfter(sortOptions);
+							SearchRequest followSearchRequest = requestConverter.searchRequest(baseQuery, clazz, index, false, true);
+							return Mono.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client
+									.search(followSearchRequest, EntityAsMap.class)));
+						});
 
-		return searchResponses.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits())
-				.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));
+			};
+
+			Flux<ResponseBody<EntityAsMap>> searchResponses = Flux.usingWhen(resourceSupplier, resourceClosure, asyncComplete,
+					asyncError, asyncCancel);
+			return searchResponses.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits())
+					.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));
+		} else {
+			return Flux.error(new IllegalArgumentException("Query must be derived from BaseQuery"));
+		}
 	}
 
-	private Publisher<?> cleanupScroll(ScrollState state) {
+	private Publisher<?> cleanupPit(PitSearchAfter psa) {
+		var baseQuery = psa.getBaseQuery();
+		baseQuery.setPointInTime(null);
+		baseQuery.setSearchAfter(null);
+		baseQuery.setSort(psa.getSort());
+		var pit = psa.getPit();
+		return StringUtils.hasText(pit) ? closePointInTime(pit) : Mono.empty();
+	}
 
-		if (state.getScrollIds().isEmpty()) {
-			return Mono.empty();
+	static private class PitSearchAfter {
+		private final BaseQuery baseQuery;
+		@Nullable private final Sort sort;
+		private final String pit;
+
+		PitSearchAfter(BaseQuery baseQuery, String pit) {
+			this.baseQuery = baseQuery;
+			this.sort = baseQuery.getSort();
+			this.pit = pit;
 		}
 
-		return execute((ClientCallback<Publisher<ClearScrollResponse>>) client -> client
-				.clearScroll(ClearScrollRequest.of(csr -> csr.scrollId(state.getScrollIds()))));
+		public BaseQuery getBaseQuery() {
+			return baseQuery;
+		}
+
+		@Nullable
+		public Sort getSort() {
+			return sort;
+		}
+
+		public String getPit() {
+			return pit;
+		}
 	}
 
 	@Override
@@ -368,7 +446,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		SearchRequest searchRequest = requestConverter.searchRequest(query, entityType, index, true, false);
+		SearchRequest searchRequest = requestConverter.searchRequest(query, entityType, index, true);
 
 		return Mono
 				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
@@ -376,7 +454,9 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				.map(searchResponse -> searchResponse.hits().total() != null ? searchResponse.hits().total().value() : 0L);
 	}
 
-	private Flux<SearchDocument> doFind(SearchRequest searchRequest) {
+	private Flux<SearchDocument> doFindBounded(Query query, Class<?> clazz, IndexCoordinates index) {
+
+		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false, false);
 
 		return Mono
 				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
@@ -391,7 +471,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false, false);
+		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false);
 
 		// noinspection unchecked
 		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>((Class<T>) clazz, index);
@@ -456,29 +536,6 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				return reactiveElasticsearchClient.info();
 			}
 		})).map(infoResponse -> infoResponse.version().number());
-	}
-
-	@Override
-	public Mono<UpdateResponse> update(UpdateQuery updateQuery, IndexCoordinates index) {
-
-		Assert.notNull(updateQuery, "UpdateQuery must not be null");
-		Assert.notNull(index, "Index must not be null");
-
-		UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index, getRefreshPolicy(),
-				routingResolver.getRouting());
-
-		return Mono.from(execute(
-				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.UpdateResponse<Document>>>) client -> client
-						.update(request, Document.class)))
-				.flatMap(response -> {
-					UpdateResponse.Result result = result(response.result());
-					return result == null ? Mono.empty() : Mono.just(UpdateResponse.of(result));
-				});
-	}
-
-	@Override
-	public Mono<ByQueryResponse> updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
-		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override
