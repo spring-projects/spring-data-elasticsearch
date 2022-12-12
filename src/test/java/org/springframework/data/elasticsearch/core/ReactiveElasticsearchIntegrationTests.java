@@ -463,11 +463,14 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		index(IntStream.range(0, 100).mapToObj(it -> randomEntity("entity - " + it)).toArray(SampleEntity[]::new));
 
-		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("entity")) //
-				.addSort(Sort.by("message"))//
-				.setPageable(Pageable.unpaged());
+		var query = CriteriaQuery.builder(new Criteria("message").contains("entity")) //
+				.withSort(Sort.by("message")) //
+				.withPageable(Pageable.unpaged()) //
+				.withReactiveBatchSize(20) //
+				.build();
 
-		operations.search(query, SampleEntity.class).as(StepVerifier::create) //
+		operations.search(query, SampleEntity.class) //
+				.as(StepVerifier::create) //
 				.expectNextCount(100) //
 				.verifyComplete();
 	}

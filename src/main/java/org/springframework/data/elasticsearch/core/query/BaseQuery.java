@@ -111,6 +111,13 @@ public class BaseQuery implements Query {
 		this.reactiveBatchSize = builder.getReactiveBatchSize();
 	}
 
+	/**
+	 * @since 5.1
+	 */
+	public void setSort(@Nullable Sort sort) {
+		this.sort = sort;
+	}
+
 	@Override
 	@Nullable
 	public Sort getSort() {
