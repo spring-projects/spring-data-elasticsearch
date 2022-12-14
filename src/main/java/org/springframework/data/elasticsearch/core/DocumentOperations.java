@@ -304,6 +304,17 @@ public interface DocumentOperations {
 	<T> UpdateResponse update(T entity);
 
 	/**
+	 * Partially update a document by the given entity.
+	 *
+	 * @param entity the entity to update partially, must not be {@literal null}.
+	 * @param index the index to use for the update instead of the one defined by the entity, must not be null
+	 * @return the update response
+	 * @param <T> the entity type
+	 * @since 5.1
+	 */
+	<T> UpdateResponse update(T entity, IndexCoordinates index);
+
+	/**
 	 * Partial update of the document.
 	 *
 	 * @param updateQuery query defining the update
