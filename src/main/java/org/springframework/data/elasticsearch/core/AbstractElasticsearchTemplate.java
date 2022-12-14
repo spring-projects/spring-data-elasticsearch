@@ -362,6 +362,76 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	public abstract List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index);
 
+	@Override
+	public <T> UpdateResponse update(T entity) {
+
+		Assert.notNull(entity, "entity must not be null");
+
+		return update(entity, getIndexCoordinatesFor(entity.getClass()));
+	}
+
+	@Override
+	public <T> UpdateResponse update(T entity, IndexCoordinates index) {
+
+		Assert.notNull(entity, "entity must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		return update(buildUpdateQueryByEntity(entity), index);
+	}
+
+	protected <T> UpdateQuery buildUpdateQueryByEntity(T entity) {
+
+		Assert.notNull(entity, "entity must not be null");
+
+		String id = getEntityId(entity);
+		Assert.notNull(id, "entity must have an id that is notnull");
+
+		UpdateQuery.Builder updateQueryBuilder = UpdateQuery.builder(id)
+				.withDocument(elasticsearchConverter.mapObject(entity));
+
+		String routing = getEntityRouting(entity);
+		if (StringUtils.hasText(routing)) {
+			updateQueryBuilder.withRouting(routing);
+		}
+
+		return updateQueryBuilder.build();
+	}
+
+	protected <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
+
+		ElasticsearchPersistentEntity<?> persistentEntity = elasticsearchConverter.getMappingContext()
+				.getPersistentEntity(entity.getClass());
+
+		if (persistentEntity != null) {
+			PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
+			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
+
+			// Only deal with text because ES generated Ids are strings!
+			if (indexedObjectInformation.getId() != null && idProperty != null && idProperty.isWritable()
+					&& idProperty.getType().isAssignableFrom(String.class)) {
+				propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
+			}
+
+			if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
+					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
+				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
+				// noinspection ConstantConditions
+				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
+						new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
+			}
+
+			if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
+				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+				// noinspection ConstantConditions
+				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
+			}
+
+			// noinspection unchecked
+			return (T) propertyAccessor.getBean();
+		}
+		return entity;
+	}
+
 	// endregion
 
 	// region SearchOperations
@@ -461,64 +531,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Override
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
 		return getRequiredPersistentEntity(clazz).getIndexCoordinates();
-	}
-
-	@Override
-	public <T> UpdateResponse update(T entity) {
-		return update(buildUpdateQueryByEntity(entity), getIndexCoordinatesFor(entity.getClass()));
-	}
-
-	protected <T> UpdateQuery buildUpdateQueryByEntity(T entity) {
-
-		Assert.notNull(entity, "entity must not be null");
-
-		String id = getEntityId(entity);
-		Assert.notNull(id, "entity must have an id that is notnull");
-
-		UpdateQuery.Builder updateQueryBuilder = UpdateQuery.builder(id)
-				.withDocument(elasticsearchConverter.mapObject(entity));
-
-		String routing = getEntityRouting(entity);
-		if (StringUtils.hasText(routing)) {
-			updateQueryBuilder.withRouting(routing);
-		}
-
-		return updateQueryBuilder.build();
-	}
-
-	protected <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
-
-		ElasticsearchPersistentEntity<?> persistentEntity = elasticsearchConverter.getMappingContext()
-				.getPersistentEntity(entity.getClass());
-
-		if (persistentEntity != null) {
-			PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
-			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
-
-			// Only deal with text because ES generated Ids are strings!
-			if (indexedObjectInformation.getId() != null && idProperty != null && idProperty.isWritable()
-					&& idProperty.getType().isAssignableFrom(String.class)) {
-				propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
-			}
-
-			if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
-					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
-				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
-				// noinspection ConstantConditions
-				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
-						new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
-			}
-
-			if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
-				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
-				// noinspection ConstantConditions
-				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
-			}
-
-			// noinspection unchecked
-			return (T) propertyAccessor.getBean();
-		}
-		return entity;
 	}
 
 	ElasticsearchPersistentEntity<?> getRequiredPersistentEntity(Class<?> clazz) {
