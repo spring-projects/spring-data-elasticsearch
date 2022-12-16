@@ -28,11 +28,10 @@ import java.util.stream.Collectors;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.ELCQueries;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregations;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.client.elc.QueryBuilders;
+import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.AggregationsContainer;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
@@ -59,7 +58,7 @@ public class AggregationELCIntegrationTests extends AggregationIntegrationTests 
 
 	@Override
 	protected Query getTermsAggsQuery(String aggsName, String aggsField) {
-		return ELCQueries.getTermsAggsQuery(aggsName, aggsField);
+		return Queries.getTermsAggsQuery(aggsName, aggsField);
 	}
 
 	@Override
@@ -75,7 +74,7 @@ public class AggregationELCIntegrationTests extends AggregationIntegrationTests 
 	@Override
 	protected Query getPipelineAggsQuery(String aggsName, String aggsField, String aggsNamePipeline, String bucketsPath) {
 		return NativeQuery.builder() //
-				.withQuery(QueryBuilders.matchAllQueryAsQuery()) //
+				.withQuery(Queries.matchAllQueryAsQuery()) //
 				.withAggregation(aggsName, Aggregation.of(a -> a //
 						.terms(ta -> ta.field(aggsField)))) //
 				.withAggregation(aggsNamePipeline, Aggregation.of(a -> a //

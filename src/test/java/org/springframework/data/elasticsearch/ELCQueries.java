@@ -15,12 +15,12 @@
  */
 package org.springframework.data.elasticsearch;
 
-import static org.springframework.data.elasticsearch.client.elc.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.client.elc.QueryBuilders;
+import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 
@@ -29,14 +29,16 @@ import org.springframework.data.elasticsearch.core.query.Query;
  *
  * @author Peter-Josef Meisch
  * @since 4.4
+ * @deprecated since 5.1, use the corresponding methods from {@link Queries}.
  */
+@Deprecated(forRemoval = true)
 public final class ELCQueries {
 
 	private ELCQueries() {}
 
-	public static Query getTermsAggsQuery(String aggsName, String aggsField){
+	public static Query getTermsAggsQuery(String aggsName, String aggsField) {
 		return NativeQuery.builder() //
-				.withQuery(QueryBuilders.matchAllQueryAsQuery()) //
+				.withQuery(Queries.matchAllQueryAsQuery()) //
 				.withAggregation(aggsName, Aggregation.of(a -> a //
 						.terms(ta -> ta.field(aggsField)))) //
 				.withMaxResults(0) //

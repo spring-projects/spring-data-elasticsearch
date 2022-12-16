@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.data.elasticsearch.client.elc.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 import static org.springframework.util.StringUtils.*;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;

@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.elasticsearch.client.elc.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import co.elastic.clients.elasticsearch._types.SortOrder;
@@ -35,9 +35,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.ELCQueries;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
+import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
@@ -93,7 +93,7 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 
 	@Override
 	protected Query queryWithIds(String... ids) {
-		return ELCQueries.queryWithIds(ids);
+		return Queries.queryWithIds(ids);
 	}
 
 	@Override
@@ -103,7 +103,7 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 
 	@Override
 	protected BaseQueryBuilder<?, ?> getBuilderWithMatchAllQuery() {
-		return ELCQueries.getBuilderWithMatchAllQuery();
+		return Queries.getBuilderWithMatchAllQuery();
 	}
 
 	@Override

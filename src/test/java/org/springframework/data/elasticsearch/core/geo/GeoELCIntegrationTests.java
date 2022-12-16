@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
-import org.springframework.data.elasticsearch.client.elc.QueryBuilders;
+import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -59,9 +59,9 @@ public class GeoELCIntegrationTests extends GeoIntegrationTests {
 								.boundingBox(gb -> gb //
 										.tlbr(tlbr -> tlbr //
 												.topLeft(tl -> tl //
-														.latlon(QueryBuilders.latLon(top, left)))
+														.latlon(Queries.latLon(top, left)))
 												.bottomRight(br -> br //
-														.latlon(QueryBuilders.latLon(bottom, right)))))))
+														.latlon(Queries.latLon(bottom, right)))))))
 				.build();
 	}
 

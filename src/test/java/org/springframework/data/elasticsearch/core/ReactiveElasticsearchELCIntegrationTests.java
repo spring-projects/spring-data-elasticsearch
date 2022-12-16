@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.elasticsearch.client.elc.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Buckets;
@@ -30,10 +30,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.ELCQueries;
 import org.springframework.data.elasticsearch.client.elc.Aggregation;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
@@ -59,17 +59,17 @@ public class ReactiveElasticsearchELCIntegrationTests extends ReactiveElasticsea
 
 	@Override
 	protected Query getTermsAggsQuery(String aggsName, String aggsField) {
-		return ELCQueries.getTermsAggsQuery(aggsName, aggsField);
+		return Queries.getTermsAggsQuery(aggsName, aggsField);
 	}
 
 	@Override
 	protected BaseQueryBuilder<?, ?> getBuilderWithMatchAllQuery() {
-		return ELCQueries.getBuilderWithMatchAllQuery();
+		return Queries.getBuilderWithMatchAllQuery();
 	}
 
 	@Override
 	protected BaseQueryBuilder<?, ?> getBuilderWithTermQuery(String field, String value) {
-		return ELCQueries.getBuilderWithTermQuery(field, value);
+		return Queries.getBuilderWithTermQuery(field, value);
 	}
 
 	@Override
@@ -88,7 +88,7 @@ public class ReactiveElasticsearchELCIntegrationTests extends ReactiveElasticsea
 
 	@Override
 	protected Query queryWithIds(String... ids) {
-		return ELCQueries.queryWithIds(ids);
+		return Queries.queryWithIds(ids);
 	}
 
 	@Override

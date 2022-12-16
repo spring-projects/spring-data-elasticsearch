@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch;
 
 import static co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders.*;
-import static org.springframework.data.elasticsearch.client.elc.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
 
