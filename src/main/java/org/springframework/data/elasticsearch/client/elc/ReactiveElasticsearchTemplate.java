@@ -571,12 +571,12 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	public Query matchAllQuery() {
-		return NativeQuery.builder().withQuery(QueryBuilders.matchAllQueryAsQuery()).build();
+		return NativeQuery.builder().withQuery(Queries.matchAllQueryAsQuery()).build();
 	}
 
 	@Override
 	public Query idsQuery(List<String> ids) {
-		return NativeQuery.builder().withQuery(QueryBuilders.idsQueryAsQuery(ids)).build();
+		return NativeQuery.builder().withQuery(Queries.idsQueryAsQuery(ids)).build();
 	}
 
 	/**

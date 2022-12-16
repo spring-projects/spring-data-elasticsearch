@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.LatLonGeoLocation;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.IdsQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchAllQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
@@ -34,6 +35,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -42,12 +44,10 @@ import org.springframework.util.Assert;
  *
  * @author Peter-Josef Meisch
  * @since 4.4
- * @deprecated since 5.1, use {@link Queries} instead.
  */
-@Deprecated(forRemoval = true)
-public final class QueryBuilders {
+public final class Queries {
 
-	private QueryBuilders() {}
+	private Queries() {}
 
 	public static IdsQuery idsQuery(List<String> ids) {
 
@@ -170,5 +170,27 @@ public final class QueryBuilders {
 
 	public static LatLonGeoLocation latLon(double lat, double lon) {
 		return LatLonGeoLocation.of(_0 -> _0.lat(lat).lon(lon));
+	}
+
+	public static org.springframework.data.elasticsearch.core.query.Query getTermsAggsQuery(String aggsName,
+			String aggsField) {
+		return NativeQuery.builder() //
+				.withQuery(Queries.matchAllQueryAsQuery()) //
+				.withAggregation(aggsName, Aggregation.of(a -> a //
+						.terms(ta -> ta.field(aggsField)))) //
+				.withMaxResults(0) //
+				.build();
+	}
+
+	public static org.springframework.data.elasticsearch.core.query.Query queryWithIds(String... ids) {
+		return NativeQuery.builder().withIds(ids).build();
+	}
+
+	public static BaseQueryBuilder<?, ?> getBuilderWithMatchAllQuery() {
+		return NativeQuery.builder().withQuery(matchAllQueryAsQuery());
+	}
+
+	public static BaseQueryBuilder<?, ?> getBuilderWithTermQuery(String field, String value) {
+		return NativeQuery.builder().withQuery(termQueryAsQuery(field, value));
 	}
 }

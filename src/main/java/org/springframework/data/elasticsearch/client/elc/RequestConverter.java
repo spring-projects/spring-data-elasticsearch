@@ -1355,7 +1355,7 @@ class RequestConverter {
 				return SortOptions.of(so -> so //
 						.geoDistance(gd -> gd //
 								.field(fieldName) //
-								.location(loc -> loc.latlon(QueryBuilders.latLon(geoDistanceOrder.getGeoPoint())))//
+								.location(loc -> loc.latlon(Queries.latLon(geoDistanceOrder.getGeoPoint())))//
 								.distanceType(TypeUtils.geoDistanceType(geoDistanceOrder.getDistanceType()))
 								.mode(TypeUtils.sortMode(finalMode)) //
 								.unit(TypeUtils.distanceUnit(geoDistanceOrder.getUnit())) //
@@ -1443,7 +1443,7 @@ class RequestConverter {
 		if (query instanceof CriteriaQuery) {
 			esQuery = CriteriaQueryProcessor.createQuery(((CriteriaQuery) query).getCriteria());
 		} else if (query instanceof StringQuery) {
-			esQuery = QueryBuilders.wrapperQueryAsQuery(((StringQuery) query).getSource());
+			esQuery = Queries.wrapperQueryAsQuery(((StringQuery) query).getSource());
 		} else if (query instanceof NativeQuery nativeQuery) {
 
 			if (nativeQuery.getQuery() != null) {
