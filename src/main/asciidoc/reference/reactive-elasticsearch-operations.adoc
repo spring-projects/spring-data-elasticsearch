@@ -37,7 +37,8 @@ public class Person {
 [source,java]
 ----
 
-ReactiveELasticsearchOperations operations;                        <.>
+@Autowired
+ReactiveElasticsearchOperations operations;                        <.>
 
 // ...
 
@@ -61,6 +62,7 @@ The above outputs the following sequence on the console.
 > QjWCWWcBXiLAnp77ksfR
 > 0
 ----
+<.> An implementation of `ReactiveElasticsearchOperations`.
 <.> Insert a new `Person` document into the _marvel_ index . The `id` is generated on server 
 side and set into the instance returned.
 <.> Lookup the `Person` with matching `id` in the _marvel_ index.

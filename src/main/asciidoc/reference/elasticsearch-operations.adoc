@@ -35,6 +35,7 @@ There is support for automatic creation of indices and writing the mappings when
 
 The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller.
 The example assumes that `Person` is a class that is annotated with `@Document`, `@Id` etc (see <<elasticsearch.mapping.meta-model.annotations>>).
+
 .ElasticsearchOperations usage
 ====
 [source,java]
@@ -56,7 +57,7 @@ public class TestController {
   }
 
   @GetMapping("/person/{id}")
-  public Person findById(@PathVariable("id")  Long id) {                   <.>
+  public Person findById(@PathVariable("id") Long id) {                    <.>
     Person person = elasticsearchOperations.get(id.toString(), Person.class);
     return person;
   }
