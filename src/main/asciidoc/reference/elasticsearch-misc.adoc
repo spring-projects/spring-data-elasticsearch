@@ -281,9 +281,8 @@ This works with every implementation of the `Query` interface.
 [[elasticsearch.misc.point-in-time]]
 == Point In Time (PIT) API
 
-`ElasticsearchOperations` supports the point in time API of Elasticsearch (see https://www.elastic
-.co/guide/en/elasticsearch/reference/8.3/point-in-time-api.html). The following code snippet shows how to use this
-feature with a fictional `Person` class:
+`ElasticsearchOperations` supports the point in time API of Elasticsearch (see https://www.elastic.co/guide/en/elasticsearch/reference/8.3/point-in-time-api.html). 
+The following code snippet shows how to use this feature with a fictional `Person` class:
 
 ====
 [source,java]

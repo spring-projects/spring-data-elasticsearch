@@ -35,6 +35,7 @@ There is support for automatic creation of indices and writing the mappings when
 
 The example shows how to use an injected `ElasticsearchOperations` instance in a Spring REST controller.
 The example assumes that `Person` is a class that is annotated with `@Document`, `@Id` etc (see <<elasticsearch.mapping.meta-model.annotations>>).
+
 .ElasticsearchOperations usage
 ====
 [source,java]
@@ -56,7 +57,7 @@ public class TestController {
   }
 
   @GetMapping("/person/{id}")
-  public Person findById(@PathVariable("id")  Long id) {                   <.>
+  public Person findById(@PathVariable("id") Long id) {                    <.>
     Person person = elasticsearchOperations.get(id.toString(), Person.class);
     return person;
   }
@@ -135,7 +136,7 @@ NOTE: when talking about AND or OR when combining criteria keep in mind, that in
 ====
 [source,java]
 ----
-Criteria criteria = new Criteria("price").is(42.0);
+Criteria criteria = new Criteria("price").is(42.0L);
 Query query = new CriteriaQuery(criteria);
 ----
 ====
@@ -146,7 +147,7 @@ Conditions for the same field can be chained, they will be combined with a logic
 ====
 [source,java]
 ----
-Criteria criteria = new Criteria("price").greaterThan(42.0).lessThan(34.0L);
+Criteria criteria = new Criteria("price").greaterThan(42.0L).lessThan(34.0L);
 Query query = new CriteriaQuery(criteria);
 ----
 ====

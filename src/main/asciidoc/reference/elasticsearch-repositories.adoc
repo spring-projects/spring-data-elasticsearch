@@ -100,12 +100,12 @@ The Spring Data Elasticsearch repositories support can be activated using an ann
 @Configuration
 @EnableElasticsearchRepositories(                             <1>
   basePackages = "org.springframework.data.elasticsearch.repositories"
-  )
+)
 static class Config {
 
   @Bean
   public ElasticsearchOperations elasticsearchTemplate() {    <2>
-      // ...
+    // ...
   }
 }
 
