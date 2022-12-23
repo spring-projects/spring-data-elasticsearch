@@ -37,7 +37,7 @@ public class Person {
 [source,java]
 ----
 
-ReactiveELasticsearchOperations operations;                        <.>
+ReactiveElasticsearchOperations operations;
 
 // ...
 
