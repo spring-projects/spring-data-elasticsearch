@@ -66,8 +66,8 @@ public class TestController {
 ----
 
 <.> Let Spring inject the provided `ElasticsearchOperations` bean in the constructor.
-<.> Store some entity in the Elasticsearch cluster. The id is read from the returned entity, as it might have been 
-null in the `person` object and been created by Elasticsearch.
+<.> Store some entity in the Elasticsearch cluster.
+The id is read from the returned entity, as it might have been null in the `person` object and been created by Elasticsearch.
 <.> Retrieve the entity with a get by id.
 ====
 
@@ -136,7 +136,7 @@ NOTE: when talking about AND or OR when combining criteria keep in mind, that in
 ====
 [source,java]
 ----
-Criteria criteria = new Criteria("price").is(42.0L);
+Criteria criteria = new Criteria("price").is(42.0);
 Query query = new CriteriaQuery(criteria);
 ----
 ====
@@ -147,7 +147,7 @@ Conditions for the same field can be chained, they will be combined with a logic
 ====
 [source,java]
 ----
-Criteria criteria = new Criteria("price").greaterThan(42.0L).lessThan(34.0L);
+Criteria criteria = new Criteria("price").greaterThan(42.0).lessThan(34.0);
 Query query = new CriteriaQuery(criteria);
 ----
 ====
