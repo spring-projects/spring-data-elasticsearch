@@ -132,6 +132,7 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @author cdalxndr
+ * @author scoobyzhang
  * @since 4.4
  */
 class RequestConverter {
@@ -476,7 +477,7 @@ class RequestConverter {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			String id = !StringUtils.hasText(query.getId()) ? getPersistentEntityId(queryObject) : query.getId();
+			String id = StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject);
 			builder //
 					.id(id) //
 					.document(elasticsearchConverter.mapObject(queryObject));
@@ -528,7 +529,7 @@ class RequestConverter {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			String id = StringUtils.hasText(query.getId()) ? getPersistentEntityId(queryObject) : query.getId();
+			String id = StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject);
 			builder //
 					.id(id) //
 					.document(elasticsearchConverter.mapObject(queryObject));
@@ -569,7 +570,7 @@ class RequestConverter {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			String id = StringUtils.hasText(query.getId()) ? getPersistentEntityId(queryObject) : query.getId();
+			String id = StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject);
 			builder //
 					.id(id) //
 					.document(elasticsearchConverter.mapObject(queryObject));
