@@ -128,6 +128,7 @@ import org.springframework.lang.Nullable;
  * @author Peer Mueller
  * @author Sijia Liu
  * @author Haibo Liu
+ * @author scoobyzhang
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests {
@@ -213,6 +214,26 @@ public abstract class ElasticsearchIntegrationTests {
 				.version(System.currentTimeMillis()).build();
 
 		assertThatThrownBy(() -> operations.update(sampleEntity)).isInstanceOf(DataAccessException.class);
+	}
+
+	@Test // #2405
+	public void shouldNotIgnoreIdFromIndexQuery() {
+		String indexName = indexNameProvider.indexName();
+		IndexCoordinates indexCoordinates = IndexCoordinates.of(indexName);
+
+		SampleEntity object1 = SampleEntity.builder().id("objectId1").message("objectMessage1").build();
+		SampleEntity object2 = SampleEntity.builder().id("objectId2").message("objectMessage2").build();
+		List<IndexQuery> indexQueries = Arrays.asList(
+				new IndexQueryBuilder().withIndex(indexName).withId("idFromQuery1").withObject(object1)
+						.withOpType(IndexQuery.OpType.INDEX).build(),
+				new IndexQueryBuilder().withIndex(indexName).withId("idFromQuery2").withObject(object2)
+						.withOpType(IndexQuery.OpType.CREATE).build());
+		operations.bulkIndex(indexQueries, indexCoordinates);
+
+		boolean foundObject1 = operations.exists("idFromQuery1", indexCoordinates);
+		assertThat(foundObject1).isTrue();
+		boolean foundObject2 = operations.exists("idFromQuery2", indexCoordinates);
+		assertThat(foundObject2).isTrue();
 	}
 
 	@Test
