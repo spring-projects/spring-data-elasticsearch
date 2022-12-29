@@ -174,10 +174,10 @@ Let's assume we want to find all persons with a last name of _Miller_ and a firs
 ====
 [source,java]
 ----
-Criteria miller = new Criteria("lastName").is("Miller")  <.>
-  .subCriteria(                                          <.>
-    new Criteria().or("firstName").is("John")            <.>
-      .or("firstName").is("Jack")                        <.>
+Criteria criteria = new Criteria("lastName").is("Miller")  <.>
+  .subCriteria(                                            <.>
+    new Criteria().or("firstName").is("John")              <.>
+      .or("firstName").is("Jack")                          <.>
   );
 Query query = new CriteriaQuery(criteria);
 ----
@@ -185,7 +185,7 @@ Query query = new CriteriaQuery(criteria);
 <.> create a first `Criteria` for the last name
 <.> this is combined with AND to a subCriteria
 <.> This sub Criteria is an OR combination for the first name _John_
-<.> and the first name Jack
+<.> and the first name _Jack_
 ====
 
 Please refer to the API documentation of the `Criteria` class for a complete overview of the different available operations.
