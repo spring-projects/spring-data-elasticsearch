@@ -19,6 +19,7 @@ import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 import static org.springframework.util.CollectionUtils.*;
 
 import co.elastic.clients.elasticsearch._types.Conflicts;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.InlineScript;
 import co.elastic.clients.elasticsearch._types.OpType;
 import co.elastic.clients.elasticsearch._types.SortOptions;
@@ -754,7 +755,7 @@ class RequestConverter {
 
 					ReindexRequest.Slice slice = source.getSlice();
 					if (slice != null) {
-						s.slice(sl -> sl.id(slice.getId()).max(slice.getMax()));
+						s.slice(sl -> sl.id(String.valueOf(slice.getId())).max(slice.getMax()));
 					}
 
 					if (source.getQuery() != null) {
@@ -1168,7 +1169,8 @@ class RequestConverter {
 		}
 
 		if (!isEmpty(query.getSearchAfter())) {
-			builder.searchAfter(query.getSearchAfter().stream().map(Object::toString).collect(Collectors.toList()));
+			builder.searchAfter(
+					query.getSearchAfter().stream().map(it -> FieldValue.of(it.toString())).collect(Collectors.toList()));
 		}
 
 		query.getRescorerQueries().forEach(rescorerQuery -> {
