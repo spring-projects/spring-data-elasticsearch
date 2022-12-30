@@ -138,9 +138,8 @@ final class DocumentAdapters {
 		document.setPrimaryTerm(hit.primaryTerm() != null && hit.primaryTerm() > 0 ? hit.primaryTerm() : 0);
 
 		float score = hit.score() != null ? hit.score().floatValue() : Float.NaN;
-		return new SearchDocumentAdapter(document, score, hit.sort().toArray(new String[0]), documentFields,
-				highlightFields, innerHits, nestedMetaData, explanation, matchedQueries, hit.routing());
-	}
+		return new SearchDocumentAdapter(document, score, hit.sort().stream().map(TypeUtils::toString).toArray(),
+			documentFields, highlightFields, innerHits, nestedMetaData, explanation, matchedQueries, hit.routing());	}
 
 	@Nullable
 	private static Explanation from(@Nullable co.elastic.clients.elasticsearch.core.explain.Explanation explanation) {

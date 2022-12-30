@@ -19,9 +19,9 @@
 
 	<properties>
 		<!-- version of the RestHighLevelClient	-->
-		<elasticsearch-rhlc>7.17.7</elasticsearch-rhlc>
+		<elasticsearch-rhlc>7.17.8</elasticsearch-rhlc>
 		<!-- version of the new ElasticsearchClient	-->
-		<elasticsearch-java>7.17.7</elasticsearch-java>
+		<elasticsearch-java>7.17.8</elasticsearch-java>
 		<log4j>2.17.1</log4j>
 		<netty>4.1.65.Final</netty>
 		<springdata.commons>2.7.7-SNAPSHOT</springdata.commons>
