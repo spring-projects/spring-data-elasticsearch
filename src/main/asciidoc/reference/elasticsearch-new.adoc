@@ -4,7 +4,7 @@
 [[new-features.5-0-1]]
 == New in Spring Data Elasticsearch 5.0.1
 
-* Upgrade to Elasticsearch 8.5.2
+* Upgrade to Elasticsearch 8.5.3
 
 [[new-features.5-0-0]]
 == New in Spring Data Elasticsearch 5.0
