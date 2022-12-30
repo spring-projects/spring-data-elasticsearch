@@ -234,3 +234,9 @@ Query query = NativeQuery.builder()
 SearchHits<Person> searchHits = operations.search(query, Person.class);
 ----
 ====
+
+[[elasticsearch.operations.searchtemplateScOp§query]]
+=== SearchTemplateQuery
+
+This is a special implementation of the `Query` interface to be used in combination with a stored search template. 
+See <<elasticsearch.misc.searchtemplates>> for further information.

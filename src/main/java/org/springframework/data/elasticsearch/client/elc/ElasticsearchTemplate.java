@@ -55,10 +55,12 @@ import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
+import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -317,16 +319,38 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public <T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index) {
 
 		Assert.notNull(query, "query must not be null");
+		Assert.notNull(clazz, "clazz must not be null");
 		Assert.notNull(index, "index must not be null");
 
+		if (query instanceof SearchTemplateQuery searchTemplateQuery) {
+			return doSearch(searchTemplateQuery, clazz, index);
+		} else {
+			return doSearch(query, clazz, index);
+		}
+	}
+
+	protected <T> SearchHits<T> doSearch(Query query, Class<T> clazz, IndexCoordinates index) {
 		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false);
 		SearchResponse<EntityAsMap> searchResponse = execute(client -> client.search(searchRequest, EntityAsMap.class));
 
+		// noinspection DuplicatedCode
 		ReadDocumentCallback<T> readDocumentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponse.EntityCreator<T> entityCreator = getEntityCreator(readDocumentCallback);
 		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
 
 		return callback.doWith(SearchDocumentResponseBuilder.from(searchResponse, entityCreator, jsonpMapper));
+	}
+
+	protected <T> SearchHits<T> doSearch(SearchTemplateQuery query, Class<T> clazz, IndexCoordinates index) {
+		var searchTemplateRequest = requestConverter.searchTemplate(query, index);
+		var searchTemplateResponse = execute(client -> client.searchTemplate(searchTemplateRequest, EntityAsMap.class));
+
+		// noinspection DuplicatedCode
+		ReadDocumentCallback<T> readDocumentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
+		SearchDocumentResponse.EntityCreator<T> entityCreator = getEntityCreator(readDocumentCallback);
+		SearchDocumentResponseCallback<SearchHits<T>> callback = new ReadSearchDocumentResponseCallback<>(clazz, index);
+
+		return callback.doWith(SearchDocumentResponseBuilder.from(searchTemplateResponse, entityCreator, jsonpMapper));
 	}
 
 	@Override
@@ -511,6 +535,35 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return response.succeeded();
 	}
 
+	// endregion
+
+	// region script methods
+	@Override
+	public boolean putScript(Script script) {
+
+		Assert.notNull(script, "script must not be null");
+
+		var request = requestConverter.scriptPut(script);
+		return execute(client -> client.putScript(request)).acknowledged();
+	}
+
+	@Nullable
+	@Override
+	public Script getScript(String name) {
+
+		Assert.notNull(name, "name must not be null");
+
+		var request = requestConverter.scriptGet(name);
+		return responseConverter.scriptResponse(execute(client -> client.getScript(request)));
+	}
+
+	public boolean deleteScript(String name) {
+
+		Assert.notNull(name, "name must not be null");
+
+		DeleteScriptRequest request = requestConverter.scriptDelete(name);
+		return execute(client -> client.deleteScript(request)).acknowledged();
+	}
 	// endregion
 
 	// region client callback

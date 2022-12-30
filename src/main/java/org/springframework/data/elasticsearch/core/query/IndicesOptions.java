@@ -80,7 +80,7 @@ public class IndicesOptions {
 	}
 
 	public enum WildcardStates {
-		OPEN, CLOSED, HIDDEN;
+		OPEN, CLOSED, HIDDEN, ALL, NONE;
 	}
 
 	public enum Option {

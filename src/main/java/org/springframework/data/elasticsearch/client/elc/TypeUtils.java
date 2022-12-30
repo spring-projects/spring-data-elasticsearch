@@ -26,10 +26,14 @@ import co.elastic.clients.elasticsearch.core.search.HighlighterType;
 import co.elastic.clients.elasticsearch.core.search.ScoreMode;
 
 import java.time.Duration;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndicesOptions;
 import org.springframework.data.elasticsearch.core.query.Order;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery;
@@ -125,6 +129,7 @@ final class TypeUtils {
 			default -> throw new IllegalStateException("Unexpected value: " + fieldValue._kind());
 		}
 	}
+
 	@Nullable
 	static Object toObject(@Nullable FieldValue fieldValue) {
 
@@ -390,5 +395,15 @@ final class TypeUtils {
 	@Nullable
 	static Float toFloat(@Nullable Long value) {
 		return value != null ? Float.valueOf(value) : null;
+	}
+
+	/**
+	 * @sice 5.1
+	 */
+	@Nullable
+	public static List<ExpandWildcard> expandWildcards(@Nullable EnumSet<IndicesOptions.WildcardStates> wildcardStates) {
+		return (wildcardStates != null && !wildcardStates.isEmpty()) ? wildcardStates.stream()
+				.map(wildcardState -> ExpandWildcard.valueOf(wildcardState.name().toLowerCase())).collect(Collectors.toList())
+				: null;
 	}
 }

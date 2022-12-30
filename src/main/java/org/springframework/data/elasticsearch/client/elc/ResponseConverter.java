@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.data.elasticsearch.client.elc.JsonUtils.toJson;
+import static org.springframework.data.elasticsearch.client.elc.JsonUtils.*;
 
 import co.elastic.clients.elasticsearch._types.BulkIndexByScrollFailure;
 import co.elastic.clients.elasticsearch._types.ErrorCause;
@@ -23,6 +23,7 @@ import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
+import co.elastic.clients.elasticsearch.core.GetScriptResponse;
 import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetError;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
@@ -62,6 +63,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
+import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -421,6 +423,22 @@ class ResponseConverter {
 	}
 
 	// endregion
+
+	// region script API
+	@Nullable
+	public Script scriptResponse(GetScriptResponse response) {
+
+		Assert.notNull(response, "response must not be null");
+
+		return response.found() //
+				? Script.builder() //
+						.withId(response.id()) //
+						.withLanguage(response.script().lang()) //
+						.withSource(response.script().source()).build() //
+				: null;
+	}
+	// endregion
+
 	// region helper functions
 
 	private long timeToLong(Time time) {

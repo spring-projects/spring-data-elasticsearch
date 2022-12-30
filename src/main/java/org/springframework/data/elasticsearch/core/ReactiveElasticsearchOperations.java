@@ -23,6 +23,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
+import org.springframework.data.elasticsearch.core.script.ReactiveScriptOperations;
 import org.springframework.lang.Nullable;
 
 /**
@@ -37,7 +38,8 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @since 3.2
  */
-public interface ReactiveElasticsearchOperations extends ReactiveDocumentOperations, ReactiveSearchOperations {
+public interface ReactiveElasticsearchOperations
+		extends ReactiveDocumentOperations, ReactiveSearchOperations, ReactiveScriptOperations {
 
 	/**
 	 * Execute within a {@link ClientCallback} managing resources and translating errors.

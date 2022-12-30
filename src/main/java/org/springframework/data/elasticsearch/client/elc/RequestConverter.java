@@ -85,9 +85,11 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.Remote;
+import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -99,6 +101,7 @@ import org.springframework.util.StringUtils;
  * @author scoobyzhang
  * @since 4.4
  */
+@SuppressWarnings("ClassCanBeRecord")
 class RequestConverter {
 
 	// the default max result window size of Elasticsearch
@@ -1163,13 +1166,26 @@ class RequestConverter {
 
 		builder //
 				.version(true) //
-				.trackScores(query.getTrackScores());
+				.trackScores(query.getTrackScores()) //
+				.allowNoIndices(query.getAllowNoIndices()) //
+				.source(getSourceConfig(query)) //
+				.searchType(searchType(query.getSearchType())) //
+				.timeout(timeStringMs(query.getTimeout())) //
+				.requestCache(query.getRequestCache()) //
+		;
 
 		var pointInTime = query.getPointInTime();
 		if (pointInTime != null) {
 			builder.pit(pb -> pb.id(pointInTime.id()).keepAlive(time(pointInTime.keepAlive())));
 		} else {
-			builder.index(Arrays.asList(indexNames));
+			builder //
+					.index(Arrays.asList(indexNames)) //
+			;
+
+			var expandWildcards = query.getExpandWildcards();
+			if (expandWildcards != null && !expandWildcards.isEmpty()) {
+				builder.expandWildcards(expandWildcards(expandWildcards));
+			}
 
 			if (query.getRoute() != null) {
 				builder.routing(query.getRoute());
@@ -1191,8 +1207,6 @@ class RequestConverter {
 		} else {
 			builder.from(0).size(INDEX_MAX_RESULT_WINDOW);
 		}
-
-		builder.source(getSourceConfig(query));
 
 		if (!isEmpty(query.getFields())) {
 			builder.fields(fb -> {
@@ -1217,8 +1231,6 @@ class RequestConverter {
 			builder.minScore((double) query.getMinScore());
 		}
 
-		builder.searchType(searchType(query.getSearchType()));
-
 		if (query.getSort() != null) {
 			List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
 
@@ -1241,8 +1253,6 @@ class RequestConverter {
 			builder.trackTotalHits(th -> th.count(query.getTrackTotalHitsUpTo()));
 		}
 
-		builder.timeout(timeStringMs(query.getTimeout()));
-
 		if (query.getExplain()) {
 			builder.explain(true);
 		}
@@ -1253,8 +1263,6 @@ class RequestConverter {
 		}
 
 		query.getRescorerQueries().forEach(rescorerQuery -> builder.rescore(getRescore(rescorerQuery)));
-
-		builder.requestCache(query.getRequestCache());
 
 		if (!query.getRuntimeFields().isEmpty()) {
 
@@ -1540,8 +1548,69 @@ class RequestConverter {
 		return ClosePointInTimeRequest.of(cpit -> cpit.id(pit));
 	}
 
+	public SearchTemplateRequest searchTemplate(SearchTemplateQuery query, IndexCoordinates index) {
+
+		Assert.notNull(query, "query must not be null");
+
+		return SearchTemplateRequest.of(builder -> {
+			builder //
+				.allowNoIndices(query.getAllowNoIndices()) //
+				.explain(query.getExplain()) //
+				.id(query.getId()) //
+				.index(Arrays.asList(index.getIndexNames())) //
+				.preference(query.getPreference()) //
+				.routing(query.getRoute()) //
+				.searchType(searchType(query.getSearchType()))
+				.source(query.getSource()) //
+			;
+
+			var expandWildcards = query.getExpandWildcards();
+			if (!expandWildcards.isEmpty()) {
+				builder.expandWildcards(expandWildcards(expandWildcards));
+			}
+
+			if (query.hasScrollTime()) {
+				builder.scroll(time(query.getScrollTime()));
+			}
+
+			if (!CollectionUtils.isEmpty(query.getParams())) {
+				Function<Map.Entry<String, Object>, String> keyMapper = Map.Entry::getKey;
+				Function<Map.Entry<String, Object>, JsonData> valueMapper = entry -> JsonData.of(entry.getValue(), jsonpMapper);
+				Map<String, JsonData> params = query.getParams().entrySet().stream()
+					.collect(Collectors.toMap(keyMapper, valueMapper));
+				builder.params(params);
+			}
+
+			return builder;
+		});
+	}
+
 	// endregion
 
+	public PutScriptRequest scriptPut(Script script) {
+
+		Assert.notNull(script, "script must not be null");
+
+		return PutScriptRequest.of(b -> b //
+				.id(script.id()) //
+				.script(sb -> sb //
+						.lang(script.language()) //
+						.source(script.source())));
+	}
+
+	public GetScriptRequest scriptGet(String name) {
+
+		Assert.notNull(name, "name must not be null");
+
+		return GetScriptRequest.of(b -> b.id(name));
+	}
+
+	public DeleteScriptRequest scriptDelete(String name) {
+
+		Assert.notNull(name, "name must not be null");
+
+		return DeleteScriptRequest.of(b -> b.id(name));
+	}
 	// region helper functions
 
 	public <T> T fromJson(String json, JsonpDeserializer<T> deserializer) {

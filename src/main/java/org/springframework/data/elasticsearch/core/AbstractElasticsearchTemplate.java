@@ -52,6 +52,7 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
+import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
@@ -735,6 +736,29 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			}
 		}
 	}
+
+	// region script operations
+
+	@Override
+	public boolean putScript(Script script) {
+		throw new UnsupportedOperationException(
+				"putScript() operation not implemented by " + getClass().getCanonicalName());
+	}
+
+	@Nullable
+	@Override
+	public Script getScript(String name) {
+		throw new UnsupportedOperationException(
+				"getScript() operation not implemented by " + getClass().getCanonicalName());
+	}
+
+	@Override
+	public boolean deleteScript(String name) {
+		throw new UnsupportedOperationException(
+				"deleteScript() operation not implemented by " + getClass().getCanonicalName());
+	}
+
+	// endregion
 
 	// region Document callbacks
 	protected interface DocumentCallback<T> {

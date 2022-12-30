@@ -228,11 +228,6 @@ public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery
 		return this;
 	}
 
-	public NativeSearchQueryBuilder withIndicesOptions(IndicesOptions indicesOptions) {
-		this.indicesOptions = indicesOptions;
-		return this;
-	}
-
 	/**
 	 * @since 4.2
 	 */
@@ -306,8 +301,8 @@ public class NativeSearchQueryBuilder extends BaseQueryBuilder<NativeSearchQuery
 			nativeSearchQuery.setSearchType(Query.SearchType.valueOf(searchType.name()));
 		}
 
-		if (indicesOptions != null) {
-			nativeSearchQuery.setIndicesOptions(indicesOptions);
+		if (getIndicesOptions() != null) {
+			nativeSearchQuery.setIndicesOptions(getIndicesOptions());
 		}
 
 		nativeSearchQuery.setTrackTotalHits(trackTotalHits);

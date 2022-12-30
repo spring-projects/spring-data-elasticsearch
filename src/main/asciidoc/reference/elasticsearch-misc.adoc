@@ -17,7 +17,6 @@ The following arguments are available:
 * `refreshIntervall`, defaults to _"1s"_
 * `indexStoreType`, defaults to _"fs"_
 
-
 It is as well possible to define https://www.elastic.co/guide/en/elasticsearch/reference/7.11/index-modules-index-sorting.html[index sorting] (check the linked Elasticsearch documentation for the possible field types and values):
 
 ====
@@ -133,9 +132,7 @@ stream.close();
 ----
 ====
 
-There are no methods in the `SearchOperations` API to access the scroll id, if it should be necessary to access this,
-the following methods of the `AbstractElasticsearchTemplate` can be used (this is the base implementation for the
-different `ElasticsearchOperations` implementations):
+There are no methods in the `SearchOperations` API to access the scroll id, if it should be necessary to access this, the following methods of the `AbstractElasticsearchTemplate` can be used (this is the base implementation for the different `ElasticsearchOperations` implementations):
 
 ====
 [source,java]
@@ -281,7 +278,7 @@ This works with every implementation of the `Query` interface.
 [[elasticsearch.misc.point-in-time]]
 == Point In Time (PIT) API
 
-`ElasticsearchOperations` supports the point in time API of Elasticsearch (see https://www.elastic.co/guide/en/elasticsearch/reference/8.3/point-in-time-api.html). 
+`ElasticsearchOperations` supports the point in time API of Elasticsearch (see https://www.elastic.co/guide/en/elasticsearch/reference/8.3/point-in-time-api.html).
 The following code snippet shows how to use this feature with a fictional `Person` class:
 
 ====
@@ -310,8 +307,115 @@ SearchHits<Person> searchHits2 = operations.search(query2, Person.class);
 operations.closePointInTime(searchHits2.getPointInTimeId());                        <.>
 
 ----
+
 <.> create a point in time for an index (can be multiple names) and a keep-alive duration and retrieve its id
 <.> pass that id into the query to search together with the next keep-alive value
 <.> for the next query, use the id returned from the previous search
 <.> when done, close the point in time using the last returned id
+====
+
+[[elasticsearch.misc.searchtemplates]]
+== Search Template support
+
+Use of the search template API is supported.
+To use this, it first is necessary to create a stored script.
+The `ElasticsearchOperations` interface extends `ScriptOperations` which provides the necessary functions.
+The example used here assumes that we have `Person` entity with a property named `firstName`.
+A search template script can be saved like this:
+
+====
+[source,java]
+----
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.script.Script;
+
+operations.putScript(                            <.>
+  Script.builder()
+    .withId("person-firstname")                  <.>
+    .withLanguage("mustache")                    <.>
+    .withSource("""                              <.>
+      {
+        "query": {
+          "bool": {
+            "must": [
+              {
+                "match": {
+                  "firstName": "{{firstName}}"   <.>
+                }
+              }
+            ]
+          }
+        },
+        "from": "{{from}}",                      <.>
+        "size": "{{size}}"                       <.>
+      }
+      """)
+    .build()
+);
+----
+
+<.> Use the `putScript()` method to store a search template script
+<.> The name / id of the script
+<.> Scripts that are used in search templates must be in the _mustache_ language.
+<.> The script source
+<.> The search parameter in the script
+<.> Paging request offset
+<.> Paging request size
+====
+
+To use a search template in a search query, Spring Data Elasticsearch provides the `SearchTemplateQuery`, an implementation of the `org.springframework.data.elasticsearch.core.query.Query` interface.
+
+In the following code, we will add a call using a search template query to a custom repository implementation (see 
+<<repositories.custom-implementations>>) as
+an example how this can be integrated into a repository call.
+
+We first define the custom repository fragment interface:
+
+====
+[source,java]
+----
+interface PersonCustomRepository {
+	SearchPage<Person> findByFirstNameWithSearchTemplate(String firstName, Pageable pageable);
+}
+----
+====
+
+The implementation of this repository fragment looks like this:
+
+====
+[source,java]
+----
+public class PersonCustomRepositoryImpl implements PersonCustomRepository {
+
+  private final ElasticsearchOperations operations;
+
+  public PersonCustomRepositoryImpl(ElasticsearchOperations operations) {
+    this.operations = operations;
+  }
+
+  @Override
+  public SearchPage<Person> findByFirstNameWithSearchTemplate(String firstName, Pageable pageable) {
+
+    var query = SearchTemplateQuery.builder()                               <.>
+      .withId("person-firstname")                                           <.>
+      .withParams(
+        Map.of(                                                             <.>                             
+          "firstName", firstName,
+          "from", pageable.getOffset(),
+          "size", pageable.getPageSize()
+          )
+      )
+      .build();
+
+    SearchHits<Person> searchHits = operations.search(query, Person.class); <.>
+
+    return SearchHitSupport.searchPageFor(searchHits, pageable);
+  }
+}
+----
+
+<.> Create a `SearchTemplateQuery`
+<.> Provide the id of the search template
+<.> The parameters are passed in a `Map<String,Object>`
+<.> Do the search in the same way as with the other query types.
 ====
