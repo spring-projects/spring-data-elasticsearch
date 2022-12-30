@@ -237,6 +237,29 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		return search(fn.apply(new SearchRequest.Builder()).build(), tDocumentClass);
 	}
 
+	/**
+	 * @since 5.1
+	 */
+	public <T> Mono<SearchTemplateResponse<T>> searchTemplate(SearchTemplateRequest request, Class<T> tDocumentClass) {
+
+		Assert.notNull(request, "request must not be null");
+		Assert.notNull(tDocumentClass, "tDocumentClass must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request,
+				SearchTemplateRequest.createSearchTemplateEndpoint(this.getDeserializer(tDocumentClass)), transportOptions));
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public <T> Mono<SearchTemplateResponse<T>> searchTemplate(
+			Function<SearchTemplateRequest.Builder, ObjectBuilder<SearchTemplateRequest>> fn, Class<T> tDocumentClass) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return searchTemplate(fn.apply(new SearchTemplateRequest.Builder()).build(), tDocumentClass);
+	}
+
 	public <T> Mono<ScrollResponse<T>> scroll(ScrollRequest request, Class<T> tDocumentClass) {
 
 		Assert.notNull(request, "request must not be null");
@@ -317,6 +340,69 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		Assert.notNull(fn, "fn must not be null");
 
 		return closePointInTime(fn.apply(new ClosePointInTimeRequest.Builder()).build());
+	}
+	// endregion
+
+	// region script api
+	/**
+	 * @since 5.1
+	 */
+	public Mono<PutScriptResponse> putScript(PutScriptRequest request) {
+
+		Assert.notNull(request, "request must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request, PutScriptRequest._ENDPOINT, transportOptions));
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public Mono<PutScriptResponse> putScript(Function<PutScriptRequest.Builder, ObjectBuilder<PutScriptRequest>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return putScript(fn.apply(new PutScriptRequest.Builder()).build());
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public Mono<GetScriptResponse> getScript(GetScriptRequest request) {
+
+		Assert.notNull(request, "request must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request, GetScriptRequest._ENDPOINT, transportOptions));
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public Mono<GetScriptResponse> getScript(Function<GetScriptRequest.Builder, ObjectBuilder<GetScriptRequest>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return getScript(fn.apply(new GetScriptRequest.Builder()).build());
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public Mono<DeleteScriptResponse> deleteScript(DeleteScriptRequest request) {
+
+		Assert.notNull(request, "request must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request, DeleteScriptRequest._ENDPOINT, transportOptions));
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public Mono<DeleteScriptResponse> deleteScript(
+			Function<DeleteScriptRequest.Builder, ObjectBuilder<DeleteScriptRequest>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return deleteScript(fn.apply(new DeleteScriptRequest.Builder()).build());
 	}
 	// endregion
 

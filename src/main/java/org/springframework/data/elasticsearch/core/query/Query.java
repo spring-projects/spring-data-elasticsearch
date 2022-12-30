@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.query;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -460,8 +461,19 @@ public interface Query {
 	}
 
 	/**
-	 * @since 4.3
+	 * @since 5.1
 	 */
+	@Nullable
+	Boolean getAllowNoIndices();
+
+	/**
+	 * @since 5.1
+	 */
+	EnumSet<IndicesOptions.WildcardStates> getExpandWildcards();
+
+	/**
+		 * @since 4.3
+		 */
 	enum SearchType {
 		QUERY_THEN_FETCH, DFS_QUERY_THEN_FETCH
 	}

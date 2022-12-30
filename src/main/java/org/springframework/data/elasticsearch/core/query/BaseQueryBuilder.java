@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.springframework.data.domain.Pageable;
@@ -45,26 +46,28 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	private float minScore;
 	private final Collection<String> ids = new ArrayList<>();
 	@Nullable private String route;
-	protected Query.SearchType searchType = Query.SearchType.QUERY_THEN_FETCH;
-	@Nullable protected IndicesOptions indicesOptions;
+	private Query.SearchType searchType = Query.SearchType.QUERY_THEN_FETCH;
+	@Nullable private IndicesOptions indicesOptions;
 	private boolean trackScores;
 	@Nullable private String preference;
 	@Nullable private Integer maxResults;
-	@Nullable protected HighlightQuery highlightQuery;
+	@Nullable private HighlightQuery highlightQuery;
 	@Nullable private Boolean trackTotalHits;
-	@Nullable protected Integer trackTotalHitsUpTo;
-	@Nullable protected Duration scrollTime;
-	@Nullable protected Duration timeout;
+	@Nullable private Integer trackTotalHitsUpTo;
+	@Nullable private Duration scrollTime;
+	@Nullable private Duration timeout;
 	boolean explain = false;
-	@Nullable protected List<Object> searchAfter;
+	@Nullable private List<Object> searchAfter;
 
 	@Nullable private List<IndexBoost> indicesBoost;
 	protected final List<RescorerQuery> rescorerQueries = new ArrayList<>();
 
-	@Nullable protected Boolean requestCache;
-	protected final List<Query.IdWithRouting> idsWithRouting = new ArrayList<>();
-	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
-	@Nullable protected Query.PointInTime pointInTime;
+	@Nullable private Boolean requestCache;
+	private final List<Query.IdWithRouting> idsWithRouting = new ArrayList<>();
+	private final List<RuntimeField> runtimeFields = new ArrayList<>();
+	@Nullable private Query.PointInTime pointInTime;
+	@Nullable private Boolean allowNoIndices;
+	private EnumSet<IndicesOptions.WildcardStates> expandWildcards = EnumSet.noneOf(IndicesOptions.WildcardStates.class);
 
 	@Nullable Integer reactiveBatchSize;
 
@@ -198,6 +201,21 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	 */
 	public Integer getReactiveBatchSize() {
 		return reactiveBatchSize;
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	@Nullable
+	public Boolean getAllowNoIndices() {
+		return allowNoIndices;
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public EnumSet<IndicesOptions.WildcardStates> getExpandWildcards() {
+		return expandWildcards;
 	}
 
 	public SELF withPageable(Pageable pageable) {
@@ -389,6 +407,19 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	 */
 	public SELF withReactiveBatchSize(@Nullable Integer reactiveBatchSize) {
 		this.reactiveBatchSize = reactiveBatchSize;
+		return self();
+	}
+
+	public SELF witAllowNoIndices(@Nullable Boolean allowNoIndices) {
+		this.allowNoIndices = allowNoIndices;
+		return self();
+	}
+
+	public SELF withExpandWildcards(EnumSet<IndicesOptions.WildcardStates> expandWildcards) {
+
+		Assert.notNull(expandWildcards, "expandWildcards must not be null");
+
+		this.expandWildcards = expandWildcards;
 		return self();
 	}
 

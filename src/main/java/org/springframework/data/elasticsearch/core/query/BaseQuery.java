@@ -22,6 +22,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -75,9 +76,11 @@ public class BaseQuery implements Query {
 	protected List<IdWithRouting> idsWithRouting = Collections.emptyList();
 	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
 	@Nullable protected PointInTime pointInTime;
-
 	private boolean queryIsUpdatedByConverter = false;
 	@Nullable private Integer reactiveBatchSize = null;
+@Nullable private Boolean  allowNoIndices = null;
+
+	private EnumSet<IndicesOptions.WildcardStates> expandWildcards;
 
 	public BaseQuery() {}
 
@@ -109,6 +112,8 @@ public class BaseQuery implements Query {
 		this.idsWithRouting = builder.getIdsWithRouting();
 		this.pointInTime = builder.getPointInTime();
 		this.reactiveBatchSize = builder.getReactiveBatchSize();
+		this.allowNoIndices = builder.getAllowNoIndices();
+		this.expandWildcards = builder.getExpandWildcards();
 	}
 
 	/**
@@ -508,5 +513,15 @@ public class BaseQuery implements Query {
 	 */
 	public void setReactiveBatchSize(Integer reactiveBatchSize) {
 		this.reactiveBatchSize = reactiveBatchSize;
+	}
+
+	@Nullable
+	public Boolean getAllowNoIndices() {
+		return allowNoIndices;
+	}
+
+	@Override
+	public EnumSet<IndicesOptions.WildcardStates> getExpandWildcards() {
+		return expandWildcards;
 	}
 }

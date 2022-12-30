@@ -62,10 +62,12 @@ import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
+import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
@@ -341,12 +343,18 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	@Override
 	protected Flux<SearchDocument> doFind(Query query, Class<?> clazz, IndexCoordinates index) {
 
-		return Flux.defer(() -> {
-			boolean queryIsUnbounded = !(query.getPageable().isPaged() || query.isLimiting());
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(clazz, "clazz must not be null");
+		Assert.notNull(index, "index must not be null");
 
-			return queryIsUnbounded ? doFindUnbounded(query, clazz, index) : doFindBounded(query, clazz, index);
-		});
-
+		if (query instanceof SearchTemplateQuery searchTemplateQuery) {
+			return Flux.defer(() -> doSearch(searchTemplateQuery, clazz, index));
+		} else {
+			return Flux.defer(() -> {
+				boolean queryIsUnbounded = !(query.getPageable().isPaged() || query.isLimiting());
+				return queryIsUnbounded ? doFindUnbounded(query, clazz, index) : doFindBounded(query, clazz, index);
+			});
+		}
 	}
 
 	private Flux<SearchDocument> doFindUnbounded(Query query, Class<?> clazz, IndexCoordinates index) {
@@ -465,6 +473,17 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));
 	}
 
+	private Flux<SearchDocument> doSearch(SearchTemplateQuery query, Class<?> clazz, IndexCoordinates index) {
+
+		var request = requestConverter.searchTemplate(query, index);
+
+		return Mono
+				.from(execute((ClientCallback<Publisher<SearchTemplateResponse<EntityAsMap>>>) client -> client
+						.searchTemplate(request, EntityAsMap.class))) //
+				.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits()) //
+				.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));
+	}
+
 	@Override
 	protected <T> Mono<SearchDocumentResponse> doFindForResponse(Query query, Class<?> clazz, IndexCoordinates index) {
 
@@ -517,6 +536,37 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				.map(ClosePointInTimeResponse::succeeded);
 	}
 
+	// endregion
+
+	// region script operations
+	@Override
+	public Mono<Boolean> putScript(Script script) {
+
+		Assert.notNull(script, "script must not be null");
+
+		var request = requestConverter.scriptPut(script);
+		return Mono.from(execute((ClientCallback<Publisher<PutScriptResponse>>) client -> client.putScript(request)))
+				.map(PutScriptResponse::acknowledged);
+	}
+
+	@Override
+	public Mono<Script> getScript(String name) {
+
+		Assert.notNull(name, "name must not be null");
+
+		var request = requestConverter.scriptGet(name);
+		return Mono.from(execute((ClientCallback<Publisher<GetScriptResponse>>) client -> client.getScript(request)))
+				.mapNotNull(responseConverter::scriptResponse);
+	}
+
+	@Override
+	public Mono<Boolean> deleteScript(String name) {
+		Assert.notNull(name, "name must not be null");
+
+		var request = requestConverter.scriptDelete(name);
+		return Mono.from(execute((ClientCallback<Publisher<DeleteScriptResponse>>) client -> client.deleteScript(request)))
+				.map(DeleteScriptResponse::acknowledged);
+	}
 	// endregion
 
 	@Override

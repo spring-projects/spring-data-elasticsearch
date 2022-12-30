@@ -21,6 +21,7 @@ import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
+import org.springframework.data.elasticsearch.core.script.ScriptOperations;
 import org.springframework.lang.Nullable;
 
 /**
@@ -36,7 +37,7 @@ import org.springframework.lang.Nullable;
  * @author Dmitriy Yakovlev
  * @author Peter-Josef Meisch
  */
-public interface ElasticsearchOperations extends DocumentOperations, SearchOperations {
+public interface ElasticsearchOperations extends DocumentOperations, SearchOperations, ScriptOperations {
 
 	/**
 	 * get an {@link IndexOperations} that is bound to the given class

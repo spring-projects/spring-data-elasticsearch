@@ -30,6 +30,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
+import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 
 /**
@@ -77,16 +78,20 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			var errorType = response.error().type();
 			var errorReason = response.error().reason() != null ? response.error().reason() : "undefined reason";
 
-			if (response.status() == 404 && "index_not_found_exception".equals(errorType)) {
+			if (response.status() == 404) {
 
-				// noinspection RegExpRedundantEscape
-				Pattern pattern = Pattern.compile(".*no such index \\[(.*)\\]");
-				String index = "";
-				Matcher matcher = pattern.matcher(errorReason);
-				if (matcher.matches()) {
-					index = matcher.group(1);
+				if ("index_not_found_exception".equals(errorType)) {
+					// noinspection RegExpRedundantEscape
+					Pattern pattern = Pattern.compile(".*no such index \\[(.*)\\]");
+					String index = "";
+					Matcher matcher = pattern.matcher(errorReason);
+					if (matcher.matches()) {
+						index = matcher.group(1);
+					}
+					return new NoSuchIndexException(index);
 				}
-				return new NoSuchIndexException(index);
+
+				return new ResourceNotFoundException(errorReason);
 			}
 			String body = JsonUtils.toJson(response, jsonpMapper);
 

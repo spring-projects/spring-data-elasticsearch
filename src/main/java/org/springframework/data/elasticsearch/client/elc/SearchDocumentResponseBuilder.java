@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.SearchTemplateResponse;
 import co.elastic.clients.elasticsearch.core.search.CompletionSuggest;
 import co.elastic.clients.elasticsearch.core.search.CompletionSuggestOption;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -70,12 +71,38 @@ class SearchDocumentResponseBuilder {
 
 		Assert.notNull(responseBody, "responseBody must not be null");
 		Assert.notNull(entityCreator, "entityCreator must not be null");
+		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
 
 		HitsMetadata<EntityAsMap> hitsMetadata = responseBody.hits();
 		String scrollId = responseBody.scrollId();
 		Map<String, Aggregate> aggregations = responseBody.aggregations();
 		Map<String, List<Suggestion<EntityAsMap>>> suggest = responseBody.suggest();
 		var pointInTimeId = responseBody.pitId();
+
+		return from(hitsMetadata, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
+	}
+
+	/**
+	 * creates a SearchDocumentResponse from the {@link SearchTemplateResponse}
+	 *
+	 * @param response the Elasticsearch response body
+	 * @param entityCreator function to create an entity from a {@link SearchDocument}
+	 * @param jsonpMapper to map JsonData objects
+	 * @return the SearchDocumentResponse
+	 * @since 5.1
+	 */
+	public static <T> SearchDocumentResponse from(SearchTemplateResponse<EntityAsMap> response,
+			SearchDocumentResponse.EntityCreator<T> entityCreator, JsonpMapper jsonpMapper) {
+
+		Assert.notNull(response, "response must not be null");
+		Assert.notNull(entityCreator, "entityCreator must not be null");
+		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
+
+		var hitsMetadata = response.hits();
+		var scrollId = response.scrollId();
+		var aggregations = response.aggregations();
+		var suggest = response.suggest();
+		var pointInTimeId = response.pitId();
 
 		return from(hitsMetadata, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
 	}
