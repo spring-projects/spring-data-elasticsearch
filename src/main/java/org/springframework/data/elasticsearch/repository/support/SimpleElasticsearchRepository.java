@@ -147,9 +147,11 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(ids, "ids can't be null.");
 
-		List<T> result = new ArrayList<>();
-		Query query = getIdQuery(ids);
-
+		List<String> stringIds = stringIdsRepresentation(ids);
+		Query query = getIdQuery(stringIds);
+		if (!stringIds.isEmpty()) {
+			query.setPageable(PageRequest.of(0, stringIds.size()));
+		}
 		List<SearchHit<T>> searchHitList = execute(
 				operations -> operations.search(query, entityClass, getIndexCoordinates()).getSearchHits());
 		// noinspection ConstantConditions
@@ -320,9 +322,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		return operations.getIndexCoordinatesFor(entityClass);
 	}
 
-	private Query getIdQuery(Iterable<? extends ID> ids) {
-		List<String> stringIds = stringIdsRepresentation(ids);
-
+	private Query getIdQuery(List<String> stringIds) {
 		return operations.idsQuery(stringIds);
 	}
 	// endregion
