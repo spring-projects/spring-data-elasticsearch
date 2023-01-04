@@ -202,29 +202,27 @@ abstract class ElasticsearchRepositoryIntegrationTests {
 		assertThat(entityFromElasticSearch).isNotPresent();
 	}
 
-	@Test // DATAES-82
+	@Test // DATAES-82, #2417
 	void shouldFindAllByIdQuery() {
 
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("hello world.");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+		// create more than 10 documents to see that the number of input ids is set as requested size
+		int numEntities = 20;
+		List<String> ids = new ArrayList<>(numEntities);
+		List<SampleEntity> entities = new ArrayList<>(numEntities);
+		for (int i = 0; i < numEntities; i++) {
+			String documentId = nextIdAsString();
+			ids.add(documentId);
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setId(documentId);
+			sampleEntity.setMessage("hello world.");
+			sampleEntity.setVersion(System.currentTimeMillis());
+			entities.add(sampleEntity);
+		}
+		repository.saveAll(entities);
 
-		String documentId2 = nextIdAsString();
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("hello world.");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity2);
+		Iterable<SampleEntity> sampleEntities = repository.findAllById(ids);
 
-		// when
-		Iterable<SampleEntity> sampleEntities = repository.findAllById(Arrays.asList(documentId, documentId2));
-
-		// then
-		assertThat(sampleEntities).isNotNull().hasSize(2);
+		assertThat(sampleEntities).isNotNull().hasSize(numEntities);
 	}
 
 	@Test
