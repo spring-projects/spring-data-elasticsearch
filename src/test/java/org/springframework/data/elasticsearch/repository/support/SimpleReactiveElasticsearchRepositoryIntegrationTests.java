@@ -17,11 +17,13 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.core.query.Query.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -164,18 +166,27 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		repository.findAllById(Arrays.asList("id-two", "id-two")).as(StepVerifier::create).verifyComplete();
 	}
 
-	@Test // DATAES-519
+	@Test // DATAES-519, #2417
 	void findAllByIdShouldRetrieveMatchingDocuments() {
 
-		bulkIndex(new SampleEntity("id-one"), //
-				new SampleEntity("id-two"), //
-				new SampleEntity("id-three")) //
-						.block();
+		// create more than 10 documents to see that the number of input ids is set as requested size
+		int numEntities = 20;
+		List<String> ids = new ArrayList<>(numEntities);
+		List<SampleEntity> entities = new ArrayList<>(numEntities);
+		for (int i = 0; i < numEntities; i++) {
+			String documentId = nextIdAsString();
+			ids.add(documentId);
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setId(documentId);
+			sampleEntity.setMessage("hello world.");
+			sampleEntity.setVersion(System.currentTimeMillis());
+			entities.add(sampleEntity);
+		}
+		repository.saveAll(entities).blockLast();
 
-		repository.findAllById(Arrays.asList("id-one", "id-two")) //
+		repository.findAllById(ids) //
 				.as(StepVerifier::create)//
-				.expectNextMatches(entity -> entity.getId().equals("id-one") || entity.getId().equals("id-two")) //
-				.expectNextMatches(entity -> entity.getId().equals("id-one") || entity.getId().equals("id-two")) //
+				.expectNextCount(numEntities) //
 				.verifyComplete();
 	}
 
