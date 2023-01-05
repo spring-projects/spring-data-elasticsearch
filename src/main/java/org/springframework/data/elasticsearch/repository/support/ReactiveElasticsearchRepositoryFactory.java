@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2022 the original author or authors.
+ * Copyright 2019-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,15 +25,19 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryMethod;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchStringQuery;
 import org.springframework.data.elasticsearch.repository.query.ReactivePartTreeElasticsearchQuery;
+import org.springframework.data.elasticsearch.repository.support.querybyexample.ReactiveQueryByExampleElasticsearchExecutor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.core.support.ReactiveRepositoryFactorySupport;
+import org.springframework.data.repository.core.support.RepositoryComposition;
+import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
@@ -45,6 +49,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Ivan Greene
+ * @author Ezequiel Antúnez Camacho
  * @since 3.2
  */
 public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFactorySupport {
@@ -167,5 +172,17 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 				return new ReactivePartTreeElasticsearchQuery(queryMethod, operations);
 			}
 		}
+	}
+
+	@Override
+	protected RepositoryComposition.RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata) {
+		RepositoryComposition.RepositoryFragments fragments = RepositoryComposition.RepositoryFragments.empty();
+
+		if (ReactiveQueryByExampleExecutor.class.isAssignableFrom(metadata.getRepositoryInterface())) {
+			fragments = fragments.append(RepositoryFragment.implemented(ReactiveQueryByExampleExecutor.class,
+					instantiateClass(ReactiveQueryByExampleElasticsearchExecutor.class, operations)));
+		}
+
+		return fragments;
 	}
 }

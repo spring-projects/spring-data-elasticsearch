@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2022 the original author or authors.
+ * Copyright 2013-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,28 +15,32 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import static org.springframework.data.querydsl.QuerydslUtils.*;
-
-import java.lang.reflect.Method;
-import java.util.Optional;
-
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchQueryMethod;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchStringQuery;
+import org.springframework.data.elasticsearch.repository.support.querybyexample.QueryByExampleElasticsearchExecutor;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.data.repository.core.NamedQueries;
 import org.springframework.data.repository.core.RepositoryInformation;
 import org.springframework.data.repository.core.RepositoryMetadata;
+import org.springframework.data.repository.core.support.RepositoryComposition;
 import org.springframework.data.repository.core.support.RepositoryFactorySupport;
+import org.springframework.data.repository.core.support.RepositoryFragment;
+import org.springframework.data.repository.query.QueryByExampleExecutor;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
+
+import java.lang.reflect.Method;
+import java.util.Optional;
+
+import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
 
 /**
  * Factory to create {@link ElasticsearchRepository}
@@ -49,6 +53,7 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Sascha Woo
  * @author Peter-Josef Meisch
+ * @author Ezequiel Antúnez Camacho
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -122,4 +127,17 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	protected RepositoryMetadata getRepositoryMetadata(Class<?> repositoryInterface) {
 		return new ElasticsearchRepositoryMetadata(repositoryInterface);
 	}
+
+	@Override
+	protected RepositoryComposition.RepositoryFragments getRepositoryFragments(RepositoryMetadata metadata) {
+		RepositoryComposition.RepositoryFragments fragments = RepositoryComposition.RepositoryFragments.empty();
+
+		if (QueryByExampleExecutor.class.isAssignableFrom(metadata.getRepositoryInterface())) {
+			fragments = fragments.append(RepositoryFragment.implemented(QueryByExampleExecutor.class,
+					instantiateClass(QueryByExampleElasticsearchExecutor.class, elasticsearchOperations)));
+		}
+
+		return fragments;
+	}
+
 }

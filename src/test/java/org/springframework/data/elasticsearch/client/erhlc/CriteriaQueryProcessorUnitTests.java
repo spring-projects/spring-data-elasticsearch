@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2022 the original author or authors.
+ * Copyright 2020-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Ezequiel Antúnez Camacho
  */
 @SuppressWarnings("ConstantConditions")
 class CriteriaQueryProcessorUnitTests {
@@ -446,5 +447,30 @@ class CriteriaQueryProcessorUnitTests {
 		String query = queryProcessor.createQuery(criteria).toString();
 
 		assertEquals(expected, query, false);
+	}
+
+	@Test // #2418
+	void shouldBuildRegexpQuery() throws JSONException {
+		String expected = """
+				 {
+					"bool": {
+						"must": [
+							{
+								"regexp": {
+									"field1": {
+										"value": "\\\\[\\\\^abc\\\\]"
+									}
+								}
+							}
+						]
+					}
+				}
+				""";
+
+		Criteria criteria = new Criteria("field1").regexp("[^abc]");
+
+		String queryString = queryProcessor.createQuery(criteria).toString();
+
+		assertEquals(expected, queryString, false);
 	}
 }

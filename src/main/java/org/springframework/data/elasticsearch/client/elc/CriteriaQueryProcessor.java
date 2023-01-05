@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2022 the original author or authors.
+ * Copyright 2021-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@ import org.springframework.util.Assert;
  * query.
  *
  * @author Peter-Josef Meisch
+ * @author Ezequiel Antúnez Camacho
  * @since 4.4
  */
 class CriteriaQueryProcessor {
@@ -328,6 +329,13 @@ class CriteriaQueryProcessor {
 				} else {
 					throw new CriteriaQueryException("value for " + fieldName + " is not an Iterable");
 				}
+				break;
+			case REGEXP:
+				queryBuilder //
+						.regexp(rb -> rb //
+								.field(fieldName) //
+								.value(searchText) //
+								.boost(boost)); //
 				break;
 			default:
 				throw new CriteriaQueryException("Could not build query for " + entry);
