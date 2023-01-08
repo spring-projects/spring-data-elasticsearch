@@ -1,0 +1,4 @@
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+	org.springframework.data.elasticsearch.aot.ElasticsearchRuntimeHints,\
+	org.springframework.data.elasticsearch.client.elc.aot.ElasticsearchClientRuntimeHints, \
+	org.springframework.data.elasticsearch.repository.aot.RepositoryRuntimeHints

@@ -298,7 +298,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String getRuntimeLibraryVersion() {
-		return Version.VERSION.toString();
+		return Version.VERSION != null ? Version.VERSION.toString() : "0.0.0.?";
 	}
 
 	// region search operations
