@@ -50,6 +50,7 @@ import org.springframework.util.StringUtils;
  * @author Mohsin Husen
  * @author Franck Marchand
  * @author Peter-Josef Meisch
+ * @author Ezequiel Antúnez Camacho
  */
 public class Criteria {
 
@@ -611,6 +612,21 @@ public class Criteria {
 		return this;
 	}
 
+	/**
+	 * Add a {@link OperationKey#REGEXP} entry to the {@link #queryCriteriaEntries}.
+	 *
+	 * @param value the regexp value to match
+	 * @return this object
+	 * @since 5.1
+	 */
+	public Criteria regexp(String value) {
+
+		Assert.notNull(value, "value must not be null");
+
+		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.REGEXP, value));
+		return this;
+	}
+
 	// endregion
 
 	// region criteria entries - filter
@@ -954,7 +970,11 @@ public class Criteria {
 		/**
 		 * @since 4.3
 		 */
-		NOT_EMPTY;
+		NOT_EMPTY, //
+		/**
+		 * @since 5.1
+		 */
+		REGEXP;
 
 		/**
 		 * @return true if this key does not have an associated value

@@ -39,6 +39,7 @@ import org.springframework.util.Assert;
  * query.
  *
  * @author Peter-Josef Meisch
+ * @author Ezequiel Antúnez Camacho
  * @since 4.4
  */
 class CriteriaQueryProcessor {
@@ -328,6 +329,13 @@ class CriteriaQueryProcessor {
 				} else {
 					throw new CriteriaQueryException("value for " + fieldName + " is not an Iterable");
 				}
+				break;
+			case REGEXP:
+				queryBuilder //
+						.regexp(rb -> rb //
+								.field(fieldName) //
+								.value(value.toString()) //
+								.boost(boost)); //
 				break;
 			default:
 				throw new CriteriaQueryException("Could not build query for " + entry);

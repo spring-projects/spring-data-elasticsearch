@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Ezequiel Antúnez Camacho
  */
 @SuppressWarnings("ConstantConditions")
 class CriteriaQueryProcessorUnitTests {
@@ -456,4 +457,30 @@ class CriteriaQueryProcessorUnitTests {
 
 		assertEquals(expected, queryString, false);
 	}
+
+	@Test // #2418
+	void shouldBuildRegexpQuery() throws JSONException {
+		String expected = """
+				 {
+					"bool": {
+						"must": [
+							{
+								"regexp": {
+									"field1": {
+										"value": "[^abc]"
+									}
+								}
+							}
+						]
+					}
+				}
+				""";
+
+		Criteria criteria = new Criteria("field1").regexp("[^abc]");
+
+		var queryString = queryToJson(CriteriaQueryProcessor.createQuery(criteria), mapper);
+
+		assertEquals(expected, queryString, false);
+	}
+
 }

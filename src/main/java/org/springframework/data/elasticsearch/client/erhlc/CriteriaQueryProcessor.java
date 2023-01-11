@@ -44,6 +44,7 @@ import org.springframework.util.Assert;
  * @author Rasmus Faber-Espensen
  * @author James Bodkin
  * @author Peter-Josef Meisch
+ * @author Ezequiel Antúnez Camacho
  * @deprecated since 5.0
  */
 @Deprecated
@@ -247,6 +248,9 @@ class CriteriaQueryProcessor {
 						query = queryStringQuery("NOT(" + orQueryString(iterable) + ')').field(fieldName);
 					}
 				}
+				break;
+			case REGEXP:
+				query = regexpQuery(fieldName, value.toString());
 				break;
 		}
 		return query;
