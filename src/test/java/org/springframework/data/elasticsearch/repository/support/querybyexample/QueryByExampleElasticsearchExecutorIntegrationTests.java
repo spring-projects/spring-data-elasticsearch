@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.repository.support.querybyexample
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -37,6 +39,7 @@ import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 import org.springframework.lang.Nullable;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -46,6 +49,7 @@ import static org.springframework.data.elasticsearch.utils.IdGenerator.nextIdAsS
 
 /**
  * @author Ezequiel Antúnez Camacho
+ * @since 5.1
  */
 @SpringIntegrationTest
 abstract class QueryByExampleElasticsearchExecutorIntegrationTests {
@@ -66,253 +70,415 @@ abstract class QueryByExampleElasticsearchExecutorIntegrationTests {
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
-	@Test // #2418
-	void shouldFindOne() {
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some message");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+	@Nested
+	@DisplayName("All QueryByExampleExecutor operations should work")
+	class QueryByExampleExecutorOperations {
+		@Test // #2418
+		void shouldFindOne() {
+			// given
+			String documentId = nextIdAsString();
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(documentId);
+			sampleEntity.setMessage("some message");
+			sampleEntity.setVersion(System.currentTimeMillis());
 
-		// when
-		SampleEntity probe = new SampleEntity();
-		sampleEntity.setId(documentId);
-		Optional<SampleEntity> entityFromElasticSearch = repository.findOne(Example.of(probe));
+			String documentId2 = nextIdAsString();
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(documentId2);
+			sampleEntity2.setMessage("some message");
+			sampleEntity2.setVersion(System.currentTimeMillis());
 
-		// then
-		assertThat(entityFromElasticSearch).contains(sampleEntity);
+			repository.saveAll(List.of(sampleEntity, sampleEntity2));
+
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setDocumentId(documentId2);
+			Optional<SampleEntity> entityFromElasticSearch = repository.findOne(Example.of(probe));
+
+			// then
+			assertThat(entityFromElasticSearch).contains(sampleEntity2);
+
+		}
+
+		@Test // #2418
+		void shouldThrowExceptionIfMoreThanOneResultInFindOne() {
+			// given
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("some message");
+			sampleEntity.setVersion(System.currentTimeMillis());
+
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("some message");
+			sampleEntity2.setVersion(System.currentTimeMillis());
+
+			repository.saveAll(List.of(sampleEntity, sampleEntity2));
+
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setMessage("some message");
+			final Example<SampleEntity> example = Example.of(probe);
+			AbstractThrowableAssert<?, ? extends Throwable> assertThatThrownBy = assertThatThrownBy(
+					() -> repository.findOne(example));
+
+			// then
+			assertThatThrownBy.isInstanceOf(IncorrectResultSizeDataAccessException.class);
+
+		}
+
+		@Test // #2418
+		void shouldFindOneWithNestedField() {
+			// given
+			SampleEntity.SampleNestedEntity sampleNestedEntity = new SampleEntity.SampleNestedEntity();
+			sampleNestedEntity.setNestedData("sampleNestedData");
+			sampleNestedEntity.setAnotherNestedData("sampleAnotherNestedData");
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("some message");
+			sampleEntity.setSampleNestedEntity(sampleNestedEntity);
+			sampleEntity.setVersion(System.currentTimeMillis());
+
+			SampleEntity.SampleNestedEntity sampleNestedEntity2 = new SampleEntity.SampleNestedEntity();
+			sampleNestedEntity2.setNestedData("sampleNestedData2");
+			sampleNestedEntity2.setAnotherNestedData("sampleAnotherNestedData2");
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("some message");
+			sampleEntity2.setSampleNestedEntity(sampleNestedEntity2);
+			sampleEntity2.setVersion(System.currentTimeMillis());
+
+			repository.saveAll(List.of(sampleEntity, sampleEntity2));
+
+			// when
+			SampleEntity.SampleNestedEntity sampleNestedEntityProbe = new SampleEntity.SampleNestedEntity();
+			sampleNestedEntityProbe.setNestedData("sampleNestedData");
+			SampleEntity probe = new SampleEntity();
+			probe.setSampleNestedEntity(sampleNestedEntityProbe);
+
+			Optional<SampleEntity> entityFromElasticSearch = repository.findOne(Example.of(probe));
+
+			// then
+			assertThat(entityFromElasticSearch).contains(sampleEntity);
+
+		}
+
+		@Test // #2418
+		void shouldFindAll() {
+			// given
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("hello world");
+			sampleEntity.setVersion(System.currentTimeMillis());
+
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("hello world");
+			sampleEntity2.setVersion(System.currentTimeMillis());
+
+			SampleEntity sampleEntity3 = new SampleEntity();
+			sampleEntity3.setDocumentId(nextIdAsString());
+			sampleEntity3.setMessage("bye world");
+			sampleEntity3.setVersion(System.currentTimeMillis());
+
+			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3));
+
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setMessage("hello world");
+			Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe));
+
+			// then
+			assertThat(sampleEntities).isNotNull().hasSize(2);
+		}
+
+		@Test // #2418
+		void shouldFindAllWithSort() {
+			// given
+			SampleEntity sampleEntityWithRate11 = new SampleEntity();
+			sampleEntityWithRate11.setDocumentId(nextIdAsString());
+			sampleEntityWithRate11.setMessage("hello world");
+			sampleEntityWithRate11.setRate(11);
+			sampleEntityWithRate11.setVersion(System.currentTimeMillis());
+
+			SampleEntity sampleEntityWithRate13 = new SampleEntity();
+			sampleEntityWithRate13.setDocumentId(nextIdAsString());
+			sampleEntityWithRate13.setMessage("hello world");
+			sampleEntityWithRate13.setRate(13);
+			sampleEntityWithRate13.setVersion(System.currentTimeMillis());
+
+			SampleEntity sampleEntityWithRate22 = new SampleEntity();
+			sampleEntityWithRate22.setDocumentId(nextIdAsString());
+			sampleEntityWithRate22.setMessage("hello world");
+			sampleEntityWithRate22.setRate(22);
+			sampleEntityWithRate22.setVersion(System.currentTimeMillis());
+
+			repository.saveAll(List.of(sampleEntityWithRate11, sampleEntityWithRate13, sampleEntityWithRate22));
+
+			// when
+			SampleEntity probe = new SampleEntity();
+			final Iterable<SampleEntity> all = repository.findAll();
+			Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe),
+					Sort.by(Sort.Direction.DESC, "rate"));
+
+			// then
+			assertThat(sampleEntities).isNotNull().hasSize(3).containsExactly(sampleEntityWithRate22, sampleEntityWithRate13,
+					sampleEntityWithRate11);
+		}
+
+		@Test // #2418
+		void shouldFindAllWithPageable() {
+			// given
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("hello world");
+			sampleEntity.setRate(1);
+			sampleEntity.setVersion(System.currentTimeMillis());
+
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("hello world");
+			sampleEntity2.setRate(3);
+			sampleEntity2.setVersion(System.currentTimeMillis());
+
+			SampleEntity sampleEntity3 = new SampleEntity();
+			sampleEntity3.setDocumentId(nextIdAsString());
+			sampleEntity3.setMessage("hello world");
+			sampleEntity3.setRate(2);
+			sampleEntity3.setVersion(System.currentTimeMillis());
+
+			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3));
+
+			// when
+			SampleEntity probe = new SampleEntity();
+			Iterable<SampleEntity> page1 = repository.findAll(Example.of(probe),
+					PageRequest.of(0, 2, Sort.Direction.DESC, "rate"));
+			Iterable<SampleEntity> page2 = repository.findAll(Example.of(probe),
+					PageRequest.of(1, 2, Sort.Direction.DESC, "rate"));
+
+			// then
+			assertThat(page1).isNotNull().hasSize(2).containsExactly(sampleEntity2, sampleEntity3);
+			assertThat(page2).isNotNull().hasSize(1).containsExactly(sampleEntity);
+		}
+
+		@Test // #2418
+		void shouldCount() {
+			// given
+			String documentId = nextIdAsString();
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(documentId);
+			sampleEntity.setMessage("some message");
+			sampleEntity.setVersion(System.currentTimeMillis());
+
+			String documentId2 = nextIdAsString();
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(documentId2);
+			sampleEntity2.setMessage("some message");
+			sampleEntity2.setVersion(System.currentTimeMillis());
+
+			repository.saveAll(List.of(sampleEntity, sampleEntity2));
+
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setDocumentId(documentId2);
+			final long count = repository.count(Example.of(probe));
+
+			// then
+			assertThat(count).isPositive();
+		}
+
+		@Test // #2418
+		void shouldExists() {
+			// given
+			String documentId = nextIdAsString();
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(documentId);
+			sampleEntity.setMessage("some message");
+			sampleEntity.setVersion(System.currentTimeMillis());
+
+			String documentId2 = nextIdAsString();
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(documentId2);
+			sampleEntity2.setMessage("some message");
+			sampleEntity2.setVersion(System.currentTimeMillis());
+
+			repository.saveAll(List.of(sampleEntity, sampleEntity2));
+
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setDocumentId(documentId2);
+			boolean exists = repository.exists(Example.of(probe));
+
+			// then
+			assertThat(exists).isTrue();
+		}
 
 	}
 
-	@Test // #2418
-	void shouldThrowExceptionIfMoreThanOneResultInFindOne() {
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some message");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+	@Nested
+	@DisplayName("All ExampleMatchers should work")
+	class AllExampleMatchersShouldWork {
 
-		String documentId2 = nextIdAsString();
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("some message");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity2);
+		@Test // #2418
+		void defaultStringMatcherShouldWork() {
+			// given
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("hello world");
+			sampleEntity.setVersion(System.currentTimeMillis());
 
-		// when
-		SampleEntity probe = new SampleEntity();
-		AbstractThrowableAssert<?, ? extends Throwable> assertThatThrownBy = assertThatThrownBy(
-				() -> repository.findOne(Example.of(probe)));
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("bye world");
+			sampleEntity2.setVersion(System.currentTimeMillis());
 
-		// then
-		assertThatThrownBy.isInstanceOf(IncorrectResultSizeDataAccessException.class);
+			SampleEntity sampleEntity3 = new SampleEntity();
+			sampleEntity3.setDocumentId(nextIdAsString());
+			sampleEntity3.setMessage("hola mundo");
+			sampleEntity3.setVersion(System.currentTimeMillis());
 
-	}
+			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3));
 
-	@Test // #2418
-	void shouldFindOneWithNestedField() {
-		// given
-		SampleEntity.SampleNestedEntity sampleNestedEntity = new SampleEntity.SampleNestedEntity();
-		sampleNestedEntity.setNestedData("sampleNestedData");
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some message");
-		sampleEntity.setSampleNestedEntity(sampleNestedEntity);
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setMessage("hello world");
+			Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe, ExampleMatcher.matching()
+					.withMatcher("message", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.DEFAULT))));
 
-		// when
-		SampleEntity probe = new SampleEntity();
-		sampleEntity.setSampleNestedEntity(sampleNestedEntity);
-		Optional<SampleEntity> entityFromElasticSearch = repository.findOne(Example.of(probe));
+			// then
+			assertThat(sampleEntities).isNotNull().hasSize(1);
+		}
 
-		// then
-		assertThat(entityFromElasticSearch).contains(sampleEntity);
+		@Test // #2418
+		void exactStringMatcherShouldWork() {
+			// given
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("hello world");
+			sampleEntity.setVersion(System.currentTimeMillis());
 
-	}
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("bye world");
+			sampleEntity2.setVersion(System.currentTimeMillis());
 
-	@Test // #2418
-	void shouldFindAll() {
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("hello world.");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+			SampleEntity sampleEntity3 = new SampleEntity();
+			sampleEntity3.setDocumentId(nextIdAsString());
+			sampleEntity3.setMessage("hola mundo");
+			sampleEntity3.setVersion(System.currentTimeMillis());
 
-		String documentId2 = nextIdAsString();
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("hello world.");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity2);
+			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3));
 
-		// when
-		SampleEntity probe = new SampleEntity();
-		probe.setMessage("hello world.");
-		Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe));
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setMessage("bye world");
+			Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe, ExampleMatcher.matching()
+					.withMatcher("message", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.EXACT))));
 
-		// then
-		assertThat(sampleEntities).isNotNull().hasSize(2);
-	}
+			// then
+			assertThat(sampleEntities).isNotNull().hasSize(1);
+		}
 
-	@Test // #2418
-	void shouldFindAllWithMatchers() {
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("hello world.");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+		@Test // #2418
+		void startingStringMatcherShouldWork() {
+			// given
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("hello world");
+			sampleEntity.setVersion(System.currentTimeMillis());
 
-		String documentId2 = nextIdAsString();
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("hello world.");
-		sampleEntity2.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity2);
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("bye world");
+			sampleEntity2.setVersion(System.currentTimeMillis());
 
-		String documentId3 = nextIdAsString();
-		SampleEntity sampleEntity3 = new SampleEntity();
-		sampleEntity3.setId(documentId3);
-		sampleEntity3.setMessage("hola mundo.");
-		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity3);
+			SampleEntity sampleEntity3 = new SampleEntity();
+			sampleEntity3.setDocumentId(nextIdAsString());
+			sampleEntity3.setMessage("hola mundo");
+			sampleEntity3.setVersion(System.currentTimeMillis());
 
-		// when
-		SampleEntity probe = new SampleEntity();
-		probe.setMessage("world");
-		Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe, ExampleMatcher.matching()
-				.withMatcher("message", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.CONTAINING))));
+			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3));
 
-		// then
-		assertThat(sampleEntities).isNotNull().hasSize(2);
-	}
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setMessage("h");
+			Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe, ExampleMatcher.matching()
+					.withMatcher("message", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.STARTING))));
 
-	@Test // #2418
-	void shouldFindAllWithSort() {
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("hello world.");
-		sampleEntity.setRate(1);
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+			// then
+			assertThat(sampleEntities).isNotNull().hasSize(2);
+		}
 
-		String documentId2 = nextIdAsString();
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("hello world.");
-		sampleEntity2.setRate(3);
-		sampleEntity2.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity2);
+		@Test // #2418
+		void endingStringMatcherShouldWork() {
+			// given
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("hello world");
+			sampleEntity.setVersion(System.currentTimeMillis());
 
-		String documentId3 = nextIdAsString();
-		SampleEntity sampleEntity3 = new SampleEntity();
-		sampleEntity3.setId(documentId3);
-		sampleEntity3.setMessage("hello world.");
-		sampleEntity3.setRate(2);
-		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity3);
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("bye world");
+			sampleEntity2.setVersion(System.currentTimeMillis());
 
-		// when
-		SampleEntity probe = new SampleEntity();
-		final Iterable<SampleEntity> all = repository.findAll();
-		Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe), Sort.by(Sort.Direction.DESC, "rate"));
+			SampleEntity sampleEntity3 = new SampleEntity();
+			sampleEntity3.setDocumentId(nextIdAsString());
+			sampleEntity3.setMessage("hola mundo");
+			sampleEntity3.setVersion(System.currentTimeMillis());
 
-		// then
-		assertThat(sampleEntities).isNotNull().hasSize(3).containsExactly(sampleEntity2, sampleEntity3, sampleEntity);
-	}
+			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3));
 
-	@Test // #2418
-	void shouldFindAllWithPageable() {
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("hello world.");
-		sampleEntity.setRate(1);
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setMessage("world");
+			Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe, ExampleMatcher.matching()
+					.withMatcher("message", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.ENDING))));
 
-		String documentId2 = nextIdAsString();
-		SampleEntity sampleEntity2 = new SampleEntity();
-		sampleEntity2.setId(documentId2);
-		sampleEntity2.setMessage("hello world.");
-		sampleEntity2.setRate(3);
-		sampleEntity2.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity2);
+			// then
+			assertThat(sampleEntities).isNotNull().hasSize(2);
+		}
 
-		String documentId3 = nextIdAsString();
-		SampleEntity sampleEntity3 = new SampleEntity();
-		sampleEntity3.setId(documentId3);
-		sampleEntity3.setMessage("hello world.");
-		sampleEntity3.setRate(2);
-		sampleEntity3.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity3);
+		@Test // #2418
+		void regexStringMatcherShouldWork() {
+			// given
+			SampleEntity sampleEntity = new SampleEntity();
+			sampleEntity.setDocumentId(nextIdAsString());
+			sampleEntity.setMessage("hello world");
+			sampleEntity.setVersion(System.currentTimeMillis());
 
-		// when
-		SampleEntity probe = new SampleEntity();
-		Iterable<SampleEntity> page1 = repository.findAll(Example.of(probe),
-				PageRequest.of(0, 2, Sort.Direction.DESC, "rate"));
-		Iterable<SampleEntity> page2 = repository.findAll(Example.of(probe),
-				PageRequest.of(1, 2, Sort.Direction.DESC, "rate"));
+			SampleEntity sampleEntity2 = new SampleEntity();
+			sampleEntity2.setDocumentId(nextIdAsString());
+			sampleEntity2.setMessage("bye world");
+			sampleEntity2.setVersion(System.currentTimeMillis());
 
-		// then
-		assertThat(page1).isNotNull().hasSize(2).containsExactly(sampleEntity2, sampleEntity3);
-		assertThat(page2).isNotNull().hasSize(1).containsExactly(sampleEntity);
-	}
+			SampleEntity sampleEntity3 = new SampleEntity();
+			sampleEntity3.setDocumentId(nextIdAsString());
+			sampleEntity3.setMessage("hola mundo");
+			sampleEntity3.setVersion(System.currentTimeMillis());
 
-	@Test // #2418
-	void shouldCount() {
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some message");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
+			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3));
 
-		// when
-		Long count = repository.count(Example.of(sampleEntity));
+			// when
+			SampleEntity probe = new SampleEntity();
+			probe.setMessage("[(hello)(hola)].*");
+			Iterable<SampleEntity> sampleEntities = repository.findAll(Example.of(probe, ExampleMatcher.matching()
+					.withMatcher("message", ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.REGEX))));
 
-		// then
-		assertThat(count).isPositive();
-	}
+			// then
+			assertThat(sampleEntities).isNotNull().hasSize(2);
+		}
 
-	@Test // #2418
-	void shouldExists() {
-		// given
-		String documentId = nextIdAsString();
-		SampleEntity sampleEntity = new SampleEntity();
-		sampleEntity.setId(documentId);
-		sampleEntity.setMessage("some message");
-		sampleEntity.setVersion(System.currentTimeMillis());
-		repository.save(sampleEntity);
-
-		// when
-		boolean exists = repository.exists(Example.of(sampleEntity));
-
-		// then
-		assertThat(exists).isTrue();
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
 		@Nullable
-		@Id private String id;
+		@Id private String documentId;
 		@Nullable
 		@Field(type = FieldType.Text, store = true, fielddata = true) private String type;
 		@Nullable
-		@Field(type = FieldType.Text, store = true, fielddata = true) private String message;
+		@Field(type = FieldType.Keyword, store = true) private String message;
 		@Nullable private Integer rate;
 		@Nullable private Boolean available;
 		@Nullable
@@ -321,12 +487,12 @@ abstract class QueryByExampleElasticsearchExecutorIntegrationTests {
 		@Version private Long version;
 
 		@Nullable
-		public String getId() {
-			return id;
+		public String getDocumentId() {
+			return documentId;
 		}
 
-		public void setId(@Nullable String id) {
-			this.id = id;
+		public void setDocumentId(@Nullable String documentId) {
+			this.documentId = documentId;
 		}
 
 		@Nullable
@@ -392,11 +558,11 @@ abstract class QueryByExampleElasticsearchExecutorIntegrationTests {
 
 			SampleEntity that = (SampleEntity) o;
 
-			if (rate != that.rate)
+			if (!Objects.equals(rate, that.rate))
 				return false;
 			if (available != that.available)
 				return false;
-			if (!Objects.equals(id, that.id))
+			if (!Objects.equals(documentId, that.documentId))
 				return false;
 			if (!Objects.equals(type, that.type))
 				return false;
@@ -409,11 +575,11 @@ abstract class QueryByExampleElasticsearchExecutorIntegrationTests {
 
 		@Override
 		public int hashCode() {
-			int result = id != null ? id.hashCode() : 0;
+			int result = documentId != null ? documentId.hashCode() : 0;
 			result = 31 * result + (type != null ? type.hashCode() : 0);
 			result = 31 * result + (message != null ? message.hashCode() : 0);
-			result = 31 * result + rate;
-			result = 31 * result + (available ? 1 : 0);
+			result = 31 * result + (rate != null ? rate.hashCode() : 0);
+			result = 31 * result + (available != null ? available.hashCode() : 0);
 			result = 31 * result + (sampleNestedEntity != null ? sampleNestedEntity.hashCode() : 0);
 			result = 31 * result + (version != null ? version.hashCode() : 0);
 			return result;
@@ -425,12 +591,24 @@ abstract class QueryByExampleElasticsearchExecutorIntegrationTests {
 			@Field(type = FieldType.Text, store = true, fielddata = true) private String nestedData;
 
 			@Nullable
+			@Field(type = FieldType.Text, store = true, fielddata = true) private String anotherNestedData;
+
+			@Nullable
 			public String getNestedData() {
 				return nestedData;
 			}
 
 			public void setNestedData(@Nullable String nestedData) {
 				this.nestedData = nestedData;
+			}
+
+			@Nullable
+			public String getAnotherNestedData() {
+				return anotherNestedData;
+			}
+
+			public void setAnotherNestedData(@Nullable String anotherNestedData) {
+				this.anotherNestedData = anotherNestedData;
 			}
 
 			@Override
@@ -442,12 +620,14 @@ abstract class QueryByExampleElasticsearchExecutorIntegrationTests {
 
 				SampleNestedEntity that = (SampleNestedEntity) o;
 
-				return Objects.equals(nestedData, that.nestedData);
+				return Objects.equals(nestedData, that.nestedData) && Objects.equals(anotherNestedData, that.anotherNestedData);
 			}
 
 			@Override
 			public int hashCode() {
-				return nestedData != null ? nestedData.hashCode() : 0;
+				int result = nestedData != null ? nestedData.hashCode() : 0;
+				result = 31 * result + (anotherNestedData != null ? anotherNestedData.hashCode() : 0);
+				return result;
 			}
 		}
 	}

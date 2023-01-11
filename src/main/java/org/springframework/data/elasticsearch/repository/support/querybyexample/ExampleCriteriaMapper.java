@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.support.querybyexample;
 
+import java.util.Map;
+import java.util.Optional;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -27,24 +30,15 @@ import org.springframework.data.support.ExampleMatcherAccessor;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
-import java.util.EnumSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-
 /**
  * Maps a {@link Example} to a {@link org.springframework.data.elasticsearch.core.query.Criteria}
  *
- * @param <T> Class type
  * @author Ezequiel Antúnez Camacho
+ * @since 5.1
  */
-class ExampleCriteriaMapper<T> {
+class ExampleCriteriaMapper {
 
-	private static final Set<ExampleMatcher.StringMatcher> SUPPORTED_MATCHERS = EnumSet.of(
-			ExampleMatcher.StringMatcher.DEFAULT, ExampleMatcher.StringMatcher.EXACT, ExampleMatcher.StringMatcher.STARTING,
-			ExampleMatcher.StringMatcher.CONTAINING, ExampleMatcher.StringMatcher.ENDING);
-
-	private final MappingContext<? extends ElasticsearchPersistentEntity<T>, ElasticsearchPersistentProperty> mappingContext;
+	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
 	/**
 	 * Builds a {@link ExampleCriteriaMapper}
@@ -52,15 +46,15 @@ class ExampleCriteriaMapper<T> {
 	 * @param mappingContext mappingContext to use
 	 */
 	ExampleCriteriaMapper(
-			MappingContext<? extends ElasticsearchPersistentEntity<T>, ElasticsearchPersistentProperty> mappingContext) {
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
 		this.mappingContext = mappingContext;
 	}
 
-	<S extends T> Criteria criteria(Example<S> example) {
+	<S> Criteria criteria(Example<S> example) {
 		return buildCriteria(example);
 	}
 
-	private <S extends T> Criteria buildCriteria(Example<S> example) {
+	private <S> Criteria buildCriteria(Example<S> example) {
 		final ExampleMatcherAccessor matcherAccessor = new ExampleMatcherAccessor(example.getMatcher());
 
 		return applyPropertySpecs(new Criteria(), "", example.getProbe(),
@@ -79,7 +73,7 @@ class ExampleCriteriaMapper<T> {
 		PersistentPropertyAccessor<?> propertyAccessor = persistentEntity.getPropertyAccessor(probe);
 
 		for (ElasticsearchPersistentProperty property : persistentEntity) {
-			final String propertyName = getPropertyName(property);
+			final String propertyName = property.getName();
 			String propertyPath = StringUtils.hasText(path) ? (path + "." + propertyName) : propertyName;
 			if (exampleSpecAccessor.isIgnoredPath(propertyPath) || property.isCollectionLike()
 					|| property.isVersionProperty()) {
@@ -102,23 +96,12 @@ class ExampleCriteriaMapper<T> {
 		return criteria;
 	}
 
-	private String getPropertyName(ElasticsearchPersistentProperty property) {
-		return property.isIdProperty() ? "_id" : property.getName();
-	}
-
 	private Criteria applyPropertySpec(String path, Object propertyValue, ExampleMatcherAccessor exampleSpecAccessor,
 			ElasticsearchPersistentProperty property, ExampleMatcher.MatchMode matchMode, Criteria criteria) {
 
 		if (exampleSpecAccessor.isIgnoreCaseForPath(path)) {
 			throw new InvalidDataAccessApiUsageException(
 					"Current implementation of Query-by-Example supports only case-sensitive matching.");
-		}
-
-		ExampleMatcher.StringMatcher stringMatcher = exampleSpecAccessor.getStringMatcherForPath(path);
-		if (!SUPPORTED_MATCHERS.contains(exampleSpecAccessor.getStringMatcherForPath(path))) {
-			throw new InvalidDataAccessApiUsageException(String.format(
-					"Current implementation of Query-by-Example does not support string matcher %s. Supported matchers are: %s.",
-					stringMatcher, SUPPORTED_MATCHERS));
 		}
 
 		final Object transformedValue = exampleSpecAccessor.getValueTransformerForPath(path)
@@ -131,7 +114,8 @@ class ExampleCriteriaMapper<T> {
 				return applyPropertySpecs(criteria, path, transformedValue,
 						mappingContext.getRequiredPersistentEntity(property), exampleSpecAccessor, matchMode);
 			} else {
-				return applyStringMatcher(applyMatchMode(criteria, path, matchMode), transformedValue, stringMatcher);
+				return applyStringMatcher(applyMatchMode(criteria, path, matchMode), transformedValue,
+						exampleSpecAccessor.getStringMatcherForPath(path));
 			}
 		}
 		return criteria;
@@ -156,11 +140,12 @@ class ExampleCriteriaMapper<T> {
 
 	private Criteria applyStringMatcher(Criteria criteria, Object value, ExampleMatcher.StringMatcher stringMatcher) {
 		return switch (stringMatcher) {
-			case DEFAULT, EXACT -> criteria.is(value);
+			case DEFAULT -> criteria.is(value);
+			case EXACT -> criteria.matchesAll(value);
 			case STARTING -> criteria.startsWith(validateString(value));
 			case ENDING -> criteria.endsWith(validateString(value));
 			case CONTAINING -> criteria.contains(validateString(value));
-			case REGEX -> throw new UnsupportedOperationException("REGEX matcher is unsupported");
+			case REGEX -> criteria.regexp(validateString(value));
 		};
 	}
 

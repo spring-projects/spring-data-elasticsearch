@@ -334,7 +334,7 @@ class CriteriaQueryProcessor {
 				queryBuilder //
 						.regexp(rb -> rb //
 								.field(fieldName) //
-								.value(searchText) //
+								.value(value.toString()) //
 								.boost(boost)); //
 				break;
 			default:

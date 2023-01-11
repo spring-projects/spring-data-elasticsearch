@@ -25,6 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Ezequiel Antúnez Camacho
+ * @since 5.1
  */
 @ContextConfiguration(classes = { QueryByExampleElasticsearchExecutorELCIntegrationTests.Config.class })
 public class QueryByExampleElasticsearchExecutorELCIntegrationTests
@@ -39,6 +40,5 @@ public class QueryByExampleElasticsearchExecutorELCIntegrationTests
 		IndexNameProvider indexNameProvider() {
 			return new IndexNameProvider("query-by-example-repository");
 		}
-
 	}
 }

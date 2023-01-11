@@ -617,8 +617,9 @@ public class Criteria {
 	 *
 	 * @param value the regexp value to match
 	 * @return this object
+	 * @since 5.1
 	 */
-	public Criteria regexp(Object value) {
+	public Criteria regexp(String value) {
 
 		Assert.notNull(value, "value must not be null");
 
@@ -970,6 +971,9 @@ public class Criteria {
 		 * @since 4.3
 		 */
 		NOT_EMPTY, //
+		/**
+		 * @since 5.1
+		 */
 		REGEXP;
 
 		/**

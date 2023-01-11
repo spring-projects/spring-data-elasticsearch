@@ -467,7 +467,7 @@ class CriteriaQueryProcessorUnitTests {
 							{
 								"regexp": {
 									"field1": {
-										"value": "\\\\[\\\\^abc\\\\]"
+										"value": "[^abc]"
 									}
 								}
 							}

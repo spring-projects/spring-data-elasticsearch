@@ -15,36 +15,33 @@
  */
 package org.springframework.data.elasticsearch.repository.support.querybyexample;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
+import java.util.function.Function;
+
 import org.reactivestreams.Publisher;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
-import java.util.function.Function;
 
 /**
  * @author Ezequiel Antúnez Camacho
+ * @since 5.1
  */
 public class ReactiveQueryByExampleElasticsearchExecutor<T> implements ReactiveQueryByExampleExecutor<T> {
 
 	protected ReactiveElasticsearchOperations operations;
-	protected ExampleCriteriaMapper<T> exampleCriteriaMapper;
+	protected ExampleCriteriaMapper exampleCriteriaMapper;
 
 	public ReactiveQueryByExampleElasticsearchExecutor(ReactiveElasticsearchOperations operations) {
 		this.operations = operations;
-		this.exampleCriteriaMapper = new ExampleCriteriaMapper<>(
-				(MappingContext<? extends ElasticsearchPersistentEntity<T>, ElasticsearchPersistentProperty>) operations
-						.getElasticsearchConverter().getMappingContext());
+		this.exampleCriteriaMapper = new ExampleCriteriaMapper(operations.getElasticsearchConverter().getMappingContext());
 	}
 
 	@Override

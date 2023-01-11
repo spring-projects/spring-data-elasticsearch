@@ -250,7 +250,7 @@ class CriteriaQueryProcessor {
 				}
 				break;
 			case REGEXP:
-				query = regexpQuery(fieldName, searchText);
+				query = regexpQuery(fieldName, value.toString());
 				break;
 		}
 		return query;

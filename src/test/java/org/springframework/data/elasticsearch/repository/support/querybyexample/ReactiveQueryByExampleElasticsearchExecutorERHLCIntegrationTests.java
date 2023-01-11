@@ -25,6 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Ezequiel Antúnez Camacho
+ * @since 5.1
  */
 @ContextConfiguration(classes = { ReactiveQueryByExampleElasticsearchExecutorERHLCIntegrationTests.Config.class })
 public class ReactiveQueryByExampleElasticsearchExecutorERHLCIntegrationTests

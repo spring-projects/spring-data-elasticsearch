@@ -15,6 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repository.support.querybyexample;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,35 +27,27 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchPage;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.FluentQuery;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
-
 /**
  * @author Ezequiel Antúnez Camacho
+ * @since 5.1
  */
 public class QueryByExampleElasticsearchExecutor<T> implements QueryByExampleExecutor<T> {
 
 	protected ElasticsearchOperations operations;
-	protected ExampleCriteriaMapper<T> exampleCriteriaMapper;
+	protected ExampleCriteriaMapper exampleCriteriaMapper;
 
 	public QueryByExampleElasticsearchExecutor(ElasticsearchOperations operations) {
 		this.operations = operations;
-		this.exampleCriteriaMapper = new ExampleCriteriaMapper<>(
-				(MappingContext<? extends ElasticsearchPersistentEntity<T>, ElasticsearchPersistentProperty>) operations
-						.getElasticsearchConverter().getMappingContext());
+		this.exampleCriteriaMapper = new ExampleCriteriaMapper(operations.getElasticsearchConverter().getMappingContext());
 	}
 
 	@Override
 	public <S extends T> Optional<S> findOne(Example<S> example) {
-		CriteriaQuery criteriaQuery = new CriteriaQuery(exampleCriteriaMapper.criteria(example));
+		CriteriaQuery criteriaQuery = CriteriaQuery.builder(exampleCriteriaMapper.criteria(example)).withMaxResults(2).build();
 		SearchHits<S> searchHits = operations.search(criteriaQuery, example.getProbeType(),
 				operations.getIndexCoordinatesFor(example.getProbeType()));
 		if (searchHits.getTotalHits() > 1) {

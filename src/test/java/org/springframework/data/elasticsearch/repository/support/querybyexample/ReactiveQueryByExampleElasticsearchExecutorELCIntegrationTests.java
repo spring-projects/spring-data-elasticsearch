@@ -18,20 +18,21 @@ package org.springframework.data.elasticsearch.repository.support.querybyexample
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Ezequiel Antúnez Camacho
+ * @since 5.1
  */
 @ContextConfiguration(classes = { ReactiveQueryByExampleElasticsearchExecutorELCIntegrationTests.Config.class })
 public class ReactiveQueryByExampleElasticsearchExecutorELCIntegrationTests
 		extends ReactiveQueryByExampleElasticsearchExecutorIntegrationTests {
 
 	@Configuration
-	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
+	@Import({ ReactiveElasticsearchTemplateConfiguration.class })
 	@EnableReactiveElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {
 		@Bean
