@@ -110,7 +110,7 @@ public final class MappingParameters {
 	private final Integer dims;
 	private final String searchAnalyzer;
 	private final double scalingFactor;
-	private final Similarity similarity;
+	private final String similarity;
 	private final boolean store;
 	private final TermVector termVector;
 	private final FieldType type;
@@ -330,8 +330,8 @@ public final class MappingParameters {
 			objectNode.put(FIELD_PARAM_POSITION_INCREMENT_GAP, positionIncrementGap);
 		}
 
-		if (similarity != Similarity.Default) {
-			objectNode.put(FIELD_PARAM_SIMILARITY, similarity.toString());
+		if (!Similarity.Default.equals(similarity)) {
+			objectNode.put(FIELD_PARAM_SIMILARITY, similarity);
 		}
 
 		if (termVector != TermVector.none) {

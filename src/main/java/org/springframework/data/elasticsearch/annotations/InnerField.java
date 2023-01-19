@@ -109,7 +109,7 @@ public @interface InnerField {
 	/**
 	 * @since 4.0
 	 */
-	Similarity similarity() default Similarity.Default;
+	String similarity() default Similarity.Default;
 
 	/**
 	 * @since 4.0

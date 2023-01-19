@@ -6,6 +6,11 @@ This section describes breaking changes from version 5.0.x to 5.1.x and how remo
 [[elasticsearch-migration-guide-5.0-5.1.breaking-changes]]
 == Breaking Changes
 
-In the `org.springframework.data.elasticsearch.core.index.AliasData` class, which is used for alias information 
-returned from Elasticsearch, the property `filter` (of type `Document`) is replaced by `filterQuery` which is of type
+In the `org.springframework.data.elasticsearch.core.index.AliasData` class, which is used for alias information returned from Elasticsearch, the property `filter` (of type `Document`) is replaced by `filterQuery` which is of type
 `org.springframework.data.elasticsearch.core.query.Query`.
+
+`org.springframework.data.elasticsearch.annotations.Similarity` was an enum class until 5.1. This enum was used in the `@Field` annotation to specify a similarity value.
+But besides the values defined by the enum, it is possible to have similarities with custom names in Elasticsearch.
+Therefore, the annotation property was changed from the type of the enum to a simple `String`.
+The previous enum values like `Similarity.Default` do still exist as String constants, so existing code will compile unmodified.
+Adaptions are necessary when this enum was used at other places than as a property of the `@Field` annotation.
