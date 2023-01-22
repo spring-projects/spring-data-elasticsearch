@@ -1,0 +1,9 @@
+{
+    "age": {
+        "type": "long",
+        "script": {
+            "lang": "painless",
+            "source": "Instant currentDate = Instant.ofEpochMilli(new Date().getTime()); Instant startDate = doc['birthDate'].value.toInstant(); emit(ChronoUnit.DAYS.between(startDate, currentDate) / 365);"
+        }
+    }
+}

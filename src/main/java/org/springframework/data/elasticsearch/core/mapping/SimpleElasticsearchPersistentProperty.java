@@ -24,6 +24,7 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.domain.Range;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -119,7 +120,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	@Override
 	public boolean isWritable() {
-		return super.isWritable() && !isSeqNoPrimaryTermProperty();
+		return !isTransient() && !isSeqNoPrimaryTermProperty() && !isAnnotationPresent(ReadOnlyProperty.class);
 	}
 
 	@Override

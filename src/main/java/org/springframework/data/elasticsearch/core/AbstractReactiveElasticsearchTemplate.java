@@ -261,7 +261,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
 			// Only deal with text because ES generated Ids are strings!
-			if (indexedObjectInformation.getId() != null && idProperty != null && idProperty.isWritable()
+			if (indexedObjectInformation.getId() != null && idProperty != null && idProperty.isReadable()
 					&& idProperty.getType().isAssignableFrom(String.class)) {
 				propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
 			}
