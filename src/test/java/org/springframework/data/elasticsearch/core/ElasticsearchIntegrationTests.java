@@ -15,21 +15,20 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.assertj.core.api.Assertions.fail;
-import static org.elasticsearch.index.query.QueryBuilders.matchAllQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-import static org.springframework.data.elasticsearch.annotations.Document.VersionType.EXTERNAL_GTE;
+import static java.util.Collections.*;
+import static org.assertj.core.api.Assertions.*;
+import static org.elasticsearch.index.query.QueryBuilders.*;
+import static org.springframework.data.elasticsearch.annotations.Document.VersionType.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Keyword;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
-import static org.springframework.data.elasticsearch.core.document.Document.create;
-import static org.springframework.data.elasticsearch.core.document.Document.parse;
-import static org.springframework.data.elasticsearch.utils.IdGenerator.nextIdAsString;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
+import static org.springframework.data.elasticsearch.core.document.Document.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
+import java.lang.Double;
+import java.lang.Integer;
+import java.lang.Long;
+import java.lang.Object;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -55,7 +54,6 @@ import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.AccessType;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -79,20 +77,7 @@ import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
-import org.springframework.data.elasticsearch.core.query.HighlightQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.IndicesOptions;
-import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
-import org.springframework.data.elasticsearch.core.query.SourceFilter;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -4582,7 +4567,7 @@ public abstract class ElasticsearchIntegrationTests {
 		@Field(type = FieldType.Keyword) private String part2;
 
 		@Id
-		@ReadOnlyProperty
+		@WriteOnlyProperty
 		@AccessType(AccessType.Type.PROPERTY)
 		public String getId() {
 			return part1 + '-' + part2;
