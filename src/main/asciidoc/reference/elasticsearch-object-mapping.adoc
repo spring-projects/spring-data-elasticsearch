@@ -29,7 +29,7 @@ See <<elasticsearch.repositories.autocreation>>
 
 
 * `@Id`: Applied at the field level to mark the field used for identity purpose.
-* `@Transient`: By default all fields are mapped to the document when it is stored or retrieved, this annotation excludes the field.
+* `@Transient`, `@ReadOnlyProperty`, `@WriteOnlyProperty`: see the following section <<elasticsearch.mapping.meta-model.annotations.read-write>> for detailed information.
 * `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database.
 Constructor arguments are mapped by name to the key values in the retrieved Document.
 * `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions (the following list is not complete, check the annotation Javadoc for a complete reference):
@@ -48,6 +48,25 @@ Can be omitted if the field is an instance of the `GeoPoint` class.
 In difference to a registered Spring `Converter` this only converts the annotated property and not every property of the given type.
 
 The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
+
+[[elasticsearch.mapping.meta-model.annotations.read-write]]
+==== Controlling which properties are written to and read from Elasticsearch
+
+This section details the annotations that define if the value of a property is written to or 
+read from Elasticsearch.
+
+`@Transient`: A property annotated with this annotation will not be written to the mapping, it's value will not be 
+sent to Elasticsearch and when documents are returned from Elasticsearch, this property will not be set in the 
+resulting entity.
+
+`@ReadOnlyProperty`: A property with this annotaiton will not have its value written to Elasticsearch, but when 
+returning data, the proeprty will be filled with the value returned in the document from Elasticsearch.  One use case
+for this are runtime fields defined in the index mapping.
+
+`@WriteOnlyProperty`: A property with this annotaiton will have its value stored in Elasticsearch but will not be set
+with any value when reading document. This can be used for example for synthesized fields which should go into the 
+Elasticsearch index but are not used elsewhere.
+
 
 [[elasticsearch.mapping.meta-model.annotations.date-formats]]
 ==== Date format mapping

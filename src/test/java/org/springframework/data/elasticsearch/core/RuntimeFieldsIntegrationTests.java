@@ -17,19 +17,24 @@ package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
 
+import java.time.LocalDate;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
+import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -44,14 +49,13 @@ public abstract class RuntimeFieldsIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
 	@Autowired protected IndexNameProvider indexNameProvider;
-	private IndexOperations indexOperations;
 
 	@BeforeEach
 	void setUp() {
 
 		indexNameProvider.increment();
-		indexOperations = operations.indexOps(SomethingToBuy.class);
-		indexOperations.createWithMapping();
+		operations.indexOps(SomethingToBuy.class).createWithMapping();
+		operations.indexOps(Person.class).createWithMapping();
 	}
 
 	@Test
@@ -91,6 +95,24 @@ public abstract class RuntimeFieldsIntegrationTests {
 		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("1");
 	}
 
+	@Test // #2431
+	@DisplayName("should return value from runtime field defined in mapping")
+	void shouldReturnValueFromRuntimeFieldDefinedInMapping() {
+
+		var person = new Person();
+		var years = 10;
+		person.setBirthDate(LocalDate.now().minusDays(years * 365 + 100));
+		operations.save(person);
+		var query = Query.findAll();
+		query.addFields("age");
+		query.addSourceFilter(new FetchSourceFilterBuilder().withIncludes("*").build());
+
+		var searchHits = operations.search(query, Person.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getContent().getAge()).isEqualTo(years);
+	}
+
 	private void insert(String id, String description, double price) {
 		SomethingToBuy entity = new SomethingToBuy();
 		entity.setId(id);
@@ -99,7 +121,7 @@ public abstract class RuntimeFieldsIntegrationTests {
 		operations.save(entity);
 	}
 
-	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-something")
 	private static class SomethingToBuy {
 		private @Id @Nullable String id;
 
@@ -134,6 +156,45 @@ public abstract class RuntimeFieldsIntegrationTests {
 
 		public void setPrice(@Nullable Double price) {
 			this.price = price;
+		}
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}-person")
+	@Mapping(runtimeFieldsPath = "/runtime-fields-person.json")
+	public class Person {
+		@Nullable private String id;
+
+		@Field(type = FieldType.Date, format = DateFormat.basic_date)
+		@Nullable private LocalDate birthDate;
+
+		@ReadOnlyProperty // do not write to prevent ES from automapping
+		@Nullable private Integer age;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public LocalDate getBirthDate() {
+			return birthDate;
+		}
+
+		public void setBirthDate(@Nullable LocalDate birthDate) {
+			this.birthDate = birthDate;
+		}
+
+		@Nullable
+		public Integer getAge() {
+			return age;
+		}
+
+		public void setAge(@Nullable Integer age) {
+			this.age = age;
 		}
 	}
 }

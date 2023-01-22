@@ -61,7 +61,7 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	PropertyValueConverter getPropertyValueConverter();
 
 	/**
-	 * Returns true if the property may be read.
+	 * Returns true if the property may be read from the store into the entity.
 	 *
 	 * @return true if readable, false otherwise
 	 * @since 4.0
