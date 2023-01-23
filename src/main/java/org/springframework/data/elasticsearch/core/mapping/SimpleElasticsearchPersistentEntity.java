@@ -27,6 +27,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
 import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.index.Settings;
@@ -71,6 +72,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final Lazy<SettingsParameter> settingsParameter;
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
+	private @Nullable ElasticsearchPersistentProperty indexedIndexNameProperty;
 	private @Nullable Document.VersionType versionType;
 	private boolean createIndexAndMapping;
 	private final Dynamic dynamic;
@@ -218,6 +220,20 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			}
 		}
 
+		if (property.isIndexedIndexNameProperty()) {
+
+			if (!property.getActualType().isAssignableFrom(String.class)) {
+				throw new MappingException(String.format("@IndexedIndexName annotation must be put on String property"));
+			}
+
+			if (indexedIndexNameProperty != null) {
+				throw new MappingException(
+						String.format("@IndexedIndexName annotation can only be put on one property in an entity"));
+			}
+
+			this.indexedIndexNameProperty = property;
+		}
+
 		Class<?> actualType = property.getActualTypeOrNull();
 		if (actualType == JoinField.class) {
 			ElasticsearchPersistentProperty joinProperty = this.joinFieldProperty;
@@ -278,6 +294,12 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public ElasticsearchPersistentProperty getJoinFieldProperty() {
 		return joinFieldProperty;
+	}
+
+	@Nullable
+	@Override
+	public ElasticsearchPersistentProperty getIndexedIndexNameProperty() {
+		return indexedIndexNameProperty;
 	}
 
 	// region SpEL handling

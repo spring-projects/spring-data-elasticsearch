@@ -155,8 +155,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 								BulkItemResponse bulkItemResponse = indexAndResponse.getT2();
 
 								DocWriteResponse response = bulkItemResponse.getResponse();
-								updateIndexedObject(savedEntity, IndexedObjectInformation.of(response.getId(), response.getSeqNo(),
-										response.getPrimaryTerm(), response.getVersion()));
+								updateIndexedObject(savedEntity, new IndexedObjectInformation(response.getId(), response.getIndex(),
+										response.getSeqNo(), response.getPrimaryTerm(), response.getVersion()));
 
 								return maybeCallbackAfterSave(savedEntity, index);
 							});
@@ -255,10 +255,11 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		return Mono.just(entity).zipWith(doIndex(request) //
 				.map(indexResponse -> new IndexResponseMetaData( //
 						indexResponse.getId(), //
+						indexResponse.getIndex(), //
 						indexResponse.getSeqNo(), //
 						indexResponse.getPrimaryTerm(), //
 						indexResponse.getVersion() //
-				))); //
+				)));
 	}
 
 	@Override

@@ -217,8 +217,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			query.setObject(updateIndexedObject(queryObject, IndexedObjectInformation.of(indexResponse.id(),
-					indexResponse.seqNo(), indexResponse.primaryTerm(), indexResponse.version())));
+			query.setObject(updateIndexedObject(queryObject, new IndexedObjectInformation(indexResponse.id(),
+					indexResponse.index(), indexResponse.seqNo(), indexResponse.primaryTerm(), indexResponse.version())));
 		}
 
 		return indexResponse.id();
@@ -629,7 +629,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		}
 
 		return bulkResponse.items().stream()
-				.map(item -> IndexedObjectInformation.of(item.id(), item.seqNo(), item.primaryTerm(), item.version()))
+				.map(item -> new IndexedObjectInformation(item.id(), item.index(), item.seqNo(), item.primaryTerm(),
+						item.version()))
 				.collect(Collectors.toList());
 
 	}

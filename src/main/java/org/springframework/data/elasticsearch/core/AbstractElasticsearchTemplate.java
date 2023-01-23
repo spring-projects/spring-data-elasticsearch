@@ -408,23 +408,29 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
 			// Only deal with text because ES generated Ids are strings!
-			if (indexedObjectInformation.getId() != null && idProperty != null && idProperty.isReadable()
+			if (indexedObjectInformation.id() != null && idProperty != null && idProperty.isReadable()
 					&& idProperty.getType().isAssignableFrom(String.class)) {
-				propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
+				propertyAccessor.setProperty(idProperty, indexedObjectInformation.id());
 			}
 
-			if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
+			if (indexedObjectInformation.seqNo() != null && indexedObjectInformation.primaryTerm() != null
 					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
 				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
 				// noinspection ConstantConditions
 				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
-						new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
+						new SeqNoPrimaryTerm(indexedObjectInformation.seqNo(),
+								indexedObjectInformation.primaryTerm()));
 			}
 
-			if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
+			if (indexedObjectInformation.version() != null && persistentEntity.hasVersionProperty()) {
 				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
 				// noinspection ConstantConditions
-				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
+				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.version());
+			}
+
+			var indexedIndexNameProperty = persistentEntity.getIndexedIndexNameProperty();
+			if (indexedIndexNameProperty != null) {
+				propertyAccessor.setProperty(indexedIndexNameProperty, indexedObjectInformation.index());
 			}
 
 			// noinspection unchecked
@@ -791,8 +797,9 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 			T entity = reader.read(type, documentAfterLoad);
 
-			IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of( //
+			IndexedObjectInformation indexedObjectInformation = new IndexedObjectInformation( //
 					documentAfterLoad.hasId() ? documentAfterLoad.getId() : null, //
+					documentAfterLoad.getIndex(), //
 					documentAfterLoad.hasSeqNo() ? documentAfterLoad.getSeqNo() : null, //
 					documentAfterLoad.hasPrimaryTerm() ? documentAfterLoad.getPrimaryTerm() : null, //
 					documentAfterLoad.hasVersion() ? documentAfterLoad.getVersion() : null); //

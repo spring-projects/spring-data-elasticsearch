@@ -99,6 +99,13 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	boolean isCompletionProperty();
 
 	/**
+	 * @return {@literal true} if this is a property annotated with
+	 * {@link org.springframework.data.elasticsearch.annotations.IndexedIndexName}.
+	 * @since 5.1
+	 */
+	boolean isIndexedIndexNameProperty();
+
+	/**
 	 * calls {@link #getActualType()} but returns null when an exception is thrown
 	 *
 	 * @since 4.1

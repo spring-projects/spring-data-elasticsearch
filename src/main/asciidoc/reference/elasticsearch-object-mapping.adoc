@@ -1,8 +1,8 @@
 [[elasticsearch.mapping]]
 = Elasticsearch Object Mapping
 
-Spring Data Elasticsearch Object Mapping is the process that maps a Java object - the domain entity - into the JSON 
-representation that is stored in Elasticsearch and back. The class that is internally used for this mapping is the 
+Spring Data Elasticsearch Object Mapping is the process that maps a Java object - the domain entity - into the JSON representation that is stored in Elasticsearch and back.
+The class that is internally used for this mapping is the
 `MappingElasticsearcvhConverter`.
 
 [[elasticsearch.mapping.meta-model]]
@@ -52,21 +52,15 @@ The mapping metadata infrastructure is defined in a separate spring-data-commons
 [[elasticsearch.mapping.meta-model.annotations.read-write]]
 ==== Controlling which properties are written to and read from Elasticsearch
 
-This section details the annotations that define if the value of a property is written to or 
-read from Elasticsearch.
+This section details the annotations that define if the value of a property is written to or read from Elasticsearch.
 
-`@Transient`: A property annotated with this annotation will not be written to the mapping, it's value will not be 
-sent to Elasticsearch and when documents are returned from Elasticsearch, this property will not be set in the 
-resulting entity.
+`@Transient`: A property annotated with this annotation will not be written to the mapping, it's value will not be sent to Elasticsearch and when documents are returned from Elasticsearch, this property will not be set in the resulting entity.
 
-`@ReadOnlyProperty`: A property with this annotaiton will not have its value written to Elasticsearch, but when 
-returning data, the proeprty will be filled with the value returned in the document from Elasticsearch.  One use case
-for this are runtime fields defined in the index mapping.
+`@ReadOnlyProperty`: A property with this annotaiton will not have its value written to Elasticsearch, but when returning data, the proeprty will be filled with the value returned in the document from Elasticsearch.
+One use case for this are runtime fields defined in the index mapping.
 
-`@WriteOnlyProperty`: A property with this annotaiton will have its value stored in Elasticsearch but will not be set
-with any value when reading document. This can be used for example for synthesized fields which should go into the 
-Elasticsearch index but are not used elsewhere.
-
+`@WriteOnlyProperty`: A property with this annotaiton will have its value stored in Elasticsearch but will not be set with any value when reading document.
+This can be used for example for synthesized fields which should go into the Elasticsearch index but are not used elsewhere.
 
 [[elasticsearch.mapping.meta-model.annotations.date-formats]]
 ==== Date format mapping
@@ -110,8 +104,7 @@ The following table shows the different attributes and the mapping created from 
 NOTE: If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_.
 This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
 
-Check the code of the `org.springframework.data.elasticsearch.annotations.DateFormat` enum for a complete list of 
-predefined values and their patterns.
+Check the code of the `org.springframework.data.elasticsearch.annotations.DateFormat` enum for a complete list of predefined values and their patterns.
 
 [[elasticsearch.mapping.meta-model.annotations.range]]
 ==== Range types
@@ -172,12 +165,13 @@ A `FieldNamingStrategy` applies to all entities; it can be overwritten by settin
 [[elasticsearch.mapping.meta-model.annotations.non-field-backed-properties]]
 ==== Non-field-backed properties
 
-Normally the properties used in an entity are fields of the entity class. There might be cases, when a property value
-is calculated in the entity and should be stored in Elasticsearch. In this case, the getter method (`getProperty()`) can be 
-annotated 
-with the `@Field` annotation, in addition to that the method must be annotated with `@AccessType(AccessType.Type
-.PROPERTY)`. The third annotation that is needed in such a case is `@WriteOnlyProperty`, as such a value is only 
-written to Elasticsearch. A full example:
+Normally the properties used in an entity are fields of the entity class.
+There might be cases, when a property value is calculated in the entity and should be stored in Elasticsearch.
+In this case, the getter method (`getProperty()`) can be annotated with the `@Field` annotation, in addition to that the method must be annotated with `@AccessType(AccessType.Type
+.PROPERTY)`.
+The third annotation that is needed in such a case is `@WriteOnlyProperty`, as such a value is only written to Elasticsearch.
+A full example:
+
 ====
 [source,java]
 ----
@@ -189,6 +183,19 @@ public String getProperty() {
 }
 ----
 ====
+
+[[elasticsearch.mapping.meta-model.annotations.misc]]
+==== Other property annotations
+
+===== @IndexedIndexName
+
+This annotation can be set on a String property of an entity.
+This property will not be written to the mapping, it will not be stored in Elasticsearch and its value will not be read from an Elasticsearch document.
+After an entity is persisted, for example with a call to `ElasticsearchOperations.save(T entity)`, the entity 
+returned from that call will contain the name of the index that an entity was saved to in that property.
+This is useful when the index name is dynamically set by a bean, or when writing to a write alias.
+
+Putting some value into such a property does not set the index into which an entity is stored!
 
 [[elasticsearch.mapping.meta-model.rules]]
 === Mapping Rules
@@ -412,12 +419,15 @@ Looking at the `Configuration` from the <<elasticsearch.mapping.meta-model, prev
 [source,java]
 ----
 @Configuration
-public class Config extends AbstractElasticsearchConfiguration {
+public class Config extends ElasticsearchConfiguration  {
 
-  @Override
-  public RestHighLevelClient elasticsearchClient() {
-    return RestClients.create(ClientConfiguration.create("localhost:9200")).rest();
-  }
+	@NonNull
+	@Override
+	public ClientConfiguration clientConfiguration() {
+		return ClientConfiguration.builder() //
+				.connectedTo("localhost:9200") //
+				.build();
+	}
 
   @Bean
   @Override
@@ -428,7 +438,7 @@ public class Config extends AbstractElasticsearchConfiguration {
 
   @WritingConverter                                                 <2>
   static class AddressToMap implements Converter<Address, Map<String, Object>> {
-
+	  
     @Override
     public Map<String, Object> convert(Address source) {
 

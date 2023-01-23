@@ -58,16 +58,9 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.JoinTypeRelation;
-import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
-import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.annotations.WriteOnlyProperty;
 import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -78,6 +71,7 @@ import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -137,6 +131,7 @@ public abstract class ElasticsearchIntegrationTests {
 		indexNameProvider.increment();
 		indexOperations = operations.indexOps(SampleEntity.class);
 		indexOperations.createWithMapping();
+		operations.indexOps(IndexedIndexNameEntity.class).createWithMapping();
 	}
 
 	@Test
@@ -3573,6 +3568,18 @@ public abstract class ElasticsearchIntegrationTests {
 		operations.index(query, IndexCoordinates.of(indexNameProvider.indexName()));
 	}
 
+	@Test // #2112
+	@DisplayName("should set IndexedIndexName property")
+	void shouldSetIndexedIndexNameProperty() {
+
+		var entity = new IndexedIndexNameEntity();
+		entity.setId("42");
+		entity.setSomeText("someText");
+		var saved = operations.save(entity);
+
+		assertThat(saved.getIndexedIndexName()).isEqualTo(indexNameProvider.indexName() + "-indexedindexname");
+	}
+
 	@Test // #1945
 	@DisplayName("should error on sort with unmapped field and default settings")
 	void shouldErrorOnSortWithUnmappedFieldAndDefaultSettings() {
@@ -4661,6 +4668,43 @@ public abstract class ElasticsearchIntegrationTests {
 			result = 31 * result + (firstName != null ? firstName.hashCode() : 0);
 			result = 31 * result + (lastName != null ? lastName.hashCode() : 0);
 			return result;
+		}
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}-indexedindexname")
+	private static class IndexedIndexNameEntity {
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text) private String someText;
+		@Nullable
+		@IndexedIndexName private String indexedIndexName;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getSomeText() {
+			return someText;
+		}
+
+		public void setSomeText(@Nullable String someText) {
+			this.someText = someText;
+		}
+
+		@Nullable
+		public String getIndexedIndexName() {
+			return indexedIndexName;
+		}
+
+		public void setIndexedIndexName(@Nullable String indexedIndexName) {
+			this.indexedIndexName = indexedIndexName;
 		}
 	}
 	// endregion

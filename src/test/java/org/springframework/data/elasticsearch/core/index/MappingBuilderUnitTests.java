@@ -1043,6 +1043,28 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
+	@Test // #2112
+	@DisplayName("should not write mapping for property with IndexedIndexName anotation")
+	void shouldNotWriteMappingForPropertyWithIndexedIndexNameAnotation() throws JSONException {
+
+		var expected = """
+				{
+				  "properties": {
+				    "_class": {
+				      "type": "keyword",
+				      "index": false,
+				      "doc_values": false
+				    },
+				    "someText": {
+				      "type": "text"
+				    }
+				  }
+				}
+				""";
+		String mapping = getMappingBuilder().buildPropertyMapping(IndexedIndexNameEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
 	// region entities
 
 	@Document(indexName = "ignore-above-index")
@@ -2192,6 +2214,14 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	private static class NestedExcludedFieldEntity {
 		@Nullable
 		@Field(name = "excluded-text", type = Text, excludeFromSource = true) private String excludedText;
+	}
+
+	private static class IndexedIndexNameEntity {
+		@Nullable
+		@Field(type = Text) private String someText;
+		@Nullable
+		@IndexedIndexName
+		private String storedIndexName;
 	}
 	// endregion
 }

@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
+import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ValueConverter;
 import org.springframework.data.elasticsearch.annotations.WriteOnlyProperty;
@@ -358,4 +359,8 @@ public class SimpleElasticsearchPersistentProperty extends
 		return getActualType() == Completion.class;
 	}
 
+	@Override
+	public boolean isIndexedIndexNameProperty() {
+		return isAnnotationPresent(IndexedIndexName.class);
+	}
 }

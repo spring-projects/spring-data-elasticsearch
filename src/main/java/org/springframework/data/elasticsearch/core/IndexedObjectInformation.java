@@ -24,42 +24,12 @@ import org.springframework.lang.Nullable;
  * @author Roman Puchkovskiy
  * @since 4.1
  */
-public class IndexedObjectInformation {
-	@Nullable private final String id;
-	@Nullable private final Long seqNo;
-	@Nullable private final Long primaryTerm;
-	@Nullable private final Long version;
-
-	private IndexedObjectInformation(@Nullable String id, @Nullable Long seqNo, @Nullable Long primaryTerm,
-			@Nullable Long version) {
-		this.id = id;
-		this.seqNo = seqNo;
-		this.primaryTerm = primaryTerm;
-		this.version = version;
-	}
-
-	public static IndexedObjectInformation of(@Nullable String id, @Nullable Long seqNo, @Nullable Long primaryTerm,
-			@Nullable Long version) {
-		return new IndexedObjectInformation(id, seqNo, primaryTerm, version);
-	}
-
-	@Nullable
-	public String getId() {
-		return id;
-	}
-
-	@Nullable
-	public Long getSeqNo() {
-		return seqNo;
-	}
-
-	@Nullable
-	public Long getPrimaryTerm() {
-		return primaryTerm;
-	}
-
-	@Nullable
-	public Long getVersion() {
-		return version;
-	}
+public record IndexedObjectInformation( //
+		@Nullable String id, //
+		/** @since 5.1 */ //
+		@Nullable String index, //
+		@Nullable Long seqNo, //
+		@Nullable Long primaryTerm, //
+		@Nullable Long version //
+) {
 }

@@ -261,23 +261,28 @@ abstract public class AbstractReactiveElasticsearchTemplate
 			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
 
 			// Only deal with text because ES generated Ids are strings!
-			if (indexedObjectInformation.getId() != null && idProperty != null && idProperty.isReadable()
+			if (indexedObjectInformation.id() != null && idProperty != null && idProperty.isReadable()
 					&& idProperty.getType().isAssignableFrom(String.class)) {
-				propertyAccessor.setProperty(idProperty, indexedObjectInformation.getId());
+				propertyAccessor.setProperty(idProperty, indexedObjectInformation.id());
 			}
 
-			if (indexedObjectInformation.getSeqNo() != null && indexedObjectInformation.getPrimaryTerm() != null
+			if (indexedObjectInformation.seqNo() != null && indexedObjectInformation.primaryTerm() != null
 					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
 				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
 				// noinspection ConstantConditions
 				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
-						new SeqNoPrimaryTerm(indexedObjectInformation.getSeqNo(), indexedObjectInformation.getPrimaryTerm()));
+						new SeqNoPrimaryTerm(indexedObjectInformation.seqNo(), indexedObjectInformation.primaryTerm()));
 			}
 
-			if (indexedObjectInformation.getVersion() != null && persistentEntity.hasVersionProperty()) {
+			if (indexedObjectInformation.version() != null && persistentEntity.hasVersionProperty()) {
 				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
 				// noinspection ConstantConditions
-				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.getVersion());
+				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.version());
+			}
+
+			var indexedIndexNameProperty = persistentEntity.getIndexedIndexNameProperty();
+			if (indexedIndexNameProperty != null) {
+				propertyAccessor.setProperty(indexedIndexNameProperty, indexedObjectInformation.index());
 			}
 
 			// noinspection unchecked
@@ -286,7 +291,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		} else {
 			EntityOperations.AdaptableEntity<T> adaptableEntity = entityOperations.forEntity(entity,
 					converter.getConversionService(), routingResolver);
-			adaptableEntity.populateIdIfNecessary(indexedObjectInformation.getId());
+			adaptableEntity.populateIdIfNecessary(indexedObjectInformation.id());
 		}
 		return entity;
 	}
@@ -317,8 +322,9 @@ abstract public class AbstractReactiveElasticsearchTemplate
 				.map(it -> {
 					T savedEntity = it.getT1();
 					IndexResponseMetaData indexResponseMetaData = it.getT2();
-					return updateIndexedObject(savedEntity, IndexedObjectInformation.of( //
+					return updateIndexedObject(savedEntity, new IndexedObjectInformation( //
 							indexResponseMetaData.id(), //
+							indexResponseMetaData.index(), //
 							indexResponseMetaData.seqNo(), //
 							indexResponseMetaData.primaryTerm(), //
 							indexResponseMetaData.version()));
@@ -571,8 +577,9 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 						T entity = reader.read(type, documentAfterLoad);
 
-						IndexedObjectInformation indexedObjectInformation = IndexedObjectInformation.of( //
+						IndexedObjectInformation indexedObjectInformation = new IndexedObjectInformation( //
 								documentAfterLoad.hasId() ? documentAfterLoad.getId() : null, //
+								documentAfterLoad.getIndex(), //
 								documentAfterLoad.hasSeqNo() ? documentAfterLoad.getSeqNo() : null, //
 								documentAfterLoad.hasPrimaryTerm() ? documentAfterLoad.getPrimaryTerm() : null, //
 								documentAfterLoad.hasVersion() ? documentAfterLoad.getVersion() : null); //
@@ -685,7 +692,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	/**
 	 * Value class to capture client independent information from a response to an index request.
 	 */
-	public record IndexResponseMetaData(String id, long seqNo, long primaryTerm, long version) {
+	public record IndexResponseMetaData(String id, String index, long seqNo, long primaryTerm, long version) {
 	}
 	// endregion
 
