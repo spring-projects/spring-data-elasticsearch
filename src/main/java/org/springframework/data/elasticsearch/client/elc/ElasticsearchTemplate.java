@@ -69,6 +69,7 @@ import org.springframework.util.Assert;
  * Elasticsearch client.
  *
  * @author Peter-Josef Meisch
+ * @author Hamid Rahimi
  * @since 4.4
  */
 public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
@@ -459,6 +460,29 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Iterator<Class<?>> it = classes.iterator();
 		for (Query query : queries) {
 			Class<?> clazz = it.next();
+			multiSearchQueryParameters.add(new MultiSearchQueryParameter(query, clazz, index));
+		}
+
+		return doMultiSearch(multiSearchQueryParameters);
+	}
+
+	@Override
+	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
+		   List<IndexCoordinates> indexes) {
+
+		Assert.notNull(queries, "queries must not be null");
+		Assert.notNull(classes, "classes must not be null");
+		Assert.notNull(indexes, "indexes must not be null");
+		Assert.isTrue(queries.size() == classes.size() && queries.size() == indexes.size(),
+				"queries, classes and indexes must have the same size");
+
+		List<MultiSearchQueryParameter> multiSearchQueryParameters = new ArrayList<>(queries.size());
+		Iterator<Class<?>> it = classes.iterator();
+		Iterator<IndexCoordinates> indexesIt = indexes.iterator();
+
+		for (Query query : queries) {
+			Class<?> clazz = it.next();
+			IndexCoordinates index = indexesIt.next();
 			multiSearchQueryParameters.add(new MultiSearchQueryParameter(query, clazz, index));
 		}
 

@@ -30,6 +30,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author Hamid Rahimi
  * @since 4.0
  */
 public interface SearchOperations {
@@ -127,10 +128,20 @@ public interface SearchOperations {
 	 *
 	 * @param queries the queries to execute
 	 * @param classes the entity classes used for property mapping
-	 * @param index the index to run the query against
+	 * @param index the index to run the queries against
 	 * @return list of SearchHits
 	 */
 	List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes, IndexCoordinates index);
+
+	/**
+	 * Execute the multi search query against elasticsearch and return result as {@link List} of {@link SearchHits}.
+	 *
+	 * @param queries the queries to execute
+	 * @param classes the entity classes used for property mapping
+	 * @param indexes the indexes to run the queries against
+	 * @return list of SearchHits
+	 */
+	List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes, List<IndexCoordinates> indexes);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link SearchHits}
