@@ -114,6 +114,7 @@ import org.springframework.lang.Nullable;
  * @author Sijia Liu
  * @author Haibo Liu
  * @author scoobyzhang
+ * @author Hamid Rahimi
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests {
@@ -1756,6 +1757,40 @@ public abstract class ElasticsearchIntegrationTests {
 		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries,
 				Lists.newArrayList(SampleEntity.class, Book.class),
 				IndexCoordinates.of(indexNameProvider.indexName(), bookIndex.getIndexName()));
+
+		bookIndexOperations.delete();
+
+		SearchHits<?> searchHits0 = searchHitsList.get(0);
+		assertThat(searchHits0.getTotalHits()).isEqualTo(1L);
+		SearchHit<SampleEntity> searchHit0 = (SearchHit<SampleEntity>) searchHits0.getSearchHit(0);
+		assertThat(searchHit0.getContent().getClass()).isEqualTo(SampleEntity.class);
+		SearchHits<?> searchHits1 = searchHitsList.get(1);
+		assertThat(searchHits1.getTotalHits()).isEqualTo(1L);
+		SearchHit<Book> searchHit1 = (SearchHit<Book>) searchHits1.getSearchHit(0);
+		assertThat(searchHit1.getContent().getClass()).isEqualTo(Book.class);
+	}
+
+	@Test // #2434
+	public void shouldReturnDifferentEntityForMultiSearchWithMultipleIndexCoordinates() {
+
+		IndexOperations bookIndexOperations = operations.indexOps(Book.class);
+		bookIndexOperations.delete();
+		bookIndexOperations.createWithMapping();
+		bookIndexOperations.refresh();
+		IndexCoordinates bookIndex = IndexCoordinates.of("i-need-my-own-index");
+		operations.index(buildIndex(SampleEntity.builder().id("1").message("ab").build()),
+				IndexCoordinates.of(indexNameProvider.indexName()));
+		operations.index(buildIndex(Book.builder().id("2").description("bc").build()), bookIndex);
+		bookIndexOperations.refresh();
+
+		List<Query> queries = new ArrayList<>();
+		queries.add(getTermQuery("message", "ab"));
+		queries.add(getTermQuery("description", "bc"));
+
+		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries,
+				Lists.newArrayList(SampleEntity.class, Book.class),
+				List.of(IndexCoordinates.of(indexNameProvider.indexName()),
+						IndexCoordinates.of(bookIndex.getIndexName())));
 
 		bookIndexOperations.delete();
 
