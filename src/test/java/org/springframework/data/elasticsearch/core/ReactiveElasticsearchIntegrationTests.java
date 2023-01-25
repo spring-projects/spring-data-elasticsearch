@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
+import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -105,6 +106,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		indexNameProvider.increment();
 		operations.indexOps(SampleEntity.class).createWithMapping().block();
+		operations.indexOps(IndexedIndexNameEntity.class).createWithMapping().block();
 	}
 
 	@Test
@@ -155,6 +157,19 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.expectNext(true) //
 				.verifyComplete();
 	}
+
+	@Test // #2112
+	@DisplayName("should set IndexedIndexName property")
+	void shouldSetIndexedIndexNameProperty() {
+
+		var entity = new IndexedIndexNameEntity();
+		entity.setId("42");
+		entity.setSomeText("someText");
+		var saved = operations.save(entity).block();
+
+		assertThat(saved.getIndexedIndexName()).isEqualTo(indexNameProvider.indexName() + "-indexedindexname");
+	}
+
 
 	private Mono<Boolean> documentWithIdExistsInIndex(String id, String index) {
 		return operations.exists(id, IndexCoordinates.of(index));
@@ -1528,5 +1543,41 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 			this.part2 = part2;
 		}
 	}
-	// endregion
+	@Document(indexName = "#{@indexNameProvider.indexName()}-indexedindexname")
+	private static class IndexedIndexNameEntity {
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = Text) private String someText;
+		@Nullable
+		@IndexedIndexName
+		private String indexedIndexName;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getSomeText() {
+			return someText;
+		}
+
+		public void setSomeText(@Nullable String someText) {
+			this.someText = someText;
+		}
+
+		@Nullable
+		public String getIndexedIndexName() {
+			return indexedIndexName;
+		}
+
+		public void setIndexedIndexName(@Nullable String indexedIndexName) {
+			this.indexedIndexName = indexedIndexName;
+		}
+	}	// endregion
 }

@@ -107,7 +107,7 @@ public interface Document extends StringObjectMap<Document> {
 	}
 
 	/**
-	 * @return the index if this document was retrieved from an index
+	 * @return the index if this document was retrieved from an index or was just stored.
 	 * @since 4.1
 	 */
 	@Nullable

@@ -111,7 +111,9 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		return Mono.just(entity) //
 				.zipWith(//
 						Mono.from(execute((ClientCallback<Publisher<IndexResponse>>) client -> client.index(indexRequest))) //
-								.map(indexResponse -> new IndexResponseMetaData(indexResponse.id(), //
+								.map(indexResponse -> new IndexResponseMetaData(
+										indexResponse.id(), //
+										indexResponse.index(), //
 										indexResponse.seqNo(), //
 										indexResponse.primaryTerm(), //
 										indexResponse.version() //
@@ -139,8 +141,12 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 							.flatMap(indexAndResponse -> {
 								T savedEntity = entities.entityAt(indexAndResponse.getT1());
 								BulkResponseItem response = indexAndResponse.getT2();
-								updateIndexedObject(savedEntity, IndexedObjectInformation.of(response.id(), response.seqNo(),
-										response.primaryTerm(), response.version()));
+								updateIndexedObject(savedEntity, new IndexedObjectInformation( //
+										response.id(), //
+										response.index(), //
+										response.seqNo(), //
+										response.primaryTerm(), //
+										response.version()));
 								return maybeCallbackAfterSave(savedEntity, index);
 							});
 				});

@@ -134,6 +134,14 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	}
 
 	/**
+	 * @return the property annotated with {@link org.springframework.data.elasticsearch.annotations.IndexedIndexName} if
+	 *         it exists, otherwise null
+	 * @since 5.1
+	 */
+	@Nullable
+	ElasticsearchPersistentProperty getIndexedIndexNameProperty();
+
+	/**
 	 * returns the default settings for an index.
 	 *
 	 * @return settings

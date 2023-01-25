@@ -194,8 +194,12 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			query.setObject(updateIndexedObject(queryObject, IndexedObjectInformation.of(indexResponse.getId(),
-					indexResponse.getSeqNo(), indexResponse.getPrimaryTerm(), indexResponse.getVersion())));
+			query.setObject(updateIndexedObject(queryObject, new IndexedObjectInformation( //
+					indexResponse.getId(), //
+					indexResponse.getIndex(), //
+					indexResponse.getSeqNo(), //
+					indexResponse.getPrimaryTerm(), //
+					indexResponse.getVersion())));
 		}
 
 		return indexResponse.getId();
@@ -369,10 +373,15 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		return Stream.of(bulkResponse.getItems()).map(bulkItemResponse -> {
 			DocWriteResponse response = bulkItemResponse.getResponse();
 			if (response != null) {
-				return IndexedObjectInformation.of(response.getId(), response.getSeqNo(), response.getPrimaryTerm(),
+				return new IndexedObjectInformation( //
+						response.getId(), //
+						response.getIndex(), //
+						response.getSeqNo(), //
+						response.getPrimaryTerm(), //
 						response.getVersion());
 			} else {
-				return IndexedObjectInformation.of(bulkItemResponse.getId(), null, null, null);
+				return new IndexedObjectInformation(bulkItemResponse.getId(), bulkItemResponse.getIndex(), null, null,
+						null);
 			}
 
 		}).collect(Collectors.toList());

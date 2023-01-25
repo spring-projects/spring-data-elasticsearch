@@ -409,15 +409,15 @@ public class MappingElasticsearchConverter
 			PersistentPropertyAccessor<R> accessor = new ConvertingPropertyAccessor<>(entity.getPropertyAccessor(instance),
 					conversionService);
 
-			for (ElasticsearchPersistentProperty prop : entity) {
+			for (ElasticsearchPersistentProperty property : entity) {
 
-				if (entity.isCreatorArgument(prop) || !prop.isReadable()) {
+				if (entity.isCreatorArgument(property) || !property.isReadable() || property.isIndexedIndexNameProperty()) {
 					continue;
 				}
 
-				Object value = valueProvider.getPropertyValue(prop);
+				Object value = valueProvider.getPropertyValue(property);
 				if (value != null) {
-					accessor.setProperty(prop, value);
+					accessor.setProperty(property, value);
 				}
 			}
 
@@ -939,7 +939,7 @@ public class MappingElasticsearchConverter
 
 			for (ElasticsearchPersistentProperty property : entity) {
 
-				if (!property.isWritable()) {
+				if (!property.isWritable() || property.isIndexedIndexNameProperty()) {
 					continue;
 				}
 
