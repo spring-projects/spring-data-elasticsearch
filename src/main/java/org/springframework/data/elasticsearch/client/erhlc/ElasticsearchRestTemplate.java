@@ -112,6 +112,7 @@ import org.springframework.util.Assert;
  * @author Massimiliano Poggi
  * @author Farid Faoudi
  * @author Sijia Liu
+ * @author Hamid Rahimi
  * @since 4.4
  * @deprecated since 5.0
  */
@@ -547,6 +548,42 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Iterator<Class<?>> it1 = classes.iterator();
 		for (int i = 0; i < queries.size(); i++) {
 			Class entityClass = it1.next();
+
+			ReadDocumentCallback<?> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, entityClass, index);
+			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(entityClass,
+					index);
+
+			SearchResponse response = items[i].getResponse();
+			res.add(callback.doWith(SearchDocumentResponseBuilder.from(response, getEntityCreator(documentCallback))));
+		}
+		return res;
+	}
+
+	@Override
+	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
+		   List<IndexCoordinates> indexes) {
+
+		Assert.notNull(queries, "queries must not be null");
+		Assert.notNull(classes, "classes must not be null");
+		Assert.notNull(indexes, "indexes must not be null");
+		Assert.isTrue(queries.size() == classes.size() && queries.size() == indexes.size(),
+				"queries, classes and indexes must have the same size");
+
+		MultiSearchRequest request = new MultiSearchRequest();
+		Iterator<Class<?>> it = classes.iterator();
+		Iterator<IndexCoordinates> indexesIt = indexes.iterator();
+		for (Query query : queries) {
+			request.add(requestFactory.searchRequest(query, it.next(), indexesIt.next()));
+		}
+
+		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
+
+		List<SearchHits<?>> res = new ArrayList<>(queries.size());
+		Iterator<Class<?>> it1 = classes.iterator();
+		Iterator<IndexCoordinates> indexesIt1 = indexes.iterator();
+		for (int i = 0; i < queries.size(); i++) {
+			Class entityClass = it1.next();
+			IndexCoordinates index = indexesIt1.next();
 
 			ReadDocumentCallback<?> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, entityClass, index);
 			SearchDocumentResponseCallback<SearchHits<?>> callback = new ReadSearchDocumentResponseCallback<>(entityClass,
