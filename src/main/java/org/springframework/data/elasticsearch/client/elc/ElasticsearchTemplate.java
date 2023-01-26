@@ -468,7 +468,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
-		   List<IndexCoordinates> indexes) {
+			List<IndexCoordinates> indexes) {
 
 		Assert.notNull(queries, "queries must not be null");
 		Assert.notNull(classes, "classes must not be null");
@@ -652,9 +652,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 					failedDocuments);
 		}
 
-		return bulkResponse.items().stream()
-				.map(item -> new IndexedObjectInformation(item.id(), item.index(), item.seqNo(), item.primaryTerm(),
-						item.version()))
+		return bulkResponse.items().stream().map(
+				item -> new IndexedObjectInformation(item.id(), item.index(), item.seqNo(), item.primaryTerm(), item.version()))
 				.collect(Collectors.toList());
 
 	}

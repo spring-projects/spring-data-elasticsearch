@@ -140,8 +140,10 @@ public interface SearchOperations {
 	 * @param classes the entity classes used for property mapping
 	 * @param indexes the indexes to run the queries against
 	 * @return list of SearchHits
+	 * @since 5.1
 	 */
-	List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes, List<IndexCoordinates> indexes);
+	List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
+			List<IndexCoordinates> indexes);
 
 	/**
 	 * Execute the criteria query against elasticsearch and return result as {@link SearchHits}
@@ -232,19 +234,20 @@ public interface SearchOperations {
 	/**
 	 * Opens a point in time (pit) in Elasticsearch.
 	 *
-	 * @param index             the index name(s) to use
-	 * @param keepAlive         the duration the pit shoult be kept alive
+	 * @param index the index name(s) to use
+	 * @param keepAlive the duration the pit shoult be kept alive
 	 * @return the pit identifier
 	 * @since 5.0
 	 */
 	default String openPointInTime(IndexCoordinates index, Duration keepAlive) {
 		return openPointInTime(index, keepAlive, false);
 	}
+
 	/**
 	 * Opens a point in time (pit) in Elasticsearch.
 	 *
-	 * @param index             the index name(s) to use
-	 * @param keepAlive         the duration the pit shoult be kept alive
+	 * @param index the index name(s) to use
+	 * @param keepAlive the duration the pit shoult be kept alive
 	 * @param ignoreUnavailable if {$literal true} the call will fail if any of the indices is missing or closed
 	 * @return the pit identifier
 	 * @since 5.0

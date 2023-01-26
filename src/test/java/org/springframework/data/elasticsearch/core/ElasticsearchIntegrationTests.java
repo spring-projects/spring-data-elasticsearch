@@ -29,16 +29,7 @@ import java.lang.Double;
 import java.lang.Integer;
 import java.lang.Long;
 import java.lang.Object;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -1784,8 +1775,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries,
 				Lists.newArrayList(SampleEntity.class, Book.class),
-				List.of(IndexCoordinates.of(indexNameProvider.indexName()),
-						IndexCoordinates.of(bookIndex.getIndexName())));
+				List.of(IndexCoordinates.of(indexNameProvider.indexName()), IndexCoordinates.of(bookIndex.getIndexName())));
 
 		bookIndexOperations.delete();
 

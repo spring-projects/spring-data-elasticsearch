@@ -381,8 +381,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 						response.getPrimaryTerm(), //
 						response.getVersion());
 			} else {
-				return new IndexedObjectInformation(bulkItemResponse.getId(), bulkItemResponse.getIndex(), null, null,
-						null);
+				return new IndexedObjectInformation(bulkItemResponse.getId(), bulkItemResponse.getIndex(), null, null, null);
 			}
 
 		}).collect(Collectors.toList());
@@ -561,7 +560,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
-		   List<IndexCoordinates> indexes) {
+			List<IndexCoordinates> indexes) {
 
 		Assert.notNull(queries, "queries must not be null");
 		Assert.notNull(classes, "classes must not be null");
