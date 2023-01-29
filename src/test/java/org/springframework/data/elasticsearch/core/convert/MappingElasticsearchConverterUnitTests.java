@@ -1871,6 +1871,28 @@ public class MappingElasticsearchConverterUnitTests {
 		return sink;
 	}
 
+	@Test // #2364
+	@DisplayName("should not write id property to document source if configured so")
+	void shouldNotWriteIdPropertyToDocumentSourceIfConfiguredSo() throws JSONException {
+
+		@Language("JSON")
+		var expected = """
+				{
+					"_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$DontWriteIdToSourceEntity",
+					"text": "some text"
+				}
+				""";
+		var entity = new DontWriteIdToSourceEntity();
+		entity.setId("42");
+		entity.setText("some text");
+
+		Document document = Document.create();
+		mappingElasticsearchConverter.write(entity, document);
+		String json = document.toJson();
+
+		assertEquals(expected, json, true);
+	}
+
 	// region entities
 	public static class Sample {
 		@Nullable public @ReadOnlyProperty String readOnly;
@@ -2885,7 +2907,7 @@ public class MappingElasticsearchConverterUnitTests {
 		@Nullable private Set<Child> childrenSet;
 
 		public ImmutableEntityWithCollections(@Nullable List<String> stringList, @Nullable Set<String> stringSet,
-																					@Nullable List<Child> childrenList, @Nullable Set<Child> childrenSet) {
+				@Nullable List<Child> childrenList, @Nullable Set<Child> childrenSet) {
 			this.stringList = stringList;
 			this.stringSet = stringSet;
 			this.childrenList = childrenList;
@@ -2925,6 +2947,31 @@ public class MappingElasticsearchConverterUnitTests {
 			public String getName() {
 				return name;
 			}
+		}
+	}
+
+	@org.springframework.data.elasticsearch.annotations.Document(indexName = "doesnt-matter", storeIdInSource = false)
+	static class DontWriteIdToSourceEntity {
+		@Nullable private String id;
+		@Nullable
+		@Field(type = FieldType.Text) private String text;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
 		}
 	}
 	// endregion

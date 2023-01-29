@@ -175,4 +175,10 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 * @since 4.3
 	 */
 	Dynamic dynamic();
+
+	/**
+	 * @return the storeIdInSource value from the document annotation
+	 * @since 5.1
+	 */
+	boolean storeIdInSource();
 }
