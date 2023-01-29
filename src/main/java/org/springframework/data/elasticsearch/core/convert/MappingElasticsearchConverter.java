@@ -939,7 +939,13 @@ public class MappingElasticsearchConverter
 
 			for (ElasticsearchPersistentProperty property : entity) {
 
-				if (!property.isWritable() || property.isIndexedIndexNameProperty()) {
+				if (!property.isWritable() //
+						|| property.isIndexedIndexNameProperty() //
+						|| (property.isIdProperty() && !entity.storeIdInSource())) {
+					continue;
+				}
+
+				if (property.isIdProperty() && !entity.storeIdInSource()) {
 					continue;
 				}
 

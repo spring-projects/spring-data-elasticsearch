@@ -452,7 +452,7 @@
 					</jvmArgs>
 					<excludedGroups>integration-test</excludedGroups>
 					<targetClasses>
-						<param>org.springframework.data.elasticsearch.core.geo.*</param>
+						<param>org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter*</param>
 					</targetClasses>
 					<excludedMethods>toString</excludedMethods>
 				</configuration>

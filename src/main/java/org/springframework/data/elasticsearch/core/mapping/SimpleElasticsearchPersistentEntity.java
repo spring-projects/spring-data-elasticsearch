@@ -27,7 +27,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
 import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.index.Settings;
@@ -84,6 +83,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
 	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
 
+	private final boolean storeIdInSource;
+
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation,
 			ContextConfiguration contextConfiguration) {
 
@@ -106,8 +107,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.versionType = document.versionType();
 			this.createIndexAndMapping = document.createIndex();
 			this.dynamic = document.dynamic();
+			this.storeIdInSource = document.storeIdInSource();
 		} else {
 			this.dynamic = Dynamic.INHERIT;
+			this.storeIdInSource = true;
 		}
 		Routing routingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Routing.class);
 
@@ -190,6 +193,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		}
 
 		return writeTypeHints;
+	}
+
+	@Override
+	public boolean storeIdInSource() {
+		return storeIdInSource;
 	}
 
 	@Override

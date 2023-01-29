@@ -78,6 +78,14 @@ public @interface Document {
 	Dynamic dynamic() default Dynamic.INHERIT;
 
 	/**
+	 * Specifies if the id property should also be stored in the Elasticsearch document source. Default value is
+	 * {@literal true}
+	 *
+	 * @since 5.1
+	 */
+	boolean storeIdInSource() default true;
+
+	/**
 	 * @since 4.3
 	 */
 	enum VersionType {
