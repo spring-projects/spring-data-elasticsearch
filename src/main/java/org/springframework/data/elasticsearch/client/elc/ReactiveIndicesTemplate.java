@@ -154,7 +154,8 @@ public class ReactiveIndicesTemplate
 
 	@Override
 	public Mono<Void> refresh() {
-		return Mono.from(execute(ReactiveElasticsearchIndicesClient::refresh)).then();
+		RefreshRequest refreshRequest = requestConverter.indicesRefreshRequest(getIndexCoordinates());
+		return Mono.from(execute(client -> client.refresh(refreshRequest))).then();
 	}
 
 	@Override
