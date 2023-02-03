@@ -3,7 +3,7 @@
 
 Spring Data Elasticsearch Object Mapping is the process that maps a Java object - the domain entity - into the JSON representation that is stored in Elasticsearch and back.
 The class that is internally used for this mapping is the
-`MappingElasticsearcvhConverter`.
+`MappingElasticsearchConverter`.
 
 [[elasticsearch.mapping.meta-model]]
 == Meta Model Object Mapping
