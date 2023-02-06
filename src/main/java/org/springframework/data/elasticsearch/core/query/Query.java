@@ -472,8 +472,14 @@ public interface Query {
 	EnumSet<IndicesOptions.WildcardStates> getExpandWildcards();
 
 	/**
-		 * @since 4.3
-		 */
+	 * @return a possible empty list of docvalue_field values to be set on the query.
+	 * @since 5.1
+	 */
+	List<DocValueField> getDocValueFields();
+
+	/**
+	 * @since 4.3
+	 */
 	enum SearchType {
 		QUERY_THEN_FETCH, DFS_QUERY_THEN_FETCH
 	}

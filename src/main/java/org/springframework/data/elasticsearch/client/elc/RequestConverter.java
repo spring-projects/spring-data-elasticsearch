@@ -31,6 +31,7 @@ import co.elastic.clients.elasticsearch._types.mapping.Property;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
+import co.elastic.clients.elasticsearch._types.query_dsl.FieldAndFormat;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.core.*;
@@ -1298,6 +1299,12 @@ class RequestConverter {
 			// noinspection unchecked
 			builder.indicesBoost(boosts);
 		}
+
+		if (!isEmpty(query.getDocValueFields())) {
+			builder.docvalueFields(query.getDocValueFields().stream() //
+					.map(docValueField -> FieldAndFormat.of(b -> b.field(docValueField.field()).format(docValueField.format())))
+					.toList());
+		}
 	}
 
 	private Rescore getRescore(RescorerQuery rescorerQuery) {
@@ -1554,14 +1561,13 @@ class RequestConverter {
 
 		return SearchTemplateRequest.of(builder -> {
 			builder //
-				.allowNoIndices(query.getAllowNoIndices()) //
-				.explain(query.getExplain()) //
-				.id(query.getId()) //
-				.index(Arrays.asList(index.getIndexNames())) //
-				.preference(query.getPreference()) //
-				.routing(query.getRoute()) //
-				.searchType(searchType(query.getSearchType()))
-				.source(query.getSource()) //
+					.allowNoIndices(query.getAllowNoIndices()) //
+					.explain(query.getExplain()) //
+					.id(query.getId()) //
+					.index(Arrays.asList(index.getIndexNames())) //
+					.preference(query.getPreference()) //
+					.routing(query.getRoute()) //
+					.searchType(searchType(query.getSearchType())).source(query.getSource()) //
 			;
 
 			var expandWildcards = query.getExpandWildcards();
@@ -1577,7 +1583,7 @@ class RequestConverter {
 				Function<Map.Entry<String, Object>, String> keyMapper = Map.Entry::getKey;
 				Function<Map.Entry<String, Object>, JsonData> valueMapper = entry -> JsonData.of(entry.getValue(), jsonpMapper);
 				Map<String, JsonData> params = query.getParams().entrySet().stream()
-					.collect(Collectors.toMap(keyMapper, valueMapper));
+						.collect(Collectors.toMap(keyMapper, valueMapper));
 				builder.params(params);
 			}
 
