@@ -78,9 +78,9 @@ public class BaseQuery implements Query {
 	@Nullable protected PointInTime pointInTime;
 	private boolean queryIsUpdatedByConverter = false;
 	@Nullable private Integer reactiveBatchSize = null;
-@Nullable private Boolean  allowNoIndices = null;
-
+	@Nullable private Boolean allowNoIndices = null;
 	private EnumSet<IndicesOptions.WildcardStates> expandWildcards;
+	private List<DocValueField> docValueFields = new ArrayList<>();
 
 	public BaseQuery() {}
 
@@ -114,6 +114,7 @@ public class BaseQuery implements Query {
 		this.reactiveBatchSize = builder.getReactiveBatchSize();
 		this.allowNoIndices = builder.getAllowNoIndices();
 		this.expandWildcards = builder.getExpandWildcards();
+		this.docValueFields = builder.getDocValueFields();
 	}
 
 	/**
@@ -523,5 +524,23 @@ public class BaseQuery implements Query {
 	@Override
 	public EnumSet<IndicesOptions.WildcardStates> getExpandWildcards() {
 		return expandWildcards;
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	@Override
+	public List<DocValueField> getDocValueFields() {
+		return docValueFields;
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public void setDocValueFields(List<DocValueField> docValueFields) {
+
+		Assert.notNull(docValueFields, "getDocValueFields must not be null");
+
+		this.docValueFields = docValueFields;
 	}
 }

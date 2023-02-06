@@ -70,6 +70,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	private EnumSet<IndicesOptions.WildcardStates> expandWildcards = EnumSet.noneOf(IndicesOptions.WildcardStates.class);
 
 	@Nullable Integer reactiveBatchSize;
+	private final List<DocValueField> docValueFields = new ArrayList<>();
 
 	@Nullable
 	public Sort getSort() {
@@ -216,6 +217,13 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	 */
 	public EnumSet<IndicesOptions.WildcardStates> getExpandWildcards() {
 		return expandWildcards;
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public List<DocValueField> getDocValueFields() {
+		return docValueFields;
 	}
 
 	public SELF withPageable(Pageable pageable) {
@@ -420,6 +428,18 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		Assert.notNull(expandWildcards, "expandWildcards must not be null");
 
 		this.expandWildcards = expandWildcards;
+		return self();
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public SELF withDocValueFields(List<DocValueField> docValueFields) {
+
+		Assert.notNull(docValueFields, "docValueFields must not be null");
+
+		this.docValueFields.clear();
+		this.docValueFields.addAll(docValueFields);
 		return self();
 	}
 
