@@ -62,6 +62,8 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		String queryString = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService())
 				.replacePlaceholders(this.queryString, parameterAccessor);
 
-		return new StringQuery(queryString);
+		var query = new StringQuery(queryString);
+		query.addSort(parameterAccessor.getSort());
+		return query;
 	}
 }
