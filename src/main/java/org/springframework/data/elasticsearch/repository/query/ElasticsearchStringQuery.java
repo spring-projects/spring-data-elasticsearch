@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
@@ -62,7 +63,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		String queryString = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService())
 				.replacePlaceholders(this.queryString, parameterAccessor);
 
-		var query = new StringQuery(queryString);
+		BaseQuery query = new StringQuery(queryString);
 		query.addSort(parameterAccessor.getSort());
 		return query;
 	}
