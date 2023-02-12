@@ -30,6 +30,7 @@ import java.util.Map;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * A {@link org.springframework.data.elasticsearch.core.query.Query} implementation using query builders from the new
@@ -42,6 +43,7 @@ import org.springframework.lang.Nullable;
 public class NativeQuery extends BaseQuery {
 
 	@Nullable private final Query query;
+	@Nullable private org.springframework.data.elasticsearch.core.query.Query springDataQuery;
 	@Nullable private Query filter;
 	// note: the new client does not have pipeline aggs, these are just set up as normal aggs
 	private final Map<String, Aggregation> aggregations = new LinkedHashMap<>();
@@ -62,6 +64,12 @@ public class NativeQuery extends BaseQuery {
 		this.scriptedFields = builder.getScriptedFields();
 		this.sortOptions = builder.getSortOptions();
 		this.searchExtensions = builder.getSearchExtensions();
+
+		if (builder.getSpringDataQuery() != null) {
+			Assert.isTrue(!NativeQuery.class.isAssignableFrom(builder.getSpringDataQuery().getClass()),
+					"Cannot add an NativeQuery in a NativeQuery");
+		}
+		this.springDataQuery = builder.getSpringDataQuery();
 	}
 
 	public NativeQuery(@Nullable Query query) {
@@ -106,5 +114,18 @@ public class NativeQuery extends BaseQuery {
 
 	public Map<String, JsonData> getSearchExtensions() {
 		return searchExtensions;
+	}
+
+	/**
+	 * @see NativeQueryBuilder#withQuery(org.springframework.data.elasticsearch.core.query.Query).
+	 * @since 5.1
+	 */
+	public void setSpringDataQuery(@Nullable org.springframework.data.elasticsearch.core.query.Query springDataQuery) {
+		this.springDataQuery = springDataQuery;
+	}
+
+	@Nullable
+	public org.springframework.data.elasticsearch.core.query.Query getSpringDataQuery() {
+		return springDataQuery;
 	}
 }

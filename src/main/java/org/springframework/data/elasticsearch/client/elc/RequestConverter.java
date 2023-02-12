@@ -1464,6 +1464,8 @@ class RequestConverter {
 
 			if (nativeQuery.getQuery() != null) {
 				esQuery = nativeQuery.getQuery();
+			} else if (nativeQuery.getSpringDataQuery() != null) {
+				esQuery = getQuery(nativeQuery.getSpringDataQuery(), clazz);
 			}
 		} else {
 			throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
