@@ -51,6 +51,8 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	private List<SortOptions> sortOptions = new ArrayList<>();
 	private Map<String, JsonData> searchExtensions = new LinkedHashMap<>();
 
+	@Nullable private org.springframework.data.elasticsearch.core.query.Query springDataQuery;
+
 	public NativeQueryBuilder() {}
 
 	@Nullable
@@ -87,6 +89,11 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 
 	public Map<String, JsonData> getSearchExtensions() {
 		return this.searchExtensions;
+	}
+
+	@Nullable
+	public org.springframework.data.elasticsearch.core.query.Query getSpringDataQuery() {
+		return springDataQuery;
 	}
 
 	public NativeQueryBuilder withQuery(Query query) {
@@ -188,7 +195,20 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		return this;
 	}
 
+	/**
+	 * Allows to use a {@link org.springframework.data.elasticsearch.core.query.Query} within a NativeQuery. Cannot be
+	 * used together with {@link #withQuery(Query)} that sets an Elasticsearch query. Passing in a {@link NativeQuery}
+	 * will result in an exception when {@link #build()} is called.
+	 *
+	 * @since 5.1
+	 */
+	public NativeQueryBuilder withQuery(org.springframework.data.elasticsearch.core.query.Query query) {
+		this.springDataQuery = query;
+		return this;
+	}
+
 	public NativeQuery build() {
+		Assert.isTrue(query == null || springDataQuery == null, "Cannot have both a native query and a Spring Data query");
 		return new NativeQuery(this);
 	}
 }
