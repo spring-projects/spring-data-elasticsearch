@@ -1413,7 +1413,8 @@ class RequestConverter {
 		builder //
 				.suggest(query.getSuggester()) //
 				.collapse(query.getFieldCollapse()) //
-				.sort(query.getSortOptions());
+				.sort(query.getSortOptions()) //
+				.knn(query.getKnnQuery());
 
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
@@ -1433,7 +1434,8 @@ class RequestConverter {
 		builder //
 				.suggest(query.getSuggester()) //
 				.collapse(query.getFieldCollapse()) //
-				.sort(query.getSortOptions());
+				.sort(query.getSortOptions()) //
+				.knn(query.getKnnQuery());
 
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
