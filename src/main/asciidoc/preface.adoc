@@ -37,7 +37,7 @@ built and tested.
 [cols="^,^,^,^,^",options="header"]
 |===
 | Spring Data Release Train | Spring Data Elasticsearch | Elasticsearch | Spring Framework | Spring Boot
-| 2022.1 | 5.1.x | 8.6.0 | 6.0.x | 3.0.x
+| 2022.1 | 5.1.x | 8.6.1 | 6.0.x | 3.0.x
 | 2022.0 (Turing) | 5.0.x | 8.5.3 | 6.0.x | 3.0.x
 | 2021.2 (Raj) | 4.4.x | 7.17.3 | 5.3.x | 2.7.x
 | 2021.1 (Q) | 4.3.x | 7.15.2 | 5.3.x | 2.6.x
