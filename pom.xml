@@ -23,7 +23,7 @@
 		<!-- version of the RestHighLevelClient	-->
 		<elasticsearch-rhlc>7.17.9</elasticsearch-rhlc>
 		<!-- version of the new ElasticsearchClient	-->
-		<elasticsearch-java>8.6.1</elasticsearch-java>
+		<elasticsearch-java>8.6.2</elasticsearch-java>
 
 		<log4j>2.18.0</log4j>
 		<netty>4.1.65.Final</netty>
