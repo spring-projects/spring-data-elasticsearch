@@ -40,7 +40,7 @@ public class ElasticsearchPartQueryELCIntegrationTests extends ElasticsearchPart
 
 		JacksonJsonpMapper jsonpMapper = new JacksonJsonpMapper();
 		RequestConverter requestConverter = new RequestConverter(operations.getElasticsearchConverter(), jsonpMapper);
-		SearchRequest request = requestConverter.searchRequest(query, clazz, IndexCoordinates.of("dummy"), false);
+		SearchRequest request = requestConverter.searchRequest(query, null, clazz, IndexCoordinates.of("dummy"), false);
 
 		return JsonUtils.toJson(request, jsonpMapper);
 		// return "{\"query\":" + JsonUtils.toJson(request.query(), jsonpMapper) + "}";

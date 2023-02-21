@@ -374,7 +374,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	protected Mono<BulkByScrollResponse> doDeleteBy(Query query, Class<?> entityType, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
-			DeleteByQueryRequest request = requestFactory.deleteByQueryRequest(query, entityType, index);
+			DeleteByQueryRequest request = requestFactory.deleteByQueryRequest(query, routingResolver.getRouting(),
+					entityType, index);
 			return doDeleteBy(prepareDeleteByRequest(request));
 		});
 	}
@@ -505,7 +506,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		return Flux.defer(() -> {
 
-			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
+			SearchRequest request = requestFactory.searchRequest(query, routingResolver.getRouting(), clazz, index);
 			boolean useScroll = !(query.getPageable().isPaged() || query.isLimiting());
 			request = prepareSearchRequest(request, useScroll);
 
@@ -520,7 +521,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	protected <T> Mono<SearchDocumentResponse> doFindForResponse(Query query, Class<?> clazz, IndexCoordinates index) {
 
 		return Mono.defer(() -> {
-			SearchRequest request = requestFactory.searchRequest(query, clazz, index);
+			SearchRequest request = requestFactory.searchRequest(query, routingResolver.getRouting(), clazz, index);
 			request = prepareSearchRequest(request, false);
 
 			SearchDocumentCallback<?> documentCallback = new ReadSearchDocumentCallback<>(clazz, index);
@@ -540,7 +541,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(index, "index must not be null");
 
 		return Flux.defer(() -> {
-			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
+			SearchRequest request = requestFactory.searchRequest(query, routingResolver.getRouting(), entityType, index);
 			request = prepareSearchRequest(request, false);
 			return doAggregate(request);
 		});
@@ -565,7 +566,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	protected Mono<Long> doCount(Query query, Class<?> entityType, IndexCoordinates index) {
 		return Mono.defer(() -> {
 
-			SearchRequest request = requestFactory.searchRequest(query, entityType, index);
+			SearchRequest request = requestFactory.searchRequest(query, routingResolver.getRouting(), entityType, index);
 			request = prepareSearchRequest(request, false);
 			return doCount(request);
 		});

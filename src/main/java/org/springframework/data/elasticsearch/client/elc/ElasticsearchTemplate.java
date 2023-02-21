@@ -174,8 +174,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(query, "query must not be null");
 
-		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, clazz, index,
-				getRefreshPolicy());
+		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
+				clazz, index, getRefreshPolicy());
 
 		DeleteByQueryResponse response = execute(client -> client.deleteByQuery(request));
 
@@ -309,7 +309,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, true);
+		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
+				true);
 
 		SearchResponse<EntityAsMap> searchResponse = execute(client -> client.search(searchRequest, EntityAsMap.class));
 
@@ -331,7 +332,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	protected <T> SearchHits<T> doSearch(Query query, Class<T> clazz, IndexCoordinates index) {
-		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false);
+		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
+				false);
 		SearchResponse<EntityAsMap> searchResponse = execute(client -> client.search(searchRequest, EntityAsMap.class));
 
 		// noinspection DuplicatedCode
@@ -343,7 +345,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	protected <T> SearchHits<T> doSearch(SearchTemplateQuery query, Class<T> clazz, IndexCoordinates index) {
-		var searchTemplateRequest = requestConverter.searchTemplate(query, index);
+		var searchTemplateRequest = requestConverter.searchTemplate(query, routingResolver.getRouting(), index);
 		var searchTemplateResponse = execute(client -> client.searchTemplate(searchTemplateRequest, EntityAsMap.class));
 
 		// noinspection DuplicatedCode
@@ -374,7 +376,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(query.getPageable(), "pageable of query must not be null.");
 
-		SearchRequest request = requestConverter.searchRequest(query, clazz, index, false, scrollTimeInMillis);
+		SearchRequest request = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index, false,
+				scrollTimeInMillis);
 		SearchResponse<EntityAsMap> response = execute(client -> client.search(request, EntityAsMap.class));
 
 		return getSearchScrollHits(clazz, index, response);
@@ -492,7 +495,8 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private List<SearchHits<?>> doMultiSearch(List<MultiSearchQueryParameter> multiSearchQueryParameters) {
 
-		MsearchRequest request = requestConverter.searchMsearchRequest(multiSearchQueryParameters);
+		MsearchRequest request = requestConverter.searchMsearchRequest(multiSearchQueryParameters,
+				routingResolver.getRouting());
 
 		MsearchResponse<EntityAsMap> msearchResponse = execute(client -> client.msearch(request, EntityAsMap.class));
 		List<MultiSearchResponseItem<EntityAsMap>> responseItems = msearchResponse.responses();

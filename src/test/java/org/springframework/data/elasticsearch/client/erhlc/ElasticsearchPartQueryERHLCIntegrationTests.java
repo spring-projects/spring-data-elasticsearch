@@ -40,7 +40,7 @@ public class ElasticsearchPartQueryERHLCIntegrationTests extends ElasticsearchPa
 
 	protected String buildQueryString(Query query, Class<?> clazz) {
 		SearchSourceBuilder source = new RequestFactory(operations.getElasticsearchConverter())
-				.searchRequest(query, clazz, IndexCoordinates.of("dummy")).source();
+				.searchRequest(query, null, clazz, IndexCoordinates.of("dummy")).source();
 		// remove defaultboost values
 		return source.toString().replaceAll("(\\^\\d+\\.\\d+)", "");
 	}
