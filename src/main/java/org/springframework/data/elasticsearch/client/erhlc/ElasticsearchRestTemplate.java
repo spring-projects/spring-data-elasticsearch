@@ -261,7 +261,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index) {
-		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(query, clazz, index);
+		DeleteByQueryRequest deleteByQueryRequest = requestFactory.deleteByQueryRequest(query, routingResolver.getRouting(),
+				clazz, index);
 		return ResponseConverter
 				.byQueryResponseOf(execute(client -> client.deleteByQuery(deleteByQueryRequest, RequestOptions.DEFAULT)));
 	}
@@ -398,7 +399,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		final Boolean trackTotalHits = query.getTrackTotalHits();
 		query.setTrackTotalHits(true);
-		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
+		SearchRequest searchRequest = requestFactory.searchRequest(query, routingResolver.getRouting(), clazz, index);
 		query.setTrackTotalHits(trackTotalHits);
 
 		searchRequest.source().size(0);
@@ -409,7 +410,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public <T> SearchHits<T> search(Query query, Class<T> clazz, IndexCoordinates index) {
-		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
+		SearchRequest searchRequest = requestFactory.searchRequest(query, routingResolver.getRouting(), clazz, index);
 		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
 
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
@@ -431,7 +432,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(query.getPageable(), "pageable of query must not be null.");
 
-		SearchRequest searchRequest = requestFactory.searchRequest(query, clazz, index);
+		SearchRequest searchRequest = requestFactory.searchRequest(query, routingResolver.getRouting(), clazz, index);
 		searchRequest.scroll(TimeValue.timeValueMillis(scrollTimeInMillis));
 
 		SearchResponse response = execute(client -> client.search(searchRequest, RequestOptions.DEFAULT));
@@ -477,7 +478,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 	public <T> List<SearchHits<T>> multiSearch(List<? extends Query> queries, Class<T> clazz, IndexCoordinates index) {
 		MultiSearchRequest request = new MultiSearchRequest();
 		for (Query query : queries) {
-			request.add(requestFactory.searchRequest(query, clazz, index));
+			request.add(requestFactory.searchRequest(query, routingResolver.getRouting(), clazz, index));
 		}
 
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
@@ -504,7 +505,8 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Iterator<Class<?>> it = classes.iterator();
 		for (Query query : queries) {
 			Class<?> clazz = it.next();
-			request.add(requestFactory.searchRequest(query, clazz, getIndexCoordinatesFor(clazz)));
+			request
+					.add(requestFactory.searchRequest(query, routingResolver.getRouting(), clazz, getIndexCoordinatesFor(clazz)));
 		}
 
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
@@ -538,7 +540,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		MultiSearchRequest request = new MultiSearchRequest();
 		Iterator<Class<?>> it = classes.iterator();
 		for (Query query : queries) {
-			request.add(requestFactory.searchRequest(query, it.next(), index));
+			request.add(requestFactory.searchRequest(query, routingResolver.getRouting(), it.next(), index));
 		}
 
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);
@@ -572,7 +574,7 @@ public class ElasticsearchRestTemplate extends AbstractElasticsearchTemplate {
 		Iterator<Class<?>> it = classes.iterator();
 		Iterator<IndexCoordinates> indexesIt = indexes.iterator();
 		for (Query query : queries) {
-			request.add(requestFactory.searchRequest(query, it.next(), indexesIt.next()));
+			request.add(requestFactory.searchRequest(query, routingResolver.getRouting(), it.next(), indexesIt.next()));
 		}
 
 		MultiSearchResponse.Item[] items = getMultiSearchResult(request);

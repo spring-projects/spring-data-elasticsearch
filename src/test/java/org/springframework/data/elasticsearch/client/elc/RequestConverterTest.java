@@ -62,7 +62,7 @@ class RequestConverterTest {
 			.withDocValueFields(docValueFields) //
 			.build();
 
-		var searchRequest = requestConverter.searchRequest(query, SampleEntity.class, IndexCoordinates.of("foo"), true);
+		var searchRequest = requestConverter.searchRequest(query,null, SampleEntity.class, IndexCoordinates.of("foo"), true);
 
 		var fieldAndFormats = searchRequest.docvalueFields();
 		assertThat(fieldAndFormats).hasSize(2);

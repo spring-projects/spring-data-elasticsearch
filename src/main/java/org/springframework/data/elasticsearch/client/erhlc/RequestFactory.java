@@ -525,8 +525,8 @@ class RequestFactory {
 	// endregion
 
 	// region delete
-	public DeleteByQueryRequest deleteByQueryRequest(Query query, Class<?> clazz, IndexCoordinates index) {
-		SearchRequest searchRequest = searchRequest(query, clazz, index);
+	public DeleteByQueryRequest deleteByQueryRequest(Query query, @Nullable String routing,  Class<?> clazz, IndexCoordinates index) {
+		SearchRequest searchRequest = searchRequest(query, routing, clazz, index);
 		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getIndexNames()) //
 				.setQuery(searchRequest.source().query()) //
 				.setAbortOnVersionConflict(false) //
@@ -544,6 +544,8 @@ class RequestFactory {
 
 		if (query.getRoute() != null) {
 			deleteByQueryRequest.setRouting(query.getRoute());
+		} else if (StringUtils.hasText(routing)) {
+			deleteByQueryRequest.setRouting(routing);
 		}
 
 		return deleteByQueryRequest;
@@ -751,10 +753,10 @@ class RequestFactory {
 		return searchRequest;
 	}
 
-	public SearchRequest searchRequest(Query query, @Nullable Class<?> clazz, IndexCoordinates index) {
+	public SearchRequest searchRequest(Query query, @Nullable String routing, @Nullable Class<?> clazz, IndexCoordinates index) {
 
 		elasticsearchConverter.updateQuery(query, clazz);
-		SearchRequest searchRequest = prepareSearchRequest(query, clazz, index);
+		SearchRequest searchRequest = prepareSearchRequest(query, routing,clazz, index);
 		QueryBuilder elasticsearchQuery = getQuery(query);
 		QueryBuilder elasticsearchFilter = getFilter(query);
 
@@ -768,7 +770,7 @@ class RequestFactory {
 
 	}
 
-	private SearchRequest prepareSearchRequest(Query query, @Nullable Class<?> clazz, IndexCoordinates indexCoordinates) {
+	private SearchRequest prepareSearchRequest(Query query, @Nullable String routing, @Nullable Class<?> clazz, IndexCoordinates indexCoordinates) {
 
 		String[] indexNames = indexCoordinates.getIndexNames();
 		Assert.notNull(indexNames, "No index defined for Query");
@@ -843,6 +845,8 @@ class RequestFactory {
 
 		if (StringUtils.hasLength(query.getRoute())) {
 			request.routing(query.getRoute());
+		} else if (StringUtils.hasText(routing)) {
+			request.routing(routing);
 		}
 
 		Duration timeout = query.getTimeout();

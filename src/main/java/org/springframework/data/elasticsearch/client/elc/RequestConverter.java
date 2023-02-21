@@ -837,8 +837,8 @@ class RequestConverter {
 		});
 	}
 
-	public DeleteByQueryRequest documentDeleteByQueryRequest(Query query, Class<?> clazz, IndexCoordinates index,
-			@Nullable RefreshPolicy refreshPolicy) {
+	public DeleteByQueryRequest documentDeleteByQueryRequest(Query query, @Nullable String routing, Class<?> clazz,
+			IndexCoordinates index, @Nullable RefreshPolicy refreshPolicy) {
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
@@ -857,6 +857,8 @@ class RequestConverter {
 
 			if (query.getRoute() != null) {
 				b.routing(query.getRoute());
+			} else if (StringUtils.hasText(routing)) {
+				b.routing(routing);
 			}
 
 			return b;
@@ -998,23 +1000,24 @@ class RequestConverter {
 
 	// region search
 
-	public <T> SearchRequest searchRequest(Query query, @Nullable Class<T> clazz, IndexCoordinates indexCoordinates,
-			boolean forCount) {
-		return searchRequest(query, clazz, indexCoordinates, forCount, false, null);
+	public <T> SearchRequest searchRequest(Query query, @Nullable String routing, @Nullable Class<T> clazz,
+			IndexCoordinates indexCoordinates, boolean forCount) {
+		return searchRequest(query, routing, clazz, indexCoordinates, forCount, false, null);
 	}
 
-	public <T> SearchRequest searchRequest(Query query, @Nullable Class<T> clazz, IndexCoordinates indexCoordinates,
-			boolean forCount, long scrollTimeInMillis) {
-		return searchRequest(query, clazz, indexCoordinates, forCount, true, scrollTimeInMillis);
+	public <T> SearchRequest searchRequest(Query query, @Nullable String routing, @Nullable Class<T> clazz,
+			IndexCoordinates indexCoordinates, boolean forCount, long scrollTimeInMillis) {
+		return searchRequest(query, routing, clazz, indexCoordinates, forCount, true, scrollTimeInMillis);
 	}
 
-	public <T> SearchRequest searchRequest(Query query, @Nullable Class<T> clazz, IndexCoordinates indexCoordinates,
-			boolean forCount, boolean forBatchedSearch) {
-		return searchRequest(query, clazz, indexCoordinates, forCount, forBatchedSearch, null);
+	public <T> SearchRequest searchRequest(Query query, @Nullable String routing, @Nullable Class<T> clazz,
+			IndexCoordinates indexCoordinates, boolean forCount, boolean forBatchedSearch) {
+		return searchRequest(query, routing, clazz, indexCoordinates, forCount, forBatchedSearch, null);
 	}
 
-	public <T> SearchRequest searchRequest(Query query, @Nullable Class<T> clazz, IndexCoordinates indexCoordinates,
-			boolean forCount, boolean forBatchedSearch, @Nullable Long scrollTimeInMillis) {
+	public <T> SearchRequest searchRequest(Query query, @Nullable String routing, @Nullable Class<T> clazz,
+			IndexCoordinates indexCoordinates, boolean forCount, boolean forBatchedSearch,
+			@Nullable Long scrollTimeInMillis) {
 
 		String[] indexNames = indexCoordinates.getIndexNames();
 		Assert.notNull(query, "query must not be null");
@@ -1022,7 +1025,7 @@ class RequestConverter {
 
 		elasticsearchConverter.updateQuery(query, clazz);
 		SearchRequest.Builder builder = new SearchRequest.Builder();
-		prepareSearchRequest(query, clazz, indexCoordinates, builder, forCount, forBatchedSearch);
+		prepareSearchRequest(query, routing, clazz, indexCoordinates, builder, forCount, forBatchedSearch);
 
 		if (scrollTimeInMillis != null) {
 			builder.scroll(t -> t.time(scrollTimeInMillis + "ms"));
@@ -1030,13 +1033,20 @@ class RequestConverter {
 
 		builder.query(getQuery(query, clazz));
 
+		if (StringUtils.hasText(query.getRoute())) {
+			builder.routing(query.getRoute());
+		}
+		if (StringUtils.hasText(routing)) {
+			builder.routing(routing);
+		}
+
 		addFilter(query, builder);
 
 		return builder.build();
 	}
 
 	public MsearchRequest searchMsearchRequest(
-			List<ElasticsearchTemplate.MultiSearchQueryParameter> multiSearchQueryParameters) {
+			List<ElasticsearchTemplate.MultiSearchQueryParameter> multiSearchQueryParameters, @Nullable String routing) {
 
 		// basically the same stuff as in prepareSearchRequest, but the new Elasticsearch has different builders for a
 		// normal search and msearch
@@ -1049,10 +1059,15 @@ class RequestConverter {
 						.header(h -> {
 							h //
 									.index(Arrays.asList(param.index().getIndexNames())) //
-									.routing(query.getRoute()) //
 									.searchType(searchType(query.getSearchType())) //
 									.requestCache(query.getRequestCache()) //
 							;
+
+							if (StringUtils.hasText(query.getRoute())) {
+								h.routing(query.getRoute());
+							} else if (StringUtils.hasText(routing)) {
+								h.routing(routing);
+							}
 
 							if (query.getPreference() != null) {
 								h.preference(query.getPreference());
@@ -1156,8 +1171,8 @@ class RequestConverter {
 		});
 	}
 
-	private <T> void prepareSearchRequest(Query query, @Nullable Class<T> clazz, IndexCoordinates indexCoordinates,
-			SearchRequest.Builder builder, boolean forCount, boolean forBatchedSearch) {
+	private <T> void prepareSearchRequest(Query query, @Nullable String routing, @Nullable Class<T> clazz,
+			IndexCoordinates indexCoordinates, SearchRequest.Builder builder, boolean forCount, boolean forBatchedSearch) {
 
 		String[] indexNames = indexCoordinates.getIndexNames();
 
@@ -1190,6 +1205,8 @@ class RequestConverter {
 
 			if (query.getRoute() != null) {
 				builder.routing(query.getRoute());
+			} else if (StringUtils.hasText(routing)) {
+				builder.routing(routing);
 			}
 
 			if (query.getPreference() != null) {
@@ -1559,7 +1576,8 @@ class RequestConverter {
 		return ClosePointInTimeRequest.of(cpit -> cpit.id(pit));
 	}
 
-	public SearchTemplateRequest searchTemplate(SearchTemplateQuery query, IndexCoordinates index) {
+	public SearchTemplateRequest searchTemplate(SearchTemplateQuery query, @Nullable String routing,
+			IndexCoordinates index) {
 
 		Assert.notNull(query, "query must not be null");
 
@@ -1570,9 +1588,14 @@ class RequestConverter {
 					.id(query.getId()) //
 					.index(Arrays.asList(index.getIndexNames())) //
 					.preference(query.getPreference()) //
-					.routing(query.getRoute()) //
 					.searchType(searchType(query.getSearchType())).source(query.getSource()) //
 			;
+
+			if (query.getRoute() != null) {
+				builder.routing(query.getRoute());
+			} else if (StringUtils.hasText(routing)) {
+				builder.routing(routing);
+			}
 
 			var expandWildcards = query.getExpandWildcards();
 			if (!expandWildcards.isEmpty()) {

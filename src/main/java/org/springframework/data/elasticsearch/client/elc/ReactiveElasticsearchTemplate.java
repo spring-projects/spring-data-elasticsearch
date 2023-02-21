@@ -111,8 +111,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		return Mono.just(entity) //
 				.zipWith(//
 						Mono.from(execute((ClientCallback<Publisher<IndexResponse>>) client -> client.index(indexRequest))) //
-								.map(indexResponse -> new IndexResponseMetaData(
-										indexResponse.id(), //
+								.map(indexResponse -> new IndexResponseMetaData(indexResponse.id(), //
 										indexResponse.index(), //
 										indexResponse.seqNo(), //
 										indexResponse.primaryTerm(), //
@@ -171,8 +170,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(query, "query must not be null");
 
-		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, entityType, index,
-				getRefreshPolicy());
+		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
+				entityType, index, getRefreshPolicy());
 		return Mono
 				.from(execute((ClientCallback<Publisher<DeleteByQueryResponse>>) client -> client.deleteByQuery(request)))
 				.map(responseConverter::byQueryResponse);
@@ -391,7 +390,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 				baseQuery.setPointInTime(new Query.PointInTime(psa.getPit(), pitKeepAlive));
 				baseQuery.addSort(Sort.by("_shard_doc"));
-				SearchRequest firstSearchRequest = requestConverter.searchRequest(baseQuery, clazz, index, false, true);
+				SearchRequest firstSearchRequest = requestConverter.searchRequest(baseQuery, routingResolver.getRouting(),
+						clazz, index, false, true);
 
 				return Mono.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client
 						.search(firstSearchRequest, EntityAsMap.class))).expand(entityAsMapSearchResponse -> {
@@ -404,7 +404,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 							List<Object> sortOptions = hits.get(hits.size() - 1).sort().stream().map(TypeUtils::toObject)
 									.collect(Collectors.toList());
 							baseQuery.setSearchAfter(sortOptions);
-							SearchRequest followSearchRequest = requestConverter.searchRequest(baseQuery, clazz, index, false, true);
+							SearchRequest followSearchRequest = requestConverter.searchRequest(baseQuery,
+									routingResolver.getRouting(), clazz, index, false, true);
 							return Mono.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client
 									.search(followSearchRequest, EntityAsMap.class)));
 						});
@@ -460,7 +461,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		SearchRequest searchRequest = requestConverter.searchRequest(query, entityType, index, true);
+		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), entityType, index,
+				true);
 
 		return Mono
 				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
@@ -470,7 +472,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	private Flux<SearchDocument> doFindBounded(Query query, Class<?> clazz, IndexCoordinates index) {
 
-		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false, false);
+		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
+				false, false);
 
 		return Mono
 				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
@@ -481,7 +484,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	private Flux<SearchDocument> doSearch(SearchTemplateQuery query, Class<?> clazz, IndexCoordinates index) {
 
-		var request = requestConverter.searchTemplate(query, index);
+		var request = requestConverter.searchTemplate(query, routingResolver.getRouting(), index);
 
 		return Mono
 				.from(execute((ClientCallback<Publisher<SearchTemplateResponse<EntityAsMap>>>) client -> client
@@ -496,7 +499,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		SearchRequest searchRequest = requestConverter.searchRequest(query, clazz, index, false);
+		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
+				false);
 
 		// noinspection unchecked
 		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>((Class<T>) clazz, index);
