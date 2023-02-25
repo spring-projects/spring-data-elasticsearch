@@ -81,6 +81,7 @@ public class BaseQuery implements Query {
 	@Nullable private Boolean allowNoIndices = null;
 	private EnumSet<IndicesOptions.WildcardStates> expandWildcards;
 	private List<DocValueField> docValueFields = new ArrayList<>();
+	private List<ScriptedField> scriptedFields = new ArrayList<>();
 
 	public BaseQuery() {}
 
@@ -115,6 +116,7 @@ public class BaseQuery implements Query {
 		this.allowNoIndices = builder.getAllowNoIndices();
 		this.expandWildcards = builder.getExpandWildcards();
 		this.docValueFields = builder.getDocValueFields();
+		this.scriptedFields = builder.getScriptedFields();
 	}
 
 	/**
@@ -542,5 +544,10 @@ public class BaseQuery implements Query {
 		Assert.notNull(docValueFields, "getDocValueFields must not be null");
 
 		this.docValueFields = docValueFields;
+	}
+
+	@Override
+	public List<ScriptedField> getScriptedFields() {
+		return scriptedFields;
 	}
 }

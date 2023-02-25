@@ -71,6 +71,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 
 	@Nullable Integer reactiveBatchSize;
 	private final List<DocValueField> docValueFields = new ArrayList<>();
+	private final List<ScriptedField> scriptedFields = new ArrayList<>();
 
 	@Nullable
 	public Sort getSort() {
@@ -224,6 +225,10 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	 */
 	public List<DocValueField> getDocValueFields() {
 		return docValueFields;
+	}
+
+	public List<ScriptedField> getScriptedFields() {
+		return scriptedFields;
 	}
 
 	public SELF withPageable(Pageable pageable) {
@@ -440,6 +445,14 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 
 		this.docValueFields.clear();
 		this.docValueFields.addAll(docValueFields);
+		return self();
+	}
+
+	public SELF withScriptedField(ScriptedField scriptedField) {
+
+		Assert.notNull(scriptedField, "scriptedField must not be null");
+
+		this.scriptedFields.add(scriptedField);
 		return self();
 	}
 

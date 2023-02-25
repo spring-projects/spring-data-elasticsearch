@@ -50,7 +50,6 @@ public class NativeQuery extends BaseQuery {
 	private final Map<String, Aggregation> aggregations = new LinkedHashMap<>();
 	@Nullable private Suggester suggester;
 	@Nullable private FieldCollapse fieldCollapse;
-	private List<ScriptedField> scriptedFields = Collections.emptyList();
 	private List<SortOptions> sortOptions = Collections.emptyList();
 
 	private Map<String, JsonData> searchExtensions = Collections.emptyMap();
@@ -63,7 +62,6 @@ public class NativeQuery extends BaseQuery {
 		this.aggregations.putAll(builder.getAggregations());
 		this.suggester = builder.getSuggester();
 		this.fieldCollapse = builder.getFieldCollapse();
-		this.scriptedFields = builder.getScriptedFields();
 		this.sortOptions = builder.getSortOptions();
 		this.searchExtensions = builder.getSearchExtensions();
 
@@ -105,10 +103,6 @@ public class NativeQuery extends BaseQuery {
 	@Nullable
 	public FieldCollapse getFieldCollapse() {
 		return fieldCollapse;
-	}
-
-	public List<ScriptedField> getScriptedFields() {
-		return scriptedFields;
 	}
 
 	public List<SortOptions> getSortOptions() {

@@ -1157,6 +1157,9 @@ class RequestConverter {
 								bb.indicesBoost(boosts);
 							}
 
+							query.getScriptedFields().forEach(scriptedField -> bb.scriptFields(scriptedField.getFieldName(),
+									sf -> sf.script(getScript(scriptedField.getScriptData()))));
+
 							if (query instanceof NativeQuery) {
 								prepareNativeSearch((NativeQuery) query, bb);
 							}
@@ -1258,6 +1261,9 @@ class RequestConverter {
 		}
 
 		addHighlight(query, builder);
+
+		query.getScriptedFields().forEach(scriptedField -> builder.scriptFields(scriptedField.getFieldName(),
+				sf -> sf.script(getScript(scriptedField.getScriptData()))));
 
 		if (query instanceof NativeQuery) {
 			prepareNativeSearch((NativeQuery) query, builder);
@@ -1424,9 +1430,6 @@ class RequestConverter {
 	@SuppressWarnings("DuplicatedCode")
 	private void prepareNativeSearch(NativeQuery query, SearchRequest.Builder builder) {
 
-		query.getScriptedFields().forEach(scriptedField -> builder.scriptFields(scriptedField.getFieldName(),
-				sf -> sf.script(getScript(scriptedField.getScriptData()))));
-
 		builder //
 				.suggest(query.getSuggester()) //
 				.collapse(query.getFieldCollapse()) //
@@ -1444,9 +1447,6 @@ class RequestConverter {
 
 	@SuppressWarnings("DuplicatedCode")
 	private void prepareNativeSearch(NativeQuery query, MultisearchBody.Builder builder) {
-
-		query.getScriptedFields().forEach(scriptedField -> builder.scriptFields(scriptedField.getFieldName(),
-				sf -> sf.script(getScript(scriptedField.getScriptData()))));
 
 		builder //
 				.suggest(query.getSuggester()) //
