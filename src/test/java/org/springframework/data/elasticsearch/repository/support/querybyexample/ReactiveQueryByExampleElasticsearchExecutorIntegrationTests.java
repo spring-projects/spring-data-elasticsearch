@@ -15,9 +15,16 @@
  */
 package org.springframework.data.elasticsearch.repository.support.querybyexample;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
+
+import reactor.test.StepVerifier;
+
+import java.util.List;
+import java.util.Objects;
+
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
@@ -36,13 +43,6 @@ import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRe
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.lang.Nullable;
-import reactor.test.StepVerifier;
-
-import java.util.List;
-import java.util.Objects;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.elasticsearch.utils.IdGenerator.nextIdAsString;
 
 /**
  * @author Ezequiel Antúnez Camacho
@@ -58,430 +58,418 @@ abstract class ReactiveQueryByExampleElasticsearchExecutorIntegrationTests {
 	@BeforeEach
 	void before() {
 		indexNameProvider.increment();
-		operations.indexOps(SampleEntity.class).createWithMapping()
+		operations.indexOps(SampleEntity.class).createWithMapping().as(StepVerifier::create) //
+				.expectNext(true) //
+				.verifyComplete();
+	}
+
+	@Test // #2418
+	@Order(Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
+	}
+
+	@Test
+	void shouldFindOne() {
+		// given
+		String documentId = nextIdAsString();
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(documentId);
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		String documentId2 = nextIdAsString();
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(documentId2);
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2L) //
+				.verifyComplete();
+
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setDocumentId(documentId2);
+		repository.findOne(Example.of(probe))
+				// then
+				.as(StepVerifier::create) //
+				.consumeNextWith(entityFromElasticSearch -> assertThat(entityFromElasticSearch).isEqualTo(sampleEntity2)) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldThrowExceptionIfMoreThanOneResultInFindOne() {
+		// given
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(nextIdAsString());
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(nextIdAsString());
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2L) //
+				.verifyComplete();
+
+		// when
+		SampleEntity probe = new SampleEntity();
+		repository.findOne(Example.of(probe))
+				// then
+				.as(StepVerifier::create) //
+				.expectError(IncorrectResultSizeDataAccessException.class) //
+				.verify();
+	}
+
+	@Test
+	void shouldFindOneWithNestedField() {
+		// given
+		SampleEntity.SampleNestedEntity sampleNestedEntity = new SampleEntity.SampleNestedEntity();
+		sampleNestedEntity.setNestedData("sampleNestedData");
+		sampleNestedEntity.setAnotherNestedData("sampleAnotherNestedData");
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(nextIdAsString());
+		sampleEntity.setMessage("some message");
+		sampleEntity.setSampleNestedEntity(sampleNestedEntity);
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		SampleEntity.SampleNestedEntity sampleNestedEntity2 = new SampleEntity.SampleNestedEntity();
+		sampleNestedEntity2.setNestedData("sampleNestedData2");
+		sampleNestedEntity2.setAnotherNestedData("sampleAnotherNestedData2");
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(nextIdAsString());
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setSampleNestedEntity(sampleNestedEntity2);
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2L) //
+				.verifyComplete();
+
+		// when
+		SampleEntity.SampleNestedEntity sampleNestedEntityProbe = new SampleEntity.SampleNestedEntity();
+		sampleNestedEntityProbe.setNestedData("sampleNestedData");
+		SampleEntity probe = new SampleEntity();
+		probe.setSampleNestedEntity(sampleNestedEntityProbe);
+		repository.findOne(Example.of(probe))
+				// then
+				.as(StepVerifier::create) //
+				.expectNext(sampleEntity) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldFindAll() {
+		// given
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(nextIdAsString());
+		sampleEntity.setMessage("hello world");
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(nextIdAsString());
+		sampleEntity2.setMessage("hello world");
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setDocumentId(nextIdAsString());
+		sampleEntity3.setMessage("bye world");
+		sampleEntity3.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(3L) //
+				.verifyComplete();
+
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setMessage("hello world");
+		repository.findAll(Example.of(probe))
+				// then
+				.as(StepVerifier::create) //
+				.expectNextSequence(List.of(sampleEntity, sampleEntity2)) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldFindAllWithSort() {
+		// given
+		SampleEntity sampleEntityWithRate11 = new SampleEntity();
+		sampleEntityWithRate11.setDocumentId(nextIdAsString());
+		sampleEntityWithRate11.setMessage("hello world");
+		sampleEntityWithRate11.setRate(11);
+		sampleEntityWithRate11.setVersion(System.currentTimeMillis());
+
+		SampleEntity sampleEntityWithRate13 = new SampleEntity();
+		sampleEntityWithRate13.setDocumentId(nextIdAsString());
+		sampleEntityWithRate13.setMessage("hello world");
+		sampleEntityWithRate13.setRate(13);
+		sampleEntityWithRate13.setVersion(System.currentTimeMillis());
+
+		SampleEntity sampleEntityWithRate22 = new SampleEntity();
+		sampleEntityWithRate22.setDocumentId(nextIdAsString());
+		sampleEntityWithRate22.setMessage("hello world");
+		sampleEntityWithRate22.setRate(22);
+		sampleEntityWithRate22.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(List.of(sampleEntityWithRate11, sampleEntityWithRate13, sampleEntityWithRate22)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(3L) //
+				.verifyComplete();
+
+		// when
+		SampleEntity probe = new SampleEntity();
+		repository.findAll(Example.of(probe), Sort.by(Sort.Direction.DESC, "rate"))
+				// then
+				.as(StepVerifier::create) //
+				.expectNextSequence(List.of(sampleEntityWithRate22, sampleEntityWithRate13, sampleEntityWithRate11)) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldCount() {
+		// given
+		String documentId = nextIdAsString();
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(documentId);
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		String documentId2 = nextIdAsString();
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(documentId2);
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2L) //
+				.verifyComplete();
+
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setDocumentId(documentId2);
+		repository.count(Example.of(probe))
+				// then
+				.as(StepVerifier::create) //
+				.expectNext(1L) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldExists() {
+		// given
+		String documentId = nextIdAsString();
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(documentId);
+		sampleEntity.setMessage("some message");
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		String documentId2 = nextIdAsString();
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(documentId2);
+		sampleEntity2.setMessage("some message");
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(2L) //
+				.verifyComplete();
+
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setDocumentId(documentId2);
+		repository.exists(Example.of(probe))
+				// then
 				.as(StepVerifier::create) //
 				.expectNext(true) //
 				.verifyComplete();
 	}
 
 	@Test // #2418
-	@org.junit.jupiter.api.Order(Integer.MAX_VALUE)
-	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
+	void defaultStringMatcherShouldWork() {
+		// given
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(nextIdAsString());
+		sampleEntity.setMessage("hello world");
+		sampleEntity.setVersion(System.currentTimeMillis());
+
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(nextIdAsString());
+		sampleEntity2.setMessage("bye world");
+		sampleEntity2.setVersion(System.currentTimeMillis());
+
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setDocumentId(nextIdAsString());
+		sampleEntity3.setMessage("hola mundo");
+		sampleEntity3.setVersion(System.currentTimeMillis());
+
+		repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(3L) //
+				.verifyComplete();
+
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setMessage("hello world");
+		repository
+				.findAll(Example.of(probe,
+						ExampleMatcher.matching().withMatcher("message",
+								ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.DEFAULT))))
+				// then
+				.as(StepVerifier::create) //
+				.expectNext(sampleEntity) //
+				.verifyComplete();
 	}
 
-	@Nested
-	@DisplayName("All QueryByExampleExecutor operations should work")
-	class ReactiveQueryByExampleExecutorOperations {
-		@Test
-		void shouldFindOne() {
-			// given
-			String documentId = nextIdAsString();
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(documentId);
-			sampleEntity.setMessage("some message");
-			sampleEntity.setVersion(System.currentTimeMillis());
+	@Test // #2418
+	void exactStringMatcherShouldWork() {
+		// given
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(nextIdAsString());
+		sampleEntity.setMessage("hello world");
+		sampleEntity.setVersion(System.currentTimeMillis());
 
-			String documentId2 = nextIdAsString();
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(documentId2);
-			sampleEntity2.setMessage("some message");
-			sampleEntity2.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(nextIdAsString());
+		sampleEntity2.setMessage("bye world");
+		sampleEntity2.setVersion(System.currentTimeMillis());
 
-			repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(2L) //
-					.verifyComplete();
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setDocumentId(nextIdAsString());
+		sampleEntity3.setMessage("hola mundo");
+		sampleEntity3.setVersion(System.currentTimeMillis());
 
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setDocumentId(documentId2);
-			repository.findOne(Example.of(probe))
-					// then
-					.as(StepVerifier::create) //
-					.consumeNextWith(entityFromElasticSearch -> assertThat(entityFromElasticSearch).isEqualTo(sampleEntity2)) //
-					.verifyComplete();
-		}
+		repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(3L) //
+				.verifyComplete();
 
-		@Test
-		void shouldThrowExceptionIfMoreThanOneResultInFindOne() {
-			// given
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(nextIdAsString());
-			sampleEntity.setMessage("some message");
-			sampleEntity.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(nextIdAsString());
-			sampleEntity2.setMessage("some message");
-			sampleEntity2.setVersion(System.currentTimeMillis());
-
-			repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(2L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity probe = new SampleEntity();
-			repository.findOne(Example.of(probe))
-					// then
-					.as(StepVerifier::create) //
-					.expectError(IncorrectResultSizeDataAccessException.class) //
-					.verify();
-		}
-
-		@Test
-		void shouldFindOneWithNestedField() {
-			// given
-			SampleEntity.SampleNestedEntity sampleNestedEntity = new SampleEntity.SampleNestedEntity();
-			sampleNestedEntity.setNestedData("sampleNestedData");
-			sampleNestedEntity.setAnotherNestedData("sampleAnotherNestedData");
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(nextIdAsString());
-			sampleEntity.setMessage("some message");
-			sampleEntity.setSampleNestedEntity(sampleNestedEntity);
-			sampleEntity.setVersion(System.currentTimeMillis());
-
-			SampleEntity.SampleNestedEntity sampleNestedEntity2 = new SampleEntity.SampleNestedEntity();
-			sampleNestedEntity2.setNestedData("sampleNestedData2");
-			sampleNestedEntity2.setAnotherNestedData("sampleAnotherNestedData2");
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(nextIdAsString());
-			sampleEntity2.setMessage("some message");
-			sampleEntity2.setSampleNestedEntity(sampleNestedEntity2);
-			sampleEntity2.setVersion(System.currentTimeMillis());
-
-			repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(2L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity.SampleNestedEntity sampleNestedEntityProbe = new SampleEntity.SampleNestedEntity();
-			sampleNestedEntityProbe.setNestedData("sampleNestedData");
-			SampleEntity probe = new SampleEntity();
-			probe.setSampleNestedEntity(sampleNestedEntityProbe);
-			repository.findOne(Example.of(probe))
-					// then
-					.as(StepVerifier::create) //
-					.expectNext(sampleEntity) //
-					.verifyComplete();
-		}
-
-		@Test
-		void shouldFindAll() {
-			// given
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(nextIdAsString());
-			sampleEntity.setMessage("hello world");
-			sampleEntity.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(nextIdAsString());
-			sampleEntity2.setMessage("hello world");
-			sampleEntity2.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntity3 = new SampleEntity();
-			sampleEntity3.setDocumentId(nextIdAsString());
-			sampleEntity3.setMessage("bye world");
-			sampleEntity3.setVersion(System.currentTimeMillis());
-
-			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(3L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setMessage("hello world");
-			repository.findAll(Example.of(probe))
-					// then
-					.as(StepVerifier::create) //
-					.expectNextSequence(List.of(sampleEntity, sampleEntity2)) //
-					.verifyComplete();
-		}
-
-		@Test
-		void shouldFindAllWithSort() {
-			// given
-			SampleEntity sampleEntityWithRate11 = new SampleEntity();
-			sampleEntityWithRate11.setDocumentId(nextIdAsString());
-			sampleEntityWithRate11.setMessage("hello world");
-			sampleEntityWithRate11.setRate(11);
-			sampleEntityWithRate11.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntityWithRate13 = new SampleEntity();
-			sampleEntityWithRate13.setDocumentId(nextIdAsString());
-			sampleEntityWithRate13.setMessage("hello world");
-			sampleEntityWithRate13.setRate(13);
-			sampleEntityWithRate13.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntityWithRate22 = new SampleEntity();
-			sampleEntityWithRate22.setDocumentId(nextIdAsString());
-			sampleEntityWithRate22.setMessage("hello world");
-			sampleEntityWithRate22.setRate(22);
-			sampleEntityWithRate22.setVersion(System.currentTimeMillis());
-
-			repository.saveAll(List.of(sampleEntityWithRate11, sampleEntityWithRate13, sampleEntityWithRate22)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(3L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity probe = new SampleEntity();
-			repository.findAll(Example.of(probe), Sort.by(Sort.Direction.DESC, "rate"))
-					// then
-					.as(StepVerifier::create) //
-					.expectNextSequence(List.of(sampleEntityWithRate22, sampleEntityWithRate13, sampleEntityWithRate11)) //
-					.verifyComplete();
-		}
-
-		@Test
-		void shouldCount() {
-			// given
-			String documentId = nextIdAsString();
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(documentId);
-			sampleEntity.setMessage("some message");
-			sampleEntity.setVersion(System.currentTimeMillis());
-
-			String documentId2 = nextIdAsString();
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(documentId2);
-			sampleEntity2.setMessage("some message");
-			sampleEntity2.setVersion(System.currentTimeMillis());
-
-			repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(2L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setDocumentId(documentId2);
-			repository.count(Example.of(probe))
-					// then
-					.as(StepVerifier::create) //
-					.expectNext(1L) //
-					.verifyComplete();
-		}
-
-		@Test
-		void shouldExists() {
-			// given
-			String documentId = nextIdAsString();
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(documentId);
-			sampleEntity.setMessage("some message");
-			sampleEntity.setVersion(System.currentTimeMillis());
-
-			String documentId2 = nextIdAsString();
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(documentId2);
-			sampleEntity2.setMessage("some message");
-			sampleEntity2.setVersion(System.currentTimeMillis());
-
-			repository.saveAll(List.of(sampleEntity, sampleEntity2)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(2L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setDocumentId(documentId2);
-			repository.exists(Example.of(probe))
-					// then
-					.as(StepVerifier::create) //
-					.expectNext(true) //
-					.verifyComplete();
-		}
-
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setMessage("bye world");
+		repository
+				.findAll(Example.of(probe,
+						ExampleMatcher.matching().withMatcher("message",
+								ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.EXACT))))
+				// then
+				.as(StepVerifier::create) //
+				.expectNext(sampleEntity2) //
+				.verifyComplete();
 	}
 
-	@Nested
-	@DisplayName("All ExampleMatchers should work")
-	class AllExampleMatchersShouldWork {
+	@Test // #2418
+	void startingStringMatcherShouldWork() {
+		// given
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(nextIdAsString());
+		sampleEntity.setMessage("hello world");
+		sampleEntity.setVersion(System.currentTimeMillis());
 
-		@Test // #2418
-		void defaultStringMatcherShouldWork() {
-			// given
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(nextIdAsString());
-			sampleEntity.setMessage("hello world");
-			sampleEntity.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(nextIdAsString());
+		sampleEntity2.setMessage("bye world");
+		sampleEntity2.setVersion(System.currentTimeMillis());
 
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(nextIdAsString());
-			sampleEntity2.setMessage("bye world");
-			sampleEntity2.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setDocumentId(nextIdAsString());
+		sampleEntity3.setMessage("hola mundo");
+		sampleEntity3.setVersion(System.currentTimeMillis());
 
-			SampleEntity sampleEntity3 = new SampleEntity();
-			sampleEntity3.setDocumentId(nextIdAsString());
-			sampleEntity3.setMessage("hola mundo");
-			sampleEntity3.setVersion(System.currentTimeMillis());
+		repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(3L) //
+				.verifyComplete();
 
-			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(3L) //
-					.verifyComplete();
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setMessage("h");
+		repository
+				.findAll(Example.of(probe,
+						ExampleMatcher.matching().withMatcher("message",
+								ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.STARTING))))
+				// then
+				.as(StepVerifier::create) //
+				.expectNextSequence(List.of(sampleEntity, sampleEntity3)) //
+				.verifyComplete();
+	}
 
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setMessage("hello world");
-			repository
-					.findAll(Example.of(probe,
-							ExampleMatcher.matching().withMatcher("message",
-									ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.DEFAULT))))
-					// then
-					.as(StepVerifier::create) //
-					.expectNext(sampleEntity) //
-					.verifyComplete();
-		}
+	@Test // #2418
+	void endingStringMatcherShouldWork() {
+		// given
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(nextIdAsString());
+		sampleEntity.setMessage("hello world");
+		sampleEntity.setVersion(System.currentTimeMillis());
 
-		@Test // #2418
-		void exactStringMatcherShouldWork() {
-			// given
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(nextIdAsString());
-			sampleEntity.setMessage("hello world");
-			sampleEntity.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(nextIdAsString());
+		sampleEntity2.setMessage("bye world");
+		sampleEntity2.setVersion(System.currentTimeMillis());
 
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(nextIdAsString());
-			sampleEntity2.setMessage("bye world");
-			sampleEntity2.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setDocumentId(nextIdAsString());
+		sampleEntity3.setMessage("hola mundo");
+		sampleEntity3.setVersion(System.currentTimeMillis());
 
-			SampleEntity sampleEntity3 = new SampleEntity();
-			sampleEntity3.setDocumentId(nextIdAsString());
-			sampleEntity3.setMessage("hola mundo");
-			sampleEntity3.setVersion(System.currentTimeMillis());
+		repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(3L) //
+				.verifyComplete();
 
-			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(3L) //
-					.verifyComplete();
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setMessage("world");
+		repository
+				.findAll(Example.of(probe,
+						ExampleMatcher.matching().withMatcher("message",
+								ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.ENDING))))
+				// then
+				.as(StepVerifier::create) //
+				.expectNextSequence(List.of(sampleEntity, sampleEntity2)) //
+				.verifyComplete();
+	}
 
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setMessage("bye world");
-			repository
-					.findAll(Example.of(probe,
-							ExampleMatcher.matching().withMatcher("message",
-									ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.EXACT))))
-					// then
-					.as(StepVerifier::create) //
-					.expectNext(sampleEntity2) //
-					.verifyComplete();
-		}
+	@Test // #2418
+	void regexStringMatcherShouldWork() {
+		// given
+		SampleEntity sampleEntity = new SampleEntity();
+		sampleEntity.setDocumentId(nextIdAsString());
+		sampleEntity.setMessage("hello world");
+		sampleEntity.setVersion(System.currentTimeMillis());
 
-		@Test // #2418
-		void startingStringMatcherShouldWork() {
-			// given
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(nextIdAsString());
-			sampleEntity.setMessage("hello world");
-			sampleEntity.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity2 = new SampleEntity();
+		sampleEntity2.setDocumentId(nextIdAsString());
+		sampleEntity2.setMessage("bye world");
+		sampleEntity2.setVersion(System.currentTimeMillis());
 
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(nextIdAsString());
-			sampleEntity2.setMessage("bye world");
-			sampleEntity2.setVersion(System.currentTimeMillis());
+		SampleEntity sampleEntity3 = new SampleEntity();
+		sampleEntity3.setDocumentId(nextIdAsString());
+		sampleEntity3.setMessage("hola mundo");
+		sampleEntity3.setVersion(System.currentTimeMillis());
 
-			SampleEntity sampleEntity3 = new SampleEntity();
-			sampleEntity3.setDocumentId(nextIdAsString());
-			sampleEntity3.setMessage("hola mundo");
-			sampleEntity3.setVersion(System.currentTimeMillis());
+		repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
+				.as(StepVerifier::create) //
+				.expectNextCount(3L) //
+				.verifyComplete();
 
-			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(3L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setMessage("h");
-			repository
-					.findAll(Example.of(probe,
-							ExampleMatcher.matching().withMatcher("message",
-									ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.STARTING))))
-					// then
-					.as(StepVerifier::create) //
-					.expectNextSequence(List.of(sampleEntity, sampleEntity3)) //
-					.verifyComplete();
-		}
-
-		@Test // #2418
-		void endingStringMatcherShouldWork() {
-			// given
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(nextIdAsString());
-			sampleEntity.setMessage("hello world");
-			sampleEntity.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(nextIdAsString());
-			sampleEntity2.setMessage("bye world");
-			sampleEntity2.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntity3 = new SampleEntity();
-			sampleEntity3.setDocumentId(nextIdAsString());
-			sampleEntity3.setMessage("hola mundo");
-			sampleEntity3.setVersion(System.currentTimeMillis());
-
-			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(3L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setMessage("world");
-			repository
-					.findAll(Example.of(probe,
-							ExampleMatcher.matching().withMatcher("message",
-									ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.ENDING))))
-					// then
-					.as(StepVerifier::create) //
-					.expectNextSequence(List.of(sampleEntity, sampleEntity2)) //
-					.verifyComplete();
-		}
-
-		@Test // #2418
-		void regexStringMatcherShouldWork() {
-			// given
-			SampleEntity sampleEntity = new SampleEntity();
-			sampleEntity.setDocumentId(nextIdAsString());
-			sampleEntity.setMessage("hello world");
-			sampleEntity.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntity2 = new SampleEntity();
-			sampleEntity2.setDocumentId(nextIdAsString());
-			sampleEntity2.setMessage("bye world");
-			sampleEntity2.setVersion(System.currentTimeMillis());
-
-			SampleEntity sampleEntity3 = new SampleEntity();
-			sampleEntity3.setDocumentId(nextIdAsString());
-			sampleEntity3.setMessage("hola mundo");
-			sampleEntity3.setVersion(System.currentTimeMillis());
-
-			repository.saveAll(List.of(sampleEntity, sampleEntity2, sampleEntity3)) //
-					.as(StepVerifier::create) //
-					.expectNextCount(3L) //
-					.verifyComplete();
-
-			// when
-			SampleEntity probe = new SampleEntity();
-			probe.setMessage("[(hello)(hola)].*");
-			repository
-					.findAll(Example.of(probe,
-							ExampleMatcher.matching().withMatcher("message",
-									ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.REGEX))))
-					// then
-					.as(StepVerifier::create) //
-					.expectNextSequence(List.of(sampleEntity, sampleEntity3)) //
-					.verifyComplete();
-		}
-
+		// when
+		SampleEntity probe = new SampleEntity();
+		probe.setMessage("[(hello)(hola)].*");
+		repository
+				.findAll(Example.of(probe,
+						ExampleMatcher.matching().withMatcher("message",
+								ExampleMatcher.GenericPropertyMatcher.of(ExampleMatcher.StringMatcher.REGEX))))
+				// then
+				.as(StepVerifier::create) //
+				.expectNextSequence(List.of(sampleEntity, sampleEntity3)) //
+				.verifyComplete();
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
