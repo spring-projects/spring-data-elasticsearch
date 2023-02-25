@@ -82,6 +82,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	private final @Nullable String annotatedFieldName;
 	@Nullable private PropertyValueConverter propertyValueConverter;
 	private final boolean storeNullValue;
+	private final boolean storeEmptyValue;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -106,6 +107,7 @@ public class SimpleElasticsearchPersistentProperty extends
 		initPropertyValueConverter();
 
 		storeNullValue = isField && getRequiredAnnotation(Field.class).storeNullValue();
+		storeEmptyValue = isField ? getRequiredAnnotation(Field.class).storeEmptyValue() : true;
 	}
 
 	@Override
@@ -132,6 +134,11 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean storeNullValue() {
 		return storeNullValue;
+	}
+
+	@Override
+	public boolean storeEmptyValue() {
+		return storeEmptyValue;
 	}
 
 	protected boolean hasExplicitFieldName() {
