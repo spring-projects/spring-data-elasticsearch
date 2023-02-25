@@ -960,6 +960,10 @@ public class MappingElasticsearchConverter
 					continue;
 				}
 
+				if (!property.storeEmptyValue() && hasEmptyValue(value)) {
+					continue;
+				}
+
 				if (property.hasPropertyValueConverter()) {
 					value = propertyConverterWrite(property, value);
 					sink.set(property, value);
@@ -986,6 +990,16 @@ public class MappingElasticsearchConverter
 					}
 				}
 			}
+		}
+
+		private static boolean hasEmptyValue(Object value) {
+
+			if (value instanceof String s && s.isEmpty() || value instanceof Collection<?> c && c.isEmpty()
+					|| value instanceof Map<?, ?> m && m.isEmpty()) {
+				return true;
+			}
+
+			return false;
 		}
 
 		@SuppressWarnings("unchecked")

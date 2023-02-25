@@ -1893,6 +1893,35 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, true);
 	}
 
+	@Test // #2290
+	@DisplayName("should respect field setting for empty properties")
+	void shouldRespectFieldSettingForEmptyProperties() throws JSONException {
+		@Language("JSON")
+		var expected = """
+				{
+					"_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$EntityWithPropertiesThatMightBeEmpty",
+					"id": "42",
+					"stringToWriteWhenEmpty": "",
+					"listToWriteWhenEmpty": [],
+					"mapToWriteWhenEmpty": {}
+				}
+				""";
+		var entity = new EntityWithPropertiesThatMightBeEmpty();
+		entity.setId("42");
+		entity.setStringToWriteWhenEmpty("");
+		entity.setStringToNotWriteWhenEmpty("");
+		entity.setListToWriteWhenEmpty(emptyList());
+		entity.setListToNotWriteWhenEmpty(emptyList());
+		entity.setMapToWriteWhenEmpty(emptyMap());
+		entity.setMapToNotWriteWhenEmpty(emptyMap());
+
+		Document document = Document.create();
+		mappingElasticsearchConverter.write(entity, document);
+		String json = document.toJson();
+
+		assertEquals(expected, json, true);
+	}
+
 	// region entities
 	public static class Sample {
 		@Nullable public @ReadOnlyProperty String readOnly;
@@ -2972,6 +3001,91 @@ public class MappingElasticsearchConverterUnitTests {
 
 		public void setText(@Nullable String text) {
 			this.text = text;
+		}
+	}
+
+	static class EntityWithPropertiesThatMightBeEmpty {
+		@Nullable private String id;
+
+		@Field(type = FieldType.Text)
+		@Nullable private String stringToWriteWhenEmpty;
+
+		@Field(type = FieldType.Text, storeEmptyValue = false)
+		@Nullable private String stringToNotWriteWhenEmpty;
+
+		@Field(type = FieldType.Nested)
+		@Nullable private List<String> listToWriteWhenEmpty;
+
+		@Field(type = FieldType.Nested, storeEmptyValue = false)
+		@Nullable private List<String> listToNotWriteWhenEmpty;
+
+		@Field(type = FieldType.Nested)
+		@Nullable private Map<String, String> mapToWriteWhenEmpty;
+
+		@Field(type = FieldType.Nested, storeEmptyValue = false)
+		@Nullable private Map<String, String> mapToNotWriteWhenEmpty;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getStringToWriteWhenEmpty() {
+			return stringToWriteWhenEmpty;
+		}
+
+		public void setStringToWriteWhenEmpty(@Nullable String stringToWriteWhenEmpty) {
+			this.stringToWriteWhenEmpty = stringToWriteWhenEmpty;
+		}
+
+		@Nullable
+		public String getStringToNotWriteWhenEmpty() {
+			return stringToNotWriteWhenEmpty;
+		}
+
+		public void setStringToNotWriteWhenEmpty(@Nullable String stringToNotWriteWhenEmpty) {
+			this.stringToNotWriteWhenEmpty = stringToNotWriteWhenEmpty;
+		}
+
+		@Nullable
+		public List<String> getListToWriteWhenEmpty() {
+			return listToWriteWhenEmpty;
+		}
+
+		public void setListToWriteWhenEmpty(@Nullable List<String> listToWriteWhenEmpty) {
+			this.listToWriteWhenEmpty = listToWriteWhenEmpty;
+		}
+
+		@Nullable
+		public List<String> getListToNotWriteWhenEmpty() {
+			return listToNotWriteWhenEmpty;
+		}
+
+		public void setListToNotWriteWhenEmpty(@Nullable List<String> listToNotWriteWhenEmpty) {
+			this.listToNotWriteWhenEmpty = listToNotWriteWhenEmpty;
+		}
+
+		@Nullable
+		public Map<String, String> getMapToWriteWhenEmpty() {
+			return mapToWriteWhenEmpty;
+		}
+
+		public void setMapToWriteWhenEmpty(@Nullable Map<String, String> mapToWriteWhenEmpty) {
+			this.mapToWriteWhenEmpty = mapToWriteWhenEmpty;
+		}
+
+		@Nullable
+		public Map<String, String> getMapToNotWriteWhenEmpty() {
+			return mapToNotWriteWhenEmpty;
+		}
+
+		public void setMapToNotWriteWhenEmpty(@Nullable Map<String, String> mapToNotWriteWhenEmpty) {
+			this.mapToNotWriteWhenEmpty = mapToNotWriteWhenEmpty;
 		}
 	}
 	// endregion

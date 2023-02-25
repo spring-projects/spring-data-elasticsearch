@@ -210,4 +210,12 @@ public @interface Field {
 	 * @since 4.3
 	 */
 	boolean excludeFromSource() default false;
+
+	/**
+	 * when this field is a {{@link String}}, a {{@link java.util.Collection}} or a {{@link java.util.Map}} that is empty
+	 * this property controlls whether the empty value is sent to Elasticsearch.
+	 *
+	 * @since 5.1
+	 */
+	boolean storeEmptyValue() default true;
 }

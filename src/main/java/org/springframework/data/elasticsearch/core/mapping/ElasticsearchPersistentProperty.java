@@ -75,6 +75,13 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	boolean storeNullValue();
 
 	/**
+	 * @return true if empty values ({{@link String}}, or {{@link java.util.Collection}} or {{@link java.util.Map}})
+	 *         should be store in Elasticsearch.
+	 * @since 5.1
+	 */
+	boolean storeEmptyValue();
+
+	/**
 	 * @return {@literal true} if this is a GeoPoint property
 	 * @since 4.1
 	 */
@@ -100,7 +107,7 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 
 	/**
 	 * @return {@literal true} if this is a property annotated with
-	 * {@link org.springframework.data.elasticsearch.annotations.IndexedIndexName}.
+	 *         {@link org.springframework.data.elasticsearch.annotations.IndexedIndexName}.
 	 * @since 5.1
 	 */
 	boolean isIndexedIndexNameProperty();
