@@ -478,6 +478,12 @@ public interface Query {
 	List<DocValueField> getDocValueFields();
 
 	/**
+	 * @return the list of scripted fields for the query
+	 * @since 5.1
+	 */
+	List<ScriptedField> getScriptedFields();
+
+	/**
 	 * @since 4.3
 	 */
 	enum SearchType {

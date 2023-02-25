@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -48,7 +47,6 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	private final Map<String, Aggregation> aggregations = new LinkedHashMap<>();
 	@Nullable private Suggester suggester;
 	@Nullable private FieldCollapse fieldCollapse;
-	private final List<ScriptedField> scriptedFields = new ArrayList<>();
 	private List<SortOptions> sortOptions = new ArrayList<>();
 	private Map<String, JsonData> searchExtensions = new LinkedHashMap<>();
 
@@ -79,10 +77,6 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	@Nullable
 	public FieldCollapse getFieldCollapse() {
 		return fieldCollapse;
-	}
-
-	public List<ScriptedField> getScriptedFields() {
-		return scriptedFields;
 	}
 
 	public List<SortOptions> getSortOptions() {
@@ -149,17 +143,10 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		return this;
 	}
 
-	public NativeQueryBuilder withScriptedField(ScriptedField scriptedField) {
-
-		Assert.notNull(scriptedField, "scriptedField must not be null");
-
-		this.scriptedFields.add(scriptedField);
-		return this;
-	}
-
 	public NativeQueryBuilder withSort(List<SortOptions> values) {
 
 		Assert.notEmpty(values, "values must not be empty");
+
 		sortOptions.clear();
 		sortOptions.addAll(values);
 
