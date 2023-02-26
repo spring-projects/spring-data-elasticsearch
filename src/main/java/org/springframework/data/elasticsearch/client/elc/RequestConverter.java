@@ -55,6 +55,7 @@ import jakarta.json.stream.JsonParser;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -144,14 +145,12 @@ class RequestConverter {
 		createRequestBuilder.index(indexCoordinates.getIndexName());
 
 		// note: the new client does not support the index.storeType anymore
-		String settingsJson = Document.from(settings).toJson();
-		IndexSettings indexSettings = fromJson(settingsJson, IndexSettings._DESERIALIZER);
-		createRequestBuilder.settings(indexSettings);
+		createRequestBuilder.settings(IndexSettings.of(b -> b //
+				.withJson(new StringReader(Document.from(settings).toJson()))));
 
 		if (mapping != null) {
-			String mappingJson = mapping.toJson();
-			TypeMapping typeMapping = fromJson(mappingJson, TypeMapping._DESERIALIZER);
-			createRequestBuilder.mappings(typeMapping);
+			createRequestBuilder.mappings(TypeMapping.of(b -> b //
+					.withJson(new StringReader(mapping.toJson()))));
 		}
 
 		return createRequestBuilder.build();
@@ -243,11 +242,12 @@ class RequestConverter {
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 		Assert.notNull(mapping, "mapping must not be null");
 
-		PutMappingRequest.Builder builder = new PutMappingRequest.Builder();
-		builder.index(Arrays.asList(indexCoordinates.getIndexNames()));
-		addPropertiesToMapping(builder, mapping);
+		PutMappingRequest request = new PutMappingRequest.Builder() //
+				.withJson(new StringReader(mapping.toJson())) //
+				.index(Arrays.asList(indexCoordinates.getIndexNames())) //
+				.build();
 
-		return builder.build();
+		return request;
 	}
 
 	public GetMappingRequest indicesGetMappingRequest(IndexCoordinates indexCoordinates) {
@@ -255,23 +255,6 @@ class RequestConverter {
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
 		return new GetMappingRequest.Builder().index(Arrays.asList(indexCoordinates.getIndexNames())).build();
-	}
-
-	private void addPropertiesToMapping(PutMappingRequest.Builder builder, Document mapping) {
-		Object properties = mapping.get("properties");
-
-		if (properties != null) {
-
-			if (properties instanceof Map) {
-				Map<String, Property> propertiesMap = new HashMap<>();
-				// noinspection unchecked
-				((Map<String, Object>) properties).forEach((key, value) -> {
-					Property property = getProperty(value);
-					propertiesMap.put(key, property);
-				});
-				builder.properties(propertiesMap);
-			}
-		}
 	}
 
 	private Property getProperty(Object value) {
