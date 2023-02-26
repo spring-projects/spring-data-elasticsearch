@@ -43,7 +43,16 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Dynamic;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.annotations.TermVector;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
@@ -205,11 +214,37 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 	}
 
 	@Test // #1767
-	@DisplayName("should write dynamic mapping annotations")
-	void shouldWriteDynamicMappingAnnotations() {
+	@DisplayName("should write dynamic mapping annotations on create")
+	void shouldWriteDynamicMappingAnnotationsOnCreate() {
 
 		IndexOperations indexOps = operations.indexOps(DynamicMappingAnnotationEntity.class);
 		indexOps.createWithMapping();
+
+		var mapping = indexOps.getMapping();
+		var dynamic = mapping.get("dynamic");
+		if (dynamic instanceof String s) {
+			assertThat(dynamic).isEqualTo("false");
+		} else {
+			assertThat(mapping.get("dynamic")).isEqualTo(false);
+		}
+	}
+
+	@Test // #2478
+	@DisplayName("should write dynamic mapping annotations on put")
+	void shouldWriteDynamicMappingAnnotationsOnPut() {
+
+		IndexOperations indexOps = operations.indexOps(DynamicMappingAnnotationEntity.class);
+		indexOps.create();
+
+		indexOps.putMapping();
+
+		var mapping = indexOps.getMapping();
+		var dynamic = mapping.get("dynamic");
+		if (dynamic instanceof String s) {
+			assertThat(dynamic).isEqualTo("false");
+		} else {
+			assertThat(mapping.get("dynamic")).isEqualTo(false);
+		}
 	}
 
 	@Test // #1871
