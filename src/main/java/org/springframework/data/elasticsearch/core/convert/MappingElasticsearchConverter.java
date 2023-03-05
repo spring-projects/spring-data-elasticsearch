@@ -941,7 +941,8 @@ public class MappingElasticsearchConverter
 
 				if (!property.isWritable() //
 						|| property.isIndexedIndexNameProperty() //
-						|| (property.isIdProperty() && !entity.storeIdInSource())) {
+						|| (property.isIdProperty() && !entity.storeIdInSource()) //
+						|| (property.isVersionProperty() && !entity.storeVersionInSource())) {
 					continue;
 				}
 
