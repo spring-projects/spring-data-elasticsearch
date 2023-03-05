@@ -50,6 +50,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.ReadOnlyProperty;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.TypeAlias;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
 import org.springframework.data.domain.Range;
@@ -1893,6 +1894,30 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, true);
 	}
 
+	@Test // #2364
+	@DisplayName("should not write version property to document source if configured so")
+	void shouldNotWriteVersionPropertyToDocumentSourceIfConfiguredSo() throws JSONException {
+
+		@Language("JSON")
+		var expected = """
+				{
+					"_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$DontWriteVersionToSourceEntity",
+					"id": "42",
+					"text": "some text"
+				}
+				""";
+		var entity = new DontWriteVersionToSourceEntity();
+		entity.setId("42");
+		entity.setVersion(7L);
+		entity.setText("some text");
+
+		Document document = Document.create();
+		mappingElasticsearchConverter.write(entity, document);
+		String json = document.toJson();
+
+		assertEquals(expected, json, true);
+	}
+
 	@Test // #2290
 	@DisplayName("should respect field setting for empty properties")
 	void shouldRespectFieldSettingForEmptyProperties() throws JSONException {
@@ -2992,6 +3017,43 @@ public class MappingElasticsearchConverterUnitTests {
 
 		public void setId(@Nullable String id) {
 			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
+	}
+
+	@org.springframework.data.elasticsearch.annotations.Document(indexName = "doesnt-matter",
+			storeVersionInSource = false)
+	static class DontWriteVersionToSourceEntity {
+		@Nullable private String id;
+		@Version
+		@Nullable private Long version;
+		@Nullable
+		@Field(type = FieldType.Text) private String text;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable Long version) {
+			this.version = version;
 		}
 
 		@Nullable

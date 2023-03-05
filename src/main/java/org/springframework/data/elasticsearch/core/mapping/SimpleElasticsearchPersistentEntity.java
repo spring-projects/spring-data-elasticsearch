@@ -84,6 +84,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
 
 	private final boolean storeIdInSource;
+	private final boolean storeVersionInSource;
 
 	public SimpleElasticsearchPersistentEntity(TypeInformation<T> typeInformation,
 			ContextConfiguration contextConfiguration) {
@@ -108,9 +109,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.createIndexAndMapping = document.createIndex();
 			this.dynamic = document.dynamic();
 			this.storeIdInSource = document.storeIdInSource();
+			this.storeVersionInSource = document.storeVersionInSource();
 		} else {
 			this.dynamic = Dynamic.INHERIT;
 			this.storeIdInSource = true;
+			this.storeVersionInSource = true;
 		}
 		Routing routingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Routing.class);
 
@@ -198,6 +201,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public boolean storeIdInSource() {
 		return storeIdInSource;
+	}
+
+	@Override
+	public boolean storeVersionInSource() {
+		return storeVersionInSource;
 	}
 
 	@Override

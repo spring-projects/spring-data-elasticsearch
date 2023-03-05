@@ -181,4 +181,10 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 * @since 5.1
 	 */
 	boolean storeIdInSource();
+
+	/**
+	 * @return the storeVersionInSource value from the document annotation.
+	 * @since 5.1
+	 */
+	boolean storeVersionInSource();
 }

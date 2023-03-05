@@ -86,6 +86,14 @@ public @interface Document {
 	boolean storeIdInSource() default true;
 
 	/**
+	 * Specifies if the version property should also be stored in the Elasticsearch document source. Default value is
+	 * true.
+	 *
+	 * @since 5.1
+	 */
+	boolean storeVersionInSource() default true;
+
+	/**
 	 * @since 4.3
 	 */
 	enum VersionType {
