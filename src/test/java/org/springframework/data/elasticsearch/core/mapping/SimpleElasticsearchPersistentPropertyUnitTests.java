@@ -34,8 +34,10 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ValueConverter;
+import org.springframework.data.elasticsearch.core.convert.AbstractPropertyValueConverter;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
+import org.springframework.data.mapping.PersistentProperty;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
@@ -258,6 +260,8 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		assertThat(
 				persistentEntity.getRequiredPersistentProperty("fieldWithClassBasedConverter").getPropertyValueConverter())
 						.isInstanceOf(ClassBasedValueConverter.class);
+		assertThat(persistentEntity.getRequiredPersistentProperty("fieldWithClassBasedDerivedFromAbstractValueConverter")
+				.getPropertyValueConverter()).isInstanceOf(ClassBasedDerivedFromAbstractValueConverter.class);
 		assertThat(
 				persistentEntity.getRequiredPersistentProperty("fieldWithEnumBasedConverter").getPropertyValueConverter())
 						.isInstanceOf(EnumBasedValueConverter.class);
@@ -354,10 +358,29 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 		@Nullable
 		@ValueConverter(ClassBasedValueConverter.class) private String fieldWithClassBasedConverter;
 		@Nullable
+		@ValueConverter(ClassBasedDerivedFromAbstractValueConverter.class) private String fieldWithClassBasedDerivedFromAbstractValueConverter;
+		@Nullable
 		@ValueConverter(EnumBasedValueConverter.class) private String fieldWithEnumBasedConverter;
 	}
 
 	private static class ClassBasedValueConverter implements PropertyValueConverter {
+
+		@Override
+		public Object write(Object value) {
+			return value;
+		}
+
+		@Override
+		public Object read(Object value) {
+			return value;
+		}
+	}
+
+	private static class ClassBasedDerivedFromAbstractValueConverter extends AbstractPropertyValueConverter {
+
+		public ClassBasedDerivedFromAbstractValueConverter(PersistentProperty<?> property) {
+			super(property);
+		}
 
 		@Override
 		public Object write(Object value) {
