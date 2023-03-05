@@ -35,6 +35,7 @@ import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.ValueConverter;
 import org.springframework.data.elasticsearch.annotations.WriteOnlyProperty;
+import org.springframework.data.elasticsearch.core.convert.AbstractPropertyValueConverter;
 import org.springframework.data.elasticsearch.core.convert.DatePropertyValueConverter;
 import org.springframework.data.elasticsearch.core.convert.DateRangePropertyValueConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchDateConverter;
@@ -243,7 +244,11 @@ public class SimpleElasticsearchPersistentProperty extends
 				}
 				propertyValueConverter = enumConstants[0];
 			} else {
-				propertyValueConverter = BeanUtils.instantiateClass(clazz);
+				if (AbstractPropertyValueConverter.class.isAssignableFrom(clazz)) {
+					propertyValueConverter = BeanUtils.instantiateClass(BeanUtils.getResolvableConstructor(clazz), this);
+				} else {
+					propertyValueConverter = BeanUtils.instantiateClass(clazz);
+				}
 			}
 		}
 	}

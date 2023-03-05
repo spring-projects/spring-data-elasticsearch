@@ -39,7 +39,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * Integration tests to check that {@link org.springframework.data.elasticsearch.annotations.ValueConverter} annotated
- * properties are handle correctly (method name derived queries, for
+ * properties are handled correctly (method name derived queries, for
  *
  * @{@link org.springframework.data.elasticsearch.core.query.Query} methods we don't know which parameters map to which
  *         property.
