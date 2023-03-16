@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.ParameterAccessor;
 
@@ -35,6 +36,11 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 
 	StubParameterAccessor(Object... values) {
 		this.values = values;
+	}
+
+	@Override
+	public ScrollPosition getScrollPosition() {
+		return null;
 	}
 
 	/*
