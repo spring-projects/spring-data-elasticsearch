@@ -20,7 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -61,6 +61,7 @@ import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.annotations.WriteOnlyProperty;
@@ -169,7 +170,6 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		assertThat(saved.getIndexedIndexName()).isEqualTo(indexNameProvider.indexName() + "-indexedindexname");
 	}
-
 
 	private Mono<Boolean> documentWithIdExistsInIndex(String id, String index) {
 		return operations.exists(id, IndexCoordinates.of(index));
@@ -1180,6 +1180,25 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 					assertThat(readEntity.getPart2()).isEqualTo(entity.getPart2()); //
 				}).verifyComplete();
 	}
+
+	@Test // #2496
+	@DisplayName("should save data from Flux and return saved data in a flux")
+	void shouldSaveDataFromFluxAndReturnSavedDataInAFlux() {
+
+		var count = 12_345;
+		var entityList = IntStream.rangeClosed(1, count)//
+				.mapToObj(SampleEntity::of) //
+				.collect(Collectors.toList());
+
+		var entityFlux = Flux.fromIterable(entityList);
+
+		operations.save(entityFlux, SampleEntity.class).collectList() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(savedEntities -> {
+					assertThat(savedEntities).isEqualTo(entityList);
+				}) //
+				.verifyComplete();
+	}
 	// endregion
 
 	// region Helper functions
@@ -1261,6 +1280,13 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		@Nullable private int rate;
 		@Nullable
 		@Version private Long version;
+
+		static SampleEntity of(int id) {
+			var entity = new SampleEntity();
+			entity.setId("" + id);
+			entity.setMessage(" message " + id);
+			return entity;
+		}
 
 		@Nullable
 		public String getId() {
@@ -1543,6 +1569,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 			this.part2 = part2;
 		}
 	}
+
 	@Document(indexName = "#{@indexNameProvider.indexName()}-indexedindexname")
 	private static class IndexedIndexNameEntity {
 		@Nullable
@@ -1550,8 +1577,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		@Nullable
 		@Field(type = Text) private String someText;
 		@Nullable
-		@IndexedIndexName
-		private String indexedIndexName;
+		@IndexedIndexName private String indexedIndexName;
 
 		@Nullable
 		public String getId() {
@@ -1579,5 +1605,6 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		public void setIndexedIndexName(@Nullable String indexedIndexName) {
 			this.indexedIndexName = indexedIndexName;
 		}
-	}	// endregion
+	}
+	// endregion
 }

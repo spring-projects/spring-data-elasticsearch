@@ -44,6 +44,9 @@ import org.springframework.util.Assert;
  * @since 4.0
  */
 public interface ReactiveDocumentOperations {
+
+	int FLUX_SAVE_BULK_SIZE = 500;
+
 	/**
 	 * Index the given entity, once available, extracting index from entity metadata.
 	 *
@@ -92,6 +95,61 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting the saved entity.
 	 */
 	<T> Mono<T> save(T entity, IndexCoordinates index);
+
+	/**
+	 * Indexes the entities into the index extracted from entity metadata.
+	 *
+	 * @param entities
+	 * @param clazz the class to get the index name from
+	 * @param <T> entity type
+	 * @return a Flux emitting the saved entities
+	 * @since 5.1
+	 */
+	default <T> Flux<T> save(Flux<T> entities, Class<?> clazz) {
+		return save(entities, clazz, FLUX_SAVE_BULK_SIZE);
+	}
+
+	/**
+	 * Indexes the entities into the index extracted from entity metadata. The entities are collected into batches of
+	 * {bulkSize} with a maximal timeout of 200 ms, see
+	 * {@link reactor.core.publisher.Flux#bufferTimeout(int, java.time .Duration)} and then sent in a bulk operation to
+	 * Elasticsearch.
+	 *
+	 * @param entities
+	 * @param clazz the class to get the index name from
+	 * @param bulkSize number of entities to put in a bulk request
+	 * @param <T> entity type
+	 * @return a Flux emitting the saved entities
+	 * @since 5.1
+	 */
+	<T> Flux<T> save(Flux<T> entities, Class<?> clazz, int bulkSize);
+
+	/**
+	 * Indexes the entities into the given index.
+	 *
+	 * @param entities the entities to save
+	 * @param index the index to save to
+	 * @param <T> entity type
+	 * @return a Flux emitting the saved entities
+	 * @since 5.1
+	 */
+	default <T> Flux<T> save(Flux<T> entities, IndexCoordinates index) {
+		return save(entities, index, FLUX_SAVE_BULK_SIZE);
+	}
+
+	/**
+	 * Indexes the entities into the given index. The entities are collected into batches of {bulkSize} with a maximal
+	 * timeout of 200 ms, see {@link reactor.core.publisher.Flux#bufferTimeout(int, java.time * .Duration)} and then sent
+	 * in a bulk operation to Elasticsearch.
+	 *
+	 * @param entities the entities to save
+	 * @param index the index to save to
+	 * @param bulkSize number of entities to put in a bulk request
+	 * @param <T> entity type
+	 * @return a Flux emitting the saved entities
+	 * @since 5.1
+	 */
+	<T> Flux<T> save(Flux<T> entities, IndexCoordinates index, int bulkSize);
 
 	/**
 	 * Index entities the index extracted from entity metadata.
