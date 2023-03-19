@@ -739,6 +739,24 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				.verifyComplete();
 	}
 
+	@Test // #2496
+	@DisplayName("should save data from Flux and return saved data in a flux")
+	void shouldSaveDataFromFluxAndReturnSavedDataInAFlux() {
+		var count = 12_345;
+		var entityList = IntStream.rangeClosed(1, count)//
+				.mapToObj(SampleEntity::of) //
+				.collect(Collectors.toList());
+
+		var entityFlux = Flux.fromIterable(entityList);
+
+		repository.saveAll(entityFlux).collectList() //
+				.as(StepVerifier::create) //
+				.consumeNextWith(savedEntities -> {
+					assertThat(savedEntities).isEqualTo(entityList);
+				}) //
+				.verifyComplete();
+	}
+
 	Mono<Void> bulkIndex(SampleEntity... entities) {
 		return operations.saveAll(Arrays.asList(entities), IndexCoordinates.of(indexNameProvider.indexName())).then();
 	}
@@ -828,6 +846,13 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		@Version private Long version;
 		@Field(name = "custom_field_name", type = FieldType.Text)
 		@Nullable private String customFieldNameMessage;
+
+		static SampleEntity of(int id) {
+			var entity = new SampleEntity();
+			entity.setId("" + id);
+			entity.setMessage(" message " + id);
+			return entity;
+		}
 
 		public SampleEntity() {}
 

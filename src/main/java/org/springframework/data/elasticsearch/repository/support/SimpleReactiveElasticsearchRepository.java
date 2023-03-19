@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,6 +29,7 @@ import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.util.Assert;
@@ -97,7 +97,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(entityStream, "EntityStream must not be null!");
 
-		return operations.saveAll(Flux.from(entityStream).collectList(), entityInformation.getIndexCoordinates())
+		return operations.save(Flux.from(entityStream), entityInformation.getIndexCoordinates())
 				.concatWith(doRefresh().then(Mono.empty()));
 	}
 

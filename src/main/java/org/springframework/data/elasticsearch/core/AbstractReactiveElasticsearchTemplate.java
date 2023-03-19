@@ -17,13 +17,17 @@ package org.springframework.data.elasticsearch.core;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.util.function.Tuple2;
 
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
@@ -205,6 +209,61 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	@Override
 	public <T> Mono<T> save(T entity) {
 		return save(entity, getIndexCoordinatesFor(entity.getClass()));
+	}
+
+	@Override
+	public <T> Flux<T> save(Flux<T> entities, Class<?> clazz, int bulkSize) {
+		return save(entities, getIndexCoordinatesFor(clazz), bulkSize);
+	}
+
+	@Override
+	public <T> Flux<T> save(Flux<T> entities, IndexCoordinates index, int bulkSize) {
+
+		Assert.notNull(entities, "entities must not be null");
+		Assert.notNull(index, "index must not be null");
+		Assert.isTrue(bulkSize > 0, "bulkSize must be greater than 0");
+
+		return Flux.defer(() -> {
+			Sinks.Many<T> sink = Sinks.many().unicast().onBackpressureBuffer();
+			entities //
+					.bufferTimeout(bulkSize, Duration.ofMillis(200)) //
+					.subscribe(new Subscriber<List<T>>() {
+						private Subscription subscription;
+						private AtomicBoolean upstreamComplete = new AtomicBoolean(false);
+
+						@Override
+						public void onSubscribe(Subscription subscription) {
+							this.subscription = subscription;
+							subscription.request(1);
+						}
+
+						@Override
+						public void onNext(List<T> entityList) {
+							saveAll(entityList, index) //
+									.map(sink::tryEmitNext) //
+									.doOnComplete(() -> {
+										if (!upstreamComplete.get()) {
+											subscription.request(1);
+										} else {
+											sink.tryEmitComplete();
+										}
+									}).subscribe();
+						}
+
+						@Override
+						public void onError(Throwable throwable) {
+							subscription.cancel();
+							sink.tryEmitError(throwable);
+						}
+
+						@Override
+						public void onComplete() {
+							upstreamComplete.set(true);
+						}
+					});
+			return sink.asFlux();
+		});
+
 	}
 
 	@Override

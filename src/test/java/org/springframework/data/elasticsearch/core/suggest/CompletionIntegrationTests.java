@@ -112,7 +112,6 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 		operations.bulkIndex(indexQueries, AnnotatedCompletionEntity.class);
 	}
 
-	// @DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingCompletionEntity() {
 
@@ -144,7 +143,6 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 		operations.get("1", CompletionEntity.class);
 	}
 
-	// @DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES issue 150")
 	@Test
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 
@@ -168,7 +166,6 @@ public abstract class CompletionIntegrationTests implements NewElasticsearchClie
 		assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
 	}
 
-	// @DisabledIf(value = "newElasticsearchClient", disabledReason = "todo #2139, ES 1issue 150")
 	@Test
 	public void shouldFindSuggestionsWithWeightsForGivenCriteriaQueryUsingAnnotatedCompletionEntity() {
 
