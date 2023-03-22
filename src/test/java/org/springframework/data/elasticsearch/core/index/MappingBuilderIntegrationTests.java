@@ -279,6 +279,14 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		indexOps.createWithMapping();
 	}
 
+	@Test // #2502
+	@DisplayName(" should write mapping with field name with dots")
+	void shouldWriteMappingWithFieldNameWithDots() {
+
+		IndexOperations indexOps = operations.indexOps(FieldNameDotsEntity.class);
+		indexOps.createWithMapping();
+	}
+
 	// region Entities
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class Book {
@@ -900,6 +908,13 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Field(type = FieldType.Wildcard) String wildcardField;
 		@Nullable
 		@Field(type = FieldType.Dense_Vector, dims = 1) String denseVectorField;
+	}
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	private static class FieldNameDotsEntity {
+		@Id
+		@Nullable private String id;
+		@Nullable
+		@Field(name = "dotted.field", type = Text) private String dottedField;
 	}
 	// endregion
 }

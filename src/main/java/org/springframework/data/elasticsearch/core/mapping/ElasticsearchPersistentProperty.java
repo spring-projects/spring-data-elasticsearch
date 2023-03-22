@@ -40,6 +40,12 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	String getFieldName();
 
 	/**
+	 * @return {@literal true} if the field name comes from an explicit value in the field annotation
+	 * @since 5.1
+	 */
+	boolean hasExplicitFieldName();
+
+	/**
 	 * Returns whether the current property is a {@link SeqNoPrimaryTerm} property.
 	 *
 	 * @return true if the type is {@link SeqNoPrimaryTerm}

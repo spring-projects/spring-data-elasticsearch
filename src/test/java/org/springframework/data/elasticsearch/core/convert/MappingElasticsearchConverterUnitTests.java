@@ -1947,6 +1947,48 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, json, true);
 	}
 
+	@Test // #2502
+	@DisplayName("should write entity with dotted field name")
+	void shouldWriteEntityWithDottedFieldName() throws JSONException {
+
+		@Language("JSON")
+		var expected = """
+				{
+					"_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$FieldNameDotsEntity",
+					"id": "42",
+					"dotted.field": "dotted field"
+				}
+			""";
+		var entity = new FieldNameDotsEntity();
+		entity.setId("42");
+		entity.setDottedField("dotted field");
+
+		Document document = Document.create();
+		mappingElasticsearchConverter.write(entity, document);
+		String json = document.toJson();
+
+		assertEquals(expected, json, true);
+	}
+
+	@Test // #2502
+	@DisplayName("should read entity with dotted field name")
+	void shouldReadEntityWithDottedFieldName() {
+
+		@Language("JSON")
+		String json = """
+				{
+				  "id": "42",
+				  "dotted.field": "dotted field"
+				}""";
+
+		Document document = Document.parse(json);
+
+		FieldNameDotsEntity entity = mappingElasticsearchConverter.read(FieldNameDotsEntity.class, document);
+
+		assertThat(entity.id).isEqualTo("42");
+		assertThat(entity.getDottedField()).isEqualTo("dotted field");
+	}
+
 	// region entities
 	public static class Sample {
 		@Nullable public @ReadOnlyProperty String readOnly;
@@ -3150,6 +3192,31 @@ public class MappingElasticsearchConverterUnitTests {
 			this.mapToNotWriteWhenEmpty = mapToNotWriteWhenEmpty;
 		}
 	}
+	static class FieldNameDotsEntity {
+		@Id
+		@Nullable private String id;
+		@Nullable
+		@Field(name = "dotted.field", type = FieldType.Text) private String dottedField;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getDottedField() {
+			return dottedField;
+		}
+
+		public void setDottedField(@Nullable String dottedField) {
+			this.dottedField = dottedField;
+		}
+	}
+
 	// endregion
 
 	private static String reverse(Object o) {

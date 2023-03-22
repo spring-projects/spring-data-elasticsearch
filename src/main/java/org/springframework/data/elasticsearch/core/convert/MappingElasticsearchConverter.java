@@ -1419,7 +1419,7 @@ public class MappingElasticsearchConverter
 
 			}
 
-			if (!fieldName.contains(".")) {
+			if (property.hasExplicitFieldName() || !fieldName.contains(".")) {
 				return target.get(fieldName);
 			}
 

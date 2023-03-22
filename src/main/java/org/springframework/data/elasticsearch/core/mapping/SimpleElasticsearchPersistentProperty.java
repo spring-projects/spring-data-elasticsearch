@@ -142,7 +142,8 @@ public class SimpleElasticsearchPersistentProperty extends
 		return storeEmptyValue;
 	}
 
-	protected boolean hasExplicitFieldName() {
+	@Override
+	public boolean hasExplicitFieldName() {
 		return StringUtils.hasText(getAnnotatedFieldName());
 	}
 
