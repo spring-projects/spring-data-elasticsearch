@@ -1065,6 +1065,30 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		assertEquals(expected, mapping, true);
 	}
+
+	@Test // #2502
+	@DisplayName("should use custom name with dots")
+	void shouldUseCustomNameWithDots() throws JSONException {
+
+		var expected = """
+					{
+					  "properties": {
+					    "_class": {
+					      "type": "keyword",
+					      "index": false,
+					      "doc_values": false
+					    },
+					    "dotted.field": {
+					      "type": "text"
+					    }
+					  }
+					}
+				""";
+		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameDotsEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
 	// region entities
 
 	@Document(indexName = "ignore-above-index")
@@ -2220,8 +2244,14 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable
 		@Field(type = Text) private String someText;
 		@Nullable
-		@IndexedIndexName
-		private String storedIndexName;
+		@IndexedIndexName private String storedIndexName;
+	}
+
+	private static class FieldNameDotsEntity {
+		@Id
+		@Nullable private String id;
+		@Nullable
+		@Field(name = "dotted.field", type = Text) private String dottedField;
 	}
 	// endregion
 }
