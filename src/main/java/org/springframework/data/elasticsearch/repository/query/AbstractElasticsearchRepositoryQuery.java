@@ -79,11 +79,13 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 		Query query = createQuery(parameters);
 
-		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
+		IndexCoordinates index = parameterAccessor
+				.getIndexCoordinatesOrDefaults(elasticsearchOperations.getIndexCoordinatesFor(clazz));
 
 		Object result = null;
 
 		if (isDeleteQuery()) {
+			index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
 			result = countOrGetDocumentsForDelete(query, parameterAccessor);
 			elasticsearchOperations.delete(query, clazz, index);
 			elasticsearchOperations.indexOps(index).refresh();

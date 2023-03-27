@@ -17,12 +17,13 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Optional;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.lang.NonNull;
 
 /**
  * Simple {@link ParameterAccessor} that returns the given parameters unfiltered.
@@ -95,6 +96,11 @@ class StubParameterAccessor implements ElasticsearchParameterAccessor {
 	@Override
 	public Object[] getValues() {
 		return this.values;
+	}
+
+	@Override
+	public IndexCoordinates getIndexCoordinatesOrDefaults(@NonNull IndexCoordinates defaults) {
+		return defaults;
 	}
 
 	/*

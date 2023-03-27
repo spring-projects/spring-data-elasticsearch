@@ -29,9 +29,10 @@ import org.springframework.data.util.TypeInformation;
  * @since 3.2
  */
 public class ElasticsearchParameters extends Parameters<ElasticsearchParameters, ElasticsearchParameter> {
-
 	private final List<ElasticsearchParameter> scriptedFields = new ArrayList<>();
 	private final List<ElasticsearchParameter> runtimeFields = new ArrayList<>();
+
+	private final int indexCoordinatesIndex;
 
 	public ElasticsearchParameters(Method method, TypeInformation<?> domainType) {
 
@@ -50,16 +51,34 @@ public class ElasticsearchParameters extends Parameters<ElasticsearchParameters,
 				runtimeFields.add(parameter);
 			}
 		}
+		this.indexCoordinatesIndex = initIndexCoordinatesIndex();
+	}
 
+	private int initIndexCoordinatesIndex() {
+		int index = 0;
+		List<Integer> foundIndices = new ArrayList<>();
+		for (ElasticsearchParameter parameter : this) {
+			if (parameter.isIndexCoordinatesParameter()) {
+				foundIndices.add(index);
+			}
+			index++;
+		}
+		if (foundIndices.size() > 1) {
+			throw new IllegalArgumentException(this + " can only contain at most one IndexCoordinates parameter.");
+		}
+		return foundIndices.isEmpty() ? -1 : foundIndices.get(0);
 	}
 
 	private ElasticsearchParameter parameterFactory(MethodParameter methodParameter, TypeInformation<?> domainType) {
 		return new ElasticsearchParameter(methodParameter, domainType);
 	}
 
+
 	private ElasticsearchParameters(List<ElasticsearchParameter> parameters) {
 		super(parameters);
+		this.indexCoordinatesIndex = initIndexCoordinatesIndex();
 	}
+
 
 	@Override
 	protected ElasticsearchParameters createFrom(List<ElasticsearchParameter> parameters) {
@@ -72,5 +91,13 @@ public class ElasticsearchParameters extends Parameters<ElasticsearchParameters,
 
 	List<ElasticsearchParameter> getRuntimeFields() {
 		return runtimeFields;
+	}
+
+	public boolean hasIndexCoordinatesParameter() {
+		return this.indexCoordinatesIndex != -1;
+	}
+
+	public int getIndexCoordinatesIndex() {
+		return indexCoordinatesIndex;
 	}
 }

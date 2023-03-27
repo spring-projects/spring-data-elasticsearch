@@ -143,11 +143,6 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 	}
 
 	@Override
-	public ElasticsearchParameters getParameters() {
-		return (ElasticsearchParameters) super.getParameters();
-	}
-
-	@Override
 	protected boolean isAllowedGenericType(ParameterizedType methodGenericReturnType) {
 		return super.isAllowedGenericType(methodGenericReturnType)
 				|| ReactiveWrappers.supports((Class<?>) methodGenericReturnType.getRawType());
