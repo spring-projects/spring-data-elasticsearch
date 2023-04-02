@@ -153,15 +153,6 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getHostNameVerifier()).contains(NoopHostnameVerifier.INSTANCE);
 	}
 
-	@Test // DATAES-719
-	void shouldHaveDefaultWebClientConfigurer() {
-		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
-				.connectedTo("foo", "bar") //
-				.build();
-
-		assertThat(clientConfiguration.getWebClientConfigurer()).isEqualTo(Function.identity());
-	}
-
 	@Test // #1885
 	@DisplayName("should use configured httpClientConfigurer as client configurer")
 	void shouldUseConfiguredHttpClientConfigurerAsClientConfigurer() {

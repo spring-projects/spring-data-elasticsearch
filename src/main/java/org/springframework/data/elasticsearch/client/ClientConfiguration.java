@@ -164,11 +164,6 @@ public interface ClientConfiguration {
 	Optional<String> getProxy();
 
 	/**
-	 * @return the function for configuring a WebClient.
-	 */
-	Function<WebClient, WebClient> getWebClientConfigurer();
-
-	/**
 	 * @return the client configuration callbacks
 	 * @since 4.3
 	 */

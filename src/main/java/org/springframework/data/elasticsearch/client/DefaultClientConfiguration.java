@@ -19,7 +19,6 @@ import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.net.ssl.HostnameVerifier;
@@ -28,7 +27,6 @@ import javax.net.ssl.SSLContext;
 import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.Nullable;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Default {@link ClientConfiguration} implementation.
@@ -50,7 +48,6 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final @Nullable String pathPrefix;
 	private final @Nullable HostnameVerifier hostnameVerifier;
 	private final @Nullable String proxy;
-	private final Function<WebClient, WebClient> webClientConfigurer;
 	private final HttpClientConfigCallback httpClientConfigurer;
 	private final Supplier<HttpHeaders> headersSupplier;
 	private final List<ClientConfigurationCallback<?>> clientConfigurers;
@@ -58,8 +55,8 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
 			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
 			@Nullable HostnameVerifier hostnameVerifier, @Nullable String proxy,
-			Function<WebClient, WebClient> webClientConfigurer, HttpClientConfigCallback httpClientConfigurer,
-			List<ClientConfigurationCallback<?>> clientConfigurers, Supplier<HttpHeaders> headersSupplier) {
+			HttpClientConfigCallback httpClientConfigurer, List<ClientConfigurationCallback<?>> clientConfigurers,
+			Supplier<HttpHeaders> headersSupplier) {
 
 		this.hosts = List.copyOf(hosts);
 		this.headers = headers;
@@ -70,7 +67,6 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.pathPrefix = pathPrefix;
 		this.hostnameVerifier = hostnameVerifier;
 		this.proxy = proxy;
-		this.webClientConfigurer = webClientConfigurer;
 		this.httpClientConfigurer = httpClientConfigurer;
 		this.clientConfigurers = clientConfigurers;
 		this.headersSupplier = headersSupplier;
@@ -120,11 +116,6 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	@Override
 	public Optional<String> getProxy() {
 		return Optional.ofNullable(proxy);
-	}
-
-	@Override
-	public Function<WebClient, WebClient> getWebClientConfigurer() {
-		return webClientConfigurer;
 	}
 
 	@Override
