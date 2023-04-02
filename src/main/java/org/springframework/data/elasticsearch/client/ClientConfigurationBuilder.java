@@ -59,7 +59,6 @@ class ClientConfigurationBuilder
 	private @Nullable String password;
 	private @Nullable String pathPrefix;
 	private @Nullable String proxy;
-	private final Function<WebClient, WebClient> webClientConfigurer = Function.identity();
 	private Supplier<HttpHeaders> headersSupplier = HttpHeaders::new;
 	@Deprecated private final HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
 	private final List<ClientConfiguration.ClientConfigurationCallback<?>> clientConfigurers = new ArrayList<>();
@@ -230,7 +229,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
-				hostnameVerifier, proxy, webClientConfigurer, httpClientConfigurer, clientConfigurers, headersSupplier);
+				hostnameVerifier, proxy, httpClientConfigurer, clientConfigurers, headersSupplier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {
