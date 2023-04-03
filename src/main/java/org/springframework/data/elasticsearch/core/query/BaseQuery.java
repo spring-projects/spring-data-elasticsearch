@@ -226,7 +226,7 @@ public class BaseQuery implements Query {
 	}
 
 	/**
-	 * Set Ids for a multi-get request with on this query.
+	 * Set Ids for a multi-get request run with this query. Not used in any other searches.
 	 *
 	 * @param ids list of id values
 	 */
@@ -255,7 +255,7 @@ public class BaseQuery implements Query {
 	}
 
 	/**
-	 * Set Ids with routing values for a multi-get request set on this query.
+	 * Set Ids with routing values for a multi-get request run with this query. Not used in any other searches.
 	 *
 	 * @param idsWithRouting list of id values, must not be {@literal null}
 	 * @since 4.3

@@ -250,6 +250,11 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return self();
 	}
 
+		/**
+		 * Set Ids for a multi-get request run with this query. Not used in any other searches.
+		 *
+		 * @param ids list of id values
+		 */
 	public SELF withIds(String... ids) {
 
 		this.ids.clear();
@@ -257,6 +262,11 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return self();
 	}
 
+		/**
+		 * Set Ids for a multi-get request run with this query. Not used in any other searches.
+		 *
+		 * @param ids list of id values
+		 */
 	public SELF withIds(Collection<String> ids) {
 
 		Assert.notNull(ids, "ids must not be null");
@@ -372,6 +382,12 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return self();
 	}
 
+		/**
+		 * Set Ids with routing values for a multi-get request run with this query. Not used in any other searches.
+		 *
+		 * @param idsWithRouting list of id values, must not be {@literal null}
+		 * @since 4.3
+		 */
 	public SELF withIdsWithRouting(List<Query.IdWithRouting> idsWithRouting) {
 
 		Assert.notNull(idsWithRouting, "idsWithRouting must not be null");
