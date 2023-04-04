@@ -42,7 +42,10 @@ public class InetSocketAddressParser {
 		String host;
 		String portString = null;
 
-		if (hostPortString.startsWith("[")) {
+		// Check if the host is surrounded by square brackets
+		boolean isBracketedHost = hostPortString.startsWith("[");
+
+		if (isBracketedHost) {
 			String[] hostAndPort = getHostAndPortFromBracketedHost(hostPortString);
 			host = hostAndPort[0];
 			portString = hostAndPort[1];
@@ -58,19 +61,8 @@ public class InetSocketAddressParser {
 			}
 		}
 
-		int port = defaultPort;
-		if (StringUtils.hasText(portString)) {
-			// Try to parse the whole port string as a number.
-			Assert.isTrue(!portString.startsWith("+"), String.format("Cannot parse port number: %s", hostPortString));
-			try {
-				port = Integer.parseInt(portString);
-			} catch (NumberFormatException e) {
-				throw new IllegalArgumentException(String.format("Cannot parse port number: %s", hostPortString));
-			}
-
-			Assert.isTrue(isValidPort(port), String.format("Port number out of range: %s", hostPortString));
-		}
-
+		int port = parsePort(portString, defaultPort);
+		Assert.isTrue(isValidPort(port), String.format("Port number out of range: %s", hostPortString));
 		return InetSocketAddress.createUnresolved(host, port);
 	}
 
@@ -114,4 +106,19 @@ public class InetSocketAddressParser {
 	private static boolean isValidPort(int port) {
 		return port >= 0 && port <= 65535;
 	}
+
+	private static int parsePort(String portString, int defaultPort) {
+		if (StringUtils.hasText(portString)) {
+			try {
+				return Integer.parseInt(portString);
+			} catch (NumberFormatException e) {
+				throw new IllegalArgumentException(String.format("Cannot parse port number: %s", portString));
+			}
+		} else {
+			return defaultPort;
+		}
+	}
+
 }
+
+

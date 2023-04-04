@@ -164,6 +164,11 @@ public interface ClientConfiguration {
 	Optional<String> getProxy();
 
 	/**
+	 * @return the function for configuring a WebClient.
+	 */
+	Function<WebClient, WebClient> getWebClientConfigurer();
+
+	/**
 	 * @return the client configuration callbacks
 	 * @since 4.3
 	 */
@@ -329,7 +334,7 @@ public interface ClientConfiguration {
 		 * @param proxy a proxy formatted as String {@literal host:port}.
 		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 */
-		TerminalClientConfigurationBuilder withProxy(String proxy);
+		TerminalClientConfigurationBuilder setProxy(String proxy);
 
 		/**
 		 * Register a {@link ClientConfigurationCallback} to configure the client.

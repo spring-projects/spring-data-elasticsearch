@@ -59,6 +59,7 @@ class ClientConfigurationBuilder
 	private @Nullable String password;
 	private @Nullable String pathPrefix;
 	private @Nullable String proxy;
+	private final Function<WebClient, WebClient> webClientConfigurer = Function.identity();
 	private Supplier<HttpHeaders> headersSupplier = HttpHeaders::new;
 	@Deprecated private final HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
 	private final List<ClientConfiguration.ClientConfigurationCallback<?>> clientConfigurers = new ArrayList<>();
@@ -71,7 +72,6 @@ class ClientConfigurationBuilder
 	public MaybeSecureClientConfigurationBuilder connectedTo(String... hostAndPorts) {
 
 		Assert.notEmpty(hostAndPorts, "At least one host is required");
-
 		this.hosts.addAll(Arrays.stream(hostAndPorts).map(ClientConfigurationBuilder::parse).toList());
 		return this;
 	}
@@ -91,7 +91,7 @@ class ClientConfigurationBuilder
 	}
 
 	@Override
-	public MaybeSecureClientConfigurationBuilder withProxy(String proxy) {
+	public MaybeSecureClientConfigurationBuilder setProxy(String proxy) {
 		Assert.hasLength(proxy, "proxy must not be null or empty");
 		this.proxy = proxy;
 		return this;
@@ -229,11 +229,10 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
-				hostnameVerifier, proxy, httpClientConfigurer, clientConfigurers, headersSupplier);
+				hostnameVerifier, proxy, webClientConfigurer, httpClientConfigurer, clientConfigurers, headersSupplier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {
 		return InetSocketAddressParser.parse(hostAndPort, ElasticsearchHost.DEFAULT_PORT);
 	}
-
 }

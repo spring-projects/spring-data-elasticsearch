@@ -159,7 +159,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 				.collect(Collectors.toList());
 	}
 
-	@Override
 	public void bulkUpdate(List<UpdateQuery> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 
 		Assert.notNull(queries, "queries must not be null");
@@ -182,7 +181,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return responseConverter.byQueryResponse(response);
 	}
 
-	@Override
 	public UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index) {
 
 		UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index, getRefreshPolicy(),
@@ -192,7 +190,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return UpdateResponse.of(result(response.result()));
 	}
 
-	@Override
 	public ByQueryResponse updateByQuery(UpdateQuery updateQuery, IndexCoordinates index) {
 
 		Assert.notNull(updateQuery, "updateQuery must not be null");
@@ -247,7 +244,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return execute(client -> client.delete(request)).id();
 	}
 
-	@Override
 	public ReindexResponse reindex(ReindexRequest reindexRequest) {
 
 		Assert.notNull(reindexRequest, "reindexRequest must not be null");
@@ -259,7 +255,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return responseConverter.reindexResponse(reindexResponse);
 	}
 
-	@Override
 	public String submitReindex(ReindexRequest reindexRequest) {
 
 		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
@@ -276,7 +271,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
-			IndexCoordinates index) {
+														  IndexCoordinates index) {
 
 		BulkRequest bulkRequest = requestConverter.documentBulkRequest(queries, bulkOptions, index, refreshPolicy);
 		BulkResponse bulkResponse = execute(client -> client.bulk(bulkRequest));
@@ -371,7 +366,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public <T> SearchScrollHits<T> searchScrollStart(long scrollTimeInMillis, Query query, Class<T> clazz,
-			IndexCoordinates index) {
+													 IndexCoordinates index) {
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(query.getPageable(), "pageable of query must not be null.");
@@ -385,7 +380,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public <T> SearchScrollHits<T> searchScrollContinue(String scrollId, long scrollTimeInMillis, Class<T> clazz,
-			IndexCoordinates index) {
+														IndexCoordinates index) {
 
 		Assert.notNull(scrollId, "scrollId must not be null");
 
@@ -397,7 +392,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private <T> SearchScrollHits<T> getSearchScrollHits(Class<T> clazz, IndexCoordinates index,
-			ResponseBody<EntityAsMap> response) {
+														ResponseBody<EntityAsMap> response) {
 		ReadDocumentCallback<T> documentCallback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 		SearchDocumentResponseCallback<SearchScrollHits<T>> callback = new ReadSearchScrollDocumentResponseCallback<>(clazz,
 				index);
@@ -452,7 +447,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
-			IndexCoordinates index) {
+										   IndexCoordinates index) {
 
 		Assert.notNull(queries, "queries must not be null");
 		Assert.notNull(classes, "classes must not be null");
@@ -471,7 +466,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public List<SearchHits<?>> multiSearch(List<? extends Query> queries, List<Class<?>> classes,
-			List<IndexCoordinates> indexes) {
+										   List<IndexCoordinates> indexes) {
 
 		Assert.notNull(queries, "queries must not be null");
 		Assert.notNull(classes, "classes must not be null");
@@ -657,7 +652,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		}
 
 		return bulkResponse.items().stream().map(
-				item -> new IndexedObjectInformation(item.id(), item.index(), item.seqNo(), item.primaryTerm(), item.version()))
+						item -> new IndexedObjectInformation(item.id(), item.index(), item.seqNo(), item.primaryTerm(), item.version()))
 				.collect(Collectors.toList());
 
 	}

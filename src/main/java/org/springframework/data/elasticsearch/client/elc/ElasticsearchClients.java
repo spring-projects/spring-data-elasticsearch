@@ -51,6 +51,7 @@ import org.apache.http.protocol.HttpContext;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
+import org.springframework.context.annotation.Bean;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
@@ -93,7 +94,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ReactiveElasticsearchClient}
 	 */
 	public static ReactiveElasticsearchClient createReactive(ClientConfiguration clientConfiguration,
-			@Nullable TransportOptions transportOptions) {
+															 @Nullable TransportOptions transportOptions) {
 
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 
@@ -118,7 +119,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ReactiveElasticsearchClient}
 	 */
 	public static ReactiveElasticsearchClient createReactive(RestClient restClient,
-			@Nullable TransportOptions transportOptions) {
+															 @Nullable TransportOptions transportOptions) {
 		return new ReactiveElasticsearchClient(getElasticsearchTransport(restClient, REACTIVE_CLIENT, transportOptions));
 	}
 
@@ -140,7 +141,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ElasticsearchClient}
 	 */
 	public static ElasticsearchClient createImperative(ClientConfiguration clientConfiguration,
-			TransportOptions transportOptions) {
+													   TransportOptions transportOptions) {
 		return createImperative(getRestClient(clientConfiguration), transportOptions);
 	}
 
@@ -162,7 +163,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ElasticsearchClient}
 	 */
 	public static ElasticsearchClient createImperative(RestClient restClient,
-			@Nullable TransportOptions transportOptions) {
+													   @Nullable TransportOptions transportOptions) {
 
 		Assert.notNull(restClient, "restClient must not be null");
 
@@ -246,14 +247,14 @@ public final class ElasticsearchClients {
 	}
 
 	private static ElasticsearchTransport getElasticsearchTransport(RestClient restClient, String clientType,
-			@Nullable TransportOptions transportOptions) {
+																	@Nullable TransportOptions transportOptions) {
 
 		TransportOptions.Builder transportOptionsBuilder = transportOptions != null ? transportOptions.toBuilder()
 				: new RestClientOptions(RequestOptions.DEFAULT).toBuilder();
 
 		ContentType jsonContentType = Version.VERSION == null ? ContentType.APPLICATION_JSON
 				: ContentType.create("application/vnd.elasticsearch+json",
-						new BasicNameValuePair("compatible-with", String.valueOf(Version.VERSION.major())));
+				new BasicNameValuePair("compatible-with", String.valueOf(Version.VERSION.major())));
 
 		Consumer<String> setHeaderIfNotPresent = header -> {
 			if (transportOptionsBuilder.build().headers().stream() //
@@ -403,4 +404,23 @@ public final class ElasticsearchClients {
 			return restClientBuilderCallback::apply;
 		}
 	}
+
+	/**
+	 * Provides the {@link ElasticsearchClient} to be used.
+	 *
+	 * @param restClient the low level RestClient to use
+	 * @return ElasticsearchClient instance
+	 */
+	@Bean
+	public static ElasticsearchClient elasticsearchClient(RestClient restClient) {
+
+		Assert.notNull(restClient, "restClient must not be null");
+
+		return ElasticsearchClients.createImperative(restClient, transportOptions());
+	}
+
+	public static TransportOptions transportOptions() {
+		return new RestClientOptions(RequestOptions.DEFAULT);
+	}
+
 }

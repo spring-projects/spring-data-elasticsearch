@@ -67,10 +67,7 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 	 */
 	@Bean
 	public ElasticsearchClient elasticsearchClient(RestClient restClient) {
-
-		Assert.notNull(restClient, "restClient must not be null");
-
-		return ElasticsearchClients.createImperative(restClient, transportOptions());
+		return ElasticsearchClients.elasticsearchClient(restClient);
 	}
 
 	/**
@@ -81,7 +78,7 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 	 */
 	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
 	public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter,
-			ElasticsearchClient elasticsearchClient) {
+														   ElasticsearchClient elasticsearchClient) {
 
 		ElasticsearchTemplate template = new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
 		template.setRefreshPolicy(refreshPolicy());
