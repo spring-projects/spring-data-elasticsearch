@@ -79,7 +79,7 @@ public class RestClientsTest {
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
 			ClientConfiguration clientConfiguration = configurationBuilder //
 					.connectedTo(serviceHost)//
-					.withProxy(proxyHost) //
+					.setProxy(proxyHost) //
 					.build();
 			ClientUnderTest clientUnderTest = clientUnderTestFactory.create(clientConfiguration);
 

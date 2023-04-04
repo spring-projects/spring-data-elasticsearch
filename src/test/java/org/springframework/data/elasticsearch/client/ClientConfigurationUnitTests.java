@@ -67,7 +67,7 @@ public class ClientConfigurationUnitTests {
 				.withDefaultHeaders(headers) //
 				.withConnectTimeout(Duration.ofDays(1)).withSocketTimeout(Duration.ofDays(2)) //
 				.withPathPrefix("myPathPrefix") //
-				.withProxy("localhost:8080").build();
+				.setProxy("localhost:8080").build();
 
 		assertThat(clientConfiguration.getEndpoints()).containsOnly(InetSocketAddress.createUnresolved("foo", 9200),
 				InetSocketAddress.createUnresolved("bar", 9200));

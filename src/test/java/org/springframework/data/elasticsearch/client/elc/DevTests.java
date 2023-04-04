@@ -353,7 +353,7 @@ public class DevTests {
 	private ClientConfiguration clientConfiguration() {
 		return ClientConfiguration.builder() //
 				.connectedTo("localhost:9200")//
-				.withBasicAuth("elastic", "hcraescitsale").withProxy("localhost:8080") //
+				.withBasicAuth("elastic", "hcraescitsale").setProxy("localhost:8080") //
 				.withHeaders(() -> {
 					HttpHeaders headers = new HttpHeaders();
 					headers.add("X-SpringDataElasticsearch-timestamp",

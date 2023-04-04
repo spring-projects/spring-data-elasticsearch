@@ -71,7 +71,7 @@ class ElasticsearchOperationsProducer {
 		String proxy = System.getenv("DATAES_ELASTICSEARCH_PROXY");
 
 		if (hasText(proxy)) {
-			configurationBuilder.withProxy(proxy);
+			configurationBuilder.setProxy(proxy);
 		}
 
 		ClientConfiguration clientConfiguration = configurationBuilder //

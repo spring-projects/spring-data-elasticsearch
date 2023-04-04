@@ -48,7 +48,7 @@ public class ElasticsearchTemplateConfiguration extends ElasticsearchConfigurati
 		String proxy = System.getenv("DATAES_ELASTICSEARCH_PROXY");
 
 		if (proxy != null) {
-			configurationBuilder = configurationBuilder.withProxy(proxy);
+			configurationBuilder = configurationBuilder.setProxy(proxy);
 		}
 
 		if (clusterConnectionInfo.isUseSsl()) {

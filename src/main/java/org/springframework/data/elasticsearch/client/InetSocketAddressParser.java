@@ -107,6 +107,11 @@ public class InetSocketAddressParser {
 		return port >= 0 && port <= 65535;
 	}
 
+	/**
+	 * @param portString A string representing a port number.
+	 * @param defaultPort default port to apply if {@code hostPostString} does not contain a port.
+	 * @return {@literal true} for valid port numbers.
+	 */
 	private static int parsePort(String portString, int defaultPort) {
 		if (StringUtils.hasText(portString)) {
 			try {

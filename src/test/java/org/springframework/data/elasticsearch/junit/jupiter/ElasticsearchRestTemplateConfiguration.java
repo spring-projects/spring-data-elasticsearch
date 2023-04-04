@@ -58,7 +58,7 @@ public class ElasticsearchRestTemplateConfiguration extends AbstractElasticsearc
 		String proxy = System.getenv("DATAES_ELASTICSEARCH_PROXY");
 
 		if (proxy != null) {
-			configurationBuilder = configurationBuilder.withProxy(proxy);
+			configurationBuilder = configurationBuilder.setProxy(proxy);
 		}
 
 		if (clusterConnectionInfo.isUseSsl()) {
