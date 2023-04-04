@@ -60,6 +60,7 @@ import org.springframework.lang.Nullable;
  * on port 9200 and an intercepting proxy on port 8080.
  *
  * @author Peter-Josef Meisch
+ * @author Taranjot Singh
  */
 @Disabled
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)

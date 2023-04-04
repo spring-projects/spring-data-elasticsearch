@@ -43,6 +43,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Peter-Josef Meisch
  * @author Huw Ayling-Miller
  * @author Henrique Amaral
+ * @author Taranjot Singh
  * @since 3.2
  */
 class ClientConfigurationBuilder

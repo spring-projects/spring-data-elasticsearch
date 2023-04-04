@@ -33,6 +33,7 @@ import org.springframework.util.Assert;
  * connection using the Elasticsearch Client.
  *
  * @author Peter-Josef Meisch
+ * @author Taranjot Singh
  * @since 4.4
  */
 public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurationSupport {

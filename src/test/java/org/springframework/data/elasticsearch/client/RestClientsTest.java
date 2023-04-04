@@ -59,6 +59,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
  * uses HTTP CONNECT on proxy requests which wiremock does not support.
  *
  * @author Peter-Josef Meisch
+ * @author Taranjot Singh
  */
 @HoverflyCapture(path = "target/hoverfly", config = @HoverflyConfig(proxyLocalHost = true, plainHttpTunneling = true))
 @ExtendWith(HoverflyExtension.class)

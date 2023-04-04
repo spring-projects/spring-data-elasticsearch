@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.core.RefreshPolicy;
  * Configuration for Spring Data Elasticsearch tests using an {@link ReactiveElasticsearchTemplate}.
  *
  * @author Peter-Josef Meisch
+ * @author Taranjot Singh
  * @since 4.4
  */
 @Configuration

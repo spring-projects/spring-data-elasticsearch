@@ -62,6 +62,7 @@ import org.springframework.util.Assert;
  * Utility class to create the different Elasticsearch clients
  *
  * @author Peter-Josef Meisch
+ * @author Taranjot Singh
  * @since 4.4
  */
 public final class ElasticsearchClients {

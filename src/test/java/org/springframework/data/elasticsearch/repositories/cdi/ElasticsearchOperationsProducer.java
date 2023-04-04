@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.junit.jupiter.ClusterConnectionInf
 /**
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @author Taranjot Singh
  */
 @ApplicationScoped
 class ElasticsearchOperationsProducer {

@@ -37,6 +37,7 @@ import org.springframework.data.elasticsearch.support.HttpHeaders;
  * Configuration for Spring Data Elasticsearch using {@link ElasticsearchRestTemplate}.
  *
  * @author Peter-Josef Meisch
+ * @author Taranjot Singh
  * @deprecated since 5.0
  */
 @Deprecated

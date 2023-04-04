@@ -37,6 +37,7 @@ import org.springframework.web.reactive.function.client.WebClient;
  * @author Christoph Strobl
  * @author Huw Ayling-Miller
  * @author Peter-Josef Meisch
+ * @author Taranjot Singh
  * @since 3.2
  */
 class DefaultClientConfiguration implements ClientConfiguration {
