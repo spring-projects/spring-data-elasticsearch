@@ -1,6 +1,9 @@
 = Spring Data contribution guidelines
 
 You find the contribution guidelines for Spring Data projects https://github.com/spring-projects/spring-data-build/blob/main/CONTRIBUTING.adoc[here].
+**Please read these carefully!**
+
+Do not submit a Pull Request before having created an issue and having discussed it. This prevents you from doing work that might be rejected.
 
 == Running the test locally
 
