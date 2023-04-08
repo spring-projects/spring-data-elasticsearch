@@ -45,6 +45,7 @@ import org.springframework.util.Assert;
  * @author Roman Puchkovskiy
  * @author Matt Gilene
  * @author Sascha Woo
+ * @author Jakob Hoeper
  * @since 4.0
  */
 public class SearchHitMapping<T> {
@@ -154,7 +155,8 @@ public class SearchHitMapping<T> {
 		}
 
 		return highlightFields.entrySet().stream().collect(Collectors.toMap(entry -> {
-			ElasticsearchPersistentProperty property = persistentEntity.getPersistentPropertyWithFieldName(entry.getKey());
+			ElasticsearchPersistentProperty property = persistentEntity
+					.getPersistentPropertyWithFieldName(entry.getKey());
 			return property != null ? property.getName() : entry.getKey();
 		}, Map.Entry::getValue));
 	}
@@ -199,9 +201,10 @@ public class SearchHitMapping<T> {
 		}
 
 		try {
+			ElasticsearchPersistentEntity<?> persistentEntityForType = mappingContext.getPersistentEntity(type);
 			NestedMetaData nestedMetaData = searchHits.getSearchHit(0).getContent().getNestedMetaData();
 			ElasticsearchPersistentEntityWithNestedMetaData persistentEntityWithNestedMetaData = getPersistentEntity(
-					mappingContext.getPersistentEntity(type), nestedMetaData);
+					persistentEntityForType, nestedMetaData);
 
 			if (persistentEntityWithNestedMetaData.entity != null) {
 				List<SearchHit<Object>> convertedSearchHits = new ArrayList<>();
@@ -219,7 +222,8 @@ public class SearchHitMapping<T> {
 							searchDocument.getSortValues(), //
 							searchDocument.getHighlightFields(), //
 							searchHit.getInnerHits(), //
-							persistentEntityWithNestedMetaData.nestedMetaData, //
+							getPersistentEntity(persistentEntityForType, //
+									searchHit.getContent().getNestedMetaData()).nestedMetaData, //
 							searchHit.getExplanation(), //
 							searchHit.getMatchedQueries(), //
 							targetObject));
