@@ -155,8 +155,7 @@ public class SearchHitMapping<T> {
 		}
 
 		return highlightFields.entrySet().stream().collect(Collectors.toMap(entry -> {
-			ElasticsearchPersistentProperty property = persistentEntity
-					.getPersistentPropertyWithFieldName(entry.getKey());
+			ElasticsearchPersistentProperty property = persistentEntity.getPersistentPropertyWithFieldName(entry.getKey());
 			return property != null ? property.getName() : entry.getKey();
 		}, Map.Entry::getValue));
 	}
