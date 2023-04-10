@@ -42,6 +42,7 @@ import org.springframework.lang.Nullable;
  * Testing the querying and parsing of inner_hits.
  *
  * @author Peter-Josef Meisch
+ * @author Jakob Hoeper
  */
 @SpringIntegrationTest
 public abstract class InnerHitsIntegrationTests {
@@ -58,8 +59,9 @@ public abstract class InnerHitsIntegrationTests {
 		indexOps.createWithMapping();
 
 		Inhabitant john = new Inhabitant("John", "Smith");
-		Inhabitant carla = new Inhabitant("Carla", "Miller");
-		House cornerHouse = new House("Round the corner", "7", Arrays.asList(john, carla));
+		Inhabitant carla1 = new Inhabitant("Carla", "Miller");
+		Inhabitant carla2 = new Inhabitant("Carla", "Nguyen");
+		House cornerHouse = new House("Round the corner", "7", Arrays.asList(john, carla1, carla2));
 		City metropole = new City("Metropole", Arrays.asList(cornerHouse));
 
 		Inhabitant jack = new Inhabitant("Jack", "Wayne");
@@ -76,7 +78,7 @@ public abstract class InnerHitsIntegrationTests {
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
-	@Test
+	@Test // #2521
 	void shouldReturnInnerHits() {
 
 		Query query = buildQueryForInnerHits("inner_hit_name", "hou-ses.in-habi-tants", "hou-ses.in-habi-tants.first-name",
@@ -91,7 +93,7 @@ public abstract class InnerHitsIntegrationTests {
 		softly.assertThat(searchHit.getInnerHits()).hasSize(1);
 
 		SearchHits<?> innerHits = searchHit.getInnerHits("inner_hit_name");
-		softly.assertThat(innerHits).hasSize(1);
+		softly.assertThat(innerHits).hasSize(2);
 
 		SearchHit<?> innerHit = innerHits.getSearchHit(0);
 		Object content = innerHit.getContent();
@@ -105,6 +107,10 @@ public abstract class InnerHitsIntegrationTests {
 		softly.assertThat(nestedMetaData.getOffset()).isEqualTo(0);
 		softly.assertThat(nestedMetaData.getChild().getField()).isEqualTo("inhabitants");
 		softly.assertThat(nestedMetaData.getChild().getOffset()).isEqualTo(1);
+
+		innerHit = innerHits.getSearchHit(1);
+		softly.assertThat(((Inhabitant) innerHit.getContent()).getLastName()).isEqualTo("Nguyen");
+		softly.assertThat(innerHit.getNestedMetaData().getChild().getOffset()).isEqualTo(2);
 
 		softly.assertAll();
 	}
