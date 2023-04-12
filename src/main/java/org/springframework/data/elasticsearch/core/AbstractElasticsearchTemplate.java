@@ -66,7 +66,7 @@ import org.springframework.util.StringUtils;
 /**
  * This class contains methods that are common to different implementations of the {@link ElasticsearchOperations}
  * interface that use different clients, like RestHighLevelClient and the next Java client from Elasticsearch or some
- * future implementation that might use an Opensearch client. This class must not contain imports or use classes that
+ * external implementation that might use a different client. This class must not contain imports or use classes that
  * are specific to one of these implementations.
  * <p>
  * <strong>Note:</strong> Although this class is public, it is not considered to be part of the official Spring Data
