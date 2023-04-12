@@ -20,7 +20,7 @@ package org.springframework.data.elasticsearch.junit.jupiter;
  */
 public enum IntegrationtestEnvironment {
 
-	ELASTICSEARCH, OPENSEARCH, UNDEFINED;
+	ELASTICSEARCH, UNDEFINED;
 
 	public static final String SYSTEM_PROPERTY = "sde.integration-test.environment";
 
@@ -29,7 +29,6 @@ public enum IntegrationtestEnvironment {
 		String property = System.getProperty(SYSTEM_PROPERTY, "elasticsearch");
 		return switch (property.toUpperCase()) {
 			case "ELASTICSEARCH" -> ELASTICSEARCH;
-			case "OPENSEARCH" -> OPENSEARCH;
 			default -> UNDEFINED;
 		};
 	}
