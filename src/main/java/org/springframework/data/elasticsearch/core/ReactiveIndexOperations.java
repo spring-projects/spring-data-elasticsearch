@@ -22,14 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
-import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
+import org.springframework.data.elasticsearch.core.index.*;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
 /**
@@ -226,8 +219,115 @@ public interface ReactiveIndexOperations {
 	 * @param putTemplateRequest template request parameters
 	 * @return Mono of {@literal true} if the template could be stored
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	Mono<Boolean> putTemplate(PutTemplateRequest putTemplateRequest);
+
+	/**
+	 * Writes a component index template that can be used in a composable index template.
+	 *
+	 * @param putComponentTemplateRequest index template request parameters
+	 * @return {@literal true} if successful
+	 * @since 5.1
+	 */
+	Mono<Boolean> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest);
+
+	/**
+	 * Get component template(s).
+	 *
+	 * @param getComponentTemplateRequest the getComponentTemplateRequest parameters
+	 * @return a {@link Flux} of {@link TemplateResponse}
+	 * @since 5.1
+	 */
+	Flux<TemplateResponse> getComponentTemplate(GetComponentTemplateRequest getComponentTemplateRequest);
+
+	/**
+	 * Checks wether a component index template exists.
+	 *
+	 * @param existsComponentTemplateRequest the parameters for the request
+	 * @return Mono with the value if the componentTemplate exists.
+	 * @since 5.1
+	 */
+	Mono<Boolean> existsComponentTemplate(ExistsComponentTemplateRequest existsComponentTemplateRequest);
+
+	/**
+	 * Deletes a component index template.
+	 *
+	 * @param deleteComponentTemplateRequest the parameters for the request
+	 * @return Mono with the value if the request was acknowledged.
+	 * @since 5.1
+	 */
+	Mono<Boolean> deleteComponentTemplate(DeleteComponentTemplateRequest deleteComponentTemplateRequest);
+
+	/**
+	 * Creates an index template.
+	 *
+	 * @param putIndexTemplateRequest template request parameters
+	 * @return {@literal true} if successful
+	 * @since 5.1
+	 */
+	Mono<Boolean> putIndexTemplate(PutIndexTemplateRequest putIndexTemplateRequest);
+
+	/**
+	 * Checks if an index template exists.
+	 *
+	 * @param indexTemplateName the name of the index template
+	 * @return Mono with the value if the index template exists.
+	 * @since 5.1
+	 */
+	default Mono<Boolean> existsIndexTemplate(String indexTemplateName) {
+		return existsIndexTemplate(new ExistsIndexTemplateRequest(indexTemplateName));
+	}
+
+	/**
+	 * Checks if an index template exists.
+	 *
+	 * @param existsIndexTemplateRequest the parameters for the request
+	 * @return Mono with the value if the index template exists.
+	 * @since 5.1
+	 */
+	Mono<Boolean> existsIndexTemplate(ExistsIndexTemplateRequest existsIndexTemplateRequest);
+
+	/**
+	 * Get index template(s).
+	 *
+	 * @param indexTemplateName the name of the index template
+	 * @return a {@link Flux} of {@link TemplateResponse}
+	 * @since 5.1
+	 */
+	default Flux<TemplateResponse> getIndexTemplate(String indexTemplateName) {
+		return getIndexTemplate(new GetIndexTemplateRequest(indexTemplateName));
+	}
+
+	/**
+	 * Get index template(s).
+	 *
+	 * @param getIndexTemplateRequest
+	 * @return a {@link Flux} of {@link TemplateResponse}
+	 * @since 5.1
+	 */
+	Flux<TemplateResponse> getIndexTemplate(GetIndexTemplateRequest getIndexTemplateRequest);
+
+	/**
+	 * Deletes an index template.
+	 *
+	 * @param indexTemplateName the name of the index template
+	 * @return Mono with the value if the request was acknowledged.
+	 * @since 5.1
+	 */
+	default Mono<Boolean> deleteIndexTemplate(String indexTemplateName) {
+		return deleteIndexTemplate(new DeleteIndexTemplateRequest(indexTemplateName));
+	}
+
+	/**
+	 * Deletes an index template.
+	 *
+	 * @param deleteIndexTemplateRequest the parameters for the request
+	 * @return Mono with the value if the request was acknowledged.
+	 * @since 5.1
+	 */
+	Mono<Boolean> deleteIndexTemplate(DeleteIndexTemplateRequest deleteIndexTemplateRequest);
 
 	/**
 	 * gets an index template using the legacy Elasticsearch interface.
@@ -235,7 +335,9 @@ public interface ReactiveIndexOperations {
 	 * @param templateName the template name
 	 * @return Mono of TemplateData, {@literal Mono.empty()} if no template with the given name exists.
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	default Mono<TemplateData> getTemplate(String templateName) {
 		return getTemplate(new GetTemplateRequest(templateName));
 	}
@@ -246,7 +348,9 @@ public interface ReactiveIndexOperations {
 	 * @param getTemplateRequest the request parameters
 	 * @return Mono of TemplateData, {@literal Mono.empty()} if no template with the given name exists.
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	Mono<TemplateData> getTemplate(GetTemplateRequest getTemplateRequest);
 
 	/**
@@ -256,7 +360,9 @@ public interface ReactiveIndexOperations {
 	 * @param templateName the template name
 	 * @return Mono of {@literal true} if the template exists
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	default Mono<Boolean> existsTemplate(String templateName) {
 		return existsTemplate(new ExistsTemplateRequest(templateName));
 	}
@@ -268,7 +374,9 @@ public interface ReactiveIndexOperations {
 	 * @param existsTemplateRequest template request parameters
 	 * @return Mono of {@literal true} if the template exists
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	Mono<Boolean> existsTemplate(ExistsTemplateRequest existsTemplateRequest);
 
 	/**
@@ -278,7 +386,9 @@ public interface ReactiveIndexOperations {
 	 * @param templateName the template name
 	 * @return Mono of {@literal true} if the template could be deleted
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	default Mono<Boolean> deleteTemplate(String templateName) {
 		return deleteTemplate(new DeleteTemplateRequest(templateName));
 	}
@@ -290,7 +400,9 @@ public interface ReactiveIndexOperations {
 	 * @param deleteTemplateRequest template request parameters
 	 * @return Mono of {@literal true} if the template could be deleted
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	Mono<Boolean> deleteTemplate(DeleteTemplateRequest deleteTemplateRequest);
 
 	// endregion

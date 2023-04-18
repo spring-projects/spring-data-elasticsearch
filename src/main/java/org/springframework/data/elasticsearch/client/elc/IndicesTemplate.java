@@ -37,15 +37,15 @@ import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.*;
+import org.springframework.data.elasticsearch.core.index.DeleteIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.MappingBuilder;
+import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
@@ -62,30 +62,37 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(IndicesTemplate.class);
 
+	// we need a cluster client as well because ES has put some methods from the indices API into the cluster client
+	// (component templates)
+	private final ClusterTemplate clusterTemplate;
 	protected final ElasticsearchConverter elasticsearchConverter;
 	@Nullable protected final Class<?> boundClass;
 	@Nullable protected final IndexCoordinates boundIndex;
 
-	public IndicesTemplate(ElasticsearchIndicesClient client, ElasticsearchConverter elasticsearchConverter,
-			Class<?> boundClass) {
+	public IndicesTemplate(ElasticsearchIndicesClient client, ClusterTemplate clusterTemplate,
+			ElasticsearchConverter elasticsearchConverter, Class<?> boundClass) {
 		super(client, elasticsearchConverter);
 
+		Assert.notNull(clusterTemplate, "cluster must not be null");
 		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null");
 		Assert.notNull(boundClass, "boundClass may not be null");
 
+		this.clusterTemplate = clusterTemplate;
 		this.elasticsearchConverter = elasticsearchConverter;
 		this.boundClass = boundClass;
 		this.boundIndex = null;
 
 	}
 
-	public IndicesTemplate(ElasticsearchIndicesClient client, ElasticsearchConverter elasticsearchConverter,
-			IndexCoordinates boundIndex) {
+	public IndicesTemplate(ElasticsearchIndicesClient client, ClusterTemplate clusterTemplate,
+												 ElasticsearchConverter elasticsearchConverter, IndexCoordinates boundIndex) {
 		super(client, elasticsearchConverter);
 
+		Assert.notNull(clusterTemplate, "cluster must not be null");
 		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null");
 		Assert.notNull(boundIndex, "boundIndex must not be null");
 
+		this.clusterTemplate = clusterTemplate;
 		this.elasticsearchConverter = elasticsearchConverter;
 		this.boundClass = null;
 		this.boundIndex = boundIndex;
@@ -336,6 +343,87 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		co.elastic.clients.elasticsearch.indices.DeleteTemplateRequest deleteTemplateRequestES = requestConverter
 				.indicesDeleteTemplateRequest(deleteTemplateRequest);
 		return execute(client -> client.deleteTemplate(deleteTemplateRequestES)).acknowledged();
+	}
+
+	@Override
+	public boolean putIndexTemplate(PutIndexTemplateRequest putIndexTemplateRequest) {
+
+		co.elastic.clients.elasticsearch.indices.PutIndexTemplateRequest putIndexTemplateRequestES = requestConverter
+				.indicesPutIndexTemplateRequest(putIndexTemplateRequest);
+
+		return execute(client -> client.putIndexTemplate(putIndexTemplateRequestES)).acknowledged();
+	}
+
+	@Override
+	public boolean existsIndexTemplate(ExistsIndexTemplateRequest existsIndexTemplateRequest) {
+
+		Assert.notNull(existsIndexTemplateRequest, "existsIndexTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest existsTemplateRequestES = requestConverter
+				.indicesExistsIndexTemplateRequest(existsIndexTemplateRequest);
+		return execute(client -> client.existsIndexTemplate(existsTemplateRequestES)).value();
+	}
+
+	@Override
+	public List<TemplateResponse> getIndexTemplate(GetIndexTemplateRequest getIndexTemplateRequest) {
+
+		Assert.notNull(getIndexTemplateRequest, "getIndexTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.indices.GetIndexTemplateRequest getIndexTemplateRequestES = requestConverter
+				.indicesGetIndexTemplateRequest(getIndexTemplateRequest);
+		var getIndexTemplateResponse = execute(client -> client.getIndexTemplate(getIndexTemplateRequestES));
+		return responseConverter.getIndexTemplates(getIndexTemplateResponse);
+	}
+
+	@Override
+	public boolean deleteIndexTemplate(DeleteIndexTemplateRequest deleteIndexTemplateRequest) {
+
+		Assert.notNull(deleteIndexTemplateRequest, "deleteIndexTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.indices.DeleteIndexTemplateRequest deleteIndexTemplateRequestES = requestConverter
+				.indicesDeleteIndexTemplateRequest(deleteIndexTemplateRequest);
+		return execute(client -> client.deleteIndexTemplate(deleteIndexTemplateRequestES)).acknowledged();
+	}
+
+	@Override
+	public boolean putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
+
+		Assert.notNull(putComponentTemplateRequest, "putComponentTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest putComponentTemplateRequestES = requestConverter
+				.clusterPutComponentTemplateRequest(putComponentTemplateRequest);
+		// the new Elasticsearch client has this call in the cluster index
+		return clusterTemplate.execute(client -> client.putComponentTemplate(putComponentTemplateRequestES)).acknowledged();
+	}
+
+	@Override
+	public boolean existsComponentTemplate(ExistsComponentTemplateRequest existsComponentTemplateRequest) {
+
+		Assert.notNull(existsComponentTemplateRequest, "existsComponentTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.cluster.ExistsComponentTemplateRequest existsComponentTemplateRequestES = requestConverter
+				.clusterExistsComponentTemplateRequest(existsComponentTemplateRequest);
+		return clusterTemplate.execute(client -> client.existsComponentTemplate(existsComponentTemplateRequestES)).value();
+	}
+
+	@Override
+	public List<TemplateResponse> getComponentTemplate(GetComponentTemplateRequest getComponentTemplateRequest) {
+
+		co.elastic.clients.elasticsearch.cluster.GetComponentTemplateRequest getComponentTemplateRequestES = requestConverter
+				.clusterGetComponentTemplateRequest(getComponentTemplateRequest);
+		var response = clusterTemplate.execute(client -> client.getComponentTemplate(getComponentTemplateRequestES));
+		return responseConverter.clusterGetComponentTemplates(response);
+	}
+
+	@Override
+	public boolean deleteComponentTemplate(DeleteComponentTemplateRequest deleteComponentTemplateRequest) {
+
+		Assert.notNull(deleteComponentTemplateRequest, "deleteComponentTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateRequest deleteComponentTemplateRequestES = requestConverter
+				.clusterDeleteComponentTemplateRequest(deleteComponentTemplateRequest);
+		return clusterTemplate.execute(client -> client.deleteComponentTemplate(deleteComponentTemplateRequestES))
+				.acknowledged();
 	}
 
 	@Override

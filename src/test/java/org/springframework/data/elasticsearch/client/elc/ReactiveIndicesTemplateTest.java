@@ -15,9 +15,17 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import co.elastic.clients.elasticsearch.indices.RefreshRequest;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,13 +35,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import reactor.core.publisher.Mono;
-import reactor.test.StepVerifier;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
 /**
  * @author Urs Keller
@@ -43,6 +44,7 @@ import static org.mockito.Mockito.*;
 class ReactiveIndicesTemplateTest {
 	@Mock private ElasticsearchConverter elasticsearchConverter;
 	@Mock private ReactiveElasticsearchIndicesClient client;
+	@Mock private ReactiveClusterTemplate cluster;
 	@Mock private ElasticsearchTransport transport;
 	@Mock private JsonpMapper jsonpMapper;
 	@Captor ArgumentCaptor<RefreshRequest> refreshRequest;
@@ -59,7 +61,8 @@ class ReactiveIndicesTemplateTest {
 	@Test
 	void refresh() {
 		IndexCoordinates indexCoordinate = IndexCoordinates.of("i1", "i2");
-		ReactiveIndicesTemplate template = new ReactiveIndicesTemplate(client, elasticsearchConverter, indexCoordinate);
+		ReactiveIndicesTemplate template = new ReactiveIndicesTemplate(client, cluster, elasticsearchConverter,
+				indexCoordinate);
 		doReturn(Mono.empty()).when(client).refresh(any(RefreshRequest.class));
 
 		template.refresh().as(StepVerifier::create).verifyComplete();

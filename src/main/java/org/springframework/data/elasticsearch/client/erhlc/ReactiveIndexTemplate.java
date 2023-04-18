@@ -15,13 +15,9 @@
  */
 package org.springframework.data.elasticsearch.client.erhlc;
 
-import static org.elasticsearch.client.Requests.*;
-import static org.springframework.util.StringUtils.*;
+import static org.elasticsearch.client.Requests.refreshRequest;
+import static org.springframework.util.StringUtils.hasText;
 
-import org.springframework.data.elasticsearch.core.IndexInformation;
-import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
-import org.springframework.data.elasticsearch.core.ReactiveResourceUtil;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -36,27 +32,21 @@ import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.settings.get.GetSettingsRequest;
 import org.elasticsearch.action.admin.indices.template.delete.DeleteIndexTemplateRequest;
 import org.elasticsearch.client.GetAliasesResponse;
-import org.elasticsearch.client.indices.CreateIndexRequest;
-import org.elasticsearch.client.indices.GetIndexRequest;
-import org.elasticsearch.client.indices.GetIndexTemplatesRequest;
-import org.elasticsearch.client.indices.GetMappingsRequest;
-import org.elasticsearch.client.indices.IndexTemplatesExistRequest;
+import org.elasticsearch.client.indices.*;
 import org.elasticsearch.client.indices.PutIndexTemplateRequest;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.core.IndexInformation;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
+import org.springframework.data.elasticsearch.core.ReactiveResourceUtil;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
-import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.ReactiveMappingBuilder;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
+import org.springframework.data.elasticsearch.core.index.*;
+import org.springframework.data.elasticsearch.core.index.DeleteComponentTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutComponentTemplateRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
@@ -288,6 +278,48 @@ class ReactiveIndexTemplate implements ReactiveIndexOperations {
 
 		PutIndexTemplateRequest putIndexTemplateRequest = requestFactory.putIndexTemplateRequest(putTemplateRequest);
 		return Mono.from(operations.executeWithIndicesClient(client -> client.putTemplate(putIndexTemplateRequest)));
+	}
+
+	@Override
+	public Mono<Boolean> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public Flux<TemplateResponse> getComponentTemplate(GetComponentTemplateRequest request) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public Mono<Boolean> existsComponentTemplate(ExistsComponentTemplateRequest existsComponentTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public Mono<Boolean> deleteComponentTemplate(DeleteComponentTemplateRequest deleteComponentTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public Mono<Boolean> putIndexTemplate(
+			org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest putIndexTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public Mono<Boolean> existsIndexTemplate(ExistsIndexTemplateRequest existsIndexTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public Flux<TemplateResponse> getIndexTemplate(GetIndexTemplateRequest getIndexTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public Mono<Boolean> deleteIndexTemplate(
+			org.springframework.data.elasticsearch.core.index.DeleteIndexTemplateRequest deleteIndexTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override

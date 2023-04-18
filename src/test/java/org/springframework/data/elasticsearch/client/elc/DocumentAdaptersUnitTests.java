@@ -35,7 +35,6 @@ import org.springframework.data.elasticsearch.core.document.SearchDocument;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-// todo #1973 check that all is tested what was in the elasticsearch7 version
 class DocumentAdaptersUnitTests {
 
 	private final JsonpMapper jsonpMapper = new JacksonJsonpMapper();

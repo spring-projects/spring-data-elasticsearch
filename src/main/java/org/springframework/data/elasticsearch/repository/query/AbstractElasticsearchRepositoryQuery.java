@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import java.util.Collections;
+
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
@@ -31,8 +33,6 @@ import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-
-import java.util.Collections;
 
 /**
  * AbstractElasticsearchRepositoryQuery
@@ -100,7 +100,7 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 			}
 		} else if (queryMethod.isStreamQuery()) {
 			query.setPageable(parameterAccessor.getPageable().isPaged() ? parameterAccessor.getPageable()
-				: PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
+					: PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
 			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.searchForStream(query, clazz, index));
 		} else if (queryMethod.isCollectionQuery()) {
 
@@ -109,7 +109,7 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 				if (itemCount == 0) {
 					result = new SearchHitsImpl<>(0, TotalHitsRelation.EQUAL_TO, Float.NaN, null,
-						query.getPointInTime() != null ? query.getPointInTime().id() : null, Collections.emptyList(), null, null);
+							query.getPointInTime() != null ? query.getPointInTime().id() : null, Collections.emptyList(), null, null);
 				} else {
 					query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 				}
@@ -126,8 +126,8 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 		}
 
 		return (queryMethod.isNotSearchHitMethod() && queryMethod.isNotSearchPageMethod())
-			? SearchHitSupport.unwrapSearchHits(result)
-			: result;
+				? SearchHitSupport.unwrapSearchHits(result)
+				: result;
 	}
 
 	public Query createQuery(Object[] parameters) {
@@ -147,9 +147,6 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 		if (sourceFilter != null) {
 			query.addSourceFilter(sourceFilter);
 		}
-
-		// todo #2338 remove that call, this should be done when the real request is built
-//		elasticsearchConverter.updateQuery(query, clazz);
 
 		return query;
 	}

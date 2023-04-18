@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono;
 import org.elasticsearch.action.admin.cluster.health.ClusterHealthRequest;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
+import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 
 /**
  * Default implementation of {@link ReactiveClusterOperations} using the {@link ReactiveElasticsearchOperations}.

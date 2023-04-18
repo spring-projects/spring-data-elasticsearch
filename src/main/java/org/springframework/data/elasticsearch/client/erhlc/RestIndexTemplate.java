@@ -44,14 +44,7 @@ import org.springframework.data.elasticsearch.core.AbstractIndexTemplate;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
-import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
+import org.springframework.data.elasticsearch.core.index.*;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -229,6 +222,48 @@ class RestIndexTemplate extends AbstractIndexTemplate implements IndexOperations
 				.deleteIndexTemplateRequest(deleteTemplateRequest);
 		return restTemplate.execute(
 				client -> client.indices().deleteTemplate(deleteIndexTemplateRequest, RequestOptions.DEFAULT).isAcknowledged());
+	}
+
+	@Override
+	public boolean putIndexTemplate(
+			org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest putIndexTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public boolean existsIndexTemplate(ExistsIndexTemplateRequest existsTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public List<TemplateResponse> getIndexTemplate(GetIndexTemplateRequest getIndexTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public boolean deleteIndexTemplate(
+			org.springframework.data.elasticsearch.core.index.DeleteIndexTemplateRequest deleteIndexTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public boolean putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public boolean existsComponentTemplate(ExistsComponentTemplateRequest existsComponentTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public List<TemplateResponse> getComponentTemplate(GetComponentTemplateRequest getComponentTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
+	}
+
+	@Override
+	public boolean deleteComponentTemplate(DeleteComponentTemplateRequest deleteComponentTemplateRequest) {
+		throw new UnsupportedOperationException("not implemented");
 	}
 
 	@Override

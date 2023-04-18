@@ -19,10 +19,16 @@ import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 import static org.springframework.util.CollectionUtils.isEmpty;
 
 import co.elastic.clients.elasticsearch._types.*;
-import co.elastic.clients.elasticsearch._types.mapping.*;
+import co.elastic.clients.elasticsearch._types.mapping.FieldType;
+import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
+import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.query_dsl.FieldAndFormat;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
-import co.elastic.clients.elasticsearch.cluster.HealthRequest;
+import co.elastic.clients.elasticsearch.cluster.*;
+import co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.ExistsComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
@@ -34,16 +40,15 @@ import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
 import co.elastic.clients.json.JsonpMapper;
-import jakarta.json.stream.JsonGenerator;
 import jakarta.json.stream.JsonParser;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -58,9 +63,12 @@ import org.springframework.data.elasticsearch.core.ScriptType;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
+import org.springframework.data.elasticsearch.core.index.DeleteIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -102,8 +110,100 @@ class RequestConverter {
 	}
 
 	// region Cluster client
-	public HealthRequest clusterHealthRequest() {
+	public co.elastic.clients.elasticsearch.cluster.HealthRequest clusterHealthRequest() {
 		return new HealthRequest.Builder().build();
+	}
+
+	public co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest clusterPutComponentTemplateRequest(
+			org.springframework.data.elasticsearch.core.index.PutComponentTemplateRequest putComponentTemplateRequest) {
+
+		Assert.notNull(putComponentTemplateRequest, "putComponentTemplateRequest must not be null");
+
+		return PutComponentTemplateRequest.of(b -> b //
+				.name(putComponentTemplateRequest.name()) //
+				.create(putComponentTemplateRequest.create()) //
+				.version(putComponentTemplateRequest.version()) //
+				.masterTimeout(time(putComponentTemplateRequest.masterTimeout())) //
+				.template(isb -> {
+					var componentTemplateData = putComponentTemplateRequest.template();
+					isb //
+							.mappings(typeMapping(componentTemplateData.mapping())) //
+							.settings(indexSettings(componentTemplateData.settings()));
+					// same code schema, but different Elasticsearch builder types
+					// noinspection DuplicatedCode
+					var aliasActions = componentTemplateData.aliasActions();
+					if (aliasActions != null) {
+						aliasActions.getActions().forEach(aliasAction -> {
+							if (aliasAction instanceof AliasAction.Add add) {
+								var parameters = add.getParameters();
+								// noinspection DuplicatedCode
+								String[] parametersAliases = parameters.getAliases();
+								if (parametersAliases != null) {
+									for (String aliasName : parametersAliases) {
+										isb.aliases(aliasName, aliasBuilder -> buildAlias(parameters, aliasBuilder));
+									}
+								}
+							}
+						});
+					}
+					return isb;
+				}));
+	}
+
+	private Alias.Builder buildAlias(AliasActionParameters parameters, Alias.Builder aliasBuilder) {
+
+		// noinspection DuplicatedCode
+		if (parameters.getRouting() != null) {
+			aliasBuilder.routing(parameters.getRouting());
+		}
+
+		if (parameters.getIndexRouting() != null) {
+			aliasBuilder.indexRouting(parameters.getIndexRouting());
+		}
+
+		if (parameters.getSearchRouting() != null) {
+			aliasBuilder.searchRouting(parameters.getSearchRouting());
+		}
+
+		if (parameters.getHidden() != null) {
+			aliasBuilder.isHidden(parameters.getHidden());
+		}
+
+		if (parameters.getWriteIndex() != null) {
+			aliasBuilder.isWriteIndex(parameters.getWriteIndex());
+		}
+
+		Query filterQuery = parameters.getFilterQuery();
+
+		if (filterQuery != null) {
+			co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getQuery(filterQuery, null);
+
+			if (esQuery != null) {
+				aliasBuilder.filter(esQuery);
+			}
+		}
+		return aliasBuilder;
+	}
+
+	public ExistsComponentTemplateRequest clusterExistsComponentTemplateRequest(
+			org.springframework.data.elasticsearch.core.index.ExistsComponentTemplateRequest existsComponentTemplateRequest) {
+
+		Assert.notNull(existsComponentTemplateRequest, "existsComponentTemplateRequest must not be null");
+
+		return ExistsComponentTemplateRequest.of(b -> b.name(existsComponentTemplateRequest.templateName()));
+	}
+
+	public GetComponentTemplateRequest clusterGetComponentTemplateRequest(
+			org.springframework.data.elasticsearch.core.index.GetComponentTemplateRequest getComponentTemplateRequest) {
+
+		Assert.notNull(getComponentTemplateRequest, "getComponentTemplateRequest must not be null");
+
+		return GetComponentTemplateRequest.of(b -> b.name(getComponentTemplateRequest.templateName()));
+	}
+
+	public DeleteComponentTemplateRequest clusterDeleteComponentTemplateRequest(
+			org.springframework.data.elasticsearch.core.index.DeleteComponentTemplateRequest deleteComponentTemplateRequest) {
+		return DeleteComponentTemplateRequest.of(b -> b.name(deleteComponentTemplateRequest.templateName()));
 	}
 	// endregion
 
@@ -121,20 +221,12 @@ class RequestConverter {
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 		Assert.notNull(settings, "settings must not be null");
 
-		CreateIndexRequest.Builder createRequestBuilder = new CreateIndexRequest.Builder();
-
-		createRequestBuilder.index(indexCoordinates.getIndexName());
-
 		// note: the new client does not support the index.storeType anymore
-		createRequestBuilder.settings(IndexSettings.of(b -> b //
-				.withJson(new StringReader(Document.from(settings).toJson()))));
-
-		if (mapping != null) {
-			createRequestBuilder.mappings(TypeMapping.of(b -> b //
-					.withJson(new StringReader(mapping.toJson()))));
-		}
-
-		return createRequestBuilder.build();
+		return new CreateIndexRequest.Builder() //
+				.index(indexCoordinates.getIndexName()) //
+				.settings(indexSettings(settings)) //
+				.mappings(typeMapping(mapping)) //
+				.build();
 	}
 
 	public RefreshRequest indicesRefreshRequest(IndexCoordinates indexCoordinates) {
@@ -235,18 +327,7 @@ class RequestConverter {
 
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
-		return new GetMappingRequest.Builder().index(Arrays.asList(indexCoordinates.getIndexNames())).build();
-	}
-
-	private Property getProperty(Object value) {
-		// noinspection SpellCheckingInspection
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		JsonGenerator generator = jsonpMapper.jsonProvider().createGenerator(baos);
-		jsonpMapper.serialize(value, generator);
-		generator.close();
-		// noinspection SpellCheckingInspection
-		ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
-		return fromJson(bais, Property._DESERIALIZER);
+		return new GetMappingRequest.Builder().index(List.of(indexCoordinates.getIndexNames())).build();
 	}
 
 	public GetIndicesSettingsRequest indicesGetSettingsRequest(IndexCoordinates indexCoordinates,
@@ -303,7 +384,7 @@ class RequestConverter {
 		}
 
 		if (putTemplateRequest.getMappings() != null) {
-			builder.mappings(fromJson(putTemplateRequest.getMappings().toJson(), TypeMapping._DESERIALIZER));
+			builder.mappings(typeMapping(putTemplateRequest.getMappings()));
 		}
 
 		if (putTemplateRequest.getVersion() != null) {
@@ -314,43 +395,14 @@ class RequestConverter {
 		if (aliasActions != null) {
 			aliasActions.getActions().forEach(aliasAction -> {
 				AliasActionParameters parameters = aliasAction.getParameters();
+				// noinspection DuplicatedCode
 				String[] parametersAliases = parameters.getAliases();
 
 				if (parametersAliases != null) {
 					for (String aliasName : parametersAliases) {
 						builder.aliases(aliasName, aliasBuilder -> {
 
-							// noinspection DuplicatedCode
-							if (parameters.getRouting() != null) {
-								aliasBuilder.routing(parameters.getRouting());
-							}
-
-							if (parameters.getIndexRouting() != null) {
-								aliasBuilder.indexRouting(parameters.getIndexRouting());
-							}
-
-							if (parameters.getSearchRouting() != null) {
-								aliasBuilder.searchRouting(parameters.getSearchRouting());
-							}
-
-							if (parameters.getHidden() != null) {
-								aliasBuilder.isHidden(parameters.getHidden());
-							}
-
-							if (parameters.getWriteIndex() != null) {
-								aliasBuilder.isWriteIndex(parameters.getWriteIndex());
-							}
-
-							Query filterQuery = parameters.getFilterQuery();
-
-							if (filterQuery != null) {
-								co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getQuery(filterQuery, null);
-
-								if (esQuery != null) {
-									aliasBuilder.filter(esQuery);
-								}
-							}
-							return aliasBuilder;
+							return buildAlias(parameters, aliasBuilder);
 						});
 					}
 				}
@@ -360,6 +412,55 @@ class RequestConverter {
 		return builder.build();
 	}
 
+	public co.elastic.clients.elasticsearch.indices.PutIndexTemplateRequest indicesPutIndexTemplateRequest(
+			PutIndexTemplateRequest putIndexTemplateRequest) {
+
+		Assert.notNull(putIndexTemplateRequest, "putIndexTemplateRequest must not be null");
+
+		var builder = new co.elastic.clients.elasticsearch.indices.PutIndexTemplateRequest.Builder()
+				.name(putIndexTemplateRequest.name()) //
+				.indexPatterns(Arrays.asList(putIndexTemplateRequest.indexPatterns())) //
+				.template(t -> {
+					t //
+							.settings(indexSettings(putIndexTemplateRequest.settings())) //
+							.mappings(typeMapping(putIndexTemplateRequest.mapping()));
+
+					// same code schema, but different Elasticsearch builder types
+					// noinspection DuplicatedCode
+					var aliasActions = putIndexTemplateRequest.aliasActions();
+					if (aliasActions != null) {
+						aliasActions.getActions().forEach(aliasAction -> {
+							if (aliasAction instanceof AliasAction.Add add) {
+								var parameters = add.getParameters();
+								// noinspection DuplicatedCode
+								String[] parametersAliases = parameters.getAliases();
+								if (parametersAliases != null) {
+									for (String aliasName : parametersAliases) {
+										t.aliases(aliasName, aliasBuilder -> buildAlias(parameters, aliasBuilder));
+									}
+								}
+							}
+						});
+					}
+					return t;
+				});
+
+		if (!putIndexTemplateRequest.composedOf().isEmpty()) {
+			builder.composedOf(putIndexTemplateRequest.composedOf());
+		}
+
+		return builder.build();
+	}
+
+	public ExistsIndexTemplateRequest indicesExistsIndexTemplateRequest(
+			org.springframework.data.elasticsearch.core.index.ExistsIndexTemplateRequest existsIndexTemplateRequest) {
+
+		Assert.notNull(existsIndexTemplateRequest, "existsIndexTemplateRequest must not be null");
+
+		return co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest
+				.of(b -> b.name(existsIndexTemplateRequest.templateName()));
+	}
+
 	public co.elastic.clients.elasticsearch.indices.ExistsTemplateRequest indicesExistsTemplateRequest(
 			ExistsTemplateRequest existsTemplateRequest) {
 
@@ -367,6 +468,24 @@ class RequestConverter {
 
 		return co.elastic.clients.elasticsearch.indices.ExistsTemplateRequest
 				.of(etr -> etr.name(existsTemplateRequest.getTemplateName()));
+	}
+
+	public co.elastic.clients.elasticsearch.indices.GetIndexTemplateRequest indicesGetIndexTemplateRequest(
+			GetIndexTemplateRequest getIndexTemplateRequest) {
+
+		Assert.notNull(getIndexTemplateRequest, "getIndexTemplateRequest must not be null");
+
+		return co.elastic.clients.elasticsearch.indices.GetIndexTemplateRequest
+				.of(gitr -> gitr.name(getIndexTemplateRequest.templateName()));
+	}
+
+	public co.elastic.clients.elasticsearch.indices.DeleteIndexTemplateRequest indicesDeleteIndexTemplateRequest(
+			DeleteIndexTemplateRequest deleteIndexTemplateRequest) {
+
+		Assert.notNull(deleteIndexTemplateRequest, "deleteIndexTemplateRequest must not be null");
+
+		return co.elastic.clients.elasticsearch.indices.DeleteIndexTemplateRequest
+				.of(ditr -> ditr.name(deleteIndexTemplateRequest.templateName()));
 	}
 
 	public co.elastic.clients.elasticsearch.indices.DeleteTemplateRequest indicesDeleteTemplateRequest(
@@ -440,7 +559,7 @@ class RequestConverter {
 			}
 		}
 
-		builder.refresh(TypeUtils.refresh(refreshPolicy));
+		builder.refresh(refresh(refreshPolicy));
 
 		return builder.build();
 	}
@@ -607,9 +726,9 @@ class RequestConverter {
 			builder.timeout(tb -> tb.time(Long.valueOf(bulkOptions.getTimeout().toMillis()).toString() + "ms"));
 		}
 
-		builder.refresh(TypeUtils.refresh(refreshPolicy));
+		builder.refresh(refresh(refreshPolicy));
 		if (bulkOptions.getRefreshPolicy() != null) {
-			builder.refresh(TypeUtils.refresh(bulkOptions.getRefreshPolicy()));
+			builder.refresh(refresh(bulkOptions.getRefreshPolicy()));
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
@@ -752,13 +871,13 @@ class RequestConverter {
 					ReindexRequest.Dest dest = reindexRequest.getDest();
 					return d //
 							.index(dest.getIndex().getIndexName()) //
-							.versionType(TypeUtils.versionType(dest.getVersionType())) //
-							.opType(TypeUtils.opType(dest.getOpType()));
+							.versionType(versionType(dest.getVersionType())) //
+							.opType(opType(dest.getOpType()));
 				} //
 				);
 
 		if (reindexRequest.getConflicts() != null) {
-			builder.conflicts(TypeUtils.conflicts(reindexRequest.getConflicts()));
+			builder.conflicts(conflicts(reindexRequest.getConflicts()));
 		}
 
 		ReindexRequest.Script script = reindexRequest.getScript();
@@ -771,7 +890,7 @@ class RequestConverter {
 
 		if (reindexRequest.getWaitForActiveShards() != null) {
 			builder.waitForActiveShards(wfas -> wfas //
-					.count(TypeUtils.waitForActiveShardsCount(reindexRequest.getWaitForActiveShards())));
+					.count(waitForActiveShardsCount(reindexRequest.getWaitForActiveShards())));
 		}
 
 		builder //
@@ -796,7 +915,7 @@ class RequestConverter {
 			if (routing != null) {
 				r.routing(routing);
 			}
-			r.refresh(TypeUtils.refresh(refreshPolicy));
+			r.refresh(refresh(refreshPolicy));
 			return r;
 		});
 	}
@@ -869,7 +988,7 @@ class RequestConverter {
 					.docAsUpsert(query.getDocAsUpsert()) //
 					.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
 					.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
-					.refresh(TypeUtils.refresh(refreshPolicy)) //
+					.refresh(refresh(refreshPolicy)) //
 					.retryOnConflict(query.getRetryOnConflict()) //
 			;
 
@@ -953,7 +1072,7 @@ class RequestConverter {
 			}
 
 			if (updateQuery.getWaitForActiveShards() != null) {
-				ub.waitForActiveShards(w -> w.count(TypeUtils.waitForActiveShardsCount(updateQuery.getWaitForActiveShards())));
+				ub.waitForActiveShards(w -> w.count(waitForActiveShardsCount(updateQuery.getWaitForActiveShards())));
 			}
 
 			return ub;
@@ -1299,7 +1418,7 @@ class RequestConverter {
 		return Rescore.of(r -> r //
 				.query(rq -> rq //
 						.query(getQuery(rescorerQuery.getQuery(), null)) //
-						.scoreMode(TypeUtils.scoreMode(rescorerQuery.getScoreMode())) //
+						.scoreMode(scoreMode(rescorerQuery.getScoreMode())) //
 						.queryWeight(rescorerQuery.getQueryWeight() != null ? Double.valueOf(rescorerQuery.getQueryWeight()) : 1.0) //
 						.rescoreQueryWeight(
 								rescorerQuery.getRescoreQueryWeight() != null ? Double.valueOf(rescorerQuery.getRescoreQueryWeight())
@@ -1359,9 +1478,8 @@ class RequestConverter {
 						.geoDistance(gd -> gd //
 								.field(fieldName) //
 								.location(loc -> loc.latlon(Queries.latLon(geoDistanceOrder.getGeoPoint())))//
-								.distanceType(TypeUtils.geoDistanceType(geoDistanceOrder.getDistanceType()))
-								.mode(TypeUtils.sortMode(finalMode)) //
-								.unit(TypeUtils.distanceUnit(geoDistanceOrder.getUnit())) //
+								.distanceType(geoDistanceType(geoDistanceOrder.getDistanceType())).mode(sortMode(finalMode)) //
+								.unit(distanceUnit(geoDistanceOrder.getUnit())) //
 								.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped())));
 			} else {
 				String missing = (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) ? "_first"
@@ -1371,10 +1489,10 @@ class RequestConverter {
 						.field(f -> {
 							f.field(fieldName) //
 									.order(sortOrder) //
-									.mode(TypeUtils.sortMode(finalMode));
+									.mode(sortMode(finalMode));
 
 							if (finalUnmappedType != null) {
-								FieldType fieldType = TypeUtils.fieldType(finalUnmappedType);
+								FieldType fieldType = fieldType(finalUnmappedType);
 
 								if (fieldType != null) {
 									f.unmappedType(fieldType);
