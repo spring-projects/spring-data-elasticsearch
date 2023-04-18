@@ -15,37 +15,28 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.data.elasticsearch.client.elc.JsonUtils.*;
+import static org.springframework.data.elasticsearch.client.elc.JsonUtils.toJson;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.removePrefixFromJson;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.typeMapping;
 
 import co.elastic.clients.elasticsearch._types.BulkIndexByScrollFailure;
 import co.elastic.clients.elasticsearch._types.ErrorCause;
 import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.cluster.ComponentTemplateSummary;
+import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateResponse;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
 import co.elastic.clients.elasticsearch.core.GetScriptResponse;
 import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetError;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
-import co.elastic.clients.elasticsearch.indices.Alias;
-import co.elastic.clients.elasticsearch.indices.AliasDefinition;
-import co.elastic.clients.elasticsearch.indices.GetAliasResponse;
-import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
-import co.elastic.clients.elasticsearch.indices.GetIndicesSettingsResponse;
-import co.elastic.clients.elasticsearch.indices.GetMappingResponse;
-import co.elastic.clients.elasticsearch.indices.GetTemplateResponse;
-import co.elastic.clients.elasticsearch.indices.IndexSettings;
-import co.elastic.clients.elasticsearch.indices.IndexState;
-import co.elastic.clients.elasticsearch.indices.TemplateMapping;
+import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.elasticsearch.indices.get_index_template.IndexTemplateItem;
 import co.elastic.clients.elasticsearch.indices.get_mapping.IndexMappingRecord;
 import co.elastic.clients.json.JsonpMapper;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -56,9 +47,7 @@ import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasData;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
+import org.springframework.data.elasticsearch.core.index.*;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -107,6 +96,54 @@ class ResponseConverter {
 				.withUnassignedShards(healthResponse.unassignedShards()) //
 				.build(); //
 	}
+
+	public List<TemplateResponse> clusterGetComponentTemplates(
+			GetComponentTemplateResponse getComponentTemplateResponse) {
+
+		Assert.notNull(getComponentTemplateResponse, "getComponentTemplateResponse must not be null");
+
+		var componentTemplates = new ArrayList<TemplateResponse>();
+		getComponentTemplateResponse.componentTemplates().forEach(componentTemplate -> {
+			componentTemplates.add(clusterGetComponentTemplate(componentTemplate));
+		});
+
+		return componentTemplates;
+	}
+
+	private TemplateResponse clusterGetComponentTemplate(
+			co.elastic.clients.elasticsearch.cluster.ComponentTemplate componentTemplate) {
+		var componentTemplateNode = componentTemplate.componentTemplate();
+		var componentTemplateSummary = componentTemplateNode.template();
+		return TemplateResponse.builder() //
+				.withName(componentTemplate.name()) //
+				.withVersion(componentTemplateNode.version()) //
+				.withTemplateData(clusterGetComponentTemplateData(componentTemplateSummary)) //
+				.build();
+	}
+
+	private TemplateResponseData clusterGetComponentTemplateData(
+			ComponentTemplateSummary componentTemplateSummary) {
+
+		var mapping = typeMapping(componentTemplateSummary.mappings());
+		var settings = new Settings();
+		componentTemplateSummary.settings().forEach((key, indexSettings) -> {
+			settings.put(key, Settings.parse(removePrefixFromJson(indexSettings.toString())));
+		});
+
+		Function<? super Map.Entry<String, AliasDefinition>, String> keyMapper = Map.Entry::getKey;
+		Function<? super Map.Entry<String, AliasDefinition>, AliasData> valueMapper = entry -> indicesGetAliasData(
+				entry.getKey(), entry.getValue());
+
+		Map<String, AliasData> aliases = componentTemplateSummary.aliases().entrySet().stream()
+				.collect(Collectors.toMap(keyMapper, valueMapper));
+
+		return TemplateResponseData.builder() //
+				.withMapping(mapping) //
+				.withSettings(settings) //
+				.withAliases(aliases) //
+				.build();
+	}
+
 	// endregion
 
 	// region indices client
@@ -263,6 +300,59 @@ class ResponseConverter {
 		}
 
 		return null;
+	}
+
+	public List<TemplateResponse> getIndexTemplates(GetIndexTemplateResponse getIndexTemplateResponse) {
+
+		Assert.notNull(getIndexTemplateResponse, "getIndexTemplateResponse must not be null");
+
+		var componentTemplates = new ArrayList<TemplateResponse>();
+		getIndexTemplateResponse.indexTemplates().forEach(indexTemplateItem -> {
+			componentTemplates.add(indexGetComponentTemplate(indexTemplateItem));
+		});
+
+		return componentTemplates;
+	}
+
+	private TemplateResponse indexGetComponentTemplate(IndexTemplateItem indexTemplateItem) {
+		var indexTemplate = indexTemplateItem.indexTemplate();
+		var composedOf = indexTemplate.composedOf();
+		var indexTemplateSummary = indexTemplate.template();
+		return TemplateResponse.builder() //
+				.withName(indexTemplateItem.name()) //
+				.withVersion(indexTemplate.version()) //
+				.withTemplateData(indexGetComponentTemplateData(indexTemplateSummary, composedOf)) //
+				.build();
+	}
+
+	private TemplateResponseData indexGetComponentTemplateData(IndexTemplateSummary indexTemplateSummary,
+																														 List<String> composedOf) {
+		var mapping = typeMapping(indexTemplateSummary.mappings());
+
+		Function<IndexSettings, Settings> indexSettingsToSettings = indexSettings -> {
+
+			if (indexSettings == null) {
+				return null;
+			}
+
+			Settings parsedSettings = Settings.parse(toJson(indexSettings, jsonpMapper));
+			return (indexSettings.index() != null) ? parsedSettings : new Settings().append("index", parsedSettings);
+		};
+		var settings = indexSettingsToSettings.apply(indexTemplateSummary.settings());
+
+		Function<? super Map.Entry<String, Alias>, String> keyMapper = Map.Entry::getKey;
+		Function<? super Map.Entry<String, Alias>, AliasData> valueMapper = entry -> indicesGetAliasData(entry.getKey(),
+				entry.getValue());
+
+		Map<String, Alias> aliases1 = indexTemplateSummary.aliases();
+		Map<String, AliasData> aliases = aliases1.entrySet().stream().collect(Collectors.toMap(keyMapper, valueMapper));
+
+		return TemplateResponseData.builder() //
+				.withMapping(mapping) //
+				.withSettings(settings) //
+				.withAliases(aliases) //
+				.withComposedOf(composedOf) //
+				.build();
 	}
 
 	// endregion
@@ -465,6 +555,5 @@ class ResponseConverter {
 			return null;
 		}
 	}
-
 	// endregion
 }

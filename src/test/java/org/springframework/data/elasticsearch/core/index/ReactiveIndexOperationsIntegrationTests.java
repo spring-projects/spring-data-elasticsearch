@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core.indices;
+package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
@@ -22,16 +22,12 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
-import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
@@ -44,16 +40,6 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
-import org.springframework.data.elasticsearch.core.index.AliasAction;
-import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
-import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -376,124 +362,6 @@ public abstract class ReactiveIndexOperationsIntegrationTests implements NewElas
 				.verifyComplete();
 	}
 
-	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
-	@Test // DATAES-612
-	void shouldPutTemplate() {
-
-		org.springframework.data.elasticsearch.core.document.Document mapping = indexOperations
-				.createMapping(TemplateClass.class).block();
-		Settings settings = indexOperations.createSettings(TemplateClass.class).block();
-
-		AliasActions aliasActions = new AliasActions(
-				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
-		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder("test-template", "log-*") //
-				.withSettings(settings) //
-				.withMappings(mapping) //
-				.withAliasActions(aliasActions) //
-				.withOrder(11) //
-				.withVersion(42) //
-				.build();
-
-		Boolean acknowledged = indexOperations.putTemplate(putTemplateRequest).block();
-		assertThat(acknowledged).isTrue();
-	}
-
-	@Test // DATAES-612
-	void shouldReturnNullOnNonExistingGetTemplate() {
-
-		String templateName = "template" + UUID.randomUUID().toString();
-
-		GetTemplateRequest getTemplateRequest = new GetTemplateRequest(templateName);
-		indexOperations.getTemplate(getTemplateRequest) //
-				.as(StepVerifier::create) //
-				.verifyComplete();
-	}
-
-	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
-	@Test // DATAES-612
-	void shouldGetTemplate() throws JSONException {
-
-		org.springframework.data.elasticsearch.core.document.Document mapping = indexOperations
-				.createMapping(TemplateClass.class).block();
-		Settings settings = indexOperations.createSettings(TemplateClass.class).block();
-
-		AliasActions aliasActions = new AliasActions(
-				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
-		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder("test-template", "log-*") //
-				.withSettings(settings) //
-				.withMappings(mapping) //
-				.withAliasActions(aliasActions) //
-				.withOrder(11) //
-				.withVersion(42) //
-				.build();
-
-		Boolean acknowledged = indexOperations.putTemplate(putTemplateRequest).block();
-		assertThat(acknowledged).isTrue();
-
-		GetTemplateRequest getTemplateRequest = new GetTemplateRequest(putTemplateRequest.getName());
-		TemplateData templateData = indexOperations.getTemplate(getTemplateRequest).block();
-
-		SoftAssertions softly = new SoftAssertions();
-		softly.assertThat(templateData).isNotNull();
-		softly.assertThat(templateData.getIndexPatterns()).containsExactlyInAnyOrder(putTemplateRequest.getIndexPatterns());
-		assertEquals(settings.flatten().toJson(), templateData.getSettings().toJson(), false);
-		assertEquals(mapping.toJson(), templateData.getMapping().toJson(), false);
-		Map<String, AliasData> aliases = templateData.getAliases();
-		softly.assertThat(aliases).hasSize(2);
-		AliasData alias1 = aliases.get("alias1");
-		softly.assertThat(alias1.getAlias()).isEqualTo("alias1");
-		AliasData alias2 = aliases.get("alias2");
-		softly.assertThat(alias2.getAlias()).isEqualTo("alias2");
-		softly.assertThat(templateData.getOrder()).isEqualTo(putTemplateRequest.getOrder());
-		softly.assertThat(templateData.getVersion()).isEqualTo(putTemplateRequest.getVersion());
-		softly.assertAll();
-	}
-
-	@Test // DATAES-612
-	void shouldCheckTemplateExists() {
-
-		String templateName = "template" + UUID.randomUUID().toString();
-		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
-
-		boolean exists = indexOperations.existsTemplate(existsTemplateRequest).block();
-		assertThat(exists).isFalse();
-
-		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder(templateName, "log-*") //
-				.withOrder(11) //
-				.withVersion(42) //
-				.build();
-
-		boolean acknowledged = indexOperations.putTemplate(putTemplateRequest).block();
-		assertThat(acknowledged).isTrue();
-
-		exists = indexOperations.existsTemplate(existsTemplateRequest).block();
-		assertThat(exists).isTrue();
-	}
-
-	@Test // DATAES-612
-	void shouldDeleteTemplate() {
-
-		String templateName = "template" + UUID.randomUUID().toString();
-		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
-
-		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder(templateName, "log-*") //
-				.withOrder(11) //
-				.withVersion(42) //
-				.build();
-
-		boolean acknowledged = indexOperations.putTemplate(putTemplateRequest).block();
-		assertThat(acknowledged).isTrue();
-
-		boolean exists = indexOperations.existsTemplate(existsTemplateRequest).block();
-		assertThat(exists).isTrue();
-
-		acknowledged = indexOperations.deleteTemplate(new DeleteTemplateRequest(templateName)).block();
-		assertThat(acknowledged).isTrue();
-
-		exists = indexOperations.existsTemplate(existsTemplateRequest).block();
-		assertThat(exists).isFalse();
-	}
-
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(shards = 3, replicas = 2, refreshInterval = "4s")
 	static class Entity {
@@ -549,32 +417,4 @@ public abstract class ReactiveIndexOperationsIntegrationTests implements NewElas
 			this.id = id;
 		}
 	}
-
-	@Document(indexName = "#{@indexNameProvider.indexName()}")
-	@Setting(refreshInterval = "5s")
-	static class TemplateClass {
-		@Id
-		@Nullable private String id;
-		@Field(type = FieldType.Text)
-		@Nullable private String message;
-
-		@Nullable
-		public String getId() {
-			return id;
-		}
-
-		public void setId(@Nullable String id) {
-			this.id = id;
-		}
-
-		@Nullable
-		public String getMessage() {
-			return message;
-		}
-
-		public void setMessage(@Nullable String message) {
-			this.message = message;
-		}
-	}
-
 }

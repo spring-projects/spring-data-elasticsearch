@@ -17,27 +17,21 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
-import co.elastic.clients.elasticsearch.core.search.BoundaryScanner;
-import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
-import co.elastic.clients.elasticsearch.core.search.HighlighterFragmenter;
-import co.elastic.clients.elasticsearch.core.search.HighlighterOrder;
-import co.elastic.clients.elasticsearch.core.search.HighlighterTagsSchema;
-import co.elastic.clients.elasticsearch.core.search.HighlighterType;
-import co.elastic.clients.elasticsearch.core.search.ScoreMode;
+import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
+import co.elastic.clients.elasticsearch.core.search.*;
+import co.elastic.clients.elasticsearch.indices.IndexSettings;
 
+import java.io.StringReader;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
-import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.query.IndicesOptions;
-import org.springframework.data.elasticsearch.core.query.Order;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.RescorerQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.lang.Nullable;
 
@@ -404,6 +398,29 @@ final class TypeUtils {
 	public static List<ExpandWildcard> expandWildcards(@Nullable EnumSet<IndicesOptions.WildcardStates> wildcardStates) {
 		return (wildcardStates != null && !wildcardStates.isEmpty()) ? wildcardStates.stream()
 				.map(wildcardState -> ExpandWildcard.valueOf(wildcardState.name().toLowerCase())).collect(Collectors.toList())
+				: null;
+	}
+
+	@Nullable
+	static TypeMapping typeMapping(@Nullable Document mapping) {
+		if (mapping != null) {
+			return TypeMapping.of(b -> b.withJson(new StringReader(mapping.toJson())));
+		}
+		return null;
+	}
+
+	@Nullable
+	static Document typeMapping(@Nullable TypeMapping typeMapping) {
+		return (typeMapping != null) ? Document.parse(removePrefixFromJson(typeMapping.toString())) : null;
+	}
+
+	public static String removePrefixFromJson(String jsonWithPrefix) {
+		return jsonWithPrefix.substring(jsonWithPrefix.indexOf("{"));
+	}
+
+	@Nullable
+	static IndexSettings indexSettings(@Nullable Map<String, Object> settings) {
+		return settings != null ? IndexSettings.of(b -> b.withJson(new StringReader(Document.from(settings).toJson())))
 				: null;
 	}
 }

@@ -20,8 +20,8 @@ import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import reactor.core.publisher.Mono;
 
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
+import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 
 /**

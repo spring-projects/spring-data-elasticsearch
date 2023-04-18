@@ -20,14 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
-import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
+import org.springframework.data.elasticsearch.core.index.*;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
 
@@ -224,8 +217,55 @@ public interface IndexOperations {
 	 * @param putTemplateRequest template request parameters
 	 * @return true if successful
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	boolean putTemplate(PutTemplateRequest putTemplateRequest);
+
+	/**
+	 * Creates an index template
+	 *
+	 * @param putIndexTemplateRequest template request parameters
+	 * @return {@literal true} if successful
+	 * @since 5.1
+	 */
+	boolean putIndexTemplate(PutIndexTemplateRequest putIndexTemplateRequest);
+
+	/**
+	 * Writes a component index template that can be used in a composable index template.
+	 *
+	 * @param putComponentTemplateRequest index template request parameters
+	 * @return {@literal true} if successful
+	 * @since 5.1
+	 */
+	boolean putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest);
+
+	/**
+	 * Checks wether a component index template exists.
+	 *
+	 * @param existsComponentTemplateRequest the parameters for the request
+	 * @return {@literal true} if the componentTemplate exists.
+	 * @since 5.1
+	 */
+	boolean existsComponentTemplate(ExistsComponentTemplateRequest existsComponentTemplateRequest);
+
+	/**
+	 * Get a component template.
+	 *
+	 * @param getComponentTemplateRequest parameters for the request, may contain wildcard names
+	 * @return the found {@link TemplateResponse}s, may be empty
+	 * @since 5.1
+	 */
+	List<TemplateResponse> getComponentTemplate(GetComponentTemplateRequest getComponentTemplateRequest);
+
+	/**
+	 * Deletes the given component index template
+	 *
+	 * @param deleteComponentTemplateRequest request parameters
+	 * @return {@literal true} if successful.
+	 * @since 5.1
+	 */
+	boolean deleteComponentTemplate(DeleteComponentTemplateRequest deleteComponentTemplateRequest);
 
 	/**
 	 * gets an index template using the legacy Elasticsearch interface.
@@ -233,7 +273,9 @@ public interface IndexOperations {
 	 * @param templateName the template name
 	 * @return TemplateData, {@literal null} if no template with the given name exists.
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	@Nullable
 	default TemplateData getTemplate(String templateName) {
 		return getTemplate(new GetTemplateRequest(templateName));
@@ -245,7 +287,9 @@ public interface IndexOperations {
 	 * @param getTemplateRequest the request parameters
 	 * @return TemplateData, {@literal null} if no template with the given name exists.
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	@Nullable
 	TemplateData getTemplate(GetTemplateRequest getTemplateRequest);
 
@@ -255,7 +299,9 @@ public interface IndexOperations {
 	 * @param templateName the template name
 	 * @return {@literal true} if the index exists
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	default boolean existsTemplate(String templateName) {
 		return existsTemplate(new ExistsTemplateRequest(templateName));
 	}
@@ -266,8 +312,68 @@ public interface IndexOperations {
 	 * @param existsTemplateRequest the request parameters
 	 * @return {@literal true} if the index exists
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	boolean existsTemplate(ExistsTemplateRequest existsTemplateRequest);
+
+	/**
+	 * check if an index template exists.
+	 *
+	 * @param templateName the template name
+	 * @return true if the index template exists
+	 * @since 5.1
+	 */
+	default boolean existsIndexTemplate(String templateName) {
+		return existsIndexTemplate(new ExistsIndexTemplateRequest(templateName));
+	}
+
+	/**
+	 * check if an index template exists.
+	 *
+	 * @param existsTemplateRequest the request parameters
+	 * @return true if the index template exists
+	 * @since 5.1
+	 */
+	boolean existsIndexTemplate(ExistsIndexTemplateRequest existsTemplateRequest);
+
+	/**
+	 * Gets an index template.
+	 *
+	 * @param templateName template name
+	 * @since 5.1
+	 */
+	default List<TemplateResponse> getIndexTemplate(String templateName) {
+		return getIndexTemplate(new GetIndexTemplateRequest(templateName));
+	}
+
+	/**
+	 * Gets an index template.
+	 *
+	 * @param getIndexTemplateRequest the request parameters
+	 * @since 5.1
+	 */
+	List<TemplateResponse> getIndexTemplate(GetIndexTemplateRequest getIndexTemplateRequest);
+
+	/**
+	 * Deletes an index template.
+	 *
+	 * @param templateName template name
+	 * @return true if successful
+	 * @since 5.1
+	 */
+	default boolean deleteIndexTemplate(String templateName) {
+		return deleteIndexTemplate(new DeleteIndexTemplateRequest(templateName));
+	}
+
+	/**
+	 * Deletes an index template.
+	 *
+	 * @param deleteIndexTemplateRequest template request parameters
+	 * @return true if successful
+	 * @since 5.1
+	 */
+	boolean deleteIndexTemplate(DeleteIndexTemplateRequest deleteIndexTemplateRequest);
 
 	/**
 	 * Deletes an index template using the legacy Elasticsearch interface (@see
@@ -276,7 +382,9 @@ public interface IndexOperations {
 	 * @param templateName the template name
 	 * @return true if successful
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	default boolean deleteTemplate(String templateName) {
 		return deleteTemplate(new DeleteTemplateRequest(templateName));
 	}
@@ -288,7 +396,9 @@ public interface IndexOperations {
 	 * @param deleteTemplateRequest template request parameters
 	 * @return true if successful
 	 * @since 4.1
+	 * @deprecated since 5.1, as the underlying Elasticsearch API is deprecated.
 	 */
+	@Deprecated
 	boolean deleteTemplate(DeleteTemplateRequest deleteTemplateRequest);
 
 	// endregion

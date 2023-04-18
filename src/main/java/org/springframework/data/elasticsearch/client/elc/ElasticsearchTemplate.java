@@ -115,16 +115,20 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	// region child templates
 	@Override
 	public IndexOperations indexOps(Class<?> clazz) {
-		return new IndicesTemplate(client.indices(), elasticsearchConverter, clazz);
+		return new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, clazz);
 	}
 
 	@Override
 	public IndexOperations indexOps(IndexCoordinates index) {
-		return new IndicesTemplate(client.indices(), elasticsearchConverter, index);
+		return new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, index);
 	}
 
 	@Override
 	public ClusterOperations cluster() {
+		return getClusterTemplate();
+	}
+
+	private ClusterTemplate getClusterTemplate() {
 		return new ClusterTemplate(client.cluster(), elasticsearchConverter);
 	}
 	// endregion

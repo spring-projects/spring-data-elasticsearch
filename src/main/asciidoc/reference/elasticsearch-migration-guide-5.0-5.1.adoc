@@ -14,3 +14,13 @@ But besides the values defined by the enum, it is possible to have similarities 
 Therefore, the annotation property was changed from the type of the enum to a simple `String`.
 The previous enum values like `Similarity.Default` do still exist as String constants, so existing code will compile unmodified.
 Adaptions are necessary when this enum was used at other places than as a property of the `@Field` annotation.
+
+[[elasticsearch-migration-guide-5.0-5.1.deprecations]]
+== Deprecations
+
+=== template functions
+
+The functions in the `IndexOperations` and `ReactiverIndexOperations` to manage index templates that were introduced in Spring Data Elasticsearch 4.1
+have been deprecated. They were using the old Elasticsearch API that was deprecated in Elasticsearch version 7.8. 
+
+Please use the new functions that are based on the compsable index template API instead.

@@ -348,7 +348,8 @@ class RequestFactory {
 					for (String aliasName : parametersAliases) {
 						Alias alias = new Alias(aliasName);
 
-						if (parameters.getRouting() != null) {
+							//noinspection DuplicatedCode
+							if (parameters.getRouting() != null) {
 							alias.routing(parameters.getRouting());
 						}
 

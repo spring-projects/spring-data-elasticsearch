@@ -13,20 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.client.erhlc;
+package org.springframework.data.elasticsearch.core.cluster;
 
 import reactor.core.publisher.Mono;
-
-import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
 
 /**
  * Reactive Elasticsearch operations on cluster level.
  *
  * @author Peter-Josef Meisch
  * @since 4.2
- * @deprecated since 5.0
  */
-@Deprecated
 public interface ReactiveClusterOperations {
 
 	/**

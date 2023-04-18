@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.util.StringUtils.*;
+import static org.springframework.util.StringUtils.hasText;
 
 import co.elastic.clients.elasticsearch._types.AcknowledgedResponseBase;
 import co.elastic.clients.elasticsearch.indices.*;
@@ -37,15 +37,15 @@ import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.ReactiveResourceUtil;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
-import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.*;
+import org.springframework.data.elasticsearch.core.index.DeleteIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.ExistsIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.GetIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
+import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.index.ReactiveMappingBuilder;
-import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.data.elasticsearch.core.index.TemplateData;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
@@ -58,27 +58,35 @@ public class ReactiveIndicesTemplate
 		extends ReactiveChildTemplate<ElasticsearchTransport, ReactiveElasticsearchIndicesClient>
 		implements ReactiveIndexOperations {
 
+	// we need a cluster client as well because ES has put some methods from the indices API into the cluster client
+	// (component templates)
+	private final ReactiveClusterTemplate clusterTemplate;
+
 	@Nullable private final Class<?> boundClass;
 	private final IndexCoordinates boundIndexCoordinates;
 
-	public ReactiveIndicesTemplate(ReactiveElasticsearchIndicesClient client,
+	public ReactiveIndicesTemplate(ReactiveElasticsearchIndicesClient client, ReactiveClusterTemplate clusterTemplate,
 			ElasticsearchConverter elasticsearchConverter, IndexCoordinates index) {
 
 		super(client, elasticsearchConverter);
 
 		Assert.notNull(index, "index must not be null");
+		Assert.notNull(clusterTemplate, "clusterTemplate must not be null");
 
+		this.clusterTemplate = clusterTemplate;
 		this.boundClass = null;
 		this.boundIndexCoordinates = index;
 	}
 
-	public ReactiveIndicesTemplate(ReactiveElasticsearchIndicesClient client,
+	public ReactiveIndicesTemplate(ReactiveElasticsearchIndicesClient client, ReactiveClusterTemplate clusterTemplate,
 			ElasticsearchConverter elasticsearchConverter, Class<?> clazz) {
 
 		super(client, elasticsearchConverter);
 
 		Assert.notNull(clazz, "clazz must not be null");
+		Assert.notNull(clusterTemplate, "clusterTemplate must not be null");
 
+		this.clusterTemplate = clusterTemplate;
 		this.boundClass = clazz;
 		this.boundIndexCoordinates = getIndexCoordinatesFor(clazz);
 	}
@@ -269,6 +277,99 @@ public class ReactiveIndicesTemplate
 		Mono<PutTemplateResponse> putTemplateResponse = Mono
 				.from(execute(client -> client.putTemplate(putTemplateRequestES)));
 		return putTemplateResponse.map(PutTemplateResponse::acknowledged);
+	}
+
+	@Override
+	public Mono<Boolean> putComponentTemplate(PutComponentTemplateRequest putComponentTemplateRequest) {
+
+		Assert.notNull(putComponentTemplateRequest, "putComponentTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest putComponentTemplateRequestES = requestConverter
+				.clusterPutComponentTemplateRequest(putComponentTemplateRequest);
+		// the new Elasticsearch client has this call in the cluster index
+		return Mono.from(clusterTemplate.execute(client -> client.putComponentTemplate(putComponentTemplateRequestES)))
+				.map(AcknowledgedResponseBase::acknowledged);
+	}
+
+	@Override
+	public Flux<TemplateResponse> getComponentTemplate(GetComponentTemplateRequest getComponentTemplateRequest) {
+
+		Assert.notNull(getComponentTemplateRequest, "getComponentTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.cluster.GetComponentTemplateRequest getComponentTemplateRequestES = requestConverter
+				.clusterGetComponentTemplateRequest(getComponentTemplateRequest);
+		return Flux.from(clusterTemplate.execute(client -> client.getComponentTemplate(getComponentTemplateRequestES)))
+				.flatMapIterable(responseConverter::clusterGetComponentTemplates);
+	}
+
+	@Override
+	public Mono<Boolean> existsComponentTemplate(ExistsComponentTemplateRequest existsComponentTemplateRequest) {
+
+		Assert.notNull(existsComponentTemplateRequest, "existsComponentTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.cluster.ExistsComponentTemplateRequest existsComponentTemplateRequestES = requestConverter
+				.clusterExistsComponentTemplateRequest(existsComponentTemplateRequest);
+
+		return Mono
+				.from(clusterTemplate.execute(client -> client.existsComponentTemplate(existsComponentTemplateRequestES)))
+				.map(BooleanResponse::value);
+	}
+
+	@Override
+	public Mono<Boolean> deleteComponentTemplate(DeleteComponentTemplateRequest deleteComponentTemplateRequest) {
+
+		Assert.notNull(deleteComponentTemplateRequest, "deleteComponentTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateRequest deleteComponentTemplateRequestES = requestConverter
+				.clusterDeleteComponentTemplateRequest(deleteComponentTemplateRequest);
+		return Mono
+				.from(clusterTemplate.execute(client -> client.deleteComponentTemplate(deleteComponentTemplateRequestES)))
+				.map(AcknowledgedResponseBase::acknowledged);
+	}
+
+	@Override
+	public Mono<Boolean> putIndexTemplate(PutIndexTemplateRequest putIndexTemplateRequest) {
+
+		Assert.notNull(putIndexTemplateRequest, "putIndexTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.indices.PutIndexTemplateRequest putIndexTemplateRequestES = requestConverter
+				.indicesPutIndexTemplateRequest(putIndexTemplateRequest);
+
+		return Mono.from(execute(client -> client.putIndexTemplate(putIndexTemplateRequestES)))
+				.map(PutIndexTemplateResponse::acknowledged);
+	}
+
+	@Override
+	public Mono<Boolean> existsIndexTemplate(ExistsIndexTemplateRequest existsIndexTemplateRequest) {
+
+		Assert.notNull(existsIndexTemplateRequest, "existsIndexTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest existsIndexTemplateRequestES = requestConverter
+				.indicesExistsIndexTemplateRequest(existsIndexTemplateRequest);
+		return Mono.from(execute(client -> client.existsIndexTemplate(existsIndexTemplateRequestES)))
+				.map(BooleanResponse::value);
+	}
+
+	@Override
+	public Flux<TemplateResponse> getIndexTemplate(GetIndexTemplateRequest getIndexTemplateRequest) {
+
+		Assert.notNull(getIndexTemplateRequest, "getIndexTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.indices.GetIndexTemplateRequest getIndexTemplateRequestES = requestConverter
+				.indicesGetIndexTemplateRequest(getIndexTemplateRequest);
+		return Mono.from(execute(client -> client.getIndexTemplate(getIndexTemplateRequestES)))
+				.flatMapIterable(responseConverter::getIndexTemplates);
+	}
+
+	@Override
+	public Mono<Boolean> deleteIndexTemplate(DeleteIndexTemplateRequest deleteIndexTemplateRequest) {
+
+		Assert.notNull(deleteIndexTemplateRequest, "deleteIndexTemplateRequest must not be null");
+
+		co.elastic.clients.elasticsearch.indices.DeleteIndexTemplateRequest deleteIndexTemplateRequestES = requestConverter
+				.indicesDeleteIndexTemplateRequest(deleteIndexTemplateRequest);
+		return Mono.from(execute(client -> client.deleteIndexTemplate(deleteIndexTemplateRequestES)))
+				.map(AcknowledgedResponseBase::acknowledged);
 	}
 
 	@Override

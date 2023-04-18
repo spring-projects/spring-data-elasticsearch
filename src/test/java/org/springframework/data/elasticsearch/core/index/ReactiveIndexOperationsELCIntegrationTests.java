@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2023 the original author or authors.
+ * Copyright 2018-2023 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,27 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core.indices;
+package org.springframework.data.elasticsearch.core.index;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  */
-@ContextConfiguration(classes = { IndexOperationsERHLCIntegrationTests.Config.class })
-public class IndexOperationsERHLCIntegrationTests extends IndexOperationsIntegrationTests {
-
+@ContextConfiguration(classes = { ReactiveIndexOperationsELCIntegrationTests.Config.class })
+public class ReactiveIndexOperationsELCIntegrationTests extends ReactiveIndexOperationsIntegrationTests {
 	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@Import({ ReactiveElasticsearchTemplateConfiguration.class })
 	static class Config {
 		@Bean
 		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider("indexoperations-es7");
+			return new IndexNameProvider("reactive-indexoperations");
 		}
+	}
+
+	@Override
+	public boolean newElasticsearchClient() {
+		return true;
 	}
 }

@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static co.elastic.clients.util.ApiTypeHelper.*;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
+import static co.elastic.clients.util.ApiTypeHelper.DANGEROUS_disableRequiredPropertiesCheck;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.result;
 
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch.core.*;
@@ -46,24 +46,14 @@ import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.UnsupportedBackendOperation;
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveClusterOperations;
-import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.AggregationContainer;
-import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
-import org.springframework.data.elasticsearch.core.MultiGetItem;
-import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
+import org.springframework.data.elasticsearch.core.*;
+import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BaseQuery;
-import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
@@ -616,16 +606,23 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	public ReactiveIndexOperations indexOps(IndexCoordinates index) {
-		return new ReactiveIndicesTemplate(client.indices(), converter, index);
+		return new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, index);
 	}
 
 	@Override
 	public ReactiveIndexOperations indexOps(Class<?> clazz) {
-		return new ReactiveIndicesTemplate(client.indices(), converter, clazz);
+		return new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, clazz);
 	}
 
 	@Override
 	public ReactiveClusterOperations cluster() {
+		return getReactiveClusterTemplate();
+	}
+
+		/**
+		 * @since 5.1
+		 */
+	private ReactiveClusterTemplate getReactiveClusterTemplate() {
 		return new ReactiveClusterTemplate(client.cluster(), converter);
 	}
 
