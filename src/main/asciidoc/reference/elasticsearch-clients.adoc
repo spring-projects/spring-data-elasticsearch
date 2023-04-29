@@ -240,7 +240,7 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
 
 <.> Define default headers, if they need to be customized
 <.> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
-<.> Optionally enable SSL.
+<.> Optionally enable SSL. There exist overloads of this function that can take a `SSLContext` or as an alternative the fingerprint of the certificate as it is output by Elasticsearch 8 on startup.
 <.> Optionally set a proxy.
 <.> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
 <.> Set the connection timeout.

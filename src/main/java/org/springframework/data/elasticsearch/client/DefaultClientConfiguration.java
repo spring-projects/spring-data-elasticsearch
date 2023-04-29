@@ -42,19 +42,20 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	private final List<InetSocketAddress> hosts;
 	private final HttpHeaders headers;
 	private final boolean useSsl;
-	private final @Nullable SSLContext sslContext;
+	@Nullable private final SSLContext sslContext;
+	@Nullable private final String caFingerprint;
 	private final Duration soTimeout;
 	private final Duration connectTimeout;
-	private final @Nullable String pathPrefix;
-	private final @Nullable HostnameVerifier hostnameVerifier;
-	private final @Nullable String proxy;
+	@Nullable private final String pathPrefix;
+	@Nullable private final HostnameVerifier hostnameVerifier;
+	@Nullable private final String proxy;
 	private final HttpClientConfigCallback httpClientConfigurer;
 	private final Supplier<HttpHeaders> headersSupplier;
 	private final List<ClientConfigurationCallback<?>> clientConfigurers;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
-			@Nullable SSLContext sslContext, Duration soTimeout, Duration connectTimeout, @Nullable String pathPrefix,
-			@Nullable HostnameVerifier hostnameVerifier, @Nullable String proxy,
+			@Nullable SSLContext sslContext, @Nullable String caFingerprint, Duration soTimeout, Duration connectTimeout,
+			@Nullable String pathPrefix, @Nullable HostnameVerifier hostnameVerifier, @Nullable String proxy,
 			HttpClientConfigCallback httpClientConfigurer, List<ClientConfigurationCallback<?>> clientConfigurers,
 			Supplier<HttpHeaders> headersSupplier) {
 
@@ -62,6 +63,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.headers = headers;
 		this.useSsl = useSsl;
 		this.sslContext = sslContext;
+		this.caFingerprint = caFingerprint;
 		this.soTimeout = soTimeout;
 		this.connectTimeout = connectTimeout;
 		this.pathPrefix = pathPrefix;
@@ -90,6 +92,11 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	@Override
 	public Optional<SSLContext> getSslContext() {
 		return Optional.ofNullable(this.sslContext);
+	}
+
+	@Override
+	public Optional<String> getCaFingerprint() {
+		return Optional.ofNullable(this.caFingerprint);
 	}
 
 	@Override

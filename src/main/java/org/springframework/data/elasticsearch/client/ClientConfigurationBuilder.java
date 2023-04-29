@@ -20,7 +20,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.net.ssl.HostnameVerifier;
@@ -33,7 +32,6 @@ import org.springframework.data.elasticsearch.client.ClientConfiguration.Termina
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Default builder implementation for {@link ClientConfiguration}.
@@ -51,14 +49,15 @@ class ClientConfigurationBuilder
 	private final List<InetSocketAddress> hosts = new ArrayList<>();
 	private HttpHeaders headers = new HttpHeaders();
 	private boolean useSsl;
-	private @Nullable SSLContext sslContext;
-	private @Nullable HostnameVerifier hostnameVerifier;
+	@Nullable private SSLContext sslContext;
+	@Nullable private String caFingerprint;
+	@Nullable private HostnameVerifier hostnameVerifier;
 	private Duration connectTimeout = Duration.ofSeconds(10);
 	private Duration soTimeout = Duration.ofSeconds(5);
-	private @Nullable String username;
-	private @Nullable String password;
-	private @Nullable String pathPrefix;
-	private @Nullable String proxy;
+	@Nullable private String username;
+	@Nullable private String password;
+	@Nullable private String pathPrefix;
+	@Nullable private String proxy;
 	private Supplier<HttpHeaders> headersSupplier = HttpHeaders::new;
 	@Deprecated private final HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
 	private final List<ClientConfiguration.ClientConfigurationCallback<?>> clientConfigurers = new ArrayList<>();
@@ -138,10 +137,20 @@ class ClientConfigurationBuilder
 		return this;
 	}
 
+	@Override
+	public TerminalClientConfigurationBuilder usingSsl(String caFingerprint) {
+
+		Assert.notNull(caFingerprint, "caFingerprint must not be null");
+
+		this.useSsl = true;
+		this.caFingerprint = caFingerprint;
+		return this;
+	}
+
 	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder#withDefaultHeaders(org.springframework.http.HttpHeaders)
-	 */
+	* (non-Javadoc)
+	* @see org.springframework.data.elasticsearch.client.ClientConfiguration.TerminalClientConfigurationBuilder#withDefaultHeaders(org.springframework.http.HttpHeaders)
+	*/
 	@Override
 	public TerminalClientConfigurationBuilder withDefaultHeaders(HttpHeaders defaultHeaders) {
 
@@ -228,8 +237,12 @@ class ClientConfigurationBuilder
 			headers.setBasicAuth(username, password);
 		}
 
-		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, soTimeout, connectTimeout, pathPrefix,
-				hostnameVerifier, proxy, httpClientConfigurer, clientConfigurers, headersSupplier);
+		if (sslContext != null && caFingerprint != null) {
+			throw new IllegalArgumentException("Either SSLContext or caFingerprint must be set, but not both");
+		}
+
+		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, caFingerprint, soTimeout, connectTimeout,
+				pathPrefix, hostnameVerifier, proxy, httpClientConfigurer, clientConfigurers, headersSupplier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {
