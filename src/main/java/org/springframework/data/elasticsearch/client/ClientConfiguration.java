@@ -20,7 +20,6 @@ import java.net.SocketAddress;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.net.ssl.HostnameVerifier;
@@ -28,7 +27,6 @@ import javax.net.ssl.SSLContext;
 
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.Nullable;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Configuration interface exposing common client configuration properties for Elasticsearch clients.
@@ -121,6 +119,12 @@ public interface ClientConfiguration {
 	 * @return the {@link SSLContext} to use. Can be {@link Optional#empty()} if not configured.
 	 */
 	Optional<SSLContext> getSslContext();
+
+	/**
+	 * @return the optional SHA-256 fingerprint of the self-signed http_ca.crt certificate output by Elasticsearch at
+	 *         startup time.
+	 */
+	Optional<String> getCaFingerprint();
 
 	/**
 	 * Returns the {@link HostnameVerifier} to use. Can be {@link Optional#empty()} if not configured.
@@ -250,6 +254,15 @@ public interface ClientConfiguration {
 		 * @return the {@link TerminalClientConfigurationBuilder}.
 		 */
 		TerminalClientConfigurationBuilder usingSsl(SSLContext sslContext, HostnameVerifier hostnameVerifier);
+
+		/**
+		 * Connect via https using a SSLContext that is build from the given certificate fingerprint.
+		 *
+		 * @param caFingerprint the SHA-256 fingerprint of the self-signed http_ca.crt certificate output by Elasticsearch
+		 *          at startup time.
+		 * @return the {@link TerminalClientConfigurationBuilder}.
+		 */
+		TerminalClientConfigurationBuilder usingSsl(String caFingerprint);
 	}
 
 	/**

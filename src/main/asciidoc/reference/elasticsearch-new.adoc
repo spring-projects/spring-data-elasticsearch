@@ -5,6 +5,7 @@
 == New in Spring Data Elasticsearch 5.1
 
 * Upgrade to Elasticsearch 8.7.0
+* Allow specification of the TLS certificate when connecting to an Elasticsearch 8 cluster 
 
 [[new-features.5-0-0]]
 == New in Spring Data Elasticsearch 5.0

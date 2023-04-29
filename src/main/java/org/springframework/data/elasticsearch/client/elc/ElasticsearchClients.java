@@ -19,6 +19,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
+import co.elastic.clients.transport.TransportUtils;
 import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
@@ -34,13 +35,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpEntityEnclosingRequest;
-import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpResponseInterceptor;
+import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
@@ -197,6 +192,10 @@ public final class ElasticsearchClients {
 		}
 
 		builder.setHttpClientConfigCallback(clientBuilder -> {
+			if (clientConfiguration.getCaFingerprint().isPresent()) {
+				clientBuilder
+						.setSSLContext(TransportUtils.sslContextFromCaFingerprint(clientConfiguration.getCaFingerprint().get()));
+			}
 			clientConfiguration.getSslContext().ifPresent(clientBuilder::setSSLContext);
 			clientConfiguration.getHostNameVerifier().ifPresent(clientBuilder::setSSLHostnameVerifier);
 			clientBuilder.addInterceptorLast(new CustomHeaderInjector(clientConfiguration.getHeadersSupplier()));
