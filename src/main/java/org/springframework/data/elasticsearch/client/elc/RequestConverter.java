@@ -16,18 +16,25 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.springframework.util.CollectionUtils.*;
 
-import co.elastic.clients.elasticsearch._types.*;
+import co.elastic.clients.elasticsearch._types.Conflicts;
+import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.InlineScript;
+import co.elastic.clients.elasticsearch._types.OpType;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.VersionType;
+import co.elastic.clients.elasticsearch._types.WaitForActiveShardOptions;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.query_dsl.FieldAndFormat;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
-import co.elastic.clients.elasticsearch.cluster.*;
 import co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.cluster.ExistsComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
@@ -52,7 +59,13 @@ import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -1537,8 +1550,11 @@ class RequestConverter {
 		builder //
 				.suggest(query.getSuggester()) //
 				.collapse(query.getFieldCollapse()) //
-				.sort(query.getSortOptions()) //
-				.knn(query.getKnnQuery());
+				.sort(query.getSortOptions());
+
+		if (query.getKnnQuery() != null) {
+			builder.knn(query.getKnnQuery());
+		}
 
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
