@@ -1,6 +1,9 @@
 [[new-features]]
 = What's new
 
+[[new-features.5-2-0]]
+== New in Spring Data Elasticsearch 5.2
+
 [[new-features.5-1-0]]
 == New in Spring Data Elasticsearch 5.1
 
