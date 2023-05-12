@@ -23,7 +23,7 @@
 				<!-- version of the RestHighLevelClient	-->
 				<elasticsearch-rhlc>7.17.9</elasticsearch-rhlc>
 				<!-- version of the new ElasticsearchClient	-->
-				<elasticsearch-java>8.7.0</elasticsearch-java>
+				<elasticsearch-java>8.7.1</elasticsearch-java>
 
 				<log4j>2.18.0</log4j>
 				<!-- netty dependency can be removed once the WebClient code is gone -->
