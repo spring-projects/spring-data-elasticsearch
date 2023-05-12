@@ -1,0 +1,11 @@
+[[elasticsearch-migration-guide-5.1-5.2]]
+= Upgrading from 5.1.x to 5.2.x
+
+This section describes breaking changes from version 5.1.x to 5.2.x and how removed features can be replaced by new introduced features.
+
+[[elasticsearch-migration-guide-5.1-5.2.breaking-changes]]
+== Breaking Changes
+
+
+[[elasticsearch-migration-guide-5.1-5.2.deprecations]]
+== Deprecations
