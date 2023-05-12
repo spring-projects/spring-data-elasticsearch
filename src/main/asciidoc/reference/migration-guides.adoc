@@ -15,4 +15,6 @@ include::elasticsearch-migration-guide-4.3-4.4.adoc[]
 
 include::elasticsearch-migration-guide-4.4-5.0.adoc[]
 
+include::elasticsearch-migration-guide-5.0-5.1.adoc[]
+
 :leveloffset: -1
