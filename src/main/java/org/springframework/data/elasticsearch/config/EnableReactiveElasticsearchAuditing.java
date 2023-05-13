@@ -55,8 +55,8 @@ public @interface EnableReactiveElasticsearchAuditing {
 	boolean modifyOnCreate() default true;
 
 	/**
-	 * Configures a {@link DateTimeProvider} bean name that allows customizing the {@link org.joda.time.DateTime} to be
-	 * used for setting creation and modification dates.
+	 * Configures a {@link DateTimeProvider} bean name that allows customizing the date and time to be used for setting
+	 * creation and modification dates.
 	 */
 	String dateTimeProviderRef() default "";
 }
