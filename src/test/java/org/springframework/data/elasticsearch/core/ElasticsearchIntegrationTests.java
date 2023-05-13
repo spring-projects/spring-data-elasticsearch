@@ -2921,7 +2921,7 @@ public abstract class ElasticsearchIntegrationTests {
 		List<Object> sortValues = searchHit.getSortValues();
 		assertThat(sortValues).hasSize(2);
 		assertThat(sortValues.get(0)).isInstanceOf(String.class).isEqualTo("thousands");
-		// transport client returns Long, RestHighlevelClient Integer, new ElasticsearchClient String
+		// different Java clients return this in different types
 		java.lang.Object o = sortValues.get(1);
 		if (o instanceof Integer i) {
 			assertThat(o).isInstanceOf(Integer.class).isEqualTo(1000);

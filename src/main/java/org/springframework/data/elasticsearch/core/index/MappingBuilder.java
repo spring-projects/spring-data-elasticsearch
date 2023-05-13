@@ -76,7 +76,6 @@ public class MappingBuilder {
 
 	private static final String FIELD_INDEX = "index";
 	private static final String FIELD_PROPERTIES = "properties";
-	@Deprecated private static final String FIELD_PARENT = "_parent";
 	private static final String FIELD_CONTEXT_NAME = "name";
 	private static final String FIELD_CONTEXT_TYPE = "type";
 	private static final String FIELD_CONTEXT_PATH = "path";
@@ -279,7 +278,7 @@ public class MappingBuilder {
 						if (property.isSeqNoPrimaryTermProperty()) {
 							if (property.isAnnotationPresent(Field.class)) {
 								LOGGER.warn(String.format("Property %s of %s is annotated for inclusion in mapping, but its type is " + //
-								"SeqNoPrimaryTerm that is never mapped, so it is skipped", //
+										"SeqNoPrimaryTerm that is never mapped, so it is skipped", //
 										property.getFieldName(), entity.getType()));
 							}
 							return;
