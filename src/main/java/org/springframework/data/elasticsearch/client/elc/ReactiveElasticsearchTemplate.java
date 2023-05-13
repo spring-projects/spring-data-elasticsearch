@@ -100,7 +100,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				getRefreshPolicy());
 		return Mono.just(entity) //
 				.zipWith(//
-						Mono.from(execute((ClientCallback<Publisher<IndexResponse>>) client -> client.index(indexRequest))) //
+						Mono.from(execute(client -> client.index(indexRequest))) //
 								.map(indexResponse -> new IndexResponseMetaData(indexResponse.id(), //
 										indexResponse.index(), //
 										indexResponse.seqNo(), //
@@ -149,9 +149,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index, true);
 
-		return Mono.from(execute(
-				((ClientCallback<Publisher<GetResponse<EntityAsMap>>>) client -> client.get(getRequest, EntityAsMap.class))))
-				.map(GetResult::found) //
+		return Mono.from(execute(client -> client.get(getRequest, EntityAsMap.class))).map(GetResult::found) //
 				.onErrorReturn(NoSuchIndexException.class, false);
 	}
 
@@ -162,9 +160,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
 				entityType, index, getRefreshPolicy());
-		return Mono
-				.from(execute((ClientCallback<Publisher<DeleteByQueryResponse>>) client -> client.deleteByQuery(request)))
-				.map(responseConverter::byQueryResponse);
+		return Mono.from(execute(client -> client.deleteByQuery(request))).map(responseConverter::byQueryResponse);
 	}
 
 	@Override
@@ -176,8 +172,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index, false);
 
-		Mono<GetResponse<EntityAsMap>> getResponse = Mono.from(execute(
-				(ClientCallback<Publisher<GetResponse<EntityAsMap>>>) client -> client.get(getRequest, EntityAsMap.class)));
+		Mono<GetResponse<EntityAsMap>> getResponse = Mono
+				.from(execute(client -> client.get(getRequest, EntityAsMap.class)));
 
 		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(converter, entityType, index);
 		return getResponse.flatMap(response -> callback.toEntity(DocumentAdapters.from(response)));
@@ -192,9 +188,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				true);
 
 		return Mono.from(execute( //
-				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.ReindexResponse>>) client -> client
-						.reindex(reindexRequestES)))
-				.map(responseConverter::reindexResponse);
+				client -> client.reindex(reindexRequestES))).map(responseConverter::reindexResponse);
 	}
 
 	@Override
@@ -206,8 +200,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				false);
 
 		return Mono.from(execute( //
-				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.ReindexResponse>>) client -> client
-						.reindex(reindexRequestES)))
+				client -> client.reindex(reindexRequestES)))
 				.flatMap(response -> (response.task() == null)
 						? Mono.error(
 								new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
@@ -223,13 +216,10 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index, getRefreshPolicy(),
 				routingResolver.getRouting());
 
-		return Mono.from(execute(
-				(ClientCallback<Publisher<co.elastic.clients.elasticsearch.core.UpdateResponse<Document>>>) client -> client
-						.update(request, Document.class)))
-				.flatMap(response -> {
-					UpdateResponse.Result result = result(response.result());
-					return result == null ? Mono.empty() : Mono.just(UpdateResponse.of(result));
-				});
+		return Mono.from(execute(client -> client.update(request, Document.class))).flatMap(response -> {
+			UpdateResponse.Result result = result(response.result());
+			return result == null ? Mono.empty() : Mono.just(UpdateResponse.of(result));
+		});
 	}
 
 	@Override
@@ -292,7 +282,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	private Mono<String> doDelete(DeleteRequest request) {
 
-		return Mono.from(execute((ClientCallback<Publisher<DeleteResponse>>) client -> client.delete(request))) //
+		return Mono.from(execute(client -> client.delete(request))) //
 				.flatMap(deleteResponse -> {
 					if (deleteResponse.result() == Result.NotFound) {
 						return Mono.empty();
@@ -311,8 +301,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(converter, clazz, index);
 
-		Publisher<MgetResponse<EntityAsMap>> response = execute(
-				(ClientCallback<Publisher<MgetResponse<EntityAsMap>>>) client -> client.mget(request, EntityAsMap.class));
+		Publisher<MgetResponse<EntityAsMap>> response = execute(client -> client.mget(request, EntityAsMap.class));
 
 		return Mono.from(response)//
 				.flatMapMany(it -> Flux.fromIterable(DocumentAdapters.from(it))) //
@@ -364,14 +353,14 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 			BiFunction<PitSearchAfter, Throwable, Publisher<?>> asyncError = (psa, ex) -> {
 				if (LOGGER.isErrorEnabled()) {
-					LOGGER.error(String.format("Error during pit/search_after"), ex);
+					LOGGER.error("Error during pit/search_after", ex);
 				}
 				return cleanupPit(psa);
 			};
 
 			Function<PitSearchAfter, Publisher<?>> asyncCancel = psa -> {
 				if (LOGGER.isWarnEnabled()) {
-					LOGGER.warn(String.format("pit/search_after was cancelled"));
+					LOGGER.warn("pit/search_after was cancelled");
 				}
 				return cleanupPit(psa);
 			};
@@ -383,8 +372,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 				SearchRequest firstSearchRequest = requestConverter.searchRequest(baseQuery, routingResolver.getRouting(),
 						clazz, index, false, true);
 
-				return Mono.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client
-						.search(firstSearchRequest, EntityAsMap.class))).expand(entityAsMapSearchResponse -> {
+				return Mono.from(execute(client -> client.search(firstSearchRequest, EntityAsMap.class)))
+						.expand(entityAsMapSearchResponse -> {
 
 							var hits = entityAsMapSearchResponse.hits().hits();
 							if (CollectionUtils.isEmpty(hits)) {
@@ -396,8 +385,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 							baseQuery.setSearchAfter(sortOptions);
 							SearchRequest followSearchRequest = requestConverter.searchRequest(baseQuery,
 									routingResolver.getRouting(), clazz, index, false, true);
-							return Mono.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client
-									.search(followSearchRequest, EntityAsMap.class)));
+							return Mono.from(execute(client -> client.search(followSearchRequest, EntityAsMap.class)));
 						});
 
 			};
@@ -454,9 +442,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), entityType, index,
 				true);
 
-		return Mono
-				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
-						EntityAsMap.class)))
+		return Mono.from(execute(client -> client.search(searchRequest, EntityAsMap.class)))
 				.map(searchResponse -> searchResponse.hits().total() != null ? searchResponse.hits().total().value() : 0L);
 	}
 
@@ -465,9 +451,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
 				false, false);
 
-		return Mono
-				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
-						EntityAsMap.class))) //
+		return Mono.from(execute(client -> client.search(searchRequest, EntityAsMap.class))) //
 				.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits()) //
 				.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));
 	}
@@ -476,9 +460,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		var request = requestConverter.searchTemplate(query, routingResolver.getRouting(), index);
 
-		return Mono
-				.from(execute((ClientCallback<Publisher<SearchTemplateResponse<EntityAsMap>>>) client -> client
-						.searchTemplate(request, EntityAsMap.class))) //
+		return Mono.from(execute(client -> client.searchTemplate(request, EntityAsMap.class))) //
 				.flatMapIterable(entityAsMapSearchResponse -> entityAsMapSearchResponse.hits().hits()) //
 				.map(entityAsMapHit -> DocumentAdapters.from(entityAsMapHit, jsonpMapper));
 	}
@@ -497,9 +479,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		SearchDocumentResponse.EntityCreator<T> entityCreator = searchDocument -> callback.toEntity(searchDocument)
 				.toFuture();
 
-		return Mono
-				.from(execute((ClientCallback<Publisher<ResponseBody<EntityAsMap>>>) client -> client.search(searchRequest,
-						EntityAsMap.class)))
+		return Mono.from(execute(client -> client.search(searchRequest, EntityAsMap.class)))
 				.map(searchResponse -> SearchDocumentResponseBuilder.from(searchResponse, entityCreator, jsonpMapper));
 	}
 
@@ -520,9 +500,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(ignoreUnavailable, "ignoreUnavailable must not be null");
 
 		var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
-		return Mono
-				.from(execute((ClientCallback<Publisher<OpenPointInTimeResponse>>) client -> client.openPointInTime(request)))
-				.map(OpenPointInTimeResponse::id);
+		return Mono.from(execute(client -> client.openPointInTime(request))).map(OpenPointInTimeResponse::id);
 	}
 
 	@Override
@@ -531,9 +509,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(pit, "pit must not be null");
 
 		ClosePointInTimeRequest request = requestConverter.searchClosePointInTime(pit);
-		return Mono
-				.from(execute((ClientCallback<Publisher<ClosePointInTimeResponse>>) client -> client.closePointInTime(request)))
-				.map(ClosePointInTimeResponse::succeeded);
+		return Mono.from(execute(client -> client.closePointInTime(request))).map(ClosePointInTimeResponse::succeeded);
 	}
 
 	// endregion
@@ -545,8 +521,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(script, "script must not be null");
 
 		var request = requestConverter.scriptPut(script);
-		return Mono.from(execute((ClientCallback<Publisher<PutScriptResponse>>) client -> client.putScript(request)))
-				.map(PutScriptResponse::acknowledged);
+		return Mono.from(execute(client -> client.putScript(request))).map(PutScriptResponse::acknowledged);
 	}
 
 	@Override
@@ -555,8 +530,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(name, "name must not be null");
 
 		var request = requestConverter.scriptGet(name);
-		return Mono.from(execute((ClientCallback<Publisher<GetScriptResponse>>) client -> client.getScript(request)))
-				.mapNotNull(responseConverter::scriptResponse);
+		return Mono.from(execute(client -> client.getScript(request))).mapNotNull(responseConverter::scriptResponse);
 	}
 
 	@Override
@@ -564,8 +538,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(name, "name must not be null");
 
 		var request = requestConverter.scriptDelete(name);
-		return Mono.from(execute((ClientCallback<Publisher<DeleteScriptResponse>>) client -> client.deleteScript(request)))
-				.map(DeleteScriptResponse::acknowledged);
+		return Mono.from(execute(client -> client.deleteScript(request))).map(DeleteScriptResponse::acknowledged);
 	}
 	// endregion
 
@@ -589,22 +562,6 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	}
 
 	@Override
-	@Deprecated
-	public <T> Publisher<T> execute(ReactiveElasticsearchOperations.ClientCallback<Publisher<T>> callback) {
-		throw new UnsupportedBackendOperation("direct execution on the WebClient is not supported for this class");
-	}
-
-	@Override
-	public <T> Publisher<T> executeWithIndicesClient(IndicesClientCallback<Publisher<T>> callback) {
-		throw new UnsupportedOperationException("not implemented");
-	}
-
-	@Override
-	public <T> Publisher<T> executeWithClusterClient(ClusterClientCallback<Publisher<T>> callback) {
-		throw new UnsupportedOperationException("not implemented");
-	}
-
-	@Override
 	public ReactiveIndexOperations indexOps(IndexCoordinates index) {
 		return new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, index);
 	}
@@ -619,9 +576,9 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		return getReactiveClusterTemplate();
 	}
 
-		/**
-		 * @since 5.1
-		 */
+	/**
+	 * @since 5.1
+	 */
 	private ReactiveClusterTemplate getReactiveClusterTemplate() {
 		return new ReactiveClusterTemplate(client.cluster(), converter);
 	}
@@ -633,11 +590,16 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	public Query idsQuery(List<String> ids) {
-		return NativeQuery.builder().withQuery(Queries.idsQueryAsQuery(ids)).build();
+		return NativeQuery.builder().withQuery(qb -> qb.ids(iq -> iq.values(ids))).build();
+	}
+
+	@Override
+	public BaseQueryBuilder queryBuilderWithIds(List<String> ids) {
+		return NativeQuery.builder().withIds(ids);
 	}
 
 	/**
-	 * Callback interface to be used with {@link #execute(ReactiveElasticsearchOperations.ClientCallback)} for operating
+	 * Callback interface to be used with {@link #execute(ReactiveElasticsearchTemplate.ClientCallback<>)} for operating
 	 * directly on {@link ReactiveElasticsearchClient}.
 	 *
 	 * @param <T>

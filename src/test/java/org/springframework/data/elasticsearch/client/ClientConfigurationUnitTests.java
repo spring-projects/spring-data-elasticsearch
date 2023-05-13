@@ -22,18 +22,13 @@ import static org.springframework.data.elasticsearch.support.HttpHeaders.*;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 import javax.net.ssl.SSLContext;
 
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveRestClients;
-import org.springframework.data.elasticsearch.client.erhlc.RestClients;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
-import org.springframework.web.reactive.function.client.WebClient;
 
 /**
  * Unit tests for {@link ClientConfiguration}.
@@ -151,48 +146,6 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofSeconds(10));
 		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofSeconds(5));
 		assertThat(clientConfiguration.getHostNameVerifier()).contains(NoopHostnameVerifier.INSTANCE);
-	}
-
-	@Test // #1885
-	@DisplayName("should use configured httpClientConfigurer as client configurer")
-	void shouldUseConfiguredHttpClientConfigurerAsClientConfigurer() {
-
-		AtomicInteger callCounter = new AtomicInteger();
-
-		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
-				.connectedTo("foo", "bar") //
-				.withClientConfigurer(RestClients.RestClientConfigurationCallback.from(httpClientBuilder -> {
-					callCounter.incrementAndGet();
-					return httpClientBuilder;
-				})) //
-				.build();
-
-		ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = clientConfiguration.getClientConfigurers()
-				.get(0);
-
-		((RestClients.RestClientConfigurationCallback) clientConfigurer).configure(HttpAsyncClientBuilder.create());
-		assertThat(callCounter.get()).isEqualTo(1);
-	}
-
-	@Test // #1885
-	@DisplayName("should use configured webClientConfigurer as client configurer")
-	void shouldUseConfiguredWebClientConfigurerAsClientConfigurer() {
-
-		AtomicInteger callCounter = new AtomicInteger();
-
-		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
-				.connectedTo("foo", "bar") //
-				.withClientConfigurer(ReactiveRestClients.WebClientConfigurationCallback.from(webClient -> {
-					callCounter.incrementAndGet();
-					return webClient;
-				})) //
-				.build();
-
-		ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer = clientConfiguration.getClientConfigurers()
-				.get(0);
-
-		((ReactiveRestClients.WebClientConfigurationCallback) clientConfigurer).configure(WebClient.builder().build());
-		assertThat(callCounter.get()).isEqualTo(1);
 	}
 
 	@Test // #1885

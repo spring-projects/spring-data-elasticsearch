@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.result;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Time;
@@ -28,35 +28,20 @@ import co.elastic.clients.transport.Version;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.client.UnsupportedBackendOperation;
-import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
-import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
-import org.springframework.data.elasticsearch.core.MultiGetItem;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.SearchScrollHits;
+import org.springframework.data.elasticsearch.core.*;
 import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
@@ -636,6 +621,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public Query idsQuery(List<String> ids) {
 		return NativeQuery.builder().withQuery(qb -> qb.ids(iq -> iq.values(ids))).build();
+	}
+
+	@Override
+	public BaseQueryBuilder queryBuilderWithIds(List<String> ids) {
+		return NativeQuery.builder().withIds(ids);
 	}
 
 	/**

@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.repositories.uuidkeyed;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,8 +37,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQuery;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -302,8 +299,6 @@ public abstract class UUIDElasticsearchRepositoryIntegrationTests {
 		long result = repository.deleteSampleEntityUUIDKeyedById(documentId);
 
 		// then
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(termQuery("id", documentId.toString()))
-				.build();
 		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll();
 		assertThat(sampleEntities).isEmpty();
 		assertThat(result).isEqualTo(1L);
@@ -340,7 +335,6 @@ public abstract class UUIDElasticsearchRepositoryIntegrationTests {
 
 		// then
 		assertThat(result).hasSize(2);
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Iterable<SampleEntityUUIDKeyed> sampleEntities = repository.findAll();
 		assertThat(sampleEntities).hasSize(1);
 	}

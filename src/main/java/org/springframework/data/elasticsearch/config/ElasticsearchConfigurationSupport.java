@@ -27,7 +27,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.client.erhlc.AbstractReactiveElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
@@ -144,8 +143,8 @@ public class ElasticsearchConfigurationSupport {
 
 			if (beanClassName != null) {
 				try {
-					initialEntitySet.add(
-							ClassUtils.forName(beanClassName, AbstractReactiveElasticsearchConfiguration.class.getClassLoader()));
+					initialEntitySet
+							.add(ClassUtils.forName(beanClassName, ElasticsearchConfigurationSupport.class.getClassLoader()));
 				} catch (ClassNotFoundException | LinkageError ignored) {}
 			}
 		}
