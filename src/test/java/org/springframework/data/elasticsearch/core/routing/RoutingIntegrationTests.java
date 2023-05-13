@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.apache.lucene.util.StringHelper;
+import org.apache.commons.codec.digest.MurmurHash3;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -253,7 +253,7 @@ public abstract class RoutingIntegrationTests {
 		}
 
 		public static int hash(byte[] bytes, int offset, int length) {
-			return StringHelper.murmurhash3_x86_32(bytes, offset, length, 0);
+			return MurmurHash3.hash32x86(bytes, offset, length, 0);
 		}
 
 	}

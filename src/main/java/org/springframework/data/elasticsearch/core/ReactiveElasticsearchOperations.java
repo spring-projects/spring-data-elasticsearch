@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.reactivestreams.Publisher;
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -34,37 +32,6 @@ import org.springframework.lang.Nullable;
  */
 public interface ReactiveElasticsearchOperations
 		extends ReactiveDocumentOperations, ReactiveSearchOperations, ReactiveScriptOperations {
-
-	/**
-	 * Execute within a {@link ClientCallback} managing resources and translating errors.
-	 *
-	 * @param callback must not be {@literal null}.
-	 * @param <T> the type the Publisher emits
-	 * @return the {@link Publisher} emitting results.
-	 * @deprecated since 4.4, use the execute methods from the implementing classes (they are client specific)
-	 */
-	@Deprecated
-	<T> Publisher<T> execute(ClientCallback<Publisher<T>> callback);
-
-	/**
-	 * Execute within a {@link IndicesClientCallback} managing resources and translating errors.
-	 *
-	 * @param callback must not be {@literal null}.
-	 * @param <T> the type the Publisher emits
-	 * @return the {@link Publisher} emitting results.
-	 * @since 4.1
-	 */
-	<T> Publisher<T> executeWithIndicesClient(IndicesClientCallback<Publisher<T>> callback);
-
-	/**
-	 * Execute within a {@link ClusterClientCallback} managing resources and translating errors.
-	 *
-	 * @param callback must not be {@literal null}.
-	 * @param <T> the type the Publisher emits
-	 * @return the {@link Publisher} emitting results.
-	 * @since 4.1
-	 */
-	<T> Publisher<T> executeWithClusterClient(ClusterClientCallback<Publisher<T>> callback);
 
 	/**
 	 * Get the {@link ElasticsearchConverter} used.
@@ -120,39 +87,4 @@ public interface ReactiveElasticsearchOperations
 	 */
 	ReactiveElasticsearchOperations withRouting(RoutingResolver routingResolver);
 	// endregion
-
-	/**
-	 * Callback interface to be used with {@link #execute(ClientCallback)} for operating directly on
-	 * {@link ReactiveElasticsearchClient}.
-	 *
-	 * @param <T> result type of the callback
-	 * @author Christoph Strobl
-	 * @since 3.2
-	 */
-	interface ClientCallback<T extends Publisher<?>> {
-
-		T doWithClient(ReactiveElasticsearchClient client);
-	}
-
-	/**
-	 * Callback interface to be used with {@link #executeWithIndicesClient(IndicesClientCallback)} for operating directly
-	 * on {@link ReactiveElasticsearchClient.Indices}.
-	 *
-	 * @param <T> the return type
-	 * @since 4.1
-	 */
-	interface IndicesClientCallback<T extends Publisher<?>> {
-		T doWithClient(ReactiveElasticsearchClient.Indices client);
-	}
-
-	/**
-	 * Callback interface to be used with {@link #executeWithClusterClient(ClusterClientCallback)} for operating directly
-	 * on {@link ReactiveElasticsearchClient.Cluster}.
-	 *
-	 * @param <T> the return type
-	 * @since 4.2
-	 */
-	interface ClusterClientCallback<T extends Publisher<?>> {
-		T doWithClient(ReactiveElasticsearchClient.Cluster client);
-	}
 }

@@ -20,17 +20,12 @@
 		<properties>
 				<springdata.commons>3.2.0-SNAPSHOT</springdata.commons>
 
-				<!-- version of the RestHighLevelClient	-->
-				<elasticsearch-rhlc>7.17.9</elasticsearch-rhlc>
-				<!-- version of the new ElasticsearchClient	-->
+				<!-- version of the ElasticsearchClient	-->
 				<elasticsearch-java>8.7.1</elasticsearch-java>
-
-				<log4j>2.18.0</log4j>
-				<!-- netty dependency can be removed once the WebClient code is gone -->
-				<netty>4.1.90.Final</netty>
 
 				<blockhound-junit>1.0.8.RELEASE</blockhound-junit>
 				<hoverfly>0.14.4</hoverfly>
+				<log4j>2.18.0</log4j>
 				<jsonassert>1.5.1</jsonassert>
 				<testcontainers>1.18.0</testcontainers>
 				<wiremock>2.35.0</wiremock>
@@ -93,18 +88,6 @@
 				<url>https://github.com/spring-projects/spring-data-elasticsearch/issues</url>
 		</issueManagement>
 
-		<dependencyManagement>
-				<dependencies>
-						<dependency>
-								<groupId>io.netty</groupId>
-								<artifactId>netty-bom</artifactId>
-								<version>${netty}</version>
-								<type>pom</type>
-								<scope>import</scope>
-						</dependency>
-				</dependencies>
-		</dependencyManagement>
-
 		<dependencies>
 
 				<!-- Spring -->
@@ -133,32 +116,11 @@
 				</dependency>
 
 				<dependency>
-						<groupId>io.projectreactor.netty</groupId>
-						<artifactId>reactor-netty-http</artifactId>
-						<optional>true</optional>
-				</dependency>
-
-				<dependency>
 						<groupId>io.projectreactor</groupId>
 						<artifactId>reactor-test</artifactId>
 						<scope>test</scope>
 				</dependency>
 
-				<!-- optional Elasticsearch RestHighLevelClient, deprecated in SDE 5.0 -->
-				<dependency>
-						<groupId>org.elasticsearch.client</groupId>
-						<artifactId>elasticsearch-rest-high-level-client</artifactId>
-						<version>${elasticsearch-rhlc}</version>
-						<optional>true</optional>
-						<exclusions>
-								<exclusion>
-										<groupId>commons-logging</groupId>
-										<artifactId>commons-logging</artifactId>
-								</exclusion>
-						</exclusions>
-				</dependency>
-
-				<!-- new Elasticsearch client, needs the low-level rest client and json api -->
 				<dependency>
 						<groupId>co.elastic.clients</groupId>
 						<artifactId>elasticsearch-java</artifactId>
@@ -337,6 +299,14 @@
 						<groupId>org.testcontainers</groupId>
 						<artifactId>elasticsearch</artifactId>
 						<version>${testcontainers}</version>
+						<scope>test</scope>
+				</dependency>
+
+				<!--we need Murmur3Hash in a test, before 5.2 we had it from the old Elasticsearch dependency	-->
+				<dependency>
+						<groupId>commons-codec</groupId>
+						<artifactId>commons-codec</artifactId>
+						<version>1.15</version>
 						<scope>test</scope>
 				</dependency>
 

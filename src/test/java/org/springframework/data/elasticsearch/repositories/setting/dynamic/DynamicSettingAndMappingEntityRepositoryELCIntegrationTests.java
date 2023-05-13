@@ -37,7 +37,7 @@ public class DynamicSettingAndMappingEntityRepositoryELCIntegrationTests
 	static class Config {
 		@Bean
 		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider("dynamic-setting-and-mapping=");
+			return new IndexNameProvider("dynamic-setting-and-mapping");
 		}
 	}
 

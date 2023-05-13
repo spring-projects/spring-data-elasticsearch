@@ -26,6 +26,11 @@ import org.springframework.data.domain.Sort;
  * @author Peter-Josef Meisch
  */
 public class StringQuery extends BaseQuery {
+		public static String MATCH_ALL = """
+						{
+						  "match_all": {}
+						}
+						""";
 
 	private final String source;
 

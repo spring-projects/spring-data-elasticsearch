@@ -17,8 +17,8 @@ package org.springframework.data.elasticsearch.core;
 
 import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.core.query.StringQuery.MATCH_ALL;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -65,9 +65,6 @@ import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.annotations.WriteOnlyProperty;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQuery;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
 import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
@@ -81,8 +78,6 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
- * Integration tests for {@link ReactiveElasticsearchTemplate}.
- *
  * @author Christoph Strobl
  * @author Mark Paluch
  * @author Peter-Josef Meisch
@@ -359,7 +354,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		index(randomEntity("test message"), randomEntity("test test"), randomEntity("some message"));
 
-		operations.search(new StringQuery(matchAllQuery().toString()), SampleEntity.class) //
+		operations.search(new StringQuery(MATCH_ALL), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.expectNextCount(3) //
 				.verifyComplete();
@@ -748,9 +743,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		entity2.rate = 2;
 		index(entity2);
 
-		NativeSearchQuery query = new NativeSearchQueryBuilder() //
-				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
-				.build();
+		var query = operations.queryBuilderWithIds(List.of(entity1.getId(), entity2.getId())).build();
 
 		operations.multiGet(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.map(MultiGetItem::getItem).as(StepVerifier::create) //
@@ -767,8 +760,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		entity2.rate = 2;
 		index(entity2);
 
-		NativeSearchQuery query = new NativeSearchQueryBuilder() //
-				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
+		var query = operations.queryBuilderWithIds(List.of(entity1.getId(), entity2.getId())) //
 				.withFields("message") //
 				.build();
 
@@ -804,10 +796,8 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		List<UpdateQuery> queries = Arrays.asList(updateQuery1, updateQuery2);
 		operations.bulkUpdate(queries, IndexCoordinates.of(indexNameProvider.indexName())).block();
 
-		NativeSearchQuery getQuery = new NativeSearchQueryBuilder() //
-				.withIds(Arrays.asList(entity1.getId(), entity2.getId())) //
-				.build();
-		operations.multiGet(getQuery, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
+		var query = operations.queryBuilderWithIds(List.of(entity1.getId(), entity2.getId())).build();
+		operations.multiGet(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
 				.map(MultiGetItem::getItem) //
 				.as(StepVerifier::create) //
 				.expectNextMatches(entity -> entity.getMessage().equals("updated 1")) //
@@ -873,7 +863,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 	}
 
 	private Query multiGetQueryForOne(String id) {
-		return new NativeSearchQueryBuilder().withIds(singletonList(id)).build();
+		return operations.queryBuilderWithIds(List.of(id)).build();
 	}
 
 	@Test // DATAES-799
