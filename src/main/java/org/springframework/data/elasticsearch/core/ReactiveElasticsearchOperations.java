@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -28,11 +27,6 @@ import org.springframework.lang.Nullable;
 
 /**
  * Interface that specifies a basic set of Elasticsearch operations executed in a reactive way.
- * <p>
- * Implemented by {@link ReactiveElasticsearchTemplate}. Not often used but a useful option for extensibility and
- * testability (as it can be easily mocked, stubbed, or be the target of a JDK proxy). Command execution using
- * {@link ReactiveElasticsearchOperations} is deferred until a {@link org.reactivestreams.Subscriber} subscribes to the
- * {@link Publisher}.
  *
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
