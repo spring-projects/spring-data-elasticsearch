@@ -6,6 +6,16 @@ This section describes breaking changes from version 5.1.x to 5.2.x and how remo
 [[elasticsearch-migration-guide-5.1-5.2.breaking-changes]]
 == Breaking Changes
 
-
 [[elasticsearch-migration-guide-5.1-5.2.deprecations]]
 == Deprecations
+
+=== Removal of deprecated code
+
+* All the code using the old deprecated `RestHighLevelClient` has been removed.
+The default Elasticsearch client used since version 5.0 is the (not so) new Elasticsearch Java client.
+* The `org.springframework.data.elasticsearch.client.ClientLogger` class has been removed.
+This logger was configured with the `org.springframework.data.elasticsearch.client.WIRE` setting, but was not working with all clients.
+From version 5 on, use the trace logger available in the Elasticsearch Java client, see <<elasticsearch.clients.logging>>.
+* The method `org.springframework.data.elasticsearch.core.ElasticsearchOperations.stringIdRepresentation(Object)` has been removed, use the `convertId(Object)` method defined in the same interface instead.
+* The class `org.springframework.data.elasticsearch.core.Range` has been removed, use `org.springframework.data.domain.Range` instead.
+* The methods `org.springframework.data.elasticsearch.core.query.IndexQuery.getParentId() and `setParentId(String)` have been removed, they werent used anymore and were no-ops. It has been removed from the `org.springframework.data.elasticsearch.core.query.IndexQuery` class as well.

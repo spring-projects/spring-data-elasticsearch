@@ -32,8 +32,6 @@ public class IndexQuery {
 	@Nullable private Object object;
 	@Nullable private Long version;
 	@Nullable private String source;
-	@Deprecated
-	@Nullable private String parentId;
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
 	@Nullable private String routing;
@@ -43,13 +41,12 @@ public class IndexQuery {
 	public IndexQuery() {}
 
 	public IndexQuery(@Nullable String id, @Nullable Object object, @Nullable Long version, @Nullable String source,
-			@Nullable String parentId, @Nullable Long seqNo, @Nullable Long primaryTerm, @Nullable String routing,
-			@Nullable OpType opType, @Nullable String indexName) {
+			@Nullable Long seqNo, @Nullable Long primaryTerm, @Nullable String routing, @Nullable OpType opType,
+			@Nullable String indexName) {
 		this.id = id;
 		this.object = object;
 		this.version = version;
 		this.source = source;
-		this.parentId = parentId;
 		this.seqNo = seqNo;
 		this.primaryTerm = primaryTerm;
 		this.routing = routing;
@@ -91,25 +88,6 @@ public class IndexQuery {
 
 	public void setSource(String source) {
 		this.source = source;
-	}
-
-	/**
-	 * @deprecated from 4.0. Elasticsearch 7 does not support the parent id in an index request. parent/child relations
-	 *             must be modeled using the join datatype. Setting it here will have no effect.
-	 */
-	@Nullable
-	@Deprecated
-	public String getParentId() {
-		return parentId;
-	}
-
-	/**
-	 * @deprecated from 4.0. Elasticsearch 7 does not support the parent id in an index request. parent/child relations
-	 *             must be modeled using the join datatype. Setting it here will have no effect.
-	 */
-	@Deprecated
-	public void setParentId(String parentId) {
-		this.parentId = parentId;
 	}
 
 	@Nullable

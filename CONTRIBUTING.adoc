@@ -8,7 +8,3 @@ Do not submit a Pull Request before having created an issue and having discussed
 == Running the test locally
 
 In order to run the tests locally with `./mvnw test` you need to have docker running because Spring Data Elasticsearch uses https://www.testcontainers.org/[Testcontainers] to start a local running Elasticsearch instance.
-
-== Class names of the test classes
-
-Test classes that do depend on the client have either `ERHLC` (when using the deprecated Elasticsearch  `RestHighLevelClient`) or `ELC` (the new `ElasticsearchClient`) in their name.
