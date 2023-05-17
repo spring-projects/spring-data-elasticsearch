@@ -71,7 +71,7 @@ public class BaseQuery implements Query {
 	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
 	@Nullable protected Boolean requestCache;
 	protected List<IdWithRouting> idsWithRouting = Collections.emptyList();
-	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
+	protected List<RuntimeField> runtimeFields = new ArrayList<>();
 	@Nullable protected PointInTime pointInTime;
 
 	private boolean queryIsUpdatedByConverter = false;
