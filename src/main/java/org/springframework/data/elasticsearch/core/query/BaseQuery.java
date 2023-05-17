@@ -117,6 +117,7 @@ public class BaseQuery implements Query {
 		this.expandWildcards = builder.getExpandWildcards();
 		this.docValueFields = builder.getDocValueFields();
 		this.scriptedFields = builder.getScriptedFields();
+		this.runtimeFields = builder.getRuntimeFields();
 	}
 
 	/**
