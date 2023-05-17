@@ -71,7 +71,7 @@ public abstract class DynamicSettingAndMappingEntityRepositoryIntegrationTests {
 	public void shouldCreateGivenDynamicSettingsForGivenIndex() {
 
 		assertThat(indexOperations.exists()).isTrue();
-		Map<String, Object> map = indexOperations.getSettings();
+		Map<String, Object> map = indexOperations.getSettings().flatten();
 		assertThat(map.containsKey("index.number_of_replicas")).isTrue();
 		assertThat(map.containsKey("index.number_of_shards")).isTrue();
 		assertThat(map.containsKey("index.analysis.analyzer.emailAnalyzer.tokenizer")).isTrue();

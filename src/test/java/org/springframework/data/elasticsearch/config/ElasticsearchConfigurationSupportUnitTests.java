@@ -16,23 +16,15 @@
 package org.springframework.data.elasticsearch.config;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 import java.util.Collection;
 import java.util.Collections;
 
-import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.AbstractApplicationContext;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.client.erhlc.AbstractElasticsearchConfiguration;
-import org.springframework.data.elasticsearch.client.erhlc.AbstractReactiveElasticsearchConfiguration;
-import org.springframework.data.elasticsearch.client.erhlc.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.client.erhlc.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 
@@ -79,51 +71,9 @@ public class ElasticsearchConfigurationSupportUnitTests {
 		assertThat(context.getBean(ElasticsearchConverter.class)).isNotNull();
 	}
 
-	@Test // DATAES-504
-	public void restConfigContainsElasticsearchTemplate() {
-
-		AbstractApplicationContext context = new AnnotationConfigApplicationContext(RestConfig.class);
-		assertThat(context.getBean(ElasticsearchRestTemplate.class)).isNotNull();
-	}
-
-	@Test // DATAES-563
-	public void restConfigContainsElasticsearchOperationsByNameAndAlias() {
-
-		AbstractApplicationContext context = new AnnotationConfigApplicationContext(RestConfig.class);
-
-		assertThat(context.getBean("elasticsearchOperations")).isNotNull();
-		assertThat(context.getBean("elasticsearchTemplate")).isNotNull();
-	}
-
-	@Test // DATAES-504
-	public void reactiveConfigContainsReactiveElasticsearchTemplate() {
-
-		AbstractApplicationContext context = new AnnotationConfigApplicationContext(ReactiveRestConfig.class);
-		assertThat(context.getBean(ReactiveElasticsearchTemplate.class)).isNotNull();
-	}
-
 	@Configuration
 	static class StubConfig extends ElasticsearchConfigurationSupport {
 
-	}
-
-	@Configuration
-	static class ReactiveRestConfig extends AbstractReactiveElasticsearchConfiguration {
-
-		@Override
-		@Bean
-		public ReactiveElasticsearchClient reactiveElasticsearchClient() {
-			return mock(ReactiveElasticsearchClient.class);
-		}
-	}
-
-	@Configuration
-	static class RestConfig extends AbstractElasticsearchConfiguration {
-
-		@Override
-		public RestHighLevelClient elasticsearchClient() {
-			return mock(RestHighLevelClient.class);
-		}
 	}
 
 	@Configuration

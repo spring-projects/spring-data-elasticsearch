@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.config;
 
-import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -27,7 +27,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
-import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.lang.Nullable;
@@ -43,7 +43,7 @@ import org.springframework.test.context.ContextConfiguration;
 public class ReactiveElasticsearchRepositoriesRegistrarTests {
 
 	@Configuration
-	@Import({ ReactiveElasticsearchRestTemplateConfiguration.class })
+	@Import({ ReactiveElasticsearchTemplateConfiguration.class })
 	@EnableReactiveElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {}
 

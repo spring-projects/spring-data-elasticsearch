@@ -5,41 +5,19 @@ image:https://spring.io/badges/spring-data-elasticsearch/ga.svg[Spring Data Elas
 The primary goal of the https://projects.spring.io/spring-data[Spring Data] project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
 
 The Spring Data Elasticsearch project provides integration with the https://www.elastic.co/[Elasticsearch] search engine.
-Key functional areas of Spring Data Elasticsearch are a POJO centric model for interacting with a Elasticsearch Documents and easily writing a Repository style data access layer.
+Key functional areas of Spring Data Elasticsearch are a POJO centric model for interacting with Elasticsearch Documents and easily writing a Repository style data access layer.
 
 This project is lead and maintained by the community.
 
 == Features
 
-* Spring configuration support using Java based `@Configuration` classes or an XML namespace for a ES clients instances.
+* Spring configuration support using Java based `@Configuration` classes or an XML namespace for an ES client instances.
 * `ElasticsearchOperations` class and implementations that increases productivity performing common ES operations.
 Includes integrated object mapping between documents and POJOs.
 * Feature Rich Object Mapping integrated with Spring’s Conversion Service
 * Annotation based mapping metadata
 * Automatic implementation of `Repository` interfaces including support for custom search methods.
 * CDI support for repositories
-
-== About Elasticsearch versions and clients
-
-=== Elasticsearch 7.17 client libraries
-
-At the end of 2021 Elasticsearch with version 7.17 released the new version of their Java client and deprecated the `RestHighLevelCLient` which was the default way to access Elasticsearch up to then.
-
-Spring Data Elasticsearch will in version 4.4 offer the possibility to optionally use the new client as an alternative to the existing setup using the `RestHighLevelCLient`.
-The default client that is used still is the `RestHighLevelCLient`, first because the integration of the new client is not yet complete, the new client still has features missing and bugs which will hopefully be resolved soon.
-Second, and more important, the new Elasticsearch client forces users to switch from using `javax.json.spi.JsonProvider` to `jakarta.json.spi.JsonProvider`.
-Spring Data Elasticsearch cannot enforce this switch; Spring Boot will switch to `jakarta` with version 3 and then it's safe for Spring Data Elasticsearch to switch to the new client.
-
-So for version 4.4 Spring Data Elasticsearch will keep using the `RestHighLevelCLient` in version 7.17.x (as long as this will be available).
-
-=== Elasticsearch 8 client libraries
-
-In Elasticsearch 8, the `RestHighLevelCLient` has been removed.
-This means that a switch to this client version can only be done with the next major upgrade which will be Spring Data Elasticsearch 5, based on Spring Data 3, used by Spring Boot 3, based on Spring 6 and Java 17.
-
-=== Elasticsearch 8 cluster
-
-It should be possible to use the Elasticsearch 7 client to access a cluster running version 8 by setting the appropriate compatibility headers (see the documentation at https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#elasticsearch.clients.configuration). but I encountered and heard of cases where the response from the server is not parseable by the client although the headers are set, so use with care.
 
 == Code of Conduct
 
@@ -86,25 +64,7 @@ public class MyService {
 
 === Using the RestClient
 
-Provide a configuration like this:
-
-[source,java]
-----
-@Configuration
-public class RestClientConfig extends AbstractElasticsearchConfiguration {
-
-    @Override
-    @Bean
-    public RestHighLevelClient elasticsearchClient() {
-
-        final ClientConfiguration clientConfiguration = ClientConfiguration.builder()
-            .connectedTo("localhost:9200")
-            .build();
-
-        return RestClients.create(clientConfiguration).rest();
-    }
-}
-----
+Please check the [official documentation](https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#elasticsearch.clients.configuration).
 
 === Maven configuration
 
@@ -119,9 +79,6 @@ Add the Maven dependency:
 </dependency>
 ----
 
-// NOTE: since Github does not support include directives, the content of
-// the src/main/asciidoc/reference/preface.adoc file is duplicated here
-// Always change both files!
 **Compatibility Matrix**
 
 The compatibility between Spring Data Elasticsearch, Elasticsearch client drivers and Spring Boot versions can be found in the https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#preface.versions[reference documentation].

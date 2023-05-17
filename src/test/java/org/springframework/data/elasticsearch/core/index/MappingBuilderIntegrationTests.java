@@ -38,26 +38,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.annotations.Dynamic;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.MultiField;
-import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.annotations.TermVector;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
@@ -79,15 +66,6 @@ import org.springframework.lang.Nullable;
 @SpringIntegrationTest
 public abstract class MappingBuilderIntegrationTests extends MappingContextBaseTests
 		implements NewElasticsearchClientDevelopment {
-
-	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
-	static class Config {
-		@Bean
-		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider("mapping-builder");
-		}
-	}
 
 	@Autowired private ElasticsearchOperations operations;
 	@Autowired protected IndexNameProvider indexNameProvider;
@@ -909,6 +887,7 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Field(type = FieldType.Dense_Vector, dims = 1) String denseVectorField;
 	}
+
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	private static class FieldNameDotsEntity {
 		@Id

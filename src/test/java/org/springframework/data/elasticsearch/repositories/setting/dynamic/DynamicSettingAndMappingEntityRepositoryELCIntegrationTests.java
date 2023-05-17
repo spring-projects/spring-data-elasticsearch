@@ -18,7 +18,7 @@ package org.springframework.data.elasticsearch.repositories.setting.dynamic;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchRestTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
@@ -32,12 +32,12 @@ public class DynamicSettingAndMappingEntityRepositoryELCIntegrationTests
 		extends DynamicSettingAndMappingEntityRepositoryIntegrationTests {
 
 	@Configuration
-	@Import({ ElasticsearchRestTemplateConfiguration.class })
+	@Import({ ElasticsearchTemplateConfiguration.class })
 	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {
 		@Bean
 		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider("dynamic-setting-and-mapping=");
+			return new IndexNameProvider("dynamic-setting-and-mapping");
 		}
 	}
 

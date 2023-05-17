@@ -15,38 +15,25 @@
  */
 package org.springframework.data.elasticsearch.core.suggest;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.common.unit.Fuzziness;
-import org.elasticsearch.search.suggest.SuggestBuilder;
-import org.elasticsearch.search.suggest.SuggestBuilders;
-import org.elasticsearch.search.suggest.SuggestionBuilder;
-import org.elasticsearch.search.suggest.completion.CompletionSuggestion;
-import org.elasticsearch.search.suggest.completion.CompletionSuggestionBuilder;
-import org.elasticsearch.search.suggest.completion.context.CategoryQueryContext;
-import org.elasticsearch.xcontent.ToXContent;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.CompletionContext;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.client.erhlc.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.data.elasticsearch.utils.IndexInitializer;
+import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
 
 /**
@@ -56,23 +43,24 @@ import org.springframework.lang.Nullable;
 @SpringIntegrationTest
 public abstract class CompletionWithContextsIntegrationTests {
 
+	private static final String SUGGESTION_NAME = "test-suggest";
+
 	@Autowired private ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
+	@Autowired private IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	void setup() {
-		indexOperations = operations.indexOps(ContextCompletionEntity.class);
-		indexOperations.delete();
+		indexNameProvider.increment();
+		operations.indexOps(ContextCompletionEntity.class).createWithMapping();
 	}
 
-	@AfterEach
-	void after() {
-		indexOperations.delete();
+	@Test
+	@Order(java.lang.Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
 	}
 
 	private void loadContextCompletionObjectEntities() {
-
-		IndexInitializer.init(indexOperations);
 
 		NonDocumentEntity nonDocumentEntity = new NonDocumentEntity();
 		nonDocumentEntity.setSomeField1("foo");
@@ -100,105 +88,74 @@ public abstract class CompletionWithContextsIntegrationTests {
 		indexQueries.add(new ContextCompletionEntityBuilder("4").name("Artur Konczak")
 				.suggest(new String[] { "Artur", "Konczak" }, context4).buildIndex());
 
-		operations.bulkIndex(indexQueries, IndexCoordinates.of("test-index-context-completion"));
+		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 		operations.indexOps(ContextCompletionEntity.class).refresh();
 	}
+
+	abstract protected Query getSearchQuery(String suggestionName, String category);
 
 	@Test // DATAES-536
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingContextCompletionEntityOfMongo() {
 
-		// given
 		loadContextCompletionObjectEntities();
-		CompletionSuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest")
-				.prefix("m", Fuzziness.AUTO);
+		Query query = getSearchQuery(SUGGESTION_NAME, "mongo");
 
-		Map<String, List<? extends ToXContent>> contextMap = new HashMap<>();
-		List<CategoryQueryContext> contexts = new ArrayList<>(1);
+		var searchHits = operations.search(query, ContextCompletionEntity.class);
 
-		CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
-		builder.setCategory("mongo");
-		CategoryQueryContext queryContext = builder.build();
-		contexts.add(queryContext);
-		contextMap.put(ContextCompletionEntity.LANGUAGE_CATEGORY, contexts);
-
-		completionSuggestionFuzzyBuilder.contexts(contextMap);
-
-		// when
-		SearchResponse suggestResponse = ((ElasticsearchRestTemplate) operations).suggest(
-				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion"));
-		assertThat(suggestResponse.getSuggest()).isNotNull();
-		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
-		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
-
-		// then
+		assertThat(searchHits.hasSuggest()).isTrue();
+		Suggest suggest = searchHits.getSuggest();
+		Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
+				.getSuggestion(SUGGESTION_NAME);
+		assertThat(suggestion).isNotNull();
+		assertThat(suggestion)
+				.isInstanceOf(org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion.class);
+		List<org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion.Entry.Option<CompletionIntegrationTests.AnnotatedCompletionEntity>> options = ((org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion<CompletionIntegrationTests.AnnotatedCompletionEntity>) suggestion)
+				.getEntries().get(0).getOptions();
 		assertThat(options).hasSize(1);
-		assertThat(options.get(0).getText().string()).isEqualTo("Marchand");
+		assertThat(options.get(0).getText()).isEqualTo("Marchand");
 	}
 
 	@Test // DATAES-536
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingContextCompletionEntityOfElastic() {
 
-		// given
 		loadContextCompletionObjectEntities();
-		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m",
-				Fuzziness.AUTO);
+		Query query = getSearchQuery(SUGGESTION_NAME, "elastic");
 
-		Map<String, List<? extends ToXContent>> contextMap = new HashMap<>();
-		List<CategoryQueryContext> contexts = new ArrayList<>(1);
+		var searchHits = operations.search(query, ContextCompletionEntity.class);
 
-		CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
-		builder.setCategory("elastic");
-		CategoryQueryContext queryContext = builder.build();
-		contexts.add(queryContext);
-		contextMap.put(ContextCompletionEntity.LANGUAGE_CATEGORY, contexts);
-
-		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
-
-		// when
-		SearchResponse suggestResponse = ((ElasticsearchRestTemplate) operations).suggest(
-				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion"));
-		assertThat(suggestResponse.getSuggest()).isNotNull();
-		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
-		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
-
-		// then
+		assertThat(searchHits.hasSuggest()).isTrue();
+		Suggest suggest = searchHits.getSuggest();
+		Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
+				.getSuggestion(SUGGESTION_NAME);
+		assertThat(suggestion).isNotNull();
+		assertThat(suggestion)
+				.isInstanceOf(org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion.class);
+		List<org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion.Entry.Option<CompletionIntegrationTests.AnnotatedCompletionEntity>> options = ((org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion<CompletionIntegrationTests.AnnotatedCompletionEntity>) suggestion)
+				.getEntries().get(0).getOptions();
 		assertThat(options).hasSize(1);
-		assertThat(options.get(0).getText().string()).isEqualTo("Mohsin");
+		assertThat(options.get(0).getText()).isEqualTo("Mohsin");
 	}
 
 	@Test // DATAES-536
 	public void shouldFindSuggestionsForGivenCriteriaQueryUsingContextCompletionEntityOfKotlin() {
 
-		// given
 		loadContextCompletionObjectEntities();
-		SuggestionBuilder completionSuggestionFuzzyBuilder = SuggestBuilders.completionSuggestion("suggest").prefix("m",
-				Fuzziness.AUTO);
+		Query query = getSearchQuery(SUGGESTION_NAME, "kotlin");
 
-		Map<String, List<? extends ToXContent>> contextMap = new HashMap<>();
-		List<CategoryQueryContext> contexts = new ArrayList<>(1);
+		var searchHits = operations.search(query, ContextCompletionEntity.class);
 
-		CategoryQueryContext.Builder builder = CategoryQueryContext.builder();
-		builder.setCategory("kotlin");
-		CategoryQueryContext queryContext = builder.build();
-		contexts.add(queryContext);
-		contextMap.put(ContextCompletionEntity.LANGUAGE_CATEGORY, contexts);
-
-		((CompletionSuggestionBuilder) completionSuggestionFuzzyBuilder).contexts(contextMap);
-
-		// when
-		SearchResponse suggestResponse = ((ElasticsearchRestTemplate) operations).suggest(
-				new SuggestBuilder().addSuggestion("test-suggest", completionSuggestionFuzzyBuilder),
-				IndexCoordinates.of("test-index-context-completion"));
-		assertThat(suggestResponse.getSuggest()).isNotNull();
-		CompletionSuggestion completionSuggestion = suggestResponse.getSuggest().getSuggestion("test-suggest");
-		List<CompletionSuggestion.Entry.Option> options = completionSuggestion.getEntries().get(0).getOptions();
-
-		// then
+		assertThat(searchHits.hasSuggest()).isTrue();
+		Suggest suggest = searchHits.getSuggest();
+		Suggest.Suggestion<? extends Suggest.Suggestion.Entry<? extends Suggest.Suggestion.Entry.Option>> suggestion = suggest
+				.getSuggestion(SUGGESTION_NAME);
+		assertThat(suggestion).isNotNull();
+		assertThat(suggestion)
+				.isInstanceOf(org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion.class);
+		List<org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion.Entry.Option<CompletionIntegrationTests.AnnotatedCompletionEntity>> options = ((org.springframework.data.elasticsearch.core.suggest.response.CompletionSuggestion<CompletionIntegrationTests.AnnotatedCompletionEntity>) suggestion)
+				.getEntries().get(0).getOptions();
 		assertThat(options).hasSize(2);
-		assertThat(options.get(0).getText().string()).isIn("Marchand", "Mohsin");
-		assertThat(options.get(1).getText().string()).isIn("Marchand", "Mohsin");
+		assertThat(options.get(0).getText()).isIn("Marchand", "Mohsin");
+		assertThat(options.get(1).getText()).isIn("Marchand", "Mohsin");
 	}
 
 	/**
@@ -235,7 +192,7 @@ public abstract class CompletionWithContextsIntegrationTests {
 	 * @author Mewes Kochheim
 	 * @author Robert Gruendler
 	 */
-	@Document(indexName = "test-index-context-completion")
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class ContextCompletionEntity {
 
 		public static final String LANGUAGE_CATEGORY = "language";

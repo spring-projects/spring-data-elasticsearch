@@ -33,8 +33,6 @@ public class IndexQueryBuilder {
 	@Nullable private Object object;
 	@Nullable private Long version;
 	@Nullable private String source;
-	@Deprecated
-	@Nullable private String parentId;
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
 	@Nullable private String routing;
@@ -64,12 +62,6 @@ public class IndexQueryBuilder {
 		return this;
 	}
 
-	@Deprecated
-	public IndexQueryBuilder withParentId(String parentId) {
-		this.parentId = parentId;
-		return this;
-	}
-
 	public IndexQueryBuilder withSeqNoPrimaryTerm(SeqNoPrimaryTerm seqNoPrimaryTerm) {
 		this.seqNo = seqNoPrimaryTerm.sequenceNumber();
 		this.primaryTerm = seqNoPrimaryTerm.primaryTerm();
@@ -90,7 +82,7 @@ public class IndexQueryBuilder {
 	}
 
 	public IndexQuery build() {
-		return new IndexQuery(id, object, version, source, parentId, seqNo, primaryTerm, routing, opType, indexName);
+		return new IndexQuery(id, object, version, source, seqNo, primaryTerm, routing, opType, indexName);
 	}
 
 	/**

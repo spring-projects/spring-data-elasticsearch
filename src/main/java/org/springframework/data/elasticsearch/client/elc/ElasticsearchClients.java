@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 
 import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.message.BasicHeader;
@@ -47,7 +46,6 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -200,13 +198,6 @@ public final class ElasticsearchClients {
 			clientConfiguration.getHostNameVerifier().ifPresent(clientBuilder::setSSLHostnameVerifier);
 			clientBuilder.addInterceptorLast(new CustomHeaderInjector(clientConfiguration.getHeadersSupplier()));
 
-			if (ClientLogger.isEnabled()) {
-				HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-
-				clientBuilder.addInterceptorLast((HttpRequestInterceptor) interceptor);
-				clientBuilder.addInterceptorLast((HttpResponseInterceptor) interceptor);
-			}
-
 			RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 			Duration connectTimeout = clientConfiguration.getConnectTimeout();
 
@@ -282,66 +273,6 @@ public final class ElasticsearchClients {
 				.flatMap(entry -> entry.getValue().stream() //
 						.map(value -> new BasicHeader(entry.getKey(), value))) //
 				.toArray(org.apache.http.Header[]::new);
-	}
-
-	/**
-	 * Logging interceptors for Elasticsearch client logging.
-	 *
-	 * @see ClientLogger
-	 * @since 4.4
-	 * @deprecated since 5.0
-	 */
-	@Deprecated
-	private static class HttpLoggingInterceptor implements HttpResponseInterceptor, HttpRequestInterceptor {
-
-		@Override
-		public void process(HttpRequest request, HttpContext context) throws IOException {
-
-			String logId = (String) context.getAttribute(LOG_ID_ATTRIBUTE);
-
-			if (logId == null) {
-				logId = ClientLogger.newLogId();
-				context.setAttribute(LOG_ID_ATTRIBUTE, logId);
-			}
-
-			String headers = Arrays.stream(request.getAllHeaders())
-					.map(header -> header.getName()
-							+ ((header.getName().equals("Authorization")) ? ": *****" : ": " + header.getValue()))
-					.collect(Collectors.joining(", ", "[", "]"));
-
-			if (request instanceof HttpEntityEnclosingRequest entityRequest
-					&& ((HttpEntityEnclosingRequest) request).getEntity() != null) {
-
-				HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
-				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-				entity.writeTo(buffer);
-
-				if (!entity.isRepeatable()) {
-					entityRequest.setEntity(new ByteArrayEntity(buffer.toByteArray()));
-				}
-
-				ClientLogger.logRequest(logId, request.getRequestLine().getMethod(), request.getRequestLine().getUri(), "",
-						headers, buffer::toString);
-			} else {
-				ClientLogger.logRequest(logId, request.getRequestLine().getMethod(), request.getRequestLine().getUri(), "",
-						headers);
-			}
-		}
-
-		@Override
-		public void process(HttpResponse response, HttpContext context) throws IOException {
-
-			String logId = (String) context.getAttribute(LOG_ID_ATTRIBUTE);
-
-			String headers = Arrays.stream(response.getAllHeaders())
-					.map(header -> header.getName()
-							+ ((header.getName().equals("Authorization")) ? ": *****" : ": " + header.getValue()))
-					.collect(Collectors.joining(", ", "[", "]"));
-
-			// no way of logging the body, in this callback, it is not read yet, later there is no callback possibility in
-			// RestClient or RestClientTransport
-			ClientLogger.logRawResponse(logId, response.getStatusLine().getStatusCode(), headers);
-		}
 	}
 
 	/**
