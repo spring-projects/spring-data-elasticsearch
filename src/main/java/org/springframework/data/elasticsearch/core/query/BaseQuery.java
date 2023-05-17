@@ -105,6 +105,14 @@ public class BaseQuery implements Query {
 		this.requestCache = builder.getRequestCache();
 		this.idsWithRouting = builder.getIdsWithRouting();
 		this.pointInTime = builder.getPointInTime();
+		this.runtimeFields = builder.getRuntimeFields();
+	}
+
+	/**
+	 * @since 5.1
+	 */
+	public void setSort(@Nullable Sort sort) {
+		this.sort = sort;
 	}
 
 	@Override
