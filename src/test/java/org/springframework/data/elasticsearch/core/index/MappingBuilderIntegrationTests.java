@@ -39,7 +39,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -64,8 +63,7 @@ import org.springframework.lang.Nullable;
  * @author Morgan Lutz
  */
 @SpringIntegrationTest
-public abstract class MappingBuilderIntegrationTests extends MappingContextBaseTests
-		implements NewElasticsearchClientDevelopment {
+public abstract class MappingBuilderIntegrationTests extends MappingContextBaseTests {
 
 	@Autowired private ElasticsearchOperations operations;
 	@Autowired protected IndexNameProvider indexNameProvider;

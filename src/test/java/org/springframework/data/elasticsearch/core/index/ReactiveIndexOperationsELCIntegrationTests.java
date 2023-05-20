@@ -35,9 +35,4 @@ public class ReactiveIndexOperationsELCIntegrationTests extends ReactiveIndexOpe
 			return new IndexNameProvider("reactive-indexoperations");
 		}
 	}
-
-	@Override
-	public boolean newElasticsearchClient() {
-		return true;
-	}
 }

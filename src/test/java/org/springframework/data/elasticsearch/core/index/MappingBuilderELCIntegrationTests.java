@@ -37,9 +37,4 @@ public class MappingBuilderELCIntegrationTests extends MappingBuilderIntegration
 			return new IndexNameProvider("mappingbuilder");
 		}
 	}
-
-	@Override
-	public boolean newElasticsearchClient() {
-		return true;
-	}
 }

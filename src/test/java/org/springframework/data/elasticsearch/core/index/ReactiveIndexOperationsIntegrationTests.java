@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -49,16 +48,11 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class ReactiveIndexOperationsIntegrationTests implements NewElasticsearchClientDevelopment {
+public abstract class ReactiveIndexOperationsIntegrationTests {
 
 	@Autowired private ReactiveElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
 	private ReactiveIndexOperations indexOperations;
-
-	boolean rhlcWithCluster8() {
-		var clusterVersion = ((AbstractReactiveElasticsearchTemplate) operations).getClusterVersion().block();
-		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
-	}
 
 	@BeforeEach
 	void setUp() {
