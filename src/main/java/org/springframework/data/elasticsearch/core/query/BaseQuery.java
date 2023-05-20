@@ -58,7 +58,7 @@ public class BaseQuery implements Query {
 	protected float minScore;
 	@Nullable protected Collection<String> ids;
 	@Nullable protected String route;
-	protected SearchType searchType = SearchType.QUERY_THEN_FETCH;
+	@Nullable protected SearchType searchType = SearchType.QUERY_THEN_FETCH;
 	@Nullable protected IndicesOptions indicesOptions;
 	protected boolean trackScores;
 	@Nullable protected String preference;
@@ -278,10 +278,11 @@ public class BaseQuery implements Query {
 		this.route = route;
 	}
 
-	public void setSearchType(SearchType searchType) {
+	public void setSearchType(@Nullable SearchType searchType) {
 		this.searchType = searchType;
 	}
 
+	@Nullable
 	@Override
 	public SearchType getSearchType() {
 		return searchType;
