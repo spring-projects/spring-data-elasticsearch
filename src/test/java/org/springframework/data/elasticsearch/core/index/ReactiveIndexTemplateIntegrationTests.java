@@ -30,10 +30,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -53,16 +51,11 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasticsearchClientDevelopment {
+public abstract class ReactiveIndexTemplateIntegrationTests {
 
 	@Autowired private ReactiveElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
 	private ReactiveIndexOperations indexOperations;
-
-	boolean rhlcWithCluster8() {
-		var clusterVersion = ((AbstractReactiveElasticsearchTemplate) operations).getClusterVersion().block();
-		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
-	}
 
 	@BeforeEach
 	void setUp() {
@@ -76,7 +69,6 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
 	}
 
-	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-612
 	void shouldPutTemplate() {
 
@@ -98,7 +90,6 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 		assertThat(acknowledged).isTrue();
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should create component template")
 	void shouldCreateComponentTemplate() {
@@ -129,7 +120,6 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 		assertThat(acknowledged).isTrue();
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should get component template")
 	void shouldGetComponentTemplate() throws JSONException {
@@ -179,7 +169,6 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 		assertThat(alias2.getAlias()).isEqualTo("alias2");
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should delete component template")
 	void shouldDeleteComponentTemplate() {
@@ -207,7 +196,6 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 		assertThat(exists).isFalse();
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should put, get and delete index template with template")
 	void shouldPutGetAndDeleteIndexTemplateWithTemplate() {
@@ -248,7 +236,6 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 		assertThat(exists).isFalse();
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should put, get and delete index template of components")
 	void shouldPutGetAndDeleteIndexTemplateOfComponents() {
@@ -339,7 +326,6 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 				.verifyComplete();
 	}
 
-	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-612
 	void shouldGetTemplate() throws JSONException {
 

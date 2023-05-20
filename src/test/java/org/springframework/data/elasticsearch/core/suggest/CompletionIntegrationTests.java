@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.CompletionField;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -48,7 +47,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class CompletionIntegrationTests implements NewElasticsearchClientDevelopment {
+public abstract class CompletionIntegrationTests {
 
 	@Autowired private ElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;

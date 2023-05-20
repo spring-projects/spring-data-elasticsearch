@@ -41,7 +41,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Order;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.CountQuery;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -79,17 +78,12 @@ import org.springframework.lang.Nullable;
  * @author James Mudd
  */
 @SpringIntegrationTest
-public abstract class CustomMethodRepositoryIntegrationTests implements NewElasticsearchClientDevelopment {
+public abstract class CustomMethodRepositoryIntegrationTests {
 
 	@Autowired ElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
 	@Autowired private SampleCustomMethodRepository repository;
 	@Autowired private SampleStreamingCustomMethodRepository streamingRepository;
-
-	boolean rhlcWithCluster8() {
-		var clusterVersion = ((AbstractElasticsearchTemplate) operations).getClusterVersion();
-		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
-	}
 
 	@BeforeEach
 	public void before() {
@@ -814,7 +808,6 @@ public abstract class CustomMethodRepositoryIntegrationTests implements NewElast
 		assertThat(page.getTotalElements()).isEqualTo(1L);
 	}
 
-	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test
 	public void shouldExecuteCustomMethodWithNearBox() {
 
@@ -1374,7 +1367,6 @@ public abstract class CustomMethodRepositoryIntegrationTests implements NewElast
 		assertThat(count).isEqualTo(1L);
 	}
 
-	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-106
 	public void shouldCountCustomMethodWithNearBox() {
 
