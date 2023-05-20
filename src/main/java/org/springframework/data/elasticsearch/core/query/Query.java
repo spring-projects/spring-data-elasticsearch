@@ -221,6 +221,7 @@ public interface Query {
 	 *
 	 * @return
 	 */
+	@Nullable
 	SearchType getSearchType();
 
 	/**

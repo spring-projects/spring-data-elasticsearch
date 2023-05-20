@@ -22,6 +22,7 @@ import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.InlineScript;
 import co.elastic.clients.elasticsearch._types.OpType;
+import co.elastic.clients.elasticsearch._types.SearchType;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.VersionType;
@@ -1153,9 +1154,12 @@ class RequestConverter {
 				var query = param.query();
 				mrb.searches(sb -> sb //
 						.header(h -> {
+							var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
+									: searchType(query.getSearchType());
+
 							h //
 									.index(Arrays.asList(param.index().getIndexNames())) //
-									.searchType(searchType(query.getSearchType())) //
+									.searchType(searchType) //
 									.requestCache(query.getRequestCache()) //
 							;
 
@@ -1256,8 +1260,8 @@ class RequestConverter {
 							query.getScriptedFields().forEach(scriptedField -> bb.scriptFields(scriptedField.getFieldName(),
 									sf -> sf.script(getScript(scriptedField.getScriptData()))));
 
-							if (query instanceof NativeQuery) {
-								prepareNativeSearch((NativeQuery) query, bb);
+							if (query instanceof NativeQuery nativeQuery) {
+								prepareNativeSearch(nativeQuery, bb);
 							}
 							return bb;
 						} //
@@ -1279,12 +1283,15 @@ class RequestConverter {
 
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(clazz);
 
+		var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
+				: searchType(query.getSearchType());
+
 		builder //
 				.version(true) //
 				.trackScores(query.getTrackScores()) //
 				.allowNoIndices(query.getAllowNoIndices()) //
 				.source(getSourceConfig(query)) //
-				.searchType(searchType(query.getSearchType())) //
+				.searchType(searchType) //
 				.timeout(timeStringMs(query.getTimeout())) //
 				.requestCache(query.getRequestCache()) //
 		;
@@ -1361,8 +1368,8 @@ class RequestConverter {
 		query.getScriptedFields().forEach(scriptedField -> builder.scriptFields(scriptedField.getFieldName(),
 				sf -> sf.script(getScript(scriptedField.getScriptData()))));
 
-		if (query instanceof NativeQuery) {
-			prepareNativeSearch((NativeQuery) query, builder);
+		if (query instanceof NativeQuery nativeQuery) {
+			prepareNativeSearch(nativeQuery, builder);
 		}
 
 		if (query.getTrackTotalHits() != null) {
