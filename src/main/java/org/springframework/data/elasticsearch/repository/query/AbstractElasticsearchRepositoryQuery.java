@@ -29,6 +29,7 @@ import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -75,7 +76,9 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	public Object execute(Object[] parameters) {
 
 		ParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
-		Class<?> clazz = getResultClass();
+		ResultProcessor resultProcessor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
+		Class<?> clazz = resultProcessor.getReturnedType().getDomainType();
+
 		Query query = createQuery(parameters);
 
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
@@ -132,8 +135,10 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 	public Query createQuery(Object[] parameters) {
 
-		Class<?> clazz = getResultClass();
 		ParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
+		ResultProcessor resultProcessor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
+		Class<?> returnedType = resultProcessor.getReturnedType().getDomainType();
+
 		Query query = createQuery(parameterAccessor);
 
 		Assert.notNull(query, "unsupported query");
@@ -149,10 +154,6 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 		}
 
 		return query;
-	}
-
-	private Class<?> getResultClass() {
-		return queryMethod.getResultProcessor().getReturnedType().getDomainType();
 	}
 
 	private ParametersParameterAccessor getParameterAccessor(Object[] parameters) {

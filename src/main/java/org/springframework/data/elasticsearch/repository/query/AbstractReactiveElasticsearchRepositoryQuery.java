@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -81,6 +82,13 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 	private Object execute(ElasticsearchParameterAccessor parameterAccessor) {
 
 		ResultProcessor processor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
+		var returnedType = processor.getReturnedType();
+		Class<?> domainType = returnedType.getDomainType();
+		Class<?> typeToRead = returnedType.getTypeToRead();
+
+		if (SearchHit.class.isAssignableFrom(typeToRead)) {
+			typeToRead = queryMethod.unwrappedReturnType;
+		}
 
 		Query query = createQuery(parameterAccessor);
 
@@ -100,8 +108,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		ReactiveElasticsearchQueryExecution execution = getExecution(parameterAccessor,
 				new ResultProcessingConverter(processor));
 
-		var returnedType = processor.getReturnedType();
-		return execution.execute(query, returnedType.getDomainType(), returnedType.getTypeToRead(), index);
+		return execution.execute(query, domainType, typeToRead, index);
 	}
 
 	private ReactiveElasticsearchQueryExecution getExecution(ElasticsearchParameterAccessor accessor,
