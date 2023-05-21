@@ -43,6 +43,8 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.util.QueryExecutionConverters;
+import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -62,9 +64,16 @@ import org.springframework.util.ClassUtils;
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
+	// the following 2 variables exits in the base class, but are private. We need them for
+	// correct handling of return types (SearchHits), so we have our own values here.
+	// Alas this means that we have to copy code that initializes these variables and in the
+	// base class uses them in order to use our variables
+	protected final Method method;
+	protected final Class<?> unwrappedReturnType;
+	private Boolean unwrappedReturnTypeFromSearchHit = null;
+
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	@Nullable private ElasticsearchEntityMetadata<?> metadata;
-	protected final Method method; // private in base class, but needed here and in derived classes as well
 	@Nullable private final Query queryAnnotation;
 	@Nullable private final Highlight highlightAnnotation;
 	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
@@ -83,6 +92,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		this.queryAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
 		this.highlightAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Highlight.class);
 		this.sourceFilters = AnnotatedElementUtils.findMergedAnnotation(method, SourceFilters.class);
+		this.unwrappedReturnType = potentiallyUnwrapReturnTypeFor(repositoryMetadata, method);
 
 		verifyCountQueryTypes();
 	}
@@ -188,6 +198,11 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @since 4.0
 	 */
 	public boolean isSearchHitMethod() {
+
+		if (unwrappedReturnTypeFromSearchHit != null && unwrappedReturnTypeFromSearchHit) {
+			return true;
+		}
+
 		Class<?> methodReturnType = method.getReturnType();
 
 		if (SearchHits.class.isAssignableFrom(methodReturnType)) {
@@ -322,4 +337,32 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 		return fieldNames.toArray(new String[0]);
 	}
+
+	// region Copied from QueryMethod base class
+	/*
+	 * Copied from the QueryMethod class adding support for collections of SearchHit instances. No static method here.
+	 */
+	private Class<? extends Object> potentiallyUnwrapReturnTypeFor(RepositoryMetadata metadata, Method method) {
+		TypeInformation<?> returnType = metadata.getReturnType(method);
+		if (!QueryExecutionConverters.supports(returnType.getType())
+				&& !ReactiveWrapperConverters.supports(returnType.getType())) {
+			return returnType.getType();
+		} else {
+			TypeInformation<?> componentType = returnType.getComponentType();
+			if (componentType == null) {
+				throw new IllegalStateException(
+						String.format("Couldn't find component type for return value of method %s", method));
+			} else {
+
+				if (SearchHit.class.isAssignableFrom(componentType.getType())) {
+					unwrappedReturnTypeFromSearchHit = true;
+					return componentType.getComponentType().getType();
+				} else {
+					return componentType.getType();
+				}
+			}
+		}
+	}
+	// endregion
+
 }
