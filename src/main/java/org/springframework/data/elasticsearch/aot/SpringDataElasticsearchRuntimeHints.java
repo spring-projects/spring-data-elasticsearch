@@ -27,21 +27,18 @@ import org.springframework.data.elasticsearch.client.elc.EntityAsMap;
 import org.springframework.data.elasticsearch.core.event.AfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.AfterLoadCallback;
 import org.springframework.data.elasticsearch.core.event.AfterSaveCallback;
-import org.springframework.data.elasticsearch.core.event.AuditingEntityCallback;
 import org.springframework.data.elasticsearch.core.event.BeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterConvertCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterLoadCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
-import org.springframework.data.elasticsearch.core.event.ReactiveAuditingEntityCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
-import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
  * @since 5.1
  */
-public class ElasticsearchRuntimeHints implements RuntimeHintsRegistrar {
+public class SpringDataElasticsearchRuntimeHints implements RuntimeHintsRegistrar {
 
 	@Override
 	public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
@@ -70,6 +67,5 @@ public class ElasticsearchRuntimeHints implements RuntimeHintsRegistrar {
 
 		// properties needed to log the different versions
 		hints.resources().registerPattern("versions.properties");
-		hints.resources().registerPattern("co/elastic/clients/version.properties");
 	}
 }
