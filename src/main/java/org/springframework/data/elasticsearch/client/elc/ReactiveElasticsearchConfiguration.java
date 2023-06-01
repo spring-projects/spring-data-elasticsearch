@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.TransportOptions;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
 
@@ -41,7 +43,7 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	 *
 	 * @return configuration, must not be {@literal null}
 	 */
-	@Bean(name="elasticsearchClientConfiguration")
+	@Bean(name = "elasticsearchClientConfiguration")
 	public abstract ClientConfiguration clientConfiguration();
 
 	/**
@@ -65,11 +67,11 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	 * @return ReactiveElasticsearchClient instance.
 	 */
 	@Bean
-	public ReactiveElasticsearchClient reactiveElasticsearchClient(RestClient restClient) {
+	public ReactiveElasticsearchClient reactiveElasticsearchClient(RestClient restClient, JsonpMapper jsonpMapper) {
 
 		Assert.notNull(restClient, "restClient must not be null");
 
-		return ElasticsearchClients.createReactive(restClient, transportOptions());
+		return ElasticsearchClients.createReactive(restClient, transportOptions(), jsonpMapper);
 	}
 
 	/**
@@ -86,6 +88,18 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 		template.setRefreshPolicy(refreshPolicy());
 
 		return template;
+	}
+
+	/**
+	 * Provides the JsonpMapper that is used in the {@link #reactiveElasticsearchClient(RestClient, JsonpMapper)} method
+	 * and exposes it as a bean.
+	 *
+	 * @return the {@link JsonpMapper} to use
+	 * @since 5.2
+	 */
+	@Bean
+	public JsonpMapper jsonpMapper() {
+		return new JacksonJsonpMapper();
 	}
 
 	/**

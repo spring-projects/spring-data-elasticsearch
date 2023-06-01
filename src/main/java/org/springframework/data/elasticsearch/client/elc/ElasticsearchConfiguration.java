@@ -16,11 +16,14 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.TransportOptions;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
 
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
@@ -42,7 +45,7 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 	 *
 	 * @return configuration, must not be {@literal null}
 	 */
-	@Bean(name="elasticsearchClientConfiguration")
+	@Bean(name = "elasticsearchClientConfiguration")
 	public abstract ClientConfiguration clientConfiguration();
 
 	/**
@@ -63,14 +66,15 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 	 * Provides the {@link ElasticsearchClient} to be used.
 	 *
 	 * @param restClient the low level RestClient to use
+	 * @param jsonpMapper the JsonpMapper to use
 	 * @return ElasticsearchClient instance
 	 */
 	@Bean
-	public ElasticsearchClient elasticsearchClient(RestClient restClient) {
+	public ElasticsearchClient elasticsearchClient(RestClient restClient, JsonpMapper jsonpMapper) {
 
 		Assert.notNull(restClient, "restClient must not be null");
 
-		return ElasticsearchClients.createImperative(restClient, transportOptions());
+		return ElasticsearchClients.createImperative(restClient, transportOptions(), jsonpMapper);
 	}
 
 	/**
@@ -87,6 +91,18 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 		template.setRefreshPolicy(refreshPolicy());
 
 		return template;
+	}
+
+	/**
+	 * Provides the JsonpMapper bean that is used in the {@link #elasticsearchClient(RestClient, JsonpMapper)} method.
+	 * This can be adapted by overriding tge {@link #getJsonpMapper()} method.
+	 *
+	 * @return the {@link JsonpMapper} to use
+	 * @since 5.2
+	 */
+	@Bean
+	public JsonpMapper jsonpMapper() {
+		return new JacksonJsonpMapper();
 	}
 
 	/**

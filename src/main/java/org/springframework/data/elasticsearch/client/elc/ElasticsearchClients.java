@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
@@ -24,8 +25,6 @@ import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Arrays;
@@ -60,10 +59,11 @@ public final class ElasticsearchClients {
 	/**
 	 * Name of whose value can be used to correlate log messages for this request.
 	 */
-	private static final String LOG_ID_ATTRIBUTE = ElasticsearchClients.class.getName() + ".LOG_ID";
 	private static final String X_SPRING_DATA_ELASTICSEARCH_CLIENT = "X-SpringDataElasticsearch-Client";
 	private static final String IMPERATIVE_CLIENT = "imperative";
 	private static final String REACTIVE_CLIENT = "reactive";
+
+	private static final JsonpMapper DEFAULT_JSONP_MAPPER = new JacksonJsonpMapper();
 
 	/**
 	 * Creates a new {@link ReactiveElasticsearchClient}
@@ -75,7 +75,7 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "clientConfiguration must not be null");
 
-		return createReactive(getRestClient(clientConfiguration), null);
+		return createReactive(getRestClient(clientConfiguration), null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -90,7 +90,24 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 
-		return createReactive(getRestClient(clientConfiguration), transportOptions);
+		return createReactive(getRestClient(clientConfiguration), transportOptions, DEFAULT_JSONP_MAPPER);
+	}
+
+	/**
+	 * Creates a new {@link ReactiveElasticsearchClient}
+	 *
+	 * @param clientConfiguration configuration options, must not be {@literal null}.
+	 * @param transportOptions options to be added to each request.
+	 * @param jsonpMapper the JsonpMapper to use
+	 * @return the {@link ReactiveElasticsearchClient}
+	 */
+	public static ReactiveElasticsearchClient createReactive(ClientConfiguration clientConfiguration,
+			@Nullable TransportOptions transportOptions, JsonpMapper jsonpMapper) {
+
+		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
+		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
+
+		return createReactive(getRestClient(clientConfiguration), transportOptions, jsonpMapper);
 	}
 
 	/**
@@ -100,7 +117,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ReactiveElasticsearchClient}
 	 */
 	public static ReactiveElasticsearchClient createReactive(RestClient restClient) {
-		return createReactive(restClient, null);
+		return createReactive(restClient, null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -111,8 +128,9 @@ public final class ElasticsearchClients {
 	 * @return the {@link ReactiveElasticsearchClient}
 	 */
 	public static ReactiveElasticsearchClient createReactive(RestClient restClient,
-			@Nullable TransportOptions transportOptions) {
-		return new ReactiveElasticsearchClient(getElasticsearchTransport(restClient, REACTIVE_CLIENT, transportOptions));
+			@Nullable TransportOptions transportOptions, JsonpMapper jsonpMapper) {
+		return new ReactiveElasticsearchClient(
+				getElasticsearchTransport(restClient, REACTIVE_CLIENT, transportOptions, jsonpMapper));
 	}
 
 	/**
@@ -122,7 +140,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ElasticsearchClient}
 	 */
 	public static ElasticsearchClient createImperative(ClientConfiguration clientConfiguration) {
-		return createImperative(getRestClient(clientConfiguration), null);
+		return createImperative(getRestClient(clientConfiguration), null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -134,7 +152,7 @@ public final class ElasticsearchClients {
 	 */
 	public static ElasticsearchClient createImperative(ClientConfiguration clientConfiguration,
 			TransportOptions transportOptions) {
-		return createImperative(getRestClient(clientConfiguration), transportOptions);
+		return createImperative(getRestClient(clientConfiguration), transportOptions, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -144,7 +162,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ElasticsearchClient}
 	 */
 	public static ElasticsearchClient createImperative(RestClient restClient) {
-		return createImperative(restClient, null);
+		return createImperative(restClient, null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -152,14 +170,16 @@ public final class ElasticsearchClients {
 	 *
 	 * @param restClient the RestClient to use
 	 * @param transportOptions options to be added to each request.
+	 * @param jsonpMapper the mapper for the transport to use
 	 * @return the {@link ElasticsearchClient}
 	 */
-	public static ElasticsearchClient createImperative(RestClient restClient,
-			@Nullable TransportOptions transportOptions) {
+	public static ElasticsearchClient createImperative(RestClient restClient, @Nullable TransportOptions transportOptions,
+			JsonpMapper jsonpMapper) {
 
 		Assert.notNull(restClient, "restClient must not be null");
 
-		ElasticsearchTransport transport = getElasticsearchTransport(restClient, IMPERATIVE_CLIENT, transportOptions);
+		ElasticsearchTransport transport = getElasticsearchTransport(restClient, IMPERATIVE_CLIENT, transportOptions,
+				jsonpMapper);
 
 		return new AutoCloseableElasticsearchClient(transport);
 	}
@@ -236,7 +256,7 @@ public final class ElasticsearchClients {
 	}
 
 	private static ElasticsearchTransport getElasticsearchTransport(RestClient restClient, String clientType,
-			@Nullable TransportOptions transportOptions) {
+			@Nullable TransportOptions transportOptions, JsonpMapper jsonpMapper) {
 
 		TransportOptions.Builder transportOptionsBuilder = transportOptions != null ? transportOptions.toBuilder()
 				: new RestClientOptions(RequestOptions.DEFAULT).toBuilder();
@@ -260,7 +280,7 @@ public final class ElasticsearchClients {
 		TransportOptions transportOptionsWithHeader = transportOptionsBuilder
 				.addHeader(X_SPRING_DATA_ELASTICSEARCH_CLIENT, clientType).build();
 
-		return new RestClientTransport(restClient, new JacksonJsonpMapper(), transportOptionsWithHeader);
+		return new RestClientTransport(restClient, jsonpMapper, transportOptionsWithHeader);
 	}
 
 	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
