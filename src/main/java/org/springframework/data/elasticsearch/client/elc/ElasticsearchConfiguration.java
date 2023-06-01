@@ -95,7 +95,6 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 
 	/**
 	 * Provides the JsonpMapper bean that is used in the {@link #elasticsearchClient(RestClient, JsonpMapper)} method.
-	 * This can be adapted by overriding tge {@link #getJsonpMapper()} method.
 	 *
 	 * @return the {@link JsonpMapper} to use
 	 * @since 5.2
