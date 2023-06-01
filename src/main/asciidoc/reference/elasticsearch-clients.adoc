@@ -32,12 +32,15 @@ public class MyClientConfig extends ElasticsearchConfiguration {
 <.> for a detailed description of the builder methods see <<elasticsearch.clients.configuration>>
 ====
 
+The `ElasticsearchConfiguration` class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
+
+
 The following beans can then be injected in other Spring components:
 
 ====
 [source,java]
 ----
-@Autowired
+import org.springframework.beans.factory.annotation.Autowired;@Autowired
 ElasticsearchOperations operations;      <.>
 
 @Autowired 
@@ -45,11 +48,15 @@ ElasticsearchClient elasticsearchClient; <.>
 
 @Autowired
 RestClient restClient;                   <.>
+
+@Autowired
+JsonpMapper jsonpMapper;                 <.> 
 ----
 
 <.> an implementation of `ElasticsearchOperations`
 <.> the `co.elastic.clients.elasticsearch.ElasticsearchClient` that is used.
 <.> the low level `RestClient` from the Elasticsearch libraries
+<.> the `JsonpMapper` user by the Elasticsearch `Transport`
 ====
 
 Basically one should just use the `ElasticsearchOperations` to interact with the Elasticsearch cluster.
@@ -79,6 +86,8 @@ public class MyClientConfig extends ReactiveElasticsearchConfiguration {
 <.> for a detailed description of the builder methods see <<elasticsearch.clients.configuration>>
 ====
 
+The `ReactiveElasticsearchConfiguration` class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
+
 The following beans can then be injected in other Spring components:
 
 ====
@@ -92,6 +101,9 @@ ReactiveElasticsearchClient elasticsearchClient; <.>
 
 @Autowired
 RestClient restClient;                           <.>
+
+@Autowired
+JsonpMapper jsonpMapper;                         <.> 
 ----
 
 the following can be injected:
@@ -100,6 +112,7 @@ the following can be injected:
 <.> the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient` that is used.
 This is a reactive implementation based on the Elasticsearch client implementation.
 <.> the low level `RestClient` from the Elasticsearch libraries
+<.> the `JsonpMapper` user by the Elasticsearch `Transport`
 ====
 
 Basically one should just use the `ReactiveElasticsearchOperations` to interact with the Elasticsearch cluster.

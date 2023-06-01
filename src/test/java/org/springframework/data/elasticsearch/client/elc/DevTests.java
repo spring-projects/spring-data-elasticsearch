@@ -30,6 +30,8 @@ import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
 import co.elastic.clients.elasticsearch.indices.GetIndicesSettingsRequest;
 import co.elastic.clients.elasticsearch.indices.GetIndicesSettingsResponse;
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
@@ -75,10 +77,12 @@ public class DevTests {
 	private final TransportOptions transportOptions = new RestClientOptions(RequestOptions.DEFAULT).toBuilder()
 			.addHeader("X-SpringDataElasticsearch-AlwaysThere", "true").setParameter("pretty", "true").build();
 
+	private final JsonpMapper jsonpMapper = new JacksonJsonpMapper();
+
 	private final ReactiveElasticsearchClient reactiveElasticsearchClient = ElasticsearchClients
 			.createReactive(clientConfiguration(), transportOptions);
 	private final ElasticsearchClient imperativeElasticsearchClient = ElasticsearchClients
-			.createImperative(ElasticsearchClients.getRestClient(clientConfiguration()), transportOptions);
+			.createImperative(ElasticsearchClients.getRestClient(clientConfiguration()), transportOptions, jsonpMapper);
 
 	@Test
 	void someTest() throws IOException {
