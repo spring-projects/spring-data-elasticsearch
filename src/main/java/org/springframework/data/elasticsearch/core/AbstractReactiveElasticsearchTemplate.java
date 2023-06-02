@@ -225,42 +225,42 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 		return Flux.defer(() -> {
 			Sinks.Many<T> sink = Sinks.many().unicast().onBackpressureBuffer();
-			entities //
-					.bufferTimeout(bulkSize, Duration.ofMillis(200)) //
-					.subscribe(new Subscriber<List<T>>() {
-						private Subscription subscription;
-						private AtomicBoolean upstreamComplete = new AtomicBoolean(false);
+			entities.window(bulkSize) //
+							.concatMap(flux -> flux.collectList()) //
+							.subscribe(new Subscriber<List<T>>() {
+				private Subscription subscription;
+				private AtomicBoolean upstreamComplete = new AtomicBoolean(false);
 
-						@Override
-						public void onSubscribe(Subscription subscription) {
-							this.subscription = subscription;
-							subscription.request(1);
-						}
+				@Override
+				public void onSubscribe(Subscription subscription) {
+					this.subscription = subscription;
+					subscription.request(1);
+				}
 
-						@Override
-						public void onNext(List<T> entityList) {
-							saveAll(entityList, index) //
-									.map(sink::tryEmitNext) //
-									.doOnComplete(() -> {
-										if (!upstreamComplete.get()) {
-											subscription.request(1);
-										} else {
-											sink.tryEmitComplete();
-										}
-									}).subscribe();
-						}
+				@Override
+				public void onNext(List<T> entityList) {
+					saveAll(entityList, index) //
+							.map(sink::tryEmitNext) //
+							.doOnComplete(() -> {
+								if (!upstreamComplete.get()) {
+									subscription.request(1);
+								} else {
+									sink.tryEmitComplete();
+								}
+							}).subscribe();
+				}
 
-						@Override
-						public void onError(Throwable throwable) {
-							subscription.cancel();
-							sink.tryEmitError(throwable);
-						}
+				@Override
+				public void onError(Throwable throwable) {
+					subscription.cancel();
+					sink.tryEmitError(throwable);
+				}
 
-						@Override
-						public void onComplete() {
-							upstreamComplete.set(true);
-						}
-					});
+				@Override
+				public void onComplete() {
+					upstreamComplete.set(true);
+				}
+			});
 			return sink.asFlux();
 		});
 
