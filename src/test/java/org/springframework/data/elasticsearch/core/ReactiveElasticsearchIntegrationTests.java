@@ -28,6 +28,7 @@ import java.lang.Boolean;
 import java.lang.Integer;
 import java.lang.Long;
 import java.lang.Object;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -1171,7 +1172,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				}).verifyComplete();
 	}
 
-	@Test // #2496
+	@Test // #2496, #2576
 	@DisplayName("should save data from Flux and return saved data in a flux")
 	void shouldSaveDataFromFluxAndReturnSavedDataInAFlux() {
 
@@ -1180,9 +1181,11 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.mapToObj(SampleEntity::of) //
 				.collect(Collectors.toList());
 
-		var entityFlux = Flux.fromIterable(entityList);
+		// we add a random delay to make suure the underlying implementation handles irregular incoming data
+		var entities = Flux.fromIterable(entityList).concatMap(
+				entity -> Mono.just(entity).delay(Duration.ofMillis((long) (Math.random() * 10))).thenReturn(entity));
 
-		operations.save(entityFlux, SampleEntity.class).collectList() //
+		operations.save(entities, SampleEntity.class).collectList() //
 				.as(StepVerifier::create) //
 				.consumeNextWith(savedEntities -> {
 					assertThat(savedEntities).isEqualTo(entityList);
