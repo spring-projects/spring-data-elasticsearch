@@ -137,9 +137,9 @@ To use the Release candidate versions of the upcoming major version, use our Mav
 </dependency>
 
 <repository>
-  <id>spring-libs-snapshot</id>
+  <id>spring-snapshot</id>
   <name>Spring Snapshot Repository</name>
-  <url>https://repo.spring.io/libs-milestone</url>
+  <url>https://repo.spring.io/milestone</url>
 </repository>
 ----
 
@@ -154,9 +154,9 @@ If you'd rather like the latest snapshots of the upcoming major version, use our
 </dependency>
 
 <repository>
-  <id>spring-libs-snapshot</id>
+  <id>spring-snapshot</id>
   <name>Spring Snapshot Repository</name>
-  <url>https://repo.spring.io/libs-snapshot</url>
+  <url>https://repo.spring.io/snapshot</url>
 </repository>
 ----
 
