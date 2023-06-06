@@ -17,9 +17,9 @@ include::reference/elasticsearch-new.adoc[leveloffset=+1]
 * Version Control - https://github.com/spring-projects/spring-data-elasticsearch
 * API Documentation - https://docs.spring.io/spring-data/elasticsearch/docs/current/api/
 * Bugtracker - https://github.com/spring-projects/spring-data-elasticsearch/issues
-* Release repository - https://repo.spring.io/libs-release
-* Milestone repository - https://repo.spring.io/libs-milestone
-* Snapshot repository - https://repo.spring.io/libs-snapshot
+* Release repository - https://repo1.maven.org/maven2/
+* Milestone repository - https://repo.spring.io/milestone/
+* Snapshot repository - https://repo.spring.io/snapshot/
 
 [[preface.requirements]]
 == Requirements
