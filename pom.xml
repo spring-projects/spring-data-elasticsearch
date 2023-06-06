@@ -1,467 +1,468 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-		<modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-		<groupId>org.springframework.data</groupId>
-		<artifactId>spring-data-elasticsearch</artifactId>
-		<version>5.1.1-SNAPSHOT</version>
+	<groupId>org.springframework.data</groupId>
+	<artifactId>spring-data-elasticsearch</artifactId>
+	<version>5.1.1-SNAPSHOT</version>
 
-		<parent>
-				<groupId>org.springframework.data.build</groupId>
-				<artifactId>spring-data-parent</artifactId>
-				<version>3.1.1-SNAPSHOT</version>
-		</parent>
+	<parent>
+		<groupId>org.springframework.data.build</groupId>
+		<artifactId>spring-data-parent</artifactId>
+		<version>3.1.1-SNAPSHOT</version>
+	</parent>
 
-		<name>Spring Data Elasticsearch</name>
-		<description>Spring Data Implementation for Elasticsearch</description>
+	<name>Spring Data Elasticsearch</name>
+	<description>Spring Data Implementation for Elasticsearch</description>
+	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
+
+	<properties>
+		<springdata.commons>3.1.1-SNAPSHOT</springdata.commons>
+
+		<!-- version of the RestHighLevelClient	-->
+		<elasticsearch-rhlc>7.17.9</elasticsearch-rhlc>
+		<!-- version of the new ElasticsearchClient	-->
+		<elasticsearch-java>8.7.1</elasticsearch-java>
+
+		<log4j>2.18.0</log4j>
+		<!-- netty dependency can be removed once the WebClient code is gone -->
+		<netty>4.1.90.Final</netty>
+
+		<blockhound-junit>1.0.8.RELEASE</blockhound-junit>
+		<hoverfly>0.14.4</hoverfly>
+		<jsonassert>1.5.1</jsonassert>
+		<testcontainers>1.18.0</testcontainers>
+		<wiremock>2.35.0</wiremock>
+
+		<java-module-name>spring.data.elasticsearch</java-module-name>
+
+		<!--
+			properties defining the maven phase for the tests and integration tests
+			set to "none" to disable the corresponding test execution (-Dmvn.unit-test.goal=none)
+			default execution for unit-test: "test", for the integration tests: "integration-test"
+		-->
+		<mvn.unit-test.goal>test</mvn.unit-test.goal>
+		<mvn.integration-test-elasticsearch.goal>integration-test</mvn.integration-test-elasticsearch.goal>
+	</properties>
+
+	<developers>
+		<developer>
+			<id>biomedcentral</id>
+			<name>BioMed Central Development Team</name>
+			<timezone>+0</timezone>
+		</developer>
+		<developer>
+			<id>cstrobl</id>
+			<name>Christoph Strobl</name>
+			<email>cstrobl at pivotal.io</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://www.pivotal.io</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
+			<id>mpaluch</id>
+			<name>Mark Paluch</name>
+			<email>mpaluch at pivotal.io</email>
+			<organization>Pivotal</organization>
+			<organizationUrl>https://www.pivotal.io</organizationUrl>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+
+	<scm>
 		<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
+		<connection>scm:git:git://github.com/spring-projects/spring-data-elasticsearch.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/spring-projects/spring-data-elasticsearch.git
+		</developerConnection>
+	</scm>
 
-		<properties>
-				<springdata.commons>3.1.1-SNAPSHOT</springdata.commons>
+	<ciManagement>
+		<system>Bamboo</system>
+		<url>https://build.spring.io/browse/SPRINGDATAES</url>
+	</ciManagement>
 
-				<!-- version of the RestHighLevelClient	-->
-				<elasticsearch-rhlc>7.17.9</elasticsearch-rhlc>
-				<!-- version of the new ElasticsearchClient	-->
-				<elasticsearch-java>8.7.1</elasticsearch-java>
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/spring-projects/spring-data-elasticsearch/issues</url>
+	</issueManagement>
 
-				<log4j>2.18.0</log4j>
-				<!-- netty dependency can be removed once the WebClient code is gone -->
-				<netty>4.1.90.Final</netty>
-
-				<blockhound-junit>1.0.8.RELEASE</blockhound-junit>
-				<hoverfly>0.14.4</hoverfly>
-				<jsonassert>1.5.1</jsonassert>
-				<testcontainers>1.18.0</testcontainers>
-				<wiremock>2.35.0</wiremock>
-
-				<java-module-name>spring.data.elasticsearch</java-module-name>
-
-				<!--
-					properties defining the maven phase for the tests and integration tests
-					set to "none" to disable the corresponding test execution (-Dmvn.unit-test.goal=none)
-					default execution for unit-test: "test", for the integration tests: "integration-test"
-				-->
-				<mvn.unit-test.goal>test</mvn.unit-test.goal>
-				<mvn.integration-test-elasticsearch.goal>integration-test</mvn.integration-test-elasticsearch.goal>
-		</properties>
-
-		<developers>
-				<developer>
-						<id>biomedcentral</id>
-						<name>BioMed Central Development Team</name>
-						<timezone>+0</timezone>
-				</developer>
-				<developer>
-						<id>cstrobl</id>
-						<name>Christoph Strobl</name>
-						<email>cstrobl at pivotal.io</email>
-						<organization>Pivotal</organization>
-						<organizationUrl>https://www.pivotal.io</organizationUrl>
-						<roles>
-								<role>Developer</role>
-						</roles>
-						<timezone>+1</timezone>
-				</developer>
-				<developer>
-						<id>mpaluch</id>
-						<name>Mark Paluch</name>
-						<email>mpaluch at pivotal.io</email>
-						<organization>Pivotal</organization>
-						<organizationUrl>https://www.pivotal.io</organizationUrl>
-						<roles>
-								<role>Developer</role>
-						</roles>
-						<timezone>+1</timezone>
-				</developer>
-		</developers>
-
-		<scm>
-				<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
-				<connection>scm:git:git://github.com/spring-projects/spring-data-elasticsearch.git</connection>
-				<developerConnection>scm:git:ssh://git@github.com/spring-projects/spring-data-elasticsearch.git
-				</developerConnection>
-		</scm>
-
-		<ciManagement>
-				<system>Bamboo</system>
-				<url>https://build.spring.io/browse/SPRINGDATAES</url>
-		</ciManagement>
-
-		<issueManagement>
-				<system>GitHub</system>
-				<url>https://github.com/spring-projects/spring-data-elasticsearch/issues</url>
-		</issueManagement>
-
-		<dependencyManagement>
-				<dependencies>
-						<dependency>
-								<groupId>io.netty</groupId>
-								<artifactId>netty-bom</artifactId>
-								<version>${netty}</version>
-								<type>pom</type>
-								<scope>import</scope>
-						</dependency>
-				</dependencies>
-		</dependencyManagement>
-
+	<dependencyManagement>
 		<dependencies>
-
-				<!-- Spring -->
-				<dependency>
-						<groupId>org.springframework</groupId>
-						<artifactId>spring-context</artifactId>
-				</dependency>
-
-				<dependency>
-						<groupId>org.springframework</groupId>
-						<artifactId>spring-tx</artifactId>
-				</dependency>
-
-				<!-- SPRING DATA -->
-				<dependency>
-						<groupId>org.springframework.data</groupId>
-						<artifactId>spring-data-commons</artifactId>
-						<version>${springdata.commons}</version>
-				</dependency>
-
-				<!-- Reactive Infrastructure -->
-				<dependency>
-						<groupId>org.springframework</groupId>
-						<artifactId>spring-webflux</artifactId>
-						<optional>true</optional>
-				</dependency>
-
-				<dependency>
-						<groupId>io.projectreactor.netty</groupId>
-						<artifactId>reactor-netty-http</artifactId>
-						<optional>true</optional>
-				</dependency>
-
-				<dependency>
-						<groupId>io.projectreactor</groupId>
-						<artifactId>reactor-test</artifactId>
-						<scope>test</scope>
-				</dependency>
-
-				<!-- optional Elasticsearch RestHighLevelClient, deprecated in SDE 5.0 -->
-				<dependency>
-						<groupId>org.elasticsearch.client</groupId>
-						<artifactId>elasticsearch-rest-high-level-client</artifactId>
-						<version>${elasticsearch-rhlc}</version>
-						<optional>true</optional>
-						<exclusions>
-								<exclusion>
-										<groupId>commons-logging</groupId>
-										<artifactId>commons-logging</artifactId>
-								</exclusion>
-						</exclusions>
-				</dependency>
-
-				<!-- new Elasticsearch client, needs the low-level rest client and json api -->
-				<dependency>
-						<groupId>co.elastic.clients</groupId>
-						<artifactId>elasticsearch-java</artifactId>
-						<version>${elasticsearch-java}</version>
-						<exclusions>
-								<exclusion>
-										<groupId>commons-logging</groupId>
-										<artifactId>commons-logging</artifactId>
-								</exclusion>
-						</exclusions>
-				</dependency>
-				<dependency>
-						<groupId>org.elasticsearch.client</groupId>
-						<artifactId>elasticsearch-rest-client</artifactId> <!-- is Apache 2-->
-						<version>${elasticsearch-java}</version>
-						<exclusions>
-								<exclusion>
-										<groupId>commons-logging</groupId>
-										<artifactId>commons-logging</artifactId>
-								</exclusion>
-						</exclusions>
-				</dependency>
-
-				<!-- Jackson JSON Mapper -->
-				<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-core</artifactId>
-				</dependency>
-				<dependency>
-						<groupId>com.fasterxml.jackson.core</groupId>
-						<artifactId>jackson-databind</artifactId>
-				</dependency>
-
-				<!-- CDI -->
-
-				<dependency>
-						<groupId>javax.interceptor</groupId>
-						<artifactId>javax.interceptor-api</artifactId>
-						<version>1.2.2</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>jakarta.enterprise</groupId>
-						<artifactId>jakarta.enterprise.cdi-api</artifactId>
-						<version>3.0.1</version>
-						<scope>provided</scope>
-						<optional>true</optional>
-				</dependency>
-
-				<dependency>
-						<groupId>jakarta.annotation</groupId>
-						<artifactId>jakarta.annotation-api</artifactId>
-						<version>${jakarta-annotation-api}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>org.apache.openwebbeans</groupId>
-						<artifactId>openwebbeans-se</artifactId>
-						<classifier>jakarta</classifier>
-						<version>${webbeans}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>org.apache.openwebbeans</groupId>
-						<artifactId>openwebbeans-spi</artifactId>
-						<classifier>jakarta</classifier>
-						<version>${webbeans}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>org.apache.openwebbeans</groupId>
-						<artifactId>openwebbeans-impl</artifactId>
-						<classifier>jakarta</classifier>
-						<version>${webbeans}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<!-- Test -->
-				<dependency>
-						<groupId>org.springframework</groupId>
-						<artifactId>spring-test</artifactId>
-						<scope>test</scope>
-						<exclusions>
-								<exclusion>
-										<groupId>ch.qos.logback</groupId>
-										<artifactId>logback-classic</artifactId>
-								</exclusion>
-						</exclusions>
-				</dependency>
-
-				<dependency>
-						<groupId>org.slf4j</groupId>
-						<artifactId>log4j-over-slf4j</artifactId>
-						<version>${slf4j}</version>
-						<scope>test</scope>
-				</dependency>
-				<dependency>
-						<groupId>org.apache.logging.log4j</groupId>
-						<artifactId>log4j-core</artifactId>
-						<version>${log4j}</version>
-						<scope>test</scope>
-				</dependency>
-				<dependency>
-						<groupId>org.apache.logging.log4j</groupId>
-						<artifactId>log4j-to-slf4j</artifactId>
-						<version>${log4j}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>io.projectreactor.tools</groupId>
-						<artifactId>blockhound-junit-platform</artifactId>
-						<version>${blockhound-junit}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>org.skyscreamer</groupId>
-						<artifactId>jsonassert</artifactId>
-						<version>${jsonassert}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>com.github.tomakehurst</groupId>
-						<artifactId>wiremock-jre8</artifactId>
-						<version>${wiremock}</version>
-						<scope>test</scope>
-						<exclusions>
-								<!-- these exclusions are needed because of Elasticsearch JarHell-->
-								<exclusion>
-										<groupId>commons-logging</groupId>
-										<artifactId>commons-logging</artifactId>
-								</exclusion>
-								<exclusion>
-										<groupId>org.ow2.asm</groupId>
-										<artifactId>asm</artifactId>
-								</exclusion>
-						</exclusions>
-				</dependency>
-
-				<dependency>
-						<groupId>io.specto</groupId>
-						<artifactId>hoverfly-java-junit5</artifactId>
-						<version>${hoverfly}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<!-- Upgrade xbean to 4.5 to prevent incompatibilities due to ASM versions -->
-				<dependency>
-						<groupId>org.apache.xbean</groupId>
-						<artifactId>xbean-asm5-shaded</artifactId>
-						<version>4.5</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>javax.servlet</groupId>
-						<artifactId>javax.servlet-api</artifactId>
-						<version>3.1.0</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>org.mockito</groupId>
-						<artifactId>mockito-junit-jupiter</artifactId>
-						<version>${mockito}</version>
-						<scope>test</scope>
-				</dependency>
-
-				<dependency>
-						<groupId>org.testcontainers</groupId>
-						<artifactId>elasticsearch</artifactId>
-						<version>${testcontainers}</version>
-						<scope>test</scope>
-				</dependency>
-
+			<dependency>
+				<groupId>io.netty</groupId>
+				<artifactId>netty-bom</artifactId>
+				<version>${netty}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
 		</dependencies>
+	</dependencyManagement>
 
-		<build>
-				<resources>
-						<resource>
-								<directory>src/main/resources</directory>
-								<filtering>true</filtering>
-								<includes>
-										<include>**/versions.properties</include>
-								</includes>
-						</resource>
-						<resource>
-								<directory>src/main/resources</directory>
-								<filtering>false</filtering>
-								<excludes>
-										<exclude>**/versions.properties</exclude>
-								</excludes>
-						</resource>
-				</resources>
+	<dependencies>
 
+		<!-- Spring -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-tx</artifactId>
+		</dependency>
+
+		<!-- SPRING DATA -->
+		<dependency>
+			<groupId>org.springframework.data</groupId>
+			<artifactId>spring-data-commons</artifactId>
+			<version>${springdata.commons}</version>
+		</dependency>
+
+		<!-- Reactive Infrastructure -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webflux</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor.netty</groupId>
+			<artifactId>reactor-netty-http</artifactId>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- optional Elasticsearch RestHighLevelClient, deprecated in SDE 5.0 -->
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>elasticsearch-rest-high-level-client</artifactId>
+			<version>${elasticsearch-rhlc}</version>
+			<optional>true</optional>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- new Elasticsearch client, needs the low-level rest client and json api -->
+		<dependency>
+			<groupId>co.elastic.clients</groupId>
+			<artifactId>elasticsearch-java</artifactId>
+			<version>${elasticsearch-java}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>elasticsearch-rest-client</artifactId> <!-- is Apache 2-->
+			<version>${elasticsearch-java}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<!-- Jackson JSON Mapper -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+
+		<!-- CDI -->
+
+		<dependency>
+			<groupId>javax.interceptor</groupId>
+			<artifactId>javax.interceptor-api</artifactId>
+			<version>1.2.2</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.enterprise</groupId>
+			<artifactId>jakarta.enterprise.cdi-api</artifactId>
+			<version>3.0.1</version>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+			<version>${jakarta-annotation-api}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.openwebbeans</groupId>
+			<artifactId>openwebbeans-se</artifactId>
+			<classifier>jakarta</classifier>
+			<version>${webbeans}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.openwebbeans</groupId>
+			<artifactId>openwebbeans-spi</artifactId>
+			<classifier>jakarta</classifier>
+			<version>${webbeans}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.openwebbeans</groupId>
+			<artifactId>openwebbeans-impl</artifactId>
+			<classifier>jakarta</classifier>
+			<version>${webbeans}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Test -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>ch.qos.logback</groupId>
+					<artifactId>logback-classic</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>${slf4j}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>${log4j}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-to-slf4j</artifactId>
+			<version>${log4j}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor.tools</groupId>
+			<artifactId>blockhound-junit-platform</artifactId>
+			<version>${blockhound-junit}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.skyscreamer</groupId>
+			<artifactId>jsonassert</artifactId>
+			<version>${jsonassert}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.github.tomakehurst</groupId>
+			<artifactId>wiremock-jre8</artifactId>
+			<version>${wiremock}</version>
+			<scope>test</scope>
+			<exclusions>
+				<!-- these exclusions are needed because of Elasticsearch JarHell-->
+				<exclusion>
+					<groupId>commons-logging</groupId>
+					<artifactId>commons-logging</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.ow2.asm</groupId>
+					<artifactId>asm</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>io.specto</groupId>
+			<artifactId>hoverfly-java-junit5</artifactId>
+			<version>${hoverfly}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Upgrade xbean to 4.5 to prevent incompatibilities due to ASM versions -->
+		<dependency>
+			<groupId>org.apache.xbean</groupId>
+			<artifactId>xbean-asm5-shaded</artifactId>
+			<version>4.5</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>javax.servlet-api</artifactId>
+			<version>3.1.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<version>${mockito}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>elasticsearch</artifactId>
+			<version>${testcontainers}</version>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/versions.properties</include>
+				</includes>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/versions.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<useSystemClassLoader>true</useSystemClassLoader>
+					<useFile>false</useFile>
+					<includes>
+						<include>**/*Tests.java</include>
+						<include>**/*Test.java</include>
+					</includes>
+					<systemPropertyVariables>
+						<es.set.netty.runtime.available.processors>false</es.set.netty.runtime.available.processors>
+					</systemPropertyVariables>
+				</configuration>
+				<executions>
+					<!-- the default-test execution runs only the unit tests -->
+					<execution>
+						<id>default-test</id>
+						<phase>${mvn.unit-test.goal}</phase>
+						<goals>
+							<goal>test</goal>
+						</goals>
+						<configuration>
+							<excludedGroups>integration-test</excludedGroups>
+						</configuration>
+					</execution>
+					<!-- execution to run the integration tests against Elasticsearch -->
+					<execution>
+						<id>integration-test-elasticsearch</id>
+						<phase>${mvn.integration-test-elasticsearch.goal}</phase>
+						<goals>
+							<goal>test</goal>
+						</goals>
+						<configuration>
+							<groups>integration-test</groups>
+							<systemPropertyVariables>
+								<sde.integration-test.environment>elasticsearch</sde.integration-test.environment>
+							</systemPropertyVariables>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.asciidoctor</groupId>
+				<artifactId>asciidoctor-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>ci</id>
+			<build>
 				<plugins>
-						<plugin>
-								<groupId>org.apache.maven.plugins</groupId>
-								<artifactId>maven-surefire-plugin</artifactId>
-								<configuration>
-										<useSystemClassLoader>true</useSystemClassLoader>
-										<useFile>false</useFile>
-										<includes>
-												<include>**/*Tests.java</include>
-												<include>**/*Test.java</include>
-										</includes>
-										<systemPropertyVariables>
-												<es.set.netty.runtime.available.processors>false</es.set.netty.runtime.available.processors>
-										</systemPropertyVariables>
-								</configuration>
-								<executions>
-										<!-- the default-test execution runs only the unit tests -->
-										<execution>
-												<id>default-test</id>
-												<phase>${mvn.unit-test.goal}</phase>
-												<goals>
-														<goal>test</goal>
-												</goals>
-												<configuration>
-														<excludedGroups>integration-test</excludedGroups>
-												</configuration>
-										</execution>
-										<!-- execution to run the integration tests against Elasticsearch -->
-										<execution>
-												<id>integration-test-elasticsearch</id>
-												<phase>${mvn.integration-test-elasticsearch.goal}</phase>
-												<goals>
-														<goal>test</goal>
-												</goals>
-												<configuration>
-														<groups>integration-test</groups>
-														<systemPropertyVariables>
-																<sde.integration-test.environment>elasticsearch</sde.integration-test.environment>
-														</systemPropertyVariables>
-												</configuration>
-										</execution>
-								</executions>
-						</plugin>
-						<plugin>
-								<groupId>org.apache.maven.plugins</groupId>
-								<artifactId>maven-assembly-plugin</artifactId>
-						</plugin>
-						<plugin>
-								<groupId>org.asciidoctor</groupId>
-								<artifactId>asciidoctor-maven-plugin</artifactId>
-						</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-checkstyle-plugin</artifactId>
+						<configuration>
+							<checkstyleRules>
+								<module name="Checker">
+
+									<!-- Configure checker to use UTF-8 encoding -->
+									<property name="charset" value="UTF-8"/>
+
+									<module name="io.spring.nohttp.checkstyle.check.NoHttpCheck"/>
+								</module>
+							</checkstyleRules>
+							<includes>**/*</includes>
+							<excludes>
+								.git/**/*,target/**/*,**/target/**/*,.idea/**/*,**/spring.schemas,**/*.svg,mvnw,mvnw.cmd,**/*.policy
+							</excludes>
+							<sourceDirectories>./</sourceDirectories>
+						</configuration>
+					</plugin>
 				</plugins>
-		</build>
+			</build>
+		</profile>
 
-		<profiles>
-				<profile>
-						<id>ci</id>
-						<build>
-								<plugins>
-										<plugin>
-												<groupId>org.apache.maven.plugins</groupId>
-												<artifactId>maven-checkstyle-plugin</artifactId>
-												<configuration>
-														<checkstyleRules>
-																<module name="Checker">
-
-																		<!-- Configure checker to use UTF-8 encoding -->
-																		<property name="charset" value="UTF-8"/>
-
-																		<module name="io.spring.nohttp.checkstyle.check.NoHttpCheck"/>
-																</module>
-														</checkstyleRules>
-														<includes>**/*</includes>
-														<excludes>
-																.git/**/*,target/**/*,**/target/**/*,.idea/**/*,**/spring.schemas,**/*.svg,mvnw,mvnw.cmd,**/*.policy
-														</excludes>
-														<sourceDirectories>./</sourceDirectories>
-												</configuration>
-										</plugin>
-								</plugins>
-						</build>
-				</profile>
-
-				<profile>
-						<id>jdk13+</id>
-						<!-- on jDK13+, Blockhound needs this JVM flag set -->
-						<activation>
-								<jdk>[13,)</jdk>
-						</activation>
-						<build>
-								<plugins>
-										<plugin>
-												<groupId>org.apache.maven.plugins</groupId>
-												<artifactId>maven-surefire-plugin</artifactId>
-												<configuration>
-														<argLine>-XX:+AllowRedefinitionToAddDeleteMethods</argLine>
-												</configuration>
-										</plugin>
-								</plugins>
-						</build>
-				</profile>
-		</profiles>
+		<profile>
+			<id>jdk13+</id>
+			<!-- on jDK13+, Blockhound needs this JVM flag set -->
+			<activation>
+				<jdk>[13,)</jdk>
+			</activation>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<configuration>
+							<argLine>-XX:+AllowRedefinitionToAddDeleteMethods</argLine>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<repositories>
 		<repository>
