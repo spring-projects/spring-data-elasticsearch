@@ -499,22 +499,20 @@
 
 	<repositories>
 		<repository>
-			<id>spring-libs-snapshot</id>
-			<url>https://repo.spring.io/libs-snapshot</url>
+			<id>spring-snapshot</id>
+			<url>https://repo.spring.io/snapshot</url>
+		<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+			<releases>
+				<enabled>false</enabled>
+			</releases>
 		</repository>
 
 		<repository>
-			<id>local-maven-repo</id>
-			<url>file:///${project.basedir}/src/test/resources/local-maven-repo</url>
+			<id>spring-milestone</id>
+			<url>https://repo.spring.io/milestone</url>
 		</repository>
-
 	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>spring-plugins-release</id>
-			<url>https://repo.spring.io/plugins-release</url>
-		</pluginRepository>
-	</pluginRepositories>
 
 </project>
