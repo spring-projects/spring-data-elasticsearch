@@ -56,10 +56,10 @@ This section details the annotations that define if the value of a property is w
 
 `@Transient`: A property annotated with this annotation will not be written to the mapping, it's value will not be sent to Elasticsearch and when documents are returned from Elasticsearch, this property will not be set in the resulting entity.
 
-`@ReadOnlyProperty`: A property with this annotaiton will not have its value written to Elasticsearch, but when returning data, the proeprty will be filled with the value returned in the document from Elasticsearch.
+`@ReadOnlyProperty`: A property with this annotation will not have its value written to Elasticsearch, but when returning data, the property will be filled with the value returned in the document from Elasticsearch.
 One use case for this are runtime fields defined in the index mapping.
 
-`@WriteOnlyProperty`: A property with this annotaiton will have its value stored in Elasticsearch but will not be set with any value when reading document.
+`@WriteOnlyProperty`: A property with this annotation will have its value stored in Elasticsearch but will not be set with any value when reading document.
 This can be used for example for synthesized fields which should go into the Elasticsearch index but are not used elsewhere.
 
 [[elasticsearch.mapping.meta-model.annotations.date-formats]]
@@ -71,7 +71,7 @@ This paragraph describes the use of
 
 There are two attributes of the `@Field` annotation that define which date format information is written to the mapping (also see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats[Elasticsearch Built In Formats] and https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#custom-date-formats[Elasticsearch Custom Date Formats])
 
-The `format` attributes is used to define at least one of the predefined formats.
+The `format` attribute is used to define at least one of the predefined formats.
 If it is not defined, then a default value of __date_optional_time_ and _epoch_millis_ is used.
 
 The `pattern` attribute can be used to add additional custom format strings.
@@ -191,7 +191,7 @@ public String getProperty() {
 
 This annotation can be set on a String property of an entity.
 This property will not be written to the mapping, it will not be stored in Elasticsearch and its value will not be read from an Elasticsearch document.
-After an entity is persisted, for example with a call to `ElasticsearchOperations.save(T entity)`, the entity 
+After an entity is persisted, for example with a call to `ElasticsearchOperations.save(T entity)`, the entity
 returned from that call will contain the name of the index that an entity was saved to in that property.
 This is useful when the index name is dynamically set by a bean, or when writing to a write alias.
 
@@ -438,7 +438,7 @@ public class Config extends ElasticsearchConfiguration  {
 
   @WritingConverter                                                 <2>
   static class AddressToMap implements Converter<Address, Map<String, Object>> {
-	  
+
     @Override
     public Map<String, Object> convert(Address source) {
 
