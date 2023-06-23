@@ -1497,8 +1497,9 @@ class RequestConverter {
 				return SortOptions.of(so -> so //
 						.geoDistance(gd -> gd //
 								.field(fieldName) //
-								.location(loc -> loc.latlon(Queries.latLon(geoDistanceOrder.getGeoPoint())))//
+								.location(loc -> loc.latlon(Queries.latLon(geoDistanceOrder.getGeoPoint()))) //
 								.distanceType(geoDistanceType(geoDistanceOrder.getDistanceType())).mode(sortMode(finalMode)) //
+								.order(sortOrder(geoDistanceOrder.getDirection())) //
 								.unit(distanceUnit(geoDistanceOrder.getUnit())) //
 								.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped())));
 			} else {

@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.query.*;
@@ -161,6 +162,20 @@ final class TypeUtils {
 		return switch (distanceType) {
 			case arc -> GeoDistanceType.Arc;
 			case plane -> GeoDistanceType.Plane;
+		};
+
+	}
+
+	@Nullable
+	static SortOrder sortOrder(@Nullable Sort.Direction direction) {
+
+		if (direction == null) {
+			return null;
+		}
+
+		return switch (direction) {
+			case ASC -> SortOrder.Asc;
+			case DESC -> SortOrder.Desc;
 		};
 
 	}
