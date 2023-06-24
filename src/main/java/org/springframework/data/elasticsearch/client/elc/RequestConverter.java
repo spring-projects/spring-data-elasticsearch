@@ -1373,9 +1373,10 @@ class RequestConverter {
 				return SortOptions.of(so -> so //
 						.geoDistance(gd -> gd //
 								.field(fieldName) //
-								.location(loc -> loc.latlon(QueryBuilders.latLon(geoDistanceOrder.getGeoPoint())))//
+								.location(loc -> loc.latlon(QueryBuilders.latLon(geoDistanceOrder.getGeoPoint()))) //
 								.distanceType(TypeUtils.geoDistanceType(geoDistanceOrder.getDistanceType()))
 								.mode(TypeUtils.sortMode(finalMode)) //
+								.order(TypeUtils.sortOrder(geoDistanceOrder.getDirection())) //
 								.unit(TypeUtils.distanceUnit(geoDistanceOrder.getUnit())) //
 								.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped())));
 			} else {

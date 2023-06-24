@@ -963,6 +963,8 @@ class RequestFactory {
 					sort.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped());
 				}
 
+				sort.order(order.isAscending() ? SortOrder.ASC : SortOrder.DESC);
+
 				return sort;
 			} else {
 				FieldSortBuilder sort = SortBuilders //

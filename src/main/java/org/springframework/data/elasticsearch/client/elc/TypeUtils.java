@@ -27,6 +27,7 @@ import co.elastic.clients.elasticsearch.core.search.ScoreMode;
 
 import java.time.Duration;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -132,6 +133,20 @@ final class TypeUtils {
 		return switch (distanceType) {
 			case arc -> GeoDistanceType.Arc;
 			case plane -> GeoDistanceType.Plane;
+		};
+
+	}
+
+	@Nullable
+	static SortOrder sortOrder(@Nullable Sort.Direction direction) {
+
+		if (direction == null) {
+			return null;
+		}
+
+		return switch (direction) {
+			case ASC -> SortOrder.Asc;
+			case DESC -> SortOrder.Desc;
 		};
 
 	}
