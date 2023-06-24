@@ -348,8 +348,8 @@ class RequestFactory {
 					for (String aliasName : parametersAliases) {
 						Alias alias = new Alias(aliasName);
 
-							//noinspection DuplicatedCode
-							if (parameters.getRouting() != null) {
+						// noinspection DuplicatedCode
+						if (parameters.getRouting() != null) {
 							alias.routing(parameters.getRouting());
 						}
 
@@ -526,7 +526,8 @@ class RequestFactory {
 	// endregion
 
 	// region delete
-	public DeleteByQueryRequest deleteByQueryRequest(Query query, @Nullable String routing,  Class<?> clazz, IndexCoordinates index) {
+	public DeleteByQueryRequest deleteByQueryRequest(Query query, @Nullable String routing, Class<?> clazz,
+			IndexCoordinates index) {
 		SearchRequest searchRequest = searchRequest(query, routing, clazz, index);
 		DeleteByQueryRequest deleteByQueryRequest = new DeleteByQueryRequest(index.getIndexNames()) //
 				.setQuery(searchRequest.source().query()) //
@@ -754,10 +755,11 @@ class RequestFactory {
 		return searchRequest;
 	}
 
-	public SearchRequest searchRequest(Query query, @Nullable String routing, @Nullable Class<?> clazz, IndexCoordinates index) {
+	public SearchRequest searchRequest(Query query, @Nullable String routing, @Nullable Class<?> clazz,
+			IndexCoordinates index) {
 
 		elasticsearchConverter.updateQuery(query, clazz);
-		SearchRequest searchRequest = prepareSearchRequest(query, routing,clazz, index);
+		SearchRequest searchRequest = prepareSearchRequest(query, routing, clazz, index);
 		QueryBuilder elasticsearchQuery = getQuery(query);
 		QueryBuilder elasticsearchFilter = getFilter(query);
 
@@ -771,7 +773,8 @@ class RequestFactory {
 
 	}
 
-	private SearchRequest prepareSearchRequest(Query query, @Nullable String routing, @Nullable Class<?> clazz, IndexCoordinates indexCoordinates) {
+	private SearchRequest prepareSearchRequest(Query query, @Nullable String routing, @Nullable Class<?> clazz,
+			IndexCoordinates indexCoordinates) {
 
 		String[] indexNames = indexCoordinates.getIndexNames();
 		Assert.notNull(indexNames, "No index defined for Query");
@@ -967,6 +970,8 @@ class RequestFactory {
 				if (geoDistanceOrder.getIgnoreUnmapped() != GeoDistanceOrder.DEFAULT_IGNORE_UNMAPPED) {
 					sort.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped());
 				}
+
+				sort.order(order.isAscending() ? SortOrder.ASC : SortOrder.DESC);
 
 				return sort;
 			} else {
