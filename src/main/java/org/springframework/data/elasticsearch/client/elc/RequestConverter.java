@@ -1146,11 +1146,9 @@ class RequestConverter {
 							}
 
 							if (!isEmpty(query.getIndicesBoost())) {
-								Map<String, Double> boosts = new LinkedHashMap<>();
-								query.getIndicesBoost()
-										.forEach(indexBoost -> boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost()));
-								// noinspection unchecked
-								bb.indicesBoost(boosts);
+								bb.indicesBoost(query.getIndicesBoost().stream()
+										.map(indexBoost -> Map.of(indexBoost.getIndexName(), Double.valueOf(indexBoost.getBoost())))
+										.collect(Collectors.toList()));
 							}
 
 							if (query instanceof NativeQuery) {
@@ -1301,11 +1299,9 @@ class RequestConverter {
 		}
 
 		if (!isEmpty(query.getIndicesBoost())) {
-			Map<String, Double> boosts = new LinkedHashMap<>();
-			query.getIndicesBoost()
-					.forEach(indexBoost -> boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost()));
-			// noinspection unchecked
-			builder.indicesBoost(boosts);
+			builder.indicesBoost(query.getIndicesBoost().stream()
+					.map(indexBoost -> Map.of(indexBoost.getIndexName(), Double.valueOf(indexBoost.getBoost())))
+					.collect(Collectors.toList()));
 		}
 	}
 
