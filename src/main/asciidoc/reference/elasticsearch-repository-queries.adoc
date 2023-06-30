@@ -137,7 +137,7 @@ A list of supported keywords for Elasticsearch is shown below.
 
 
 | `GreaterThanEqual`
-| `findByPriceGreaterThan`
+| `findByPriceGreaterThanEqual`
 | `{ "query" : {
 "bool" : {
 "must" : [
