@@ -61,7 +61,31 @@ public enum FieldType {
 	/** since 4.2 */
 	Wildcard("wildcard"), //
 	/** @since 4.2 */
-	Dense_Vector("dense_vector") //
+	Dense_Vector("dense_vector"), //
+	/**
+	 * @since 5.2
+	 */
+	Constant_Keyword("constant_keyword"), //
+	/**
+	 * @since 5.2
+	 */
+	Alias("alias"), //
+	/**
+	 * @since 5.2
+	 */
+	Version("version"), //
+	/**
+	 * @since 5.2
+	 */
+	Murmur3("murmur3"), //
+	/**
+	 * @since 5.2
+	 */
+	Match_Only_Text("match_only_text"), //
+	/**
+	 * @since 5.2
+	 */
+	Annotated_Text("annotated_text") //
 	;
 
 	private final String mappedName;
