@@ -154,7 +154,7 @@ The old deprecated `RestHighLevelClient` can still be used, but you will need to
 <dependency>
 	<groupId>org.elasticsearch.client</groupId>
 	<artifactId>elasticsearch-rest-high-level-client</artifactId>
-	<version>7.17.9</version>
+	<version>7.17.11</version>
 	<exclusions>
 		<exclusion>
 			<groupId>commons-logging</groupId>
@@ -165,4 +165,4 @@ The old deprecated `RestHighLevelClient` can still be used, but you will need to
 ----
 ====
 
-Make sure to specify the version 7.17.9 explicitly, otherwise maven will resolve to 8.5.3, and this does not exist.
+Make sure to specify the version 7.17.11 explicitly, otherwise maven will resolve to 8.5.3, and this does not exist.

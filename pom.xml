@@ -21,7 +21,7 @@
 		<springdata.commons>3.0.8-SNAPSHOT</springdata.commons>
 
 		<!-- version of the RestHighLevelClient	-->
-		<elasticsearch-rhlc>7.17.9</elasticsearch-rhlc>
+		<elasticsearch-rhlc>7.17.11</elasticsearch-rhlc>
 		<!-- version of the new ElasticsearchClient	-->
 		<elasticsearch-java>8.5.3</elasticsearch-java>
 
