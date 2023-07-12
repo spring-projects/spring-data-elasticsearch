@@ -4,7 +4,7 @@
 [[new-features.5-2-0]]
 == New in Spring Data Elasticsearch 5.2
 
-* Upgrade to Elasticsearch 8.8.1
+* Upgrade to Elasticsearch 8.8.2
 * The `JsonpMapper` for Elasticsearch is now configurable and provided as bean.
 * Improved AOT runtime hints for Elasticsearch client library classes.
 * Add Kotlin extensions and repository coroutine support.
