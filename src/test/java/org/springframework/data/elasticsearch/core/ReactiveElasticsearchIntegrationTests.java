@@ -20,6 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.core.query.StringQuery.MATCH_ALL;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.springframework.data.elasticsearch.BulkFailureException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -89,6 +91,7 @@ import org.springframework.util.StringUtils;
  * @author Roman Puchkovskiy
  * @author George Popides
  * @author Sijia Liu
+ * @author Illia Ulianov
  */
 @SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @SpringIntegrationTest
@@ -1192,6 +1195,27 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				}) //
 				.verifyComplete();
 	}
+
+	@Test // #2619
+	void shouldFailWithConflictOnAttemptToSaveWithSameVersion() {
+		var entity1 = new VersionedEntity();
+		entity1.setId("id1");
+		entity1.setVersion(1L);
+		var entity2 = new VersionedEntity();
+		entity2.setId("id2");
+		entity2.setVersion(1L);
+		operations.saveAll(Arrays.asList(entity1, entity2), VersionedEntity.class).blockLast();
+
+		entity1.setVersion(2L);
+		assertThatThrownBy(() -> operations.saveAll(Arrays.asList(entity1, entity2), VersionedEntity.class).blockLast())
+				.asInstanceOf(InstanceOfAssertFactories.type(BulkFailureException.class))
+				.extracting(BulkFailureException::getFailedDocuments)
+				.asInstanceOf(InstanceOfAssertFactories.map(String.class, BulkFailureException.FailureDetails.class))
+				.containsOnlyKeys("id2").extracting(Map::values)
+				.asInstanceOf(InstanceOfAssertFactories.collection(BulkFailureException.FailureDetails.class))
+				.allMatch(failureStatus -> failureStatus.status().equals(409));
+	}
+
 	// endregion
 
 	// region Helper functions

@@ -55,6 +55,7 @@ import org.springframework.util.Assert;
  *
  * @author Peter-Josef Meisch
  * @author Hamid Rahimi
+ * @author Illia Ulianov
  * @since 4.4
  */
 public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
@@ -637,11 +638,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	protected List<IndexedObjectInformation> checkForBulkOperationFailure(BulkResponse bulkResponse) {
 
 		if (bulkResponse.errors()) {
-			Map<String, String> failedDocuments = new HashMap<>();
+			Map<String, BulkFailureException.FailureDetails> failedDocuments = new HashMap<>();
 			for (BulkResponseItem item : bulkResponse.items()) {
 
 				if (item.error() != null) {
-					failedDocuments.put(item.id(), item.error().reason());
+					failedDocuments.put(item.id(), new BulkFailureException.FailureDetails(item.status(), item.error().reason()));
 				}
 			}
 			throw new BulkFailureException(

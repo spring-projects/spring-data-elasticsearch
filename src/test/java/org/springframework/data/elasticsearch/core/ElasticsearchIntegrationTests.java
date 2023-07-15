@@ -33,6 +33,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -48,6 +49,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
@@ -98,6 +100,7 @@ import org.springframework.lang.Nullable;
  * @author Haibo Liu
  * @author scoobyzhang
  * @author Hamid Rahimi
+ * @author Illia Ulianov
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests {
@@ -3614,6 +3617,27 @@ public abstract class ElasticsearchIntegrationTests {
 		Query query = operations.matchAllQuery().addSort(Sort.by(order));
 
 		operations.search(query, SampleEntity.class);
+	}
+
+	@Test // #2619
+	void shouldFailWithConflictOnAttemptToSaveWithSameVersion() {
+		var entity1 = new VersionedEntity();
+		entity1.setId("id1");
+		entity1.setVersion(1L);
+		var entity2 = new VersionedEntity();
+		entity2.setId("id2");
+		entity2.setVersion(1L);
+		operations.save(entity1, entity2);
+
+		entity1.setVersion(2L);
+		assertThatThrownBy(() -> operations.save(entity1, entity2))
+			.asInstanceOf(InstanceOfAssertFactories.type(BulkFailureException.class))
+			.extracting(BulkFailureException::getFailedDocuments)
+			.asInstanceOf(InstanceOfAssertFactories.map(String.class, BulkFailureException.FailureDetails.class))
+			.containsOnlyKeys("id2")
+			.extracting(Map::values)
+			.asInstanceOf(InstanceOfAssertFactories.collection(BulkFailureException.FailureDetails.class))
+			.allMatch(failureStatus -> failureStatus.status().equals(409));
 	}
 
 	// region entities
