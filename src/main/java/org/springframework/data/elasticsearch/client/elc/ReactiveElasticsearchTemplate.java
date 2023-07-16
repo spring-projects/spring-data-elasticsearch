@@ -25,6 +25,8 @@ import co.elastic.clients.elasticsearch.core.get.GetResult;
 import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -39,8 +41,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.reactivestreams.Publisher;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -72,7 +72,7 @@ import org.springframework.util.StringUtils;
  */
 public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearchTemplate {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ReactiveElasticsearchTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(ReactiveElasticsearchTemplate.class);
 
 	private final ReactiveElasticsearchClient client;
 	private final RequestConverter requestConverter;

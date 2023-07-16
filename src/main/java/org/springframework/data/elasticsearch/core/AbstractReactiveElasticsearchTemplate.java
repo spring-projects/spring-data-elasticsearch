@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -28,8 +30,6 @@ import java.util.stream.Collectors;
 
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -73,8 +73,8 @@ import org.springframework.util.Assert;
 abstract public class AbstractReactiveElasticsearchTemplate
 		implements ReactiveElasticsearchOperations, ApplicationContextAware {
 
-	protected static final Logger QUERY_LOGGER = LoggerFactory
-			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
+	protected static final Log QUERY_LOGGER = LogFactory
+			.getLog("org.springframework.data.elasticsearch.core.QUERY");
 
 	protected final ElasticsearchConverter converter;
 	protected final SimpleElasticsearchMappingContext mappingContext;

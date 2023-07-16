@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
@@ -60,7 +60,7 @@ import org.springframework.util.Assert;
 public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, ElasticsearchIndicesClient>
 		implements IndexOperations {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(IndicesTemplate.class);
+	private static final Log LOGGER = LogFactory.getLog(IndicesTemplate.class);
 
 	// we need a cluster client as well because ES has put some methods from the indices API into the cluster client
 	// (component templates)
