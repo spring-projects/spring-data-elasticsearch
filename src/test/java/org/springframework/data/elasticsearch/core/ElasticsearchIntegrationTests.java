@@ -3631,13 +3631,12 @@ public abstract class ElasticsearchIntegrationTests {
 
 		entity1.setVersion(2L);
 		assertThatThrownBy(() -> operations.save(entity1, entity2))
-			.asInstanceOf(InstanceOfAssertFactories.type(BulkFailureException.class))
-			.extracting(BulkFailureException::getFailedDocuments)
-			.asInstanceOf(InstanceOfAssertFactories.map(String.class, BulkFailureException.FailureDetails.class))
-			.containsOnlyKeys("id2")
-			.extracting(Map::values)
-			.asInstanceOf(InstanceOfAssertFactories.collection(BulkFailureException.FailureDetails.class))
-			.allMatch(failureStatus -> failureStatus.status().equals(409));
+				.asInstanceOf(InstanceOfAssertFactories.type(BulkFailureException.class))
+				.extracting(BulkFailureException::getFailedDocuments)
+				.asInstanceOf(InstanceOfAssertFactories.map(String.class, BulkFailureException.FailureDetails.class))
+				.containsOnlyKeys("id2").extracting(Map::values)
+				.asInstanceOf(InstanceOfAssertFactories.collection(BulkFailureException.FailureDetails.class))
+				.allMatch(failureStatus -> failureStatus.status().equals(409));
 	}
 
 	// region entities
