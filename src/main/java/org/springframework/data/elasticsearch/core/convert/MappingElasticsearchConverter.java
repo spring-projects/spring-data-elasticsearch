@@ -919,7 +919,7 @@ public class MappingElasticsearchConverter
 
 				Class<?> elementType = element == null ? null : element.getClass();
 
-				if (elementType == null || conversions.isSimpleType(elementType)) {
+				if (elementType == null || isSimpleType(elementType)) {
 					collection.add(getPotentiallyConvertedSimpleWrite(element,
 							componentType != null ? componentType.getType() : Object.class));
 				} else if (element instanceof Collection || elementType.isArray()) {

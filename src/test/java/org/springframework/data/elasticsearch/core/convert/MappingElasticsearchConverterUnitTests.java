@@ -908,6 +908,55 @@ public class MappingElasticsearchConverterUnitTests {
 		assertEquals(expected, document.toJson(), false);
 	}
 
+	@Test // #2627
+	@DisplayName("should write Map containing collection containing map")
+	void shouldWriteMapContainingCollectionContainingMap() throws JSONException {
+
+		class EntityWithMapCollectionMap {
+			Map<String, Object> map;
+		}
+		class InnerEntity {
+			String prop1;
+
+			String prop2;
+
+			public InnerEntity() {}
+
+			public InnerEntity(String prop1, String prop2) {
+				this.prop1 = prop1;
+				this.prop2 = prop2;
+			}
+
+		}
+
+		var entity = new EntityWithMapCollectionMap();
+		entity.map = Collections.singletonMap("collection",
+				Collections.singletonList(Collections.singletonMap("destination", new InnerEntity("prop1", "prop2"))));
+
+		var expected = """
+				{
+					"_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$1EntityWithMapCollectionMap",
+					"map": {
+						"collection": [
+							{
+								"destination": {
+									"_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$1InnerEntity",
+									"prop1": "prop1",
+									"prop2": "prop2"
+								}
+							}
+						]
+					}
+				}
+				""";
+
+		Document document = Document.create();
+
+		mappingElasticsearchConverter.write(entity, document);
+
+		assertEquals(expected, document.toJson(), false);
+	}
+
 	@Nested
 	class RangeTests {
 
