@@ -68,6 +68,7 @@ import org.springframework.util.StringUtils;
  * Elasticsearch client.
  *
  * @author Peter-Josef Meisch
+ * @author Illia Ulianov
  * @since 4.4
  */
 public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearchTemplate {
@@ -250,12 +251,12 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	private Mono<BulkResponse> checkForBulkOperationFailure(BulkResponse bulkResponse) {
 
 		if (bulkResponse.errors()) {
-			Map<String, String> failedDocuments = new HashMap<>();
+			Map<String, BulkFailureException.FailureDetails> failedDocuments = new HashMap<>();
 
 			for (BulkResponseItem item : bulkResponse.items()) {
 
 				if (item.error() != null) {
-					failedDocuments.put(item.id(), item.error().reason());
+					failedDocuments.put(item.id(), new BulkFailureException.FailureDetails(item.status(), item.error().reason()));
 				}
 			}
 			BulkFailureException exception = new BulkFailureException(
