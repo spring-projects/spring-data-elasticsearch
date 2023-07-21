@@ -71,6 +71,27 @@ public class IndicesOptions {
 		this.expandWildcards = expandWildcards;
 	}
 
+	/**
+	 * @since 5.2
+	 */
+	public static IndicesOptions ofOptions(EnumSet<Option> options) {
+		return of(options, EnumSet.noneOf(WildcardStates.class));
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	public static IndicesOptions oFExpandWildcards(EnumSet<WildcardStates> expandWildcards) {
+		return of(EnumSet.noneOf(Option.class), expandWildcards);
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	public static IndicesOptions of(EnumSet<Option> options, EnumSet<WildcardStates> expandWildcards) {
+		return new IndicesOptions(options, expandWildcards);
+	}
+
 	public EnumSet<Option> getOptions() {
 		return options;
 	}

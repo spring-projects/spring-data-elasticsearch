@@ -19,10 +19,10 @@ import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 import static org.springframework.util.CollectionUtils.*;
 
 import co.elastic.clients.elasticsearch._types.Conflicts;
+import co.elastic.clients.elasticsearch._types.ExpandWildcard;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.InlineScript;
 import co.elastic.clients.elasticsearch._types.OpType;
-import co.elastic.clients.elasticsearch._types.SearchType;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.VersionType;
@@ -64,12 +64,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
@@ -108,6 +109,8 @@ import org.springframework.util.StringUtils;
  */
 @SuppressWarnings("ClassCanBeRecord")
 class RequestConverter {
+
+	private static final Log LOGGER = LogFactory.getLog(RequestConverter.class);
 
 	// the default max result window size of Elasticsearch
 	public static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
@@ -1342,7 +1345,7 @@ class RequestConverter {
 		}
 
 		if (query.getIndicesOptions() != null) {
-			// new Elasticsearch client does not support the old Indices options, need to be adapted
+			addIndicesOptions(builder, query.getIndicesOptions());
 		}
 
 		if (query.isLimiting()) {
@@ -1427,6 +1430,34 @@ class RequestConverter {
 					.map(docValueField -> FieldAndFormat.of(b -> b.field(docValueField.field()).format(docValueField.format())))
 					.toList());
 		}
+	}
+
+	private void addIndicesOptions(SearchRequest.Builder builder, IndicesOptions indicesOptions) {
+
+		indicesOptions.getOptions().forEach(option -> {
+			switch (option) {
+				case ALLOW_NO_INDICES -> builder.allowNoIndices(true);
+				case IGNORE_UNAVAILABLE -> builder.ignoreUnavailable(true);
+				case IGNORE_THROTTLED -> builder.ignoreThrottled(true);
+				// the following ones aren't supported by the builder
+				case FORBID_ALIASES_TO_MULTIPLE_INDICES, FORBID_CLOSED_INDICES, IGNORE_ALIASES -> {
+					if (LOGGER.isWarnEnabled()) {
+						LOGGER
+								.warn(String.format("indices option %s is not supported by the Elasticsearch client.", option.name()));
+					}
+				}
+			}
+		});
+
+		builder.expandWildcards(indicesOptions.getExpandWildcards().stream().map(wildcardStates -> {
+			return switch (wildcardStates) {
+				case OPEN -> ExpandWildcard.Open;
+				case CLOSED -> ExpandWildcard.Closed;
+				case HIDDEN -> ExpandWildcard.Hidden;
+				case ALL -> ExpandWildcard.All;
+				case NONE -> ExpandWildcard.None;
+			};
+		}).collect(Collectors.toList()));
 	}
 
 	private Rescore getRescore(RescorerQuery rescorerQuery) {
