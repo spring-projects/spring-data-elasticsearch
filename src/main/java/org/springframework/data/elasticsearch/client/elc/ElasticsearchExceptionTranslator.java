@@ -32,6 +32,7 @@ import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
+import org.springframework.data.elasticsearch.VersionConflictException;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Elasticsearch. Convert the given runtime exception to an
@@ -68,9 +69,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 	@Override
 	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
-		if (isSeqNoConflict(ex)) {
-			return new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict", ex);
-		}
+		checkForConflictException(ex);
 
 		if (ex instanceof ElasticsearchException elasticsearchException) {
 
@@ -93,6 +92,10 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 
 				return new ResourceNotFoundException(errorReason);
 			}
+
+			if (response.status() == 409) {
+
+			}
 			String body = JsonUtils.toJson(response, jsonpMapper);
 
 			if (errorType != null && errorType.contains("validation_exception")) {
@@ -110,7 +113,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		return null;
 	}
 
-	private boolean isSeqNoConflict(Throwable exception) {
+	private void checkForConflictException(Throwable exception) {
 		Integer status = null;
 		String message = null;
 
@@ -118,14 +121,17 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 			status = responseException.getResponse().getStatusLine().getStatusCode();
 			message = responseException.getMessage();
 		} else if (exception.getCause() != null) {
-			return isSeqNoConflict(exception.getCause());
+			checkForConflictException(exception.getCause());
 		}
 
 		if (status != null && message != null) {
-			return status == 409 && message.contains("type\":\"version_conflict_engine_exception")
-					&& message.contains("version conflict, required seqNo");
+			if (status == 409 && message.contains("type\":\"version_conflict_engine_exception"))
+				if (message.contains("version conflict, required seqNo")) {
+					throw new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict",
+							exception);
+				} else if (message.contains("version conflict, current version [")) {
+					throw new VersionConflictException("Version conflict", exception);
+				}
 		}
-
-		return false;
 	}
 }

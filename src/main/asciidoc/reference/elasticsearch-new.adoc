@@ -8,12 +8,13 @@
 * The `JsonpMapper` for Elasticsearch is now configurable and provided as bean.
 * Improved AOT runtime hints for Elasticsearch client library classes.
 * Add Kotlin extensions and repository coroutine support.
+* Introducing `VersionConflictException` class thrown in case thatElasticsearch reports an 409 error with a version conflict.
 
 [[new-features.5-1-0]]
 == New in Spring Data Elasticsearch 5.1
 
 * Upgrade to Elasticsearch 8.7.1
-* Allow specification of the TLS certificate when connecting to an Elasticsearch 8 cluster 
+* Allow specification of the TLS certificate when connecting to an Elasticsearch 8 cluster
 
 [[new-features.5-0-0]]
 == New in Spring Data Elasticsearch 5.0
