@@ -440,7 +440,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return self();
 	}
 
-	public SELF witAllowNoIndices(@Nullable Boolean allowNoIndices) {
+	public SELF withAllowNoIndices(@Nullable Boolean allowNoIndices) {
 		this.allowNoIndices = allowNoIndices;
 		return self();
 	}
