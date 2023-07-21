@@ -15,15 +15,15 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import static java.util.Collections.singletonList;
+import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.elasticsearch.annotations.Document.VersionType.EXTERNAL_GTE;
+import static org.springframework.data.elasticsearch.annotations.Document.VersionType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
-import static org.springframework.data.elasticsearch.core.document.Document.create;
-import static org.springframework.data.elasticsearch.core.query.StringQuery.MATCH_ALL;
-import static org.springframework.data.elasticsearch.utils.IdGenerator.nextIdAsString;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.buildIndex;
+import static org.springframework.data.elasticsearch.core.document.Document.*;
+import static org.springframework.data.elasticsearch.core.query.StringQuery.*;
+import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import java.lang.Double;
 import java.lang.Integer;
@@ -50,6 +50,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.BulkFailureException;
+import org.springframework.data.elasticsearch.VersionConflictException;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
@@ -2008,7 +2009,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		// reindex with version one below
 		assertThatThrownBy(() -> operations.index(indexQueryBuilder.withVersion(entity.getVersion() - 1).build(), index))
-				.hasMessageContaining("version").hasMessageContaining("conflict");
+				.isInstanceOf(VersionConflictException.class);
 	}
 
 	@Test
@@ -3639,6 +3640,18 @@ public abstract class ElasticsearchIntegrationTests {
 				.allMatch(failureStatus -> failureStatus.status().equals(409));
 	}
 
+	@Test // #2467
+	@DisplayName("should throw VersionConflictException when saving invalid version")
+	void shouldThrowVersionConflictExceptionWhenSavingInvalidVersion() {
+
+		var entity = new VersionedEntity("42", 1L);
+		operations.save(entity);
+
+		assertThatThrownBy(() -> {
+			operations.save(entity);
+		}).isInstanceOf(VersionConflictException.class);
+	}
+
 	// region entities
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(shards = 1, replicas = 0, refreshInterval = "-1")
@@ -4430,6 +4443,13 @@ public abstract class ElasticsearchIntegrationTests {
 		@Id private String id;
 		@Nullable
 		@Version private Long version;
+
+		public VersionedEntity() {}
+
+		public VersionedEntity(@Nullable String id, @Nullable java.lang.Long version) {
+			this.id = id;
+			this.version = version;
+		}
 
 		@Nullable
 		public String getId() {
