@@ -33,6 +33,7 @@ import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.util.Assert;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * @author Christoph Strobl
@@ -64,8 +65,13 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		if (shouldCreateIndexAndMapping()) {
 			indexOperations.exists() //
-					.flatMap(exists -> exists ? Mono.empty() : indexOperations.createWithMapping()) //
-					.block();
+					.doOnNext(exists -> {
+						if (!exists) {
+							indexOperations.createWithMapping();
+						}
+					})
+					.subscribeOn(Schedulers.single())
+					.subscribe();
 		}
 	}
 
