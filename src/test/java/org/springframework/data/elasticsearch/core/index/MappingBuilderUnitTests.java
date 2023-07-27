@@ -73,8 +73,18 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Test // DATAES-568
 	public void testInfiniteLoopAvoidance() throws JSONException {
 
-		String expected = "{\"properties\":{\"message\":{\"store\":true,\"" + "type\":\"text\",\"index\":false,"
-				+ "\"analyzer\":\"standard\"}}}";
+		String expected = """
+				{
+						"properties": {
+							"message": {
+								"store": true,
+								"type": "text",
+								"index": false,
+								"analyzer": "standard"
+							}
+						}
+					}
+					""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleTransientEntity.class);
 
@@ -84,22 +94,40 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@Test // DATAES-568
 	public void shouldUseValueFromAnnotationType() throws JSONException {
 
-		// Given
-		String expected = "{\"properties\":{\"price\":{\"type\":\"double\"}}}";
+		String expected = """
+				  {
+				  "properties": {
+				    "price": {
+				      "type": "double"
+				    }
+				  }
+				}
+				""";
 
-		// When
 		String mapping = getMappingBuilder().buildPropertyMapping(StockPrice.class);
 
-		// Then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-76
 	public void shouldBuildMappingWithSuperclass() throws JSONException {
 
-		String expected = "{\"properties\":{\"message\":{\"store\":true,\""
-				+ "type\":\"text\",\"index\":false,\"analyzer\":\"standard\"}" + ",\"createdDate\":{"
-				+ "\"type\":\"date\",\"index\":false}}}";
+		String expected = """
+				{
+						"properties": {
+							"message": {
+								"store": true,
+								"type": "text",
+								"index": false,
+								"analyzer": "standard"
+							},
+							"createdDate": {
+								"type": "date",
+								"index": false
+							}
+						}
+					}
+					""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleInheritedEntity.class);
 
@@ -142,7 +170,6 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should build mappings for geo types")
 	void shouldBuildMappingsForGeoTypes() throws JSONException {
 
-		// given
 		String expected = """
 				{
 				  "properties": {
@@ -172,103 +199,151 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				}
 				"""; //
 
-		// when
 		String mapping;
 		mapping = getMappingBuilder().buildPropertyMapping(GeoEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-568
 	public void shouldUseFieldNameOnId() throws JSONException {
 
-		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true}" + "}}";
+		String expected = """
+				{
+				  "properties": {
+				    "id-property": {
+				      "type": "keyword",
+				      "index": true
+				    }
+				  }
+				}
+				""";
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.IdEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-568
 	public void shouldUseFieldNameOnText() throws JSONException {
 
-		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"text-property\":{\"type\":\"text\"}" + "}}";
+		String expected = """
+						{
+					"properties": {
+						"id-property": {
+							"type": "keyword",
+							"index": true
+						},
+						"text-property": {
+							"type": "text"
+						}
+					}
+				}
+				""";
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.TextEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-568
 	public void shouldUseFieldNameOnMapping() throws JSONException {
 
-		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"mapping-property\":{\"type\":\"string\",\"analyzer\":\"standard_lowercase_asciifolding\"}" + "}}";
+		String expected = """
+					{
+					"properties": {
+						"id-property": {
+							"type": "keyword",
+							"index": true
+						},
+						"mapping-property": {
+							"type": "string",
+							"analyzer": "standard_lowercase_asciifolding"
+						}
+					}
+				}
+					          """;
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.MappingEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-568
 	public void shouldUseFieldNameOnGeoPoint() throws JSONException {
 
-		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"geopoint-property\":{\"type\":\"geo_point\"}" + "}}";
+		String expected = """
+				{
+					"properties": {
+						"id-property": {
+							"type": "keyword",
+							"index": true
+						},
+						"geopoint-property": {
+							"type": "geo_point"
+						}
+					}
+				}
+				""";
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.GeoPointEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-568
 	public void shouldUseFieldNameOnCircularEntity() throws JSONException {
 
-		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true},"
-				+ "\"circular-property\":{\"type\":\"object\",\"properties\":{}}" + "}}";
+		String expected = """
+					{
+					"properties": {
+						"id-property": {
+							"type": "keyword",
+							"index": true
+						},
+						"circular-property": {
+							"type": "object",
+							"properties": {}
+						}
+					}
+				}
+				""";
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.CircularEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-568
 	public void shouldUseFieldNameOnCompletion() throws JSONException {
 
-		// given
-		String expected = "{\"properties\":{" + "\"id-property\":{\"type\":\"keyword\",\"index\":true}," + //
-				"\"completion-property\":{\"type\":\"completion\",\"max_input_length\":100,\"preserve_position_increments\":true,\"preserve_separators\":true,\"search_analyzer\":\"simple\",\"analyzer\":\"simple\"},\"completion-property\":{}"
-				+ //
-				"}}";
+		String expected = """
+				{
+					"properties": {
+						"id-property": {
+							"type": "keyword",
+							"index": true
+						},
+						"completion-property": {
+							"type": "completion",
+							"max_input_length": 100,
+							"preserve_position_increments": true,
+							"preserve_separators": true,
+							"search_analyzer": "simple",
+							"analyzer": "simple"
+						}
+					}
+				}
+				""";
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.CompletionEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-568, DATAES-896
 	public void shouldUseFieldNameOnMultiField() throws JSONException {
 
-		// given
 		String expected = """
 				{
 				  "properties": {
@@ -286,28 +361,43 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				          "search_analyzer": "standard"
 				        }
 				      }
+				    },
+				    "alternate-description": {
+				      "type": "text",
+				      "analyzer": "whitespace",
+				      "fields": {
+				        "suff-ix": {
+				          "type": "text",
+				          "analyzer": "stop",
+				          "search_analyzer": "standard"
+				        }
+				      }
 				    }
 				  }
 				}
 				"""; //
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.MultiFieldEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
 	@Test // DATAES-639
 	public void shouldUseIgnoreAbove() throws JSONException {
 
-		// given
-		String expected = "{\"properties\":{\"message\":{\"type\":\"keyword\",\"ignore_above\":10}}}";
+		String expected = """
+				{
+					"properties": {
+						"message": {
+							"type": "keyword",
+							"ignore_above": 10
+						}
+					}
+				}
+				""";
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(IgnoreAboveEntity.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
@@ -415,12 +505,10 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				            }
 				        }
 				}
-				"""; //
+				""";
 
-		// when
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldMappingParameters.class);
 
-		// then
 		assertEquals(expected, mapping, false);
 	}
 
@@ -616,9 +704,11 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should not write mapping when enabled is false on entity")
 	void shouldNotWriteMappingWhenEnabledIsFalseOnEntity() throws JSONException {
 
-		String expected = "{\n" + //
-				"  \"enabled\": false" + //
-				"}";
+		String expected = """
+				{
+					"enabled": false
+				}
+				""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(DisabledMappingEntity.class);
 
@@ -1126,6 +1216,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			@Field("id-property") private String id;
 		}
 
+		@SuppressWarnings("unused")
 		@Document(indexName = "fieldname-index")
 		static class TextEntity {
 
@@ -1137,6 +1228,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			@Nullable private String textProperty;
 		}
 
+		@SuppressWarnings("unused")
 		@Document(indexName = "fieldname-index")
 		static class MappingEntity {
 
@@ -1149,6 +1241,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			@Nullable private byte[] mappingProperty;
 		}
 
+		@SuppressWarnings("unused")
 		@Document(indexName = "fieldname-index")
 		static class GeoPointEntity {
 
@@ -1160,6 +1253,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			@Field("geopoint-property") private GeoPoint geoPoint;
 		}
 
+		@SuppressWarnings("unused")
 		@Document(indexName = "fieldname-index")
 		static class CircularEntity {
 
@@ -1172,6 +1266,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			private CircularEntity circularProperty;
 		}
 
+		@SuppressWarnings("unused")
 		@Document(indexName = "fieldname-index")
 		static class CompletionEntity {
 
@@ -1185,6 +1280,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			private Completion suggest;
 		}
 
+		@SuppressWarnings("unused")
 		@Document(indexName = "fieldname-index")
 		static class MultiFieldEntity {
 
@@ -1192,11 +1288,26 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			@Id
 			@Field("id-property") private String id;
 
-			@Nullable //
+			@Nullable
 			@MultiField(mainField = @Field(name = "main-field", type = FieldType.Text, analyzer = "whitespace"),
 					otherFields = {
 							@InnerField(suffix = "suff-ix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
 			private String description;
+
+			@Nullable private String alternateDescription;
+
+			@Nullable
+			@MultiField(mainField = @Field(name = "alternate-description", type = FieldType.Text, analyzer = "whitespace"),
+							otherFields = {
+											@InnerField(suffix = "suff-ix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
+			public String getAlternateDescription() {
+				return alternateDescription;
+			}
+
+			public void setAlternateDescription(String alternateDescription) {
+				this.alternateDescription = alternateDescription;
+			}
+
 		}
 	}
 
@@ -1260,6 +1371,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-simple-recursive-mapping-builder")
 	static class SimpleRecursiveEntity {
 		@Nullable
@@ -1412,6 +1524,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-stock-mapping-builder")
 	static class StockPrice {
 		@Nullable
@@ -1448,6 +1561,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	static class AbstractInheritedEntity {
 
 		@Nullable
@@ -1475,6 +1589,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-recursive-mapping-mapping-builder")
 	static class SampleTransientEntity {
 
@@ -1530,6 +1645,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-geo-mapping-builder")
 	static class GeoEntity {
 		@Nullable
@@ -1644,6 +1760,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-field-mapping-parameters")
 	static class FieldMappingParameters {
 		@Nullable
@@ -1719,19 +1836,20 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable
 		@Field(type = Auto) String autoField;
 		@Nullable
-		@Field(type = Object, enabled = true) private String enabledObject;
+		@Field(type = Object) private String enabledObject;
 		@Nullable
 		@Field(type = Object, enabled = false) private String disabledObject;
 		@Nullable
 		@Field(type = Text, eagerGlobalOrdinals = true) private String eagerGlobalOrdinalsTrue;
 		@Nullable
-		@Field(type = Text, eagerGlobalOrdinals = false) private String eagerGlobalOrdinalsFalse;
+		@Field(type = Text) private String eagerGlobalOrdinalsFalse;
 		@Nullable
 		@Field(type = Wildcard) private String wildcardWithoutParams;
 		@Nullable
 		@Field(type = Wildcard, nullValue = "WILD", ignoreAbove = 42) private String wildcardWithParams;
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-configure-dynamic-mapping", dynamic = Dynamic.FALSE)
 	static class DynamicMappingAnnotationEntity {
 
@@ -1752,6 +1870,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-configure-dynamic-mapping", dynamic = Dynamic.FALSE)
 	static class DynamicMappingEntity {
 
@@ -1791,12 +1910,14 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	record ValueObject(String value) {
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "valueDoc")
 	static class ValueDoc {
 		@Nullable
 		@Field(type = Text) private ValueObject valueObject;
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "completion")
 	static class CompletionDocument {
 		@Nullable
@@ -1824,10 +1945,13 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "test-index-entity-with-seq-no-primary-term-mapping-builder")
 	static class EntityWithSeqNoPrimaryTerm {
-		@Field(type = Object) private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@Field(type = Object)
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
 
+		@Nullable
 		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
 			return seqNoPrimaryTerm;
 		}
@@ -1837,6 +1961,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	static class RankFeatureEntity {
 		@Nullable
 		@Id private String id;
@@ -1884,6 +2009,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	static class DenseVectorEntity {
 		@Nullable
 		@Id private String id;
@@ -1998,6 +2124,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	static class TypeHintEntity {
 		@Nullable
 		@Id
@@ -2063,6 +2190,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	static class DateFormatsEntity {
 		@Nullable
 		@Id private String id;
@@ -2133,6 +2261,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private static class DateRangeEntity {
 		@Nullable
 		@Id private String id;
@@ -2158,6 +2287,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "magazine")
 	private static class Magazine {
 		@Id
@@ -2168,6 +2298,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable private List<Author> authors;
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "magazine-without-type-hints", writeTypeHint = WriteTypeHint.FALSE)
 	private static class MagazineWithoutTypeHints {
 		@Id
@@ -2178,6 +2309,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable private List<Author> authors;
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "magazine-with-type-hints", writeTypeHint = WriteTypeHint.TRUE)
 	private static class MagazineWithTypeHints {
 		@Id
@@ -2215,6 +2347,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable private String id;
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "runtime-fields")
 	@Mapping(runtimeFieldsPath = "/mappings/runtime-fields.json")
 	private static class RuntimeFieldEntity {
@@ -2224,6 +2357,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable private Instant timestamp;
 	}
 
+	@SuppressWarnings("unused")
 	@Document(indexName = "fields-excluded-from-source")
 	private static class ExcludedFieldEntity {
 		@Id
@@ -2235,11 +2369,13 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = Nested) private NestedExcludedFieldEntity nestedEntity;
 	}
 
+	@SuppressWarnings("unused")
 	private static class NestedExcludedFieldEntity {
 		@Nullable
 		@Field(name = "excluded-text", type = Text, excludeFromSource = true) private String excludedText;
 	}
 
+	@SuppressWarnings("unused")
 	private static class IndexedIndexNameEntity {
 		@Nullable
 		@Field(type = Text) private String someText;
@@ -2247,6 +2383,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@IndexedIndexName private String storedIndexName;
 	}
 
+	@SuppressWarnings("unused")
 	private static class FieldNameDotsEntity {
 		@Id
 		@Nullable private String id;
