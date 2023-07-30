@@ -419,3 +419,34 @@ public class PersonCustomRepositoryImpl implements PersonCustomRepository {
 <.> The parameters are passed in a `Map<String,Object>`
 <.> Do the search in the same way as with the other query types.
 ====
+
+[[elasticsearch.misc.nested-sort]]
+== Nested sort
+Spring Data Elasticsearch supports sorting within nested objects (https://www.elastic.co/guide/en/elasticsearch/reference/8.9/sort-search-results.html#nested-sorting)
+
+The following example, taken from the `org.springframework.data.elasticsearch.core.query.sort.NestedSortIntegrationTests` class, shows how to define the nested sort.
+
+====
+[source,java]
+----
+var filter = StringQuery.builder("""
+	{ "term": {"movies.actors.sex": "m"} }
+	""").build();
+var order = new org.springframework.data.elasticsearch.core.query.Order(Sort.Direction.DESC,
+	"movies.actors.yearOfBirth")
+	.withNested(
+		Nested.builder("movies")
+			.withNested(
+				Nested.builder("movies.actors")
+					.withFilter(filter)
+					.build())
+			.build());
+
+var query = Query.findAll().addSort(Sort.by(order));
+
+----
+====
+
+About the filter query: It is not possible to use a `CriteriaQuery` here, as this query would be converted into a Elasticsearch nested query which does not work in the filter context. So only `StringQuery` or `NativeQuery` can be used here. When using one of these, like the term query above, the Elasticsearch field names must be used, so take care, when these are redefined with the `@Field(name="...")` definition.
+
+For the definition of the order path and the nested paths, the Java entity property names should be used.

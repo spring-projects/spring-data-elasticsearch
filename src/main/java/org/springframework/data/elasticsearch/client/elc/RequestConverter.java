@@ -18,15 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 import static org.springframework.util.CollectionUtils.*;
 
-import co.elastic.clients.elasticsearch._types.Conflicts;
-import co.elastic.clients.elasticsearch._types.ExpandWildcard;
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.InlineScript;
-import co.elastic.clients.elasticsearch._types.OpType;
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.VersionType;
-import co.elastic.clients.elasticsearch._types.WaitForActiveShardOptions;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
@@ -71,6 +63,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
@@ -89,6 +82,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.IndicesOptions;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.Remote;
 import org.springframework.data.elasticsearch.core.script.Script;
@@ -269,36 +263,7 @@ class RequestConverter {
 		List<Action> actions = new ArrayList<>();
 		aliasActions.getActions().forEach(aliasAction -> {
 
-			Action.Builder actionBuilder = new Action.Builder();
-
-			if (aliasAction instanceof AliasAction.Add add) {
-				AliasActionParameters parameters = add.getParameters();
-				actionBuilder.add(addActionBuilder -> {
-					addActionBuilder //
-							.indices(Arrays.asList(parameters.getIndices())) //
-							.isHidden(parameters.getHidden()) //
-							.isWriteIndex(parameters.getWriteIndex()) //
-							.routing(parameters.getRouting()) //
-							.indexRouting(parameters.getIndexRouting()) //
-							.searchRouting(parameters.getSearchRouting()); //
-
-					if (parameters.getAliases() != null) {
-						addActionBuilder.aliases(Arrays.asList(parameters.getAliases()));
-					}
-
-					Query filterQuery = parameters.getFilterQuery();
-
-					if (filterQuery != null) {
-						elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
-						co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getQuery(filterQuery, null);
-						if (esQuery != null) {
-							addActionBuilder.filter(esQuery);
-
-						}
-					}
-					return addActionBuilder;
-				});
-			}
+			var actionBuilder = getBuilder(aliasAction);
 
 			if (aliasAction instanceof AliasAction.Remove remove) {
 				AliasActionParameters parameters = remove.getParameters();
@@ -325,6 +290,40 @@ class RequestConverter {
 		updateAliasRequestBuilder.actions(actions);
 
 		return updateAliasRequestBuilder.build();
+	}
+
+	@NotNull
+	private Action.Builder getBuilder(AliasAction aliasAction) {
+		Action.Builder actionBuilder = new Action.Builder();
+
+		if (aliasAction instanceof AliasAction.Add add) {
+			AliasActionParameters parameters = add.getParameters();
+			actionBuilder.add(addActionBuilder -> {
+				addActionBuilder //
+						.indices(Arrays.asList(parameters.getIndices())) //
+						.isHidden(parameters.getHidden()) //
+						.isWriteIndex(parameters.getWriteIndex()) //
+						.routing(parameters.getRouting()) //
+						.indexRouting(parameters.getIndexRouting()) //
+						.searchRouting(parameters.getSearchRouting()); //
+
+				if (parameters.getAliases() != null) {
+					addActionBuilder.aliases(Arrays.asList(parameters.getAliases()));
+				}
+
+				Query filterQuery = parameters.getFilterQuery();
+
+				if (filterQuery != null) {
+					elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
+					co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getQuery(filterQuery, null);
+					if (esQuery != null) {
+						addActionBuilder.filter(esQuery);
+					}
+				}
+				return addActionBuilder;
+			});
+		}
+		return actionBuilder;
 	}
 
 	public PutMappingRequest indicesPutMappingRequest(IndexCoordinates indexCoordinates, Document mapping) {
@@ -1502,59 +1501,88 @@ class RequestConverter {
 	private SortOptions getSortOptions(Sort.Order order, @Nullable ElasticsearchPersistentEntity<?> persistentEntity) {
 		SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.Desc : SortOrder.Asc;
 
-		Order.Mode mode = Order.DEFAULT_MODE;
+		Order.Mode mode = order.getDirection().isAscending() ? Order.Mode.min : Order.Mode.max;
 		String unmappedType = null;
-
-		if (order instanceof Order o) {
-			mode = o.getMode();
-			unmappedType = o.getUnmappedType();
-		}
+		String missing = null;
+		NestedSortValue nestedSortValue = null;
 
 		if (SortOptions.Kind.Score.jsonValue().equals(order.getProperty())) {
 			return SortOptions.of(so -> so.score(s -> s.order(sortOrder)));
-		} else {
-			ElasticsearchPersistentProperty property = (persistentEntity != null) //
-					? persistentEntity.getPersistentProperty(order.getProperty()) //
-					: null;
-			String fieldName = property != null ? property.getFieldName() : order.getProperty();
-
-			Order.Mode finalMode = mode;
-			if (order instanceof GeoDistanceOrder geoDistanceOrder) {
-
-				return SortOptions.of(so -> so //
-						.geoDistance(gd -> gd //
-								.field(fieldName) //
-								.location(loc -> loc.latlon(Queries.latLon(geoDistanceOrder.getGeoPoint()))) //
-								.distanceType(geoDistanceType(geoDistanceOrder.getDistanceType())).mode(sortMode(finalMode)) //
-								.order(sortOrder(geoDistanceOrder.getDirection())) //
-								.unit(distanceUnit(geoDistanceOrder.getUnit())) //
-								.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped())));
-			} else {
-				String missing = (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) ? "_first"
-						: ((order.getNullHandling() == Sort.NullHandling.NULLS_LAST) ? "_last" : null);
-				String finalUnmappedType = unmappedType;
-				return SortOptions.of(so -> so //
-						.field(f -> {
-							f.field(fieldName) //
-									.order(sortOrder) //
-									.mode(sortMode(finalMode));
-
-							if (finalUnmappedType != null) {
-								FieldType fieldType = fieldType(finalUnmappedType);
-
-								if (fieldType != null) {
-									f.unmappedType(fieldType);
-								}
-							}
-
-							if (missing != null) {
-								f.missing(fv -> fv //
-										.stringValue(missing));
-							}
-							return f;
-						}));
-			}
 		}
+
+		if (order instanceof Order o) {
+
+			if (o.getMode() != null) {
+				mode = o.getMode();
+			}
+			unmappedType = o.getUnmappedType();
+			missing = o.getMissing();
+			nestedSortValue = getNestedSort(o.getNested(), persistentEntity);
+		}
+		Order.Mode finalMode = mode;
+		String finalUnmappedType = unmappedType;
+		var finalNestedSortValue = nestedSortValue;
+
+		ElasticsearchPersistentProperty property = (persistentEntity != null) //
+				? persistentEntity.getPersistentProperty(order.getProperty()) //
+				: null;
+		String fieldName = property != null ? property.getFieldName() : order.getProperty();
+
+		if (order instanceof GeoDistanceOrder geoDistanceOrder) {
+			return getSortOptions(geoDistanceOrder, fieldName, finalMode);
+		}
+
+		var finalMissing = missing != null ? missing
+				: (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) ? "_first"
+						: ((order.getNullHandling() == Sort.NullHandling.NULLS_LAST) ? "_last" : null);
+
+		return SortOptions.of(so -> so //
+				.field(f -> {
+					f.field(fieldName) //
+							.order(sortOrder) //
+							.mode(sortMode(finalMode));
+
+					if (finalUnmappedType != null) {
+						FieldType fieldType = fieldType(finalUnmappedType);
+
+						if (fieldType != null) {
+							f.unmappedType(fieldType);
+						}
+					}
+
+					if (finalMissing != null) {
+						f.missing(fv -> fv //
+								.stringValue(finalMissing));
+					}
+
+					if (finalNestedSortValue != null) {
+						f.nested(finalNestedSortValue);
+					}
+
+					return f;
+				}));
+	}
+
+	@Nullable
+	private NestedSortValue getNestedSort(@Nullable Order.Nested nested,
+			ElasticsearchPersistentEntity<?> persistentEntity) {
+		return (nested == null) ? null
+				: NestedSortValue.of(b -> b //
+						.path(elasticsearchConverter.updateFieldNames(nested.getPath(), persistentEntity)) //
+						.maxChildren(nested.getMaxChildren()) //
+						.nested(getNestedSort(nested.getNested(), persistentEntity)) //
+						.filter(getQuery(nested.getFilter(), persistentEntity.getType())));
+	}
+
+	private static SortOptions getSortOptions(GeoDistanceOrder geoDistanceOrder, String fieldName, Order.Mode finalMode) {
+		return SortOptions.of(so -> so //
+				.geoDistance(gd -> gd //
+						.field(fieldName) //
+						.location(loc -> loc.latlon(Queries.latLon(geoDistanceOrder.getGeoPoint()))) //
+						.distanceType(geoDistanceType(geoDistanceOrder.getDistanceType())).mode(sortMode(finalMode)) //
+						.order(sortOrder(geoDistanceOrder.getDirection())) //
+						.unit(distanceUnit(geoDistanceOrder.getUnit())) //
+						.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped())));
 	}
 
 	@SuppressWarnings("DuplicatedCode")

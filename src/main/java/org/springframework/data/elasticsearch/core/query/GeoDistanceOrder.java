@@ -37,7 +37,7 @@ public class GeoDistanceOrder extends Order {
 	private final Boolean ignoreUnmapped;
 
 	public GeoDistanceOrder(String property, GeoPoint geoPoint) {
-		this(property, geoPoint, Sort.Direction.ASC, DEFAULT_DISTANCE_TYPE, DEFAULT_MODE, DEFAULT_UNIT,
+		this(property, geoPoint, Sort.Direction.ASC, DEFAULT_DISTANCE_TYPE, null, DEFAULT_UNIT,
 				DEFAULT_IGNORE_UNMAPPED);
 	}
 

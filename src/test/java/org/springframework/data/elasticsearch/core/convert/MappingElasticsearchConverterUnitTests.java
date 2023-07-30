@@ -25,16 +25,7 @@ import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.intellij.lang.annotations.Language;
@@ -69,6 +60,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoJsonMultiPolygon;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonPoint;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonPolygon;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -94,7 +86,13 @@ import org.springframework.util.Assert;
  */
 public class MappingElasticsearchConverterUnitTests {
 
-	static final String JSON_STRING = "{\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Car\",\"name\":\"Grat\",\"model\":\"Ford\"}";
+	static final String JSON_STRING = """
+			{
+			  "_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Car",
+			  "name": "Grat",
+			  "model": "Ford"
+			}
+			""";
 	static final String CAR_MODEL = "Ford";
 	static final String CAR_NAME = "Grat";
 	MappingElasticsearchConverter mappingElasticsearchConverter;
@@ -233,18 +231,15 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test
 	public void shouldFailToInitializeGivenMappingContextIsNull() {
 
-		// given
 		assertThatThrownBy(() -> new MappingElasticsearchConverter(null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
 	public void shouldReturnMappingContextWithWhichItWasInitialized() {
 
-		// given
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
 
-		// then
 		assertThat(converter.getMappingContext()).isNotNull();
 		assertThat(converter.getMappingContext()).isSameAs(mappingContext);
 	}
@@ -252,35 +247,29 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test
 	public void shouldReturnDefaultConversionService() {
 
-		// given
 		MappingElasticsearchConverter converter = new MappingElasticsearchConverter(
 				new SimpleElasticsearchMappingContext());
 
-		// when
 		ConversionService conversionService = converter.getConversionService();
 
-		// then
 		assertThat(conversionService).isNotNull();
 	}
 
 	@Test // DATAES-530
-	public void shouldMapObjectToJsonString() {
+	public void shouldMapObjectToJsonString() throws JSONException {
 		Car car = new Car();
 		car.setModel(CAR_MODEL);
 		car.setName(CAR_NAME);
 		String jsonResult = mappingElasticsearchConverter.mapObject(car).toJson();
 
-		assertThat(jsonResult).isEqualTo(JSON_STRING);
+		assertEquals(jsonResult, JSON_STRING, false);
 	}
 
 	@Test // DATAES-530
 	public void shouldReadJsonStringToObject() {
-		// Given
 
-		// When
 		Car result = mappingElasticsearchConverter.read(Car.class, Document.parse(JSON_STRING));
 
-		// Then
 		assertThat(result).isNotNull();
 		assertThat(result.getName()).isEqualTo(CAR_NAME);
 		assertThat(result.getModel()).isEqualTo(CAR_MODEL);
@@ -288,7 +277,6 @@ public class MappingElasticsearchConverterUnitTests {
 
 	@Test // DATAES-530
 	public void shouldMapGeoPointElasticsearchNames() throws JSONException {
-		// given
 		double lon = 5;
 		double lat = 48;
 		Point point = new Point(lon, lat);
@@ -327,17 +315,14 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-530
 	public void ignoresReadOnlyProperties() {
 
-		// given
 		Sample sample = new Sample();
 		sample.setReadOnly("readOnly");
 		sample.setProperty("property");
 		sample.setJavaTransientProperty("javaTransient");
 		sample.setAnnotatedTransientProperty("transient");
 
-		// when
 		String result = mappingElasticsearchConverter.mapObject(sample).toJson();
 
-		// then
 		assertThat(result).contains("\"property\"");
 		assertThat(result).contains("\"javaTransient\"");
 
@@ -638,13 +623,15 @@ public class MappingElasticsearchConverterUnitTests {
 		person.birthDate = LocalDate.of(2000, 8, 22);
 		person.gender = Gender.MAN;
 
-		String expected = '{' + //
-				"  \"id\": \"4711\"," + //
-				"  \"first-name\": \"John\"," + //
-				"  \"last-name\": \"Doe\"," + //
-				"  \"birth-date\": \"22.08.2000\"," + //
-				"  \"gender\": \"MAN\"" + //
-				'}';
+		String expected = """
+				{
+				  "id": "4711",
+				  "first-name": "John",
+				  "last-name": "Doe",
+				  "birth-date": "22.08.2000",
+				  "gender": "MAN"
+				}
+				""";
 		Document document = Document.create();
 		mappingElasticsearchConverter.write(person, document);
 		String json = document.toJson();
@@ -961,30 +948,59 @@ public class MappingElasticsearchConverterUnitTests {
 	@Nested
 	class RangeTests {
 
-		static final String JSON = "{"
-				+ "\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$RangeTests$RangeEntity\","
-				+ "\"integerRange\":{\"gt\":\"1\",\"lt\":\"10\"}," //
-				+ "\"floatRange\":{\"gte\":\"1.2\",\"lte\":\"2.5\"}," //
-				+ "\"longRange\":{\"gt\":\"2\",\"lte\":\"5\"}," //
-				+ "\"doubleRange\":{\"gte\":\"3.2\",\"lt\":\"7.4\"}," //
-				+ "\"dateRange\":{\"gte\":\"1970-01-01T00:00:00.000Z\",\"lte\":\"1970-01-01T01:00:00.000Z\"}," //
-				+ "\"localDateRange\":{\"gte\":\"2021-07-06\"}," //
-				+ "\"localTimeRange\":{\"gte\":\"00:30:00.000\",\"lt\":\"02:30:00.000\"}," //
-				+ "\"localDateTimeRange\":{\"gt\":\"2021-01-01T00:30:00.000\",\"lt\":\"2021-01-01T02:30:00.000\"}," //
-				+ "\"offsetTimeRange\":{\"gte\":\"00:30:00.000+02:00\",\"lt\":\"02:30:00.000+02:00\"}," //
-				+ "\"zonedDateTimeRange\":{\"gte\":\"2021-01-01T00:30:00.000+02:00\",\"lte\":\"2021-01-01T00:30:00.000+02:00\"}," //
-				+ "\"nullRange\":null}";
+		static final String JSON = """
+				{
+				  "_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$RangeTests$RangeEntity",
+				  "integerRange": {
+				    "gt": "1",
+				    "lt": "10"
+				  },
+				  "floatRange": {
+				    "gte": "1.2",
+				    "lte": "2.5"
+				  },
+				  "longRange": {
+				    "gt": "2",
+				    "lte": "5"
+				  },
+				  "doubleRange": {
+				    "gte": "3.2",
+				    "lt": "7.4"
+				  },
+				  "dateRange": {
+				    "gte": "1970-01-01T00:00:00.000Z",
+				    "lte": "1970-01-01T01:00:00.000Z"
+				  },
+				  "localDateRange": {
+				    "gte": "2021-07-06"
+				  },
+				  "localTimeRange": {
+				    "gte": "00:30:00.000",
+				    "lt": "02:30:00.000"
+				  },
+				  "localDateTimeRange": {
+				    "gt": "2021-01-01T00:30:00.000",
+				    "lt": "2021-01-01T02:30:00.000"
+				  },
+				  "offsetTimeRange": {
+				    "gte": "00:30:00.000+02:00",
+				    "lt": "02:30:00.000+02:00"
+				  },
+				  "zonedDateTimeRange": {
+				    "gte": "2021-01-01T00:30:00.000+02:00",
+				    "lte": "2021-01-01T00:30:00.000+02:00"
+				  },
+				  "nullRange": null
+				}
+				""";
 
 		@Test
 		public void shouldReadRanges() throws JSONException {
 
-			// given
 			Document source = Document.parse(JSON);
 
-			// when
 			RangeEntity entity = mappingElasticsearchConverter.read(RangeEntity.class, source);
 
-			// then
 			assertThat(entity) //
 					.isNotNull() //
 					.satisfies(e -> {
@@ -1010,7 +1026,6 @@ public class MappingElasticsearchConverterUnitTests {
 		@Test
 		public void shouldWriteRanges() throws JSONException {
 
-			// given
 			Document source = Document.parse(JSON);
 			RangeEntity entity = new RangeEntity();
 			entity.setIntegerRange(Range.open(1, 10));
@@ -1028,10 +1043,8 @@ public class MappingElasticsearchConverterUnitTests {
 					Range.just(ZonedDateTime.of(LocalDate.of(2021, 1, 1), LocalTime.of(0, 30), ZoneOffset.ofHours(2))));
 			entity.setNullRange(null);
 
-			// when
 			Document document = mappingElasticsearchConverter.mapObject(entity);
 
-			// then
 			assertThat(document).isEqualTo(source);
 		}
 
@@ -1564,7 +1577,6 @@ public class MappingElasticsearchConverterUnitTests {
 
 		Document source = Document.parse(json);
 
-		// when
 		EntityWithCustomValueConverters entity = mappingElasticsearchConverter.read(EntityWithCustomValueConverters.class,
 				source);
 
@@ -2038,6 +2050,17 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(entity.getDottedField()).isEqualTo("dotted field");
 	}
 
+	@Test // #1784
+	@DisplayName("should map property path to field names")
+	void shouldMapPropertyPathToFieldNames() {
+
+		var propertyPath = "level1Entries.level2Entries.keyWord";
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingElasticsearchConverter.getMappingContext().getPersistentEntity(NestedEntity.class);
+		var mappedNames = mappingElasticsearchConverter.updateFieldNames(propertyPath, persistentEntity);
+
+		assertThat(mappedNames).isEqualTo("level-one.level-two.key-word");
+	}
+
 	// region entities
 	public static class Sample {
 		@Nullable public @ReadOnlyProperty String readOnly;
@@ -2288,149 +2311,20 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	interface Inventory {
-
-		String getLabel();
+		String label();
 	}
 
-	static class Gun implements Inventory {
-		final String label;
-		final int shotsPerMagazine;
-
-		public Gun(@Nullable String label, int shotsPerMagazine) {
-			this.label = label;
-			this.shotsPerMagazine = shotsPerMagazine;
-		}
-
-		@Override
-		public String getLabel() {
-			return label;
-		}
-
-		public int getShotsPerMagazine() {
-			return shotsPerMagazine;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-			if (o == null || getClass() != o.getClass())
-				return false;
-
-			Gun gun = (Gun) o;
-
-			if (shotsPerMagazine != gun.shotsPerMagazine)
-				return false;
-			return label.equals(gun.label);
-		}
-
-		@Override
-		public int hashCode() {
-			int result = label.hashCode();
-			result = 31 * result + shotsPerMagazine;
-			return result;
-		}
+	record Gun(String label, int shotsPerMagazine) implements Inventory {
 	}
 
-	static class Grenade implements Inventory {
-		final String label;
-
-		public Grenade(String label) {
-			this.label = label;
-		}
-
-		@Override
-		public String getLabel() {
-			return label;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-			if (!(o instanceof Grenade grenade))
-				return false;
-
-			return label.equals(grenade.label);
-		}
-
-		@Override
-		public int hashCode() {
-			return label.hashCode();
-		}
+	record Grenade(String label) implements Inventory {
 	}
 
 	@TypeAlias("rifle")
-	static class Rifle implements Inventory {
-
-		final String label;
-		final double weight;
-		final int maxShotsPerMagazine;
-
-		public Rifle(String label, double weight, int maxShotsPerMagazine) {
-			this.label = label;
-			this.weight = weight;
-			this.maxShotsPerMagazine = maxShotsPerMagazine;
-		}
-
-		@Override
-		public String getLabel() {
-			return label;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-			if (!(o instanceof Rifle rifle))
-				return false;
-
-			if (Double.compare(rifle.weight, weight) != 0)
-				return false;
-			if (maxShotsPerMagazine != rifle.maxShotsPerMagazine)
-				return false;
-			return label.equals(rifle.label);
-		}
-
-		@Override
-		public int hashCode() {
-			int result;
-			long temp;
-			result = label.hashCode();
-			temp = Double.doubleToLongBits(weight);
-			result = 31 * result + (int) (temp ^ (temp >>> 32));
-			result = 31 * result + maxShotsPerMagazine;
-			return result;
-		}
+	record Rifle(String label, double weight, int maxShotsPerMagazine) implements Inventory {
 	}
 
-	static class ShotGun implements Inventory {
-
-		private final String label;
-
-		public ShotGun(String label) {
-			this.label = label;
-		}
-
-		@Override
-		public String getLabel() {
-			return label;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (this == o)
-				return true;
-			if (!(o instanceof ShotGun shotGun))
-				return false;
-
-			return label.equals(shotGun.label);
-		}
-
-		@Override
-		public int hashCode() {
-			return label.hashCode();
-		}
+	record ShotGun(String label) implements Inventory {
 	}
 
 	static class Address {
@@ -2599,7 +2493,7 @@ public class MappingElasticsearchConverterUnitTests {
 		public Map<String, Object> convert(ShotGun source) {
 
 			LinkedHashMap<String, Object> target = new LinkedHashMap<>();
-			target.put("model", source.getLabel());
+			target.put("model", source.label());
 			target.put("_class", ShotGun.class.getName());
 			return target;
 		}
@@ -3264,6 +3158,54 @@ public class MappingElasticsearchConverterUnitTests {
 
 		public void setDottedField(@Nullable String dottedField) {
 			this.dottedField = dottedField;
+		}
+	}
+
+	static class NestedEntity {
+		@Id
+		@Nullable private String id;
+
+		@Field(type = FieldType.Nested, name = "level-one") private List<Level1> level1Entries;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		public List<Level1> getLevel1Entries() {
+			return level1Entries;
+		}
+
+		public void setLevel1Entries(List<Level1> level1Entries) {
+			this.level1Entries = level1Entries;
+		}
+
+		static class Level1 {
+			@Field(type = FieldType.Nested, name = "level-two") private List<Level2> level2Entries;
+
+			public List<Level2> getLevel2Entries() {
+				return level2Entries;
+			}
+
+			public void setLevel2Entries(List<Level2> level2Entries) {
+				this.level2Entries = level2Entries;
+			}
+		}
+
+		static class Level2 {
+			@Field(type = FieldType.Keyword, name = "key-word") private String keyWord;
+
+			public String getKeyWord() {
+				return keyWord;
+			}
+
+			public void setKeyWord(String keyWord) {
+				this.keyWord = keyWord;
+			}
 		}
 	}
 
