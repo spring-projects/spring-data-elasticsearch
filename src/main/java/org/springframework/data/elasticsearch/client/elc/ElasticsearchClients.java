@@ -34,7 +34,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.http.*;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
@@ -261,26 +263,44 @@ public final class ElasticsearchClients {
 		TransportOptions.Builder transportOptionsBuilder = transportOptions != null ? transportOptions.toBuilder()
 				: new RestClientOptions(RequestOptions.DEFAULT).toBuilder();
 
+		RestClientOptions.Builder restClientOptionsBuilder = getRestClientOptionsBuilder(transportOptions);
+
 		ContentType jsonContentType = Version.VERSION == null ? ContentType.APPLICATION_JSON
 				: ContentType.create("application/vnd.elasticsearch+json",
 						new BasicNameValuePair("compatible-with", String.valueOf(Version.VERSION.major())));
 
 		Consumer<String> setHeaderIfNotPresent = header -> {
-			if (transportOptionsBuilder.build().headers().stream() //
+			if (restClientOptionsBuilder.build().headers().stream() //
 					.noneMatch((h) -> h.getKey().equalsIgnoreCase(header))) {
 				// need to add the compatibility header, this is only done automatically when not passing in custom options.
 				// code copied from RestClientTransport as it is not available outside the package
-				transportOptionsBuilder.addHeader(header, jsonContentType.toString());
+				restClientOptionsBuilder.addHeader(header, jsonContentType.toString());
 			}
 		};
-
+§
 		setHeaderIfNotPresent.accept("Content-Type");
 		setHeaderIfNotPresent.accept("Accept");
 
-		TransportOptions transportOptionsWithHeader = transportOptionsBuilder
-				.addHeader(X_SPRING_DATA_ELASTICSEARCH_CLIENT, clientType).build();
+		restClientOptionsBuilder.addHeader(X_SPRING_DATA_ELASTICSEARCH_CLIENT, clientType);
 
-		return new RestClientTransport(restClient, jsonpMapper, transportOptionsWithHeader);
+		return new RestClientTransport(restClient, jsonpMapper, restClientOptionsBuilder.build());
+	}
+
+	private static RestClientOptions.Builder getRestClientOptionsBuilder(@Nullable TransportOptions transportOptions) {
+
+		if (transportOptions instanceof RestClientOptions restClientOptions) {
+			return restClientOptions.toBuilder();
+		}
+
+		var builder =  new RestClientOptions.Builder(RequestOptions.DEFAULT.toBuilder());
+
+		if (transportOptions != null) {
+			transportOptions.headers().forEach(header -> builder.addHeader(header.getKey(), header.getValue()));
+			transportOptions.queryParameters().forEach(builder::setParameter);
+			builder.onWarnings(transportOptions.onWarnings());
+		}
+
+		return builder;
 	}
 
 	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
