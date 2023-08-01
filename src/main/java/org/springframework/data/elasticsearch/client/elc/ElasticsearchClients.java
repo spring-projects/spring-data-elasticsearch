@@ -277,7 +277,7 @@ public final class ElasticsearchClients {
 				restClientOptionsBuilder.addHeader(header, jsonContentType.toString());
 			}
 		};
-§
+
 		setHeaderIfNotPresent.accept("Content-Type");
 		setHeaderIfNotPresent.accept("Accept");
 
