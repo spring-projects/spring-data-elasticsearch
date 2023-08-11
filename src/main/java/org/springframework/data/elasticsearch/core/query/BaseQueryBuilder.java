@@ -25,7 +25,6 @@ import java.util.List;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.RuntimeField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 

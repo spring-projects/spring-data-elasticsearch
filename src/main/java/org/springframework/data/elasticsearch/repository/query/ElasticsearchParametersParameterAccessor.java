@@ -15,9 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 
 /**
@@ -27,7 +24,7 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
 class ElasticsearchParametersParameterAccessor extends ParametersParameterAccessor
 		implements ElasticsearchParameterAccessor {
 
-	private final List<Object> values;
+	private final Object[] values;
 
 	/**
 	 * Creates a new {@link ElasticsearchParametersParameterAccessor}.
@@ -38,11 +35,11 @@ class ElasticsearchParametersParameterAccessor extends ParametersParameterAccess
 	ElasticsearchParametersParameterAccessor(ElasticsearchQueryMethod method, Object... values) {
 
 		super(method.getParameters(), values);
-		this.values = Arrays.asList(values);
+		this.values = values;
 	}
 
 	@Override
 	public Object[] getValues() {
-		return values.toArray();
+		return values;
 	}
 }

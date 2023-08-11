@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.SearchHitsImpl;
 import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
@@ -75,7 +76,7 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	@Override
 	public Object execute(Object[] parameters) {
 
-		ParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
+		ElasticsearchParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
 		ResultProcessor resultProcessor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
 		Class<?> clazz = resultProcessor.getReturnedType().getDomainType();
 
@@ -135,29 +136,19 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 	public Query createQuery(Object[] parameters) {
 
-		ParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
+		ElasticsearchParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
 		ResultProcessor resultProcessor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
-		Class<?> returnedType = resultProcessor.getReturnedType().getDomainType();
 
-		Query query = createQuery(parameterAccessor);
-
+		var query = createQuery(parameterAccessor);
 		Assert.notNull(query, "unsupported query");
 
-		if (queryMethod.hasAnnotatedHighlight()) {
-			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
-		}
-
-		var sourceFilter = queryMethod.getSourceFilter(parameterAccessor,
-				elasticsearchOperations.getElasticsearchConverter());
-		if (sourceFilter != null) {
-			query.addSourceFilter(sourceFilter);
-		}
+		queryMethod.addMethodParameter(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter());
 
 		return query;
 	}
 
-	private ParametersParameterAccessor getParameterAccessor(Object[] parameters) {
-		return new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
+	private ElasticsearchParametersParameterAccessor getParameterAccessor(Object[] parameters) {
+		return new ElasticsearchParametersParameterAccessor(queryMethod, parameters);
 	}
 
 	@Nullable
@@ -185,5 +176,5 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 		return result;
 	}
 
-	protected abstract Query createQuery(ParametersParameterAccessor accessor);
+	protected abstract BaseQuery createQuery(ElasticsearchParametersParameterAccessor accessor);
 }

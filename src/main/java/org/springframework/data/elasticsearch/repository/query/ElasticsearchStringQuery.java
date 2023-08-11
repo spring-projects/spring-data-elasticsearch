@@ -16,10 +16,10 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.util.Assert;
 
 /**
@@ -57,7 +57,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		return false;
 	}
 
-	protected Query createQuery(ParametersParameterAccessor parameterAccessor) {
+	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
 
 		String queryString = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService())
 				.replacePlaceholders(this.queryString, parameterAccessor);

@@ -6,6 +6,7 @@ This section describes breaking changes from version 5.1.x to 5.2.x and how remo
 [[elasticsearch-migration-guide-5.1-5.2.breaking-changes]]
 == Breaking Changes
 
+=== Bulk failures
 In the `org.springframework.data.elasticsearch.BulkFailureException` class, the return type of the `getFailedDocuments` is changed from `Map<String, String>`
 to `Map<String, FailureDetails>`, which allows to get additional details about failure reasons.
 
@@ -13,6 +14,12 @@ The definition of the `FailureDetails` class (inner to `BulkFailureException`):
 [source,java]
 public record FailureDetails(Integer status, String errorMessage) {
 }
+
+=== scripted and runtime fields
+
+The classes `org.springframework.data.elasticsearch.core.RuntimeField` and `org.springframework.data.elasticsearch.core.query.ScriptType` have been moved to the subpackage `org.springframework.data.elasticsearch.core.query`.
+
+The `type` parameter of the `ScriptData` constructir is not nullable any longer.
 
 [[elasticsearch-migration-guide-5.1-5.2.deprecations]]
 == Deprecations
