@@ -16,13 +16,12 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.data.elasticsearch.repository.query.ElasticsearchParameters.ElasticsearchParameter;
-import org.springframework.data.geo.Distance;
-import org.springframework.data.repository.query.Parameter;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Christoph Strobl
@@ -31,8 +30,31 @@ import org.springframework.data.repository.query.Parameters;
  */
 public class ElasticsearchParameters extends Parameters<ElasticsearchParameters, ElasticsearchParameter> {
 
-	public ElasticsearchParameters(Method method) {
-		super(method);
+	private final List<ElasticsearchParameter> scriptedFields = new ArrayList<>();
+	private final List<ElasticsearchParameter> runtimeFields = new ArrayList<>();
+
+	public ElasticsearchParameters(Method method, TypeInformation<?> domainType) {
+
+		super(method, parameter -> new ElasticsearchParameter(parameter, domainType));
+
+		int parameterCount = method.getParameterCount();
+		for (int i = 0; i < parameterCount; i++) {
+			MethodParameter methodParameter = new MethodParameter(method, i);
+			var parameter = parameterFactory(methodParameter, domainType);
+
+			if (parameter.isScriptedFieldParameter()) {
+				scriptedFields.add(parameter);
+			}
+
+			if (parameter.isRuntimeFieldParameter()) {
+				runtimeFields.add(parameter);
+			}
+		}
+
+	}
+
+	private ElasticsearchParameter parameterFactory(MethodParameter methodParameter, TypeInformation<?> domainType) {
+		return new ElasticsearchParameter(methodParameter, domainType);
 	}
 
 	private ElasticsearchParameters(List<ElasticsearchParameter> parameters) {
@@ -40,30 +62,15 @@ public class ElasticsearchParameters extends Parameters<ElasticsearchParameters,
 	}
 
 	@Override
-	protected ElasticsearchParameter createParameter(MethodParameter parameter) {
-		return new ElasticsearchParameter(parameter);
-	}
-
-	@Override
 	protected ElasticsearchParameters createFrom(List<ElasticsearchParameter> parameters) {
 		return new ElasticsearchParameters(parameters);
 	}
 
-	/**
-	 * Custom {@link Parameter} implementation adding parameters of type {@link Distance} to the special ones.
-	 *
-	 * @author Christoph Strobl
-	 */
-	class ElasticsearchParameter extends Parameter {
+	List<ElasticsearchParameter> getScriptedFields() {
+		return scriptedFields;
+	}
 
-		/**
-		 * Creates a new {@link ElasticsearchParameter}.
-		 *
-		 * @param parameter must not be {@literal null}.
-		 */
-		ElasticsearchParameter(MethodParameter parameter) {
-			super(parameter);
-		}
-
+	List<ElasticsearchParameter> getRuntimeFields() {
+		return runtimeFields;
 	}
 }

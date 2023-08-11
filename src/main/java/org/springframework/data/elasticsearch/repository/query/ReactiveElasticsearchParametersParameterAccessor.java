@@ -81,7 +81,7 @@ class ReactiveElasticsearchParametersParameterAccessor extends ElasticsearchPara
 	@Override
 	public Object[] getValues() {
 
-		Object[] result = new Object[getValues().length];
+		Object[] result = new Object[super.getValues().length];
 		for (int i = 0; i < result.length; i++) {
 			result[i] = getValue(i);
 		}

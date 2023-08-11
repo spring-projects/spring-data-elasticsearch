@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.RuntimeField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -546,6 +545,16 @@ public class BaseQuery implements Query {
 		Assert.notNull(docValueFields, "getDocValueFields must not be null");
 
 		this.docValueFields = docValueFields;
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	public void addScriptedField(ScriptedField scriptedField) {
+
+		Assert.notNull(scriptedField, "scriptedField must not be null");
+
+		this.scriptedFields.add(scriptedField);
 	}
 
 	@Override

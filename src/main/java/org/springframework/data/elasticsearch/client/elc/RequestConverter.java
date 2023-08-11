@@ -67,7 +67,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
-import org.springframework.data.elasticsearch.core.ScriptType;
+import org.springframework.data.elasticsearch.core.query.ScriptType;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
@@ -1333,10 +1333,8 @@ class RequestConverter {
 		}
 
 		if (!isEmpty(query.getFields())) {
-			builder.fields(fb -> {
-				query.getFields().forEach(fb::field);
-				return fb;
-			});
+			var fieldAndFormats = query.getFields().stream().map(field -> FieldAndFormat.of(b -> b.field(field))).toList();
+			builder.fields(fieldAndFormats);
 		}
 
 		if (!isEmpty(query.getStoredFields())) {

@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.core.query;
 import org.springframework.util.Assert;
 
 /**
+ * Class defining a scripted field to be used in a {@link Query}. Must be set by using the builder for a query.
+ *
  * @author Peter-Josef Meisch
  * @since 4.4
  */
@@ -25,6 +27,13 @@ public class ScriptedField {
 
 	private final String fieldName;
 	private final ScriptData scriptData;
+
+	/**
+	 * @since 5.2
+	 */
+	public static ScriptedField of(String fieldName, ScriptData scriptData) {
+		return new ScriptedField(fieldName, scriptData);
+	}
 
 	public ScriptedField(String fieldName, ScriptData scriptData) {
 

@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.core;
+package org.springframework.data.elasticsearch.core.query.scriptedandruntimefields;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
@@ -26,15 +27,16 @@ import org.springframework.test.context.ContextConfiguration;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-@ContextConfiguration(classes = { RuntimeFieldsELCIntegrationTests.Config.class })
-public class RuntimeFieldsELCIntegrationTests extends RuntimeFieldsIntegrationTests {
+@ContextConfiguration(classes = { ScriptedAndRuntimeFieldsELCIntegrationTests.Config.class })
+public class ScriptedAndRuntimeFieldsELCIntegrationTests extends ScriptedAndRuntimeFieldsIntegrationTests {
 
 	@Configuration
 	@Import({ ElasticsearchTemplateConfiguration.class })
+	@EnableElasticsearchRepositories(considerNestedRepositories = true)
 	static class Config {
 		@Bean
 		IndexNameProvider indexNameProvider() {
-			return new IndexNameProvider("runtime-fields-rest-template");
+			return new IndexNameProvider("scripted-runtime");
 		}
 	}
 }
