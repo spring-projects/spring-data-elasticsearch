@@ -332,6 +332,8 @@ public final class MappingParameters {
 
 		if (similarity != Similarity.Default) {
 			objectNode.put(FIELD_PARAM_SIMILARITY, similarity.toString());
+			// similarity must have index explicitly set, otherwise Elasticsearch returns an error
+			objectNode.put(FIELD_PARAM_INDEX, index);
 		}
 
 		if (termVector != TermVector.none) {

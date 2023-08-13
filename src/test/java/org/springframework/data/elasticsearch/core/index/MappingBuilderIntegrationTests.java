@@ -279,6 +279,12 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		indexOps.createWithMapping();
 	}
 
+	@Test // #2659
+	@DisplayName("should write correct mapping for dense vector property")
+	void shouldWriteCorrectMappingForDenseVectorProperty() {
+		operations.indexOps(SimilarityEntity.class).createWithMapping();
+	}
+
 	// region Entities
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class Book {
@@ -901,5 +907,14 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Field(type = FieldType.Dense_Vector, dims = 1) String denseVectorField;
 	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	static class SimilarityEntity {
+		@Nullable
+		@Id private String id;
+
+		@Field(type = FieldType.Dense_Vector, dims = 42, similarity = "cosine") private double[] denseVector;
+	}
+
 	// endregion
 }
