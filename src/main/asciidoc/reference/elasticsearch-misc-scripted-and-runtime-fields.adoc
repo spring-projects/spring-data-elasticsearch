@@ -6,9 +6,9 @@ Please refer to the Elasticsearch documentation about scripting (https://www.ela
 In the context of Spring Data Elasticsearch you can use
 
 * scripted fields that are used to return fields that are calculated on the result documents and added to the returned document.
-* runtime fields that  are calculated on the stored documents and can be used in a query and/or be returned in the search result.
+* runtime fields that are calculated on the stored documents and can be used in a query and/or be returned in the search result.
 
-The following code snippets will show what you can do (this show imperative code, but the reactive implementation works similar).
+The following code snippets will show what you can do (these show imperative code, but the reactive implementation works similar).
 
 == The person entity
 
@@ -62,7 +62,7 @@ public record Person(
 ----
 
 <.> the `age` property will be calculated and filled in search results.
-<.> a convenience constructor to set up the test data
+<.> a convenience constructor to set up the test data.
 ====
 
 Note that the `age` property is annotated with `@ScriptedField`.
@@ -87,7 +87,7 @@ public interface PersonRepository extends ElasticsearchRepository<Person, String
 
 == The service class
 
-The service class has a repository injected and an `ElasticsearchOperations` instance to show several ways of poplauting and using the `age` property.
+The service class has a repository injected and an `ElasticsearchOperations` instance to show several ways of populating and using the `age` property.
 We show the code split up in different pieces to put the explanations in
 
 ====
@@ -137,8 +137,8 @@ public class PersonService {
 
 === Scripted fields
 
-The next piece show how to use a scripted field to calculate and return the age of the persons.
-Scripted fields can only add something to the returned data, the age cannot be used in the query (see runtime fields for that).)
+The next piece shows how to use a scripted field to calculate and return the age of the persons.
+Scripted fields can only add something to the returned data, the age cannot be used in the query (see runtime fields for that).
 
 ====
 [source,java]
@@ -212,7 +212,7 @@ In the following code this is used to run a query for a given gender and maximum
 }
 ----
 
-<.> define the runtime field that caclulates the // see https://asciidoctor.org/docs/user-manual/#builtin-attributes for builtin attributes.
+<.> define the runtime field that calculates the age of a person. // see https://asciidoctor.org/docs/user-manual/#builtin-attributes for builtin attributes.
 <.> when using `Query`, add the runtime field.
 <.> when adding a scripted field to a `Query`, an additional field parameter is needed to have the calculated value returned.
 <.> when adding a scripted field to a `Query`, an additional source filter is needed to also retrieve the _normal_ fields from the document source.
@@ -220,4 +220,4 @@ In the following code this is used to run a query for a given gender and maximum
 <.> when using the repository, all that needs to be done is adding the runtime field as method parameter.
 ====
 
-In addition to define a runtime fields on a query, they can also be defined in the index by setting the `runtimeFIeldPath` property of the `@Mapping` annotation to point to a JSON file that contains the runtime field definitions.
+In addition to define a runtime fields on a query, they can also be defined in the index by setting the `runtimeFieldsPath` property of the `@Mapping` annotation to point to a JSON file that contains the runtime field definitions.
