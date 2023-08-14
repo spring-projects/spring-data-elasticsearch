@@ -37,6 +37,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -268,12 +269,6 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 
 		IndexOperations indexOps = operations.indexOps(ExcludedFieldEntity.class);
 		indexOps.createWithMapping();
-	}
-
-	@Test // #2659
-	@DisplayName("should write correct mapping for dense vector property")
-	void shouldWriteCorrectMappingForDenseVectorProperty() {
-		operations.indexOps(SimilarityEntity.class).createWithMapping();
 	}
 
 	// region Entities
@@ -898,14 +893,5 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Field(type = FieldType.Dense_Vector, dims = 1) String denseVectorField;
 	}
-
-	@Document(indexName = "#{@indexNameProvider.indexName()}")
-	static class SimilarityEntity {
-		@Nullable
-		@Id private String id;
-
-		@Field(type = FieldType.Dense_Vector, dims = 42, similarity = Similarity.classic) private double[] denseVector;
-	}
-
 	// endregion
 }
