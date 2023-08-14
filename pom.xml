@@ -27,7 +27,7 @@
 				<netty>4.1.65.Final</netty>
 				<springdata.commons>2.7.15-SNAPSHOT</springdata.commons>
 				<testcontainers>1.16.2</testcontainers>
-				<blockhound-junit>1.0.6.RELEASE</blockhound-junit>
+				<blockhound-junit>1.0.8.RELEASE</blockhound-junit>
 				<java-module-name>spring.data.elasticsearch</java-module-name>
 
 				<!--
