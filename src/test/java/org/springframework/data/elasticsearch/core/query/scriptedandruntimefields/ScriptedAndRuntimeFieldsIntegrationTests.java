@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.query.scriptedandruntimefiel
 import static org.assertj.core.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
@@ -251,6 +252,29 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 		operations.save(entity);
 	}
 
+	@Test // #2303
+	@DisplayName("should use parameters for runtime fields in search queries")
+	void shouldUseParametersForRuntimeFieldsInSearchQueries() {
+
+		insert("1", "item 1", 80.0);
+		insert("2", "item 2", 90.0);
+
+		RuntimeField runtimeField = new RuntimeField(
+				"priceWithTax",
+				"double",
+				"emit(doc['price'].value * params.tax)",
+				Map.of("tax", 1.19)
+		);
+		var query = CriteriaQuery.builder(
+				Criteria.where("priceWithTax").greaterThan(100.0))
+				.withRuntimeFields(List.of(runtimeField))
+				.build();
+
+		var searchHits = operations.search(query, SomethingToBuy.class);
+
+		assertThat(searchHits).hasSize(1);
+	}
+
 	@SuppressWarnings("unused")
 	@Document(indexName = "#{@indexNameProvider.indexName()}-something-to-by")
 	private static class SomethingToBuy {
@@ -386,13 +410,13 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		@org.springframework.data.elasticsearch.annotations.Query("""
 				{
-				                "term": {
-				                  "value": {
-				                    "value": "?0"
-				                  }
-				                }
-				              }
-				            """)
+				   "term": {
+					 "value": {
+					   "value": "?0"
+					 }
+				   }
+				}
+				""")
 		SearchHits<SAREntity> findWithScriptedFields(Integer value,
 				org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField1,
 				org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField2);
@@ -401,13 +425,13 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		@org.springframework.data.elasticsearch.annotations.Query("""
 				{
-				                "term": {
-				                  "value": {
-				                    "value": "?0"
-				                  }
-				                }
-				              }
-				            """)
+					"term": {
+					  "value": {
+						"value": "?0"
+					  }
+					}
+				}
+				""")
 		SearchHits<SAREntity> findWithRuntimeFields(Integer value, RuntimeField runtimeField1, RuntimeField runtimeField2);
 	}
 }

@@ -67,7 +67,6 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
-import org.springframework.data.elasticsearch.core.query.ScriptType;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
@@ -1237,14 +1236,23 @@ class RequestConverter {
 								Map<String, RuntimeField> runtimeMappings = new HashMap<>();
 								query.getRuntimeFields().forEach(runtimeField -> {
 									RuntimeField esRuntimeField = RuntimeField.of(rt -> {
-										RuntimeField.Builder builder = rt
+										RuntimeField.Builder rfb = rt
 												.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
 										String script = runtimeField.getScript();
 
 										if (script != null) {
-											builder = builder.script(s -> s.inline(is -> is.source(script)));
+											rfb
+													.script(s -> s
+															.inline(is -> {
+																is.source(script);
+
+																if (runtimeField.getParams() != null) {
+																	is.params(TypeUtils.paramsMap(runtimeField.getParams()));
+																}
+																return is;
+															}));
 										}
-										return builder;
+										return rfb;
 									});
 									runtimeMappings.put(runtimeField.getName(), esRuntimeField);
 								});
@@ -1393,14 +1401,23 @@ class RequestConverter {
 
 			Map<String, RuntimeField> runtimeMappings = new HashMap<>();
 			query.getRuntimeFields()
-					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(), RuntimeField.of(runtimeFieldBuilder -> {
-						runtimeFieldBuilder.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
+					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(), RuntimeField.of(rfb -> {
+						rfb.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
 						String script = runtimeField.getScript();
-
 						if (script != null) {
-							runtimeFieldBuilder.script(s -> s.inline(is -> is.source(script)));
+							rfb
+									.script(s -> s
+											.inline(is -> {
+												is.source(script);
+
+												if (runtimeField.getParams() != null) {
+													is.params(TypeUtils.paramsMap(runtimeField.getParams()));
+												}
+												return is;
+											}));
 						}
-						return runtimeFieldBuilder;
+
+						return rfb;
 					})));
 			builder.runtimeMappings(runtimeMappings);
 		}

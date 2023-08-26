@@ -19,7 +19,7 @@ public record FailureDetails(Integer status, String errorMessage) {
 
 The classes `org.springframework.data.elasticsearch.core.RuntimeField` and `org.springframework.data.elasticsearch.core.query.ScriptType` have been moved to the subpackage `org.springframework.data.elasticsearch.core.query`.
 
-The `type` parameter of the `ScriptData` constructir is not nullable any longer.
+The `type` parameter of the `ScriptData` constructor is not nullable any longer.
 
 [[elasticsearch-migration-guide-5.1-5.2.deprecations]]
 == Deprecations
