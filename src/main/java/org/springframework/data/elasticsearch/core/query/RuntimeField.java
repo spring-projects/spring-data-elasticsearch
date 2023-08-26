@@ -31,14 +31,26 @@ import org.springframework.util.Assert;
 public class RuntimeField {
 
 	private final String name;
+	/**
+	 * the type of the runtime field (long, keyword, etc.)
+	 */
 	private final String type;
 	@Nullable private final String script;
 
+	/**
+	 * @since 5.2
+	 */
+	@Nullable Map<String, Object> params;
+
 	public RuntimeField(String name, String type) {
-		this(name, type, null);
+		this(name, type, null, null);
 	}
 
-	public RuntimeField(String name, String type, @Nullable String script) {
+	public RuntimeField(String name, String type, String script) {
+		this(name, type, script, null);
+	}
+
+	public RuntimeField(String name, String type, @Nullable String script, @Nullable Map<String, Object> params) {
 
 		Assert.notNull(name, "name must not be null");
 		Assert.notNull(type, "type must not be null");
@@ -46,6 +58,7 @@ public class RuntimeField {
 		this.name = name;
 		this.type = type;
 		this.script = script;
+		this.params = params;
 	}
 
 	public String getName() {
@@ -77,5 +90,13 @@ public class RuntimeField {
 	 */
 	public @Nullable String getScript() {
 		return script;
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	@Nullable
+	public Map<String, Object> getParams() {
+		return params;
 	}
 }
