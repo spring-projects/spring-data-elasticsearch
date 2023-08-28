@@ -171,6 +171,40 @@ final class TypeUtils {
 	}
 
 	@Nullable
+	static FieldValue toFieldValue(@Nullable Object fieldValue) {
+
+		if (fieldValue == null) {
+			return FieldValue.NULL;
+		}
+
+		if (fieldValue instanceof Boolean b) {
+			return b ? FieldValue.TRUE : FieldValue.FALSE;
+		}
+
+		if (fieldValue instanceof String s) {
+			return FieldValue.of(s);
+		}
+
+		if (fieldValue instanceof Long l) {
+			return FieldValue.of(l);
+		}
+
+		if (fieldValue instanceof Integer i) {
+			return FieldValue.of((long) i);
+		}
+
+		if (fieldValue instanceof Double d) {
+			return FieldValue.of(d);
+		}
+
+		if (fieldValue instanceof Float f) {
+			return FieldValue.of((double) f);
+		}
+
+		return FieldValue.of(JsonData.of(fieldValue));
+	}
+
+	@Nullable
 	static GeoDistanceType geoDistanceType(GeoDistanceOrder.DistanceType distanceType) {
 
 		return switch (distanceType) {
