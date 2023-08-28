@@ -18,7 +18,15 @@ package org.springframework.data.elasticsearch.client.elc;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 import static org.springframework.util.CollectionUtils.*;
 
-import co.elastic.clients.elasticsearch._types.*;
+import co.elastic.clients.elasticsearch._types.Conflicts;
+import co.elastic.clients.elasticsearch._types.ExpandWildcard;
+import co.elastic.clients.elasticsearch._types.InlineScript;
+import co.elastic.clients.elasticsearch._types.NestedSortValue;
+import co.elastic.clients.elasticsearch._types.OpType;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.VersionType;
+import co.elastic.clients.elasticsearch._types.WaitForActiveShardOptions;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
@@ -81,7 +89,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.*;
-import org.springframework.data.elasticsearch.core.query.IndicesOptions;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.Remote;
 import org.springframework.data.elasticsearch.core.script.Script;
@@ -1226,8 +1233,7 @@ class RequestConverter {
 							}
 
 							if (!isEmpty(query.getSearchAfter())) {
-								bb.searchAfter(query.getSearchAfter().stream().map(it -> FieldValue.of(it.toString()))
-										.collect(Collectors.toList()));
+								bb.searchAfter(query.getSearchAfter().stream().map(TypeUtils::toFieldValue).toList());
 							}
 
 							query.getRescorerQueries().forEach(rescorerQuery -> bb.rescore(getRescore(rescorerQuery)));
@@ -1391,8 +1397,7 @@ class RequestConverter {
 		}
 
 		if (!isEmpty(query.getSearchAfter())) {
-			builder.searchAfter(
-					query.getSearchAfter().stream().map(it -> FieldValue.of(it.toString())).collect(Collectors.toList()));
+			builder.searchAfter(query.getSearchAfter().stream().map(TypeUtils::toFieldValue).toList());
 		}
 
 		query.getRescorerQueries().forEach(rescorerQuery -> builder.rescore(getRescore(rescorerQuery)));
