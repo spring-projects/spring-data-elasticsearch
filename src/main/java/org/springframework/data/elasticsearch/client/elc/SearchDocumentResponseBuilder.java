@@ -219,7 +219,7 @@ class SearchDocumentResponseBuilder {
 			var phraseSuggestOptions = phraseSuggest.options();
 			List<PhraseSuggestion.Entry.Option> options = new ArrayList<>();
 			phraseSuggestOptions.forEach(optionES -> options
-					.add(new PhraseSuggestion.Entry.Option(optionES.text(), optionES.highlighted(), optionES.score(), null)));
+					.add(new PhraseSuggestion.Entry.Option(optionES.text(), optionES.highlighted(), optionES.score(), optionES.collateMatch())));
 			entries.add(new PhraseSuggestion.Entry(phraseSuggest.text(), phraseSuggest.offset(), phraseSuggest.length(),
 					options, null));
 		});
