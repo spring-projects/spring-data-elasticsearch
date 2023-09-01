@@ -18,10 +18,8 @@ package org.springframework.data.elasticsearch.core;
 import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.core.query.StringQuery.MATCH_ALL;
+import static org.springframework.data.elasticsearch.core.query.StringQuery.*;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
-import org.springframework.data.elasticsearch.BulkFailureException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -45,6 +43,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,6 +59,7 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.RestStatusException;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -1507,6 +1507,14 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 			this.id = id;
 			this.text = text;
 			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
+
+		public ImmutableEntity withId(@Nullable String id) {
+			return new ImmutableEntity(id, this.text, this.seqNoPrimaryTerm);
+		}
+
+		public ImmutableEntity withSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			return new ImmutableEntity(this.id, this.text, seqNoPrimaryTerm);
 		}
 
 		public String getId() {

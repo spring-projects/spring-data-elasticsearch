@@ -403,7 +403,8 @@ public class MappingElasticsearchConverter
 
 			for (ElasticsearchPersistentProperty property : entity) {
 
-				if (entity.isCreatorArgument(property) || !property.isReadable() || property.isIndexedIndexNameProperty()) {
+				if (entity.isCreatorArgument(property) || !property.isReadable() || property.isSeqNoPrimaryTermProperty()
+						|| property.isIndexedIndexNameProperty()) {
 					continue;
 				}
 

@@ -4522,6 +4522,14 @@ public abstract class ElasticsearchIntegrationTests {
 			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
 		}
 
+		public ImmutableEntity withId(@Nullable String id) {
+			return new ImmutableEntity(id, this.text, this.seqNoPrimaryTerm);
+		}
+
+		public ImmutableEntity withSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			return new ImmutableEntity(this.id, this.text, seqNoPrimaryTerm);
+		}
+
 		@Nullable
 		public String getId() {
 			return id;

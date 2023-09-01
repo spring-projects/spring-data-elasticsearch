@@ -129,7 +129,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	@Override
 	public boolean isReadable() {
-        return super.isReadable() && !isAnnotationPresent(WriteOnlyProperty.class);
+		return super.isReadable() && !isAnnotationPresent(WriteOnlyProperty.class);
 	}
 
 	@Override
