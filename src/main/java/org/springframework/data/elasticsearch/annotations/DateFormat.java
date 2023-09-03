@@ -48,6 +48,7 @@ public enum DateFormat {
 	date_hour_minute_second_fraction("uuuu-MM-dd'T'HH:mm:ss.SSS"), //
 	date_hour_minute_second_millis("uuuu-MM-dd'T'HH:mm:ss.SSS"), //
 	date_optional_time("uuuu-MM-dd['T'HH:mm:ss.SSSXXX]"), //
+	strict_date_optional_time_nanos("uuuu-MM-dd['T'HH:mm:ss.SSSSSSXXX]"), //
 	date_time("uuuu-MM-dd'T'HH:mm:ss.SSSXXX"), //
 	date_time_no_millis("uuuu-MM-dd'T'HH:mm:ssVV"), // here Elasticsearch uses the zone-id in its implementation
 	epoch_millis("epoch_millis"), //
