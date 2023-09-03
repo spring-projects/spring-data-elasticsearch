@@ -15,6 +15,11 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
+import co.elastic.clients.elasticsearch.core.search.Suggestion;
+import co.elastic.clients.elasticsearch.core.search.TotalHitsRelation;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,11 +31,6 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
-import co.elastic.clients.elasticsearch.core.search.Suggestion;
-import co.elastic.clients.elasticsearch.core.search.TotalHitsRelation;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-
 /**
  * Tests for the factory class to create {@link SearchDocumentResponse} instances.
  *
@@ -41,39 +41,40 @@ class SearchDocumentResponseBuilderUnitTests {
 
 	private JacksonJsonpMapper jsonpMapper = new JacksonJsonpMapper();
 
-	@Test // GH-2681
+	@Test // #2681
 	void shouldGetPhraseSuggestion() throws JSONException {
 		// arrange
 		final var hitsMetadata = new HitsMetadata.Builder<EntityAsMap>()
 				.total(total -> total
-					.value(0)
-					.relation(TotalHitsRelation.Eq))
+						.value(0)
+						.relation(TotalHitsRelation.Eq))
 				.hits(new ArrayList<>())
 				.build();
 
 		final var suggestionTest = new Suggestion.Builder<EntityAsMap>()
-			.phrase(phrase -> phrase
-				.text("National")
-				.offset(0)
-				.length(8)
-				.options(option -> option
-					.text("nations")
-					.highlighted("highlighted-nations")
-					.score(0.11480146)
-					.collateMatch(false))
-				.options(option -> option
-					.text("national")
-					.highlighted("highlighted-national")
-					.score( 0.08063514)
-					.collateMatch(false)))
-			.build();
+				.phrase(phrase -> phrase
+						.text("National")
+						.offset(0)
+						.length(8)
+						.options(option -> option
+								.text("nations")
+								.highlighted("highlighted-nations")
+								.score(0.11480146)
+								.collateMatch(false))
+						.options(option -> option
+								.text("national")
+								.highlighted("highlighted-national")
+								.score(0.08063514)
+								.collateMatch(false)))
+				.build();
 
-		final var sortProperties = ImmutableMap.<String, List<Suggestion<EntityAsMap>>>builder()
-			.put("suggestionTest", ImmutableList.of(suggestionTest))
-			.build();
+		final var sortProperties = ImmutableMap.<String, List<Suggestion<EntityAsMap>>> builder()
+				.put("suggestionTest", ImmutableList.of(suggestionTest))
+				.build();
 
 		// act
-		final var actual = SearchDocumentResponseBuilder.from(hitsMetadata, null, null, null, sortProperties, null, jsonpMapper);
+		final var actual = SearchDocumentResponseBuilder.from(hitsMetadata, null, null, null, sortProperties, null,
+				jsonpMapper);
 
 		// assert
 		SoftAssertions softly = new SoftAssertions();
