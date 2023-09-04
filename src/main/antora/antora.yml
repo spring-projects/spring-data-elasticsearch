@@ -1,0 +1,12 @@
+name: data-elasticsearch
+version: true
+title: Spring Data Elasticsearch
+nav:
+  - modules/ROOT/nav.adoc
+ext:
+  collector:
+    - run:
+        command: ./mvnw validate process-resources -am -Pantora-process-resources
+        local: true
+      scan:
+        dir: target/classes/

@@ -1,0 +1,35 @@
+[[elasticsearch.cdi]]
+= CDI Integration
+
+The Spring Data Elasticsearch repositories can also be set up using CDI functionality.
+
+.Spring Data Elasticsearch repositories using CDI
+====
+[source,java]
+----
+class ElasticsearchTemplateProducer {
+
+  @Produces
+  @ApplicationScoped
+  public ElasticsearchOperations createElasticsearchTemplate() {
+    // ...                               <1>
+  }
+}
+
+class ProductService {
+
+  private ProductRepository repository;  <2>
+  public Page<Product> findAvailableBookByName(String name, Pageable pageable) {
+    return repository.findByAvailableTrueAndNameStartingWith(name, pageable);
+  }
+  @Inject
+  public void setRepository(ProductRepository repository) {
+    this.repository = repository;
+  }
+}
+----
+
+<1> Create a component by using the same calls as are used in the xref:elasticsearch/template.adoc[Elasticsearch Operations] chapter.
+<2> Let the CDI framework inject the Repository into your class.
+
+====

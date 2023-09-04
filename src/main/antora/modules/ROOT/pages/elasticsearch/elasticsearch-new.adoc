@@ -1,0 +1,86 @@
+[[new-features]]
+= What's new
+
+[[new-features.5-2-0]]
+== New in Spring Data Elasticsearch 5.2
+
+* Upgrade to Elasticsearch 8.9.0
+* The `JsonpMapper` for Elasticsearch is now configurable and provided as bean.
+* Improved AOT runtime hints for Elasticsearch client library classes.
+* Add Kotlin extensions and repository coroutine support.
+* Introducing `VersionConflictException` class thrown in case thatElasticsearch reports an 409 error with a version conflict.
+* Enable MultiField annotation on property getter
+* Support nested sort option
+* Improved scripted und runtime field support
+
+[[new-features.5-1-0]]
+== New in Spring Data Elasticsearch 5.1
+
+* Upgrade to Elasticsearch 8.7.1
+* Allow specification of the TLS certificate when connecting to an Elasticsearch 8 cluster
+
+[[new-features.5-0-0]]
+== New in Spring Data Elasticsearch 5.0
+
+* Upgrade to Java 17 baseline
+* Upgrade to Spring Framework 6
+* Upgrade to Elasticsearch 8.5.0
+* Use the new Elasticsearch client library
+
+[[new-features.4-4-0]]
+== New in Spring Data Elasticsearch 4.4
+
+* Introduction of new imperative and reactive clients using the classes from the new Elasticsearch Java client
+* Upgrade to Elasticsearch 7.17.3.
+
+[[new-features.4-3-0]]
+== New in Spring Data Elasticsearch 4.3
+
+* Upgrade to Elasticsearch 7.15.2.
+* Allow runtime_fields to be defined in the index mapping.
+* Add native support for range field types by using a range object.
+* Add repository search for nullable or empty properties.
+* Enable custom converters for single fields.
+* Supply a custom `Sort.Order` providing Elasticsearch specific parameters.
+
+[[new-features.4-2-0]]
+== New in Spring Data Elasticsearch 4.2
+
+* Upgrade to Elasticsearch 7.10.0.
+* Support for custom routing values
+
+[[new-features.4-1-0]]
+== New in Spring Data Elasticsearch 4.1
+
+* Uses Spring 5.3.
+* Upgrade to Elasticsearch 7.9.3.
+* Improved API for alias management.
+* Introduction of `ReactiveIndexOperations` for index management.
+* Index templates support.
+* Support for Geo-shape data with GeoJson.
+
+[[new-features.4-0-0]]
+== New in Spring Data Elasticsearch 4.0
+
+* Uses Spring 5.2.
+* Upgrade to Elasticsearch 7.6.2.
+* Deprecation of `TransportClient` usage.
+* Implements most of the mapping-types available for the index mappings.
+* Removal of the Jackson `ObjectMapper`, now using the xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model[MappingElasticsearchConverter]
+* Cleanup of the API in the `*Operations` interfaces, grouping and renaming methods so that they match the Elasticsearch API, deprecating the old methods, aligning with other Spring Data modules.
+* Introduction of `SearchHit<T>` class to represent a found document together with the relevant result metadata for this document (i.e. _sortValues_).
+* Introduction of the `SearchHits<T>` class to represent a whole search result together with the metadata for the complete search result (i.e. _max_score_).
+* Introduction of `SearchPage<T>` class to represent a paged result containing a `SearchHits<T>` instance.
+* Introduction of the `GeoDistanceOrder` class to be able to create sorting by geographical distance
+* Implementation of Auditing Support
+* Implementation of lifecycle entity callbacks
+
+[[new-features.3-2-0]]
+== New in Spring Data Elasticsearch 3.2
+
+* Secured Elasticsearch cluster support with Basic Authentication and SSL transport.
+* Upgrade to Elasticsearch 6.8.1.
+* Reactive programming support with xref:elasticsearch/repositories/reactive-elasticsearch-repositories.adoc[Reactive Elasticsearch Repositories] and xref:.
+* Introduction of the xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model[ElasticsearchEntityMapper] as an alternative to the Jackson `ObjectMapper`.
+* Field name customization in `@Field`.
+* Support for Delete by Query.

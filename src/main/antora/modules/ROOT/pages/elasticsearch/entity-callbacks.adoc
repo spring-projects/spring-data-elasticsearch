@@ -1,0 +1,42 @@
+include::{commons}@data-commons::page$entity-callbacks.adoc[]
+
+[[elasticsearch.entity-callbacks]]
+== Store specific EntityCallbacks
+
+Spring Data Elasticsearch uses the `EntityCallback` API internally for its auditing support and reacts on the following callbacks:
+
+.Supported Entity Callbacks
+[%header,cols="4"]
+|===
+| Callback
+| Method
+| Description
+| Order
+
+| Reactive/BeforeConvertCallback
+| `onBeforeConvert(T entity, IndexCoordinates index)`
+| Invoked before a domain object is converted to `org.springframework.data.elasticsearch.core.document.Document`.
+Can return the `entity` or a modified entity which then will be converted.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| Reactive/AfterLoadCallback
+| `onAfterLoad(Document document, Class<T> type, IndexCoordinates indexCoordinates)`
+| Invoked after the result from Elasticsearch has been read into a `org.springframework.data.elasticsearch.core.document.Document`.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| Reactive/AfterConvertCallback
+| `onAfterConvert(T entity, Document document, IndexCoordinates indexCoordinates)`
+| Invoked after a domain object is converted from `org.springframework.data.elasticsearch.core.document.Document` on reading result data from Elasticsearch.
+| `Ordered.LOWEST_PRECEDENCE`
+
+| Reactive/AuditingEntityCallback
+| `onBeforeConvert(Object entity, IndexCoordinates index)`
+| Marks an auditable entity _created_ or _modified_
+| 100
+
+| Reactive/AfterSaveCallback
+| `T onAfterSave(T entity, IndexCoordinates index)`
+| Invoked after a domain object is saved.
+| `Ordered.LOWEST_PRECEDENCE`
+
+|===

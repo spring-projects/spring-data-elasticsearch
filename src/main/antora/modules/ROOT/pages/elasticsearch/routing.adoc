@@ -1,0 +1,106 @@
+[[elasticsearch.routing]]
+= Routing values
+
+When Elasticsearch stores a document in an index that has multiple shards, it determines the shard to you use based on the _id_ of the document.
+Sometimes it is necessary to predefine that multiple documents should be indexed on the same shard (join-types, faster search for related data).
+For this Elasticsearch offers the possibility to define a routing, which is the value that should be used to calculate the shard from instead of the _id_.
+
+Spring Data Elasticsearch supports routing definitions on storing and retrieving data in the following ways:
+
+[[elasticsearch.routing.join-types]]
+== Routing on join-types
+
+When using join-types (see xref:elasticsearch/join-types.adoc[Join-Type implementation]), Spring Data Elasticsearch will automatically use the `parent` property of the entity's `JoinField` property as the value for the routing.
+
+This is correct for all the use-cases where the parent-child relationship has just one level.
+If it is deeper, like a child-parent-grandparent relationship - like in the above example from _vote_ -> _answer_ -> _question_ - then the routing needs to explicitly specified by using the techniques described in the next section (the _vote_ needs the _question.id_ as routing value).
+
+[[elasticsearch.routing.custom]]
+== Custom routing values
+
+To define a custom routing for an entity, Spring Data Elasticsearch provides a `@Routing` annotation (reusing the `Statement` class from above):
+
+====
+[source,java]
+----
+@Document(indexName = "statements")
+@Routing("routing")                  <.>
+public class Statement {
+    @Id
+    private String id;
+
+    @Field(type = FieldType.Text)
+    private String text;
+
+    @JoinTypeRelations(
+        relations =
+            {
+                @JoinTypeRelation(parent = "question", children = {"answer", "comment"}),
+                @JoinTypeRelation(parent = "answer", children = "vote")
+            }
+    )
+    private JoinField<String> relation;
+
+    @Nullable
+    @Field(type = FieldType.Keyword)
+    private String routing;          <.>
+
+    // getter/setter...
+}
+----
+<.> This defines _"routing"_ as routing specification
+<.> a property with the name _routing_
+====
+
+If the `routing` specification of the annotation is a plain string and not a SpEL expression, it is interpreted as the name of a property of the entity, in the example it's the _routing_ property.
+The value of this property will then be used as the routing value for all requests that use the entity.
+
+It is also possible to us a SpEL expression in the `@Document` annotation like this:
+
+====
+[source,java]
+----
+@Document(indexName = "statements")
+@Routing("@myBean.getRouting(#entity)")
+public class Statement{
+    // all the needed stuff
+}
+----
+====
+
+In this case the user needs to provide a bean with the name _myBean_ that has a method `String getRouting(Object)`. To reference the entity _"#entity"_ must be used in the SpEL expression, and the return value must be `null` or the routing value as a String.
+
+If plain property's names and SpEL expressions are not enough to customize the routing definitions, it is possible to define provide an implementation of the `RoutingResolver` interface. This can then be set on the `ElasticOperations` instance:
+
+====
+[source,java]
+----
+RoutingResolver resolver = ...;
+
+ElasticsearchOperations customOperations= operations.withRouting(resolver);
+
+----
+====
+
+The `withRouting()` functions return a copy of the original `ElasticsearchOperations` instance with the customized routing set.
+
+
+When a routing has been defined on an entity when it is stored in Elasticsearch, the same value must be provided when doing a _get_ or _delete_ operation. For methods that do not use an entity - like `get(ID)` or `delete(ID)` - the `ElasticsearchOperations.withRouting(RoutingResolver)` method can be used like this:
+
+====
+[source,java]
+----
+String id = "someId";
+String routing = "theRoutingValue";
+
+// get an entity
+Statement s = operations
+                .withRouting(RoutingResolver.just(routing))       <.>
+                .get(id, Statement.class);
+
+// delete an entity
+operations.withRouting(RoutingResolver.just(routing)).delete(id);
+
+----
+<.> `RoutingResolver.just(s)` returns a resolver that will just return the given String.
+====

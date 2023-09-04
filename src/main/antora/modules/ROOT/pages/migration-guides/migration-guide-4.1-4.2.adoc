@@ -1,0 +1,74 @@
+[[elasticsearch-migration-guide-4.1-4.2]]
+= Upgrading from 4.1.x to 4.2.x
+
+This section describes breaking changes from version 4.1.x to 4.2.x and how removed features can be replaced by new introduced features.
+
+[[elasticsearch-migration-guide-4.1-4.2.deprecations]]
+== Deprecations
+
+[[elasticsearch-migration-guide-4.1-4.2.deprecations.document]]
+=== @Document parameters
+
+The parameters of the `@Document` annotation that are relevant for  the index settings (`useServerConfiguration`, `shards`. `replicas`, `refreshIntervall` and `indexStoretype`) have been moved to the `@Setting` annotation. Use in `@Document` is still possible but deprecated.
+
+[[elasticsearch-migration-guide-4.1-4.2.removal]]
+== Removals
+
+The `@Score` annotation that was used to set the score return value in an entity was deprecated in version 4.0 and has been removed.
+Score values are returned in the `SearchHit` instances that encapsulate the returned entities.
+
+The `org.springframework.data.elasticsearch.ElasticsearchException` class has been removed.
+The remaining usages have been replaced with `org.springframework.data.mapping.MappingException` and `org.springframework.dao.InvalidDataAccessApiUsageException`.
+
+The deprecated `ScoredPage`, `ScrolledPage` `@AggregatedPage` and implementations has been removed.
+
+The deprecated `GetQuery` and `DeleteQuery` have been removed.
+
+The deprecated `find` methods from `ReactiveSearchOperations` and `ReactiveDocumentOperations` have been removed.
+
+[[elasticsearch-migration-guide-4.1-4.2.breaking-changes]]
+== Breaking Changes
+
+[[elasticsearch-migration-guide-4.1-4.2.breaking-changes.refresh-policy]]
+=== RefreshPolicy
+
+[[elasticsearch-migration-guide-4.1-4.2.breaking-changes.refresh-policy.enum]]
+==== Enum package changed
+
+It was possible in 4.1 to configure the refresh policy for the `ReactiveElasticsearchTemplate` by overriding the method `AbstractReactiveElasticsearchConfiguration.refreshPolicy()` in a custom configuration class.
+The return value of this method was an instance of the class `org.elasticsearch.action.support.WriteRequest.RefreshPolicy`.
+
+Now the configuration must return `org.springframework.data.elasticsearch.core.RefreshPolicy`.
+This enum has the same values and triggers the same behaviour as before, so only the `import` statement has to be adjusted.
+
+[[elasticsearch-migration-guide-4.1-4.2.breaking-changes.refresh-policy.behaviour]]
+==== Refresh behaviour
+
+`ElasticsearchOperations` and `ReactiveElasticsearchOperations` now explicitly use the `RefreshPolicy` set on the template for write requests if not null.
+If the refresh policy is null, then nothing special is done, so the cluster defaults are used. `ElasticsearchOperations` was always using the cluster default before this version.
+
+The provided implementations for `ElasticsearchRepository` and `ReactiveElasticsearchRepository` will do an explicit refresh when the refresh policy is null.
+This is the same behaviour as in previous versions.
+If a refresh policy is set, then it will be used by the repositories as well.
+
+[[elasticsearch-migration-guide-4.1-4.2.breaking-changes.refresh-policy.configuration]]
+==== Refresh configuration
+
+When configuring Spring Data Elasticsearch like described in xref:elasticsearch/clients.adoc[Elasticsearch Clients] by using `ElasticsearchConfigurationSupport`, `AbstractElasticsearchConfiguration` or `AbstractReactiveElasticsearchConfiguration` the refresh policy will be initialized to `null`.
+Previously the reactive code initialized this to `IMMEDIATE`, now reactive and non-reactive code show the same behaviour.
+
+[[elasticsearch-migration-guide-4.1-4.2.breaking-changes.method-return-types]]
+=== Method return types
+
+[[elasticsearch-migration-guide-4.1-4.2.breaking-changes.method-return-types.delete]]
+==== delete methods that take a Query
+
+The reactive methods previously returned a `Mono<Long>` with the number of deleted documents, the non reactive versions were void. They now return a `Mono<ByQueryResponse>` which contains much more detailed information about the deleted documents and errors that might have occurred.
+
+[[elasticsearch-migration-guide-4.1-4.2.breaking-changes.method-return-types.multiget]]
+==== multiget methods
+
+The implementations of _multiget_ previousl only returned the found entities in a `List<T>` for non-reactive implementations and in a `Flux<T>` for reactive implementations. If the request contained ids that were not found, the information that these are missing was not available. The user needed to compare the returned ids to the requested ones to find
+which ones were missing.
+
+Now the `multiget` methods return a `MultiGetItem` for every requested id. This contains information about failures (like non existing indices) and the information if the item existed (then it is contained in the `MultiGetItem) or not.

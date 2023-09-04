@@ -137,7 +137,7 @@ If you want to raise an issue, please follow the recommendations below:
 
 * Before you log a bug, please search the
 https://github.com/spring-projects/spring-data-elasticsearch/issues[issue tracker] to see if someone has already reported the problem.
-* If the issue doesn’t already exist, https://github.com/spring-projects/spring-data-elasticsearch/issues/new[create a new issue].
+* If the issue doesn't already exist, https://github.com/spring-projects/spring-data-elasticsearch/issues/new[create a new issue].
 * Please provide as much information as possible with the issue report, we like to know the version of Spring Data Elasticsearch that you are using and JVM version.
 * If you need to paste code, or include a stack trace use Markdown +++```+++ escapes before and after your text.
 * If possible try to create a test-case or project that replicates the issue.
@@ -168,10 +168,10 @@ Building the documentation builds also the project without running tests.
 
 [source,bash]
 ----
- $ ./mvnw clean install -Pdistribute
+ $ ./mvnw clean install -Pantora
 ----
 
-The generated documentation is available from `target/site/reference/html/index.html`.
+The generated documentation is available from `target/antora/site/index.html`.
 
 == Examples
 
