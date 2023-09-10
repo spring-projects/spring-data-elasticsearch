@@ -28,7 +28,7 @@
 		<log4j>2.18.0</log4j>
 		<jsonassert>1.5.1</jsonassert>
 		<testcontainers>1.18.0</testcontainers>
-		<wiremock>2.35.0</wiremock>
+		<wiremock>2.35.1</wiremock>
 
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 
