@@ -1010,7 +1010,7 @@ class RequestConverter {
 					.docAsUpsert(query.getDocAsUpsert()) //
 					.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
 					.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
-					.refresh(refresh(refreshPolicy)) //
+					.refresh(query.getRefreshPolicy() != null ? refresh(query.getRefreshPolicy()) : refresh(refreshPolicy)) //
 					.retryOnConflict(query.getRetryOnConflict()) //
 			;
 
