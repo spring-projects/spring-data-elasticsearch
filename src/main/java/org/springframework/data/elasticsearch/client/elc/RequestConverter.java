@@ -15,12 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.searchType;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.slices;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.time;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.timeStringMs;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.toFloat;
-import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
+import static org.springframework.util.CollectionUtils.*;
 
 import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.InlineScript;
@@ -36,18 +32,7 @@ import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
-import co.elastic.clients.elasticsearch.core.ClosePointInTimeRequest;
-import co.elastic.clients.elasticsearch.core.DeleteByQueryRequest;
-import co.elastic.clients.elasticsearch.core.DeleteRequest;
-import co.elastic.clients.elasticsearch.core.GetRequest;
-import co.elastic.clients.elasticsearch.core.IndexRequest;
-import co.elastic.clients.elasticsearch.core.MgetRequest;
-import co.elastic.clients.elasticsearch.core.MsearchRequest;
-import co.elastic.clients.elasticsearch.core.OpenPointInTimeRequest;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.UpdateByQueryRequest;
-import co.elastic.clients.elasticsearch.core.UpdateRequest;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
@@ -57,17 +42,8 @@ import co.elastic.clients.elasticsearch.core.msearch.MultisearchBody;
 import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
-import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
-import co.elastic.clients.elasticsearch.indices.DeleteIndexRequest;
+import co.elastic.clients.elasticsearch.indices.*;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
-import co.elastic.clients.elasticsearch.indices.GetAliasRequest;
-import co.elastic.clients.elasticsearch.indices.GetIndexRequest;
-import co.elastic.clients.elasticsearch.indices.GetIndicesSettingsRequest;
-import co.elastic.clients.elasticsearch.indices.GetMappingRequest;
-import co.elastic.clients.elasticsearch.indices.IndexSettings;
-import co.elastic.clients.elasticsearch.indices.PutMappingRequest;
-import co.elastic.clients.elasticsearch.indices.RefreshRequest;
-import co.elastic.clients.elasticsearch.indices.UpdateAliasesRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
@@ -105,19 +81,7 @@ import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BaseQuery;
-import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
-import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.Order;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.RescorerQuery;
-import org.springframework.data.elasticsearch.core.query.ScriptData;
-import org.springframework.data.elasticsearch.core.query.SourceFilter;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.Remote;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
@@ -916,7 +880,7 @@ class RequestConverter {
 					.docAsUpsert(query.getDocAsUpsert()) //
 					.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
 					.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
-					.refresh(TypeUtils.refresh(refreshPolicy)) //
+					.refresh(query.getRefreshPolicy() != null ? refresh(query.getRefreshPolicy()) : refresh(refreshPolicy)) //
 					.retryOnConflict(query.getRetryOnConflict()) //
 			;
 
