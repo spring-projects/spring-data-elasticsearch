@@ -32,3 +32,5 @@ node_modules
 node
 package.json
 package-lock.json
+
+.mvn/.gradle-enterprise
