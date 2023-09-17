@@ -57,16 +57,18 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
+@SuppressWarnings("unused")
 public final class ElasticsearchClients {
 	/**
 	 * Name of whose value can be used to correlate log messages for this request.
 	 */
 	private static final String X_SPRING_DATA_ELASTICSEARCH_CLIENT = "X-SpringDataElasticsearch-Client";
-	private static final String IMPERATIVE_CLIENT = "imperative";
-	private static final String REACTIVE_CLIENT = "reactive";
+	public static final String IMPERATIVE_CLIENT = "imperative";
+	public static final String REACTIVE_CLIENT = "reactive";
 
 	private static final JsonpMapper DEFAULT_JSONP_MAPPER = new JacksonJsonpMapper();
 
+	// region reactive client
 	/**
 	 * Creates a new {@link ReactiveElasticsearchClient}
 	 *
@@ -131,10 +133,28 @@ public final class ElasticsearchClients {
 	 */
 	public static ReactiveElasticsearchClient createReactive(RestClient restClient,
 			@Nullable TransportOptions transportOptions, JsonpMapper jsonpMapper) {
-		return new ReactiveElasticsearchClient(
-				getElasticsearchTransport(restClient, REACTIVE_CLIENT, transportOptions, jsonpMapper));
+
+		Assert.notNull(restClient, "restClient must not be null");
+
+		var transport = getElasticsearchTransport(restClient, REACTIVE_CLIENT, transportOptions, jsonpMapper);
+		return createReactive(transport);
 	}
 
+	/**
+	 * Creates a new {@link ReactiveElasticsearchClient} that uses the given {@link ElasticsearchTransport}.
+	 *
+	 * @param transport the transport to use
+	 * @return the {@link ElasticsearchClient
+	 */
+	public static ReactiveElasticsearchClient createReactive(ElasticsearchTransport transport) {
+
+		Assert.notNull(transport, "transport must not be null");
+
+		return new ReactiveElasticsearchClient(transport);
+	}
+	// endregion
+
+	// region imperative client
 	/**
 	 * Creates a new imperative {@link ElasticsearchClient}
 	 *
@@ -183,7 +203,39 @@ public final class ElasticsearchClients {
 		ElasticsearchTransport transport = getElasticsearchTransport(restClient, IMPERATIVE_CLIENT, transportOptions,
 				jsonpMapper);
 
+		return createImperative(transport);
+	}
+
+	/**
+	 * Creates a new {@link ElasticsearchClient} that uses the given {@link ElasticsearchTransport}.
+	 *
+	 * @param transport the transport to use
+	 * @return the {@link ElasticsearchClient
+	 */
+	public static AutoCloseableElasticsearchClient createImperative(ElasticsearchTransport transport) {
+
+		Assert.notNull(transport, "transport must not be null");
+
 		return new AutoCloseableElasticsearchClient(transport);
+	}
+	// endregion
+
+	// region low level RestClient
+	private static RestClientOptions.Builder getRestClientOptionsBuilder(@Nullable TransportOptions transportOptions) {
+
+		if (transportOptions instanceof RestClientOptions restClientOptions) {
+			return restClientOptions.toBuilder();
+		}
+
+		var builder = new RestClientOptions.Builder(RequestOptions.DEFAULT.toBuilder());
+
+		if (transportOptions != null) {
+			transportOptions.headers().forEach(header -> builder.addHeader(header.getKey(), header.getValue()));
+			transportOptions.queryParameters().forEach(builder::setParameter);
+			builder.onWarnings(transportOptions.onWarnings());
+		}
+
+		return builder;
 	}
 
 	/**
@@ -256,9 +308,25 @@ public final class ElasticsearchClients {
 		}
 		return builder;
 	}
+	// endregion
 
-	private static ElasticsearchTransport getElasticsearchTransport(RestClient restClient, String clientType,
+	// region Elasticsearch transport
+	/**
+	 * Creates an {@link ElasticsearchTransport} that will use the given client that additionally is customized with a
+	 * header to contain the clientType
+	 *
+	 * @param restClient the client to use
+	 * @param clientType the client type to pass in each request as header
+	 * @param transportOptions options for the transport
+	 * @param jsonpMapper mapper for the transport
+	 * @return ElasticsearchTransport
+	 */
+	public static ElasticsearchTransport getElasticsearchTransport(RestClient restClient, String clientType,
 			@Nullable TransportOptions transportOptions, JsonpMapper jsonpMapper) {
+
+		Assert.notNull(restClient, "restClient must not be null");
+		Assert.notNull(clientType, "clientType must not be null");
+		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
 
 		TransportOptions.Builder transportOptionsBuilder = transportOptions != null ? transportOptions.toBuilder()
 				: new RestClientOptions(RequestOptions.DEFAULT).toBuilder();
@@ -285,26 +353,10 @@ public final class ElasticsearchClients {
 
 		return new RestClientTransport(restClient, jsonpMapper, restClientOptionsBuilder.build());
 	}
-
-	private static RestClientOptions.Builder getRestClientOptionsBuilder(@Nullable TransportOptions transportOptions) {
-
-		if (transportOptions instanceof RestClientOptions restClientOptions) {
-			return restClientOptions.toBuilder();
-		}
-
-		var builder =  new RestClientOptions.Builder(RequestOptions.DEFAULT.toBuilder());
-
-		if (transportOptions != null) {
-			transportOptions.headers().forEach(header -> builder.addHeader(header.getKey(), header.getValue()));
-			transportOptions.queryParameters().forEach(builder::setParameter);
-			builder.onWarnings(transportOptions.onWarnings());
-		}
-
-		return builder;
-	}
+	// endregion
 
 	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
-		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it.getHostString() + ":" + it.getPort())
+		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it.getHostString() + ':' + it.getPort())
 				.collect(Collectors.toList());
 	}
 
@@ -320,13 +372,7 @@ public final class ElasticsearchClients {
 	 *
 	 * @since 4.4
 	 */
-	private static class CustomHeaderInjector implements HttpRequestInterceptor {
-
-		public CustomHeaderInjector(Supplier<HttpHeaders> headersSupplier) {
-			this.headersSupplier = headersSupplier;
-		}
-
-		private final Supplier<HttpHeaders> headersSupplier;
+	private record CustomHeaderInjector(Supplier<HttpHeaders> headersSupplier) implements HttpRequestInterceptor {
 
 		@Override
 		public void process(HttpRequest request, HttpContext context) {
