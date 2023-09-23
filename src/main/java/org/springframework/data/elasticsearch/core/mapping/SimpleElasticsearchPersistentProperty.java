@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -56,6 +57,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
+import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
@@ -168,6 +170,18 @@ public class SimpleElasticsearchPersistentProperty extends
 			return;
 		}
 
+		Supplier<Class<?>> getGenericType = () -> {
+			TypeInformation<?> typeInformation = getTypeInformation();
+
+			if (typeInformation.isCollectionLike()) {
+				// we have a collection of Range<?>
+				typeInformation = typeInformation.getComponentType();
+			}
+
+			Class<?> genericType = typeInformation.getTypeArguments().get(0).getType();
+			return genericType;
+		};
+
 		switch (field.type()) {
 			case Date:
 			case Date_Nanos: {
@@ -197,11 +211,11 @@ public class SimpleElasticsearchPersistentProperty extends
 					return;
 				}
 
-				Class<?> genericType = getTypeInformation().getTypeArguments().get(0).getType();
+				var genericType = getGenericType.get();
 				if (TemporalAccessor.class.isAssignableFrom(genericType)) {
-					propertyValueConverter = new TemporalRangePropertyValueConverter(this, dateConverters);
+					propertyValueConverter = new TemporalRangePropertyValueConverter(this, genericType, dateConverters);
 				} else if (Date.class.isAssignableFrom(genericType)) {
-					propertyValueConverter = new DateRangePropertyValueConverter(this, dateConverters);
+					propertyValueConverter = new DateRangePropertyValueConverter(this, genericType, dateConverters);
 				} else {
 					LOGGER.warn(
 							String.format("Unsupported generic type '{%s' for date range property '%s'.", genericType, getName()));
@@ -216,7 +230,7 @@ public class SimpleElasticsearchPersistentProperty extends
 					return;
 				}
 
-				Class<?> genericType = getTypeInformation().getTypeArguments().get(0).getType();
+				var genericType = getGenericType.get();
 				if ((field.type() == FieldType.Integer_Range && !Integer.class.isAssignableFrom(genericType))
 						|| (field.type() == FieldType.Float_Range && !Float.class.isAssignableFrom(genericType))
 						|| (field.type() == FieldType.Long_Range && !Long.class.isAssignableFrom(genericType))
@@ -226,7 +240,7 @@ public class SimpleElasticsearchPersistentProperty extends
 					return;
 				}
 
-				propertyValueConverter = new NumberRangePropertyValueConverter(this);
+				propertyValueConverter = new NumberRangePropertyValueConverter(this, genericType);
 				break;
 			}
 			case Ip_Range: {

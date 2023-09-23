@@ -990,7 +990,13 @@ public class MappingElasticsearchConverterUnitTests {
 				    "gte": "2021-01-01T00:30:00.000+02:00",
 				    "lte": "2021-01-01T00:30:00.000+02:00"
 				  },
-				  "nullRange": null
+				  "nullRange": null,
+				  "integerRangeList": [
+				  	{
+				  	  "gte": "2", 
+				  	  "lte": "5"
+				  	}
+				  ]
 				}
 				""";
 
@@ -1020,6 +1026,7 @@ public class MappingElasticsearchConverterUnitTests {
 						assertThat(e.getZonedDateTimeRange()).isEqualTo(
 								Range.just(ZonedDateTime.of(LocalDate.of(2021, 1, 1), LocalTime.of(0, 30), ZoneOffset.ofHours(2))));
 						assertThat(e.getNullRange()).isNull();
+						assertThat(e.getIntegerRangeList()).containsExactly(Range.closed(2, 5));
 					});
 		}
 
@@ -1042,7 +1049,7 @@ public class MappingElasticsearchConverterUnitTests {
 			entity.setZonedDateTimeRange(
 					Range.just(ZonedDateTime.of(LocalDate.of(2021, 1, 1), LocalTime.of(0, 30), ZoneOffset.ofHours(2))));
 			entity.setNullRange(null);
-
+			entity.setIntegerRangeList(List.of(Range.closed(2, 5)));
 			Document document = mappingElasticsearchConverter.mapObject(entity);
 
 			assertThat(document).isEqualTo(source);
@@ -1065,6 +1072,8 @@ public class MappingElasticsearchConverterUnitTests {
 			@Field(type = FieldType.Date_Range, format = DateFormat.time) private Range<OffsetTime> offsetTimeRange;
 			@Field(type = FieldType.Date_Range) private Range<ZonedDateTime> zonedDateTimeRange;
 			@Field(type = FieldType.Date_Range, storeNullValue = true) private Range<ZonedDateTime> nullRange;
+
+			@Field(type = FieldType.Integer_Range) private List<Range<Integer>> integerRangeList;
 
 			public String getId() {
 				return id;
@@ -1162,6 +1171,13 @@ public class MappingElasticsearchConverterUnitTests {
 				this.nullRange = nullRange;
 			}
 
+			public List<Range<Integer>> getIntegerRangeList() {
+				return integerRangeList;
+			}
+
+			public void setIntegerRangeList(List<Range<Integer>> integerRangeList) {
+				this.integerRangeList = integerRangeList;
+			}
 		}
 	}
 
@@ -2055,7 +2071,8 @@ public class MappingElasticsearchConverterUnitTests {
 	void shouldMapPropertyPathToFieldNames() {
 
 		var propertyPath = "level1Entries.level2Entries.keyWord";
-		ElasticsearchPersistentEntity<?> persistentEntity = mappingElasticsearchConverter.getMappingContext().getPersistentEntity(NestedEntity.class);
+		ElasticsearchPersistentEntity<?> persistentEntity = mappingElasticsearchConverter.getMappingContext()
+				.getPersistentEntity(NestedEntity.class);
 		var mappedNames = mappingElasticsearchConverter.updateFieldNames(propertyPath, persistentEntity);
 
 		assertThat(mappedNames).isEqualTo("level-one.level-two.key-word");
