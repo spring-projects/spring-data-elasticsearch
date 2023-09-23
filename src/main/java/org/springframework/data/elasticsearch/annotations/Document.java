@@ -59,6 +59,13 @@ public @interface Document {
 	boolean createIndex() default true;
 
 	/**
+	 * If true, the index mapping will be written on repository bootstrapping even when the index already exists. This
+	 * allows for automatically updating the mapping with new properties. Changes on existing properties will lead to an
+	 * error from the Elasticsearch server.
+	 */
+	boolean alwaysWriteMapping() default false;
+
+	/**
 	 * Configuration of version management.
 	 */
 	VersionType versionType() default VersionType.EXTERNAL;

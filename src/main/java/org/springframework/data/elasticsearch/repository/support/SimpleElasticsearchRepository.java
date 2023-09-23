@@ -82,6 +82,8 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		if (shouldCreateIndexAndMapping() && !indexOperations.exists()) {
 			indexOperations.createWithMapping();
+		} else if (shouldAlwaysWriteMapping()) {
+			indexOperations.putMapping();
 		}
 	}
 
@@ -90,6 +92,11 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		final ElasticsearchPersistentEntity<?> entity = operations.getElasticsearchConverter().getMappingContext()
 				.getRequiredPersistentEntity(entityClass);
 		return entity.isCreateIndexAndMapping();
+	}
+
+	private boolean shouldAlwaysWriteMapping() {
+		return operations.getElasticsearchConverter().getMappingContext()
+				.getRequiredPersistentEntity(entityClass).isAlwaysWriteMapping();
 	}
 
 	@Override
