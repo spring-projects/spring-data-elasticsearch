@@ -23,8 +23,12 @@ import org.springframework.data.mapping.PersistentProperty;
  */
 public class NumberRangePropertyValueConverter extends AbstractRangePropertyValueConverter<Number> {
 
-	public NumberRangePropertyValueConverter(PersistentProperty<?> property) {
-		super(property);
+	/**
+	 * @param property the property this convertrer belongs to
+	 * @param genericType the generic type of the Range
+	 */
+	public NumberRangePropertyValueConverter(PersistentProperty<?> property, Class<?> genericType) {
+		super(property, genericType);
 	}
 
 	@Override

@@ -961,19 +961,57 @@ public class MappingElasticsearchConverterUnitTests {
 	@Nested
 	class RangeTests {
 
-		static final String JSON = "{"
-				+ "\"_class\":\"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$RangeTests$RangeEntity\","
-				+ "\"integerRange\":{\"gt\":\"1\",\"lt\":\"10\"}," //
-				+ "\"floatRange\":{\"gte\":\"1.2\",\"lte\":\"2.5\"}," //
-				+ "\"longRange\":{\"gt\":\"2\",\"lte\":\"5\"}," //
-				+ "\"doubleRange\":{\"gte\":\"3.2\",\"lt\":\"7.4\"}," //
-				+ "\"dateRange\":{\"gte\":\"1970-01-01T00:00:00.000Z\",\"lte\":\"1970-01-01T01:00:00.000Z\"}," //
-				+ "\"localDateRange\":{\"gte\":\"2021-07-06\"}," //
-				+ "\"localTimeRange\":{\"gte\":\"00:30:00.000\",\"lt\":\"02:30:00.000\"}," //
-				+ "\"localDateTimeRange\":{\"gt\":\"2021-01-01T00:30:00.000\",\"lt\":\"2021-01-01T02:30:00.000\"}," //
-				+ "\"offsetTimeRange\":{\"gte\":\"00:30:00.000+02:00\",\"lt\":\"02:30:00.000+02:00\"}," //
-				+ "\"zonedDateTimeRange\":{\"gte\":\"2021-01-01T00:30:00.000+02:00\",\"lte\":\"2021-01-01T00:30:00.000+02:00\"}," //
-				+ "\"nullRange\":null}";
+		static final String JSON = """
+				{
+				  "_class": "org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$RangeTests$RangeEntity",
+				  "integerRange": {
+				    "gt": "1",
+				    "lt": "10"
+				  },
+				  "floatRange": {
+				    "gte": "1.2",
+				    "lte": "2.5"
+				  },
+				  "longRange": {
+				    "gt": "2",
+				    "lte": "5"
+				  },
+				  "doubleRange": {
+				    "gte": "3.2",
+				    "lt": "7.4"
+				  },
+				  "dateRange": {
+				    "gte": "1970-01-01T00:00:00.000Z",
+				    "lte": "1970-01-01T01:00:00.000Z"
+				  },
+				  "localDateRange": {
+				    "gte": "2021-07-06"
+				  },
+				  "localTimeRange": {
+				    "gte": "00:30:00.000",
+				    "lt": "02:30:00.000"
+				  },
+				  "localDateTimeRange": {
+				    "gt": "2021-01-01T00:30:00.000",
+				    "lt": "2021-01-01T02:30:00.000"
+				  },
+				  "offsetTimeRange": {
+				    "gte": "00:30:00.000+02:00",
+				    "lt": "02:30:00.000+02:00"
+				  },
+				  "zonedDateTimeRange": {
+				    "gte": "2021-01-01T00:30:00.000+02:00",
+				    "lte": "2021-01-01T00:30:00.000+02:00"
+				  },
+				  "nullRange": null,
+				  "integerRangeList": [
+				  	{
+				  	  "gte": "2", 
+				  	  "lte": "5"
+				  	}
+				  ]
+				}
+				""";
 
 		@Test
 		public void shouldReadRanges() throws JSONException {
@@ -1004,6 +1042,7 @@ public class MappingElasticsearchConverterUnitTests {
 						assertThat(e.getZonedDateTimeRange()).isEqualTo(
 								Range.just(ZonedDateTime.of(LocalDate.of(2021, 1, 1), LocalTime.of(0, 30), ZoneOffset.ofHours(2))));
 						assertThat(e.getNullRange()).isNull();
+						assertThat(e.getIntegerRangeList()).containsExactly(Range.closed(2, 5));
 					});
 		}
 
@@ -1027,8 +1066,7 @@ public class MappingElasticsearchConverterUnitTests {
 			entity.setZonedDateTimeRange(
 					Range.just(ZonedDateTime.of(LocalDate.of(2021, 1, 1), LocalTime.of(0, 30), ZoneOffset.ofHours(2))));
 			entity.setNullRange(null);
-
-			// when
+			entity.setIntegerRangeList(List.of(Range.closed(2, 5)));
 			Document document = mappingElasticsearchConverter.mapObject(entity);
 
 			// then
@@ -1052,6 +1090,8 @@ public class MappingElasticsearchConverterUnitTests {
 			@Field(type = FieldType.Date_Range, format = DateFormat.time) private Range<OffsetTime> offsetTimeRange;
 			@Field(type = FieldType.Date_Range) private Range<ZonedDateTime> zonedDateTimeRange;
 			@Field(type = FieldType.Date_Range, storeNullValue = true) private Range<ZonedDateTime> nullRange;
+
+			@Field(type = FieldType.Integer_Range) private List<Range<Integer>> integerRangeList;
 
 			public String getId() {
 				return id;
@@ -1149,6 +1189,13 @@ public class MappingElasticsearchConverterUnitTests {
 				this.nullRange = nullRange;
 			}
 
+			public List<Range<Integer>> getIntegerRangeList() {
+				return integerRangeList;
+			}
+
+			public void setIntegerRangeList(List<Range<Integer>> integerRangeList) {
+				this.integerRangeList = integerRangeList;
+			}
 		}
 	}
 
