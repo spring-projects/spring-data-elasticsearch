@@ -74,6 +74,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable ElasticsearchPersistentProperty indexedIndexNameProperty;
 	private @Nullable Document.VersionType versionType;
 	private boolean createIndexAndMapping;
+	private boolean alwaysWriteMapping;
 	private final Dynamic dynamic;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, Expression> routingExpressions = new ConcurrentHashMap<>();
@@ -107,6 +108,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.indexName = document.indexName();
 			this.versionType = document.versionType();
 			this.createIndexAndMapping = document.createIndex();
+			this.alwaysWriteMapping = document.alwaysWriteMapping();
 			this.dynamic = document.dynamic();
 			this.storeIdInSource = document.storeIdInSource();
 			this.storeVersionInSource = document.storeVersionInSource();
@@ -114,6 +116,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.dynamic = Dynamic.INHERIT;
 			this.storeIdInSource = true;
 			this.storeVersionInSource = true;
+			this.createIndexAndMapping = false;
+			this.alwaysWriteMapping = false;
 		}
 		Routing routingAnnotation = AnnotatedElementUtils.findMergedAnnotation(clazz, Routing.class);
 
@@ -170,6 +174,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public boolean isCreateIndexAndMapping() {
 		return createIndexAndMapping;
+	}
+
+	public boolean isAlwaysWriteMapping() {
+		return alwaysWriteMapping;
 	}
 
 	@Override

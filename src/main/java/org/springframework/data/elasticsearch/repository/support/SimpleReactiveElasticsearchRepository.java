@@ -66,6 +66,8 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 			indexOperations.exists() //
 					.flatMap(exists -> exists ? Mono.empty() : indexOperations.createWithMapping()) //
 					.block();
+		} else if(shouldAlwaysWriteMapping()) {
+			indexOperations.putMapping().block();
 		}
 	}
 
@@ -74,6 +76,11 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 		final ElasticsearchPersistentEntity<?> entity = operations.getElasticsearchConverter().getMappingContext()
 				.getRequiredPersistentEntity(entityInformation.getJavaType());
 		return entity.isCreateIndexAndMapping();
+	}
+
+	private boolean shouldAlwaysWriteMapping() {
+		return operations.getElasticsearchConverter().getMappingContext()
+				.getRequiredPersistentEntity(entityInformation.getJavaType()).isAlwaysWriteMapping();
 	}
 
 	@Override
