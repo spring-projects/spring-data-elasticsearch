@@ -337,12 +337,10 @@ class RequestConverter {
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 		Assert.notNull(mapping, "mapping must not be null");
 
-		PutMappingRequest request = new PutMappingRequest.Builder() //
-				.withJson(new StringReader(mapping.toJson())) //
-				.index(Arrays.asList(indexCoordinates.getIndexNames())) //
+		return new PutMappingRequest.Builder()
+				.withJson(new StringReader(mapping.toJson()))
+				.index(Arrays.asList(indexCoordinates.getIndexNames()))
 				.build();
-
-		return request;
 	}
 
 	public GetMappingRequest indicesGetMappingRequest(IndexCoordinates indexCoordinates) {
@@ -422,10 +420,7 @@ class RequestConverter {
 
 				if (parametersAliases != null) {
 					for (String aliasName : parametersAliases) {
-						builder.aliases(aliasName, aliasBuilder -> {
-
-							return buildAlias(parameters, aliasBuilder);
-						});
+						builder.aliases(aliasName, aliasBuilder -> buildAlias(parameters, aliasBuilder));
 					}
 				}
 			});
@@ -860,11 +855,10 @@ class RequestConverter {
 							StringBuilder sb = new StringBuilder(remote.getScheme());
 							sb.append("://");
 							sb.append(remote.getHost());
-							sb.append(":");
+							sb.append(':');
 							sb.append(remote.getPort());
 
 							if (remote.getPathPrefix() != null) {
-								sb.append("");
 								sb.append(remote.getPathPrefix());
 							}
 
@@ -884,7 +878,7 @@ class RequestConverter {
 					}
 
 					SourceFilter sourceFilter = source.getSourceFilter();
-					if (sourceFilter != null) {
+					if (sourceFilter != null && sourceFilter.getIncludes() != null) {
 						s.sourceFields(Arrays.asList(sourceFilter.getIncludes()));
 					}
 					return s;
@@ -1038,8 +1032,8 @@ class RequestConverter {
 					int val;
 					try {
 						val = Integer.parseInt(waitForActiveShards);
-					} catch (NumberFormatException var3) {
-						throw new IllegalArgumentException("cannot parse ActiveShardCount[" + waitForActiveShards + "]", var3);
+					} catch (NumberFormatException e) {
+						throw new IllegalArgumentException("cannot parse ActiveShardCount[" + waitForActiveShards + ']', e);
 					}
 					uqb.waitForActiveShards(wfa -> wfa.count(val));
 				}
@@ -1124,7 +1118,6 @@ class RequestConverter {
 			IndexCoordinates indexCoordinates, boolean forCount, boolean forBatchedSearch,
 			@Nullable Long scrollTimeInMillis) {
 
-		String[] indexNames = indexCoordinates.getIndexNames();
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
@@ -1267,7 +1260,7 @@ class RequestConverter {
 
 							if (!isEmpty(query.getIndicesBoost())) {
 								bb.indicesBoost(query.getIndicesBoost().stream()
-										.map(indexBoost -> Map.of(indexBoost.getIndexName(), Double.valueOf(indexBoost.getBoost())))
+										.map(indexBoost -> Map.of(indexBoost.getIndexName(), (double) indexBoost.getBoost()))
 										.collect(Collectors.toList()));
 							}
 
@@ -1434,13 +1427,15 @@ class RequestConverter {
 		} else if (forBatchedSearch) {
 			// request_cache is not allowed on scroll requests.
 			builder.requestCache(null);
-			// limit the number of documents in a batch
-			builder.size(query.getReactiveBatchSize());
+			// limit the number of documents in a batch if not already set in a pageable
+			if (query.getPageable().isUnpaged()) {
+				builder.size(query.getReactiveBatchSize());
+			}
 		}
 
 		if (!isEmpty(query.getIndicesBoost())) {
 			builder.indicesBoost(query.getIndicesBoost().stream()
-					.map(indexBoost -> Map.of(indexBoost.getIndexName(), Double.valueOf(indexBoost.getBoost())))
+					.map(indexBoost -> Map.of(indexBoost.getIndexName(), (double) indexBoost.getBoost()))
 					.collect(Collectors.toList()));
 		}
 
@@ -1468,15 +1463,14 @@ class RequestConverter {
 			}
 		});
 
-		builder.expandWildcards(indicesOptions.getExpandWildcards().stream().map(wildcardStates -> {
-			return switch (wildcardStates) {
-				case OPEN -> ExpandWildcard.Open;
-				case CLOSED -> ExpandWildcard.Closed;
-				case HIDDEN -> ExpandWildcard.Hidden;
-				case ALL -> ExpandWildcard.All;
-				case NONE -> ExpandWildcard.None;
-			};
-		}).collect(Collectors.toList()));
+		builder.expandWildcards(indicesOptions.getExpandWildcards().stream()
+				.map(wildcardStates -> switch (wildcardStates) {
+					case OPEN -> ExpandWildcard.Open;
+					case CLOSED -> ExpandWildcard.Closed;
+					case HIDDEN -> ExpandWildcard.Hidden;
+					case ALL -> ExpandWildcard.All;
+					case NONE -> ExpandWildcard.None;
+				}).collect(Collectors.toList()));
 	}
 
 	private Rescore getRescore(RescorerQuery rescorerQuery) {
@@ -1585,8 +1579,8 @@ class RequestConverter {
 
 	@Nullable
 	private NestedSortValue getNestedSort(@Nullable Order.Nested nested,
-			ElasticsearchPersistentEntity<?> persistentEntity) {
-		return (nested == null) ? null
+			@Nullable ElasticsearchPersistentEntity<?> persistentEntity) {
+		return (nested == null || persistentEntity == null) ? null
 				: NestedSortValue.of(b -> b //
 						.path(elasticsearchConverter.updateFieldNames(nested.getPath(), persistentEntity)) //
 						.maxChildren(nested.getMaxChildren()) //
@@ -1682,7 +1676,8 @@ class RequestConverter {
 
 		if (query instanceof CriteriaQuery) {
 			CriteriaFilterProcessor.createQuery(((CriteriaQuery) query).getCriteria()).ifPresent(builder::postFilter);
-		} else if (query instanceof StringQuery) {
+		} else //noinspection StatementWithEmptyBody
+			if (query instanceof StringQuery) {
 			// no filter for StringQuery
 		} else if (query instanceof NativeQuery) {
 			builder.postFilter(((NativeQuery) query).getFilter());
@@ -1697,7 +1692,7 @@ class RequestConverter {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery moreLikeThisQuery = co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery
+        return co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery
 				.of(q -> {
 					q.like(Like.of(l -> l.document(ld -> ld.index(index.getIndexName()).id(query.getId()))))
 							.fields(query.getFields());
@@ -1736,8 +1731,6 @@ class RequestConverter {
 
 					return q;
 				});
-
-		return moreLikeThisQuery;
 	}
 
 	public OpenPointInTimeRequest searchOpenPointInTimeRequest(IndexCoordinates index, Duration keepAlive,
@@ -1783,7 +1776,7 @@ class RequestConverter {
 			}
 
 			var expandWildcards = query.getExpandWildcards();
-			if (!expandWildcards.isEmpty()) {
+			if (expandWildcards != null && !expandWildcards.isEmpty()) {
 				builder.expandWildcards(expandWildcards(expandWildcards));
 			}
 
