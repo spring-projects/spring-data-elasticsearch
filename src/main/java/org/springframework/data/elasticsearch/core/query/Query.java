@@ -469,7 +469,7 @@ public interface Query {
 	/**
 	 * @since 5.1
 	 */
-	EnumSet<IndicesOptions.WildcardStates> getExpandWildcards();
+	@Nullable EnumSet<IndicesOptions.WildcardStates> getExpandWildcards();
 
 	/**
 	 * @return a possible empty list of docvalue_field values to be set on the query.
