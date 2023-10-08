@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.query.scriptedandruntimefields;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 
 import reactor.core.publisher.Flux;
 
@@ -66,15 +67,15 @@ public abstract class ReactiveScriptedAndRuntimeFieldsIntegrationTests {
 	void setUp() {
 
 		indexNameProvider.increment();
-		operations.indexOps(SomethingToBuy.class).createWithMapping().block();
-		operations.indexOps(Person.class).createWithMapping().block();
-		operations.indexOps(SAREntity.class).createWithMapping().block();
+		blocking(operations.indexOps(SomethingToBuy.class)).createWithMapping();
+		blocking(operations.indexOps(Person.class)).createWithMapping();
+		blocking(operations.indexOps(SAREntity.class)).createWithMapping();
 	}
 
 	@Test
 	@Order(Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 
 	@Test // #1971

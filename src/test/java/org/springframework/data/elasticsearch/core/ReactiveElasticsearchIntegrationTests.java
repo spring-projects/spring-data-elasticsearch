@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 import static org.springframework.data.elasticsearch.core.query.StringQuery.*;
 
 import reactor.core.publisher.Flux;
@@ -105,14 +106,14 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 	public void beforeEach() {
 
 		indexNameProvider.increment();
-		operations.indexOps(SampleEntity.class).createWithMapping().block();
-		operations.indexOps(IndexedIndexNameEntity.class).createWithMapping().block();
+		blocking(operations.indexOps(SampleEntity.class)).createWithMapping();
+		blocking(operations.indexOps(IndexedIndexNameEntity.class)).createWithMapping();
 	}
 
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 	// endregion
 
@@ -625,7 +626,8 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		operations.indexOps(thisIndex).refresh().then(operations.indexOps(thatIndex).refresh()).block();
+		blocking(operations.indexOps(thisIndex)).refresh();
+		blocking(operations.indexOps(thatIndex)).refresh();
 
 		Query query = getBuilderWithTermQuery("message", "test").build();
 
@@ -651,7 +653,8 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.as(StepVerifier::create)//
 				.verifyComplete();
 
-		operations.indexOps(thisIndex).refresh().then(operations.indexOps(thatIndex).refresh()).block();
+		blocking(operations.indexOps(thisIndex)).refresh();
+		blocking(operations.indexOps(thatIndex)).refresh();
 
 		Query query = getBuilderWithTermQuery("message", "negative").build();
 
@@ -876,7 +879,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		original.setMessage("It's fine");
 		OptimisticEntity saved = operations.save(original).block();
 
-		operations.indexOps(OptimisticEntity.class).refresh().block();
+		blocking(operations.indexOps(OptimisticEntity.class)).refresh();
 
 		operations
 				.search(searchQueryForOne(saved.getId()), OptimisticEntity.class,
@@ -1081,14 +1084,16 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		String indexName = indexNameProvider.indexName();
 		String aliasName = indexName + "-alias";
 		ReactiveIndexOperations indexOps = operations.indexOps(EntityWithSettingsAndMappingsReactive.class);
+		var blockingIndexOps = blocking(indexOps);
 
 		// beforeEach uses SampleEntity, so recreate the index here
-		indexOps.delete().then(indexOps.createWithMapping()).block();
+		blockingIndexOps.delete();
+		blockingIndexOps.createWithMapping();
 
 		AliasActionParameters parameters = AliasActionParameters.builder().withAliases(aliasName).withIndices(indexName)
 				.withIsHidden(false).withIsWriteIndex(false).withRouting("indexrouting").withSearchRouting("searchrouting")
 				.build();
-		indexOps.alias(new AliasActions(new AliasAction.Add(parameters))).block();
+		blockingIndexOps.alias(new AliasActions(new AliasAction.Add(parameters)));
 
 		indexOps.getInformation().as(StepVerifier::create).consumeNextWith(indexInformation -> {
 			assertThat(indexInformation.getName()).isEqualTo(indexName);
