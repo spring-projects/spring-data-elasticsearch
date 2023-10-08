@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
+
 import reactor.test.StepVerifier;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -27,7 +29,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -45,15 +46,15 @@ public abstract class ReactiveFieldNamingStrategyIntegrationTests {
 	@BeforeEach
 	void setUp() {
 		indexNameProvider.increment();
-		ReactiveIndexOperations indexOps = this.operations.indexOps(Entity.class);
-		indexOps.delete() //
-				.then(indexOps.createWithMapping()).block();
+		var indexOps = blocking(operations.indexOps(Entity.class));
+		indexOps.delete();
+		indexOps.createWithMapping();
 	}
 
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 
 	@Test // #1565

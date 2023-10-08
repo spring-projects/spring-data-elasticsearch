@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core.paginating;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 
 import reactor.core.publisher.Mono;
 
@@ -57,13 +58,13 @@ public abstract class ReactiveSearchAfterIntegrationTests {
 	public void beforeEach() {
 
 		indexNameProvider.increment();
-		operations.indexOps(Entity.class).createWithMapping().block();
+		blocking(operations.indexOps(Entity.class)).createWithMapping();
 	}
 
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 
 	@Test // #1143

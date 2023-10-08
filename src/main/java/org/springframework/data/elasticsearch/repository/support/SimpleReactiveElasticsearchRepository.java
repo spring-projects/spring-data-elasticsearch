@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -62,12 +64,14 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 	private void createIndexAndMappingIfNeeded() {
 
+		var blockingIndexOperations = blocking(indexOperations);
+
 		if (shouldCreateIndexAndMapping()) {
-			indexOperations.exists() //
-					.flatMap(exists -> exists ? Mono.empty() : indexOperations.createWithMapping()) //
-					.block();
-		} else if(shouldAlwaysWriteMapping()) {
-			indexOperations.putMapping().block();
+			if (!blockingIndexOperations.exists()) {
+				blockingIndexOperations.createWithMapping();
+			}
+		} else if (shouldAlwaysWriteMapping()) {
+			blockingIndexOperations.putMapping();
 		}
 	}
 
