@@ -77,7 +77,7 @@ public interface ReactiveElasticsearchOperations
 	 */
 	ReactiveClusterOperations cluster();
 
-	// region routing
+	// region customizations
 	/**
 	 * Returns a copy of this instance with the same configuration, but that uses a different {@link RoutingResolver} to
 	 * obtain routing information.
@@ -86,5 +86,14 @@ public interface ReactiveElasticsearchOperations
 	 * @return DocumentOperations instance
 	 */
 	ReactiveElasticsearchOperations withRouting(RoutingResolver routingResolver);
+
+	/**
+	 * Returns a copy of this instance with the same configuration, but that uses a different {@link RefreshPolicy}.
+	 *
+	 * @param refreshPolicy the {@link RefreshPolicy} value.
+	 * @return {@link ReactiveElasticsearchOperations} instance.
+	 * @since 5.2
+	 */
+	ReactiveElasticsearchOperations withRefreshPolicy(@Nullable RefreshPolicy refreshPolicy);
 	// endregion
 }

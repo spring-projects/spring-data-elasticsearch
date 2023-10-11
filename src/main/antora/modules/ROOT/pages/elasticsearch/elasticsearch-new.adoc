@@ -12,6 +12,7 @@
 * Enable MultiField annotation on property getter
 * Support nested sort option
 * Improved scripted und runtime field support
+* Improved refresh policy support
 
 [[new-features.5-1-0]]
 == New in Spring Data Elasticsearch 5.1

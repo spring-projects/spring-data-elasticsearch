@@ -186,7 +186,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	// endregion
 
-	// region routing
+	// region customizations
 	private void setRoutingResolver(RoutingResolver routingResolver) {
 
 		Assert.notNull(routingResolver, "routingResolver must not be null");
@@ -203,6 +203,14 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		copy.setRoutingResolver(routingResolver);
 		return copy;
 	}
+
+	@Override
+	public ReactiveElasticsearchOperations withRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+		AbstractReactiveElasticsearchTemplate copy = copy();
+		copy.setRefreshPolicy(refreshPolicy);
+		return copy;
+	}
+
 	// endregion
 
 	// region DocumentOperations
