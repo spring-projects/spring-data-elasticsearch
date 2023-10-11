@@ -855,7 +855,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 	// endregion
 
-	// region routing
+	// region customization
 	private void setRoutingResolver(RoutingResolver routingResolver) {
 
 		Assert.notNull(routingResolver, "routingResolver must not be null");
@@ -870,6 +870,14 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		AbstractElasticsearchTemplate copy = copy();
 		copy.setRoutingResolver(routingResolver);
+		return copy;
+	}
+
+	@Override
+	public ElasticsearchOperations withRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+
+		var copy = copy();
+		copy.setRefreshPolicy(refreshPolicy);
 		return copy;
 	}
 

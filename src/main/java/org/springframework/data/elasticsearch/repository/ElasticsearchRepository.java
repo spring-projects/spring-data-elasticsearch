@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -31,6 +32,7 @@ import org.springframework.lang.Nullable;
  * @author Murali Chevuri
  * @author Peter-Josef Meisch
  */
+@SuppressWarnings("unused")
 @NoRepositoryBean
 public interface ElasticsearchRepository<T, ID> extends PagingAndSortingRepository<T, ID>, CrudRepository<T, ID> {
 
@@ -43,4 +45,39 @@ public interface ElasticsearchRepository<T, ID> extends PagingAndSortingReposito
 	 * @return
 	 */
 	Page<T> searchSimilar(T entity, @Nullable String[] fields, Pageable pageable);
+
+	/**
+	 * @since 5.2
+	 */
+	<S extends T> S save(S entity, @Nullable RefreshPolicy refreshPolicy);
+
+	/**
+	 * @since 5.2
+	 */
+	<S extends T> Iterable<S> saveAll(Iterable<S> entities, @Nullable RefreshPolicy refreshPolicy);
+
+	/**
+	 * @since 5.2
+	 */
+	void deleteById(ID id, @Nullable RefreshPolicy refreshPolicy);
+
+	/**
+	 * @since 5.2
+	 */
+	void delete(T entity, @Nullable RefreshPolicy refreshPolicy);
+
+	/**
+	 * @since 5.2
+	 */
+	void deleteAllById(Iterable<? extends ID> ids, @Nullable RefreshPolicy refreshPolicy);
+
+	/**
+	 * @since 5.2
+	 */
+	void deleteAll(Iterable<? extends T> entities, @Nullable RefreshPolicy refreshPolicy);
+
+	/**
+	 * @since 5.2
+	 */
+	void deleteAll(@Nullable RefreshPolicy refreshPolicy);
 }
