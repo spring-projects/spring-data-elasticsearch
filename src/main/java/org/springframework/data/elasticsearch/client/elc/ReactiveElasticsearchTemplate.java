@@ -25,6 +25,7 @@ import co.elastic.clients.elasticsearch.core.get.GetResult;
 import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -147,11 +148,11 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index, true);
+		ExistsRequest existsRequest = requestConverter.documentExistsRequest(id, routingResolver.getRouting(), index);
 
 		return Mono.from(execute(
-				((ClientCallback<Publisher<GetResponse<EntityAsMap>>>) client -> client.get(getRequest, EntityAsMap.class))))
-				.map(GetResult::found) //
+				((ClientCallback<Publisher<BooleanResponse>>) client -> client.exists(existsRequest))))
+				.map(BooleanResponse::value) //
 				.onErrorReturn(NoSuchIndexException.class, false);
 	}
 
@@ -174,7 +175,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(entityType, "entityType must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index, false);
+		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index);
 
 		Mono<GetResponse<EntityAsMap>> getResponse = Mono.from(execute(
 				(ClientCallback<Publisher<GetResponse<EntityAsMap>>>) client -> client.get(getRequest, EntityAsMap.class)));

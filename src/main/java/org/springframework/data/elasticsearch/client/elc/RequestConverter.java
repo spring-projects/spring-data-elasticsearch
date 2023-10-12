@@ -763,25 +763,26 @@ class RequestConverter {
 		return builder.build();
 	}
 
-	public GetRequest documentGetRequest(String id, @Nullable String routing, IndexCoordinates indexCoordinates,
-			boolean forExistsRequest) {
+	public GetRequest documentGetRequest(String id, @Nullable String routing, IndexCoordinates indexCoordinates) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
-		return GetRequest.of(grb -> {
-			grb //
+		return GetRequest.of(grb -> grb //
 					.index(indexCoordinates.getIndexName()) //
 					.id(id) //
-					.routing(routing);
+					.routing(routing));
+	}
 
-			if (forExistsRequest) {
-				grb.source(scp -> scp.fetch(false));
-			}
+	public co.elastic.clients.elasticsearch.core.ExistsRequest documentExistsRequest(String id, @Nullable String routing, IndexCoordinates indexCoordinates) {
 
-			return grb;
-		});
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
+		return co.elastic.clients.elasticsearch.core.ExistsRequest.of(erb -> erb
+				.index(indexCoordinates.getIndexName())
+				.id(id)
+				.routing(routing));
 	}
 
 	public <T> MgetRequest documentMgetRequest(Query query, Class<T> clazz, IndexCoordinates index) {
