@@ -274,6 +274,12 @@ class ElasticsearchDateConverterUnitTests {
 		check(ElasticsearchDateConverter.of(DateFormat.date_optional_time), LocalDateTime.class);
 	}
 
+	@Test // #2676
+	@DisplayName("should convert strict_date_optional_time_nanos")
+	void shouldConvertStrictDateOptionalTime() {
+		check(ElasticsearchDateConverter.of(DateFormat.strict_date_optional_time_nanos), LocalDateTime.class);
+	}
+
 	@Test // #1647
 	@DisplayName("should convert date_time")
 	void shouldConvertDateTime() {

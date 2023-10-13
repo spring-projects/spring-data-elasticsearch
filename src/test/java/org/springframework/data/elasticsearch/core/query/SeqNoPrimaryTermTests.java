@@ -17,13 +17,18 @@ package org.springframework.data.elasticsearch.core.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.elasticsearch.index.seqno.SequenceNumbers;
 import org.junit.jupiter.api.Test;
 
 /**
  * @author Roman Puchkovskiy
  */
 class SeqNoPrimaryTermTests {
+
+	// values copied from the original Elasticsearch libs.
+	private static final long UNASSIGNED_PRIMARY_TERM = 0L;
+	private static final long NO_OPS_PERFORMED = -1L;
+	private static final long UNASSIGNED_SEQ_NO = -2L;
+
 	@Test
 	void shouldConstructInstanceWithAssignedSeqNoAndPrimaryTerm() {
 		SeqNoPrimaryTerm instance = new SeqNoPrimaryTerm(1, 2);
@@ -34,19 +39,17 @@ class SeqNoPrimaryTermTests {
 
 	@Test
 	void shouldThrowAnExceptionWhenTryingToConstructWithUnassignedSeqNo() {
-		assertThatThrownBy(() -> new SeqNoPrimaryTerm(SequenceNumbers.UNASSIGNED_SEQ_NO, 2))
-				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> new SeqNoPrimaryTerm(UNASSIGNED_SEQ_NO, 2)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
 	void shouldThrowAnExceptionWhenTryingToConstructWithSeqNoForNoOpsPerformed() {
-		assertThatThrownBy(() -> new SeqNoPrimaryTerm(SequenceNumbers.NO_OPS_PERFORMED, 2))
-				.isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> new SeqNoPrimaryTerm(NO_OPS_PERFORMED, 2)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test
 	void shouldThrowAnExceptionWhenTryingToConstructWithUnassignedPrimaryTerm() {
-		assertThatThrownBy(() -> new SeqNoPrimaryTerm(1, SequenceNumbers.UNASSIGNED_PRIMARY_TERM))
+		assertThatThrownBy(() -> new SeqNoPrimaryTerm(1, UNASSIGNED_PRIMARY_TERM))
 				.isInstanceOf(IllegalArgumentException.class);
 	}
 }

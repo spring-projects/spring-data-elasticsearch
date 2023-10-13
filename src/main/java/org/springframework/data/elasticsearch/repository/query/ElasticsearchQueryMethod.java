@@ -34,15 +34,22 @@ import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.HighlightQuery;
+import org.springframework.data.elasticsearch.core.query.RuntimeField;
+import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.util.QueryExecutionConverters;
+import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
@@ -62,9 +69,16 @@ import org.springframework.util.ClassUtils;
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
+	// the following 2 variables exits in the base class, but are private. We need them for
+	// correct handling of return types (SearchHits), so we have our own values here.
+	// Alas this means that we have to copy code that initializes these variables and in the
+	// base class uses them in order to use our variables
+	protected final Method method;
+	protected final Class<?> unwrappedReturnType;
+	@Nullable private Boolean unwrappedReturnTypeFromSearchHit = null;
+
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 	@Nullable private ElasticsearchEntityMetadata<?> metadata;
-	protected final Method method; // private in base class, but needed here and in derived classes as well
 	@Nullable private final Query queryAnnotation;
 	@Nullable private final Highlight highlightAnnotation;
 	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
@@ -83,8 +97,14 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		this.queryAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Query.class);
 		this.highlightAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, Highlight.class);
 		this.sourceFilters = AnnotatedElementUtils.findMergedAnnotation(method, SourceFilters.class);
+		this.unwrappedReturnType = potentiallyUnwrapReturnTypeFor(repositoryMetadata, method);
 
 		verifyCountQueryTypes();
+	}
+
+	@Override
+	protected Parameters<?, ?> createParameters(Method method, TypeInformation<?> domainType) {
+		return new ElasticsearchParameters(method, domainType);
 	}
 
 	protected void verifyCountQueryTypes() {
@@ -188,6 +208,11 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @since 4.0
 	 */
 	public boolean isSearchHitMethod() {
+
+		if (unwrappedReturnTypeFromSearchHit != null && unwrappedReturnTypeFromSearchHit) {
+			return true;
+		}
+
 		Class<?> methodReturnType = method.getReturnType();
 
 		if (SearchHits.class.isAssignableFrom(methodReturnType)) {
@@ -322,4 +347,75 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 		return fieldNames.toArray(new String[0]);
 	}
+
+	// region Copied from QueryMethod base class
+	/*
+	 * Copied from the QueryMethod class adding support for collections of SearchHit instances. No static method here.
+	 */
+	private Class<? extends Object> potentiallyUnwrapReturnTypeFor(RepositoryMetadata metadata, Method method) {
+		TypeInformation<?> returnType = metadata.getReturnType(method);
+		if (!QueryExecutionConverters.supports(returnType.getType())
+				&& !ReactiveWrapperConverters.supports(returnType.getType())) {
+			return returnType.getType();
+		} else {
+			TypeInformation<?> componentType = returnType.getComponentType();
+			if (componentType == null) {
+				throw new IllegalStateException(
+						String.format("Couldn't find component type for return value of method %s", method));
+			} else {
+
+				if (SearchHit.class.isAssignableFrom(componentType.getType())) {
+					unwrappedReturnTypeFromSearchHit = true;
+					return componentType.getComponentType().getType();
+				} else {
+					return componentType.getType();
+				}
+			}
+		}
+	}
+
+	void addMethodParameter(BaseQuery query, ElasticsearchParametersParameterAccessor parameterAccessor,
+			ElasticsearchConverter elasticsearchConverter) {
+
+		if (hasAnnotatedHighlight()) {
+			query.setHighlightQuery(getAnnotatedHighlightQuery());
+		}
+
+		var sourceFilter = getSourceFilter(parameterAccessor, elasticsearchConverter);
+		if (sourceFilter != null) {
+			query.addSourceFilter(sourceFilter);
+		}
+
+		if (parameterAccessor.getParameters() instanceof ElasticsearchParameters methodParameters) {
+			var values = parameterAccessor.getValues();
+
+			methodParameters.getScriptedFields().forEach(elasticsearchParameter -> {
+				var index = elasticsearchParameter.getIndex();
+
+				if (index >= 0 && index < values.length) {
+					query.addScriptedField((ScriptedField) values[index]);
+				}
+			});
+
+			methodParameters.getRuntimeFields().forEach(elasticsearchParameter -> {
+				var index = elasticsearchParameter.getIndex();
+
+				if (index >= 0 && index < values.length) {
+					var runtimeField = (RuntimeField) values[index];
+					query.addRuntimeField(runtimeField);
+					query.addFields(runtimeField.getName());
+				}
+
+			});
+
+			var needToAddSourceFilter = sourceFilter == null
+					&& !(methodParameters.getRuntimeFields().isEmpty()
+							&& methodParameters.getScriptedFields().isEmpty());
+			if (needToAddSourceFilter) {
+				query.addSourceFilter(FetchSourceFilter.of(b -> b.withIncludes("*")));
+			}
+		}
+	}
+	// endregion
+
 }

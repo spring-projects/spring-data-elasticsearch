@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -55,16 +56,7 @@ import org.springframework.data.mapping.Parameter;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.DefaultSpELExpressionEvaluator;
-import org.springframework.data.mapping.model.EntityInstantiator;
-import org.springframework.data.mapping.model.EntityInstantiators;
-import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
-import org.springframework.data.mapping.model.PropertyValueProvider;
-import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.SpELExpressionEvaluator;
-import org.springframework.data.mapping.model.SpELExpressionParameterValueProvider;
+import org.springframework.data.mapping.model.*;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.format.datetime.DateFormatterRegistrar;
 import org.springframework.lang.Nullable;
@@ -411,7 +403,8 @@ public class MappingElasticsearchConverter
 
 			for (ElasticsearchPersistentProperty property : entity) {
 
-				if (entity.isCreatorArgument(property) || !property.isReadable() || property.isIndexedIndexNameProperty()) {
+				if (entity.isCreatorArgument(property) || !property.isReadable() || property.isSeqNoPrimaryTermProperty()
+						|| property.isIndexedIndexNameProperty()) {
 					continue;
 				}
 
@@ -919,7 +912,7 @@ public class MappingElasticsearchConverter
 
 				Class<?> elementType = element == null ? null : element.getClass();
 
-				if (elementType == null || conversions.isSimpleType(elementType)) {
+				if (elementType == null || isSimpleType(elementType)) {
 					collection.add(getPotentiallyConvertedSimpleWrite(element,
 							componentType != null ? componentType.getType() : Object.class));
 				} else if (element instanceof Collection || elementType.isArray()) {
@@ -1277,10 +1270,14 @@ public class MappingElasticsearchConverter
 	 * @return an updated list of field names
 	 */
 	private List<String> updateFieldNames(List<String> fieldNames, ElasticsearchPersistentEntity<?> persistentEntity) {
-		return fieldNames.stream().map(fieldName -> {
-			ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(fieldName);
-			return persistentProperty != null ? persistentProperty.getFieldName() : fieldName;
-		}).collect(Collectors.toList());
+		return fieldNames.stream().map(fieldName -> updateFieldName(persistentEntity, fieldName))
+				.collect(Collectors.toList());
+	}
+
+	@NotNull
+	private String updateFieldName(ElasticsearchPersistentEntity<?> persistentEntity, String fieldName) {
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(fieldName);
+		return persistentProperty != null ? persistentProperty.getFieldName() : fieldName;
 	}
 
 	private void updatePropertiesInCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
@@ -1382,6 +1379,32 @@ public class MappingElasticsearchConverter
 				field.setFieldType(fieldAnnotation.type());
 			}
 		}
+	}
+
+	@Override
+	public String updateFieldNames(String propertyPath, ElasticsearchPersistentEntity<?> persistentEntity) {
+
+		Assert.notNull(propertyPath, "propertyPath must not be null");
+		Assert.notNull(persistentEntity, "persistentEntity must not be null");
+
+		var properties = propertyPath.split("\\.", 2);
+
+		if (properties.length > 0) {
+			var propertyName = properties[0];
+			var fieldName = updateFieldName(persistentEntity, propertyName);
+
+			if (properties.length > 1) {
+				var persistentProperty = persistentEntity.getPersistentProperty(propertyName);
+				return (persistentProperty != null)
+						? fieldName + "." + updateFieldNames(properties[1], mappingContext.getPersistentEntity(persistentProperty))
+						: fieldName;
+			} else {
+				return fieldName;
+			}
+		} else {
+			return propertyPath;
+		}
+
 	}
 
 	// endregion

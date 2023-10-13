@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
@@ -24,8 +25,6 @@ import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.Arrays;
@@ -35,9 +34,10 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import org.apache.http.*;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.message.BasicHeader;
@@ -47,7 +47,6 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.ClientLogger;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -58,15 +57,18 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
+@SuppressWarnings("unused")
 public final class ElasticsearchClients {
 	/**
 	 * Name of whose value can be used to correlate log messages for this request.
 	 */
-	private static final String LOG_ID_ATTRIBUTE = ElasticsearchClients.class.getName() + ".LOG_ID";
 	private static final String X_SPRING_DATA_ELASTICSEARCH_CLIENT = "X-SpringDataElasticsearch-Client";
-	private static final String IMPERATIVE_CLIENT = "imperative";
-	private static final String REACTIVE_CLIENT = "reactive";
+	public static final String IMPERATIVE_CLIENT = "imperative";
+	public static final String REACTIVE_CLIENT = "reactive";
 
+	private static final JsonpMapper DEFAULT_JSONP_MAPPER = new JacksonJsonpMapper();
+
+	// region reactive client
 	/**
 	 * Creates a new {@link ReactiveElasticsearchClient}
 	 *
@@ -77,7 +79,7 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "clientConfiguration must not be null");
 
-		return createReactive(getRestClient(clientConfiguration), null);
+		return createReactive(getRestClient(clientConfiguration), null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -92,7 +94,24 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 
-		return createReactive(getRestClient(clientConfiguration), transportOptions);
+		return createReactive(getRestClient(clientConfiguration), transportOptions, DEFAULT_JSONP_MAPPER);
+	}
+
+	/**
+	 * Creates a new {@link ReactiveElasticsearchClient}
+	 *
+	 * @param clientConfiguration configuration options, must not be {@literal null}.
+	 * @param transportOptions options to be added to each request.
+	 * @param jsonpMapper the JsonpMapper to use
+	 * @return the {@link ReactiveElasticsearchClient}
+	 */
+	public static ReactiveElasticsearchClient createReactive(ClientConfiguration clientConfiguration,
+			@Nullable TransportOptions transportOptions, JsonpMapper jsonpMapper) {
+
+		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
+		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
+
+		return createReactive(getRestClient(clientConfiguration), transportOptions, jsonpMapper);
 	}
 
 	/**
@@ -102,7 +121,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ReactiveElasticsearchClient}
 	 */
 	public static ReactiveElasticsearchClient createReactive(RestClient restClient) {
-		return createReactive(restClient, null);
+		return createReactive(restClient, null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -113,10 +132,29 @@ public final class ElasticsearchClients {
 	 * @return the {@link ReactiveElasticsearchClient}
 	 */
 	public static ReactiveElasticsearchClient createReactive(RestClient restClient,
-			@Nullable TransportOptions transportOptions) {
-		return new ReactiveElasticsearchClient(getElasticsearchTransport(restClient, REACTIVE_CLIENT, transportOptions));
+			@Nullable TransportOptions transportOptions, JsonpMapper jsonpMapper) {
+
+		Assert.notNull(restClient, "restClient must not be null");
+
+		var transport = getElasticsearchTransport(restClient, REACTIVE_CLIENT, transportOptions, jsonpMapper);
+		return createReactive(transport);
 	}
 
+	/**
+	 * Creates a new {@link ReactiveElasticsearchClient} that uses the given {@link ElasticsearchTransport}.
+	 *
+	 * @param transport the transport to use
+	 * @return the {@link ElasticsearchClient
+	 */
+	public static ReactiveElasticsearchClient createReactive(ElasticsearchTransport transport) {
+
+		Assert.notNull(transport, "transport must not be null");
+
+		return new ReactiveElasticsearchClient(transport);
+	}
+	// endregion
+
+	// region imperative client
 	/**
 	 * Creates a new imperative {@link ElasticsearchClient}
 	 *
@@ -124,7 +162,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ElasticsearchClient}
 	 */
 	public static ElasticsearchClient createImperative(ClientConfiguration clientConfiguration) {
-		return createImperative(getRestClient(clientConfiguration), null);
+		return createImperative(getRestClient(clientConfiguration), null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -136,7 +174,7 @@ public final class ElasticsearchClients {
 	 */
 	public static ElasticsearchClient createImperative(ClientConfiguration clientConfiguration,
 			TransportOptions transportOptions) {
-		return createImperative(getRestClient(clientConfiguration), transportOptions);
+		return createImperative(getRestClient(clientConfiguration), transportOptions, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -146,7 +184,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ElasticsearchClient}
 	 */
 	public static ElasticsearchClient createImperative(RestClient restClient) {
-		return createImperative(restClient, null);
+		return createImperative(restClient, null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
@@ -154,16 +192,50 @@ public final class ElasticsearchClients {
 	 *
 	 * @param restClient the RestClient to use
 	 * @param transportOptions options to be added to each request.
+	 * @param jsonpMapper the mapper for the transport to use
 	 * @return the {@link ElasticsearchClient}
 	 */
-	public static ElasticsearchClient createImperative(RestClient restClient,
-			@Nullable TransportOptions transportOptions) {
+	public static ElasticsearchClient createImperative(RestClient restClient, @Nullable TransportOptions transportOptions,
+			JsonpMapper jsonpMapper) {
 
 		Assert.notNull(restClient, "restClient must not be null");
 
-		ElasticsearchTransport transport = getElasticsearchTransport(restClient, IMPERATIVE_CLIENT, transportOptions);
+		ElasticsearchTransport transport = getElasticsearchTransport(restClient, IMPERATIVE_CLIENT, transportOptions,
+				jsonpMapper);
+
+		return createImperative(transport);
+	}
+
+	/**
+	 * Creates a new {@link ElasticsearchClient} that uses the given {@link ElasticsearchTransport}.
+	 *
+	 * @param transport the transport to use
+	 * @return the {@link ElasticsearchClient
+	 */
+	public static AutoCloseableElasticsearchClient createImperative(ElasticsearchTransport transport) {
+
+		Assert.notNull(transport, "transport must not be null");
 
 		return new AutoCloseableElasticsearchClient(transport);
+	}
+	// endregion
+
+	// region low level RestClient
+	private static RestClientOptions.Builder getRestClientOptionsBuilder(@Nullable TransportOptions transportOptions) {
+
+		if (transportOptions instanceof RestClientOptions restClientOptions) {
+			return restClientOptions.toBuilder();
+		}
+
+		var builder = new RestClientOptions.Builder(RequestOptions.DEFAULT.toBuilder());
+
+		if (transportOptions != null) {
+			transportOptions.headers().forEach(header -> builder.addHeader(header.getKey(), header.getValue()));
+			transportOptions.queryParameters().forEach(builder::setParameter);
+			builder.onWarnings(transportOptions.onWarnings());
+		}
+
+		return builder;
 	}
 
 	/**
@@ -199,13 +271,6 @@ public final class ElasticsearchClients {
 			clientConfiguration.getSslContext().ifPresent(clientBuilder::setSSLContext);
 			clientConfiguration.getHostNameVerifier().ifPresent(clientBuilder::setSSLHostnameVerifier);
 			clientBuilder.addInterceptorLast(new CustomHeaderInjector(clientConfiguration.getHeadersSupplier()));
-
-			if (ClientLogger.isEnabled()) {
-				HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-
-				clientBuilder.addInterceptorLast((HttpRequestInterceptor) interceptor);
-				clientBuilder.addInterceptorLast((HttpResponseInterceptor) interceptor);
-			}
 
 			RequestConfig.Builder requestConfigBuilder = RequestConfig.custom();
 			Duration connectTimeout = clientConfiguration.getConnectTimeout();
@@ -243,37 +308,55 @@ public final class ElasticsearchClients {
 		}
 		return builder;
 	}
+	// endregion
 
-	private static ElasticsearchTransport getElasticsearchTransport(RestClient restClient, String clientType,
-			@Nullable TransportOptions transportOptions) {
+	// region Elasticsearch transport
+	/**
+	 * Creates an {@link ElasticsearchTransport} that will use the given client that additionally is customized with a
+	 * header to contain the clientType
+	 *
+	 * @param restClient the client to use
+	 * @param clientType the client type to pass in each request as header
+	 * @param transportOptions options for the transport
+	 * @param jsonpMapper mapper for the transport
+	 * @return ElasticsearchTransport
+	 */
+	public static ElasticsearchTransport getElasticsearchTransport(RestClient restClient, String clientType,
+			@Nullable TransportOptions transportOptions, JsonpMapper jsonpMapper) {
+
+		Assert.notNull(restClient, "restClient must not be null");
+		Assert.notNull(clientType, "clientType must not be null");
+		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
 
 		TransportOptions.Builder transportOptionsBuilder = transportOptions != null ? transportOptions.toBuilder()
 				: new RestClientOptions(RequestOptions.DEFAULT).toBuilder();
+
+		RestClientOptions.Builder restClientOptionsBuilder = getRestClientOptionsBuilder(transportOptions);
 
 		ContentType jsonContentType = Version.VERSION == null ? ContentType.APPLICATION_JSON
 				: ContentType.create("application/vnd.elasticsearch+json",
 						new BasicNameValuePair("compatible-with", String.valueOf(Version.VERSION.major())));
 
 		Consumer<String> setHeaderIfNotPresent = header -> {
-			if (transportOptionsBuilder.build().headers().stream() //
+			if (restClientOptionsBuilder.build().headers().stream() //
 					.noneMatch((h) -> h.getKey().equalsIgnoreCase(header))) {
 				// need to add the compatibility header, this is only done automatically when not passing in custom options.
 				// code copied from RestClientTransport as it is not available outside the package
-				transportOptionsBuilder.addHeader(header, jsonContentType.toString());
+				restClientOptionsBuilder.addHeader(header, jsonContentType.toString());
 			}
 		};
 
 		setHeaderIfNotPresent.accept("Content-Type");
 		setHeaderIfNotPresent.accept("Accept");
 
-		TransportOptions transportOptionsWithHeader = transportOptionsBuilder
-				.addHeader(X_SPRING_DATA_ELASTICSEARCH_CLIENT, clientType).build();
+		restClientOptionsBuilder.addHeader(X_SPRING_DATA_ELASTICSEARCH_CLIENT, clientType);
 
-		return new RestClientTransport(restClient, new JacksonJsonpMapper(), transportOptionsWithHeader);
+		return new RestClientTransport(restClient, jsonpMapper, restClientOptionsBuilder.build());
 	}
+	// endregion
 
 	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
-		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it.getHostString() + ":" + it.getPort())
+		return hosts.stream().map(it -> (useSsl ? "https" : "http") + "://" + it.getHostString() + ':' + it.getPort())
 				.collect(Collectors.toList());
 	}
 
@@ -285,77 +368,11 @@ public final class ElasticsearchClients {
 	}
 
 	/**
-	 * Logging interceptors for Elasticsearch client logging.
-	 *
-	 * @see ClientLogger
-	 * @since 4.4
-	 * @deprecated since 5.0
-	 */
-	@Deprecated
-	private static class HttpLoggingInterceptor implements HttpResponseInterceptor, HttpRequestInterceptor {
-
-		@Override
-		public void process(HttpRequest request, HttpContext context) throws IOException {
-
-			String logId = (String) context.getAttribute(LOG_ID_ATTRIBUTE);
-
-			if (logId == null) {
-				logId = ClientLogger.newLogId();
-				context.setAttribute(LOG_ID_ATTRIBUTE, logId);
-			}
-
-			String headers = Arrays.stream(request.getAllHeaders())
-					.map(header -> header.getName()
-							+ ((header.getName().equals("Authorization")) ? ": *****" : ": " + header.getValue()))
-					.collect(Collectors.joining(", ", "[", "]"));
-
-			if (request instanceof HttpEntityEnclosingRequest entityRequest
-					&& ((HttpEntityEnclosingRequest) request).getEntity() != null) {
-
-				HttpEntity entity = ((HttpEntityEnclosingRequest) request).getEntity();
-				ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-				entity.writeTo(buffer);
-
-				if (!entity.isRepeatable()) {
-					entityRequest.setEntity(new ByteArrayEntity(buffer.toByteArray()));
-				}
-
-				ClientLogger.logRequest(logId, request.getRequestLine().getMethod(), request.getRequestLine().getUri(), "",
-						headers, buffer::toString);
-			} else {
-				ClientLogger.logRequest(logId, request.getRequestLine().getMethod(), request.getRequestLine().getUri(), "",
-						headers);
-			}
-		}
-
-		@Override
-		public void process(HttpResponse response, HttpContext context) throws IOException {
-
-			String logId = (String) context.getAttribute(LOG_ID_ATTRIBUTE);
-
-			String headers = Arrays.stream(response.getAllHeaders())
-					.map(header -> header.getName()
-							+ ((header.getName().equals("Authorization")) ? ": *****" : ": " + header.getValue()))
-					.collect(Collectors.joining(", ", "[", "]"));
-
-			// no way of logging the body, in this callback, it is not read yet, later there is no callback possibility in
-			// RestClient or RestClientTransport
-			ClientLogger.logRawResponse(logId, response.getStatusLine().getStatusCode(), headers);
-		}
-	}
-
-	/**
 	 * Interceptor to inject custom supplied headers.
 	 *
 	 * @since 4.4
 	 */
-	private static class CustomHeaderInjector implements HttpRequestInterceptor {
-
-		public CustomHeaderInjector(Supplier<HttpHeaders> headersSupplier) {
-			this.headersSupplier = headersSupplier;
-		}
-
-		private final Supplier<HttpHeaders> headersSupplier;
+	private record CustomHeaderInjector(Supplier<HttpHeaders> headersSupplier) implements HttpRequestInterceptor {
 
 		@Override
 		public void process(HttpRequest request, HttpContext context) {

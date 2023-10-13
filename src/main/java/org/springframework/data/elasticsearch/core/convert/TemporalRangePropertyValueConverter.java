@@ -34,9 +34,9 @@ public class TemporalRangePropertyValueConverter extends AbstractRangePropertyVa
 	private final List<ElasticsearchDateConverter> dateConverters;
 
 	public TemporalRangePropertyValueConverter(PersistentProperty<?> property,
-			List<ElasticsearchDateConverter> dateConverters) {
+			Class<?> genericType, List<ElasticsearchDateConverter> dateConverters) {
 
-		super(property);
+		super(property, genericType);
 
 		Assert.notEmpty(dateConverters, "dateConverters must not be empty.");
 		this.dateConverters = dateConverters;

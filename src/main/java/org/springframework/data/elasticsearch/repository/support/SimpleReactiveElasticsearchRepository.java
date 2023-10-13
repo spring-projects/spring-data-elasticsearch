@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -32,6 +34,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -62,10 +65,14 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 	private void createIndexAndMappingIfNeeded() {
 
+		var blockingIndexOperations = blocking(indexOperations);
+
 		if (shouldCreateIndexAndMapping()) {
-			indexOperations.exists() //
-					.flatMap(exists -> exists ? Mono.empty() : indexOperations.createWithMapping()) //
-					.block();
+			if (!blockingIndexOperations.exists()) {
+				blockingIndexOperations.createWithMapping();
+			}
+		} else if (shouldAlwaysWriteMapping()) {
+			blockingIndexOperations.putMapping();
 		}
 	}
 
@@ -74,6 +81,11 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 		final ElasticsearchPersistentEntity<?> entity = operations.getElasticsearchConverter().getMappingContext()
 				.getRequiredPersistentEntity(entityInformation.getJavaType());
 		return entity.isCreateIndexAndMapping();
+	}
+
+	private boolean shouldAlwaysWriteMapping() {
+		return operations.getElasticsearchConverter().getMappingContext()
+				.getRequiredPersistentEntity(entityInformation.getJavaType()).isAlwaysWriteMapping();
 	}
 
 	@Override
@@ -86,10 +98,28 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	}
 
 	@Override
+	public <S extends T> Mono<S> save(S entity, @Nullable RefreshPolicy refreshPolicy) {
+
+		Assert.notNull(entity, "Entity must not be null!");
+
+		return operations.withRefreshPolicy(refreshPolicy).save(entity, entityInformation.getIndexCoordinates())
+				.flatMap(saved -> doRefresh().thenReturn(saved));
+	}
+
+	@Override
 	public <S extends T> Flux<S> saveAll(Iterable<S> entities) {
 
 		Assert.notNull(entities, "Entities must not be null!");
+
 		return saveAll(Flux.fromIterable(entities));
+	}
+
+	@Override
+	public <S extends T> Flux<S> saveAll(Iterable<S> entities, @Nullable RefreshPolicy refreshPolicy) {
+
+		Assert.notNull(entities, "Entities must not be null!");
+
+		return saveAll(Flux.fromIterable(entities), refreshPolicy);
 	}
 
 	@Override
@@ -98,6 +128,16 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 		Assert.notNull(entityStream, "EntityStream must not be null!");
 
 		return operations.save(Flux.from(entityStream), entityInformation.getIndexCoordinates())
+				.concatWith(doRefresh().then(Mono.empty()));
+	}
+
+	@Override
+	public <S extends T> Flux<S> saveAll(Publisher<S> entityStream, @Nullable RefreshPolicy refreshPolicy) {
+
+		Assert.notNull(entityStream, "EntityStream must not be null!");
+
+		return operations.withRefreshPolicy(refreshPolicy)
+				.save(Flux.from(entityStream), entityInformation.getIndexCoordinates())
 				.concatWith(doRefresh().then(Mono.empty()));
 	}
 
@@ -181,7 +221,17 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> deleteById(ID id) {
 
 		Assert.notNull(id, "Id must not be null!");
+
 		return operations.delete(convertId(id), entityInformation.getIndexCoordinates()) //
+				.then(doRefresh());
+	}
+
+	@Override
+	public Mono<Void> deleteById(ID id, @Nullable RefreshPolicy refreshPolicy) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return operations.withRefreshPolicy(refreshPolicy).delete(convertId(id), entityInformation.getIndexCoordinates()) //
 				.then(doRefresh());
 	}
 
@@ -189,14 +239,33 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> deleteById(Publisher<ID> id) {
 
 		Assert.notNull(id, "Id must not be null!");
+
 		return Mono.from(id).flatMap(this::deleteById);
+	}
+
+	@Override
+	public Mono<Void> deleteById(Publisher<ID> id, @Nullable RefreshPolicy refreshPolicy) {
+
+		Assert.notNull(id, "Id must not be null!");
+
+		return Mono.from(id).flatMap(id2 -> deleteById(id, refreshPolicy));
 	}
 
 	@Override
 	public Mono<Void> delete(T entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
+
 		return operations.delete(entity, entityInformation.getIndexCoordinates()) //
+				.then(doRefresh());
+	}
+
+	@Override
+	public Mono<Void> delete(T entity, @Nullable RefreshPolicy refreshPolicy) {
+
+		Assert.notNull(entity, "Entity must not be null!");
+
+		return operations.withRefreshPolicy(refreshPolicy).delete(entity, entityInformation.getIndexCoordinates()) //
 				.then(doRefresh());
 	}
 
@@ -215,16 +284,42 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	}
 
 	@Override
+	public Mono<Void> deleteAllById(Iterable<? extends ID> ids, @Nullable RefreshPolicy refreshPolicy) {
+
+		Assert.notNull(ids, "Ids must not be null!");
+
+		var operationsWithRefreshPolicy = operations.withRefreshPolicy(refreshPolicy);
+		return Flux.fromIterable(ids) //
+				.map(this::convertId) //
+				.collectList() //
+				.map(operations::idsQuery) //
+				.flatMap(
+						query -> operationsWithRefreshPolicy.delete(query, entityInformation.getJavaType(),
+								entityInformation.getIndexCoordinates())) //
+				.then(doRefresh());
+	}
+
+	@Override
 	public Mono<Void> deleteAll(Iterable<? extends T> entities) {
 
 		Assert.notNull(entities, "Entities must not be null!");
+
 		return deleteAll(Flux.fromIterable(entities));
+	}
+
+	@Override
+	public Mono<Void> deleteAll(Iterable<? extends T> entities, @Nullable RefreshPolicy refreshPolicy) {
+
+		Assert.notNull(entities, "Entities must not be null!");
+
+		return deleteAll(Flux.fromIterable(entities), refreshPolicy);
 	}
 
 	@Override
 	public Mono<Void> deleteAll(Publisher<? extends T> entityStream) {
 
 		Assert.notNull(entityStream, "EntityStream must not be null!");
+
 		return Flux.from(entityStream) //
 				.map(entityInformation::getRequiredId) //
 				.map(this::convertId) //
@@ -236,9 +331,32 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	}
 
 	@Override
-	public Mono<Void> deleteAll() {
+	public Mono<Void> deleteAll(Publisher<? extends T> entityStream, @Nullable RefreshPolicy refreshPolicy) {
 
+		Assert.notNull(entityStream, "EntityStream must not be null!");
+
+		var operationsWithRefreshPolicy = operations.withRefreshPolicy(refreshPolicy);
+		return Flux.from(entityStream) //
+				.map(entityInformation::getRequiredId) //
+				.map(this::convertId) //
+				.collectList() //
+				.map(operations::idsQuery)
+				.flatMap(
+						query -> operationsWithRefreshPolicy.delete(query, entityInformation.getJavaType(),
+								entityInformation.getIndexCoordinates())) //
+				.then(doRefresh());
+	}
+
+	@Override
+	public Mono<Void> deleteAll() {
 		return operations.delete(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
+				.then(doRefresh());
+	}
+
+	@Override
+	public Mono<Void> deleteAll(@Nullable RefreshPolicy refreshPolicy) {
+		return operations.withRefreshPolicy(refreshPolicy)
+				.delete(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
 				.then(doRefresh());
 	}
 

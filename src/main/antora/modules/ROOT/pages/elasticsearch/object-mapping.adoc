@@ -1,0 +1,480 @@
+[[elasticsearch.mapping]]
+= Elasticsearch Object Mapping
+
+Spring Data Elasticsearch Object Mapping is the process that maps a Java object - the domain entity - into the JSON representation that is stored in Elasticsearch and back.
+The class that is internally used for this mapping is the
+`MappingElasticsearchConverter`.
+
+[[elasticsearch.mapping.meta-model]]
+== Meta Model Object Mapping
+
+The Metamodel based approach uses domain type information for reading/writing from/to Elasticsearch.
+This allows to register `Converter` instances for specific domain type mapping.
+
+[[elasticsearch.mapping.meta-model.annotations]]
+=== Mapping Annotation Overview
+
+The `MappingElasticsearchConverter` uses metadata to drive the mapping of objects to documents.
+The metadata is taken from the entity's properties which can be annotated.
+
+The following annotations are available:
+
+* `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database.
+The most important attributes are (check the API documentation for the complete list of attributes):
+** `indexName`: the name of the index to store this entity in.
+This can contain a SpEL template expression like `"log-#{T(java.time.LocalDate).now().toString()}"`
+** `createIndex`: flag whether to create an index on repository bootstrapping.
+Default value is _true_.
+See xref:elasticsearch/repositories/elasticsearch-repositories.adoc#elasticsearch.repositories.autocreation[Automatic creation of indices with the corresponding mapping]
+
+
+* `@Id`: Applied at the field level to mark the field used for identity purpose.
+* `@Transient`, `@ReadOnlyProperty`, `@WriteOnlyProperty`: see the following section xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model.annotations.read-write[Controlling which properties are written to and read from Elasticsearch] for detailed information.
+* `@PersistenceConstructor`: Marks a given constructor - even a package protected one - to use when instantiating the object from the database.
+Constructor arguments are mapped by name to the key values in the retrieved Document.
+* `@Field`: Applied at the field level and defines properties of the field, most of the attributes map to the respective https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping.html[Elasticsearch Mapping] definitions (the following list is not complete, check the annotation Javadoc for a complete reference):
+** `name`: The name of the field as it will be represented in the Elasticsearch document, if not set, the Java field name is used.
+** `type`: The field type, can be one of _Text, Keyword, Long, Integer, Short, Byte, Double, Float, Half_Float, Scaled_Float, Date, Date_Nanos, Boolean, Binary, Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range, Ip_Range, Object, Nested, Ip, TokenCount, Percolator, Flattened, Search_As_You_Type_.
+See https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-types.html[Elasticsearch Mapping Types].
+If the field type is not specified, it defaults to `FieldType.Auto`.
+This means, that no mapping entry is written for the property and that Elasticsearch will add a mapping entry dynamically when the first data for this property is stored (check the Elasticsearch documentation for dynamic mapping rules).
+** `format`: One or more built-in date formats, see the next section xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model.annotations.date-formats[Date format mapping].
+** `pattern`: One or more custom date formats, see the next section xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model.annotations.date-formats[Date format mapping].
+** `store`: Flag whether the original field value should be store in Elasticsearch, default value is _false_.
+** `analyzer`, `searchAnalyzer`, `normalizer` for specifying custom analyzers and normalizer.
+* `@GeoPoint`: Marks a field as _geo_point_ datatype.
+Can be omitted if the field is an instance of the `GeoPoint` class.
+* `@ValueConverter` defines a class to be used to convert the given property.
+In difference to a registered Spring `Converter` this only converts the annotated property and not every property of the given type.
+
+The mapping metadata infrastructure is defined in a separate spring-data-commons project that is technology agnostic.
+
+[[elasticsearch.mapping.meta-model.annotations.read-write]]
+==== Controlling which properties are written to and read from Elasticsearch
+
+This section details the annotations that define if the value of a property is written to or read from Elasticsearch.
+
+`@Transient`: A property annotated with this annotation will not be written to the mapping, it's value will not be sent to Elasticsearch and when documents are returned from Elasticsearch, this property will not be set in the resulting entity.
+
+`@ReadOnlyProperty`: A property with this annotation will not have its value written to Elasticsearch, but when returning data, the property will be filled with the value returned in the document from Elasticsearch.
+One use case for this are runtime fields defined in the index mapping.
+
+`@WriteOnlyProperty`: A property with this annotation will have its value stored in Elasticsearch but will not be set with any value when reading document.
+This can be used for example for synthesized fields which should go into the Elasticsearch index but are not used elsewhere.
+
+[[elasticsearch.mapping.meta-model.annotations.date-formats]]
+==== Date format mapping
+
+Properties that derive from `TemporalAccessor` or are of type `java.util.Date` must either have a `@Field` annotation of type `FieldType.Date` or a custom converter must be registered for this type.
+This paragraph describes the use of
+`FieldType.Date`.
+
+There are two attributes of the `@Field` annotation that define which date format information is written to the mapping (also see https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#built-in-date-formats[Elasticsearch Built In Formats] and https://www.elastic.co/guide/en/elasticsearch/reference/current/mapping-date-format.html#custom-date-formats[Elasticsearch Custom Date Formats])
+
+The `format` attribute is used to define at least one of the predefined formats.
+If it is not defined, then a default value of __date_optional_time_ and _epoch_millis_ is used.
+
+The `pattern` attribute can be used to add additional custom format strings.
+If you want to use only custom date formats, you must set the `format` property to empty `{}`.
+
+The following table shows the different attributes and the mapping created from their values:
+
+[cols=2*,options=header]
+|===
+| annotation
+| format string in Elasticsearch mapping
+
+| @Field(type=FieldType.Date)
+| "date_optional_time\|\|epoch_millis",
+
+| @Field(type=FieldType.Date, format=DateFormat.basic_date)
+| "basic_date"
+
+| @Field(type=FieldType.Date, format={DateFormat.basic_date, DateFormat.basic_time})
+| "basic_date\|\|basic_time"
+
+| @Field(type=FieldType.Date, pattern="dd.MM.uuuu")
+| "date_optional_time\|\|epoch_millis\|\|dd.MM.uuuu",
+
+| @Field(type=FieldType.Date, format={}, pattern="dd.MM.uuuu")
+| "dd.MM.uuuu"
+
+|===
+
+NOTE: If you are using a custom date format, you need to use _uuuu_ for the year instead of _yyyy_.
+This is due to a https://www.elastic.co/guide/en/elasticsearch/reference/current/migrate-to-java-time.html#java-time-migration-incompatible-date-formats[change in Elasticsearch 7].
+
+Check the code of the `org.springframework.data.elasticsearch.annotations.DateFormat` enum for a complete list of predefined values and their patterns.
+
+[[elasticsearch.mapping.meta-model.annotations.range]]
+==== Range types
+
+When a field is annotated with a type of one of _Integer_Range, Float_Range, Long_Range, Double_Range, Date_Range,_ or _Ip_Range_ the field must be an instance of a class that will be mapped to an Elasticsearch range, for example:
+
+====
+[source,java]
+----
+class SomePersonData {
+
+    @Field(type = FieldType.Integer_Range)
+    private ValidAge validAge;
+
+    // getter and setter
+}
+
+class ValidAge {
+    @Field(name="gte")
+    private Integer from;
+
+    @Field(name="lte")
+    private Integer to;
+
+    // getter and setter
+}
+----
+====
+
+As an alternative Spring Data Elasticsearch provides a `Range<T>` class so that the previous example can be written as:
+
+====
+[source,java]
+----
+class SomePersonData {
+
+    @Field(type = FieldType.Integer_Range)
+    private Range<Integer> validAge;
+
+    // getter and setter
+}
+----
+====
+
+Supported classes for the type `<T>` are `Integer`, `Long`, `Float`, `Double`, `Date` and classes that implement the
+`TemporalAccessor` interface.
+
+[[elasticsearch.mapping.meta-model.annotations.mapped-names]]
+==== Mapped field names
+
+Without further configuration, Spring Data Elasticsearch will use the property name of an object as field name in Elasticsearch.
+This can be changed for individual field by using the `@Field` annotation on that property.
+
+It is also possible to define a `FieldNamingStrategy` in the configuration of the client (xref:elasticsearch/clients.adoc[Elasticsearch Clients]).
+If for example a `SnakeCaseFieldNamingStrategy` is configured, the property _sampleProperty_ of the object would be mapped to _sample_property_ in Elasticsearch.
+A `FieldNamingStrategy` applies to all entities; it can be overwritten by setting a specific name with `@Field` on a property.
+
+[[elasticsearch.mapping.meta-model.annotations.non-field-backed-properties]]
+==== Non-field-backed properties
+
+Normally the properties used in an entity are fields of the entity class.
+There might be cases, when a property value is calculated in the entity and should be stored in Elasticsearch.
+In this case, the getter method (`getProperty()`) can be annotated with the `@Field` annotation, in addition to that the method must be annotated with `@AccessType(AccessType.Type
+.PROPERTY)`.
+The third annotation that is needed in such a case is `@WriteOnlyProperty`, as such a value is only written to Elasticsearch.
+A full example:
+
+====
+[source,java]
+----
+@Field(type = Keyword)
+@WriteOnlyProperty
+@AccessType(AccessType.Type.PROPERTY)
+public String getProperty() {
+	return "some value that is calculated here";
+}
+----
+====
+
+[[elasticsearch.mapping.meta-model.annotations.misc]]
+==== Other property annotations
+
+[[indexedindexname]]
+===== @IndexedIndexName
+
+This annotation can be set on a String property of an entity.
+This property will not be written to the mapping, it will not be stored in Elasticsearch and its value will not be read from an Elasticsearch document.
+After an entity is persisted, for example with a call to `ElasticsearchOperations.save(T entity)`, the entity
+returned from that call will contain the name of the index that an entity was saved to in that property.
+This is useful when the index name is dynamically set by a bean, or when writing to a write alias.
+
+Putting some value into such a property does not set the index into which an entity is stored!
+
+[[elasticsearch.mapping.meta-model.rules]]
+=== Mapping Rules
+
+[[elasticsearch.mapping.meta-model.rules.typehints]]
+==== Type Hints
+
+Mapping uses _type hints_ embedded in the document sent to the server to allow generic type mapping.
+Those type hints are represented as `_class` attributes within the document and are written for each aggregate root.
+
+.Type Hints
+====
+[source,java]
+----
+public class Person {              <1>
+  @Id String id;
+  String firstname;
+  String lastname;
+}
+----
+
+[source,json]
+----
+{
+  "_class" : "com.example.Person", <1>
+  "id" : "cb7bef",
+  "firstname" : "Sarah",
+  "lastname" : "Connor"
+}
+----
+
+<1> By default the domain types class name is used for the type hint.
+====
+
+Type hints can be configured to hold custom information.
+Use the `@TypeAlias` annotation to do so.
+
+NOTE: Make sure to add types with `@TypeAlias` to the initial entity set (`AbstractElasticsearchConfiguration#getInitialEntitySet`) to already have entity information available when first reading data from the store.
+
+.Type Hints with Alias
+====
+[source,java]
+----
+@TypeAlias("human")                <1>
+public class Person {
+
+  @Id String id;
+  // ...
+}
+----
+
+[source,json]
+----
+{
+  "_class" : "human",              <1>
+  "id" : ...
+}
+----
+
+<1> The configured alias is used when writing the entity.
+====
+
+NOTE: Type hints will not be written for nested Objects unless the properties type is `Object`, an interface or the actual value type does not match the properties declaration.
+
+[[disabling-type-hints]]
+===== Disabling Type Hints
+
+It may be necessary to disable writing of type hints when the index that should be used already exists without having the type hints defined in its mapping and with the mapping mode set to strict.
+In this case, writing the type hint will produce an error, as the field cannot be added automatically.
+
+Type hints can be disabled for the whole application by overriding the method `writeTypeHints()` in a configuration class derived from `AbstractElasticsearchConfiguration` (see xref:elasticsearch/clients.adoc[Elasticsearch Clients]).
+
+As an alternative they can be disabled for a single index with the `@Document` annotation:
+
+====
+[source,java]
+----
+@Document(indexName = "index", writeTypeHint = WriteTypeHint.FALSE)
+----
+====
+
+WARNING: We strongly advise against disabling Type Hints.
+Only do this if you are forced to.
+Disabling type hints can lead to documents not being retrieved correctly from Elasticsearch in case of polymorphic data or document retrieval may fail completely.
+
+[[elasticsearch.mapping.meta-model.rules.geospatial]]
+==== Geospatial Types
+
+Geospatial types like `Point` & `GeoPoint` are converted into _lat/lon_ pairs.
+
+.Geospatial types
+====
+[source,java]
+----
+public class Address {
+  String city, street;
+  Point location;
+}
+----
+
+[source,json]
+----
+{
+  "city" : "Los Angeles",
+  "street" : "2800 East Observatory Road",
+  "location" : { "lat" : 34.118347, "lon" : -118.3026284 }
+}
+----
+====
+
+[[elasticsearch.mapping.meta-model.rules.geojson]]
+==== GeoJson Types
+
+Spring Data Elasticsearch supports the GeoJson types by providing an interface `GeoJson` and implementations for the different geometries.
+They are mapped to Elasticsearch documents according to the GeoJson specification.
+The corresponding properties of the entity are specified in the index mappings as `geo_shape` when the index mappings is written. (check the https://www.elastic.co/guide/en/elasticsearch/reference/current/geo-shape.html[Elasticsearch documentation] as well)
+
+.GeoJson types
+====
+[source,java]
+----
+public class Address {
+
+  String city, street;
+  GeoJsonPoint location;
+}
+----
+
+[source,json]
+----
+{
+  "city": "Los Angeles",
+  "street": "2800 East Observatory Road",
+  "location": {
+    "type": "Point",
+    "coordinates": [-118.3026284, 34.118347]
+  }
+}
+----
+====
+
+The following GeoJson types are implemented:
+
+* `GeoJsonPoint`
+* `GeoJsonMultiPoint`
+* `GeoJsonLineString`
+* `GeoJsonMultiLineString`
+* `GeoJsonPolygon`
+* `GeoJsonMultiPolygon`
+* `GeoJsonGeometryCollection`
+
+[[elasticsearch.mapping.meta-model.rules.collections]]
+==== Collections
+
+For values inside Collections apply the same mapping rules as for aggregate roots when it comes to _type hints_ and xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model.conversions[Custom Conversions].
+
+.Collections
+====
+[source,java]
+----
+public class Person {
+
+  // ...
+
+  List<Person> friends;
+
+}
+----
+
+[source,json]
+----
+{
+  // ...
+
+  "friends" : [ { "firstname" : "Kyle", "lastname" : "Reese" } ]
+}
+----
+====
+
+[[elasticsearch.mapping.meta-model.rules.maps]]
+==== Maps
+
+For values inside Maps apply the same mapping rules as for aggregate roots when it comes to _type hints_ and xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model.conversions[Custom Conversions].
+However the Map key needs to a String to be processed by Elasticsearch.
+
+.Collections
+====
+[source,java]
+----
+public class Person {
+
+  // ...
+
+  Map<String, Address> knownLocations;
+
+}
+----
+
+[source,json]
+----
+{
+  // ...
+
+  "knownLocations" : {
+    "arrivedAt" : {
+       "city" : "Los Angeles",
+       "street" : "2800 East Observatory Road",
+       "location" : { "lat" : 34.118347, "lon" : -118.3026284 }
+     }
+  }
+}
+----
+====
+
+[[elasticsearch.mapping.meta-model.conversions]]
+=== Custom Conversions
+
+Looking at the `Configuration` from the xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model[previous section] `ElasticsearchCustomConversions` allows registering specific rules for mapping domain and simple types.
+
+.Meta Model Object Mapping Configuration
+====
+[source,java]
+----
+@Configuration
+public class Config extends ElasticsearchConfiguration  {
+
+	@NonNull
+	@Override
+	public ClientConfiguration clientConfiguration() {
+		return ClientConfiguration.builder() //
+				.connectedTo("localhost:9200") //
+				.build();
+	}
+
+  @Bean
+  @Override
+  public ElasticsearchCustomConversions elasticsearchCustomConversions() {
+    return new ElasticsearchCustomConversions(
+      Arrays.asList(new AddressToMap(), new MapToAddress()));       <1>
+  }
+
+  @WritingConverter                                                 <2>
+  static class AddressToMap implements Converter<Address, Map<String, Object>> {
+
+    @Override
+    public Map<String, Object> convert(Address source) {
+
+      LinkedHashMap<String, Object> target = new LinkedHashMap<>();
+      target.put("ciudad", source.getCity());
+      // ...
+
+      return target;
+    }
+  }
+
+  @ReadingConverter                                                 <3>
+  static class MapToAddress implements Converter<Map<String, Object>, Address> {
+
+    @Override
+    public Address convert(Map<String, Object> source) {
+
+      // ...
+      return address;
+    }
+  }
+}
+----
+
+[source,json]
+----
+{
+  "ciudad" : "Los Angeles",
+  "calle" : "2800 East Observatory Road",
+  "localidad" : { "lat" : 34.118347, "lon" : -118.3026284 }
+}
+----
+
+<1> Add `Converter` implementations.
+<2> Set up the `Converter` used for writing `DomainType` to Elasticsearch.
+<3> Set up the `Converter` used for reading `DomainType` from search result.
+====

@@ -49,15 +49,13 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	@Nullable private final String pathPrefix;
 	@Nullable private final HostnameVerifier hostnameVerifier;
 	@Nullable private final String proxy;
-	private final HttpClientConfigCallback httpClientConfigurer;
 	private final Supplier<HttpHeaders> headersSupplier;
 	private final List<ClientConfigurationCallback<?>> clientConfigurers;
 
 	DefaultClientConfiguration(List<InetSocketAddress> hosts, HttpHeaders headers, boolean useSsl,
 			@Nullable SSLContext sslContext, @Nullable String caFingerprint, Duration soTimeout, Duration connectTimeout,
 			@Nullable String pathPrefix, @Nullable HostnameVerifier hostnameVerifier, @Nullable String proxy,
-			HttpClientConfigCallback httpClientConfigurer, List<ClientConfigurationCallback<?>> clientConfigurers,
-			Supplier<HttpHeaders> headersSupplier) {
+			List<ClientConfigurationCallback<?>> clientConfigurers, Supplier<HttpHeaders> headersSupplier) {
 
 		this.hosts = List.copyOf(hosts);
 		this.headers = headers;
@@ -69,7 +67,6 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		this.pathPrefix = pathPrefix;
 		this.hostnameVerifier = hostnameVerifier;
 		this.proxy = proxy;
-		this.httpClientConfigurer = httpClientConfigurer;
 		this.clientConfigurers = clientConfigurers;
 		this.headersSupplier = headersSupplier;
 	}

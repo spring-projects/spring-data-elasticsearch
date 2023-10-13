@@ -21,10 +21,12 @@ import reactor.core.publisher.Mono;
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingConverter;
@@ -34,6 +36,7 @@ import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
+import org.springframework.util.Assert;
 
 /**
  * AbstractElasticsearchRepositoryQuery
@@ -78,21 +81,21 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		return Mono.defer(() -> (Mono<Object>) execute(parameterAccessor));
 	}
 
-	private Object execute(ElasticsearchParameterAccessor parameterAccessor) {
+	private Object execute(ElasticsearchParametersParameterAccessor parameterAccessor) {
 
 		ResultProcessor processor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
+		var returnedType = processor.getReturnedType();
+		Class<?> domainType = returnedType.getDomainType();
+		Class<?> typeToRead = returnedType.getTypeToRead();
 
-		Query query = createQuery(parameterAccessor);
-
-		if (queryMethod.hasAnnotatedHighlight()) {
-			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
+		if (SearchHit.class.isAssignableFrom(typeToRead)) {
+			typeToRead = queryMethod.unwrappedReturnType;
 		}
 
-		var sourceFilter = queryMethod.getSourceFilter(parameterAccessor,
-				elasticsearchOperations.getElasticsearchConverter());
-		if (sourceFilter != null) {
-			query.addSourceFilter(sourceFilter);
-		}
+		var query = createQuery(parameterAccessor);
+		Assert.notNull(query, "unsupported query");
+
+		queryMethod.addMethodParameter(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter());
 
 		String indexName = queryMethod.getEntityInformation().getIndexName();
 		IndexCoordinates index = IndexCoordinates.of(indexName);
@@ -100,13 +103,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		ReactiveElasticsearchQueryExecution execution = getExecution(parameterAccessor,
 				new ResultProcessingConverter(processor));
 
-		var returnedType = processor.getReturnedType();
-		return execution.execute(query, returnedType.getDomainType(), returnedType.getTypeToRead(), index);
-	}
-
-	private ReactiveElasticsearchQueryExecution getExecution(ElasticsearchParameterAccessor accessor,
-			Converter<Object, Object> resultProcessing) {
-		return new ResultProcessingExecution(getExecutionToWrap(accessor, elasticsearchOperations), resultProcessing);
+		return execution.execute(query, domainType, typeToRead, index);
 	}
 
 	/**
@@ -115,7 +112,12 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 	 * @param accessor must not be {@literal null}.
 	 * @return
 	 */
-	protected abstract Query createQuery(ElasticsearchParameterAccessor accessor);
+	protected abstract BaseQuery createQuery(ElasticsearchParameterAccessor accessor);
+
+	private ReactiveElasticsearchQueryExecution getExecution(ElasticsearchParameterAccessor accessor,
+			Converter<Object, Object> resultProcessing) {
+		return new ResultProcessingExecution(getExecutionToWrap(accessor, elasticsearchOperations), resultProcessing);
+	}
 
 	private ReactiveElasticsearchQueryExecution getExecutionToWrap(ElasticsearchParameterAccessor accessor,
 			ReactiveElasticsearchOperations operations) {

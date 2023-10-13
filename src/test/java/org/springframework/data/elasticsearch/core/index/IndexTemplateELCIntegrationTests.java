@@ -23,9 +23,4 @@ import org.springframework.test.context.ContextConfiguration;
  * @since 4.4
  */
 @ContextConfiguration(classes = { ElasticsearchTemplateConfiguration.class })
-public class IndexTemplateELCIntegrationTests extends IndexTemplateIntegrationTests {
-	@Override
-	public boolean newElasticsearchClient() {
-		return true;
-	}
-}
+public class IndexTemplateELCIntegrationTests extends IndexTemplateIntegrationTests { }

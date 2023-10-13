@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 
 import java.time.Duration;
 import java.util.List;
@@ -49,19 +50,17 @@ public abstract class ReactivePointInTimeIntegrationTests {
 
 	@Autowired ReactiveElasticsearchOperations operations;
 	@Autowired IndexNameProvider indexNameProvider;
-	@Nullable ReactiveIndexOperations indexOperations;
 
 	@BeforeEach
 	void setUp() {
 		indexNameProvider.increment();
-		indexOperations = operations.indexOps(SampleEntity.class);
-		indexOperations.createWithMapping().block();
+		blocking(operations.indexOps(SampleEntity.class)).createWithMapping();
 	}
 
 	@Test
 	@Order(Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 
 	@Test // #1684

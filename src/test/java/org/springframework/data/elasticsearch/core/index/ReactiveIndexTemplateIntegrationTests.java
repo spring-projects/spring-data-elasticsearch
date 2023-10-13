@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 
 import reactor.test.StepVerifier;
 
@@ -30,15 +31,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -53,36 +52,32 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasticsearchClientDevelopment {
+public abstract class ReactiveIndexTemplateIntegrationTests {
 
 	@Autowired private ReactiveElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
 	private ReactiveIndexOperations indexOperations;
-
-	boolean rhlcWithCluster8() {
-		var clusterVersion = ((AbstractReactiveElasticsearchTemplate) operations).getClusterVersion().block();
-		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
-	}
+	private IndexOperations blockingIndexOperations;
 
 	@BeforeEach
 	void setUp() {
 		indexNameProvider.increment();
 		indexOperations = operations.indexOps(IndexCoordinates.of(indexNameProvider.indexName()));
+		blockingIndexOperations = blocking(indexOperations);
 	}
 
 	@Test
 	@Order(Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 
-	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-612
 	void shouldPutTemplate() {
 
-		org.springframework.data.elasticsearch.core.document.Document mapping = indexOperations
-				.createMapping(TemplateClass.class).block();
-		Settings settings = indexOperations.createSettings(TemplateClass.class).block();
+		org.springframework.data.elasticsearch.core.document.Document mapping = blockingIndexOperations
+				.createMapping(TemplateClass.class);
+		Settings settings = blockingIndexOperations.createSettings(TemplateClass.class);
 
 		AliasActions aliasActions = new AliasActions(
 				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
@@ -94,20 +89,19 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 				.withVersion(42) //
 				.build();
 
-		Boolean acknowledged = indexOperations.putTemplate(putTemplateRequest).block();
+		Boolean acknowledged = blockingIndexOperations.putTemplate(putTemplateRequest);
 		assertThat(acknowledged).isTrue();
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should create component template")
 	void shouldCreateComponentTemplate() {
 
-		ReactiveIndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
+		var blockingIndexOps = blocking(operations.indexOps(IndexCoordinates.of("dont-care")));
 
-		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
-				.block();
-		Settings settings = indexOps.createSettings(TemplateClass.class).block();
+		org.springframework.data.elasticsearch.core.document.Document mapping = blockingIndexOps
+				.createMapping(TemplateClass.class);
+		Settings settings = blockingIndexOps.createSettings(TemplateClass.class);
 
 		AliasActions aliasActions = new AliasActions( //
 				new AliasAction.Add(AliasActionParameters.builderForTemplate() //
@@ -124,20 +118,19 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 						.build() //
 				).build();
 
-		boolean acknowledged = indexOps.putComponentTemplate(putComponentTemplateRequest).block();
+		boolean acknowledged = blockingIndexOps.putComponentTemplate(putComponentTemplateRequest);
 
 		assertThat(acknowledged).isTrue();
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should get component template")
 	void shouldGetComponentTemplate() throws JSONException {
-		ReactiveIndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
+		var blockingIndexOps = blocking(operations.indexOps(IndexCoordinates.of("dont-care")));
 
-		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
-				.block();
-		Settings settings = indexOps.createSettings(TemplateClass.class).block();
+		org.springframework.data.elasticsearch.core.document.Document mapping = blockingIndexOps
+				.createMapping(TemplateClass.class);
+		Settings settings = blockingIndexOps.createSettings(TemplateClass.class);
 
 		var filterQuery = CriteriaQuery.builder(Criteria.where("message").is("foo")).build();
 		AliasActions aliasActions = new AliasActions(new AliasAction.Add(AliasActionParameters.builderForTemplate() //
@@ -155,12 +148,12 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 						.build()) //
 				.build();
 
-		boolean acknowledged = indexOps.putComponentTemplate(putComponentTemplateRequest).block();
+		boolean acknowledged = blockingIndexOps.putComponentTemplate(putComponentTemplateRequest);
 		assertThat(acknowledged).isTrue();
 
 		GetComponentTemplateRequest getComponentTemplateRequest = new GetComponentTemplateRequest(
 				putComponentTemplateRequest.name());
-		var componentTemplates = indexOps.getComponentTemplate(getComponentTemplateRequest).collectList().block();
+		var componentTemplates = blockingIndexOps.getComponentTemplate(getComponentTemplateRequest);
 
 		assertThat(componentTemplates).isNotNull().hasSize(1);
 		var returnedComponentTemplate = componentTemplates.iterator().next();
@@ -179,43 +172,41 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 		assertThat(alias2.getAlias()).isEqualTo("alias2");
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should delete component template")
 	void shouldDeleteComponentTemplate() {
 
-		ReactiveIndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
+		var blockingIndexOps = blocking(operations.indexOps(IndexCoordinates.of("dont-care")));
 		String templateName = "template" + UUID.randomUUID().toString();
 		var putComponentTemplateRequest = PutComponentTemplateRequest.builder() //
 				.withName(templateName) //
 				.withTemplateData(ComponentTemplateRequestData.builder() //
-						.withSettings(indexOps.createSettings(TemplateClass.class).block()) //
+						.withSettings(blockingIndexOps.createSettings(TemplateClass.class)) //
 						.build() //
 				).build();
 		ExistsComponentTemplateRequest existsComponentTemplateRequest = new ExistsComponentTemplateRequest(templateName);
 
-		boolean acknowledged = indexOps.putComponentTemplate(putComponentTemplateRequest).block();
+		boolean acknowledged = blockingIndexOps.putComponentTemplate(putComponentTemplateRequest);
 		assertThat(acknowledged).isTrue();
 
-		boolean exists = indexOps.existsComponentTemplate(existsComponentTemplateRequest).block();
+		boolean exists = blockingIndexOps.existsComponentTemplate(existsComponentTemplateRequest);
 		assertThat(exists).isTrue();
 
-		acknowledged = indexOps.deleteComponentTemplate(new DeleteComponentTemplateRequest(templateName)).block();
+		acknowledged = blockingIndexOps.deleteComponentTemplate(new DeleteComponentTemplateRequest(templateName));
 		assertThat(acknowledged).isTrue();
 
-		exists = indexOps.existsComponentTemplate(existsComponentTemplateRequest).block();
+		exists = blockingIndexOps.existsComponentTemplate(existsComponentTemplateRequest);
 		assertThat(exists).isFalse();
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should put, get and delete index template with template")
 	void shouldPutGetAndDeleteIndexTemplateWithTemplate() {
 
-		ReactiveIndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
-		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
-				.block();
-		Settings settings = indexOps.createSettings(TemplateClass.class).block();
+		var blockingIndexOps = blocking(operations.indexOps(IndexCoordinates.of("dont-care")));
+		org.springframework.data.elasticsearch.core.document.Document mapping = blockingIndexOps
+				.createMapping(TemplateClass.class);
+		Settings settings = blockingIndexOps.createSettings(TemplateClass.class);
 
 		AliasActions aliasActions = new AliasActions( //
 				new AliasAction.Add(AliasActionParameters.builderForTemplate() //
@@ -231,33 +222,32 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 				.withAliasActions(aliasActions) //
 				.build();
 
-		Boolean acknowledged = indexOps.putIndexTemplate(putIndexTemplateRequest).block();
+		Boolean acknowledged = blockingIndexOps.putIndexTemplate(putIndexTemplateRequest);
 		assertThat(acknowledged).isTrue();
 
-		var exists = indexOps.existsIndexTemplate(indexTemplateName).block();
+		var exists = blockingIndexOps.existsIndexTemplate(indexTemplateName);
 		assertThat(exists).isTrue();
 
-		var indexTemplates = indexOps.getIndexTemplate(indexTemplateName).collectList().block();
+		var indexTemplates = blockingIndexOps.getIndexTemplate(indexTemplateName);
 		assertThat(indexTemplates).hasSize(1);
 
 		// delete template
-		acknowledged = indexOps.deleteIndexTemplate(indexTemplateName).block();
+		acknowledged = blockingIndexOps.deleteIndexTemplate(indexTemplateName);
 		assertThat(acknowledged).isTrue();
 
-		exists = indexOps.existsIndexTemplate(indexTemplateName).block();
+		exists = blockingIndexOps.existsIndexTemplate(indexTemplateName);
 		assertThat(exists).isFalse();
 	}
 
-	@DisabledIf(value = "oldElasticsearchClient", disabledReason = "not implemented for the deprecated old client")
 	@Test // #1458
 	@DisplayName("should put, get and delete index template of components")
 	void shouldPutGetAndDeleteIndexTemplateOfComponents() {
 
-		ReactiveIndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
+		var blockingIndexOps = blocking(operations.indexOps(IndexCoordinates.of("dont-care")));
 
-		org.springframework.data.elasticsearch.core.document.Document mapping = indexOps.createMapping(TemplateClass.class)
-				.block();
-		Settings settings = indexOps.createSettings(TemplateClass.class).block();
+		org.springframework.data.elasticsearch.core.document.Document mapping = blockingIndexOps
+				.createMapping(TemplateClass.class);
+		Settings settings = blockingIndexOps.createSettings(TemplateClass.class);
 
 		var filterQuery = CriteriaQuery.builder(Criteria.where("message").is("foo")).build();
 		AliasActions aliasActions = new AliasActions(new AliasAction.Add(AliasActionParameters.builderForTemplate() //
@@ -273,7 +263,7 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 						.build()) //
 				.build();
 
-		Boolean acknowledged = indexOps.putComponentTemplate(putComponentTemplateRequestMapping).block();
+		Boolean acknowledged = blockingIndexOps.putComponentTemplate(putComponentTemplateRequestMapping);
 		assertThat(acknowledged).isTrue();
 
 		PutComponentTemplateRequest putComponentTemplateRequestSettings = PutComponentTemplateRequest.builder() //
@@ -284,7 +274,7 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 						.build()) //
 				.build();
 
-		acknowledged = indexOps.putComponentTemplate(putComponentTemplateRequestSettings).block();
+		acknowledged = blockingIndexOps.putComponentTemplate(putComponentTemplateRequestSettings);
 		assertThat(acknowledged).isTrue();
 
 		PutComponentTemplateRequest putComponentTemplateRequestAliases = PutComponentTemplateRequest.builder() //
@@ -295,7 +285,7 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 						.build()) //
 				.build();
 
-		acknowledged = indexOps.putComponentTemplate(putComponentTemplateRequestAliases).block();
+		acknowledged = blockingIndexOps.putComponentTemplate(putComponentTemplateRequestAliases);
 		assertThat(acknowledged).isTrue();
 
 		var indexTemplateName = "test-index-template";
@@ -307,24 +297,24 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 				.withComposedOf(composedOf) //
 				.build();
 
-		acknowledged = indexOps.putIndexTemplate(putIndexTemplateRequest).block();
+		acknowledged = blockingIndexOps.putIndexTemplate(putIndexTemplateRequest);
 		assertThat(acknowledged).isTrue();
 
-		var indexTemplates = indexOps.getIndexTemplate(indexTemplateName).collectList().block();
+		var indexTemplates = blockingIndexOps.getIndexTemplate(indexTemplateName);
 		assertThat(indexTemplates).hasSize(1);
 		assertThat(indexTemplates.get(0).templateData().composedOf()).isEqualTo(composedOf);
 
 		// delete template and components
-		acknowledged = indexOps.deleteIndexTemplate(indexTemplateName).block();
+		acknowledged = blockingIndexOps.deleteIndexTemplate(indexTemplateName);
 		assertThat(acknowledged).isTrue();
-		acknowledged = indexOps
-				.deleteComponentTemplate(new DeleteComponentTemplateRequest("test-component-template-mapping")).block();
+		acknowledged = blockingIndexOps
+				.deleteComponentTemplate(new DeleteComponentTemplateRequest("test-component-template-mapping"));
 		assertThat(acknowledged).isTrue();
-		acknowledged = indexOps
-				.deleteComponentTemplate(new DeleteComponentTemplateRequest("test-component-template-settings")).block();
+		acknowledged = blockingIndexOps
+				.deleteComponentTemplate(new DeleteComponentTemplateRequest("test-component-template-settings"));
 		assertThat(acknowledged).isTrue();
-		acknowledged = indexOps
-				.deleteComponentTemplate(new DeleteComponentTemplateRequest("test-component-template-aliases")).block();
+		acknowledged = blockingIndexOps
+				.deleteComponentTemplate(new DeleteComponentTemplateRequest("test-component-template-aliases"));
 		assertThat(acknowledged).isTrue();
 	}
 
@@ -339,13 +329,14 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 				.verifyComplete();
 	}
 
-	@DisabledIf(value = "rhlcWithCluster8", disabledReason = "RHLC fails to parse response from ES 8.2")
 	@Test // DATAES-612
 	void shouldGetTemplate() throws JSONException {
 
-		org.springframework.data.elasticsearch.core.document.Document mapping = indexOperations
-				.createMapping(TemplateClass.class).block();
-		Settings settings = indexOperations.createSettings(TemplateClass.class).block();
+		var blockingIndexOperations = blocking(indexOperations);
+
+		org.springframework.data.elasticsearch.core.document.Document mapping = blockingIndexOperations
+				.createMapping(TemplateClass.class);
+		Settings settings = blockingIndexOperations.createSettings(TemplateClass.class);
 
 		AliasActions aliasActions = new AliasActions(
 				new AliasAction.Add(AliasActionParameters.builderForTemplate().withAliases("alias1", "alias2").build()));
@@ -357,11 +348,11 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 				.withVersion(42) //
 				.build();
 
-		Boolean acknowledged = indexOperations.putTemplate(putTemplateRequest).block();
+		Boolean acknowledged = blockingIndexOperations.putTemplate(putTemplateRequest);
 		assertThat(acknowledged).isTrue();
 
 		GetTemplateRequest getTemplateRequest = new GetTemplateRequest(putTemplateRequest.getName());
-		TemplateData templateData = indexOperations.getTemplate(getTemplateRequest).block();
+		TemplateData templateData = blockingIndexOperations.getTemplate(getTemplateRequest);
 
 		SoftAssertions softly = new SoftAssertions();
 		softly.assertThat(templateData).isNotNull();
@@ -385,7 +376,7 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 		String templateName = "template" + UUID.randomUUID().toString();
 		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
 
-		boolean exists = indexOperations.existsTemplate(existsTemplateRequest).block();
+		boolean exists = blockingIndexOperations.existsTemplate(existsTemplateRequest);
 		assertThat(exists).isFalse();
 
 		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder(templateName, "log-*") //
@@ -393,10 +384,10 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 				.withVersion(42) //
 				.build();
 
-		boolean acknowledged = indexOperations.putTemplate(putTemplateRequest).block();
+		boolean acknowledged = blockingIndexOperations.putTemplate(putTemplateRequest);
 		assertThat(acknowledged).isTrue();
 
-		exists = indexOperations.existsTemplate(existsTemplateRequest).block();
+		exists = blockingIndexOperations.existsTemplate(existsTemplateRequest);
 		assertThat(exists).isTrue();
 	}
 
@@ -411,16 +402,16 @@ public abstract class ReactiveIndexTemplateIntegrationTests implements NewElasti
 				.withVersion(42) //
 				.build();
 
-		boolean acknowledged = indexOperations.putTemplate(putTemplateRequest).block();
+		boolean acknowledged = blockingIndexOperations.putTemplate(putTemplateRequest);
 		assertThat(acknowledged).isTrue();
 
-		boolean exists = indexOperations.existsTemplate(existsTemplateRequest).block();
+		boolean exists = blockingIndexOperations.existsTemplate(existsTemplateRequest);
 		assertThat(exists).isTrue();
 
-		acknowledged = indexOperations.deleteTemplate(new DeleteTemplateRequest(templateName)).block();
+		acknowledged = blockingIndexOperations.deleteTemplate(new DeleteTemplateRequest(templateName));
 		assertThat(acknowledged).isTrue();
 
-		exists = indexOperations.existsTemplate(existsTemplateRequest).block();
+		exists = blockingIndexOperations.existsTemplate(existsTemplateRequest);
 		assertThat(exists).isFalse();
 	}
 

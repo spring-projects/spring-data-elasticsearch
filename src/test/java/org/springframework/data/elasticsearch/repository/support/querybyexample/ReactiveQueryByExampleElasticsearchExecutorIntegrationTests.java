@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.support.querybyexample;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import reactor.test.StepVerifier;
@@ -66,7 +67,7 @@ abstract class ReactiveQueryByExampleElasticsearchExecutorIntegrationTests {
 	@Test // #2418
 	@Order(Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 
 	@Test

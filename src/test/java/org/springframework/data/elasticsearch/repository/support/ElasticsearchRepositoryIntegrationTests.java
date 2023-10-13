@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
 import java.io.IOException;
@@ -42,8 +41,6 @@ import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQuery;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -298,7 +295,6 @@ abstract class ElasticsearchRepositoryIntegrationTests {
 		repository.deleteAll();
 
 		// then
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Iterable<SampleEntity> sampleEntities = repository.findAll();
 		assertThat(sampleEntities).isEmpty();
 	}
@@ -388,7 +384,6 @@ abstract class ElasticsearchRepositoryIntegrationTests {
 
 		// then
 		assertThat(result).hasSize(2);
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Iterable<SampleEntity> sampleEntities = repository.findAll();
 		assertThat(sampleEntities).hasSize(1);
 	}
@@ -421,7 +416,6 @@ abstract class ElasticsearchRepositoryIntegrationTests {
 
 		// then
 		assertThat(result).hasSize(1);
-		NativeSearchQuery searchQuery = new NativeSearchQueryBuilder().withQuery(matchAllQuery()).build();
 		Iterable<SampleEntity> sampleEntities = repository.findAll();
 		assertThat(sampleEntities).hasSize(2);
 	}

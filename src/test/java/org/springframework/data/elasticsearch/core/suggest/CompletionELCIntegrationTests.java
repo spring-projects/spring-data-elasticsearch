@@ -47,11 +47,6 @@ public class CompletionELCIntegrationTests extends CompletionIntegrationTests {
 	}
 
 	@Override
-	public boolean newElasticsearchClient() {
-		return true;
-	}
-
-	@Override
 	protected Query getSuggestQuery(String suggestionName, String fieldName, String prefix) {
 		return NativeQuery.builder() //
 				.withSuggester(Suggester.of(s -> s //

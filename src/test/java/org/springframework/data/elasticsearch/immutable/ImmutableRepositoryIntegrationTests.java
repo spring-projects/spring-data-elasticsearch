@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Young Gu
@@ -88,6 +89,10 @@ public abstract class ImmutableRepositoryIntegrationTests {
 
 		public ImmutableEntity(String name) {
 			this(null, name);
+		}
+
+		public ImmutableEntity withId(@Nullable String id) {
+			return new ImmutableEntity(id, this.name);
 		}
 
 		public String getId() {

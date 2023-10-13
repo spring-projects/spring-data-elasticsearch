@@ -19,9 +19,10 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.RuntimeField;
+import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.parser.PartTree;
 
 /**
@@ -60,12 +61,11 @@ public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery
 		return tree.isExistsProjection();
 	}
 
-	protected Query createQuery(ParametersParameterAccessor accessor) {
+	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor accessor) {
 
 		BaseQuery query = new ElasticsearchQueryCreator(tree, accessor, mappingContext).createQuery();
 
-		if (tree.isLimiting()) {
-			// noinspection ConstantConditions
+		if (tree.getMaxResults() != null) {
 			query.setMaxResults(tree.getMaxResults());
 		}
 

@@ -101,5 +101,15 @@ public interface ElasticsearchConverter
 	 */
 	void updateQuery(Query query, @Nullable Class<?> domainClass);
 
+	/**
+	 * Replaces the parts in a dot separated property path with the field names of the respective properties. If no
+	 * matching property is found, the original parts are rteturned.
+	 *
+	 * @param propertyPath the property path
+	 * @param persistentEntity the replaced values.
+	 * @return a String wihere the property names are replaced with field names
+	 * @since 5.2
+	 */
+	public String updateFieldNames(String propertyPath, ElasticsearchPersistentEntity<?> persistentEntity);
 	// endregion
 }

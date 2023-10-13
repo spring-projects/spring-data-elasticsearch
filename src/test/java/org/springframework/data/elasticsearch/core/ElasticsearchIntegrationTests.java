@@ -17,11 +17,11 @@ package org.springframework.data.elasticsearch.core;
 
 import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.elasticsearch.index.query.QueryBuilders.*;
 import static org.springframework.data.elasticsearch.annotations.Document.VersionType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 import static org.springframework.data.elasticsearch.core.document.Document.*;
+import static org.springframework.data.elasticsearch.core.query.StringQuery.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
@@ -33,8 +33,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.SoftAssertions;
-import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -49,10 +49,11 @@ import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.BulkFailureException;
+import org.springframework.data.elasticsearch.VersionConflictException;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQueryBuilder;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -100,6 +101,7 @@ import org.springframework.lang.Nullable;
  * @author Haibo Liu
  * @author scoobyzhang
  * @author Hamid Rahimi
+ * @author Illia Ulianov
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests {
@@ -369,8 +371,8 @@ public abstract class ElasticsearchIntegrationTests {
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// when
-		Query query = new NativeSearchQueryBuilder().withIds(Arrays.asList(documentId, documentId2))
-				.withFields("message", "type").build();
+		Query query = operations.queryBuilderWithIds(Arrays.asList(documentId, documentId2)).withFields("message", "type")
+				.build();
 		List<MultiGetItem<SampleEntity>> sampleEntities = operations.multiGet(query, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
@@ -431,7 +433,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		assertThatThrownBy(
 				() -> operations.search(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())))
-						.isInstanceOf(Exception.class);
+				.isInstanceOf(Exception.class);
 	}
 
 	@Test // DATAES-422 - Add support for IndicesOptions in search queries
@@ -877,7 +879,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
+		StringQuery stringQuery = new StringQuery(MATCH_ALL);
 
 		// when
 		SearchHits<SampleEntity> searchHits = operations.search(stringQuery, SampleEntity.class,
@@ -929,7 +931,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		StringQuery stringQuery = new StringQuery(matchAllQuery().toString(), PageRequest.of(0, 10));
+		StringQuery stringQuery = new StringQuery(MATCH_ALL, PageRequest.of(0, 10));
 
 		// when
 		SearchHits<SampleEntity> searchHits = operations.search(stringQuery, SampleEntity.class,
@@ -955,8 +957,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		StringQuery stringQuery = new StringQuery(matchAllQuery().toString(), PageRequest.of(0, 10),
-				Sort.by(Sort.Order.asc("message")));
+		StringQuery stringQuery = new StringQuery(MATCH_ALL, PageRequest.of(0, 10), Sort.by(Sort.Order.asc("message")));
 
 		// when
 		SearchHits<SampleEntity> searchHits = operations.search(stringQuery, SampleEntity.class,
@@ -978,7 +979,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		operations.index(indexQuery, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		StringQuery stringQuery = new StringQuery(termQuery("id", documentId).toString());
+		StringQuery stringQuery = new StringQuery(" { \"term\":  { \"id\":  " + documentId + "}}");
 
 		// when
 		SearchHit<SampleEntity> sampleEntity1 = operations.searchOne(stringQuery, SampleEntity.class,
@@ -1041,7 +1042,7 @@ public abstract class ElasticsearchIntegrationTests {
 		operations.delete(criteriaQuery, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
 
 		// then
-		StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
+		StringQuery stringQuery = new StringQuery(MATCH_ALL);
 		SearchHits<SampleEntity> sampleEntities = operations.search(stringQuery, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
@@ -1482,7 +1483,7 @@ public abstract class ElasticsearchIntegrationTests {
 		// when
 		operations.bulkIndex(indexQueries, IndexCoordinates.of(indexNameProvider.indexName()));
 
-		StringQuery stringQuery = new StringQuery(matchAllQuery().toString());
+		StringQuery stringQuery = new StringQuery(MATCH_ALL);
 		SearchHits<SampleEntity> sampleEntities = operations.search(stringQuery, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
@@ -1544,19 +1545,14 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThat(mappingFromAlias).isNotNull();
 		assertThat(
 				((Map<String, Object>) ((Map<String, Object>) mappingFromAlias.get("properties")).get("message")).get("type"))
-						.isEqualTo("text");
+				.isEqualTo("text");
 	}
 
 	@Test
 	public void shouldDeleteIndexForGivenEntity() {
 
-		// given
-		Class<?> clazz = SampleEntity.class;
-
-		// when
 		indexOperations.delete();
 
-		// then
 		assertThat(indexOperations.exists()).isFalse();
 	}
 
@@ -1634,7 +1630,7 @@ public abstract class ElasticsearchIntegrationTests {
 		final Query query = operations.matchAllQuery();
 
 		final UpdateQuery updateQuery = UpdateQuery.builder(query)
-				.withScriptType(org.springframework.data.elasticsearch.core.ScriptType.INLINE)
+				.withScriptType(ScriptType.INLINE)
 				.withScript("ctx._source['message'] = params['newMessage']").withLang("painless")
 				.withParams(Collections.singletonMap("newMessage", messageAfterUpdate)).withAbortOnVersionConflict(true)
 				.build();
@@ -1740,8 +1736,7 @@ public abstract class ElasticsearchIntegrationTests {
 		queries.add(getTermQuery("message", "ab"));
 		queries.add(getTermQuery("description", "bc"));
 
-		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries,
-				Lists.newArrayList(SampleEntity.class, Book.class),
+		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries, List.of(SampleEntity.class, Book.class),
 				IndexCoordinates.of(indexNameProvider.indexName(), bookIndex.getIndexName()));
 
 		bookIndexOperations.delete();
@@ -1773,8 +1768,7 @@ public abstract class ElasticsearchIntegrationTests {
 		queries.add(getTermQuery("message", "ab"));
 		queries.add(getTermQuery("description", "bc"));
 
-		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries,
-				Lists.newArrayList(SampleEntity.class, Book.class),
+		List<SearchHits<?>> searchHitsList = operations.multiSearch(queries, List.of(SampleEntity.class, Book.class),
 				List.of(IndexCoordinates.of(indexNameProvider.indexName()), IndexCoordinates.of(bookIndex.getIndexName())));
 
 		bookIndexOperations.delete();
@@ -2015,7 +2009,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		// reindex with version one below
 		assertThatThrownBy(() -> operations.index(indexQueryBuilder.withVersion(entity.getVersion() - 1).build(), index))
-				.hasMessageContaining("version").hasMessageContaining("conflict");
+				.isInstanceOf(VersionConflictException.class);
 	}
 
 	@Test
@@ -2343,7 +2337,7 @@ public abstract class ElasticsearchIntegrationTests {
 				}"""; //
 
 		indexOperations.delete();
-		indexOperations.create(parse(settings));
+		indexOperations.create(org.springframework.data.elasticsearch.core.document.Document.parse(settings));
 
 		Settings storedSettings = indexOperations.getSettings().flatten();
 		assertThat(indexOperations.exists()).isTrue();
@@ -2386,7 +2380,7 @@ public abstract class ElasticsearchIntegrationTests {
 				}"""; //
 
 		indexOperations.delete();
-		indexOperations.create(parse(settings));
+		indexOperations.create(org.springframework.data.elasticsearch.core.document.Document.parse(settings));
 		indexOperations.putMapping(SampleEntity.class);
 
 		Settings storedSettings = indexOperations.getSettings().flatten();
@@ -2606,7 +2600,7 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThat(sampleEntities).hasSize(2);
 		assertThat(
 				sampleEntities.stream().map(SearchHit::getContent).map(SampleEntity::getMessage).collect(Collectors.toList()))
-						.doesNotContain(notFindableMessage);
+				.doesNotContain(notFindableMessage);
 	}
 
 	@Test // DATAES-525
@@ -2642,7 +2636,7 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThat(sampleEntities).hasSize(2);
 		assertThat(
 				sampleEntities.stream().map(SearchHit::getContent).map(SampleEntity::getMessage).collect(Collectors.toList()))
-						.doesNotContain(notFindableMessage);
+				.doesNotContain(notFindableMessage);
 	}
 
 	@Test // DATAES-565
@@ -2676,7 +2670,7 @@ public abstract class ElasticsearchIntegrationTests {
 				.doesNotContain((String) null);
 		assertThat(
 				sampleEntities.stream().map(SearchHit::getContent).map(SampleEntity::getMessage).collect(Collectors.toList()))
-						.containsOnly((String) null);
+				.containsOnly((String) null);
 	}
 
 	@Test // DATAES-457
@@ -2931,7 +2925,7 @@ public abstract class ElasticsearchIntegrationTests {
 		List<Object> sortValues = searchHit.getSortValues();
 		assertThat(sortValues).hasSize(2);
 		assertThat(sortValues.get(0)).isInstanceOf(String.class).isEqualTo("thousands");
-		// transport client returns Long, RestHighlevelClient Integer, new ElasticsearchClient String
+		// different Java clients return this in different types
 		java.lang.Object o = sortValues.get(1);
 		if (o instanceof Integer i) {
 			assertThat(o).isInstanceOf(Integer.class).isEqualTo(1000);
@@ -3624,6 +3618,38 @@ public abstract class ElasticsearchIntegrationTests {
 		Query query = operations.matchAllQuery().addSort(Sort.by(order));
 
 		operations.search(query, SampleEntity.class);
+	}
+
+	@Test // #2619
+	void shouldFailWithConflictOnAttemptToSaveWithSameVersion() {
+		var entity1 = new VersionedEntity();
+		entity1.setId("id1");
+		entity1.setVersion(1L);
+		var entity2 = new VersionedEntity();
+		entity2.setId("id2");
+		entity2.setVersion(1L);
+		operations.save(entity1, entity2);
+
+		entity1.setVersion(2L);
+		assertThatThrownBy(() -> operations.save(entity1, entity2))
+				.asInstanceOf(InstanceOfAssertFactories.type(BulkFailureException.class))
+				.extracting(BulkFailureException::getFailedDocuments)
+				.asInstanceOf(InstanceOfAssertFactories.map(String.class, BulkFailureException.FailureDetails.class))
+				.containsOnlyKeys("id2").extracting(Map::values)
+				.asInstanceOf(InstanceOfAssertFactories.collection(BulkFailureException.FailureDetails.class))
+				.allMatch(failureStatus -> failureStatus.status().equals(409));
+	}
+
+	@Test // #2467
+	@DisplayName("should throw VersionConflictException when saving invalid version")
+	void shouldThrowVersionConflictExceptionWhenSavingInvalidVersion() {
+
+		var entity = new VersionedEntity("42", 1L);
+		operations.save(entity);
+
+		assertThatThrownBy(() -> {
+			operations.save(entity);
+		}).isInstanceOf(VersionConflictException.class);
 	}
 
 	// region entities
@@ -4418,6 +4444,13 @@ public abstract class ElasticsearchIntegrationTests {
 		@Nullable
 		@Version private Long version;
 
+		public VersionedEntity() {}
+
+		public VersionedEntity(@Nullable String id, @Nullable java.lang.Long version) {
+			this.id = id;
+			this.version = version;
+		}
+
 		@Nullable
 		public String getId() {
 			return id;
@@ -4487,6 +4520,14 @@ public abstract class ElasticsearchIntegrationTests {
 			this.id = id;
 			this.text = text;
 			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
+
+		public ImmutableEntity withId(@Nullable String id) {
+			return new ImmutableEntity(id, this.text, this.seqNoPrimaryTerm);
+		}
+
+		public ImmutableEntity withSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			return new ImmutableEntity(this.id, this.text, seqNoPrimaryTerm);
 		}
 
 		@Nullable

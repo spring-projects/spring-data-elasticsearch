@@ -185,7 +185,7 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 
 		Assert.notNull(searchExtensions, "searchExtensions must not be null");
 
-		searchExtensions.putAll(searchExtensions);
+		this.searchExtensions.putAll(searchExtensions);
 		return this;
 	}
 

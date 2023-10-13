@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
 
@@ -29,7 +32,8 @@ import org.springframework.util.Assert;
 
 /**
  * Base class for a @{@link org.springframework.context.annotation.Configuration} class to set up the Elasticsearch
- * connection using the {@link ReactiveElasticsearchClient}.
+ * connection using the {@link ReactiveElasticsearchClient}. This class exposes different parts of the setup as Spring
+ * beans. Deriving * classes must provide the {@link ClientConfiguration} to use.
  *
  * @author Peter-Josef Meisch
  * @since 4.4
@@ -41,7 +45,7 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	 *
 	 * @return configuration, must not be {@literal null}
 	 */
-	@Bean(name="elasticsearchClientConfiguration")
+	@Bean(name = "elasticsearchClientConfiguration")
 	public abstract ClientConfiguration clientConfiguration();
 
 	/**
@@ -59,17 +63,34 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	}
 
 	/**
+	 * Provides the Elasticsearch transport to be used. The default implementation uses the {@link RestClient} bean and
+	 * the {@link JsonpMapper} bean provided in this class.
+	 *
+	 * @return the {@link ElasticsearchTransport}
+	 * @since 5.2
+	 */
+	@Bean
+	public ElasticsearchTransport elasticsearchTransport(RestClient restClient, JsonpMapper jsonpMapper) {
+
+		Assert.notNull(restClient, "restClient must not be null");
+		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
+
+		return ElasticsearchClients.getElasticsearchTransport(restClient, ElasticsearchClients.REACTIVE_CLIENT,
+				transportOptions(), jsonpMapper);
+	}
+
+	/**
 	 * Provides the {@link ReactiveElasticsearchClient} instance used.
 	 *
-	 * @param restClient the low level RestClient to use
+	 * @param transport the ElasticsearchTransport to use
 	 * @return ReactiveElasticsearchClient instance.
 	 */
 	@Bean
-	public ReactiveElasticsearchClient reactiveElasticsearchClient(RestClient restClient) {
+	public ReactiveElasticsearchClient reactiveElasticsearchClient(ElasticsearchTransport transport) {
 
-		Assert.notNull(restClient, "restClient must not be null");
+		Assert.notNull(transport, "transport must not be null");
 
-		return ElasticsearchClients.createReactive(restClient, transportOptions());
+		return ElasticsearchClients.createReactive(transport);
 	}
 
 	/**
@@ -86,6 +107,18 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 		template.setRefreshPolicy(refreshPolicy());
 
 		return template;
+	}
+
+	/**
+	 * Provides the JsonpMapper that is used in the {@link #elasticsearchTransport(RestClient, JsonpMapper)} method and
+	 * exposes it as a bean.
+	 *
+	 * @return the {@link JsonpMapper} to use
+	 * @since 5.2
+	 */
+	@Bean
+	public JsonpMapper jsonpMapper() {
+		return new JacksonJsonpMapper();
 	}
 
 	/**

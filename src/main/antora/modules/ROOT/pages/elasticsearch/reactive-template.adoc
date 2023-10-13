@@ -1,0 +1,65 @@
+[[elasticsearch.reactive.operations]]
+= Reactive Elasticsearch Operations
+
+`ReactiveElasticsearchOperations` is the gateway to executing high level commands against an Elasticsearch cluster using the `ReactiveElasticsearchClient`.
+
+The `ReactiveElasticsearchTemplate` is the default implementation of `ReactiveElasticsearchOperations`.
+
+To get started the `ReactiveElasticsearchOperations` needs to know about the actual client to work with.
+Please see xref:elasticsearch/clients.adoc#elasticsearch.clients.reactiverestclient[Reactive Rest Client] for details on the client and how to configure it.
+
+[[elasticsearch.reactive.operations.usage]]
+== Reactive Operations Usage
+
+`ReactiveElasticsearchOperations` lets you save, find and delete your domain objects and map those objects to documents stored in Elasticsearch.
+
+Consider the following:
+
+.Use the ReactiveElasticsearchOperations
+====
+[source,java]
+----
+@Document(indexName = "marvel")
+public class Person {
+
+  private @Id String id;
+  private String name;
+  private int age;
+  // Getter/Setter omitted...
+}
+----
+
+[source,java]
+----
+
+ReactiveElasticsearchOperations operations;
+
+// ...
+
+operations.save(new Person("Bruce Banner", 42))                    <.>
+  .doOnNext(System.out::println)
+  .flatMap(person -> operations.get(person.id, Person.class))      <.>
+  .doOnNext(System.out::println)
+  .flatMap(person -> operations.delete(person))                    <.>
+  .doOnNext(System.out::println)
+  .flatMap(id -> operations.count(Person.class))                   <.>
+  .doOnNext(System.out::println)
+  .subscribe();                                                    <.>
+----
+
+The above outputs the following sequence on the console.
+
+[source,text]
+----
+> Person(id=QjWCWWcBXiLAnp77ksfR, name=Bruce Banner, age=42)
+> Person(id=QjWCWWcBXiLAnp77ksfR, name=Bruce Banner, age=42)
+> QjWCWWcBXiLAnp77ksfR
+> 0
+----
+
+<.> Insert a new `Person` document into the _marvel_ index . The `id` is generated on server side and set into the instance returned.
+<.> Lookup the `Person` with matching `id` in the _marvel_ index.
+<.> Delete the `Person` with matching `id`, extracted from the given instance, in the _marvel_ index.
+<.> Count the total number of documents in the _marvel_ index.
+<.> Don't forget to _subscribe()_.
+====

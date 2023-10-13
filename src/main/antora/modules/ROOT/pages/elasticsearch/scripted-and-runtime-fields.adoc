@@ -1,0 +1,228 @@
+[[elasticsearch.misc.scripted-and-runtime-fields]]
+= Scripted and runtime fields
+
+Spring Data Elasticsearch supports scripted fields and runtime fields.
+Please refer to the Elasticsearch documentation about scripting (https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting.html) and runtime fields (https://www.elastic.co/guide/en/elasticsearch/reference/8.9/runtime.html) for detailed information about this.
+In the context of Spring Data Elasticsearch you can use
+
+* scripted fields that are used to return fields that are calculated on the result documents and added to the returned document.
+* runtime fields that are calculated on the stored documents and can be used in a query and/or be returned in the search result.
+
+The following code snippets will show what you can do (these show imperative code, but the reactive implementation works similar).
+
+[[the-person-entity]]
+== The person entity
+
+The enity that is used in these examples is a `Person` entity.
+This entity has a `birthDate` and an `age` property.
+Whereas the birthdate is fix, the age depends on the time when a query is issued and needs to be calculated dynamically.
+
+====
+[source,java]
+----
+import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.DateFormat;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.lang.Nullable;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+
+import java.lang.Integer;
+
+@Document(indexName = "persons")
+public record Person(
+        @Id
+        @Nullable
+        String id,
+        @Field(type = Text)
+        String lastName,
+        @Field(type = Text)
+        String firstName,
+        @Field(type = Keyword)
+        String gender,
+        @Field(type = Date, format = DateFormat.basic_date)
+        LocalDate birthDate,
+        @Nullable
+        @ScriptedField Integer age                   <.>
+) {
+    public Person(String id,String lastName, String firstName, String gender, String birthDate) {
+        this(id,                                     <.>
+            lastName,
+            firstName,
+            LocalDate.parse(birthDate, DateTimeFormatter.ISO_LOCAL_DATE),
+            gender,
+            null);
+    }
+}
+
+----
+
+<.> the `age` property will be calculated and filled in search results.
+<.> a convenience constructor to set up the test data.
+====
+
+Note that the `age` property is annotated with `@ScriptedField`.
+This inhibits the writing of a corresponding entry in the index mapping and marks the property as a target to put a calculated field from a search response.
+
+[[the-repository-interface]]
+== The repository interface
+
+The repository used in this example:
+
+====
+[source,java]
+----
+public interface PersonRepository extends ElasticsearchRepository<Person, String> {
+
+    SearchHits<Person> findAllBy(ScriptedField scriptedField);
+
+    SearchHits<Person> findByGenderAndAgeLessThanEqual(String gender, Integer age, RuntimeField runtimeField);
+}
+
+----
+====
+
+[[the-service-class]]
+== The service class
+
+The service class has a repository injected and an `ElasticsearchOperations` instance to show several ways of populating and using the `age` property.
+We show the code split up in different pieces to put the explanations in
+
+====
+[source,java]
+----
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
+import org.springframework.data.elasticsearch.core.query.RuntimeField;
+import org.springframework.data.elasticsearch.core.query.ScriptData;
+import org.springframework.data.elasticsearch.core.query.ScriptType;
+import org.springframework.data.elasticsearch.core.query.ScriptedField;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+@Service
+public class PersonService {
+    private final ElasticsearchOperations operations;
+    private final PersonRepository repository;
+
+    public PersonService(ElasticsearchOperations operations, SaRPersonRepository repository) {
+        this.operations = operations;
+        this.repository = repository;
+    }
+
+    public void save() { <.>
+        List<Person> persons = List.of(
+                new Person("1", "Smith", "Mary", "f", "1987-05-03"),
+                new Person("2", "Smith", "Joshua", "m", "1982-11-17"),
+                new Person("3", "Smith", "Joanna", "f", "2018-03-27"),
+                new Person("4", "Smith", "Alex", "m", "2020-08-01"),
+                new Person("5", "McNeill", "Fiona", "f", "1989-04-07"),
+                new Person("6", "McNeill", "Michael", "m", "1984-10-20"),
+                new Person("7", "McNeill", "Geraldine", "f", "2020-03-02"),
+                new Person("8", "McNeill", "Patrick", "m", "2022-07-04"));
+
+        repository.saveAll(persons);
+    }
+----
+
+<.> a utility method to store some data in Elasticsearch.
+====
+
+[[scripted-fields]]
+=== Scripted fields
+
+The next piece shows how to use a scripted field to calculate and return the age of the persons.
+Scripted fields can only add something to the returned data, the age cannot be used in the query (see runtime fields for that).
+
+====
+[source,java]
+----
+    public SearchHits<Person> findAllWithAge() {
+
+        var scriptedField = ScriptedField.of("age",                               <.>
+                ScriptData.of(b -> b
+                        .withType(ScriptType.INLINE)
+                        .withScript("""
+                                Instant currentDate = Instant.ofEpochMilli(new Date().getTime());
+                                Instant startDate = doc['birth-date'].value.toInstant();
+                                return (ChronoUnit.DAYS.between(startDate, currentDate) / 365);
+                                """)));
+
+        // version 1: use a direct query
+        var query = new StringQuery("""
+                { "match_all": {} }
+                """);
+        query.addScriptedField(scriptedField);                                    <.>
+        query.addSourceFilter(FetchSourceFilter.of(b -> b.withIncludes("*")));    <.>
+
+        var result1 = operations.search(query, Person.class);                     <.>
+
+        // version 2: use the repository
+        var result2 = repository.findAllBy(scriptedField);                        <.>
+
+        return result1;
+    }
+----
+
+<.> define the `ScriptedField` that calculates the age of a person.
+<.> when using a `Query`, add the scripted field to the query.
+<.> when adding a scripted field to a `Query`, an additional source filter is needed to also retrieve the _normal_ fields from the document source.
+<.> get the data where the `Person` entities now have the values set in their `age` property.
+<.> when using the repository, all that needs to be done is adding the scripted field as method parameter.
+====
+
+[[runtime-fields]]
+=== Runtime fields
+
+When using runtime fields, the calculated value can be used in the query itself.
+In the following code this is used to run a query for a given gender and maximum age of persons:
+
+====
+[source,java]
+----
+    public SearchHits<Person> findWithGenderAndMaxAge(String gender, Integer maxAge) {
+
+        var runtimeField = new RuntimeField("age", "long", """                    <.>
+                                Instant currentDate = Instant.ofEpochMilli(new Date().getTime());
+                                Instant startDate = doc['birth-date'].value.toInstant();
+                                emit (ChronoUnit.DAYS.between(startDate, currentDate) / 365);
+                """);
+
+        // variant 1 : use a direct query
+        var query = CriteriaQuery.builder(Criteria
+                        .where("gender").is(gender)
+                        .and("age").lessThanEqual(maxAge))
+                .withRuntimeFields(List.of(runtimeField))                         <.>
+                .withFields("age")                                                <.>
+                .withSourceFilter(FetchSourceFilter.of(b -> b.withIncludes("*"))) <.>
+                .build();
+
+        var result1 = operations.search(query, Person.class);                     <.>
+
+        // variant 2: use the repository                                          <.>
+        var result2 = repository.findByGenderAndAgeLessThanEqual(gender, maxAge, runtimeField);
+
+        return result1;
+    }
+}
+----
+
+<.> define the runtime field that calculates the age of a person. // see https://asciidoctor.org/docs/user-manual/#builtin-attributes for builtin attributes.
+<.> when using `Query`, add the runtime field.
+<.> when adding a scripted field to a `Query`, an additional field parameter is needed to have the calculated value returned.
+<.> when adding a scripted field to a `Query`, an additional source filter is needed to also retrieve the _normal_ fields from the document source.
+<.> get the data filtered with the query and where the returned entites have the age property set.
+<.> when using the repository, all that needs to be done is adding the runtime field as method parameter.
+====
+
+In addition to define a runtime fields on a query, they can also be defined in the index by setting the `runtimeFieldsPath` property of the `@Mapping` annotation to point to a JSON file that contains the runtime field definitions.

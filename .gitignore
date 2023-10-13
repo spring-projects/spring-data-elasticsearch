@@ -26,3 +26,9 @@ target
 /zap.env
 /localdocker.env
 .localdocker-env
+
+build/
+node_modules
+node
+package.json
+package-lock.json

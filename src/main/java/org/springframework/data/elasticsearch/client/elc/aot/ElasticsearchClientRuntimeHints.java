@@ -15,8 +15,10 @@
  */
 package org.springframework.data.elasticsearch.client.elc.aot;
 
-import java.util.Arrays;
-
+import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
+import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
+import co.elastic.clients.elasticsearch.indices.IndexSettings;
+import co.elastic.clients.elasticsearch.indices.PutMappingRequest;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -24,6 +26,8 @@ import org.springframework.aot.hint.TypeReference;
 import org.springframework.lang.Nullable;
 
 /**
+ * runtime hints for the Elasticsearch client libraries, as these do not provide any of their own.
+ *
  * @author Peter-Josef Meisch
  * @since 5.1
  */
@@ -31,9 +35,22 @@ public class ElasticsearchClientRuntimeHints implements RuntimeHintsRegistrar {
 
 	@Override
 	public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
-		// needed for the http client used by the Elasticsearch client
-		hints.serialization().registerType(org.apache.http.impl.auth.BasicScheme.class);
-		hints.serialization().registerType(org.apache.http.impl.auth.RFC2617Scheme.class);
-		hints.serialization().registerType(java.util.HashMap.class);
+
+		hints.reflection()
+				.registerType(TypeReference.of(IndexSettings.class), builder -> builder.withField("_DESERIALIZER")) //
+				.registerType(TypeReference.of(PutMappingRequest.class), builder -> builder.withField("_DESERIALIZER")) //
+				.registerType(TypeReference.of(RuntimeFieldType.class), builder -> builder.withField("_DESERIALIZER"))//
+				.registerType(TypeReference.of(TypeMapping.class), builder -> builder.withField("_DESERIALIZER")) //
+		;
+
+		hints.serialization() //
+				.registerType(org.apache.http.impl.auth.BasicScheme.class) //
+				.registerType(org.apache.http.impl.auth.RFC2617Scheme.class) //
+				.registerType(java.util.HashMap.class) //
+		;
+
+		hints.resources() //
+				.registerPattern("co/elastic/clients/version.properties") //
+		;
 	}
 }

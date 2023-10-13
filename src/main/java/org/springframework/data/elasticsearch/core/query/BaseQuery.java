@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.RuntimeField;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -58,7 +57,7 @@ public class BaseQuery implements Query {
 	protected float minScore;
 	@Nullable protected Collection<String> ids;
 	@Nullable protected String route;
-	protected SearchType searchType = SearchType.QUERY_THEN_FETCH;
+	@Nullable protected SearchType searchType = SearchType.QUERY_THEN_FETCH;
 	@Nullable protected IndicesOptions indicesOptions;
 	protected boolean trackScores;
 	@Nullable protected String preference;
@@ -74,7 +73,7 @@ public class BaseQuery implements Query {
 	protected List<RescorerQuery> rescorerQueries = new ArrayList<>();
 	@Nullable protected Boolean requestCache;
 	protected List<IdWithRouting> idsWithRouting = Collections.emptyList();
-	protected final List<RuntimeField> runtimeFields = new ArrayList<>();
+	protected List<RuntimeField> runtimeFields = new ArrayList<>();
 	@Nullable protected PointInTime pointInTime;
 	private boolean queryIsUpdatedByConverter = false;
 	@Nullable private Integer reactiveBatchSize = null;
@@ -117,6 +116,7 @@ public class BaseQuery implements Query {
 		this.expandWildcards = builder.getExpandWildcards();
 		this.docValueFields = builder.getDocValueFields();
 		this.scriptedFields = builder.getScriptedFields();
+		this.runtimeFields = builder.getRuntimeFields();
 	}
 
 	/**
@@ -277,10 +277,11 @@ public class BaseQuery implements Query {
 		this.route = route;
 	}
 
-	public void setSearchType(SearchType searchType) {
+	public void setSearchType(@Nullable SearchType searchType) {
 		this.searchType = searchType;
 	}
 
+	@Nullable
 	@Override
 	public SearchType getSearchType() {
 		return searchType;
@@ -544,6 +545,16 @@ public class BaseQuery implements Query {
 		Assert.notNull(docValueFields, "getDocValueFields must not be null");
 
 		this.docValueFields = docValueFields;
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	public void addScriptedField(ScriptedField scriptedField) {
+
+		Assert.notNull(scriptedField, "scriptedField must not be null");
+
+		this.scriptedFields.add(scriptedField);
 	}
 
 	@Override

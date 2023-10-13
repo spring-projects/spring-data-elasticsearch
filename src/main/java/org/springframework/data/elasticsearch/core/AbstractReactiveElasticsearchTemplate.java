@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -28,8 +30,6 @@ import java.util.stream.Collectors;
 
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -73,8 +73,8 @@ import org.springframework.util.Assert;
 abstract public class AbstractReactiveElasticsearchTemplate
 		implements ReactiveElasticsearchOperations, ApplicationContextAware {
 
-	protected static final Logger QUERY_LOGGER = LoggerFactory
-			.getLogger("org.springframework.data.elasticsearch.core.QUERY");
+	protected static final Log QUERY_LOGGER = LogFactory
+			.getLog("org.springframework.data.elasticsearch.core.QUERY");
 
 	protected final ElasticsearchConverter converter;
 	protected final SimpleElasticsearchMappingContext mappingContext;
@@ -186,7 +186,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	// endregion
 
-	// region routing
+	// region customizations
 	private void setRoutingResolver(RoutingResolver routingResolver) {
 
 		Assert.notNull(routingResolver, "routingResolver must not be null");
@@ -203,6 +203,14 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		copy.setRoutingResolver(routingResolver);
 		return copy;
 	}
+
+	@Override
+	public ReactiveElasticsearchOperations withRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+		AbstractReactiveElasticsearchTemplate copy = copy();
+		copy.setRefreshPolicy(refreshPolicy);
+		return copy;
+	}
+
 	// endregion
 
 	// region DocumentOperations
@@ -225,42 +233,42 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 		return Flux.defer(() -> {
 			Sinks.Many<T> sink = Sinks.many().unicast().onBackpressureBuffer();
-			entities //
-					.bufferTimeout(bulkSize, Duration.ofMillis(200)) //
-					.subscribe(new Subscriber<List<T>>() {
-						private Subscription subscription;
-						private AtomicBoolean upstreamComplete = new AtomicBoolean(false);
+			entities.window(bulkSize) //
+							.concatMap(flux -> flux.collectList()) //
+							.subscribe(new Subscriber<List<T>>() {
+				private Subscription subscription;
+				private AtomicBoolean upstreamComplete = new AtomicBoolean(false);
 
-						@Override
-						public void onSubscribe(Subscription subscription) {
-							this.subscription = subscription;
-							subscription.request(1);
-						}
+				@Override
+				public void onSubscribe(Subscription subscription) {
+					this.subscription = subscription;
+					subscription.request(1);
+				}
 
-						@Override
-						public void onNext(List<T> entityList) {
-							saveAll(entityList, index) //
-									.map(sink::tryEmitNext) //
-									.doOnComplete(() -> {
-										if (!upstreamComplete.get()) {
-											subscription.request(1);
-										} else {
-											sink.tryEmitComplete();
-										}
-									}).subscribe();
-						}
+				@Override
+				public void onNext(List<T> entityList) {
+					saveAll(entityList, index) //
+							.map(sink::tryEmitNext) //
+							.doOnComplete(() -> {
+								if (!upstreamComplete.get()) {
+									subscription.request(1);
+								} else {
+									sink.tryEmitComplete();
+								}
+							}).subscribe();
+				}
 
-						@Override
-						public void onError(Throwable throwable) {
-							subscription.cancel();
-							sink.tryEmitError(throwable);
-						}
+				@Override
+				public void onError(Throwable throwable) {
+					subscription.cancel();
+					sink.tryEmitError(throwable);
+				}
 
-						@Override
-						public void onComplete() {
-							upstreamComplete.set(true);
-						}
-					});
+				@Override
+				public void onComplete() {
+					upstreamComplete.set(true);
+				}
+			});
 			return sink.asFlux();
 		});
 

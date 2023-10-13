@@ -16,18 +16,26 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
-import static org.springframework.util.CollectionUtils.isEmpty;
+import static org.springframework.util.CollectionUtils.*;
 
-import co.elastic.clients.elasticsearch._types.*;
+import co.elastic.clients.elasticsearch._types.Conflicts;
+import co.elastic.clients.elasticsearch._types.ExpandWildcard;
+import co.elastic.clients.elasticsearch._types.InlineScript;
+import co.elastic.clients.elasticsearch._types.NestedSortValue;
+import co.elastic.clients.elasticsearch._types.OpType;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.VersionType;
+import co.elastic.clients.elasticsearch._types.WaitForActiveShardOptions;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.query_dsl.FieldAndFormat;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
-import co.elastic.clients.elasticsearch.cluster.*;
 import co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.cluster.ExistsComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
@@ -52,14 +60,21 @@ import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
-import org.springframework.data.elasticsearch.core.ScriptType;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
@@ -94,6 +109,8 @@ import org.springframework.util.StringUtils;
  */
 @SuppressWarnings("ClassCanBeRecord")
 class RequestConverter {
+
+	private static final Log LOGGER = LogFactory.getLog(RequestConverter.class);
 
 	// the default max result window size of Elasticsearch
 	public static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
@@ -252,36 +269,7 @@ class RequestConverter {
 		List<Action> actions = new ArrayList<>();
 		aliasActions.getActions().forEach(aliasAction -> {
 
-			Action.Builder actionBuilder = new Action.Builder();
-
-			if (aliasAction instanceof AliasAction.Add add) {
-				AliasActionParameters parameters = add.getParameters();
-				actionBuilder.add(addActionBuilder -> {
-					addActionBuilder //
-							.indices(Arrays.asList(parameters.getIndices())) //
-							.isHidden(parameters.getHidden()) //
-							.isWriteIndex(parameters.getWriteIndex()) //
-							.routing(parameters.getRouting()) //
-							.indexRouting(parameters.getIndexRouting()) //
-							.searchRouting(parameters.getSearchRouting()); //
-
-					if (parameters.getAliases() != null) {
-						addActionBuilder.aliases(Arrays.asList(parameters.getAliases()));
-					}
-
-					Query filterQuery = parameters.getFilterQuery();
-
-					if (filterQuery != null) {
-						elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
-						co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getQuery(filterQuery, null);
-						if (esQuery != null) {
-							addActionBuilder.filter(esQuery);
-
-						}
-					}
-					return addActionBuilder;
-				});
-			}
+			var actionBuilder = getBuilder(aliasAction);
 
 			if (aliasAction instanceof AliasAction.Remove remove) {
 				AliasActionParameters parameters = remove.getParameters();
@@ -310,17 +298,49 @@ class RequestConverter {
 		return updateAliasRequestBuilder.build();
 	}
 
+	@NotNull
+	private Action.Builder getBuilder(AliasAction aliasAction) {
+		Action.Builder actionBuilder = new Action.Builder();
+
+		if (aliasAction instanceof AliasAction.Add add) {
+			AliasActionParameters parameters = add.getParameters();
+			actionBuilder.add(addActionBuilder -> {
+				addActionBuilder //
+						.indices(Arrays.asList(parameters.getIndices())) //
+						.isHidden(parameters.getHidden()) //
+						.isWriteIndex(parameters.getWriteIndex()) //
+						.routing(parameters.getRouting()) //
+						.indexRouting(parameters.getIndexRouting()) //
+						.searchRouting(parameters.getSearchRouting()); //
+
+				if (parameters.getAliases() != null) {
+					addActionBuilder.aliases(Arrays.asList(parameters.getAliases()));
+				}
+
+				Query filterQuery = parameters.getFilterQuery();
+
+				if (filterQuery != null) {
+					elasticsearchConverter.updateQuery(filterQuery, parameters.getFilterQueryClass());
+					co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = getQuery(filterQuery, null);
+					if (esQuery != null) {
+						addActionBuilder.filter(esQuery);
+					}
+				}
+				return addActionBuilder;
+			});
+		}
+		return actionBuilder;
+	}
+
 	public PutMappingRequest indicesPutMappingRequest(IndexCoordinates indexCoordinates, Document mapping) {
 
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 		Assert.notNull(mapping, "mapping must not be null");
 
-		PutMappingRequest request = new PutMappingRequest.Builder() //
-				.withJson(new StringReader(mapping.toJson())) //
-				.index(Arrays.asList(indexCoordinates.getIndexNames())) //
+		return new PutMappingRequest.Builder()
+				.withJson(new StringReader(mapping.toJson()))
+				.index(Arrays.asList(indexCoordinates.getIndexNames()))
 				.build();
-
-		return request;
 	}
 
 	public GetMappingRequest indicesGetMappingRequest(IndexCoordinates indexCoordinates) {
@@ -400,10 +420,7 @@ class RequestConverter {
 
 				if (parametersAliases != null) {
 					for (String aliasName : parametersAliases) {
-						builder.aliases(aliasName, aliasBuilder -> {
-
-							return buildAlias(parameters, aliasBuilder);
-						});
+						builder.aliases(aliasName, aliasBuilder -> buildAlias(parameters, aliasBuilder));
 					}
 				}
 			});
@@ -839,11 +856,10 @@ class RequestConverter {
 							StringBuilder sb = new StringBuilder(remote.getScheme());
 							sb.append("://");
 							sb.append(remote.getHost());
-							sb.append(":");
+							sb.append(':');
 							sb.append(remote.getPort());
 
 							if (remote.getPathPrefix() != null) {
-								sb.append("");
 								sb.append(remote.getPathPrefix());
 							}
 
@@ -863,7 +879,7 @@ class RequestConverter {
 					}
 
 					SourceFilter sourceFilter = source.getSourceFilter();
-					if (sourceFilter != null) {
+					if (sourceFilter != null && sourceFilter.getIncludes() != null) {
 						s.sourceFields(Arrays.asList(sourceFilter.getIncludes()));
 					}
 					return s;
@@ -989,7 +1005,7 @@ class RequestConverter {
 					.docAsUpsert(query.getDocAsUpsert()) //
 					.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
 					.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
-					.refresh(refresh(refreshPolicy)) //
+					.refresh(query.getRefreshPolicy() != null ? refresh(query.getRefreshPolicy()) : refresh(refreshPolicy)) //
 					.retryOnConflict(query.getRetryOnConflict()) //
 			;
 
@@ -1017,8 +1033,8 @@ class RequestConverter {
 					int val;
 					try {
 						val = Integer.parseInt(waitForActiveShards);
-					} catch (NumberFormatException var3) {
-						throw new IllegalArgumentException("cannot parse ActiveShardCount[" + waitForActiveShards + "]", var3);
+					} catch (NumberFormatException e) {
+						throw new IllegalArgumentException("cannot parse ActiveShardCount[" + waitForActiveShards + ']', e);
 					}
 					uqb.waitForActiveShards(wfa -> wfa.count(val));
 				}
@@ -1103,7 +1119,6 @@ class RequestConverter {
 			IndexCoordinates indexCoordinates, boolean forCount, boolean forBatchedSearch,
 			@Nullable Long scrollTimeInMillis) {
 
-		String[] indexNames = indexCoordinates.getIndexNames();
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
@@ -1141,9 +1156,12 @@ class RequestConverter {
 				var query = param.query();
 				mrb.searches(sb -> sb //
 						.header(h -> {
+							var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
+									: searchType(query.getSearchType());
+
 							h //
 									.index(Arrays.asList(param.index().getIndexNames())) //
-									.searchType(searchType(query.getSearchType())) //
+									.searchType(searchType) //
 									.requestCache(query.getRequestCache()) //
 							;
 
@@ -1209,8 +1227,7 @@ class RequestConverter {
 							}
 
 							if (!isEmpty(query.getSearchAfter())) {
-								bb.searchAfter(query.getSearchAfter().stream().map(it -> FieldValue.of(it.toString()))
-										.collect(Collectors.toList()));
+								bb.searchAfter(query.getSearchAfter().stream().map(TypeUtils::toFieldValue).toList());
 							}
 
 							query.getRescorerQueries().forEach(rescorerQuery -> bb.rescore(getRescore(rescorerQuery)));
@@ -1219,14 +1236,23 @@ class RequestConverter {
 								Map<String, RuntimeField> runtimeMappings = new HashMap<>();
 								query.getRuntimeFields().forEach(runtimeField -> {
 									RuntimeField esRuntimeField = RuntimeField.of(rt -> {
-										RuntimeField.Builder builder = rt
+										RuntimeField.Builder rfb = rt
 												.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
 										String script = runtimeField.getScript();
 
 										if (script != null) {
-											builder = builder.script(s -> s.inline(is -> is.source(script)));
+											rfb
+													.script(s -> s
+															.inline(is -> {
+																is.source(script);
+
+																if (runtimeField.getParams() != null) {
+																	is.params(TypeUtils.paramsMap(runtimeField.getParams()));
+																}
+																return is;
+															}));
 										}
-										return builder;
+										return rfb;
 									});
 									runtimeMappings.put(runtimeField.getName(), esRuntimeField);
 								});
@@ -1234,18 +1260,16 @@ class RequestConverter {
 							}
 
 							if (!isEmpty(query.getIndicesBoost())) {
-								Map<String, Double> boosts = new LinkedHashMap<>();
-								query.getIndicesBoost()
-										.forEach(indexBoost -> boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost()));
-								// noinspection unchecked
-								bb.indicesBoost(boosts);
+								bb.indicesBoost(query.getIndicesBoost().stream()
+										.map(indexBoost -> Map.of(indexBoost.getIndexName(), (double) indexBoost.getBoost()))
+										.collect(Collectors.toList()));
 							}
 
 							query.getScriptedFields().forEach(scriptedField -> bb.scriptFields(scriptedField.getFieldName(),
 									sf -> sf.script(getScript(scriptedField.getScriptData()))));
 
-							if (query instanceof NativeQuery) {
-								prepareNativeSearch((NativeQuery) query, bb);
+							if (query instanceof NativeQuery nativeQuery) {
+								prepareNativeSearch(nativeQuery, bb);
 							}
 							return bb;
 						} //
@@ -1267,12 +1291,15 @@ class RequestConverter {
 
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(clazz);
 
+		var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
+				: searchType(query.getSearchType());
+
 		builder //
 				.version(true) //
 				.trackScores(query.getTrackScores()) //
 				.allowNoIndices(query.getAllowNoIndices()) //
 				.source(getSourceConfig(query)) //
-				.searchType(searchType(query.getSearchType())) //
+				.searchType(searchType) //
 				.timeout(timeStringMs(query.getTimeout())) //
 				.requestCache(query.getRequestCache()) //
 		;
@@ -1314,10 +1341,8 @@ class RequestConverter {
 		}
 
 		if (!isEmpty(query.getFields())) {
-			builder.fields(fb -> {
-				query.getFields().forEach(fb::field);
-				return fb;
-			});
+			var fieldAndFormats = query.getFields().stream().map(field -> FieldAndFormat.of(b -> b.field(field))).toList();
+			builder.fields(fieldAndFormats);
 		}
 
 		if (!isEmpty(query.getStoredFields())) {
@@ -1325,7 +1350,7 @@ class RequestConverter {
 		}
 
 		if (query.getIndicesOptions() != null) {
-			// new Elasticsearch client does not support the old Indices options, need to be adapted
+			addIndicesOptions(builder, query.getIndicesOptions());
 		}
 
 		if (query.isLimiting()) {
@@ -1349,8 +1374,8 @@ class RequestConverter {
 		query.getScriptedFields().forEach(scriptedField -> builder.scriptFields(scriptedField.getFieldName(),
 				sf -> sf.script(getScript(scriptedField.getScriptData()))));
 
-		if (query instanceof NativeQuery) {
-			prepareNativeSearch((NativeQuery) query, builder);
+		if (query instanceof NativeQuery nativeQuery) {
+			prepareNativeSearch(nativeQuery, builder);
 		}
 
 		if (query.getTrackTotalHits() != null) {
@@ -1366,8 +1391,7 @@ class RequestConverter {
 		}
 
 		if (!isEmpty(query.getSearchAfter())) {
-			builder.searchAfter(
-					query.getSearchAfter().stream().map(it -> FieldValue.of(it.toString())).collect(Collectors.toList()));
+			builder.searchAfter(query.getSearchAfter().stream().map(TypeUtils::toFieldValue).toList());
 		}
 
 		query.getRescorerQueries().forEach(rescorerQuery -> builder.rescore(getRescore(rescorerQuery)));
@@ -1376,14 +1400,23 @@ class RequestConverter {
 
 			Map<String, RuntimeField> runtimeMappings = new HashMap<>();
 			query.getRuntimeFields()
-					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(), RuntimeField.of(runtimeFieldBuilder -> {
-						runtimeFieldBuilder.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
+					.forEach(runtimeField -> runtimeMappings.put(runtimeField.getName(), RuntimeField.of(rfb -> {
+						rfb.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
 						String script = runtimeField.getScript();
-
 						if (script != null) {
-							runtimeFieldBuilder.script(s -> s.inline(is -> is.source(script)));
+							rfb
+									.script(s -> s
+											.inline(is -> {
+												is.source(script);
+
+												if (runtimeField.getParams() != null) {
+													is.params(TypeUtils.paramsMap(runtimeField.getParams()));
+												}
+												return is;
+											}));
 						}
-						return runtimeFieldBuilder;
+
+						return rfb;
 					})));
 			builder.runtimeMappings(runtimeMappings);
 		}
@@ -1395,16 +1428,16 @@ class RequestConverter {
 		} else if (forBatchedSearch) {
 			// request_cache is not allowed on scroll requests.
 			builder.requestCache(null);
-			// limit the number of documents in a batch
-			builder.size(query.getReactiveBatchSize());
+			// limit the number of documents in a batch if not already set in a pageable
+			if (query.getPageable().isUnpaged()) {
+				builder.size(query.getReactiveBatchSize());
+			}
 		}
 
 		if (!isEmpty(query.getIndicesBoost())) {
-			Map<String, Double> boosts = new LinkedHashMap<>();
-			query.getIndicesBoost()
-					.forEach(indexBoost -> boosts.put(indexBoost.getIndexName(), (double) indexBoost.getBoost()));
-			// noinspection unchecked
-			builder.indicesBoost(boosts);
+			builder.indicesBoost(query.getIndicesBoost().stream()
+					.map(indexBoost -> Map.of(indexBoost.getIndexName(), (double) indexBoost.getBoost()))
+					.collect(Collectors.toList()));
 		}
 
 		if (!isEmpty(query.getDocValueFields())) {
@@ -1412,6 +1445,33 @@ class RequestConverter {
 					.map(docValueField -> FieldAndFormat.of(b -> b.field(docValueField.field()).format(docValueField.format())))
 					.toList());
 		}
+	}
+
+	private void addIndicesOptions(SearchRequest.Builder builder, IndicesOptions indicesOptions) {
+
+		indicesOptions.getOptions().forEach(option -> {
+			switch (option) {
+				case ALLOW_NO_INDICES -> builder.allowNoIndices(true);
+				case IGNORE_UNAVAILABLE -> builder.ignoreUnavailable(true);
+				case IGNORE_THROTTLED -> builder.ignoreThrottled(true);
+				// the following ones aren't supported by the builder
+				case FORBID_ALIASES_TO_MULTIPLE_INDICES, FORBID_CLOSED_INDICES, IGNORE_ALIASES -> {
+					if (LOGGER.isWarnEnabled()) {
+						LOGGER
+								.warn(String.format("indices option %s is not supported by the Elasticsearch client.", option.name()));
+					}
+				}
+			}
+		});
+
+		builder.expandWildcards(indicesOptions.getExpandWildcards().stream()
+				.map(wildcardStates -> switch (wildcardStates) {
+					case OPEN -> ExpandWildcard.Open;
+					case CLOSED -> ExpandWildcard.Closed;
+					case HIDDEN -> ExpandWildcard.Hidden;
+					case ALL -> ExpandWildcard.All;
+					case NONE -> ExpandWildcard.None;
+				}).collect(Collectors.toList()));
 	}
 
 	private Rescore getRescore(RescorerQuery rescorerQuery) {
@@ -1456,58 +1516,88 @@ class RequestConverter {
 	private SortOptions getSortOptions(Sort.Order order, @Nullable ElasticsearchPersistentEntity<?> persistentEntity) {
 		SortOrder sortOrder = order.getDirection().isDescending() ? SortOrder.Desc : SortOrder.Asc;
 
-		Order.Mode mode = Order.DEFAULT_MODE;
+		Order.Mode mode = order.getDirection().isAscending() ? Order.Mode.min : Order.Mode.max;
 		String unmappedType = null;
-
-		if (order instanceof Order o) {
-			mode = o.getMode();
-			unmappedType = o.getUnmappedType();
-		}
+		String missing = null;
+		NestedSortValue nestedSortValue = null;
 
 		if (SortOptions.Kind.Score.jsonValue().equals(order.getProperty())) {
 			return SortOptions.of(so -> so.score(s -> s.order(sortOrder)));
-		} else {
-			ElasticsearchPersistentProperty property = (persistentEntity != null) //
-					? persistentEntity.getPersistentProperty(order.getProperty()) //
-					: null;
-			String fieldName = property != null ? property.getFieldName() : order.getProperty();
-
-			Order.Mode finalMode = mode;
-			if (order instanceof GeoDistanceOrder geoDistanceOrder) {
-
-				return SortOptions.of(so -> so //
-						.geoDistance(gd -> gd //
-								.field(fieldName) //
-								.location(loc -> loc.latlon(Queries.latLon(geoDistanceOrder.getGeoPoint())))//
-								.distanceType(geoDistanceType(geoDistanceOrder.getDistanceType())).mode(sortMode(finalMode)) //
-								.unit(distanceUnit(geoDistanceOrder.getUnit())) //
-								.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped())));
-			} else {
-				String missing = (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) ? "_first"
-						: ((order.getNullHandling() == Sort.NullHandling.NULLS_LAST) ? "_last" : null);
-				String finalUnmappedType = unmappedType;
-				return SortOptions.of(so -> so //
-						.field(f -> {
-							f.field(fieldName) //
-									.order(sortOrder) //
-									.mode(sortMode(finalMode));
-
-							if (finalUnmappedType != null) {
-								FieldType fieldType = fieldType(finalUnmappedType);
-
-								if (fieldType != null) {
-									f.unmappedType(fieldType);
-								}
-							}
-
-							if (missing != null) {
-								f.missing(fv -> fv //
-										.stringValue(missing));
-							}
-							return f;
-						}));
-			}
 		}
+
+		if (order instanceof Order o) {
+
+			if (o.getMode() != null) {
+				mode = o.getMode();
+			}
+			unmappedType = o.getUnmappedType();
+			missing = o.getMissing();
+			nestedSortValue = getNestedSort(o.getNested(), persistentEntity);
+		}
+		Order.Mode finalMode = mode;
+		String finalUnmappedType = unmappedType;
+		var finalNestedSortValue = nestedSortValue;
+
+		ElasticsearchPersistentProperty property = (persistentEntity != null) //
+				? persistentEntity.getPersistentProperty(order.getProperty()) //
+				: null;
+		String fieldName = property != null ? property.getFieldName() : order.getProperty();
+
+		if (order instanceof GeoDistanceOrder geoDistanceOrder) {
+			return getSortOptions(geoDistanceOrder, fieldName, finalMode);
+		}
+
+		var finalMissing = missing != null ? missing
+				: (order.getNullHandling() == Sort.NullHandling.NULLS_FIRST) ? "_first"
+						: ((order.getNullHandling() == Sort.NullHandling.NULLS_LAST) ? "_last" : null);
+
+		return SortOptions.of(so -> so //
+				.field(f -> {
+					f.field(fieldName) //
+							.order(sortOrder) //
+							.mode(sortMode(finalMode));
+
+					if (finalUnmappedType != null) {
+						FieldType fieldType = fieldType(finalUnmappedType);
+
+						if (fieldType != null) {
+							f.unmappedType(fieldType);
+						}
+					}
+
+					if (finalMissing != null) {
+						f.missing(fv -> fv //
+								.stringValue(finalMissing));
+					}
+
+					if (finalNestedSortValue != null) {
+						f.nested(finalNestedSortValue);
+					}
+
+					return f;
+				}));
+	}
+
+	@Nullable
+	private NestedSortValue getNestedSort(@Nullable Order.Nested nested,
+			@Nullable ElasticsearchPersistentEntity<?> persistentEntity) {
+		return (nested == null || persistentEntity == null) ? null
+				: NestedSortValue.of(b -> b //
+						.path(elasticsearchConverter.updateFieldNames(nested.getPath(), persistentEntity)) //
+						.maxChildren(nested.getMaxChildren()) //
+						.nested(getNestedSort(nested.getNested(), persistentEntity)) //
+						.filter(getQuery(nested.getFilter(), persistentEntity.getType())));
+	}
+
+	private static SortOptions getSortOptions(GeoDistanceOrder geoDistanceOrder, String fieldName, Order.Mode finalMode) {
+		return SortOptions.of(so -> so //
+				.geoDistance(gd -> gd //
+						.field(fieldName) //
+						.location(loc -> loc.latlon(Queries.latLon(geoDistanceOrder.getGeoPoint()))) //
+						.distanceType(geoDistanceType(geoDistanceOrder.getDistanceType())).mode(sortMode(finalMode)) //
+						.order(sortOrder(geoDistanceOrder.getDirection())) //
+						.unit(distanceUnit(geoDistanceOrder.getUnit())) //
+						.ignoreUnmapped(geoDistanceOrder.getIgnoreUnmapped())));
 	}
 
 	@SuppressWarnings("DuplicatedCode")
@@ -1538,8 +1628,11 @@ class RequestConverter {
 		builder //
 				.suggest(query.getSuggester()) //
 				.collapse(query.getFieldCollapse()) //
-				.sort(query.getSortOptions()) //
-				.knn(query.getKnnQuery());
+				.sort(query.getSortOptions());
+
+		if (query.getKnnQuery() != null) {
+			builder.knn(query.getKnnQuery());
+		}
 
 		if (!isEmpty(query.getAggregations())) {
 			builder.aggregations(query.getAggregations());
@@ -1584,7 +1677,8 @@ class RequestConverter {
 
 		if (query instanceof CriteriaQuery) {
 			CriteriaFilterProcessor.createQuery(((CriteriaQuery) query).getCriteria()).ifPresent(builder::postFilter);
-		} else if (query instanceof StringQuery) {
+		} else //noinspection StatementWithEmptyBody
+			if (query instanceof StringQuery) {
 			// no filter for StringQuery
 		} else if (query instanceof NativeQuery) {
 			builder.postFilter(((NativeQuery) query).getFilter());
@@ -1599,7 +1693,7 @@ class RequestConverter {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery moreLikeThisQuery = co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery
+        return co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery
 				.of(q -> {
 					q.like(Like.of(l -> l.document(ld -> ld.index(index.getIndexName()).id(query.getId()))))
 							.fields(query.getFields());
@@ -1638,8 +1732,6 @@ class RequestConverter {
 
 					return q;
 				});
-
-		return moreLikeThisQuery;
 	}
 
 	public OpenPointInTimeRequest searchOpenPointInTimeRequest(IndexCoordinates index, Duration keepAlive,
@@ -1685,7 +1777,7 @@ class RequestConverter {
 			}
 
 			var expandWildcards = query.getExpandWildcards();
-			if (!expandWildcards.isEmpty()) {
+			if (expandWildcards != null && !expandWildcards.isEmpty()) {
 				builder.expandWildcards(expandWildcards(expandWildcards));
 			}
 

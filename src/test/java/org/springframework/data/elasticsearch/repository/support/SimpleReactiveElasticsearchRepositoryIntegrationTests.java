@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 import static org.springframework.data.elasticsearch.core.query.Query.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
@@ -75,13 +76,13 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 	@BeforeEach
 	void before() {
 		indexNameProvider.increment();
-		operations.indexOps(SampleEntity.class).createWithMapping().block();
+		blocking(operations.indexOps(SampleEntity.class)).createWithMapping();
 	}
 
 	@Test
 	@org.junit.jupiter.api.Order(Integer.MAX_VALUE)
 	public void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 
 	@Test // DATAES-519
@@ -114,7 +115,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 	@Test // DATAES-519, DATAES-767, DATAES-822
 	void findByIdShouldErrorIfIndexDoesNotExist() {
 
-		operations.indexOps(SampleEntity.class).delete().block();
+		blocking(operations.indexOps(SampleEntity.class)).delete();
 		repository.findById("id-two") //
 				.as(StepVerifier::create) //
 				.expectError(NoSuchIndexException.class) //
@@ -127,7 +128,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one"), //
 				new SampleEntity("id-two"), //
 				new SampleEntity("id-three")) //
-						.block();
+				.block();
 
 		repository.findById("id-two").as(StepVerifier::create)//
 				.consumeNextWith(it -> assertThat(it.getId()).isEqualTo("id-two")) //
@@ -140,7 +141,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one"), //
 				new SampleEntity("id-two"), //
 				new SampleEntity("id-three")) //
-						.block();
+				.block();
 
 		repository.findById("does-not-exist").as(StepVerifier::create) //
 				.verifyComplete();
@@ -153,7 +154,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(IntStream.range(1, count + 1) //
 				.mapToObj(it -> new SampleEntity(String.valueOf(it))) //
 				.toArray(SampleEntity[]::new)) //
-						.block();
+				.block();
 
 		repository.findAll() //
 				.as(StepVerifier::create) //
@@ -196,7 +197,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one"), //
 				new SampleEntity("id-two"), //
 				new SampleEntity("id-three")) //
-						.block();
+				.block();
 
 		repository.findAllById(Arrays.asList("can't", "touch", "this")) //
 				.as(StepVerifier::create)//
@@ -209,7 +210,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "message"), //
 				new SampleEntity("id-three", "message")) //
-						.block();
+				.block();
 
 		repository.queryAllByMessage("message") //
 				.as(StepVerifier::create) //
@@ -224,7 +225,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "message"), //
 				new SampleEntity("id-three", "message")) //
-						.block();
+				.block();
 
 		repository.queryByMessageWithString("message") //
 				.as(StepVerifier::create) //
@@ -239,7 +240,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "message"), //
 				new SampleEntity("id-three", "message")) //
-						.block();
+				.block();
 
 		repository.queryAllByMessage("message") //
 				.as(StepVerifier::create) //
@@ -257,7 +258,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "message"), //
 				new SampleEntity("id-three", "message")) //
-						.block();
+				.block();
 
 		repository.queryByMessageWithString("message") //
 				.as(StepVerifier::create) //
@@ -272,7 +273,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 	@Test // DATAES-519, DATAES-767, DATAES-822
 	void countShouldErrorWhenIndexDoesNotExist() {
 
-		operations.indexOps(SampleEntity.class).delete().block();
+		blocking(operations.indexOps(SampleEntity.class)).delete();
 		repository.count() //
 				.as(StepVerifier::create) //
 				.expectError(NoSuchIndexException.class) //
@@ -284,7 +285,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 		bulkIndex(new SampleEntity("id-one"), //
 				new SampleEntity("id-two")) //
-						.block();
+				.block();
 
 		repository.count().as(StepVerifier::create).expectNext(2L).verifyComplete();
 	}
@@ -295,7 +296,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "test message"), //
 				new SampleEntity("id-three", "test test")) //
-						.block();
+				.block();
 
 		repository.existsById("id-two") //
 				.as(StepVerifier::create) //
@@ -309,7 +310,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "test message"), //
 				new SampleEntity("id-three", "test test")) //
-						.block();
+				.block();
 
 		repository.existsById("wrecking ball") //
 				.as(StepVerifier::create) //
@@ -350,7 +351,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "test message"), //
 				new SampleEntity("id-three", "test test")) //
-						.block();
+				.block();
 
 		repository.existsAllByMessage("message") //
 				.as(StepVerifier::create) //
@@ -364,7 +365,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "test message"), //
 				new SampleEntity("id-three", "test test")) //
-						.block();
+				.block();
 
 		repository.existsAllByMessage("these days") //
 				.as(StepVerifier::create) //
@@ -377,7 +378,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 		bulkIndex(new SampleEntity("id-one"), //
 				new SampleEntity("id-two")) //
-						.block();
+				.block();
 
 		repository.deleteById("does-not-exist").as(StepVerifier::create).verifyComplete();
 	}
@@ -448,7 +449,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one"), //
 				new SampleEntity("id-two"), //
 				new SampleEntity("id-three")) //
-						.block();
+				.block();
 
 		repository.deleteAll().as(StepVerifier::create).verifyComplete();
 
@@ -464,7 +465,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "test message"), //
 				new SampleEntity("id-three", "test test")) //
-						.block();
+				.block();
 
 		repository.findAllByMessageLike("test") //
 				.as(StepVerifier::create) //
@@ -478,7 +479,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "test message"), //
 				new SampleEntity("id-three", "test test")) //
-						.block();
+				.block();
 
 		repository.findAllByMessage(Mono.just("test")) //
 				.as(StepVerifier::create) //
@@ -492,7 +493,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "test", 3), //
 				new SampleEntity("id-two", "test test", 1), //
 				new SampleEntity("id-three", "test test", 2)) //
-						.block();
+				.block();
 
 		repository.findAllByMessageLikeOrderByRate("test") //
 				.as(StepVerifier::create) //
@@ -508,7 +509,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "test", 3), //
 				new SampleEntity("id-two", "test test", 1), //
 				new SampleEntity("id-three", "test test", 2)) //
-						.block();
+				.block();
 
 		repository.findAllByMessage("test", Sort.by(Order.asc("rate"))) //
 				.as(StepVerifier::create) //
@@ -524,7 +525,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "test", 3), //
 				new SampleEntity("id-two", "test test", 1), //
 				new SampleEntity("id-three", "test test", 2)) //
-						.block();
+				.block();
 
 		repository.findAllByMessage("test", PageRequest.of(0, 2, Sort.by(Order.asc("rate")))) //
 				.as(StepVerifier::create) //
@@ -539,7 +540,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "test message"), //
 				new SampleEntity("id-three", "test test")) //
-						.block();
+				.block();
 
 		repository.findFirstByMessageLike("test") //
 				.as(StepVerifier::create) //
@@ -589,7 +590,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "test message"), //
 				new SampleEntity("id-three", "test test")) //
-						.block();
+				.block();
 
 		repository.deleteAllByMessage("message") //
 				.as(StepVerifier::create) //
@@ -606,7 +607,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "message1"), //
 				new SampleEntity("id-two", "message2"), //
 				new SampleEntity("id-three", "message3")) //
-						.block();
+				.block();
 
 		repository.findAllViaAnnotatedQueryByMessageIn(List.of("message1", "message3")) //
 				.as(StepVerifier::create) //
@@ -621,7 +622,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one", "test", 3), //
 				new SampleEntity("id-two", "test test", 1), //
 				new SampleEntity("id-three", "test test", 2)) //
-						.block();
+				.block();
 
 		repository.findAllViaAnnotatedQueryByRatesIn(List.of(2, 3)) //
 				.as(StepVerifier::create) //
@@ -638,7 +639,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				new SampleEntity("id-three", "message3", 3), //
 				new SampleEntity("id-four", "message4", 4), //
 				new SampleEntity("id-five", "message5", 5)) //
-						.block();
+				.block();
 
 		repository.findAllViaAnnotatedQueryByMessageInAndRatesIn(List.of("message5", "message3"), List.of(2, 3)) //
 				.as(StepVerifier::create) //

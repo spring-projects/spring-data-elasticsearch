@@ -21,17 +21,27 @@ import java.util.Map;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Illia Ulianov
  * @since 4.1
  */
 public class BulkFailureException extends DataRetrievalFailureException {
-	private final Map<String, String> failedDocuments;
+	private final Map<String, FailureDetails> failedDocuments;
 
-	public BulkFailureException(String msg, Map<String, String> failedDocuments) {
+	public BulkFailureException(String msg, Map<String, FailureDetails> failedDocuments) {
 		super(msg);
 		this.failedDocuments = failedDocuments;
 	}
 
-	public Map<String, String> getFailedDocuments() {
+	public Map<String, FailureDetails> getFailedDocuments() {
 		return failedDocuments;
+	}
+
+	/**
+	 * Details about a document saving failure.
+	 *
+	 * @author Illia Ulianov
+	 * @since 5.2
+	 */
+	public record FailureDetails(Integer status, String errorMessage) {
 	}
 }

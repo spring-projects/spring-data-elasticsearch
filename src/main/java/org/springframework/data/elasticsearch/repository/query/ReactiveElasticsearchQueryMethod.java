@@ -30,7 +30,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.elasticsearch.repository.query.ElasticsearchParameters.ElasticsearchParameter;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -103,8 +102,8 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 	}
 
 	@Override
-	protected ElasticsearchParameters createParameters(Method method) {
-		return new ElasticsearchParameters(method);
+	protected ElasticsearchParameters createParameters(Method method, TypeInformation<?> domainType) {
+		return new ElasticsearchParameters(method, domainType);
 	}
 
 	/**

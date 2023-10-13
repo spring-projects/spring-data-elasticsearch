@@ -62,7 +62,7 @@ public abstract class SearchAfterIntegrationTests {
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete();
 	}
 
 	@Test // #1143
@@ -85,11 +85,11 @@ public abstract class SearchAfterIntegrationTests {
 			query.setSearchAfter(searchAfter);
 			SearchHits<Entity> searchHits = operations.search(query, Entity.class);
 
-			if (searchHits.getSearchHits().size() == 0) {
+			if (searchHits.getSearchHits().isEmpty()) {
 				break;
 			}
-			foundEntities.addAll(searchHits.stream().map(SearchHit::getContent).collect(Collectors.toList()));
-			searchAfter = searchHits.getSearchHit((int) (searchHits.getSearchHits().size() - 1)).getSortValues();
+			foundEntities.addAll(searchHits.stream().map(SearchHit::getContent).toList());
+			searchAfter = searchHits.getSearchHit(searchHits.getSearchHits().size() - 1).getSortValues();
 
 			if (++loop > 10) {
 				fail("loop not terminating");
@@ -99,16 +99,69 @@ public abstract class SearchAfterIntegrationTests {
 		assertThat(foundEntities).containsExactlyElementsOf(entities);
 	}
 
+	@Test // #2678
+	@DisplayName("should be able to handle different search after type values including null")
+	void shouldBeAbleToHandleDifferentSearchAfterTypeValuesIncludingNull() {
+
+		List<Entity> entities = IntStream.rangeClosed(1, 10)
+				.mapToObj(i -> {
+					var message = (i % 2 == 0) ? null : "message " + i;
+					var value = (i % 3 == 0) ? null : (long) i;
+					return new Entity((long) i, message, value);
+				})
+				.collect(Collectors.toList());
+		operations.save(entities);
+
+		Query query = Query.findAll();
+		query.setPageable(PageRequest.of(0, 3));
+		query.addSort(Sort.by(Sort.Direction.ASC, "id"));
+		query.addSort(Sort.by(Sort.Direction.ASC, "keyword"));
+		query.addSort(Sort.by(Sort.Direction.ASC, "value"));
+
+		List<Object> searchAfter = null;
+		List<Entity> foundEntities = new ArrayList<>();
+
+		int loop = 0;
+		do {
+			query.setSearchAfter(searchAfter);
+			SearchHits<Entity> searchHits = operations.search(query, Entity.class);
+
+			if (searchHits.getSearchHits().isEmpty()) {
+				break;
+			}
+			foundEntities.addAll(searchHits.stream().map(SearchHit::getContent).toList());
+			searchAfter = searchHits.getSearchHit(searchHits.getSearchHits().size() - 1).getSortValues();
+
+			if (++loop > 10) {
+				fail("loop not terminating");
+			}
+		} while (true);
+
+		assertThat(foundEntities).containsExactlyElementsOf(entities);
+	}
+
+	@SuppressWarnings("unused")
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	private static class Entity {
 		@Nullable
 		@Id private Long id;
 		@Nullable
-		@Field(type = FieldType.Text) private String message;
+		@Field(type = FieldType.Keyword) private String keyword;
 
-		public Entity(@Nullable Long id, @Nullable String message) {
+		@Nullable
+		@Field(type = FieldType.Long) private Long value;
+
+		public Entity() {}
+
+		public Entity(@Nullable Long id, @Nullable String keyword) {
 			this.id = id;
-			this.message = message;
+			this.keyword = keyword;
+		}
+
+		public Entity(@Nullable Long id, @Nullable String keyword, @Nullable Long value) {
+			this.id = id;
+			this.keyword = keyword;
+			this.value = value;
 		}
 
 		@Nullable
@@ -121,30 +174,44 @@ public abstract class SearchAfterIntegrationTests {
 		}
 
 		@Nullable
-		public String getMessage() {
-			return message;
+		public String getKeyword() {
+			return keyword;
 		}
 
-		public void setMessage(@Nullable String message) {
-			this.message = message;
+		public void setKeyword(@Nullable String keyword) {
+			this.keyword = keyword;
+		}
+
+		@Nullable
+		public Long getValue() {
+			return value;
+		}
+
+		public void setValue(@Nullable Long value) {
+			this.value = value;
 		}
 
 		@Override
 		public boolean equals(Object o) {
 			if (this == o)
 				return true;
-			if (!(o instanceof Entity entity))
+			if (o == null || getClass() != o.getClass())
 				return false;
+
+			Entity entity = (Entity) o;
 
 			if (!Objects.equals(id, entity.id))
 				return false;
-			return Objects.equals(message, entity.message);
+			if (!Objects.equals(keyword, entity.keyword))
+				return false;
+			return Objects.equals(value, entity.value);
 		}
 
 		@Override
 		public int hashCode() {
 			int result = id != null ? id.hashCode() : 0;
-			result = 31 * result + (message != null ? message.hashCode() : 0);
+			result = 31 * result + (keyword != null ? keyword.hashCode() : 0);
+			result = 31 * result + (value != null ? value.hashCode() : 0);
 			return result;
 		}
 	}

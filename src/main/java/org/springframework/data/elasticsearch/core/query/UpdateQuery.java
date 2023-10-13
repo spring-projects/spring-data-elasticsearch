@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
-import org.springframework.data.elasticsearch.core.ScriptType;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.lang.Nullable;
 

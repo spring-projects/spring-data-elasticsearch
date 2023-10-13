@@ -1,0 +1,4 @@
+include::{commons}@data-commons::page$repositories/core-concepts.adoc[]
+
+[[elasticsearch.entity-persistence.state-detection-strategies]]
+include::{commons}@data-commons::page$is-new-state-detection.adoc[leveloffset=+1]

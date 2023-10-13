@@ -20,8 +20,7 @@ import java.util.Arrays;
 import org.springframework.util.Assert;
 
 /**
- * Immutable Value object encapsulating index name(s) and index type(s). Type names are supported but deprecated as
- * Elasticsearch does not support types anymore.
+ * Immutable Value object encapsulating index name(s) and index type(s).
  *
  * @author Mark Paluch
  * @author Christoph Strobl

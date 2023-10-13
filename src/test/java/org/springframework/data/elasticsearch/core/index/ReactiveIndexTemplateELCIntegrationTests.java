@@ -35,9 +35,4 @@ public class ReactiveIndexTemplateELCIntegrationTests extends ReactiveIndexTempl
 			return new IndexNameProvider("reactive-index-template");
 		}
 	}
-
-	@Override
-	public boolean newElasticsearchClient() {
-		return true;
-	}
 }

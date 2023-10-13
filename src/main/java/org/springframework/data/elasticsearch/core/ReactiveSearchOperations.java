@@ -21,9 +21,8 @@ import reactor.core.publisher.Mono;
 import java.time.Duration;
 import java.util.List;
 
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.client.erhlc.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 
@@ -68,10 +67,7 @@ public interface ReactiveSearchOperations {
 	Mono<Long> count(Query query, Class<?> entityType, IndexCoordinates index);
 
 	/**
-	 * Search the index for entities matching the given {@link Query query}. <br />
-	 * {@link Pageable#isUnpaged() Unpaged} queries may overrule elasticsearch server defaults for page size by either
-	 * delegating to the scroll API or using a max {@link org.elasticsearch.search.builder.SearchSourceBuilder#size(int)
-	 * size}.
+	 * Search the index for entities matching the given {@link Query query}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType must not be {@literal null}.
@@ -83,10 +79,7 @@ public interface ReactiveSearchOperations {
 	}
 
 	/**
-	 * Search the index for entities matching the given {@link Query query}. <br />
-	 * {@link Pageable#isUnpaged() Unpaged} queries may overrule elasticsearch server defaults for page size by either *
-	 * delegating to the scroll API or using a max {@link org.elasticsearch.search.builder.SearchSourceBuilder#size(int) *
-	 * size}.
+	 * Search the index for entities matching the given {@link Query query}.
 	 *
 	 * @param query must not be {@literal null}.
 	 * @param entityType The entity type for mapping the query. Must not be {@literal null}.
@@ -250,8 +243,7 @@ public interface ReactiveSearchOperations {
 	/**
 	 * Does a suggest query.
 	 *
-	 * @param query the Query containing the suggest definition. Must be currently a {@link NativeSearchQuery}, must not
-	 *          be {@literal null}.
+	 * @param query the Query containing the suggest definition. Must not be {@literal null}.
 	 * @param entityType the type of the entities that might be returned for a completion suggestion, must not be
 	 *          {@literal null}.
 	 * @return suggest data
@@ -262,8 +254,7 @@ public interface ReactiveSearchOperations {
 	/**
 	 * Does a suggest query.
 	 *
-	 * @param query the Query containing the suggest definition. Must be currently a {@link NativeSearchQuery}, must not
-	 *          be {@literal null}.
+	 * @param query the Query containing the suggest definition. Must not be {@literal null}.
 	 * @param entityType the type of the entities that might be returned for a completion suggestion, must not be
 	 *          {@literal null}.
 	 * @param index the index to run the query against, must not be {@literal null}.
@@ -323,5 +314,15 @@ public interface ReactiveSearchOperations {
 	 * @since 4.3
 	 */
 	Query idsQuery(List<String> ids);
+
+	/**
+	 * Creates a {@link BaseQueryBuilder} that has the given ids setto the parameter value. No other properties of the
+	 * bulder are set.
+	 *
+	 * @param ids the list of ids must not be {@literal null}
+	 * @return query returning the documents with the given ids
+	 * @since 5.2
+	 */
+	BaseQueryBuilder queryBuilderWithIds(List<String> ids);
 	// endregion
 }

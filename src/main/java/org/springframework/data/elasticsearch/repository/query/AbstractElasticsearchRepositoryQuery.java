@@ -25,10 +25,12 @@ import org.springframework.data.elasticsearch.core.SearchHitsImpl;
 import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -74,8 +76,10 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	@Override
 	public Object execute(Object[] parameters) {
 
-		ParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
-		Class<?> clazz = getResultClass();
+		ElasticsearchParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
+		ResultProcessor resultProcessor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
+		Class<?> clazz = resultProcessor.getReturnedType().getDomainType();
+
 		Query query = createQuery(parameters);
 
 		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
@@ -132,31 +136,19 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 	public Query createQuery(Object[] parameters) {
 
-		Class<?> clazz = getResultClass();
-		ParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
-		Query query = createQuery(parameterAccessor);
+		ElasticsearchParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
+		ResultProcessor resultProcessor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
 
+		var query = createQuery(parameterAccessor);
 		Assert.notNull(query, "unsupported query");
 
-		if (queryMethod.hasAnnotatedHighlight()) {
-			query.setHighlightQuery(queryMethod.getAnnotatedHighlightQuery());
-		}
-
-		var sourceFilter = queryMethod.getSourceFilter(parameterAccessor,
-				elasticsearchOperations.getElasticsearchConverter());
-		if (sourceFilter != null) {
-			query.addSourceFilter(sourceFilter);
-		}
+		queryMethod.addMethodParameter(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter());
 
 		return query;
 	}
 
-	private Class<?> getResultClass() {
-		return queryMethod.getResultProcessor().getReturnedType().getDomainType();
-	}
-
-	private ParametersParameterAccessor getParameterAccessor(Object[] parameters) {
-		return new ParametersParameterAccessor(queryMethod.getParameters(), parameters);
+	private ElasticsearchParametersParameterAccessor getParameterAccessor(Object[] parameters) {
+		return new ElasticsearchParametersParameterAccessor(queryMethod, parameters);
 	}
 
 	@Nullable
@@ -184,5 +176,5 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 		return result;
 	}
 
-	protected abstract Query createQuery(ParametersParameterAccessor accessor);
+	protected abstract BaseQuery createQuery(ElasticsearchParametersParameterAccessor accessor);
 }

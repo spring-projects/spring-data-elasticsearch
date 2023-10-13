@@ -65,9 +65,9 @@ import org.springframework.util.StringUtils;
 
 /**
  * This class contains methods that are common to different implementations of the {@link ElasticsearchOperations}
- * interface that use different clients, like RestHighLevelClient and the next Java client from Elasticsearch or some
- * external implementation that might use a different client. This class must not contain imports or use classes that
- * are specific to one of these implementations.
+ * interface that use different clients, like the different Java clients from Elasticsearch or some external
+ * implementation that might use a different client. This class must not contain imports or use classes that are
+ * specific to one of these implementations.
  * <p>
  * <strong>Note:</strong> Although this class is public, it is not considered to be part of the official Spring Data
  * Elasticsearch API and so might change at any time.
@@ -418,8 +418,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
 				// noinspection ConstantConditions
 				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
-						new SeqNoPrimaryTerm(indexedObjectInformation.seqNo(),
-								indexedObjectInformation.primaryTerm()));
+						new SeqNoPrimaryTerm(indexedObjectInformation.seqNo(), indexedObjectInformation.primaryTerm()));
 			}
 
 			if (indexedObjectInformation.version() != null && persistentEntity.hasVersionProperty()) {
@@ -856,7 +855,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 	// endregion
 
-	// region routing
+	// region customization
 	private void setRoutingResolver(RoutingResolver routingResolver) {
 
 		Assert.notNull(routingResolver, "routingResolver must not be null");
@@ -871,6 +870,14 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		AbstractElasticsearchTemplate copy = copy();
 		copy.setRoutingResolver(routingResolver);
+		return copy;
+	}
+
+	@Override
+	public ElasticsearchOperations withRefreshPolicy(@Nullable RefreshPolicy refreshPolicy) {
+
+		var copy = copy();
+		copy.setRefreshPolicy(refreshPolicy);
 		return copy;
 	}
 

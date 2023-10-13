@@ -59,7 +59,6 @@ class ClientConfigurationBuilder
 	@Nullable private String pathPrefix;
 	@Nullable private String proxy;
 	private Supplier<HttpHeaders> headersSupplier = HttpHeaders::new;
-	@Deprecated private final HttpClientConfigCallback httpClientConfigurer = httpClientBuilder -> httpClientBuilder;
 	private final List<ClientConfiguration.ClientConfigurationCallback<?>> clientConfigurers = new ArrayList<>();
 
 	/*
@@ -242,7 +241,7 @@ class ClientConfigurationBuilder
 		}
 
 		return new DefaultClientConfiguration(hosts, headers, useSsl, sslContext, caFingerprint, soTimeout, connectTimeout,
-				pathPrefix, hostnameVerifier, proxy, httpClientConfigurer, clientConfigurers, headersSupplier);
+				pathPrefix, hostnameVerifier, proxy, clientConfigurers, headersSupplier);
 	}
 
 	private static InetSocketAddress parse(String hostAndPort) {

@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.util.List;
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.lang.Nullable;
@@ -230,6 +231,15 @@ public interface SearchOperations {
 	 * @since 4.3
 	 */
 	Query idsQuery(List<String> ids);
+
+	/**
+	 * Creates a {@link BaseQueryBuilder} that has the given ids setto the parameter value. No other properties of the bulder are set.
+	 *
+	 * @param ids the list of ids must not be {@literal null}
+	 * @return query returning the documents with the given ids
+	 * @since 5.2
+	 */
+	BaseQueryBuilder queryBuilderWithIds(List<String> ids);
 
 	/**
 	 * Opens a point in time (pit) in Elasticsearch.

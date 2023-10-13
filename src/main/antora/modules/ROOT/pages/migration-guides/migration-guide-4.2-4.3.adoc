@@ -1,0 +1,87 @@
+[[elasticsearch-migration-guide-4.2-4.3]]
+= Upgrading from 4.2.x to 4.3.x
+
+This section describes breaking changes from version 4.2.x to 4.3.x and how removed features can be replaced by new introduced features.
+
+[NOTE]
+====
+Elasticsearch is working on a new Client that will replace the `RestHighLevelClient` because the `RestHighLevelClient` uses code from Elasticsearch core libraries which are not Apache 2 licensed anymore.
+Spring Data Elasticsearch is preparing for this change as well.
+This means that internally the implementations for the `*Operations` interfaces need to change - which should be no problem if users program against the interfaces like `ElasticsearchOperations` or `ReactiveElasticsearchOperations`.
+If you are using the implementation classes like `ElasticsearchRestTemplate` directly, you will need to adapt to these changes.
+
+Spring Data Elasticsearch also removes or replaces the use of classes from the `org.elasticsearch` packages in it's API classes and methods, only using them in the implementation where the access to Elasticsearch is implemented.
+For the user that means, that some enum classes that were used are replaced by enums that live in `org.springframework.data.elasticsearch` with the same values, these are internally mapped onto the Elasticsearch ones.
+
+Places where classes are used that cannot easily be replaced, this usage is marked as deprecated, we are working on replacements.
+
+Check the sections on xref:migration-guides/migration-guide-4.2-4.3.adoc#elasticsearch-migration-guide-4.2-4.3.deprecations[Deprecations] and xref:migration-guides/migration-guide-4.2-4.3.adoc#elasticsearch-migration-guide-4.2-4.3.breaking-changes[Breaking Changes] for further details.
+====
+
+[[elasticsearch-migration-guide-4.2-4.3.deprecations]]
+== Deprecations
+
+[[elasticsearch-migration-guide-4.2-4.3.deprecations.suggest]]
+=== suggest methods
+
+In `SearchOperations`, and so in `ElasticsearchOperations` as well, the `suggest` methods taking a `org.elasticsearch.search.suggest.SuggestBuilder` as argument and returning a `org.elasticsearch.action.search.SearchResponse` have been deprecated.
+Use `SearchHits<T> search(Query query, Class<T> clazz)` instead, passing in a `NativeSearchQuery` which can contain a `SuggestBuilder` and read the suggest results from the returned `SearchHit<T>`.
+
+In `ReactiveSearchOperations` the new `suggest` methods return a `Mono<org.springframework.data.elasticsearch.core.suggest.response.Suggest>` now.
+Here as well the old methods are deprecated.
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes]]
+== Breaking Changes
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes.1]]
+=== Removal of `org.elasticsearch` classes from the API.
+
+* In the `org.springframework.data.elasticsearch.annotations.CompletionContext` annotation the property `type()` has changed from `org.elasticsearch.search.suggest.completion.context.ContextMapping.Type` to `org.springframework.data.elasticsearch.annotations.CompletionContext.ContextMappingType`, the available enum values are the same.
+* In the `org.springframework.data.elasticsearch.annotations.Document` annotation the `versionType()` property has changed to `org.springframework.data.elasticsearch.annotations.Document.VersionType`, the available enum values are the same.
+* In the `org.springframework.data.elasticsearch.core.query.Query` interface the `searchType()` property has changed to `org.springframework.data.elasticsearch.core.query.Query.SearchType`, the available enum values are the same.
+* In the `org.springframework.data.elasticsearch.core.query.Query` interface the return value of  `timeout()` was changed to `java.time.Duration`.
+* The `SearchHits<T>`class does not contain the `org.elasticsearch.search.aggregations.Aggregations` anymore.
+Instead it now contains an instance of the `org.springframework.data.elasticsearch.core.AggregationsContainer<T>` class where `T` is the concrete aggregations type from the underlying client that is used.
+Currently this will be a `org
+.springframework.data.elasticsearch.core.clients.elasticsearch7.ElasticsearchAggregations` object; later different implementations will be available.
+The same change has been done to the `ReactiveSearchOperations.aggregate()` functions, the now return a `Flux<AggregationContainer<?>>`.
+Programs using the aggregations need to be changed to cast the returned value to the appropriate class to further proces it.
+* methods that might have thrown a `org.elasticsearch.ElasticsearchStatusException` now will throw `org.springframework.data.elasticsearch.RestStatusException` instead.
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes.2]]
+=== Handling of field and sourceFilter properties of Query
+
+Up to version 4.2 the `fields` property of a `Query` was interpreted and added to the include list of the `sourceFilter`.
+This was not correct, as these are different things for Elasticsearch.
+This has been corrected.
+As a consequence code might not work anymore that relies on using `fields` to specify which fields should be returned from the document's `_source' and should be changed to use the `sourceFilter`.
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes.3]]
+=== search_type default value
+
+The default value for the `search_type` in Elasticsearch is `query_then_fetch`.
+This now is also set as default value in the `Query` implementations, it was previously set to `dfs_query_then_fetch`.
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes.4]]
+=== BulkOptions changes
+
+Some properties of the `org.springframework.data.elasticsearch.core.query.BulkOptions` class have changed their type:
+
+* the type of the `timeout` property has been changed to `java.time.Duration`.
+* the type of the`refreshPolicy` property has been changed to `org.springframework.data.elasticsearch.core.RefreshPolicy`.
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes.5]]
+=== IndicesOptions change
+
+Spring Data Elasticsearch now uses `org.springframework.data.elasticsearch.core.query.IndicesOptions` instead of `org.elasticsearch.action.support.IndicesOptions`.
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes.6]]
+=== Completion classes
+
+The classes from the package `org.springframework.data.elasticsearch.core.completion` have been moved to `org.springframework.data.elasticsearch.core.suggest`.
+
+[[elasticsearch-migration-guide-4.2-4.3.breaking-changes.7]]
+=== Other renamings
+
+The `org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentPropertyConverter` interface has been renamed to `org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter`.
+Likewise the implementations classes named _XXPersistentPropertyConverter_ have been renamed to _XXPropertyValueConverter_.

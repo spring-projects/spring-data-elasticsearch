@@ -18,22 +18,37 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
-import co.elastic.clients.elasticsearch.core.search.*;
+import co.elastic.clients.elasticsearch.core.search.BoundaryScanner;
+import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
+import co.elastic.clients.elasticsearch.core.search.HighlighterFragmenter;
+import co.elastic.clients.elasticsearch.core.search.HighlighterOrder;
+import co.elastic.clients.elasticsearch.core.search.HighlighterTagsSchema;
+import co.elastic.clients.elasticsearch.core.search.HighlighterType;
+import co.elastic.clients.elasticsearch.core.search.ScoreMode;
 import co.elastic.clients.elasticsearch.indices.IndexSettings;
+import co.elastic.clients.json.JsonData;
 
 import java.io.StringReader;
 import java.time.Duration;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
+import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndicesOptions;
+import org.springframework.data.elasticsearch.core.query.Order;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.RescorerQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Utility to handle new Elasticsearch client type values.
@@ -156,11 +171,59 @@ final class TypeUtils {
 	}
 
 	@Nullable
+	static FieldValue toFieldValue(@Nullable Object fieldValue) {
+
+		if (fieldValue == null) {
+			return FieldValue.NULL;
+		}
+
+		if (fieldValue instanceof Boolean b) {
+			return b ? FieldValue.TRUE : FieldValue.FALSE;
+		}
+
+		if (fieldValue instanceof String s) {
+			return FieldValue.of(s);
+		}
+
+		if (fieldValue instanceof Long l) {
+			return FieldValue.of(l);
+		}
+
+		if (fieldValue instanceof Integer i) {
+			return FieldValue.of((long) i);
+		}
+
+		if (fieldValue instanceof Double d) {
+			return FieldValue.of(d);
+		}
+
+		if (fieldValue instanceof Float f) {
+			return FieldValue.of((double) f);
+		}
+
+		return FieldValue.of(JsonData.of(fieldValue));
+	}
+
+	@Nullable
 	static GeoDistanceType geoDistanceType(GeoDistanceOrder.DistanceType distanceType) {
 
 		return switch (distanceType) {
 			case arc -> GeoDistanceType.Arc;
 			case plane -> GeoDistanceType.Plane;
+		};
+
+	}
+
+	@Nullable
+	static SortOrder sortOrder(@Nullable Sort.Direction direction) {
+
+		if (direction == null) {
+			return null;
+		}
+
+		return switch (direction) {
+			case ASC -> SortOrder.Asc;
+			case DESC -> SortOrder.Desc;
 		};
 
 	}
@@ -422,5 +485,19 @@ final class TypeUtils {
 	static IndexSettings indexSettings(@Nullable Map<String, Object> settings) {
 		return settings != null ? IndexSettings.of(b -> b.withJson(new StringReader(Document.from(settings).toJson())))
 				: null;
+	}
+
+	/**
+	 * @since 5.2
+	 */
+	static Map<String, JsonData> paramsMap(Map<String, Object> params) {
+
+		Assert.notNull(params, "params must not be null");
+
+		Map<String, JsonData> mappedParams = new LinkedHashMap<>();
+		params.forEach((key, value) -> {
+			mappedParams.put(key, JsonData.of(value));
+		});
+		return mappedParams;
 	}
 }

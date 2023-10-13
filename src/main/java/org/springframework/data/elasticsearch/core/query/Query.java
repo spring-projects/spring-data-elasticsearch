@@ -25,7 +25,6 @@ import java.util.Optional;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.elasticsearch.core.RuntimeField;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -221,6 +220,7 @@ public interface Query {
 	 *
 	 * @return
 	 */
+	@Nullable
 	SearchType getSearchType();
 
 	/**
@@ -469,7 +469,7 @@ public interface Query {
 	/**
 	 * @since 5.1
 	 */
-	EnumSet<IndicesOptions.WildcardStates> getExpandWildcards();
+	@Nullable EnumSet<IndicesOptions.WildcardStates> getExpandWildcards();
 
 	/**
 	 * @return a possible empty list of docvalue_field values to be set on the query.

@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -30,14 +31,13 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.NewElasticsearchClientDevelopment;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
-import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -49,27 +49,24 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  */
 @SpringIntegrationTest
-public abstract class ReactiveIndexOperationsIntegrationTests implements NewElasticsearchClientDevelopment {
+public abstract class ReactiveIndexOperationsIntegrationTests {
 
 	@Autowired private ReactiveElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
 	private ReactiveIndexOperations indexOperations;
-
-	boolean rhlcWithCluster8() {
-		var clusterVersion = ((AbstractReactiveElasticsearchTemplate) operations).getClusterVersion().block();
-		return (oldElasticsearchClient() && clusterVersion != null && clusterVersion.startsWith("8"));
-	}
+	private IndexOperations blockingIndexOperations;
 
 	@BeforeEach
 	void setUp() {
 		indexNameProvider.increment();
 		indexOperations = operations.indexOps(IndexCoordinates.of(indexNameProvider.indexName()));
+		blockingIndexOperations = blocking(indexOperations);
 	}
 
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete().block();
+		blocking(operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*'))).delete();
 	}
 
 	@Test // DATAES-678
@@ -173,41 +170,28 @@ public abstract class ReactiveIndexOperationsIntegrationTests implements NewElas
 	@Test // DATAES-678
 	void shouldDeleteIfItExists() {
 
-		indexOperations.create().block();
+		blockingIndexOperations.create();
 
-		indexOperations.delete() //
-				.as(StepVerifier::create) //
-				.expectNext(true) //
-				.verifyComplete();
+		assertThat(blockingIndexOperations.delete()).isTrue();
 	}
 
 	@Test // DATAES-678
 	void shouldReturnFalseOnDeleteIfItDoesNotExist() {
-
-		indexOperations.delete() //
-				.as(StepVerifier::create) //
-				.expectNext(false) //
-				.verifyComplete();
+		assertThat(blockingIndexOperations.delete()).isFalse();
 	}
 
 	@Test // DATAES-678
 	void shouldReturnExistsTrueIfIndexDoesExist() {
 
-		indexOperations.create().block();
+		blockingIndexOperations.create();
 
-		indexOperations.exists() //
-				.as(StepVerifier::create) //
-				.expectNext(true) //
-				.verifyComplete();
+		assertThat(blockingIndexOperations.exists()).isTrue();
 	}
 
 	@Test // DATAES-678
 	void shouldReturnExistsFalseIfIndexDoesNotExist() {
 
-		indexOperations.exists() //
-				.as(StepVerifier::create) //
-				.expectNext(false) //
-				.verifyComplete();
+		assertThat(blockingIndexOperations.exists()).isFalse();
 	}
 
 	@Test // DATAES-678
@@ -350,8 +334,8 @@ public abstract class ReactiveIndexOperationsIntegrationTests implements NewElas
 		aliasActions.add(new AliasAction.Add(AliasActionParameters.builder()
 				.withIndices(indexOperations.getIndexCoordinates().getIndexNames()).withAliases("aliasA", "aliasB").build()));
 
-		assertThat(indexOperations.create().block()).isTrue();
-		assertThat(indexOperations.alias(aliasActions).block()).isTrue();
+		assertThat(blockingIndexOperations.create()).isTrue();
+		assertThat(blockingIndexOperations.alias(aliasActions)).isTrue();
 
 		indexOperations.getAliases("aliasA") //
 				.as(StepVerifier::create) //

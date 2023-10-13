@@ -40,8 +40,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
@@ -65,7 +65,7 @@ import org.springframework.util.Assert;
  */
 class ResponseConverter {
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ResponseConverter.class);
+	private static final Log LOGGER = LogFactory.getLog(ResponseConverter.class);
 
 	private final JsonpMapper jsonpMapper;
 
@@ -193,7 +193,7 @@ class ResponseConverter {
 		if (indexMappingRecord == null) {
 
 			if (mappings.size() != 1) {
-				LOGGER.warn("no mapping returned for index {}", indexCoordinates.getIndexName());
+				LOGGER.warn(String.format("no mapping returned for index %s", indexCoordinates.getIndexName()));
 				return Document.create();
 			}
 			String index = mappings.keySet().iterator().next();

@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.utils;
 
 /**
- * Class providing an index name witInCo
+ * Class providing an index name with a prefix and a index number
  *
  * @author Peter-Josef Meisch
  */
