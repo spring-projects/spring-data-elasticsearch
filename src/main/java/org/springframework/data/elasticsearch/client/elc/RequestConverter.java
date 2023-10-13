@@ -786,12 +786,13 @@ class RequestConverter {
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
 		return GetRequest.of(grb -> grb //
-					.index(indexCoordinates.getIndexName()) //
-					.id(id) //
-					.routing(routing));
+				.index(indexCoordinates.getIndexName()) //
+				.id(id) //
+				.routing(routing));
 	}
 
-	public co.elastic.clients.elasticsearch.core.ExistsRequest documentExistsRequest(String id, @Nullable String routing, IndexCoordinates indexCoordinates) {
+	public co.elastic.clients.elasticsearch.core.ExistsRequest documentExistsRequest(String id, @Nullable String routing,
+			IndexCoordinates indexCoordinates) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
@@ -1677,8 +1678,8 @@ class RequestConverter {
 
 		if (query instanceof CriteriaQuery) {
 			CriteriaFilterProcessor.createQuery(((CriteriaQuery) query).getCriteria()).ifPresent(builder::postFilter);
-		} else //noinspection StatementWithEmptyBody
-			if (query instanceof StringQuery) {
+		} else // noinspection StatementWithEmptyBody
+		if (query instanceof StringQuery) {
 			// no filter for StringQuery
 		} else if (query instanceof NativeQuery) {
 			builder.postFilter(((NativeQuery) query).getFilter());
@@ -1693,7 +1694,7 @@ class RequestConverter {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-        return co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery
+		return co.elastic.clients.elasticsearch._types.query_dsl.MoreLikeThisQuery
 				.of(q -> {
 					q.like(Like.of(l -> l.document(ld -> ld.index(index.getIndexName()).id(query.getId()))))
 							.fields(query.getFields());

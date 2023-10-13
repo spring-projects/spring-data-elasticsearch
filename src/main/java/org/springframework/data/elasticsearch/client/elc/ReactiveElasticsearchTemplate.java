@@ -15,19 +15,16 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static co.elastic.clients.util.ApiTypeHelper.DANGEROUS_disableRequiredPropertiesCheck;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.result;
+import static co.elastic.clients.util.ApiTypeHelper.*;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
-import co.elastic.clients.elasticsearch.core.get.GetResult;
 import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -41,20 +38,32 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.client.UnsupportedBackendOperation;
-import org.springframework.data.elasticsearch.core.*;
+import org.springframework.data.elasticsearch.core.AbstractReactiveElasticsearchTemplate;
+import org.springframework.data.elasticsearch.core.AggregationContainer;
+import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
+import org.springframework.data.elasticsearch.core.MultiGetItem;
+import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.*;
+import org.springframework.data.elasticsearch.core.query.BaseQuery;
+import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
+import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
