@@ -125,7 +125,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
 
 		GetRequest getRequest = requestConverter.documentGetRequest(elasticsearchConverter.convertId(id),
-				routingResolver.getRouting(), index, false);
+				routingResolver.getRouting(), index);
 		GetResponse<EntityAsMap> getResponse = execute(client -> client.get(getRequest, EntityAsMap.class));
 
 		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
@@ -221,9 +221,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		GetRequest request = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index, true);
+		ExistsRequest request = requestConverter.documentExistsRequest(id, routingResolver.getRouting(), index);
 
-		return execute(client -> client.get(request, EntityAsMap.class)).found();
+		return execute(client -> client.exists(request)).value();
 	}
 
 	@Override

@@ -128,6 +128,13 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, transportOptions));
 	}
 
+	public Mono<BooleanResponse> exists(ExistsRequest request) {
+
+		Assert.notNull(request, "request must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request, ExistsRequest._ENDPOINT, transportOptions));
+	}
+
 	public <T, P> Mono<UpdateResponse<T>> update(UpdateRequest<T, P> request, Class<T> clazz) {
 
 		Assert.notNull(request, "request must not be null");
