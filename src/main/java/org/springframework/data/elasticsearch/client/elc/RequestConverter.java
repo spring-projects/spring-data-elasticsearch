@@ -30,6 +30,7 @@ import co.elastic.clients.elasticsearch._types.mapping.Property;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeField;
 import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
+import co.elastic.clients.elasticsearch._types.query_dsl.FieldAndFormat;
 import co.elastic.clients.elasticsearch._types.query_dsl.Like;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.core.*;
@@ -1050,10 +1051,9 @@ class RequestConverter {
 							}
 
 							if (!isEmpty(query.getFields())) {
-								bb.fields(fb -> {
-									query.getFields().forEach(fb::field);
-									return fb;
-								});
+								var fieldAndFormats = query.getFields().stream()
+										.map(field -> FieldAndFormat.of(b -> b.field(field))).toList();
+								bb.fields(fieldAndFormats);
 							}
 
 							if (!isEmpty(query.getStoredFields())) {
@@ -1169,10 +1169,9 @@ class RequestConverter {
 		builder.source(getSourceConfig(query));
 
 		if (!isEmpty(query.getFields())) {
-			builder.fields(fb -> {
-				query.getFields().forEach(fb::field);
-				return fb;
-			});
+			var fieldAndFormats = query.getFields().stream()
+					.map(field -> FieldAndFormat.of(b -> b.field(field))).toList();
+			builder.fields(fieldAndFormats);
 		}
 
 		if (!isEmpty(query.getStoredFields())) {

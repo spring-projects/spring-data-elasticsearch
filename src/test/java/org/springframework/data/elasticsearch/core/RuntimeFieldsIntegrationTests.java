@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
@@ -93,6 +94,88 @@ public abstract class RuntimeFieldsIntegrationTests {
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo("1");
+	}
+
+	@Test // #2727
+	@DisplayName("should return runtime fields values")
+	void shouldReturnRuntimeFieldsValues() {
+
+		var entity = new SAREntity();
+		entity.setId("42");
+		entity.setValue(3);
+
+		operations.save(entity);
+
+		var runtimeField1 = getRuntimeField("scriptedValue1", 2);
+		var runtimeField2 = getRuntimeField("scriptedValue2", 3);
+
+		var query = CriteriaQuery.builder(Criteria.where("value").is(3)).build();
+		query.addRuntimeField(runtimeField1);
+		query.addRuntimeField(runtimeField2);
+		query.addSourceFilter(new FetchSourceFilterBuilder().withIncludes("*").build());
+		query.addFields("scriptedValue1", "scriptedValue2");
+		var searchHits = operations.search(query, SAREntity.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		var foundEntity = searchHits.getSearchHit(0).getContent();
+		assertThat(foundEntity.value).isEqualTo(3);
+		assertThat(foundEntity.getScriptedValue1()).isEqualTo(6);
+		assertThat(foundEntity.getScriptedValue2()).isEqualTo(9);
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}-sar")
+	public static class SAREntity {
+		@Nullable private String id;
+		@Field(type = FieldType.Integer)
+		@Nullable Integer value;
+		@ScriptedField
+		@Nullable Integer scriptedValue1;
+		@ScriptedField
+		@Nullable Integer scriptedValue2;
+		// getter and setter omitted
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public Integer getValue() {
+			return value;
+		}
+
+		public void setValue(@Nullable Integer value) {
+			this.value = value;
+		}
+
+		@Nullable
+		public Integer getScriptedValue1() {
+			return scriptedValue1;
+		}
+
+		public void setScriptedValue1(@Nullable Integer scriptedValue1) {
+			this.scriptedValue1 = scriptedValue1;
+		}
+
+		@Nullable
+		public Integer getScriptedValue2() {
+			return scriptedValue2;
+		}
+
+		public void setScriptedValue2(@Nullable Integer scriptedValue2) {
+			this.scriptedValue2 = scriptedValue2;
+		}
+	}
+
+	private static RuntimeField getRuntimeField(String fieldName, int factor) {
+		return new RuntimeField(
+				fieldName,
+				"long",
+				String.format("emit(doc['value'].size() > 0 ? doc['value'].value * %d : 0)", factor));
 	}
 
 	@Test // #2431
