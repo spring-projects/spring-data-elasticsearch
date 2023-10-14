@@ -1186,10 +1186,9 @@ class RequestConverter {
 							}
 
 							if (!isEmpty(query.getFields())) {
-								bb.fields(fb -> {
-									query.getFields().forEach(fb::field);
-									return fb;
-								});
+								var fieldAndFormats = query.getFields().stream()
+										.map(field -> FieldAndFormat.of(b -> b.field(field))).toList();
+								bb.fields(fieldAndFormats);
 							}
 
 							if (!isEmpty(query.getStoredFields())) {
@@ -1321,10 +1320,9 @@ class RequestConverter {
 		}
 
 		if (!isEmpty(query.getFields())) {
-			builder.fields(fb -> {
-				query.getFields().forEach(fb::field);
-				return fb;
-			});
+			var fieldAndFormats = query.getFields().stream()
+					.map(field -> FieldAndFormat.of(b -> b.field(field))).toList();
+			builder.fields(fieldAndFormats);
 		}
 
 		if (!isEmpty(query.getStoredFields())) {
