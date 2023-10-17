@@ -386,8 +386,8 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	private void doRefresh() {
 		RefreshPolicy refreshPolicy = null;
 
-		if (operations instanceof AbstractElasticsearchTemplate) {
-			refreshPolicy = ((AbstractElasticsearchTemplate) operations).getRefreshPolicy();
+		if (operations instanceof AbstractElasticsearchTemplate template) {
+			refreshPolicy = template.getRefreshPolicy();
 		}
 
 		if (refreshPolicy == null) {

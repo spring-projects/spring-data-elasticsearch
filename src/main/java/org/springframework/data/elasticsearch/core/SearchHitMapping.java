@@ -229,8 +229,8 @@ public class SearchHitMapping<T> {
 				});
 
 				String scrollId = null;
-				if (searchHits instanceof SearchHitsImpl) {
-					scrollId = ((SearchHitsImpl<?>) searchHits).getScrollId();
+				if (searchHits instanceof SearchHitsImpl<?> searchHitsImpl) {
+					scrollId = searchHitsImpl.getScrollId();
 				}
 
 				return new SearchHitsImpl<>(searchHits.getTotalHits(), //

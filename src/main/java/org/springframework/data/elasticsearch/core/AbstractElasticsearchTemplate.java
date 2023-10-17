@@ -143,8 +143,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			setEntityCallbacks(EntityCallbacks.create(applicationContext));
 		}
 
-		if (elasticsearchConverter instanceof ApplicationContextAware) {
-			((ApplicationContextAware) elasticsearchConverter).setApplicationContext(applicationContext);
+		if (elasticsearchConverter instanceof ApplicationContextAware contextAware) {
+			contextAware.setApplicationContext(applicationContext);
 		}
 	}
 
