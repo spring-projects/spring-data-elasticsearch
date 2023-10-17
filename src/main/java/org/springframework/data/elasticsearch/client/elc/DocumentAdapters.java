@@ -115,8 +115,8 @@ final class DocumentAdapters {
 		if (source == null) {
 			document = Document.from(hitFieldsAsMap);
 		} else {
-			if (source instanceof EntityAsMap) {
-				document = Document.from((EntityAsMap) source);
+			if (source instanceof EntityAsMap entityAsMap) {
+				document = Document.from(entityAsMap);
 			} else if (source instanceof JsonData jsonData) {
 				document = Document.from(jsonData.to(EntityAsMap.class));
 			} else {

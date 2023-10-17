@@ -125,10 +125,10 @@ public final class MappingParameters {
 
 		Assert.notNull(annotation, "annotation must not be null!");
 
-		if (annotation instanceof Field) {
-			return new MappingParameters((Field) annotation);
-		} else if (annotation instanceof InnerField) {
-			return new MappingParameters((InnerField) annotation);
+		if (annotation instanceof Field field) {
+			return new MappingParameters(field);
+		} else if (annotation instanceof InnerField innerField) {
+			return new MappingParameters(innerField);
 		} else {
 			throw new IllegalArgumentException("annotation must be an instance of @Field or @InnerField");
 		}

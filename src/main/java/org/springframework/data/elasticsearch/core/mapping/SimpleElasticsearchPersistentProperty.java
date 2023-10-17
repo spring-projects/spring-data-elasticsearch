@@ -344,8 +344,8 @@ public class SimpleElasticsearchPersistentProperty extends
 	private FieldNamingStrategy getFieldNamingStrategy() {
 		PersistentEntity<?, ElasticsearchPersistentProperty> owner = getOwner();
 
-		if (owner instanceof ElasticsearchPersistentEntity) {
-			return ((ElasticsearchPersistentEntity<?>) owner).getFieldNamingStrategy();
+		if (owner instanceof ElasticsearchPersistentEntity<?> persistentEntity) {
+			return persistentEntity.getFieldNamingStrategy();
 		}
 
 		return DEFAULT_FIELD_NAMING_STRATEGY;

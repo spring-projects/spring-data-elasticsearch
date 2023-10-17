@@ -323,9 +323,9 @@ final public class ElasticsearchDateConverter {
 			try {
 				return dateTimeFormatter.format(accessor);
 			} catch (Exception e) {
-				if (accessor instanceof Instant) {
+				if (accessor instanceof Instant instant) {
 					// as alternatives try to format a ZonedDateTime or LocalDateTime
-					return dateTimeFormatter.format(ZonedDateTime.ofInstant((Instant) accessor, ZoneId.of("UTC")));
+					return dateTimeFormatter.format(ZonedDateTime.ofInstant(instant, ZoneId.of("UTC")));
 				} else {
 					throw e;
 				}

@@ -116,8 +116,8 @@ public class MappingElasticsearchConverter
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 
-		if (mappingContext instanceof ApplicationContextAware) {
-			((ApplicationContextAware) mappingContext).setApplicationContext(applicationContext);
+		if (mappingContext instanceof ApplicationContextAware contextAware) {
+			contextAware.setApplicationContext(applicationContext);
 		}
 	}
 
@@ -1186,8 +1186,8 @@ public class MappingElasticsearchConverter
 		 */
 		private static Collection<?> asCollection(Object source) {
 
-			if (source instanceof Collection) {
-				return (Collection<?>) source;
+			if (source instanceof Collection<?> collection) {
+				return collection;
 			}
 
 			return source.getClass().isArray() ? CollectionUtils.arrayToList(source) : Collections.singleton(source);
@@ -1201,9 +1201,9 @@ public class MappingElasticsearchConverter
 
 		Assert.notNull(query, "query must not be null");
 
-		if (query instanceof BaseQuery) {
+		if (query instanceof BaseQuery baseQuery) {
 
-			if (((BaseQuery) query).queryIsUpdatedByConverter()) {
+			if (baseQuery.queryIsUpdatedByConverter()) {
 				return;
 			}
 		}
@@ -1214,12 +1214,12 @@ public class MappingElasticsearchConverter
 
 		updatePropertiesInFieldsAndSourceFilter(query, domainClass);
 
-		if (query instanceof CriteriaQuery) {
-			updatePropertiesInCriteriaQuery((CriteriaQuery) query, domainClass);
+		if (query instanceof CriteriaQuery criteriaQuery) {
+			updatePropertiesInCriteriaQuery(criteriaQuery, domainClass);
 		}
 
-		if (query instanceof BaseQuery) {
-			((BaseQuery) query).setQueryIsUpdatedByConverter(true);
+		if (query instanceof BaseQuery baseQuery) {
+			baseQuery.setQueryIsUpdatedByConverter(true);
 		}
 	}
 

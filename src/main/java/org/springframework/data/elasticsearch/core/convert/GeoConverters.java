@@ -141,20 +141,20 @@ public class GeoConverters {
 
 		@Override
 		public Map<String, Object> convert(GeoJson<? extends Iterable<?>> source) {
-			if (source instanceof GeoJsonPoint) {
-				return GeoJsonPointToMapConverter.INSTANCE.convert((GeoJsonPoint) source);
-			} else if (source instanceof GeoJsonMultiPoint) {
-				return GeoJsonMultiPointToMapConverter.INSTANCE.convert((GeoJsonMultiPoint) source);
-			} else if (source instanceof GeoJsonLineString) {
-				return GeoJsonLineStringToMapConverter.INSTANCE.convert((GeoJsonLineString) source);
-			} else if (source instanceof GeoJsonMultiLineString) {
-				return GeoJsonMultiLineStringToMapConverter.INSTANCE.convert((GeoJsonMultiLineString) source);
-			} else if (source instanceof GeoJsonPolygon) {
-				return GeoJsonPolygonToMapConverter.INSTANCE.convert((GeoJsonPolygon) source);
-			} else if (source instanceof GeoJsonMultiPolygon) {
-				return GeoJsonMultiPolygonToMapConverter.INSTANCE.convert((GeoJsonMultiPolygon) source);
-			} else if (source instanceof GeoJsonGeometryCollection) {
-				return GeoJsonGeometryCollectionToMapConverter.INSTANCE.convert((GeoJsonGeometryCollection) source);
+			if (source instanceof GeoJsonPoint geoJsonPoint) {
+				return GeoJsonPointToMapConverter.INSTANCE.convert(geoJsonPoint);
+			} else if (source instanceof GeoJsonMultiPoint geoJsonMultiPoint) {
+				return GeoJsonMultiPointToMapConverter.INSTANCE.convert(geoJsonMultiPoint);
+			} else if (source instanceof GeoJsonLineString geoJsonLineString) {
+				return GeoJsonLineStringToMapConverter.INSTANCE.convert(geoJsonLineString);
+			} else if (source instanceof GeoJsonMultiLineString geoJsonMultiLineString) {
+				return GeoJsonMultiLineStringToMapConverter.INSTANCE.convert(geoJsonMultiLineString);
+			} else if (source instanceof GeoJsonPolygon geoJsonPolygon) {
+				return GeoJsonPolygonToMapConverter.INSTANCE.convert(geoJsonPolygon);
+			} else if (source instanceof GeoJsonMultiPolygon geoJsonMultiPolygon) {
+				return GeoJsonMultiPolygonToMapConverter.INSTANCE.convert(geoJsonMultiPolygon);
+			} else if (source instanceof GeoJsonGeometryCollection geoJsonGeometryCollection) {
+				return GeoJsonGeometryCollectionToMapConverter.INSTANCE.convert(geoJsonGeometryCollection);
 			} else {
 				throw new IllegalArgumentException("unknown GeoJson class " + source.getClass().getSimpleName());
 			}

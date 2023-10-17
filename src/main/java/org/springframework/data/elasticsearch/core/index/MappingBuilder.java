@@ -194,8 +194,8 @@ public class MappingBuilder {
 			if (writeTypeHints) {
 				String typeHintProperty = null;
 
-				if (elasticsearchConverter instanceof MappingElasticsearchConverter) {
-					typeHintProperty = ((MappingElasticsearchConverter) elasticsearchConverter).getTypeMapper().getTypeKey();
+				if (elasticsearchConverter instanceof MappingElasticsearchConverter mappingElasticsearchConverter) {
+					typeHintProperty = mappingElasticsearchConverter.getTypeMapper().getTypeKey();
 				}
 
 				if (typeHintProperty == null) {
