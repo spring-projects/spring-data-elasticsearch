@@ -387,7 +387,7 @@ public class Criteria {
 
 		Assert.notNull(s, "s may not be null");
 
-		assertNoBlankInWildcardQuery(s, true, false);
+		assertNoBlankInWildcardQuery(s, false, true);
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.STARTS_WITH, s));
 		return this;
 	}
@@ -419,7 +419,7 @@ public class Criteria {
 
 		Assert.notNull(s, "s may not be null");
 
-		assertNoBlankInWildcardQuery(s, false, true);
+		assertNoBlankInWildcardQuery(s, true, false);
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.ENDS_WITH, s));
 		return this;
 	}
