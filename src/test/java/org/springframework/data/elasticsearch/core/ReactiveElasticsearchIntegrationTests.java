@@ -98,7 +98,7 @@ import org.springframework.util.StringUtils;
 @SpringIntegrationTest
 public abstract class ReactiveElasticsearchIntegrationTests {
 
-	@Autowired private ReactiveElasticsearchOperations operations;
+	@Autowired protected ReactiveElasticsearchOperations operations;
 	@Autowired private IndexNameProvider indexNameProvider;
 
 	// region Setup
@@ -1224,7 +1224,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 	// endregion
 
 	// region Helper functions
-	private SampleEntity randomEntity(String message) {
+	protected SampleEntity randomEntity(@Nullable String message) {
 
 		SampleEntity entity = new SampleEntity();
 		entity.setId(UUID.randomUUID().toString());

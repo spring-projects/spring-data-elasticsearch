@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Buckets;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
@@ -27,9 +28,12 @@ import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.Aggregation;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
@@ -47,6 +51,51 @@ import org.springframework.test.context.ContextConfiguration;
  */
 @ContextConfiguration(classes = ReactiveElasticsearchELCIntegrationTests.Config.class)
 public class ReactiveElasticsearchELCIntegrationTests extends ReactiveElasticsearchIntegrationTests {
+
+	@Test // #2745
+	@DisplayName("should use sort defined in native unbounded query")
+	void shouldUseSortDefinedInNativeUnboundedQuery() {
+		var entity1 = randomEntity(null);
+		entity1.setRate(7);
+		var entity2 = randomEntity(null);
+		entity2.setRate(5);
+		var entity3 = randomEntity(null);
+		entity3.setRate(11);
+
+		operations.saveAll(List.of(entity1, entity2, entity3), SampleEntity.class).blockLast();
+
+		var query = NativeQuery.builder()
+				.withQuery(qb -> qb
+						.matchAll(m -> m))
+				.withSort(sob -> sob
+						.field(f -> f
+								.field("rate")
+								.order(SortOrder.Asc)))
+				.withPageable(Pageable.unpaged())
+				.build();
+
+		var rates = operations.search(query, SampleEntity.class)
+				.map(SearchHit::getContent)
+				.map(SampleEntity::getRate)
+				.collectList().block();
+		assertThat(rates).containsExactly(5, 7, 11);
+
+		query = NativeQuery.builder()
+				.withQuery(qb -> qb
+						.matchAll(m -> m))
+				.withSort(sob -> sob
+						.field(f -> f
+								.field("rate")
+								.order(SortOrder.Desc)))
+				.withPageable(Pageable.unpaged())
+				.build();
+
+		rates = operations.search(query, SampleEntity.class)
+				.map(SearchHit::getContent)
+				.map(SampleEntity::getRate)
+				.collectList().block();
+		assertThat(rates).containsExactly(11, 7, 5);
+	}
 
 	@Configuration
 	@Import({ ReactiveElasticsearchTemplateConfiguration.class })
