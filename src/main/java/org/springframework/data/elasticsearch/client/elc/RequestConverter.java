@@ -1341,14 +1341,6 @@ class RequestConverter {
 			builder.minScore((double) query.getMinScore());
 		}
 
-		if (query.getSort() != null) {
-			List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
-
-			if (!sortOptions.isEmpty()) {
-				builder.sort(sortOptions);
-			}
-		}
-
 		addHighlight(query, builder);
 
 		query.getScriptedFields().forEach(scriptedField -> builder.scriptFields(scriptedField.getFieldName(),
@@ -1356,6 +1348,15 @@ class RequestConverter {
 
 		if (query instanceof NativeQuery) {
 			prepareNativeSearch((NativeQuery) query, builder);
+		}
+		// query.getSort() must be checked after prepareNativeSearch as this already might hav a sort set that must have
+		// higher priority
+		if (query.getSort() != null) {
+			List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
+
+			if (!sortOptions.isEmpty()) {
+				builder.sort(sortOptions);
+			}
 		}
 
 		if (query.getTrackTotalHits() != null) {
