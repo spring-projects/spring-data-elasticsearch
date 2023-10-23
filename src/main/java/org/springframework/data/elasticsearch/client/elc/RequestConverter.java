@@ -1192,18 +1192,19 @@ class RequestConverter {
 
 		builder.searchType(searchType(query.getSearchType()));
 
+		addHighlight(query, builder);
+
+		if (query instanceof NativeQuery) {
+			prepareNativeSearch((NativeQuery) query, builder);
+		}
+		// query.getSort() must be checked after prepareNativeSearch as this already might hav a sort set that must have
+		// higher priority
 		if (query.getSort() != null) {
 			List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
 
 			if (!sortOptions.isEmpty()) {
 				builder.sort(sortOptions);
 			}
-		}
-
-		addHighlight(query, builder);
-
-		if (query instanceof NativeQuery) {
-			prepareNativeSearch((NativeQuery) query, builder);
 		}
 
 		if (query.getTrackTotalHits() != null) {
