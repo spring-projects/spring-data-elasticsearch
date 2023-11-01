@@ -125,7 +125,7 @@ Almost all of the methods defined in the `SearchOperations` and `ReactiveSearchO
 === CriteriaQuery
 
 `CriteriaQuery` based queries allow the creation of queries to search for data without knowing the syntax or basics of Elasticsearch queries.
-They allow the user to build queries by simply chaining and combining `Criteria` objects that specifiy the criteria the searched documents must fulfill.
+They allow the user to build queries by simply chaining and combining `Criteria` objects that specify the criteria the searched documents must fulfill.
 
 NOTE: when talking about AND or OR when combining criteria keep in mind, that in Elasticsearch AND are converted to a **must** condition and OR to a **should**
 
@@ -213,7 +213,7 @@ Using `StringQuery` may be appropriate if you already have an Elasticsearch quer
 `NativeQuery` is the class to use when you have a complex query, or a query that cannot be expressed by using the `Criteria` API, for example when building queries and using aggregates.
 It allows to use all the different `co.elastic.clients.elasticsearch._types.query_dsl.Query` implementations from the Elasticsearch library therefore named "native".
 
-The following code shows how to search for persons with a given firstname and for the found documents have a terms aggregation that counts the number of occurences of the lastnames for these persons:
+The following code shows how to search for persons with a given `firstname` and for the found documents have a terms aggregation that counts the number of occurrences of the `lastnames` for these persons:
 
 ====
 [source,java]
