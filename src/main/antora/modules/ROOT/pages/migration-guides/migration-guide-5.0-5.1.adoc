@@ -24,4 +24,4 @@ Adaptions are necessary when this enum was used at other places than as a proper
 The functions in the `IndexOperations` and `ReactiverIndexOperations` to manage index templates that were introduced in Spring Data Elasticsearch 4.1
 have been deprecated. They were using the old Elasticsearch API that was deprecated in Elasticsearch version 7.8. 
 
-Please use the new functions that are based on the compsable index template API instead.
+Please use the new functions that are based on the composable index template API instead.
