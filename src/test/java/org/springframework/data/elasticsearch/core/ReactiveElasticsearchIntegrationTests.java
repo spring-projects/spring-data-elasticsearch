@@ -1189,9 +1189,11 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.mapToObj(SampleEntity::of) //
 				.collect(Collectors.toList());
 
-		// we add a random delay to make suure the underlying implementation handles irregular incoming data
+		// we add a random delay to make sure the underlying implementation handles irregular incoming data
 		var entities = Flux.fromIterable(entityList).concatMap(
-				entity -> Mono.just(entity).delay(Duration.ofMillis((long) (Math.random() * 10))).thenReturn(entity));
+				entity -> Mono.just(entity)
+						.delay(Duration.ofMillis((long) (Math.random() * 10)))
+						.thenReturn(entity));
 
 		operations.save(entities, SampleEntity.class).collectList() //
 				.as(StepVerifier::create) //
