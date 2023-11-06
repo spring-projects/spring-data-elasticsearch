@@ -39,6 +39,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
@@ -223,7 +224,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(id, "Cannot delete entity with id 'null'.");
 
-		doDelete(id, getIndexCoordinates());
+		doDelete(id, null, getIndexCoordinates());
 	}
 
 	@Override
@@ -231,7 +232,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(entity, "Cannot delete 'null' entity.");
 
-		doDelete(extractIdFromBean(entity), getIndexCoordinates());
+		doDelete(extractIdFromBean(entity), operations.getEntityRouting(entity), getIndexCoordinates());
 	}
 
 	@Override
@@ -271,10 +272,14 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		deleteAllById(ids);
 	}
 
-	private void doDelete(@Nullable ID id, IndexCoordinates indexCoordinates) {
+	private void doDelete(@Nullable ID id, @Nullable String routing, IndexCoordinates indexCoordinates) {
 
 		if (id != null) {
-			executeAndRefresh(operations -> operations.delete(stringIdRepresentation(id), indexCoordinates));
+			executeAndRefresh(operations -> {
+				var ops = routing != null ? operations.withRouting(RoutingResolver.just(routing)) : operations;
+				// noinspection DataFlowIssue
+				return ops.delete(stringIdRepresentation(id), indexCoordinates);
+			});
 		}
 	}
 

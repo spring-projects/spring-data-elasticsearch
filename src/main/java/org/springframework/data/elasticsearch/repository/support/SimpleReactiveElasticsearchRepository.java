@@ -31,6 +31,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.util.Assert;
 
@@ -196,7 +197,10 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 	public Mono<Void> delete(T entity) {
 
 		Assert.notNull(entity, "Entity must not be null!");
-		return operations.delete(entity, entityInformation.getIndexCoordinates()) //
+
+		var routing = operations.getEntityRouting(entity);
+		var ops = routing != null ? operations.withRouting(RoutingResolver.just(routing)) : operations;
+		return ops.delete(entity, entityInformation.getIndexCoordinates()) //
 				.then(doRefresh());
 	}
 
