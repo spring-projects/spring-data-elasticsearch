@@ -33,6 +33,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -256,7 +257,9 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(entity, "Entity must not be null!");
 
-		return operations.delete(entity, entityInformation.getIndexCoordinates()) //
+		var routing = operations.getEntityRouting(entity);
+		var ops = routing != null ? operations.withRouting(RoutingResolver.just(routing)) : operations;
+		return ops.delete(entity, entityInformation.getIndexCoordinates()) //
 				.then(doRefresh());
 	}
 
@@ -265,7 +268,9 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(entity, "Entity must not be null!");
 
-		return operations.withRefreshPolicy(refreshPolicy).delete(entity, entityInformation.getIndexCoordinates()) //
+		var routing = operations.getEntityRouting(entity);
+		var ops = routing != null ? operations.withRouting(RoutingResolver.just(routing)) : operations;
+		return ops.withRefreshPolicy(refreshPolicy).delete(entity, entityInformation.getIndexCoordinates()) //
 				.then(doRefresh());
 	}
 

@@ -758,6 +758,12 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	public abstract Mono<String> getClusterVersion();
 
+	@Nullable
+	public String getEntityRouting(Object entity) {
+		return entityOperations.forEntity(entity, converter.getConversionService(), routingResolver)
+				.getRouting();
+	}
+
 	/**
 	 * Value class to capture client independent information from a response to an index request.
 	 */
