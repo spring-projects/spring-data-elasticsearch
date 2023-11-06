@@ -118,6 +118,17 @@ public interface ReactiveElasticsearchOperations
 
 	// region routing
 	/**
+	 * gets the routing for an entity.
+	 *
+	 * @param entity the entity
+	 * @return the routing, may be null if not set.
+	 * @since 5.2
+	 */
+	@Nullable
+	String getEntityRouting(Object entity);
+
+	// region customizations
+	/**
 	 * Returns a copy of this instance with the same configuration, but that uses a different {@link RoutingResolver} to
 	 * obtain routing information.
 	 *
