@@ -54,7 +54,6 @@ import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolve
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.support.VersionInfo;
-import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.Streamable;
@@ -240,7 +239,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		// noinspection unchecked
 		return indexQueries.stream() //
 				.map(IndexQuery::getObject) //
-				.map(entity -> (T) updateIndexedObject(entity, iterator.next())) //
+				.map(entity -> (T) entityOperations.updateIndexedObject(
+						entity,
+						iterator.next(),
+						elasticsearchConverter,
+						routingResolver)) //
 				.collect(Collectors.toList()); //
 	}
 
@@ -397,47 +400,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		return updateQueryBuilder.build();
 	}
-
-	protected <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
-
-		ElasticsearchPersistentEntity<?> persistentEntity = elasticsearchConverter.getMappingContext()
-				.getPersistentEntity(entity.getClass());
-
-		if (persistentEntity != null) {
-			PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
-			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
-
-			// Only deal with text because ES generated Ids are strings!
-			if (indexedObjectInformation.id() != null && idProperty != null && idProperty.isReadable()
-					&& idProperty.getType().isAssignableFrom(String.class)) {
-				propertyAccessor.setProperty(idProperty, indexedObjectInformation.id());
-			}
-
-			if (indexedObjectInformation.seqNo() != null && indexedObjectInformation.primaryTerm() != null
-					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
-				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
-				// noinspection ConstantConditions
-				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
-						new SeqNoPrimaryTerm(indexedObjectInformation.seqNo(), indexedObjectInformation.primaryTerm()));
-			}
-
-			if (indexedObjectInformation.version() != null && persistentEntity.hasVersionProperty()) {
-				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
-				// noinspection ConstantConditions
-				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.version());
-			}
-
-			var indexedIndexNameProperty = persistentEntity.getIndexedIndexNameProperty();
-			if (indexedIndexNameProperty != null) {
-				propertyAccessor.setProperty(indexedIndexNameProperty, indexedObjectInformation.index());
-			}
-
-			// noinspection unchecked
-			return (T) propertyAccessor.getBean();
-		}
-		return entity;
-	}
-
 	// endregion
 
 	// region SearchOperations
@@ -736,7 +698,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 				Object queryObject = indexQuery.getObject();
 
 				if (queryObject != null) {
-					indexQuery.setObject(updateIndexedObject(queryObject, indexedObjectInformationList.get(i)));
+					indexQuery.setObject(entityOperations.updateIndexedObject(
+							queryObject,
+							indexedObjectInformationList.get(i),
+							elasticsearchConverter,
+							routingResolver));
 				}
 			}
 		}
@@ -802,7 +768,11 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 					documentAfterLoad.hasSeqNo() ? documentAfterLoad.getSeqNo() : null, //
 					documentAfterLoad.hasPrimaryTerm() ? documentAfterLoad.getPrimaryTerm() : null, //
 					documentAfterLoad.hasVersion() ? documentAfterLoad.getVersion() : null); //
-			entity = updateIndexedObject(entity, indexedObjectInformation);
+			entity = entityOperations.updateIndexedObject(
+					entity,
+					indexedObjectInformation,
+					elasticsearchConverter,
+					routingResolver);
 
 			return maybeCallbackAfterConvert(entity, documentAfterLoad, index);
 		}

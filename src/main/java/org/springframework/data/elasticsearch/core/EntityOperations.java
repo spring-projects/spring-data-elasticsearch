@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import java.util.Map;
 
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -92,6 +93,69 @@ public class EntityOperations {
 		}
 
 		return AdaptableMappedEntity.of(entity, context, conversionService, routingResolver);
+	}
+
+	/**
+	 * Updates an entity after it is stored in Elasticsearch with additional data like id, version, seqno...
+	 *
+	 * @param <T> the entity class
+	 * @param entity the entity to update
+	 * @param indexedObjectInformation the update information
+	 * @param elasticsearchConverter the converter providing necessary mapping information
+	 * @param routingResolver routing resolver to use
+	 * @return
+	 */
+	public <T> T updateIndexedObject(T entity,
+			IndexedObjectInformation indexedObjectInformation,
+			ElasticsearchConverter elasticsearchConverter,
+			RoutingResolver routingResolver) {
+
+		Assert.notNull(entity, "entity must not be null");
+		Assert.notNull(indexedObjectInformation, "indexedObjectInformation must not be null");
+		Assert.notNull(elasticsearchConverter, "elasticsearchConverter must not be null");
+
+		ElasticsearchPersistentEntity<?> persistentEntity = elasticsearchConverter.getMappingContext()
+				.getPersistentEntity(entity.getClass());
+
+		if (persistentEntity != null) {
+			PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
+			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
+
+			// Only deal with text because ES generated Ids are strings!
+			if (indexedObjectInformation.id() != null && idProperty != null
+					// isReadable from the base class is false in case of records
+					&& (idProperty.isReadable() || idProperty.getOwner().getType().isRecord())
+					&& idProperty.getType().isAssignableFrom(String.class)) {
+				propertyAccessor.setProperty(idProperty, indexedObjectInformation.id());
+			}
+
+			if (indexedObjectInformation.seqNo() != null && indexedObjectInformation.primaryTerm() != null
+					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
+				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
+				// noinspection ConstantConditions
+				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
+						new SeqNoPrimaryTerm(indexedObjectInformation.seqNo(), indexedObjectInformation.primaryTerm()));
+			}
+
+			if (indexedObjectInformation.version() != null && persistentEntity.hasVersionProperty()) {
+				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
+				// noinspection ConstantConditions
+				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.version());
+			}
+
+			var indexedIndexNameProperty = persistentEntity.getIndexedIndexNameProperty();
+			if (indexedIndexNameProperty != null) {
+				propertyAccessor.setProperty(indexedIndexNameProperty, indexedObjectInformation.index());
+			}
+
+			// noinspection unchecked
+			return (T) propertyAccessor.getBean();
+		} else {
+			EntityOperations.AdaptableEntity<T> adaptableEntity = forEntity(entity,
+					elasticsearchConverter.getConversionService(), routingResolver);
+			adaptableEntity.populateIdIfNecessary(indexedObjectInformation.id());
+		}
+		return entity;
 	}
 
 	/**

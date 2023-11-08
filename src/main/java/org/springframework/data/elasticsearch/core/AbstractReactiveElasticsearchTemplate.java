@@ -43,7 +43,6 @@ import org.springframework.data.elasticsearch.core.event.ReactiveAfterLoadCallba
 import org.springframework.data.elasticsearch.core.event.ReactiveAfterSaveCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCallback;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
@@ -55,7 +54,6 @@ import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.support.VersionInfo;
-import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
@@ -320,51 +318,6 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		return query;
 	}
 
-	protected <T> T updateIndexedObject(T entity, IndexedObjectInformation indexedObjectInformation) {
-
-		ElasticsearchPersistentEntity<?> persistentEntity = converter.getMappingContext()
-				.getPersistentEntity(entity.getClass());
-
-		if (persistentEntity != null) {
-			// noinspection DuplicatedCode
-			PersistentPropertyAccessor<Object> propertyAccessor = persistentEntity.getPropertyAccessor(entity);
-			ElasticsearchPersistentProperty idProperty = persistentEntity.getIdProperty();
-
-			// Only deal with text because ES generated Ids are strings!
-			if (indexedObjectInformation.id() != null && idProperty != null && idProperty.isReadable()
-					&& idProperty.getType().isAssignableFrom(String.class)) {
-				propertyAccessor.setProperty(idProperty, indexedObjectInformation.id());
-			}
-
-			if (indexedObjectInformation.seqNo() != null && indexedObjectInformation.primaryTerm() != null
-					&& persistentEntity.hasSeqNoPrimaryTermProperty()) {
-				ElasticsearchPersistentProperty seqNoPrimaryTermProperty = persistentEntity.getSeqNoPrimaryTermProperty();
-				// noinspection ConstantConditions
-				propertyAccessor.setProperty(seqNoPrimaryTermProperty,
-						new SeqNoPrimaryTerm(indexedObjectInformation.seqNo(), indexedObjectInformation.primaryTerm()));
-			}
-
-			if (indexedObjectInformation.version() != null && persistentEntity.hasVersionProperty()) {
-				ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
-				// noinspection ConstantConditions
-				propertyAccessor.setProperty(versionProperty, indexedObjectInformation.version());
-			}
-
-			var indexedIndexNameProperty = persistentEntity.getIndexedIndexNameProperty();
-			if (indexedIndexNameProperty != null) {
-				propertyAccessor.setProperty(indexedIndexNameProperty, indexedObjectInformation.index());
-			}
-
-			// noinspection unchecked
-			return (T) propertyAccessor.getBean();
-		} else {
-			EntityOperations.AdaptableEntity<T> adaptableEntity = entityOperations.forEntity(entity,
-					converter.getConversionService(), routingResolver);
-			adaptableEntity.populateIdIfNecessary(indexedObjectInformation.id());
-		}
-		return entity;
-	}
-
 	@Override
 	public <T> Flux<MultiGetItem<T>> multiGet(Query query, Class<T> clazz) {
 		return multiGet(query, clazz, getIndexCoordinatesFor(clazz));
@@ -391,12 +344,16 @@ abstract public class AbstractReactiveElasticsearchTemplate
 				.map(it -> {
 					T savedEntity = it.getT1();
 					IndexResponseMetaData indexResponseMetaData = it.getT2();
-					return updateIndexedObject(savedEntity, new IndexedObjectInformation(
-							indexResponseMetaData.id(),
-							indexResponseMetaData.index(),
-							indexResponseMetaData.seqNo(),
-							indexResponseMetaData.primaryTerm(),
-							indexResponseMetaData.version()));
+					return entityOperations.updateIndexedObject(
+							savedEntity,
+							new IndexedObjectInformation(
+									indexResponseMetaData.id(),
+									indexResponseMetaData.index(),
+									indexResponseMetaData.seqNo(),
+									indexResponseMetaData.primaryTerm(),
+									indexResponseMetaData.version()),
+							converter,
+							routingResolver);
 				}).flatMap(saved -> maybeCallbackAfterSave(saved, index));
 	}
 
@@ -652,7 +609,11 @@ abstract public class AbstractReactiveElasticsearchTemplate
 								documentAfterLoad.hasSeqNo() ? documentAfterLoad.getSeqNo() : null,
 								documentAfterLoad.hasPrimaryTerm() ? documentAfterLoad.getPrimaryTerm() : null,
 								documentAfterLoad.hasVersion() ? documentAfterLoad.getVersion() : null);
-						entity = updateIndexedObject(entity, indexedObjectInformation);
+						entity = entityOperations.updateIndexedObject(
+								entity,
+								indexedObjectInformation,
+								converter,
+								routingResolver);
 
 						return maybeCallbackAfterConvert(entity, documentAfterLoad, index);
 					});

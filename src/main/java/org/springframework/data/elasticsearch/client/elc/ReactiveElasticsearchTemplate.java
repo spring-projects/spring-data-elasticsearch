@@ -141,13 +141,16 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 							.flatMap(indexAndResponse -> {
 								T savedEntity = entities.entityAt(indexAndResponse.getT1());
 								BulkResponseItem response = indexAndResponse.getT2();
-								updateIndexedObject(savedEntity, new IndexedObjectInformation( //
-										response.id(), //
-										response.index(), //
-										response.seqNo(), //
-										response.primaryTerm(), //
-										response.version()));
-								return maybeCallbackAfterSave(savedEntity, index);
+								var updatedEntity = entityOperations.updateIndexedObject(
+										savedEntity, new IndexedObjectInformation( //
+												response.id(), //
+												response.index(), //
+												response.seqNo(), //
+												response.primaryTerm(), //
+												response.version()),
+										converter,
+										routingResolver);
+								return maybeCallbackAfterSave(updatedEntity, index);
 							});
 				});
 	}

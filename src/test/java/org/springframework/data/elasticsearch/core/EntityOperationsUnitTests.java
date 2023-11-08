@@ -20,17 +20,24 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.GenericConversionService;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.IndexedIndexName;
 import org.springframework.data.elasticsearch.annotations.Routing;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.routing.DefaultRoutingResolver;
 import org.springframework.lang.Nullable;
 
@@ -39,22 +46,24 @@ import org.springframework.lang.Nullable;
  */
 class EntityOperationsUnitTests {
 
-	@Nullable private static ConversionService conversionService;
-	@Nullable private static EntityOperations entityOperations;
 	@Nullable private static SimpleElasticsearchMappingContext mappingContext;
+	@Nullable private static EntityOperations entityOperations;
+	@Nullable private static ElasticsearchConverter elasticsearchConverter;
+	@Nullable private static ConversionService conversionService;
 
 	@BeforeAll
 	static void setUpAll() {
 		mappingContext = new SimpleElasticsearchMappingContext();
 		mappingContext.setInitialEntitySet(new HashSet<>(Arrays.asList(EntityWithRouting.class)));
 		mappingContext.afterPropertiesSet();
+
 		entityOperations = new EntityOperations(mappingContext);
 
-		MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext,
+		elasticsearchConverter = new MappingElasticsearchConverter(mappingContext,
 				new GenericConversionService());
-		converter.afterPropertiesSet();
+		((MappingElasticsearchConverter) elasticsearchConverter).afterPropertiesSet();
 
-		conversionService = converter.getConversionService();
+		conversionService = elasticsearchConverter.getConversionService();
 	}
 
 	@Test // #1218
@@ -102,6 +111,64 @@ class EntityOperationsUnitTests {
 		String routing = adaptableEntity.getRouting();
 
 		assertThat(routing).isEqualTo("theRoute");
+	}
+
+	@Test // #2756
+	@DisplayName("should update indexed information of class entity")
+	void shouldUpdateIndexedInformationOfClassEntity() {
+
+		var entity = new EntityFromClass();
+		entity.setId(null);
+		entity.setText("some text");
+		var indexedObjectInformation = new IndexedObjectInformation(
+				"id-42",
+				"index-42",
+				1L,
+				2L,
+				3L);
+		entity = entityOperations.updateIndexedObject(entity,
+				indexedObjectInformation,
+				elasticsearchConverter,
+				new DefaultRoutingResolver(mappingContext));
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(entity.getId()).isEqualTo(indexedObjectInformation.id());
+		softly.assertThat(entity.getSeqNoPrimaryTerm().sequenceNumber()).isEqualTo(indexedObjectInformation.seqNo());
+		softly.assertThat(entity.getSeqNoPrimaryTerm().primaryTerm()).isEqualTo(indexedObjectInformation.primaryTerm());
+		softly.assertThat(entity.getVersion()).isEqualTo(indexedObjectInformation.version());
+		softly.assertThat(entity.getIndexName()).isEqualTo(indexedObjectInformation.index());
+		softly.assertAll();
+	}
+
+	@Test // #2756
+	@DisplayName("should update indexed information of record entity")
+	void shouldUpdateIndexedInformationOfRecordEntity() {
+
+		var entity = new EntityFromRecord(
+				null,
+				"someText",
+				null,
+				null,
+				null);
+
+		var indexedObjectInformation = new IndexedObjectInformation(
+				"id-42",
+				"index-42",
+				1L,
+				2L,
+				3L);
+		entity = entityOperations.updateIndexedObject(entity,
+				indexedObjectInformation,
+				elasticsearchConverter,
+				new DefaultRoutingResolver(mappingContext));
+
+		SoftAssertions softly = new SoftAssertions();
+		softly.assertThat(entity.id()).isEqualTo(indexedObjectInformation.id());
+		softly.assertThat(entity.seqNoPrimaryTerm().sequenceNumber()).isEqualTo(indexedObjectInformation.seqNo());
+		softly.assertThat(entity.seqNoPrimaryTerm().primaryTerm()).isEqualTo(indexedObjectInformation.primaryTerm());
+		softly.assertThat(entity.version()).isEqualTo(indexedObjectInformation.version());
+		softly.assertThat(entity.indexName()).isEqualTo(indexedObjectInformation.index());
+		softly.assertAll();
 	}
 
 	@Document(indexName = "entity-operations-test")
@@ -164,5 +231,71 @@ class EntityOperationsUnitTests {
 		public void setJoinField(@Nullable JoinField<String> joinField) {
 			this.joinField = joinField;
 		}
+	}
+
+	@Document(indexName = "entity-operations-test")
+	static class EntityFromClass {
+		@Id
+		@Nullable private String id;
+		@Field(type = FieldType.Text)
+		@Nullable private String text;
+		@Version
+		@Nullable private Long version;
+		@Nullable private SeqNoPrimaryTerm seqNoPrimaryTerm;
+		@IndexedIndexName
+		@Nullable private String indexName;
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getText() {
+			return text;
+		}
+
+		public void setText(@Nullable String text) {
+			this.text = text;
+		}
+
+		@Nullable
+		public Long getVersion() {
+			return version;
+		}
+
+		public void setVersion(@Nullable Long version) {
+			this.version = version;
+		}
+
+		@Nullable
+		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+			return seqNoPrimaryTerm;
+		}
+
+		public void setSeqNoPrimaryTerm(@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm) {
+			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
+		}
+
+		@Nullable
+		public String getIndexName() {
+			return indexName;
+		}
+
+		public void setIndexName(@Nullable String indexName) {
+			this.indexName = indexName;
+		}
+	}
+
+	@Document(indexName = "entity-operations-test")
+	static record EntityFromRecord(
+			@Id @Nullable String id,
+			@Field(type = FieldType.Text) @Nullable String text,
+			@Version @Nullable Long version,
+			@Nullable SeqNoPrimaryTerm seqNoPrimaryTerm,
+			@IndexedIndexName @Nullable String indexName) {
 	}
 }
