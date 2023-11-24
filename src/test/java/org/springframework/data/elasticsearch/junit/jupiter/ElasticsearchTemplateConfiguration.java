@@ -51,10 +51,8 @@ public class ElasticsearchTemplateConfiguration extends ElasticsearchConfigurati
 			configurationBuilder = configurationBuilder.withProxy(proxy);
 		}
 
-		if (clusterConnectionInfo.isUseSsl()) {
-			configurationBuilder = ((ClientConfiguration.MaybeSecureClientConfigurationBuilder) configurationBuilder)
-					.usingSsl();
-		}
+		configurationBuilder = ((ClientConfiguration.MaybeSecureClientConfigurationBuilder) configurationBuilder)
+				.usingSsl(clusterConnectionInfo.isUseSsl());
 
 		String user = System.getenv("DATAES_ELASTICSEARCH_USER");
 		String password = System.getenv("DATAES_ELASTICSEARCH_PASSWORD");

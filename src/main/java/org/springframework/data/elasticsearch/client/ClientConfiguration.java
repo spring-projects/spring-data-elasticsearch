@@ -234,6 +234,15 @@ public interface ClientConfiguration {
 		TerminalClientConfigurationBuilder usingSsl();
 
 		/**
+		 * Connects using https if flag is true.
+		 *
+		 * @param flag whether to use https in the connection
+		 * @return the {@link TerminalClientConfigurationBuilder}
+		 * @since 5.3
+		 */
+		TerminalClientConfigurationBuilder usingSsl(boolean flag);
+
+		/**
 		 * Connect via {@literal https} using the given {@link SSLContext}.<br />
 		 * <strong>NOTE</strong> You need to leave out the protocol in
 		 * {@link ClientConfigurationBuilderWithRequiredEndpoint#connectedTo(String)}.
