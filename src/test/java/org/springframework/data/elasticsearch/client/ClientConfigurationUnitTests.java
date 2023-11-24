@@ -58,7 +58,7 @@ public class ClientConfigurationUnitTests {
 
 		ClientConfiguration clientConfiguration = ClientConfiguration.builder() //
 				.connectedTo("foo", "bar") //
-				.usingSsl() //
+				.usingSsl(true) //
 				.withDefaultHeaders(headers) //
 				.withConnectTimeout(Duration.ofDays(1)).withSocketTimeout(Duration.ofDays(2)) //
 				.withPathPrefix("myPathPrefix") //
