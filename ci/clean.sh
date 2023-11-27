@@ -2,5 +2,7 @@
 
 set -euo pipefail
 
-MAVEN_OPTS="-Duser.name=jenkins -Duser.home=/tmp/jenkins-home" \
+export JENKINS_USER=${JENKINS_USER_NAME}
+
+MAVEN_OPTS="-Duser.name=${JENKINS_USER} -Duser.home=/tmp/jenkins-home" \
   ./mvnw -s settings.xml clean -Dmaven.repo.local=/tmp/jenkins-home/.m2/spring-data-elasticsearch
