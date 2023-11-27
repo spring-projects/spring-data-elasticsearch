@@ -39,41 +39,173 @@ public enum DateFormat {
 	basic_t_time("'T'HHmmss.SSSXXX"), //
 	basic_t_time_no_millis("'T'HHmmssXXX"), //
 	basic_week_date("YYYY'W'wwe"), // week-based-year!
+	/**
+	 * @since 5.3
+	 */
+	strict_basic_week_date("YYYY'W'wwe"), // week-based-year!
 	basic_week_date_time("YYYY'W'wwe'T'HHmmss.SSSX"), // here Elasticsearch uses a different zone format
+	/**
+	 * @since 5.3
+	 */
+	strict_basic_week_date_time("YYYY'W'wwe'T'HHmmss.SSSX"), // here Elasticsearch uses a different zone format
 	basic_week_date_time_no_millis("YYYY'W'wwe'T'HHmmssX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_basic_week_date_time_no_millis("YYYY'W'wwe'T'HHmmssX"), //
 	date("uuuu-MM-dd"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_date("uuuu-MM-dd"), //
 	date_hour("uuuu-MM-dd'T'HH"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_date_hour("uuuu-MM-dd'T'HH"), //
 	date_hour_minute("uuuu-MM-dd'T'HH:mm"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_date_hour_minute("uuuu-MM-dd'T'HH:mm"), //
 	date_hour_minute_second("uuuu-MM-dd'T'HH:mm:ss"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_date_hour_minute_second("uuuu-MM-dd'T'HH:mm:ss"), //
 	date_hour_minute_second_fraction("uuuu-MM-dd'T'HH:mm:ss.SSS"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_date_hour_minute_second_fraction("uuuu-MM-dd'T'HH:mm:ss.SSS"), //
 	date_hour_minute_second_millis("uuuu-MM-dd'T'HH:mm:ss.SSS"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_date_hour_minute_second_millis("uuuu-MM-dd'T'HH:mm:ss.SSS"), //
 	date_optional_time("uuuu-MM-dd['T'HH:mm:ss.SSSXXX]"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_date_optional_time("uuuu-MM-dd['T'HH:mm:ss.SSSXXX]"), //
 	strict_date_optional_time_nanos("uuuu-MM-dd['T'HH:mm:ss.SSSSSSXXX]"), //
 	date_time("uuuu-MM-dd'T'HH:mm:ss.SSSXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_date_time("uuuu-MM-dd'T'HH:mm:ss.SSSXXX"), //
 	date_time_no_millis("uuuu-MM-dd'T'HH:mm:ssVV"), // here Elasticsearch uses the zone-id in its implementation
+	/**
+	 * @since 5.3
+	 */
+	strict_date_time_no_millis("uuuu-MM-dd'T'HH:mm:ssVV"), // here Elasticsearch uses the zone-id in its implementation
 	epoch_millis("epoch_millis"), //
 	epoch_second("epoch_second"), //
 	hour("HH"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_hour("HH"), //
 	hour_minute("HH:mm"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_hour_minute("HH:mm"), //
 	hour_minute_second("HH:mm:ss"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_hour_minute_second("HH:mm:ss"), //
 	hour_minute_second_fraction("HH:mm:ss.SSS"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_hour_minute_second_fraction("HH:mm:ss.SSS"), //
 	hour_minute_second_millis("HH:mm:ss.SSS"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_hour_minute_second_millis("HH:mm:ss.SSS"), //
 	ordinal_date("uuuu-DDD"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_ordinal_date("uuuu-DDD"), //
 	ordinal_date_time("uuuu-DDD'T'HH:mm:ss.SSSXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_ordinal_date_time("uuuu-DDD'T'HH:mm:ss.SSSXXX"), //
 	ordinal_date_time_no_millis("uuuu-DDD'T'HH:mm:ssXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_ordinal_date_time_no_millis("uuuu-DDD'T'HH:mm:ssXXX"), //
 	time("HH:mm:ss.SSSXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_time("HH:mm:ss.SSSXXX"), //
 	time_no_millis("HH:mm:ssXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_time_no_millis("HH:mm:ssXXX"), //
 	t_time("'T'HH:mm:ss.SSSXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_t_time("'T'HH:mm:ss.SSSXXX"), //
 	t_time_no_millis("'T'HH:mm:ssXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_t_time_no_millis("'T'HH:mm:ssXXX"), //
 	week_date("YYYY-'W'ww-e"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_week_date("YYYY-'W'ww-e"), //
 	week_date_time("YYYY-'W'ww-e'T'HH:mm:ss.SSSXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_week_date_time("YYYY-'W'ww-e'T'HH:mm:ss.SSSXXX"), //
 	week_date_time_no_millis("YYYY-'W'ww-e'T'HH:mm:ssXXX"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_week_date_time_no_millis("YYYY-'W'ww-e'T'HH:mm:ssXXX"), //
 	weekyear(""), // no TemporalAccessor available for these 3
+	/**
+	 * @since 5.3
+	 */
+	strict_weekyear(""), // no TemporalAccessor available for these 3
 	weekyear_week(""), //
+	/**
+	 * @since 5.3
+	 */
+	strict_weekyear_week(""), //
 	weekyear_week_day(""), //
+	/**
+	 * @since 5.3
+	 */
+	strict_strict_weekyear_week_day(""), //
 	year("uuuu"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_year("uuuu"), //
 	year_month("uuuu-MM"), //
-	year_month_day("uuuu-MM-dd"); //
+	/**
+	 * @since 5.3
+	 */
+	strict_year_month("uuuu-MM"), //
+	year_month_day("uuuu-MM-dd"), //
+	/**
+	 * @since 5.3
+	 */
+	strict_year_month_day("uuuu-MM-dd"); //
 
 	private final String pattern;
 
