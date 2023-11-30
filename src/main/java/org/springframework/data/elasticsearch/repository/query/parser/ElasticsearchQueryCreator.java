@@ -44,6 +44,7 @@ import org.springframework.lang.Nullable;
  * @author Franck Marchand
  * @author Artur Konczak
  * @author Peter-Josef Meisch
+ * @author Junghoon Ban
  */
 public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuery, CriteriaQuery> {
 
@@ -154,37 +155,37 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 					secondParameter = parameters.next();
 				}
 
-				if (firstParameter instanceof GeoPoint && secondParameter instanceof String)
-					return criteria.within((GeoPoint) firstParameter, (String) secondParameter);
+				if (firstParameter instanceof GeoPoint geoPoint && secondParameter instanceof String string)
+					return criteria.within(geoPoint, string);
 
-				if (firstParameter instanceof Point && secondParameter instanceof Distance)
-					return criteria.within((Point) firstParameter, (Distance) secondParameter);
+				if (firstParameter instanceof Point point && secondParameter instanceof Distance distance)
+					return criteria.within(point, distance);
 
-				if (firstParameter instanceof String && secondParameter instanceof String)
-					return criteria.within((String) firstParameter, (String) secondParameter);
+				if (firstParameter instanceof String firstString && secondParameter instanceof String secondString)
+					return criteria.within(firstString, secondString);
 			}
 			case NEAR: {
 				Object firstParameter = parameters.next();
 
-				if (firstParameter instanceof GeoBox) {
-					return criteria.boundedBy((GeoBox) firstParameter);
+				if (firstParameter instanceof GeoBox geoBox) {
+					return criteria.boundedBy(geoBox);
 				}
 
-				if (firstParameter instanceof Box) {
-					return criteria.boundedBy(GeoBox.fromBox((Box) firstParameter));
+				if (firstParameter instanceof Box box) {
+					return criteria.boundedBy(GeoBox.fromBox(box));
 				}
 
 				Object secondParameter = parameters.next();
 
 				// "near" query can be the same query as the "within" query
-				if (firstParameter instanceof GeoPoint && secondParameter instanceof String)
-					return criteria.within((GeoPoint) firstParameter, (String) secondParameter);
+				if (firstParameter instanceof GeoPoint geoPoint && secondParameter instanceof String string)
+					return criteria.within(geoPoint, string);
 
-				if (firstParameter instanceof Point && secondParameter instanceof Distance)
-					return criteria.within((Point) firstParameter, (Distance) secondParameter);
+				if (firstParameter instanceof Point point && secondParameter instanceof Distance distance)
+					return criteria.within(point, distance);
 
-				if (firstParameter instanceof String && secondParameter instanceof String)
-					return criteria.within((String) firstParameter, (String) secondParameter);
+				if (firstParameter instanceof String firstString && secondParameter instanceof String secondString)
+					return criteria.within(firstString, secondString);
 			}
 			case EXISTS:
 			case IS_NOT_NULL:

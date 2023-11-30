@@ -40,6 +40,7 @@ import org.springframework.data.elasticsearch.VersionConflictException;
  * appropriate: any other exception may have resulted from user code, and should not be translated.
  *
  * @author Peter-Josef Meisch
+ * @author Junghoon Ban
  * @since 4.4
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
@@ -59,7 +60,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 	 */
 	public RuntimeException translateException(Throwable throwable) {
 
-		RuntimeException runtimeException = throwable instanceof RuntimeException ? (RuntimeException) throwable
+		RuntimeException runtimeException = throwable instanceof RuntimeException ex ? ex
 				: new RuntimeException(throwable.getMessage(), throwable);
 		RuntimeException potentiallyTranslatedException = translateExceptionIfPossible(runtimeException);
 

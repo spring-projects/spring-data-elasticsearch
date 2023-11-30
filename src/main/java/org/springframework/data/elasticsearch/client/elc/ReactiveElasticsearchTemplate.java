@@ -79,6 +79,7 @@ import org.springframework.util.StringUtils;
  *
  * @author Peter-Josef Meisch
  * @author Illia Ulianov
+ * @author Junghoon Ban
  * @since 4.4
  */
 public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearchTemplate {
@@ -645,7 +646,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	 */
 	private RuntimeException translateException(Throwable throwable) {
 
-		RuntimeException runtimeException = throwable instanceof RuntimeException ? (RuntimeException) throwable
+		RuntimeException runtimeException = throwable instanceof RuntimeException ex ? ex
 				: new RuntimeException(throwable.getMessage(), throwable);
 		RuntimeException potentiallyTranslatedException = exceptionTranslator
 				.translateExceptionIfPossible(runtimeException);
