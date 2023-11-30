@@ -237,4 +237,3 @@ final class DocumentAdapters {
 				.collect(Collectors.toList());
 	}
 }
-🚝
