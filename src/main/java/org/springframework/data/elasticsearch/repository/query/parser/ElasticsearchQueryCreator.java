@@ -109,8 +109,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.is(parameters.next()).not();
 			case REGEX:
 				return criteria.expression(parameters.next().toString());
-			case LIKE:
-			case STARTING_WITH:
+			case LIKE, STARTING_WITH:
 				return criteria.startsWith(parameters.next().toString());
 			case ENDING_WITH:
 				return criteria.endsWith(parameters.next().toString());
@@ -118,13 +117,11 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.contains(parameters.next().toString());
 			case GREATER_THAN:
 				return criteria.greaterThan(parameters.next());
-			case AFTER:
-			case GREATER_THAN_EQUAL:
+			case AFTER, GREATER_THAN_EQUAL:
 				return criteria.greaterThanEqual(parameters.next());
 			case LESS_THAN:
 				return criteria.lessThan(parameters.next());
-			case BEFORE:
-			case LESS_THAN_EQUAL:
+			case BEFORE, LESS_THAN_EQUAL:
 				return criteria.lessThanEqual(parameters.next());
 			case BETWEEN:
 				return criteria.between(parameters.next(), parameters.next());
@@ -132,8 +129,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.in(asArray(parameters.next()));
 			case NOT_IN:
 				return criteria.notIn(asArray(parameters.next()));
-			case SIMPLE_PROPERTY:
-			case WITHIN: {
+			case SIMPLE_PROPERTY, WITHIN: {
 				Object firstParameter = parameters.next();
 				Object secondParameter = null;
 				if (type == Part.Type.SIMPLE_PROPERTY) {
@@ -171,8 +167,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 
 				return doWithinIfPossible(criteria, firstParameter, secondParameter);
 			}
-			case EXISTS:
-			case IS_NOT_NULL:
+			case EXISTS, IS_NOT_NULL:
 				return criteria.exists();
 			case IS_NULL:
 				return criteria.not().exists();
