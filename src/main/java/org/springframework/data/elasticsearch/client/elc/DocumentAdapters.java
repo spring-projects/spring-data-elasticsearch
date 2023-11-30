@@ -138,7 +138,7 @@ final class DocumentAdapters {
 		document.setPrimaryTerm(hit.primaryTerm() != null && hit.primaryTerm() > 0 ? hit.primaryTerm() : 0);
 
 		float score = hit.score() != null ? hit.score().floatValue() : Float.NaN;
-		return new SearchDocumentAdapter(document, score, hit.sort().stream().map(TypeUtils::toString).toArray(),
+		return new SearchDocumentAdapter(document, score, hit.sort().stream().map(TypeUtils::toObject).toArray(),
 				documentFields, highlightFields, innerHits, nestedMetaData, explanation, matchedQueries, hit.routing());
 	}
 
@@ -237,3 +237,4 @@ final class DocumentAdapters {
 				.collect(Collectors.toList());
 	}
 }
+🚝

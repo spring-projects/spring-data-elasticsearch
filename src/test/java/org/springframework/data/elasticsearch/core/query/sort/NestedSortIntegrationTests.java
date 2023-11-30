@@ -103,27 +103,27 @@ public abstract class NestedSortIntegrationTests {
 		assertThat(searchHits.getSearchHit(0).getContent().id).isEqualTo(francisFordCoppola.id);
 		var sortValues = searchHits.getSearchHit(0).getSortValues();
 		assertThat(sortValues).hasSize(1);
-		assertThat(sortValues.get(0)).isEqualTo("1924");
+		assertThat(sortValues.get(0)).isEqualTo(1924L);
 
 		assertThat(searchHits.getSearchHit(1).getContent().id).isEqualTo(stanleyKubrik.id);
 		sortValues = searchHits.getSearchHit(1).getSortValues();
 		assertThat(sortValues).hasSize(1);
-		assertThat(sortValues.get(0)).isEqualTo("1937");
+		assertThat(sortValues.get(0)).isEqualTo(1937L);
 	}
 
 	@Test // #1784
 	@DisplayName("should sort directors by year of birth of actor in their movies descending")
 	void shouldSortDirectorsByYearOfBirthOfActorInTheirMoviesDescending() {
 
-var order = new org.springframework.data.elasticsearch.core.query.Order(Sort.Direction.DESC,
-		"movies.actors.yearOfBirth") //
-		.withNested( //
-				Nested.builder("movies") //
-						.withNested(Nested.builder("movies.actors") //
-								.build()) //
-						.build());
+		var order = new org.springframework.data.elasticsearch.core.query.Order(Sort.Direction.DESC,
+				"movies.actors.yearOfBirth") //
+				.withNested( //
+						Nested.builder("movies") //
+								.withNested(Nested.builder("movies.actors") //
+										.build()) //
+								.build());
 
-var query = Query.findAll().addSort(Sort.by(order));
+		var query = Query.findAll().addSort(Sort.by(order));
 
 		var searchHits = operations.search(query, Director.class);
 
@@ -132,32 +132,32 @@ var query = Query.findAll().addSort(Sort.by(order));
 		assertThat(searchHits.getSearchHit(0).getContent().id).isEqualTo(stanleyKubrik.id);
 		var sortValues = searchHits.getSearchHit(0).getSortValues();
 		assertThat(sortValues).hasSize(1);
-		assertThat(sortValues.get(0)).isEqualTo("1959");
+		assertThat(sortValues.get(0)).isEqualTo(1959L);
 
 		assertThat(searchHits.getSearchHit(1).getContent().id).isEqualTo(francisFordCoppola.id);
 		sortValues = searchHits.getSearchHit(1).getSortValues();
 		assertThat(sortValues).hasSize(1);
-		assertThat(sortValues.get(0)).isEqualTo("1946");
+		assertThat(sortValues.get(0)).isEqualTo(1946L);
 	}
 
 	@Test // #1784
 	@DisplayName("should sort directors by year of birth of male actor in their movies descending")
 	void shouldSortDirectorsByYearOfBirthOfMaleActorInTheirMoviesDescending() {
 
-var filter = StringQuery.builder("""
-		{ "term": {"movies.actors.sex": "m"} }
-		""").build();
-var order = new org.springframework.data.elasticsearch.core.query.Order(Sort.Direction.DESC,
-		"movies.actors.yearOfBirth") //
-		.withNested( //
-				Nested.builder("movies") //
-						.withNested( //
-								Nested.builder("movies.actors") //
-										.withFilter(filter) //
-										.build()) //
-						.build());
+		var filter = StringQuery.builder("""
+				{ "term": {"movies.actors.sex": "m"} }
+				""").build();
+		var order = new org.springframework.data.elasticsearch.core.query.Order(Sort.Direction.DESC,
+				"movies.actors.yearOfBirth") //
+				.withNested( //
+						Nested.builder("movies") //
+								.withNested( //
+										Nested.builder("movies.actors") //
+												.withFilter(filter) //
+												.build()) //
+								.build());
 
-var query = Query.findAll().addSort(Sort.by(order));
+		var query = Query.findAll().addSort(Sort.by(order));
 
 		var searchHits = operations.search(query, Director.class);
 
@@ -166,12 +166,12 @@ var query = Query.findAll().addSort(Sort.by(order));
 		assertThat(searchHits.getSearchHit(0).getContent().id).isEqualTo(stanleyKubrik.id);
 		var sortValues = searchHits.getSearchHit(0).getSortValues();
 		assertThat(sortValues).hasSize(1);
-		assertThat(sortValues.get(0)).isEqualTo("1959");
+		assertThat(sortValues.get(0)).isEqualTo(1959L);
 
 		assertThat(searchHits.getSearchHit(1).getContent().id).isEqualTo(francisFordCoppola.id);
 		sortValues = searchHits.getSearchHit(1).getSortValues();
 		assertThat(sortValues).hasSize(1);
-		assertThat(sortValues.get(0)).isEqualTo("1940");
+		assertThat(sortValues.get(0)).isEqualTo(1940L);
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
