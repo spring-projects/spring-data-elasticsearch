@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.query.parser;
 
 import java.util.Collection;
 import java.util.Iterator;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
@@ -63,8 +62,8 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 
 	@Override
 	protected CriteriaQuery create(Part part, Iterator<Object> iterator) {
-		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context
-				.getPersistentPropertyPath(part.getProperty());
+		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context.getPersistentPropertyPath(
+				part.getProperty());
 		return new CriteriaQuery(from(part,
 				new Criteria(path.toDotPath(ElasticsearchPersistentProperty.QueryPropertyToFieldNameConverter.INSTANCE)),
 				iterator));
@@ -75,8 +74,8 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 		if (base == null) {
 			return create(part, iterator);
 		}
-		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context
-				.getPersistentPropertyPath(part.getProperty());
+		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context.getPersistentPropertyPath(
+				part.getProperty());
 		return base.addCriteria(from(part,
 				new Criteria(path.toDotPath(ElasticsearchPersistentProperty.QueryPropertyToFieldNameConverter.INSTANCE)),
 				iterator));
@@ -155,14 +154,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 					secondParameter = parameters.next();
 				}
 
-				if (firstParameter instanceof GeoPoint geoPoint && secondParameter instanceof String string)
-					return criteria.within(geoPoint, string);
-
-				if (firstParameter instanceof Point point && secondParameter instanceof Distance distance)
-					return criteria.within(point, distance);
-
-				if (firstParameter instanceof String firstString && secondParameter instanceof String secondString)
-					return criteria.within(firstString, secondString);
+				return doWithinIfPossible(criteria, firstParameter, secondParameter);
 			}
 			case NEAR: {
 				Object firstParameter = parameters.next();
@@ -177,15 +169,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 
 				Object secondParameter = parameters.next();
 
-				// "near" query can be the same query as the "within" query
-				if (firstParameter instanceof GeoPoint geoPoint && secondParameter instanceof String string)
-					return criteria.within(geoPoint, string);
-
-				if (firstParameter instanceof Point point && secondParameter instanceof Distance distance)
-					return criteria.within(point, distance);
-
-				if (firstParameter instanceof String firstString && secondParameter instanceof String secondString)
-					return criteria.within(firstString, secondString);
+				return doWithinIfPossible(criteria, firstParameter, secondParameter);
 			}
 			case EXISTS:
 			case IS_NOT_NULL:
@@ -199,6 +183,32 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 			default:
 				throw new InvalidDataAccessApiUsageException("Illegal criteria found '" + type + "'.");
 		}
+	}
+
+	/**
+	 * Do a within query if possible, otherwise return the criteria unchanged.
+	 *
+	 * @param criteria        must not be {@literal null}
+	 * @param firstParameter  must not be {@literal null}
+	 * @param secondParameter must not be {@literal null}
+	 * @return the criteria with the within query applied if possible.
+	 * @author Junghoon Ban
+	 */
+	private Criteria doWithinIfPossible(Criteria criteria, Object firstParameter, Object secondParameter) {
+
+		if (firstParameter instanceof GeoPoint geoPoint && secondParameter instanceof String string) {
+			return criteria.within(geoPoint, string);
+		}
+
+		if (firstParameter instanceof Point point && secondParameter instanceof Distance distance) {
+			return criteria.within(point, distance);
+		}
+
+		if (firstParameter instanceof String firstString && secondParameter instanceof String secondString) {
+			return criteria.within(firstString, secondString);
+		}
+
+		return criteria;
 	}
 
 	private Object[] asArray(Object o) {
