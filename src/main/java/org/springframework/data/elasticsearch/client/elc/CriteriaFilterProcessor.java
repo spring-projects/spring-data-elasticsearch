@@ -50,6 +50,7 @@ import org.springframework.util.Assert;
  * filter.
  *
  * @author Peter-Josef Meisch
+ * @author Junghoon Ban
  * @since 4.4
  */
 class CriteriaFilterProcessor {
@@ -169,7 +170,7 @@ class CriteriaFilterProcessor {
 		Assert.isTrue(values[1] instanceof String || values[1] instanceof Distance,
 				"Second element of a geo distance filter must be a text or a Distance");
 
-		String dist = (values[1] instanceof Distance) ? extractDistanceString((Distance) values[1]) : (String) values[1];
+		String dist = (values[1] instanceof Distance distance) ? extractDistanceString(distance) : (String) values[1];
 
 		return QueryBuilders.geoDistance() //
 				.field(fieldName) //
@@ -178,8 +179,8 @@ class CriteriaFilterProcessor {
 				.location(location -> {
 					if (values[0]instanceof GeoPoint loc) {
 						location.latlon(latlon -> latlon.lat(loc.getLat()).lon(loc.getLon()));
-					} else if (values[0] instanceof Point) {
-						GeoPoint loc = GeoPoint.fromPoint((Point) values[0]);
+					} else if (values[0] instanceof Point point) {
+						GeoPoint loc = GeoPoint.fromPoint(point);
 						location.latlon(latlon -> latlon.lat(loc.getLat()).lon(loc.getLon()));
 					} else {
 						String loc = (String) values[0];
@@ -220,8 +221,8 @@ class CriteriaFilterProcessor {
 				"single-element of boundedBy filter must be type of GeoBox or Box");
 
 		GeoBox geoBBox;
-		if (value instanceof Box) {
-			geoBBox = GeoBox.fromBox((Box) value);
+		if (value instanceof Box box) {
+			geoBBox = GeoBox.fromBox(box);
 		} else {
 			geoBBox = (GeoBox) value;
 		}

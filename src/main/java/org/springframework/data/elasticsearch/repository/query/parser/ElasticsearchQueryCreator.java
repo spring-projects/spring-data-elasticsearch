@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.query.parser;
 
 import java.util.Collection;
 import java.util.Iterator;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
@@ -44,6 +43,7 @@ import org.springframework.lang.Nullable;
  * @author Franck Marchand
  * @author Artur Konczak
  * @author Peter-Josef Meisch
+ * @author Junghoon Ban
  */
 public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuery, CriteriaQuery> {
 
@@ -62,8 +62,8 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 
 	@Override
 	protected CriteriaQuery create(Part part, Iterator<Object> iterator) {
-		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context
-				.getPersistentPropertyPath(part.getProperty());
+		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context.getPersistentPropertyPath(
+				part.getProperty());
 		return new CriteriaQuery(from(part,
 				new Criteria(path.toDotPath(ElasticsearchPersistentProperty.QueryPropertyToFieldNameConverter.INSTANCE)),
 				iterator));
@@ -74,8 +74,8 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 		if (base == null) {
 			return create(part, iterator);
 		}
-		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context
-				.getPersistentPropertyPath(part.getProperty());
+		PersistentPropertyPath<ElasticsearchPersistentProperty> path = context.getPersistentPropertyPath(
+				part.getProperty());
 		return base.addCriteria(from(part,
 				new Criteria(path.toDotPath(ElasticsearchPersistentProperty.QueryPropertyToFieldNameConverter.INSTANCE)),
 				iterator));
@@ -109,8 +109,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.is(parameters.next()).not();
 			case REGEX:
 				return criteria.expression(parameters.next().toString());
-			case LIKE:
-			case STARTING_WITH:
+			case LIKE, STARTING_WITH:
 				return criteria.startsWith(parameters.next().toString());
 			case ENDING_WITH:
 				return criteria.endsWith(parameters.next().toString());
@@ -118,13 +117,11 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.contains(parameters.next().toString());
 			case GREATER_THAN:
 				return criteria.greaterThan(parameters.next());
-			case AFTER:
-			case GREATER_THAN_EQUAL:
+			case AFTER, GREATER_THAN_EQUAL:
 				return criteria.greaterThanEqual(parameters.next());
 			case LESS_THAN:
 				return criteria.lessThan(parameters.next());
-			case BEFORE:
-			case LESS_THAN_EQUAL:
+			case BEFORE, LESS_THAN_EQUAL:
 				return criteria.lessThanEqual(parameters.next());
 			case BETWEEN:
 				return criteria.between(parameters.next(), parameters.next());
@@ -132,8 +129,7 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 				return criteria.in(asArray(parameters.next()));
 			case NOT_IN:
 				return criteria.notIn(asArray(parameters.next()));
-			case SIMPLE_PROPERTY:
-			case WITHIN: {
+			case SIMPLE_PROPERTY, WITHIN: {
 				Object firstParameter = parameters.next();
 				Object secondParameter = null;
 				if (type == Part.Type.SIMPLE_PROPERTY) {
@@ -154,40 +150,24 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 					secondParameter = parameters.next();
 				}
 
-				if (firstParameter instanceof GeoPoint && secondParameter instanceof String)
-					return criteria.within((GeoPoint) firstParameter, (String) secondParameter);
-
-				if (firstParameter instanceof Point && secondParameter instanceof Distance)
-					return criteria.within((Point) firstParameter, (Distance) secondParameter);
-
-				if (firstParameter instanceof String && secondParameter instanceof String)
-					return criteria.within((String) firstParameter, (String) secondParameter);
+				return doWithinIfPossible(criteria, firstParameter, secondParameter);
 			}
 			case NEAR: {
 				Object firstParameter = parameters.next();
 
-				if (firstParameter instanceof GeoBox) {
-					return criteria.boundedBy((GeoBox) firstParameter);
+				if (firstParameter instanceof GeoBox geoBox) {
+					return criteria.boundedBy(geoBox);
 				}
 
-				if (firstParameter instanceof Box) {
-					return criteria.boundedBy(GeoBox.fromBox((Box) firstParameter));
+				if (firstParameter instanceof Box box) {
+					return criteria.boundedBy(GeoBox.fromBox(box));
 				}
 
 				Object secondParameter = parameters.next();
 
-				// "near" query can be the same query as the "within" query
-				if (firstParameter instanceof GeoPoint && secondParameter instanceof String)
-					return criteria.within((GeoPoint) firstParameter, (String) secondParameter);
-
-				if (firstParameter instanceof Point && secondParameter instanceof Distance)
-					return criteria.within((Point) firstParameter, (Distance) secondParameter);
-
-				if (firstParameter instanceof String && secondParameter instanceof String)
-					return criteria.within((String) firstParameter, (String) secondParameter);
+				return doWithinIfPossible(criteria, firstParameter, secondParameter);
 			}
-			case EXISTS:
-			case IS_NOT_NULL:
+			case EXISTS, IS_NOT_NULL:
 				return criteria.exists();
 			case IS_NULL:
 				return criteria.not().exists();
@@ -198,6 +178,32 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 			default:
 				throw new InvalidDataAccessApiUsageException("Illegal criteria found '" + type + "'.");
 		}
+	}
+
+	/**
+	 * Do a within query if possible, otherwise return the criteria unchanged.
+	 *
+	 * @param criteria        must not be {@literal null}
+	 * @param firstParameter  must not be {@literal null}
+	 * @param secondParameter must not be {@literal null}
+	 * @return the criteria with the within query applied if possible.
+	 * @author Junghoon Ban
+	 */
+	private Criteria doWithinIfPossible(Criteria criteria, Object firstParameter, Object secondParameter) {
+
+		if (firstParameter instanceof GeoPoint geoPoint && secondParameter instanceof String string) {
+			return criteria.within(geoPoint, string);
+		}
+
+		if (firstParameter instanceof Point point && secondParameter instanceof Distance distance) {
+			return criteria.within(point, distance);
+		}
+
+		if (firstParameter instanceof String firstString && secondParameter instanceof String secondString) {
+			return criteria.within(firstString, secondString);
+		}
+
+		return criteria;
 	}
 
 	private Object[] asArray(Object o) {

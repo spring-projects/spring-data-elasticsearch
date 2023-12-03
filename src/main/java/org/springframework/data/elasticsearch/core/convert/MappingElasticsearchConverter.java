@@ -80,6 +80,7 @@ import org.springframework.util.ObjectUtils;
  * @author Marc Vanbrabant
  * @author Anton Naydenov
  * @author vdisk
+ * @author Junghoon Ban
  * @since 3.2
  */
 public class MappingElasticsearchConverter
@@ -503,16 +504,16 @@ public class MappingElasticsearchConverter
 		private Object propertyConverterRead(ElasticsearchPersistentProperty property, Object source) {
 			PropertyValueConverter propertyValueConverter = Objects.requireNonNull(property.getPropertyValueConverter());
 
-			if (source instanceof String[]) {
+			if (source instanceof String[] strings) {
 				// convert to a List
-				source = Arrays.asList((String[]) source);
+				source = Arrays.asList(strings);
 			}
 
-			if (source instanceof List) {
-				source = ((List<?>) source).stream().map(it -> convertOnRead(propertyValueConverter, it))
+			if (source instanceof List<?> list) {
+				source = list.stream().map(it -> convertOnRead(propertyValueConverter, it))
 						.collect(Collectors.toList());
-			} else if (source instanceof Set) {
-				source = ((Set<?>) source).stream().map(it -> convertOnRead(propertyValueConverter, it))
+			} else if (source instanceof Set<?> set) {
+				source = set.stream().map(it -> convertOnRead(propertyValueConverter, it))
 						.collect(Collectors.toSet());
 			} else {
 				source = convertOnRead(propertyValueConverter, source);
