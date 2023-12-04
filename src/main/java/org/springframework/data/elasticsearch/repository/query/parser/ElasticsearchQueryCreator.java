@@ -100,84 +100,72 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 
 		Part.Type type = part.getType();
 
-		switch (type) {
-			case TRUE:
-				return criteria.is(true);
-			case FALSE:
-				return criteria.is(false);
-			case NEGATING_SIMPLE_PROPERTY:
-				return criteria.is(parameters.next()).not();
-			case REGEX:
-				return criteria.expression(parameters.next().toString());
-			case LIKE, STARTING_WITH:
-				return criteria.startsWith(parameters.next().toString());
-			case ENDING_WITH:
-				return criteria.endsWith(parameters.next().toString());
-			case CONTAINING:
-				return criteria.contains(parameters.next().toString());
-			case GREATER_THAN:
-				return criteria.greaterThan(parameters.next());
-			case AFTER, GREATER_THAN_EQUAL:
-				return criteria.greaterThanEqual(parameters.next());
-			case LESS_THAN:
-				return criteria.lessThan(parameters.next());
-			case BEFORE, LESS_THAN_EQUAL:
-				return criteria.lessThanEqual(parameters.next());
-			case BETWEEN:
-				return criteria.between(parameters.next(), parameters.next());
-			case IN:
-				return criteria.in(asArray(parameters.next()));
-			case NOT_IN:
-				return criteria.notIn(asArray(parameters.next()));
-			case SIMPLE_PROPERTY, WITHIN: {
-				Object firstParameter = parameters.next();
-				Object secondParameter = null;
-				if (type == Part.Type.SIMPLE_PROPERTY) {
-					if (part.getProperty().getType() != GeoPoint.class) {
-						if (firstParameter != null) {
-							return criteria.is(firstParameter);
-						} else {
-							// searching for null is a must_not (exists)
-							return criteria.exists().not();
-						}
-					} else {
-						// it means it's a simple find with exact geopoint matching (e.g. findByLocation)
-						// and because Elasticsearch does not have any kind of query with just a geopoint
-						// as argument we use a "geo distance" query with a distance of one meter.
-						secondParameter = ".001km";
-					}
+		return switch (type) {
+			case TRUE -> criteria.is(true);
+			case FALSE -> criteria.is(false);
+			case NEGATING_SIMPLE_PROPERTY -> criteria.is(parameters.next()).not();
+			case REGEX -> criteria.expression(parameters.next().toString());
+			case LIKE, STARTING_WITH -> criteria.startsWith(parameters.next().toString());
+			case ENDING_WITH -> criteria.endsWith(parameters.next().toString());
+			case CONTAINING -> criteria.contains(parameters.next().toString());
+			case GREATER_THAN -> criteria.greaterThan(parameters.next());
+			case AFTER, GREATER_THAN_EQUAL -> criteria.greaterThanEqual(parameters.next());
+			case LESS_THAN -> criteria.lessThan(parameters.next());
+			case BEFORE, LESS_THAN_EQUAL -> criteria.lessThanEqual(parameters.next());
+			case BETWEEN -> criteria.between(parameters.next(), parameters.next());
+			case IN -> criteria.in(asArray(parameters.next()));
+			case NOT_IN -> criteria.notIn(asArray(parameters.next()));
+			case SIMPLE_PROPERTY, WITHIN -> this.within(part, criteria, parameters);
+			case NEAR -> this.near(criteria, parameters);
+			case EXISTS, IS_NOT_NULL -> criteria.exists();
+			case IS_NULL -> criteria.not().exists();
+			case IS_EMPTY -> criteria.empty();
+			case IS_NOT_EMPTY -> criteria.notEmpty();
+			default -> throw new InvalidDataAccessApiUsageException("Illegal criteria found '" + type + "'.");
+		};
+	}
+
+	private Criteria within(Part part, Criteria criteria, Iterator<?> parameters) {
+
+		Object firstParameter = parameters.next();
+		Object secondParameter;
+
+		if (part.getType() == Part.Type.SIMPLE_PROPERTY) {
+			if (part.getProperty().getType() != GeoPoint.class) {
+				if (firstParameter != null) {
+					return criteria.is(firstParameter);
 				} else {
-					secondParameter = parameters.next();
+					// searching for null is a must_not (exists)
+					return criteria.exists().not();
 				}
-
-				return doWithinIfPossible(criteria, firstParameter, secondParameter);
+			} else {
+				// it means it's a simple find with exact geopoint matching (e.g. findByLocation)
+				// and because Elasticsearch does not have any kind of query with just a geopoint
+				// as argument we use a "geo distance" query with a distance of one meter.
+				secondParameter = ".001km";
 			}
-			case NEAR: {
-				Object firstParameter = parameters.next();
-
-				if (firstParameter instanceof GeoBox geoBox) {
-					return criteria.boundedBy(geoBox);
-				}
-
-				if (firstParameter instanceof Box box) {
-					return criteria.boundedBy(GeoBox.fromBox(box));
-				}
-
-				Object secondParameter = parameters.next();
-
-				return doWithinIfPossible(criteria, firstParameter, secondParameter);
-			}
-			case EXISTS, IS_NOT_NULL:
-				return criteria.exists();
-			case IS_NULL:
-				return criteria.not().exists();
-			case IS_EMPTY:
-				return criteria.empty();
-			case IS_NOT_EMPTY:
-				return criteria.notEmpty();
-			default:
-				throw new InvalidDataAccessApiUsageException("Illegal criteria found '" + type + "'.");
+		} else {
+			secondParameter = parameters.next();
 		}
+
+		return doWithinIfPossible(criteria, firstParameter, secondParameter);
+	}
+
+	private Criteria near(Criteria criteria, Iterator<?> parameters) {
+
+		Object firstParameter = parameters.next();
+
+		if (firstParameter instanceof GeoBox geoBox) {
+			return criteria.boundedBy(geoBox);
+		}
+
+		if (firstParameter instanceof Box box) {
+			return criteria.boundedBy(GeoBox.fromBox(box));
+		}
+
+		Object secondParameter = parameters.next();
+
+		return doWithinIfPossible(criteria, firstParameter, secondParameter);
 	}
 
 	/**
