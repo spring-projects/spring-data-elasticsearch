@@ -15,10 +15,12 @@
  */
 package org.springframework.data.elasticsearch.core.query.highlight;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.springframework.util.Assert;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 4.3
  */
 public abstract class HighlightCommonParameters {
@@ -31,6 +33,7 @@ public abstract class HighlightCommonParameters {
 	private final int fragmentSize;
 	private final int noMatchSize;
 	private final int numberOfFragments;
+	private final Query highlightQuery;
 	private final String order;
 	private final int phraseLimit;
 	private final String[] preTags;
@@ -51,6 +54,7 @@ public abstract class HighlightCommonParameters {
 		fragmentSize = builder.fragmentSize;
 		noMatchSize = builder.noMatchSize;
 		numberOfFragments = builder.numberOfFragments;
+		highlightQuery = builder.highlightQuery;
 		order = builder.order;
 		phraseLimit = builder.phraseLimit;
 		preTags = builder.preTags;
@@ -95,6 +99,10 @@ public abstract class HighlightCommonParameters {
 		return numberOfFragments;
 	}
 
+	public Query getHighlightQuery() {
+		return highlightQuery;
+	}
+
 	public String getOrder() {
 		return order;
 	}
@@ -130,6 +138,7 @@ public abstract class HighlightCommonParameters {
 		private int fragmentSize = -1;
 		private int noMatchSize = -1;
 		private int numberOfFragments = -1;
+		private Query highlightQuery = null;
 		private String order = "";
 		private int phraseLimit = -1;
 		private String[] preTags = new String[0];
@@ -181,6 +190,11 @@ public abstract class HighlightCommonParameters {
 
 		public SELF withNumberOfFragments(int numberOfFragments) {
 			this.numberOfFragments = numberOfFragments;
+			return (SELF) this;
+		}
+
+		public SELF withHighlightQuery(Query highlightQuery) {
+			this.highlightQuery = highlightQuery;
 			return (SELF) this;
 		}
 

@@ -35,6 +35,7 @@ import org.springframework.util.StringUtils;
  * {@link co.elastic.clients.elasticsearch.core.search.Highlight}.
  *
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 4.4
  */
 class HighlightQueryBuilder {
@@ -101,6 +102,10 @@ class HighlightQueryBuilder {
 
 		if (parameters.getNumberOfFragments() > -1) {
 			builder.numberOfFragments(parameters.getNumberOfFragments());
+		}
+
+		if (parameters.getHighlightQuery() != null) {
+			builder.highlightQuery(parameters.getHighlightQuery());
 		}
 
 		if (StringUtils.hasLength(parameters.getOrder())) {
@@ -172,6 +177,10 @@ class HighlightQueryBuilder {
 
 		if (parameters.getNumberOfFragments() > -1) {
 			builder.numberOfFragments(parameters.getNumberOfFragments());
+		}
+
+		if (parameters.getHighlightQuery() != null) {
+			builder.highlightQuery(parameters.getHighlightQuery());
 		}
 
 		if (StringUtils.hasLength(parameters.getOrder())) {
