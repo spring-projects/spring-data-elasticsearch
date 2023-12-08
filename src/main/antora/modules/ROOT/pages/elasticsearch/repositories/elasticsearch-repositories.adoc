@@ -12,10 +12,10 @@ class Book {
     @Id
     private String id;
 
-    @Field(type = FieldType.text)
+    @Field(type = FieldType.Text)
     private String name;
 
-    @Field(type = FieldType.text)
+    @Field(type = FieldType.Text)
     private String summary;
 
     @Field(type = FieldType.Integer)
