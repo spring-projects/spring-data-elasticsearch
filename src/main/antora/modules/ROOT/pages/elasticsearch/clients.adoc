@@ -150,7 +150,7 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
     return headers;
   })
   .withClientConfigurer(                                                <.>
-    ElasticsearchClientConfigurationCallback.from(clientBuilder -> {
+    ElasticsearchHttpClientConfigurationCallback.from(clientBuilder -> {
   	  // ...
       return clientBuilder;
   	}))
