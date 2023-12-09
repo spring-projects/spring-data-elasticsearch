@@ -15,7 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query.highlight;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -33,7 +34,7 @@ public abstract class HighlightCommonParameters {
 	private final int fragmentSize;
 	private final int noMatchSize;
 	private final int numberOfFragments;
-	private final Query highlightQuery;
+	@Nullable private final Query highlightQuery;
 	private final String order;
 	private final int phraseLimit;
 	private final String[] preTags;
@@ -99,6 +100,7 @@ public abstract class HighlightCommonParameters {
 		return numberOfFragments;
 	}
 
+	@Nullable
 	public Query getHighlightQuery() {
 		return highlightQuery;
 	}
@@ -138,7 +140,7 @@ public abstract class HighlightCommonParameters {
 		private int fragmentSize = -1;
 		private int noMatchSize = -1;
 		private int numberOfFragments = -1;
-		private Query highlightQuery = null;
+		@Nullable private Query highlightQuery = null;
 		private String order = "";
 		private int phraseLimit = -1;
 		private String[] preTags = new String[0];

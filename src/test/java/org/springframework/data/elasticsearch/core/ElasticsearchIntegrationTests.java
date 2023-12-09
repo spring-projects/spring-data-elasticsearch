@@ -54,7 +54,6 @@ import org.springframework.data.elasticsearch.VersionConflictException;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
-import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.document.Explanation;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.index.AliasAction;
@@ -2979,7 +2978,9 @@ public abstract class ElasticsearchIntegrationTests {
 		operations.indexOps(index).refresh();
 
 		// a highlight query equals to the search query
-		var sameHighlightQuery = HighlightFieldParameters.builder().withHighlightQuery(Queries.termQueryAsQuery("message", "message")).build();
+		var sameHighlightQuery = HighlightFieldParameters.builder()
+				.withHighlightQuery(getBuilderWithTermQuery("message", "message").build())
+				.build();
 		Query query = getBuilderWithTermQuery("message", "message") //
 				.withHighlightQuery(
 						new HighlightQuery(new Highlight(singletonList(new HighlightField("message", sameHighlightQuery))), HighlightEntity.class)
@@ -2997,34 +2998,49 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThat(highlightField.get(1)).contains("<em>message</em>");
 
 		// a different highlight query from the search query
-		var differentHighlightQueryInField = HighlightFieldParameters.builder().withHighlightQuery(Queries.termQueryAsQuery("message", "initial")).build();
+		var differentHighlightQueryInField = HighlightFieldParameters.builder()
+				.withHighlightQuery(getBuilderWithTermQuery("message", "initial").build())
+				.build();
 		// highlight_query in field
-		Query hlFieldQuery = getBuilderWithTermQuery("message", "message") //
+		Query highlightQueryInField = getBuilderWithTermQuery("message", "message") //
 				.withHighlightQuery(
 						new HighlightQuery(new Highlight(singletonList(new HighlightField("message", differentHighlightQueryInField))), HighlightEntity.class)
 				)
 				.build();
-		SearchHits<HighlightEntity> hlFieldHits = operations.search(hlFieldQuery, HighlightEntity.class, index);
+		assertThatHighlightFieldIsDifferent(highlightQueryInField, index);
 
-		SearchHit<HighlightEntity> hlFieldHit = hlFieldHits.getSearchHit(0);
-		List<String> hlField = hlFieldHit.getHighlightField("message");
-		assertThat(hlField).hasSize(1);
-		assertThat(hlField.get(0)).contains("<em>initial</em>");
-
-		// a different highlight query from the search query
-		var differentHighlightQueryInParam = HighlightParameters.builder().withHighlightQuery(Queries.termQueryAsQuery("message", "initial")).build();
+		// a different highlight query from the search query and used in highlight param rather than field
+		var differentHighlightQueryInParam = HighlightParameters.builder()
+				.withHighlightQuery(getBuilderWithTermQuery("message", "initial").build())
+				.build();
 		// highlight_query in param
-		Query hlParamQuery = getBuilderWithTermQuery("message", "message") //
+		Query highlightQueryInParam = getBuilderWithTermQuery("message", "message") //
 				.withHighlightQuery(
 						new HighlightQuery(new Highlight(differentHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
 				)
 				.build();
-		SearchHits<HighlightEntity> hlParamHits = operations.search(hlParamQuery, HighlightEntity.class, index);
+		assertThatHighlightFieldIsDifferent(highlightQueryInParam, index);
 
-		SearchHit<HighlightEntity> hlParamHit = hlParamHits.getSearchHit(0);
-		List<String> hlParamField = hlParamHit.getHighlightField("message");
-		assertThat(hlParamField).hasSize(1);
-		assertThat(hlParamField.get(0)).contains("<em>initial</em>");
+		// a different highlight query from the search query, written by CriteriaQuery rather than NativeQuery
+		var criteriaHighlightQueryInParam = HighlightParameters.builder()
+				.withHighlightQuery(new CriteriaQuery(new Criteria("message").is("initial")))
+				.build();
+		// highlight_query in param
+		Query differentHighlightQueryUsingCriteria = getBuilderWithTermQuery("message", "message") //
+				.withHighlightQuery(
+						new HighlightQuery(new Highlight(criteriaHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
+				)
+				.build();
+		assertThatHighlightFieldIsDifferent(differentHighlightQueryUsingCriteria, index);
+	}
+
+	private void assertThatHighlightFieldIsDifferent(Query query, IndexCoordinates index) {
+		SearchHits<HighlightEntity> searchHits = operations.search(query, HighlightEntity.class, index);
+
+		SearchHit<HighlightEntity> searchHit = searchHits.getSearchHit(0);
+		List<String> highlightField = searchHit.getHighlightField("message");
+		assertThat(highlightField).hasSize(1);
+		assertThat(highlightField.get(0)).contains("<em>initial</em>");
 	}
 
 	@Test // #1686
