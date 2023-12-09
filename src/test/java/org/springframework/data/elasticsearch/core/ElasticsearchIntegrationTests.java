@@ -3032,6 +3032,28 @@ public abstract class ElasticsearchIntegrationTests {
 				)
 				.build();
 		assertThatHighlightFieldIsDifferent(differentHighlightQueryUsingCriteria, index);
+
+		// a different highlight query from the search query, written by StringQuery
+		var stringHighlightQueryInParam = HighlightParameters.builder()
+				.withHighlightQuery(new StringQuery(
+						"""
+								{
+								    "term": {
+								      "message": {
+								        "value": "initial"
+								      }
+								    }
+								}
+								"""
+				))
+				.build();
+		// highlight_query in param
+		Query differentHighlightQueryUsingStringQuery = getBuilderWithTermQuery("message", "message") //
+				.withHighlightQuery(
+						new HighlightQuery(new Highlight(stringHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
+				)
+				.build();
+		assertThatHighlightFieldIsDifferent(differentHighlightQueryUsingStringQuery, index);
 	}
 
 	private void assertThatHighlightFieldIsDifferent(Query query, IndexCoordinates index) {
