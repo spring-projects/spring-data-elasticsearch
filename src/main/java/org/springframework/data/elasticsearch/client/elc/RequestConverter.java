@@ -1647,7 +1647,7 @@ class RequestConverter {
 	}
 
 	@Nullable
-	public co.elastic.clients.elasticsearch._types.query_dsl.Query getQuery(@Nullable Query query,
+	co.elastic.clients.elasticsearch._types.query_dsl.Query getQuery(@Nullable Query query,
 			@Nullable Class<?> clazz) {
 
 		if (query == null) {

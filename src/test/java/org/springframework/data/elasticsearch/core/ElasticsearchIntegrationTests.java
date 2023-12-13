@@ -2968,14 +2968,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 	@Test // #2636
 	void shouldReturnHighlightFieldsWithHighlightQueryInSearchHit() {
-		IndexCoordinates index = IndexCoordinates.of("test-index-highlight-entity-template");
-		HighlightEntity entity = new HighlightEntity("1",
-				"This message is a long text which contains the word to search for "
-						+ "in two places, the first being near the beginning and the second near the end of the message. "
-						+ "However, i'll use a different highlight query from the initial search query");
-		IndexQuery indexQuery = new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build();
-		operations.index(indexQuery, index);
-		operations.indexOps(index).refresh();
+		IndexCoordinates index = createIndexCoordinatesWithHighlightMessage();
 
 		// a highlight query equals to the search query
 		var sameHighlightQuery = HighlightFieldParameters.builder()
@@ -2996,6 +2989,11 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThat(highlightField).hasSize(2);
 		assertThat(highlightField.get(0)).contains("<em>message</em>");
 		assertThat(highlightField.get(1)).contains("<em>message</em>");
+	}
+
+	@Test // #2636
+	void shouldReturnDifferentHighlightFieldsWithDifferentHighlightQueryInSearchHit() {
+		IndexCoordinates index = createIndexCoordinatesWithHighlightMessage();
 
 		// a different highlight query from the search query
 		var differentHighlightQueryInField = HighlightFieldParameters.builder()
@@ -3007,7 +3005,12 @@ public abstract class ElasticsearchIntegrationTests {
 						new HighlightQuery(new Highlight(singletonList(new HighlightField("message", differentHighlightQueryInField))), HighlightEntity.class)
 				)
 				.build();
-		assertThatHighlightFieldIsDifferent(highlightQueryInField, index);
+		assertThatHighlightFieldsIsDifferentFromHighlightQuery(highlightQueryInField, index);
+	}
+
+	@Test // #2636
+	void shouldReturnDifferentHighlightFieldsWithDifferentParamHighlightQueryInSearchHit() {
+		IndexCoordinates index = createIndexCoordinatesWithHighlightMessage();
 
 		// a different highlight query from the search query and used in highlight param rather than field
 		var differentHighlightQueryInParam = HighlightParameters.builder()
@@ -3019,8 +3022,12 @@ public abstract class ElasticsearchIntegrationTests {
 						new HighlightQuery(new Highlight(differentHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
 				)
 				.build();
-		assertThatHighlightFieldIsDifferent(highlightQueryInParam, index);
+		assertThatHighlightFieldsIsDifferentFromHighlightQuery(highlightQueryInParam, index);
+	}
 
+	@Test // #2636
+	void shouldReturnDifferentHighlightFieldsWithDifferentHighlightCriteriaQueryInSearchHit() {
+		IndexCoordinates index = createIndexCoordinatesWithHighlightMessage();
 		// a different highlight query from the search query, written by CriteriaQuery rather than NativeQuery
 		var criteriaHighlightQueryInParam = HighlightParameters.builder()
 				.withHighlightQuery(new CriteriaQuery(new Criteria("message").is("initial")))
@@ -3031,8 +3038,12 @@ public abstract class ElasticsearchIntegrationTests {
 						new HighlightQuery(new Highlight(criteriaHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
 				)
 				.build();
-		assertThatHighlightFieldIsDifferent(differentHighlightQueryUsingCriteria, index);
+		assertThatHighlightFieldsIsDifferentFromHighlightQuery(differentHighlightQueryUsingCriteria, index);
+	}
 
+	@Test // #2636
+	void shouldReturnDifferentHighlightFieldsWithDifferentHighlightStringQueryInSearchHit() {
+		IndexCoordinates index = createIndexCoordinatesWithHighlightMessage();
 		// a different highlight query from the search query, written by StringQuery
 		var stringHighlightQueryInParam = HighlightParameters.builder()
 				.withHighlightQuery(new StringQuery(
@@ -3053,10 +3064,22 @@ public abstract class ElasticsearchIntegrationTests {
 						new HighlightQuery(new Highlight(stringHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
 				)
 				.build();
-		assertThatHighlightFieldIsDifferent(differentHighlightQueryUsingStringQuery, index);
+		assertThatHighlightFieldsIsDifferentFromHighlightQuery(differentHighlightQueryUsingStringQuery, index);
 	}
 
-	private void assertThatHighlightFieldIsDifferent(Query query, IndexCoordinates index) {
+	private IndexCoordinates createIndexCoordinatesWithHighlightMessage() {
+		IndexCoordinates index = IndexCoordinates.of("test-index-highlight-entity-template");
+		HighlightEntity entity = new HighlightEntity("1",
+				"This message is a long text which contains the word to search for "
+						+ "in two places, the first being near the beginning and the second near the end of the message. "
+						+ "However, i'll use a different highlight query from the initial search query");
+		IndexQuery indexQuery = new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build();
+		operations.index(indexQuery, index);
+		operations.indexOps(index).refresh();
+		return index;
+	}
+
+	private void assertThatHighlightFieldsIsDifferentFromHighlightQuery(Query query, IndexCoordinates index) {
 		SearchHits<HighlightEntity> searchHits = operations.search(query, HighlightEntity.class, index);
 
 		SearchHit<HighlightEntity> searchHit = searchHits.getSearchHit(0);
