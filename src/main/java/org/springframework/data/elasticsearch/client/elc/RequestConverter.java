@@ -105,6 +105,7 @@ import org.springframework.util.StringUtils;
  * @author Sascha Woo
  * @author cdalxndr
  * @author scoobyzhang
+ * @author Haibo Liu
  * @since 4.4
  */
 @SuppressWarnings("ClassCanBeRecord")
@@ -1494,7 +1495,7 @@ class RequestConverter {
 	private void addHighlight(Query query, SearchRequest.Builder builder) {
 
 		Highlight highlight = query.getHighlightQuery()
-				.map(highlightQuery -> new HighlightQueryBuilder(elasticsearchConverter.getMappingContext())
+				.map(highlightQuery -> new HighlightQueryBuilder(elasticsearchConverter.getMappingContext(), this)
 						.getHighlight(highlightQuery.getHighlight(), highlightQuery.getType()))
 				.orElse(null);
 
@@ -1504,7 +1505,7 @@ class RequestConverter {
 	private void addHighlight(Query query, MultisearchBody.Builder builder) {
 
 		Highlight highlight = query.getHighlightQuery()
-				.map(highlightQuery -> new HighlightQueryBuilder(elasticsearchConverter.getMappingContext())
+				.map(highlightQuery -> new HighlightQueryBuilder(elasticsearchConverter.getMappingContext(), this)
 						.getHighlight(highlightQuery.getHighlight(), highlightQuery.getType()))
 				.orElse(null);
 
@@ -1646,7 +1647,7 @@ class RequestConverter {
 	}
 
 	@Nullable
-	private co.elastic.clients.elasticsearch._types.query_dsl.Query getQuery(@Nullable Query query,
+	co.elastic.clients.elasticsearch._types.query_dsl.Query getQuery(@Nullable Query query,
 			@Nullable Class<?> clazz) {
 
 		if (query == null) {

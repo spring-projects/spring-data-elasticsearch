@@ -35,14 +35,17 @@ import org.springframework.util.StringUtils;
  * {@link co.elastic.clients.elasticsearch.core.search.Highlight}.
  *
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 4.4
  */
 class HighlightQueryBuilder {
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
+	private final RequestConverter requestConverter;
 
 	HighlightQueryBuilder(
-			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext, RequestConverter requestConverter) {
 		this.mappingContext = mappingContext;
+		this.requestConverter = requestConverter;
 	}
 
 	public co.elastic.clients.elasticsearch.core.search.Highlight getHighlight(Highlight highlight,
@@ -52,7 +55,7 @@ class HighlightQueryBuilder {
 
 		// in the old implementation we could use one addParameters method, but in the new Elasticsearch client
 		// the builder for highlight and highlightfield share no code
-		addParameters(highlight.getParameters(), highlightBuilder);
+		addParameters(highlight.getParameters(), highlightBuilder, type);
 
 		for (HighlightField highlightField : highlight.getFields()) {
 			String mappedName = mapFieldName(highlightField.getName(), type);
@@ -69,7 +72,7 @@ class HighlightQueryBuilder {
 	 * the builder for highlight and highlight fields don't share code, so we have these two methods here that basically are almost copies
 	 */
 	private void addParameters(HighlightParameters parameters,
-			co.elastic.clients.elasticsearch.core.search.Highlight.Builder builder) {
+			co.elastic.clients.elasticsearch.core.search.Highlight.Builder builder, @Nullable Class<?> type) {
 
 		if (StringUtils.hasLength(parameters.getBoundaryChars())) {
 			builder.boundaryChars(parameters.getBoundaryChars());
@@ -101,6 +104,10 @@ class HighlightQueryBuilder {
 
 		if (parameters.getNumberOfFragments() > -1) {
 			builder.numberOfFragments(parameters.getNumberOfFragments());
+		}
+
+		if (parameters.getHighlightQuery() != null) {
+			builder.highlightQuery(requestConverter.getQuery(parameters.getHighlightQuery(), type));
 		}
 
 		if (StringUtils.hasLength(parameters.getOrder())) {
@@ -172,6 +179,10 @@ class HighlightQueryBuilder {
 
 		if (parameters.getNumberOfFragments() > -1) {
 			builder.numberOfFragments(parameters.getNumberOfFragments());
+		}
+
+		if (parameters.getHighlightQuery() != null) {
+			builder.highlightQuery(requestConverter.getQuery(parameters.getHighlightQuery(), type));
 		}
 
 		if (StringUtils.hasLength(parameters.getOrder())) {
