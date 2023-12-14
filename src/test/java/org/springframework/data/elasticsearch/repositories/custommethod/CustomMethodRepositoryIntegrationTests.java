@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
@@ -46,9 +45,9 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
+import org.springframework.data.elasticsearch.annotations.HighlightParameters;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.SourceFilters;
-import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -76,6 +75,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Rasmus Faber-Espensen
  * @author James Mudd
+ * @author Haibo Liu
  */
 @SpringIntegrationTest
 public abstract class CustomMethodRepositoryIntegrationTests {
@@ -1548,6 +1548,19 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(searchHit.getHighlightField("type")).hasSize(1).contains("<em>abc</em>");
 	}
 
+	@Test
+	void shouldReturnDifferentHighlightsOnAnnotatedStringQueryMethod() {
+		List<SampleEntity> entities = createSampleEntities("abc xyz", 2);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByStringWithSeparateHighlight("abc", "xyz");
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(2);
+		SearchHit<SampleEntity> searchHit = searchHits.getSearchHit(0);
+		assertThat(searchHit.getHighlightField("type")).hasSize(1).contains("abc <em>xyz</em>");
+	}
+
 	@Test // DATAES-734
 	void shouldUseGeoSortParameter() {
 		GeoPoint munich = new GeoPoint(48.137154, 11.5761247);
@@ -1919,6 +1932,41 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
 		@Highlight(fields = { @HighlightField(name = "type") })
 		SearchHits<SampleEntity> queryByString(String type);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "match":{
+				          "type":"?0"
+				        }
+				      }
+				    ]
+				  }
+				}
+				"""
+		)
+		@Highlight(
+				fields = {@HighlightField(name = "type")},
+				parameters = @HighlightParameters(
+						highlightQuery = @Query("""
+								{
+								  "bool":{
+								    "must":[
+								      {
+								        "match":{
+								          "type":"?1"
+								        }
+								      }
+								    ]
+								  }
+								}
+								"""
+						)
+				)
+		)
+		SearchHits<SampleEntity> queryByStringWithSeparateHighlight(String type, String highlight);
 
 		List<SearchHit<SampleEntity>> queryByMessage(String message);
 

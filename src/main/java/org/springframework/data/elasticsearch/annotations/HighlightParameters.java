@@ -21,6 +21,7 @@ import java.lang.annotation.RetentionPolicy;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 4.0
  */
 @Documented
@@ -58,6 +59,8 @@ public @interface HighlightParameters {
 	int noMatchSize() default -1;
 
 	int numberOfFragments() default -1;
+
+	Query highlightQuery() default @Query;
 
 	String order() default "";
 

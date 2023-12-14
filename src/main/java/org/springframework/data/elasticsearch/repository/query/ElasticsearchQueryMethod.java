@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -41,6 +42,9 @@ import org.springframework.data.elasticsearch.core.query.HighlightQuery;
 import org.springframework.data.elasticsearch.core.query.RuntimeField;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
+import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
@@ -50,7 +54,6 @@ import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
-import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -66,6 +69,7 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Alexander Torres
+ * @author Haibo Liu
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
@@ -81,8 +85,6 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	@Nullable private ElasticsearchEntityMetadata<?> metadata;
 	@Nullable private final Query queryAnnotation;
 	@Nullable private final Highlight highlightAnnotation;
-	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
-
 	@Nullable private final SourceFilters sourceFilters;
 
 	public ElasticsearchQueryMethod(Method method, RepositoryMetadata repositoryMetadata, ProjectionFactory factory,
@@ -143,20 +145,65 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @throws IllegalArgumentException if no {@link Highlight} annotation is present on the method
 	 * @see #hasAnnotatedHighlight()
 	 */
-	public HighlightQuery getAnnotatedHighlightQuery() {
+	public HighlightQuery getAnnotatedHighlightQuery(ElasticsearchParametersParameterAccessor parameterAccessor,
+													 ElasticsearchConverter elasticsearchConverter) {
 
 		Assert.isTrue(hasAnnotatedHighlight(), "no Highlight annotation present on " + getName());
-
-		return highlightQueryLazy.get();
-	}
-
-	private HighlightQuery createAnnotatedHighlightQuery() {
-
 		Assert.notNull(highlightAnnotation, "highlightAnnotation must not be null");
 
 		return new HighlightQuery(
-				org.springframework.data.elasticsearch.core.query.highlight.Highlight.of(highlightAnnotation),
+				convertHighlight(highlightAnnotation, parameterAccessor, elasticsearchConverter),
 				getDomainClass());
+	}
+
+	/**
+	 * Creates a {@link org.springframework.data.elasticsearch.core.query.highlight.Highlight} from an Annotation instance.
+	 *
+	 * @param highlight must not be {@literal null}
+	 * @return highlight definition
+	 */
+	private org.springframework.data.elasticsearch.core.query.highlight.Highlight convertHighlight(Highlight highlight,
+																								   ElasticsearchParametersParameterAccessor parameterAccessor,
+																								   ElasticsearchConverter elasticsearchConverter) {
+
+		Assert.notNull(highlight, "highlight must not be null");
+
+		org.springframework.data.elasticsearch.annotations.HighlightParameters parameters = highlight.parameters();
+
+		// replace placeholders in highlight query with actual parameters
+		org.springframework.data.elasticsearch.core.query.Query highlightQuery = null;
+		if (!parameters.highlightQuery().value().isEmpty()) {
+			String rawString = parameters.highlightQuery().value();
+			String queryString = new StringQueryUtil(elasticsearchConverter.getConversionService())
+					.replacePlaceholders(rawString, parameterAccessor);
+			highlightQuery = new StringQuery(queryString);
+		}
+		HighlightParameters highlightParameters = HighlightParameters.builder() //
+				.withBoundaryChars(parameters.boundaryChars()) //
+				.withBoundaryMaxScan(parameters.boundaryMaxScan()) //
+				.withBoundaryScanner(parameters.boundaryScanner()) //
+				.withBoundaryScannerLocale(parameters.boundaryScannerLocale()) //
+				.withEncoder(parameters.encoder()) //
+				.withForceSource(parameters.forceSource()) //
+				.withFragmenter(parameters.fragmenter()) //
+				.withFragmentSize(parameters.fragmentSize()) //
+				.withNoMatchSize(parameters.noMatchSize()) //
+				.withNumberOfFragments(parameters.numberOfFragments()) //
+				.withHighlightQuery(highlightQuery) //
+				.withOrder(parameters.order()) //
+				.withPhraseLimit(parameters.phraseLimit()) //
+				.withPreTags(parameters.preTags()) //
+				.withPostTags(parameters.postTags()) //
+				.withRequireFieldMatch(parameters.requireFieldMatch()) //
+				.withTagsSchema(parameters.tagsSchema()) //
+				.withType(parameters.type()) //
+				.build();
+
+		List<HighlightField> highlightFields = Arrays.stream(highlight.fields()) //
+				.map(HighlightField::of) //
+				.collect(Collectors.toList());
+
+		return new org.springframework.data.elasticsearch.core.query.highlight.Highlight(highlightParameters, highlightFields);
 	}
 
 	/**
@@ -378,7 +425,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 			ElasticsearchConverter elasticsearchConverter) {
 
 		if (hasAnnotatedHighlight()) {
-			query.setHighlightQuery(getAnnotatedHighlightQuery());
+			query.setHighlightQuery(getAnnotatedHighlightQuery(parameterAccessor, elasticsearchConverter));
 		}
 
 		var sourceFilter = getSourceFilter(parameterAccessor, elasticsearchConverter);
