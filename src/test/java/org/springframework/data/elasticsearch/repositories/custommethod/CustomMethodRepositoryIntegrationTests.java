@@ -1554,11 +1554,18 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		repository.saveAll(entities);
 
 		// when
-		SearchHits<SampleEntity> searchHits = repository.queryByStringWithSeparateHighlight("abc", "xyz");
+		SearchHits<SampleEntity> highlightAbcHits = repository.queryByStringWithSeparateHighlight("abc", "abc");
 
-		assertThat(searchHits.getTotalHits()).isEqualTo(2);
-		SearchHit<SampleEntity> searchHit = searchHits.getSearchHit(0);
-		assertThat(searchHit.getHighlightField("type")).hasSize(1).contains("abc <em>xyz</em>");
+		assertThat(highlightAbcHits.getTotalHits()).isEqualTo(2);
+		SearchHit<SampleEntity> highlightAbcHit = highlightAbcHits.getSearchHit(0);
+		assertThat(highlightAbcHit.getHighlightField("type")).hasSize(1).contains("<em>abc</em> xyz");
+
+		// when
+		SearchHits<SampleEntity> highlightXyzHits = repository.queryByStringWithSeparateHighlight("abc", "xyz");
+
+		assertThat(highlightXyzHits.getTotalHits()).isEqualTo(2);
+		SearchHit<SampleEntity> highlightXyzHit = highlightXyzHits.getSearchHit(0);
+		assertThat(highlightXyzHit.getHighlightField("type")).hasSize(1).contains("abc <em>xyz</em>");
 	}
 
 	@Test // DATAES-734
