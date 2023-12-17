@@ -199,7 +199,7 @@ public abstract class HighlightCommonParameters {
 			return (SELF) this;
 		}
 
-		public SELF withHighlightQuery(Query highlightQuery) {
+		public SELF withHighlightQuery(@Nullable Query highlightQuery) {
 			this.highlightQuery = highlightQuery;
 			return (SELF) this;
 		}

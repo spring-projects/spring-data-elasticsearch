@@ -15,14 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Highlight;
@@ -50,11 +42,18 @@ import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
-import org.springframework.data.util.Lazy;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * ElasticsearchQueryMethod
@@ -66,6 +65,7 @@ import org.springframework.util.ClassUtils;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Alexander Torres
+ * @author Haibo Liu
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
@@ -81,8 +81,6 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	@Nullable private ElasticsearchEntityMetadata<?> metadata;
 	@Nullable private final Query queryAnnotation;
 	@Nullable private final Highlight highlightAnnotation;
-	private final Lazy<HighlightQuery> highlightQueryLazy = Lazy.of(this::createAnnotatedHighlightQuery);
-
 	@Nullable private final SourceFilters sourceFilters;
 
 	public ElasticsearchQueryMethod(Method method, RepositoryMetadata repositoryMetadata, ProjectionFactory factory,
@@ -143,19 +141,13 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @throws IllegalArgumentException if no {@link Highlight} annotation is present on the method
 	 * @see #hasAnnotatedHighlight()
 	 */
-	public HighlightQuery getAnnotatedHighlightQuery() {
+	public HighlightQuery getAnnotatedHighlightQuery(HighlightConverter highlightConverter) {
 
 		Assert.isTrue(hasAnnotatedHighlight(), "no Highlight annotation present on " + getName());
-
-		return highlightQueryLazy.get();
-	}
-
-	private HighlightQuery createAnnotatedHighlightQuery() {
-
 		Assert.notNull(highlightAnnotation, "highlightAnnotation must not be null");
 
 		return new HighlightQuery(
-				org.springframework.data.elasticsearch.core.query.highlight.Highlight.of(highlightAnnotation),
+				highlightConverter.convert(highlightAnnotation),
 				getDomainClass());
 	}
 
@@ -378,7 +370,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 			ElasticsearchConverter elasticsearchConverter) {
 
 		if (hasAnnotatedHighlight()) {
-			query.setHighlightQuery(getAnnotatedHighlightQuery());
+			query.setHighlightQuery(getAnnotatedHighlightQuery(new HighlightConverter(parameterAccessor, elasticsearchConverter)));
 		}
 
 		var sourceFilter = getSourceFilter(parameterAccessor, elasticsearchConverter);
