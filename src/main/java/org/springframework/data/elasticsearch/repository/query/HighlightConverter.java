@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import java.util.Arrays;
+import java.util.List;
+
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -23,9 +26,6 @@ import org.springframework.data.elasticsearch.core.query.highlight.HighlightFiel
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.util.Assert;
-
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Convert {@link org.springframework.data.elasticsearch.annotations.Highlight} to {@link Highlight}.
@@ -38,7 +38,7 @@ public class HighlightConverter {
 	private final ElasticsearchConverter elasticsearchConverter;
 
 	HighlightConverter(ElasticsearchParametersParameterAccessor parameterAccessor,
-					   ElasticsearchConverter elasticsearchConverter) {
+			ElasticsearchConverter elasticsearchConverter) {
 		this.parameterAccessor = parameterAccessor;
 		this.elasticsearchConverter = elasticsearchConverter;
 	}

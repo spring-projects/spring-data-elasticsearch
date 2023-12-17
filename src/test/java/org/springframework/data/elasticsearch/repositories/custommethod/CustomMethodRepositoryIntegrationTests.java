@@ -1952,10 +1952,9 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				    ]
 				  }
 				}
-				"""
-		)
+				""")
 		@Highlight(
-				fields = {@HighlightField(name = "type")},
+				fields = { @HighlightField(name = "type") },
 				parameters = @HighlightParameters(
 						highlightQuery = @Query("""
 								{
@@ -1969,10 +1968,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 								    ]
 								  }
 								}
-								"""
-						)
-				)
-		)
+								""")))
 		SearchHits<SampleEntity> queryByStringWithSeparateHighlight(String type, String highlight);
 
 		List<SearchHit<SampleEntity>> queryByMessage(String message);

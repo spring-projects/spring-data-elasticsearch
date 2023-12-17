@@ -141,8 +141,7 @@ public abstract class HighlightCommonParameters {
 		private int noMatchSize = -1;
 		private int numberOfFragments = -1;
 		/**
-		 * Only the search query part of the {@link Query} takes effect,
-		 * others are just ignored.
+		 * Only the search query part of the {@link Query} takes effect, others are just ignored.
 		 */
 		@Nullable private Query highlightQuery = null;
 		private String order = "";

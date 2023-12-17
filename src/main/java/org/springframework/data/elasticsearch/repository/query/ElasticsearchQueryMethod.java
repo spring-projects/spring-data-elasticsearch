@@ -15,6 +15,14 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
+
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Highlight;
@@ -46,14 +54,6 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * ElasticsearchQueryMethod
@@ -370,7 +370,8 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 			ElasticsearchConverter elasticsearchConverter) {
 
 		if (hasAnnotatedHighlight()) {
-			query.setHighlightQuery(getAnnotatedHighlightQuery(new HighlightConverter(parameterAccessor, elasticsearchConverter)));
+			query.setHighlightQuery(
+					getAnnotatedHighlightQuery(new HighlightConverter(parameterAccessor, elasticsearchConverter)));
 		}
 
 		var sourceFilter = getSourceFilter(parameterAccessor, elasticsearchConverter);
