@@ -2,11 +2,14 @@
 = Versions
 
 The following table shows the Elasticsearch versions that are used by Spring Data release trains and version of Spring Data Elasticsearch included in that, as well as the Spring Boot versions referring to that particular Spring Data release train.
-The Elasticsearch version given shows with which client libraries Spring Data Elasticsearch was built and tested.
+
+The Elasticsearch version given shows with which client libraries Spring Data Elasticsearch was built with and tested.
+
+Note that Spring Data Elasticsearch **does not** depend on Spring Boot, the version given here shows the Sprig Boot version that uses Spring Data Elasticsearch.
 
 [cols="^,^,^,^,^",options="header"]
 |===
-| Spring Data Release Train | Spring Data Elasticsearch | Elasticsearch | Spring Framework | Spring Boot
+| Spring Data Release Train | Spring Data Elasticsearch | Elasticsearch | Spring Framework | used by Spring Boot
 | 2024.0 (?) | 5.3.x | 8.11.2 | ? | ?
 | 2023.1 (Vaughan) | 5.2.x | 8.11.1 | 6.1.x | 3.2.x
 | 2023.0 (Ullmann) | 5.1.x | 8.7.1 | 6.0.x | 3.1.x
