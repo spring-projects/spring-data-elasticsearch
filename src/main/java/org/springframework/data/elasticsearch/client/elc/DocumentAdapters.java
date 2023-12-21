@@ -49,6 +49,7 @@ import org.springframework.util.Assert;
  * {@link org.springframework.data.elasticsearch.core.document.Document}
  *
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 4.4
  */
 final class DocumentAdapters {
@@ -73,7 +74,7 @@ final class DocumentAdapters {
 		Map<String, SearchDocumentResponse> innerHits = new LinkedHashMap<>();
 		hit.innerHits().forEach((name, innerHitsResult) -> {
 			// noinspection ReturnOfNull
-			innerHits.put(name, SearchDocumentResponseBuilder.from(innerHitsResult.hits(), null, null, null, null,
+			innerHits.put(name, SearchDocumentResponseBuilder.from(innerHitsResult.hits(), null, null, null, null, null,
 					searchDocument -> null, jsonpMapper));
 		});
 

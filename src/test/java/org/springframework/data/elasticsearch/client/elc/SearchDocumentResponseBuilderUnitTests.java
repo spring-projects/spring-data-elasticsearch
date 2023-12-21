@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.elasticsearch._types.ShardStatistics;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.elasticsearch.core.search.Suggestion;
 import co.elastic.clients.elasticsearch.core.search.TotalHitsRelation;
@@ -31,10 +32,13 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import static org.assertj.core.api.Assertions.*;
+
 /**
  * Tests for the factory class to create {@link SearchDocumentResponse} instances.
  *
  * @author Sébastien Comeau
+ * @author Haibo Liu
  * @since 5.2
  */
 class SearchDocumentResponseBuilderUnitTests {
@@ -73,7 +77,7 @@ class SearchDocumentResponseBuilderUnitTests {
 				.build();
 
 		// act
-		final var actual = SearchDocumentResponseBuilder.from(hitsMetadata, null, null, null, sortProperties, null,
+		final var actual = SearchDocumentResponseBuilder.from(hitsMetadata, null, null, null, null, sortProperties, null,
 				jsonpMapper);
 
 		// assert
@@ -107,5 +111,33 @@ class SearchDocumentResponseBuilderUnitTests {
 		softly.assertThat(actualOption2.getCollateMatch()).isEqualTo(false);
 
 		softly.assertAll();
+	}
+
+	@Test // #2605
+	void shouldGetShardStatisticsInfo() {
+		// arrange
+		HitsMetadata<EntityAsMap> hitsMetadata = new HitsMetadata.Builder<EntityAsMap>()
+				.total(t -> t
+						.value(0)
+						.relation(TotalHitsRelation.Eq))
+				.hits(new ArrayList<>())
+				.build();
+
+		ShardStatistics shards = new ShardStatistics.Builder()
+				.total(15)
+				.successful(15)
+				.skipped(0)
+				.failed(0)
+				.build();
+
+		// act
+		SearchDocumentResponse response = SearchDocumentResponseBuilder.from(hitsMetadata, shards, null, null,
+				null, null, null, jsonpMapper);
+
+		// assert
+		assertThat(response.getSearchShardStatistics().total()).isEqualTo(15);
+		assertThat(response.getSearchShardStatistics().successful()).isEqualTo(15);
+		assertThat(response.getSearchShardStatistics().skipped()).isEqualTo(0);
+		assertThat(response.getSearchShardStatistics().failed()).isEqualTo(0);
 	}
 }

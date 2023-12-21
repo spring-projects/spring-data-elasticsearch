@@ -15,14 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.util.Collections;
-
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHitSupport;
 import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.SearchHitsImpl;
-import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
@@ -42,6 +38,7 @@ import org.springframework.util.ClassUtils;
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  */
 
 public abstract class AbstractElasticsearchRepositoryQuery implements RepositoryQuery {
@@ -110,13 +107,7 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 			if (parameterAccessor.getPageable().isUnpaged()) {
 				int itemCount = (int) elasticsearchOperations.count(query, clazz, index);
-
-				if (itemCount == 0) {
-					result = new SearchHitsImpl<>(0, TotalHitsRelation.EQUAL_TO, Float.NaN, null,
-							query.getPointInTime() != null ? query.getPointInTime().id() : null, Collections.emptyList(), null, null);
-				} else {
-					query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
-				}
+				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 				query.setPageable(parameterAccessor.getPageable());
 			}

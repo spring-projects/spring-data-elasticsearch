@@ -32,6 +32,7 @@ import org.springframework.data.util.CloseableIterator;
 /**
  * @author Roman Puchkovskiy
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  */
 class SearchHitSupportTest {
 
@@ -65,7 +66,7 @@ class SearchHitSupportTest {
 		hits.add(new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "five"));
 
 		SearchHits<String> originalSearchHits = new SearchHitsImpl<>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, "scroll",
-				null, hits, null, null);
+				null, hits, null, null, null);
 
 		SearchPage<String> searchPage = SearchHitSupport.searchPageFor(originalSearchHits, PageRequest.of(0, 3));
 		SearchHits<String> searchHits = searchPage.getSearchHits();

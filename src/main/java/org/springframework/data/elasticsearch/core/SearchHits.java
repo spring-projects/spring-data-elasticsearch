@@ -27,6 +27,7 @@ import org.springframework.lang.Nullable;
  *
  * @param <T> the result data class.
  * @author Sascha Woo
+ * @author Haibo Liu
  * @since 4.0
  */
 public interface SearchHits<T> extends Streamable<SearchHit<T>> {
@@ -108,4 +109,10 @@ public interface SearchHits<T> extends Streamable<SearchHit<T>> {
 	 */
 	@Nullable
 	String getPointInTimeId();
+
+	/**
+	 * @return a count of shards used for the request.
+	 */
+	@Nullable
+	SearchShardStatistics getSearchShardStatistics();
 }
