@@ -192,6 +192,7 @@ This callback provides a `org.elasticsearch.client.RestClientBuilder` that can b
 [source,java]
 ----
 ClientConfiguration.builder()
+    .connectedTo("localhost:9200", "localhost:9291")
     .withClientConfigurer(ElasticsearchClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
         // configure the Elasticsearch RestClient
         return restClientBuilder;
@@ -210,6 +211,7 @@ used by the `RestClient`.
 [source,java]
 ----
 ClientConfiguration.builder()
+    .connectedTo("localhost:9200", "localhost:9291")
     .withClientConfigurer(ElasticsearchClients.ElasticsearchHttpClientConfigurationCallback.from(httpAsyncClientBuilder -> {
         // configure the HttpAsyncClient
         return httpAsyncClientBuilder;
