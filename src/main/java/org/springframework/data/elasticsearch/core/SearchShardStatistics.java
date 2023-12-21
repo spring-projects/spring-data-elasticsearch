@@ -20,37 +20,5 @@ import org.springframework.lang.Nullable;
 /**
  * @author Haibo Liu
  */
-public class SearchShardStatistics {
-	private final Number failed;
-
-	private final Number successful;
-
-	private final Number total;
-
-	@Nullable
-	private final Number skipped;
-
-	public SearchShardStatistics(Number failed, Number successful, Number total, @Nullable Number skipped) {
-		this.failed = failed;
-		this.successful = successful;
-		this.total = total;
-		this.skipped = skipped;
-	}
-
-	public Number getFailed() {
-		return failed;
-	}
-
-	public Number getSuccessful() {
-		return successful;
-	}
-
-	public Number getTotal() {
-		return total;
-	}
-
-	@Nullable
-	public Number getSkipped() {
-		return skipped;
-	}
+public record SearchShardStatistics(Number failed, Number successful, Number total, @Nullable Number skipped) {
 }
