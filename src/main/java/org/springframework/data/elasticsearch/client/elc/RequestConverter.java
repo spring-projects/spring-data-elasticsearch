@@ -44,6 +44,7 @@ import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetOperation;
 import co.elastic.clients.elasticsearch.core.msearch.MultisearchBody;
+import co.elastic.clients.elasticsearch.core.msearch.MultisearchHeader;
 import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
@@ -54,6 +55,7 @@ import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
 import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.util.ObjectBuilder;
 import jakarta.json.stream.JsonParser;
 
 import java.io.ByteArrayInputStream;
@@ -66,6 +68,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -397,10 +400,7 @@ class RequestConverter {
 				.order(putTemplateRequest.getOrder());
 
 		if (putTemplateRequest.getSettings() != null) {
-			Function<Map.Entry<String, Object>, String> keyMapper = Map.Entry::getKey;
-			Function<Map.Entry<String, Object>, JsonData> valueMapper = entry -> JsonData.of(entry.getValue(), jsonpMapper);
-			Map<String, JsonData> settings = putTemplateRequest.getSettings().entrySet().stream()
-					.collect(Collectors.toMap(keyMapper, valueMapper));
+			Map<String, JsonData> settings = getTemplateParams(putTemplateRequest.getSettings().entrySet());
 			builder.settings(settings);
 		}
 
@@ -1146,6 +1146,36 @@ class RequestConverter {
 		return builder.build();
 	}
 
+	public MsearchTemplateRequest searchMsearchTemplateRequest(
+			List<ElasticsearchTemplate.MultiSearchTemplateQueryParameter> multiSearchTemplateQueryParameters,
+			@Nullable String routing) {
+
+		// basically the same stuff as in template search
+		return MsearchTemplateRequest.of(mtrb -> {
+			multiSearchTemplateQueryParameters.forEach(param -> {
+				var query = param.query();
+				mtrb.searchTemplates(stb -> stb
+						.header(msearchHeaderSetter(query, param.index(), routing))
+						.body(bb -> {
+							bb //
+									.explain(query.getExplain()) //
+									.id(query.getId()) //
+									.source(query.getSource()) //
+							;
+
+							if (!CollectionUtils.isEmpty(query.getParams())) {
+								Map<String, JsonData> params = getTemplateParams(query.getParams().entrySet());
+								bb.params(params);
+							}
+
+							return bb;
+						})
+				);
+			});
+			return mtrb;
+		});
+	}
+
 	public MsearchRequest searchMsearchRequest(
 			List<ElasticsearchTemplate.MultiSearchQueryParameter> multiSearchQueryParameters, @Nullable String routing) {
 
@@ -1157,28 +1187,7 @@ class RequestConverter {
 
 				var query = param.query();
 				mrb.searches(sb -> sb //
-						.header(h -> {
-							var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
-									: searchType(query.getSearchType());
-
-							h //
-									.index(Arrays.asList(param.index().getIndexNames())) //
-									.searchType(searchType) //
-									.requestCache(query.getRequestCache()) //
-							;
-
-							if (StringUtils.hasText(query.getRoute())) {
-								h.routing(query.getRoute());
-							} else if (StringUtils.hasText(routing)) {
-								h.routing(routing);
-							}
-
-							if (query.getPreference() != null) {
-								h.preference(query.getPreference());
-							}
-
-							return h;
-						}) //
+						.header(msearchHeaderSetter(query, param.index(), routing)) //
 						.body(bb -> {
 							bb //
 									.query(getQuery(query, param.clazz()))//
@@ -1282,6 +1291,35 @@ class RequestConverter {
 
 			return mrb;
 		});
+	}
+
+	/**
+	 * {@link MsearchRequest} and {@link MsearchTemplateRequest} share the same {@link MultisearchHeader}
+	 */
+	private Function<MultisearchHeader.Builder, ObjectBuilder<MultisearchHeader>> msearchHeaderSetter(Query query,
+			IndexCoordinates index, @Nullable String routing) {
+		return h -> {
+			var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
+					: searchType(query.getSearchType());
+
+			h //
+					.index(Arrays.asList(index.getIndexNames())) //
+					.searchType(searchType) //
+					.requestCache(query.getRequestCache()) //
+			;
+
+			if (StringUtils.hasText(query.getRoute())) {
+				h.routing(query.getRoute());
+			} else if (StringUtils.hasText(routing)) {
+				h.routing(routing);
+			}
+
+			if (query.getPreference() != null) {
+				h.preference(query.getPreference());
+			}
+
+			return h;
+		};
 	}
 
 	private <T> void prepareSearchRequest(Query query, @Nullable String routing, @Nullable Class<T> clazz,
@@ -1770,7 +1808,8 @@ class RequestConverter {
 					.id(query.getId()) //
 					.index(Arrays.asList(index.getIndexNames())) //
 					.preference(query.getPreference()) //
-					.searchType(searchType(query.getSearchType())).source(query.getSource()) //
+					.searchType(searchType(query.getSearchType())) //
+					.source(query.getSource()) //
 			;
 
 			if (query.getRoute() != null) {
@@ -1789,15 +1828,20 @@ class RequestConverter {
 			}
 
 			if (!CollectionUtils.isEmpty(query.getParams())) {
-				Function<Map.Entry<String, Object>, String> keyMapper = Map.Entry::getKey;
-				Function<Map.Entry<String, Object>, JsonData> valueMapper = entry -> JsonData.of(entry.getValue(), jsonpMapper);
-				Map<String, JsonData> params = query.getParams().entrySet().stream()
-						.collect(Collectors.toMap(keyMapper, valueMapper));
+				Map<String, JsonData> params = getTemplateParams(query.getParams().entrySet());
 				builder.params(params);
 			}
 
 			return builder;
 		});
+	}
+
+	@NotNull
+	private Map<String, JsonData> getTemplateParams(Set<Map.Entry<String, Object>> query) {
+		Function<Map.Entry<String, Object>, String> keyMapper = Map.Entry::getKey;
+		Function<Map.Entry<String, Object>, JsonData> valueMapper = entry -> JsonData.of(entry.getValue(), jsonpMapper);
+		return query.stream()
+				.collect(Collectors.toMap(keyMapper, valueMapper));
 	}
 
 	// endregion
