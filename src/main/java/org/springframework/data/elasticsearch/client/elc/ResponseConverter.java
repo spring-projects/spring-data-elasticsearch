@@ -541,7 +541,7 @@ class ResponseConverter {
 	}
 
 	@Nullable
-	private static ElasticsearchErrorCause toErrorCause(@Nullable ErrorCause errorCause) {
+	static ElasticsearchErrorCause toErrorCause(@Nullable ErrorCause errorCause) {
 
 		if (errorCause != null) {
 			return new ElasticsearchErrorCause( //

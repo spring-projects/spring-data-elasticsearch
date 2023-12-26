@@ -111,7 +111,7 @@ public interface SearchHits<T> extends Streamable<SearchHit<T>> {
 	String getPointInTimeId();
 
 	/**
-	 * @return a count of shards used for the request.
+	 * @return shard statistics for the search hit.
 	 */
 	@Nullable
 	SearchShardStatistics getSearchShardStatistics();

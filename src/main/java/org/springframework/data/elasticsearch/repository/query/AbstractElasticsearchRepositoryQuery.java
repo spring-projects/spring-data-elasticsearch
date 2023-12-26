@@ -104,18 +104,12 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 					: PageRequest.of(0, DEFAULT_STREAM_BATCH_SIZE));
 			result = StreamUtils.createStreamFromIterator(elasticsearchOperations.searchForStream(query, clazz, index));
 		} else if (queryMethod.isCollectionQuery()) {
-
 			if (parameterAccessor.getPageable().isUnpaged()) {
 				int itemCount = (int) elasticsearchOperations.count(query, clazz, index);
 				query.setPageable(PageRequest.of(0, Math.max(1, itemCount)));
 			} else {
 				query.setPageable(parameterAccessor.getPageable());
 			}
-
-			if (result == null) {
-				result = elasticsearchOperations.search(query, clazz, index);
-			}
-
 		} else {
 			result = elasticsearchOperations.searchOne(query, clazz, index);
 		}

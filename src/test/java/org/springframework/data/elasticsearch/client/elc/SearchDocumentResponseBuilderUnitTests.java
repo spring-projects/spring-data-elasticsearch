@@ -15,18 +15,23 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.elasticsearch._types.ShardFailure;
 import co.elastic.clients.elasticsearch._types.ShardStatistics;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.elasticsearch.core.search.Suggestion;
 import co.elastic.clients.elasticsearch.core.search.TotalHitsRelation;
+import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
+import org.springframework.data.elasticsearch.core.SearchShardStatistics;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 
 import com.google.common.collect.ImmutableList;
@@ -125,9 +130,26 @@ class SearchDocumentResponseBuilderUnitTests {
 
 		ShardStatistics shards = new ShardStatistics.Builder()
 				.total(15)
-				.successful(15)
+				.successful(14)
 				.skipped(0)
-				.failed(0)
+				.failed(1)
+				.failures(List.of(
+						ShardFailure.of(sfb -> sfb
+								.index("test-index")
+								.node("test-node")
+								.shard(1)
+								.reason(rb -> rb
+										.reason("this is a mock failure in shards")
+										.causedBy(cbb ->
+												cbb.reason("inner reason")
+														.metadata(Map.of("hello", JsonData.of("world")))
+										)
+										.type("reason-type")
+
+								)
+								.status("fail")
+						)
+				))
 				.build();
 
 		// act
@@ -135,9 +157,22 @@ class SearchDocumentResponseBuilderUnitTests {
 				null, null, null, jsonpMapper);
 
 		// assert
-		assertThat(response.getSearchShardStatistics().total()).isEqualTo(15);
-		assertThat(response.getSearchShardStatistics().successful()).isEqualTo(15);
-		assertThat(response.getSearchShardStatistics().skipped()).isEqualTo(0);
-		assertThat(response.getSearchShardStatistics().failed()).isEqualTo(0);
+		SearchShardStatistics shardStatistics = response.getSearchShardStatistics();
+		assertThat(shardStatistics).isNotNull();
+		assertThat(shardStatistics.getTotal()).isEqualTo(15);
+		assertThat(shardStatistics.getSuccessful()).isEqualTo(14);
+		assertThat(shardStatistics.getSkipped()).isEqualTo(0);
+		assertThat(shardStatistics.getFailed()).isEqualTo(1);
+		// assert failure
+		List<SearchShardStatistics.Failure> failures = shardStatistics.getFailures();
+		assertThat(failures.size()).isEqualTo(1);
+		assertThat(failures).extracting(SearchShardStatistics.Failure::getIndex).containsExactly("test-index");
+		assertThat(failures).extracting(SearchShardStatistics.Failure::getElasticsearchErrorCause)
+				.extracting(ElasticsearchErrorCause::getReason)
+				.containsExactly("this is a mock failure in shards");
+		assertThat(failures).extracting(SearchShardStatistics.Failure::getElasticsearchErrorCause)
+				.extracting(ElasticsearchErrorCause::getCausedBy)
+				.extracting(ElasticsearchErrorCause::getReason)
+				.containsExactly("inner reason");
 	}
 }

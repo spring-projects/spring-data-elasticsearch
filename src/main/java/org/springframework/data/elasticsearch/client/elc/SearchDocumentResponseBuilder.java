@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.elasticsearch._types.ShardFailure;
 import co.elastic.clients.elasticsearch._types.ShardStatistics;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -167,7 +168,12 @@ class SearchDocumentResponseBuilder {
 	}
 
 	private static SearchShardStatistics shardsFrom(ShardStatistics shards) {
-		return new SearchShardStatistics(shards.failed(), shards.successful(), shards.total(), shards.skipped());
+		List<ShardFailure> failures = shards.failures();
+		List<SearchShardStatistics.Failure> searchFailures = failures.stream()
+				.map(f -> SearchShardStatistics.Failure.of(f.index(), f.node(), f.status(), f.shard(), null,
+						ResponseConverter.toErrorCause(f.reason())))
+				.toList();
+		return SearchShardStatistics.of(shards.failed(), shards.successful(), shards.total(), shards.skipped(), searchFailures);
 	}
 
 	@Nullable
