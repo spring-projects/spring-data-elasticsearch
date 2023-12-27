@@ -110,6 +110,7 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 			} else {
 				query.setPageable(parameterAccessor.getPageable());
 			}
+			result = elasticsearchOperations.search(query, clazz, index);
 		} else {
 			result = elasticsearchOperations.searchOne(query, clazz, index);
 		}
