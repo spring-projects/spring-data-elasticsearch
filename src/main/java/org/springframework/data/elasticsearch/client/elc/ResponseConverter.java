@@ -121,8 +121,7 @@ class ResponseConverter {
 				.build();
 	}
 
-	private TemplateResponseData clusterGetComponentTemplateData(
-			ComponentTemplateSummary componentTemplateSummary) {
+	private TemplateResponseData clusterGetComponentTemplateData(ComponentTemplateSummary componentTemplateSummary) {
 
 		var mapping = typeMapping(componentTemplateSummary.mappings());
 		var settings = new Settings();
@@ -326,7 +325,7 @@ class ResponseConverter {
 	}
 
 	private TemplateResponseData indexGetComponentTemplateData(IndexTemplateSummary indexTemplateSummary,
-																														 List<String> composedOf) {
+			List<String> composedOf) {
 		var mapping = typeMapping(indexTemplateSummary.mappings());
 
 		Function<IndexSettings, Settings> indexSettingsToSettings = indexSettings -> {

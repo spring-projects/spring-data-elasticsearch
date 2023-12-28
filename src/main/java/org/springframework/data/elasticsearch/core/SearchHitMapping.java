@@ -235,13 +235,13 @@ public class SearchHitMapping<T> {
 					scrollId = searchHitsImpl.getScrollId();
 				}
 
-				return new SearchHitsImpl<>(searchHits.getTotalHits(), //
-						searchHits.getTotalHitsRelation(), //
-						searchHits.getMaxScore(), //
-						scrollId, //
-						searchHits.getPointInTimeId(), //
-						convertedSearchHits, //
-						searchHits.getAggregations(), //
+				return new SearchHitsImpl<>(searchHits.getTotalHits(),
+						searchHits.getTotalHitsRelation(),
+						searchHits.getMaxScore(),
+						scrollId,
+						searchHits.getPointInTimeId(),
+						convertedSearchHits,
+						searchHits.getAggregations(),
 						searchHits.getSuggest(),
 						searchHits.getSearchShardStatistics());
 			}

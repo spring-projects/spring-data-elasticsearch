@@ -169,11 +169,10 @@ class SearchDocumentResponseBuilder {
 
 	private static SearchShardStatistics shardsFrom(ShardStatistics shards) {
 		List<ShardFailure> failures = shards.failures();
-		List<SearchShardStatistics.Failure> searchFailures = failures.stream()
-				.map(f -> SearchShardStatistics.Failure.of(f.index(), f.node(), f.status(), f.shard(), null,
-						ResponseConverter.toErrorCause(f.reason())))
-				.toList();
-		return SearchShardStatistics.of(shards.failed(), shards.successful(), shards.total(), shards.skipped(), searchFailures);
+		List<SearchShardStatistics.Failure> searchFailures = failures.stream().map(f -> SearchShardStatistics.Failure
+				.of(f.index(), f.node(), f.status(), f.shard(), null, ResponseConverter.toErrorCause(f.reason()))).toList();
+		return SearchShardStatistics.of(shards.failed(), shards.successful(), shards.total(), shards.skipped(),
+				searchFailures);
 	}
 
 	@Nullable
@@ -235,9 +234,8 @@ class SearchDocumentResponseBuilder {
 			var phraseSuggest = suggestionES.phrase();
 			var phraseSuggestOptions = phraseSuggest.options();
 			List<PhraseSuggestion.Entry.Option> options = new ArrayList<>();
-			phraseSuggestOptions.forEach(optionES -> options
-					.add(new PhraseSuggestion.Entry.Option(optionES.text(), optionES.highlighted(), optionES.score(),
-							optionES.collateMatch())));
+			phraseSuggestOptions.forEach(optionES -> options.add(new PhraseSuggestion.Entry.Option(optionES.text(),
+					optionES.highlighted(), optionES.score(), optionES.collateMatch())));
 			entries.add(new PhraseSuggestion.Entry(phraseSuggest.text(), phraseSuggest.offset(), phraseSuggest.length(),
 					options, null));
 		});

@@ -140,16 +140,12 @@ class SearchDocumentResponseBuilderUnitTests {
 								.shard(1)
 								.reason(rb -> rb
 										.reason("this is a mock failure in shards")
-										.causedBy(cbb ->
-												cbb.reason("inner reason")
-														.metadata(Map.of("hello", JsonData.of("world")))
-										)
+										.causedBy(cbb -> cbb.reason("inner reason")
+												.metadata(Map.of("hello", JsonData.of("world"))))
 										.type("reason-type")
 
 								)
-								.status("fail")
-						)
-				))
+								.status("fail"))))
 				.build();
 
 		// act
