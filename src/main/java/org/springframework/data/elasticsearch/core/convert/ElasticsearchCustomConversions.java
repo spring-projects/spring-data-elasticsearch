@@ -129,7 +129,7 @@ public class ElasticsearchCustomConversions extends CustomConversions {
 	@WritingConverter
 	enum ByteArrayToBase64Converter implements Converter<byte[], String> {
 
-		INSTANCE,;
+		INSTANCE;
 
 		@Override
 		public String convert(byte[] source) {

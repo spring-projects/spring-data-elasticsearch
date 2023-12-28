@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.elasticsearch._types.ShardFailure;
+import co.elastic.clients.elasticsearch._types.ShardStatistics;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.SearchTemplateResponse;
@@ -36,6 +38,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.data.elasticsearch.core.SearchShardStatistics;
 import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
@@ -52,6 +55,7 @@ import org.springframework.util.CollectionUtils;
  * Factory class to create {@link SearchDocumentResponse} instances.
  *
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 4.4
  */
 class SearchDocumentResponseBuilder {
@@ -78,8 +82,9 @@ class SearchDocumentResponseBuilder {
 		Map<String, Aggregate> aggregations = responseBody.aggregations();
 		Map<String, List<Suggestion<EntityAsMap>>> suggest = responseBody.suggest();
 		var pointInTimeId = responseBody.pitId();
+		var shards = responseBody.shards();
 
-		return from(hitsMetadata, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
+		return from(hitsMetadata, shards, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
 	}
 
 	/**
@@ -98,13 +103,14 @@ class SearchDocumentResponseBuilder {
 		Assert.notNull(entityCreator, "entityCreator must not be null");
 		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
 
+		var shards = response.shards();
 		var hitsMetadata = response.hits();
 		var scrollId = response.scrollId();
 		var aggregations = response.aggregations();
 		var suggest = response.suggest();
 		var pointInTimeId = response.pitId();
 
-		return from(hitsMetadata, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
+		return from(hitsMetadata, shards, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
 	}
 
 	/**
@@ -120,8 +126,8 @@ class SearchDocumentResponseBuilder {
 	 * @param jsonpMapper to map JsonData objects
 	 * @return the {@link SearchDocumentResponse}
 	 */
-	public static <T> SearchDocumentResponse from(HitsMetadata<?> hitsMetadata, @Nullable String scrollId,
-			@Nullable String pointInTimeId, @Nullable Map<String, Aggregate> aggregations,
+	public static <T> SearchDocumentResponse from(HitsMetadata<?> hitsMetadata, @Nullable ShardStatistics shards,
+			@Nullable String scrollId, @Nullable String pointInTimeId, @Nullable Map<String, Aggregate> aggregations,
 			Map<String, List<Suggestion<EntityAsMap>>> suggestES, SearchDocumentResponse.EntityCreator<T> entityCreator,
 			JsonpMapper jsonpMapper) {
 
@@ -155,8 +161,19 @@ class SearchDocumentResponseBuilder {
 
 		Suggest suggest = suggestFrom(suggestES, entityCreator);
 
+		SearchShardStatistics shardStatistics = shards != null ? shardsFrom(shards) : null;
+
 		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, pointInTimeId, searchDocuments,
-				aggregationsContainer, suggest);
+				aggregationsContainer, suggest, shardStatistics);
+	}
+
+	private static SearchShardStatistics shardsFrom(ShardStatistics shards) {
+		List<ShardFailure> failures = shards.failures();
+		List<SearchShardStatistics.Failure> searchFailures = failures.stream()
+				.map(f -> SearchShardStatistics.Failure.of(f.index(), f.node(), f.status(), f.shard(), null,
+						ResponseConverter.toErrorCause(f.reason())))
+				.toList();
+		return SearchShardStatistics.of(shards.failed(), shards.successful(), shards.total(), shards.skipped(), searchFailures);
 	}
 
 	@Nullable

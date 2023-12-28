@@ -29,6 +29,7 @@ import org.springframework.util.Assert;
  * @param <T> the result data class.
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author Haibo Liu
  * @since 4.0
  */
 public class SearchHitsImpl<T> implements SearchScrollHits<T> {
@@ -42,6 +43,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	@Nullable private final AggregationsContainer<?> aggregations;
 	@Nullable private final Suggest suggest;
 	@Nullable private String pointInTimeId;
+	@Nullable private final SearchShardStatistics searchShardStatistics;
 
 	/**
 	 * @param totalHits the number of total hits for the search
@@ -53,7 +55,8 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	 */
 	public SearchHitsImpl(long totalHits, TotalHitsRelation totalHitsRelation, float maxScore, @Nullable String scrollId,
 			@Nullable String pointInTimeId, List<? extends SearchHit<T>> searchHits,
-			@Nullable AggregationsContainer<?> aggregations, @Nullable Suggest suggest) {
+			@Nullable AggregationsContainer<?> aggregations, @Nullable Suggest suggest,
+			@Nullable SearchShardStatistics searchShardStatistics) {
 
 		Assert.notNull(searchHits, "searchHits must not be null");
 
@@ -66,6 +69,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 		this.aggregations = aggregations;
 		this.suggest = suggest;
 		this.unmodifiableSearchHits = Lazy.of(() -> Collections.unmodifiableList(searchHits));
+		this.searchShardStatistics = searchShardStatistics;
 	}
 
 	// region getter
@@ -119,6 +123,11 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	}
 
 	@Override
+	public SearchShardStatistics getSearchShardStatistics() {
+		return searchShardStatistics;
+	}
+
+	@Override
 	public String toString() {
 		return "SearchHits{" + //
 				"totalHits=" + totalHits + //
@@ -128,6 +137,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 				", pointInTimeId='" + pointInTimeId + '\'' + //
 				", searchHits={" + searchHits.size() + " elements}" + //
 				", aggregations=" + aggregations + //
+				", shardStatistics=" + searchShardStatistics + //
 				'}';
 	}
 }

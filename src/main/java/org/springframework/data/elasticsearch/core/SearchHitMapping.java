@@ -46,6 +46,7 @@ import org.springframework.util.Assert;
  * @author Matt Gilene
  * @author Sascha Woo
  * @author Jakob Hoeper
+ * @author Haibo Liu
  * @since 4.0
  */
 public class SearchHitMapping<T> {
@@ -84,6 +85,7 @@ public class SearchHitMapping<T> {
 				"Count of documents must match the count of entities");
 
 		long totalHits = searchDocumentResponse.getTotalHits();
+		SearchShardStatistics shardStatistics = searchDocumentResponse.getSearchShardStatistics();
 		float maxScore = searchDocumentResponse.getMaxScore();
 		String scrollId = searchDocumentResponse.getScrollId();
 		String pointInTimeId = searchDocumentResponse.getPointInTimeId();
@@ -103,7 +105,7 @@ public class SearchHitMapping<T> {
 		mapHitsInCompletionSuggestion(suggest);
 
 		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, scrollId, pointInTimeId, searchHits,
-				aggregations, suggest);
+				aggregations, suggest, shardStatistics);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -240,7 +242,8 @@ public class SearchHitMapping<T> {
 						searchHits.getPointInTimeId(), //
 						convertedSearchHits, //
 						searchHits.getAggregations(), //
-						searchHits.getSuggest());
+						searchHits.getSuggest(),
+						searchHits.getSearchShardStatistics());
 			}
 		} catch (Exception e) {
 			throw new UncategorizedElasticsearchException("Unable to convert inner hits.", e);
