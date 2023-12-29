@@ -1155,7 +1155,7 @@ class RequestConverter {
 			multiSearchTemplateQueryParameters.forEach(param -> {
 				var query = param.query();
 				mtrb.searchTemplates(stb -> stb
-						.header(msearchHeaderSetter(query, param.index(), routing))
+						.header(msearchHeaderBuilder(query, param.index(), routing))
 						.body(bb -> {
 							bb //
 									.explain(query.getExplain()) //
@@ -1187,7 +1187,7 @@ class RequestConverter {
 
 				var query = param.query();
 				mrb.searches(sb -> sb //
-						.header(msearchHeaderSetter(query, param.index(), routing)) //
+						.header(msearchHeaderBuilder(query, param.index(), routing)) //
 						.body(bb -> {
 							bb //
 									.query(getQuery(query, param.clazz()))//
@@ -1296,8 +1296,8 @@ class RequestConverter {
 	/**
 	 * {@link MsearchRequest} and {@link MsearchTemplateRequest} share the same {@link MultisearchHeader}
 	 */
-	private Function<MultisearchHeader.Builder, ObjectBuilder<MultisearchHeader>> msearchHeaderSetter(Query query,
-			IndexCoordinates index, @Nullable String routing) {
+	private Function<MultisearchHeader.Builder, ObjectBuilder<MultisearchHeader>> msearchHeaderBuilder(Query query,
+																									   IndexCoordinates index, @Nullable String routing) {
 		return h -> {
 			var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
 					: searchType(query.getSearchType());
