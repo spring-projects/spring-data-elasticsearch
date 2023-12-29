@@ -1297,7 +1297,7 @@ class RequestConverter {
 	 * {@link MsearchRequest} and {@link MsearchTemplateRequest} share the same {@link MultisearchHeader}
 	 */
 	private Function<MultisearchHeader.Builder, ObjectBuilder<MultisearchHeader>> msearchHeaderBuilder(Query query,
-																									   IndexCoordinates index, @Nullable String routing) {
+			IndexCoordinates index, @Nullable String routing) {
 		return h -> {
 			var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
 					: searchType(query.getSearchType());
