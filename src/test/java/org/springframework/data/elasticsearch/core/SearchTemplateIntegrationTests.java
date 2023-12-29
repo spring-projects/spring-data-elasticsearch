@@ -22,9 +22,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -122,7 +122,6 @@ public abstract class SearchTemplateIntegrationTests {
 	@Order(Integer.MAX_VALUE)
 	void cleanup() {
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete();
-	}
 	}
 
 	@Test // #1891
