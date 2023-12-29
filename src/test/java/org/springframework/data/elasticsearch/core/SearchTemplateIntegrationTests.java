@@ -118,10 +118,11 @@ public abstract class SearchTemplateIntegrationTests {
 				new Student("2", "Michael", "Dunlop"));
 	}
 
-	@AfterEach
-	void tearDown() {
-		personIndexOperations.delete();
-		studentIndexOperations.delete();
+	@Test
+	@Order(Integer.MAX_VALUE)
+	void cleanup() {
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete();
+	}
 	}
 
 	@Test // #1891
@@ -288,8 +289,11 @@ public abstract class SearchTemplateIntegrationTests {
 				.build();
 
 		// search with multiple index coordinates
-		var multiSearchHits = operations.multiSearch(List.of(q1, q2), List.of(Person.class, Student.class),
-				List.of(IndexCoordinates.of(indexNameProvider.indexName()), IndexCoordinates.of("another-index")));
+		var multiSearchHits = operations.multiSearch(
+				List.of(q1, q2),
+				List.of(Person.class, Student.class),
+				List.of(IndexCoordinates.of(indexNameProvider.indexName() + "-person"),
+						IndexCoordinates.of(indexNameProvider.indexName() + "-student")));
 
 		assertThat(multiSearchHits.size()).isEqualTo(2);
 		assertThat(multiSearchHits.get(0).getTotalHits()).isEqualTo(2);
@@ -310,7 +314,7 @@ public abstract class SearchTemplateIntegrationTests {
 		assertThat(operations.deleteScript(SCRIPT_SEARCH_LASTNAME.id())).isTrue();
 	}
 
-	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-person")
 	record Person( //
 			@Nullable @Id String id, //
 			@Field(type = FieldType.Text) String firstName, //
@@ -318,7 +322,7 @@ public abstract class SearchTemplateIntegrationTests {
 	) {
 	}
 
-	@Document(indexName = "another-index")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-student")
 	record Student( //
 				   @Nullable @Id String id, //
 				   @Field(type = FieldType.Text) String firstName, //
