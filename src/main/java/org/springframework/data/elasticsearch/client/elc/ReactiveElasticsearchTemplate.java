@@ -642,7 +642,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	 *
 	 * @param <T>
 	 */
-	interface ClientCallback<T extends Publisher<?>> {
+	public interface ClientCallback<T extends Publisher<?>> {
 
 		T doWithClient(ReactiveElasticsearchClient client);
 	}
