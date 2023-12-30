@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
+import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
@@ -42,11 +43,12 @@ import org.springframework.lang.Nullable;
  * Integration tests search template API.
  *
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  */
 @SpringIntegrationTest
 public abstract class SearchTemplateIntegrationTests {
 
-	private static final String SCRIPT = """
+	private static final String SEARCH_FIRSTNAME = """
 			{
 				"query": {
 					"bool": {
@@ -63,21 +65,57 @@ public abstract class SearchTemplateIntegrationTests {
 				"size": 100
 			  }
 			""";
-	private Script script = Script.builder() //
-			.withId("testScript") //
+
+	private static final String SEARCH_LASTNAME = """
+			{
+				"query": {
+					"bool": {
+						"must": [
+							{
+								"match": {
+									"lastName": "{{lastName}}"
+								}
+							}
+						]
+					}
+				},
+				"from": 0,
+				"size": 100
+			  }
+			""";
+
+	private static final Script SCRIPT_SEARCH_FIRSTNAME = Script.builder() //
+			.withId("searchFirstName") //
 			.withLanguage("mustache") //
-			.withSource(SCRIPT) //
+			.withSource(SEARCH_FIRSTNAME) //
+			.build();
+
+	private static final Script SCRIPT_SEARCH_LASTNAME = Script.builder() //
+			.withId("searchLastName") //
+			.withLanguage("mustache") //
+			.withSource(SEARCH_LASTNAME) //
 			.build();
 
 	@Autowired ElasticsearchOperations operations;
 	@Autowired IndexNameProvider indexNameProvider;
-	@Nullable IndexOperations indexOperations;
+	IndexOperations personIndexOperations, studentIndexOperations;
 
 	@BeforeEach
 	void setUp() {
 		indexNameProvider.increment();
-		indexOperations = operations.indexOps(Person.class);
-		indexOperations.createWithMapping();
+		personIndexOperations = operations.indexOps(Person.class);
+		personIndexOperations.createWithMapping();
+		studentIndexOperations = operations.indexOps(Student.class);
+		studentIndexOperations.createWithMapping();
+
+		operations.save( //
+				new Person("1", "John", "Smith"), //
+				new Person("2", "Willy", "Smith"), //
+				new Person("3", "John", "Myers"));
+
+		operations.save(
+				new Student("1", "Joey", "Dunlop"), //
+				new Student("2", "Michael", "Dunlop"));
 	}
 
 	@Test
@@ -89,41 +127,35 @@ public abstract class SearchTemplateIntegrationTests {
 	@Test // #1891
 	@DisplayName("should store, retrieve and delete template script")
 	void shouldStoreAndRetrieveAndDeleteTemplateScript() throws JSONException {
-
 		// we do all in this test because scripts aren't stored in an index but in the cluster and we need to clenaup.
 
-		var success = operations.putScript(script);
+		var success = operations.putScript(SCRIPT_SEARCH_FIRSTNAME);
 		assertThat(success).isTrue();
 
-		var savedScript = operations.getScript(script.id());
+		var savedScript = operations.getScript(SCRIPT_SEARCH_FIRSTNAME.id());
 		assertThat(savedScript).isNotNull();
-		assertThat(savedScript.id()).isEqualTo(script.id());
-		assertThat(savedScript.language()).isEqualTo(script.language());
-		assertEquals(savedScript.source(), script.source(), false);
+		assertThat(savedScript.id()).isEqualTo(SCRIPT_SEARCH_FIRSTNAME.id());
+		assertThat(savedScript.language()).isEqualTo(SCRIPT_SEARCH_FIRSTNAME.language());
+		assertEquals(savedScript.source(), SCRIPT_SEARCH_FIRSTNAME.source(), false);
 
-		success = operations.deleteScript(script.id());
+		success = operations.deleteScript(SCRIPT_SEARCH_FIRSTNAME.id());
 		assertThat(success).isTrue();
 
-		savedScript = operations.getScript(script.id());
+		savedScript = operations.getScript(SCRIPT_SEARCH_FIRSTNAME.id());
 		assertThat(savedScript).isNull();
 
-		assertThatThrownBy(() -> operations.deleteScript(script.id())) //
+		assertThatThrownBy(() -> operations.deleteScript(SCRIPT_SEARCH_FIRSTNAME.id())) //
 				.isInstanceOf(ResourceNotFoundException.class);
 	}
 
 	@Test // #1891
 	@DisplayName("should search with template")
 	void shouldSearchWithTemplate() {
-
-		var success = operations.putScript(script);
+		var success = operations.putScript(SCRIPT_SEARCH_FIRSTNAME);
 		assertThat(success).isTrue();
 
-		operations.save( //
-				new Person("1", "John", "Smith"), //
-				new Person("2", "Willy", "Smith"), //
-				new Person("3", "John", "Myers"));
 		var query = SearchTemplateQuery.builder() //
-				.withId(script.id()) //
+				.withId(SCRIPT_SEARCH_FIRSTNAME.id()) //
 				.withParams(Map.of("firstName", "John")) //
 				.build();
 
@@ -131,15 +163,169 @@ public abstract class SearchTemplateIntegrationTests {
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(2);
 
-		success = operations.deleteScript(script.id());
+		success = operations.deleteScript(SCRIPT_SEARCH_FIRSTNAME.id());
 		assertThat(success).isTrue();
 	}
 
-	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	@Test // #2704
+	@DisplayName("should search with template multisearch")
+	void shouldSearchWithTemplateMultiSearch() {
+		var success = operations.putScript(SCRIPT_SEARCH_FIRSTNAME);
+		assertThat(success).isTrue();
+
+		var q1 = SearchTemplateQuery.builder() //
+				.withId(SCRIPT_SEARCH_FIRSTNAME.id()) //
+				.withParams(Map.of("firstName", "John")) //
+				.build();
+		var q2 = SearchTemplateQuery.builder() //
+				.withId(SCRIPT_SEARCH_FIRSTNAME.id()) //
+				.withParams(Map.of("firstName", "Willy")) //
+				.build();
+
+		var multiSearchHits = operations.multiSearch(List.of(q1, q2), Person.class);
+
+		assertThat(multiSearchHits.size()).isEqualTo(2);
+		assertThat(multiSearchHits.get(0).getTotalHits()).isEqualTo(2);
+		assertThat(multiSearchHits.get(1).getTotalHits()).isEqualTo(1);
+
+		assertThat(multiSearchHits.get(0).getSearchHits())
+				.extracting(SearchHit::getContent)
+				.extracting(Person::lastName)
+				.contains("Smith", "Myers");
+		assertThat(multiSearchHits.get(1).getSearchHits())
+				.extracting(SearchHit::getContent)
+				.extracting(Person::lastName)
+				.containsExactly("Smith");
+
+		success = operations.deleteScript(SCRIPT_SEARCH_FIRSTNAME.id());
+		assertThat(success).isTrue();
+	}
+
+	@Test // #2704
+	@DisplayName("should search with template multisearch including different scripts")
+	void shouldSearchWithTemplateMultiSearchIncludingDifferentScripts() {
+		assertThat(operations.putScript(SCRIPT_SEARCH_FIRSTNAME)).isTrue();
+		assertThat(operations.putScript(SCRIPT_SEARCH_LASTNAME)).isTrue();
+
+		var q1 = SearchTemplateQuery.builder() //
+				.withId(SCRIPT_SEARCH_FIRSTNAME.id()) //
+				.withParams(Map.of("firstName", "John")) //
+				.build();
+		var q2 = SearchTemplateQuery.builder() //
+				.withId(SCRIPT_SEARCH_LASTNAME.id()) //
+				.withParams(Map.of("lastName", "smith")) //
+				.build();
+
+		var multiSearchHits = operations.multiSearch(List.of(q1, q2), Person.class);
+
+		assertThat(multiSearchHits.size()).isEqualTo(2);
+		assertThat(multiSearchHits.get(0).getTotalHits()).isEqualTo(2);
+		assertThat(multiSearchHits.get(1).getTotalHits()).isEqualTo(2);
+
+		assertThat(multiSearchHits.get(0).getSearchHits())
+				.extracting(SearchHit::getContent)
+				.extracting(Person::lastName)
+				.contains("Smith", "Myers");
+		assertThat(multiSearchHits.get(1).getSearchHits())
+				.extracting(SearchHit::getContent)
+				.extracting(Person::firstName)
+				.contains("John", "Willy");
+
+		assertThat(operations.deleteScript(SCRIPT_SEARCH_FIRSTNAME.id())).isTrue();
+		assertThat(operations.deleteScript(SCRIPT_SEARCH_LASTNAME.id())).isTrue();
+	}
+
+	@Test // #2704
+	@DisplayName("should search with template multisearch with multiple classes")
+	void shouldSearchWithTemplateMultiSearchWithMultipleClasses() {
+		assertThat(operations.putScript(SCRIPT_SEARCH_FIRSTNAME)).isTrue();
+		assertThat(operations.putScript(SCRIPT_SEARCH_LASTNAME)).isTrue();
+
+		var q1 = SearchTemplateQuery.builder() //
+				.withId(SCRIPT_SEARCH_FIRSTNAME.id()) //
+				.withParams(Map.of("firstName", "John")) //
+				.build();
+		var q2 = SearchTemplateQuery.builder() //
+				.withId(SCRIPT_SEARCH_FIRSTNAME.id()) //
+				.withParams(Map.of("firstName", "Joey")) //
+				.build();
+
+		// search with multiple classes
+		var multiSearchHits = operations.multiSearch(List.of(q1, q2), List.of(Person.class, Student.class));
+
+		assertThat(multiSearchHits.size()).isEqualTo(2);
+		assertThat(multiSearchHits.get(0).getTotalHits()).isEqualTo(2);
+		assertThat(multiSearchHits.get(1).getTotalHits()).isEqualTo(1);
+
+		assertThat(multiSearchHits.get(0).getSearchHits())
+				// type casting is needed here
+				.extracting(hits -> (Person) hits.getContent())
+				.extracting(Person::lastName)
+				.contains("Smith", "Myers");
+		assertThat(multiSearchHits.get(1).getSearchHits())
+				// type casting is needed here
+				.extracting(hits -> (Student) hits.getContent())
+				.extracting(Student::lastName)
+				.containsExactly("Dunlop");
+
+		assertThat(operations.deleteScript(SCRIPT_SEARCH_FIRSTNAME.id())).isTrue();
+		assertThat(operations.deleteScript(SCRIPT_SEARCH_LASTNAME.id())).isTrue();
+	}
+
+	@Test // #2704
+	@DisplayName("should search with template multisearch with multiple index coordinates")
+	void shouldSearchWithTemplateMultiSearchWithMultipleIndexCoordinates() {
+		assertThat(operations.putScript(SCRIPT_SEARCH_FIRSTNAME)).isTrue();
+		assertThat(operations.putScript(SCRIPT_SEARCH_LASTNAME)).isTrue();
+
+		var q1 = SearchTemplateQuery.builder() //
+				.withId(SCRIPT_SEARCH_FIRSTNAME.id()) //
+				.withParams(Map.of("firstName", "John")) //
+				.build();
+		var q2 = SearchTemplateQuery.builder() //
+				.withId(SCRIPT_SEARCH_LASTNAME.id()) //
+				.withParams(Map.of("lastName", "Dunlop")) //
+				.build();
+
+		// search with multiple index coordinates
+		var multiSearchHits = operations.multiSearch(
+				List.of(q1, q2),
+				List.of(Person.class, Student.class),
+				List.of(IndexCoordinates.of(indexNameProvider.indexName() + "-person"),
+						IndexCoordinates.of(indexNameProvider.indexName() + "-student")));
+
+		assertThat(multiSearchHits.size()).isEqualTo(2);
+		assertThat(multiSearchHits.get(0).getTotalHits()).isEqualTo(2);
+		assertThat(multiSearchHits.get(1).getTotalHits()).isEqualTo(2);
+
+		assertThat(multiSearchHits.get(0).getSearchHits())
+				// type casting is needed here
+				.extracting(hits -> (Person) hits.getContent())
+				.extracting(Person::lastName)
+				.contains("Smith", "Myers");
+		assertThat(multiSearchHits.get(1).getSearchHits())
+				// type casting is needed here
+				.extracting(hits -> (Student) hits.getContent())
+				.extracting(Student::firstName)
+				.contains("Joey", "Michael");
+
+		assertThat(operations.deleteScript(SCRIPT_SEARCH_FIRSTNAME.id())).isTrue();
+		assertThat(operations.deleteScript(SCRIPT_SEARCH_LASTNAME.id())).isTrue();
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}-person")
 	record Person( //
 			@Nullable @Id String id, //
 			@Field(type = FieldType.Text) String firstName, //
 			@Field(type = FieldType.Text) String lastName //
+	) {
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}-student")
+	record Student( //
+				   @Nullable @Id String id, //
+				   @Field(type = FieldType.Text) String firstName, //
+				   @Field(type = FieldType.Text) String lastName //
 	) {
 	}
 }
