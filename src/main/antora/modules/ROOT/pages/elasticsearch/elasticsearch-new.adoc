@@ -4,7 +4,10 @@
 [[new-features.5-3-0]]
 == New in Spring Data Elasticsearch 5.3
 
-* Upgrade to Elasticsearch 8.11.2
+* Upgrade to Elasticsearch 8.11.2.
+* Add support for highlight queries in highlighting.
+* Add shard statistics to the `SearchHit` class.
+* Add support for mulsti search template API.
 
 [[new-features.5-2-0]]
 == New in Spring Data Elasticsearch 5.2
