@@ -15,7 +15,13 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
+import org.springframework.lang.NonNull;
 
 /**
  * @author Christoph Strobl
@@ -25,6 +31,7 @@ class ElasticsearchParametersParameterAccessor extends ParametersParameterAccess
 		implements ElasticsearchParameterAccessor {
 
 	private final Object[] values;
+	private final ElasticsearchParameters eleasticSearchParameters;
 
 	/**
 	 * Creates a new {@link ElasticsearchParametersParameterAccessor}.
@@ -36,10 +43,20 @@ class ElasticsearchParametersParameterAccessor extends ParametersParameterAccess
 
 		super(method.getParameters(), values);
 		this.values = values;
+		this.eleasticSearchParameters = method.getParameters();
 	}
 
 	@Override
 	public Object[] getValues() {
 		return values;
+	}
+
+
+	@Override
+	public IndexCoordinates getIndexCoordinatesOrDefaults(@NonNull IndexCoordinates defaults) {
+		if (!eleasticSearchParameters.hasIndexCoordinatesParameter()) {
+			return defaults;
+		}
+		return (IndexCoordinates) getValues()[eleasticSearchParameters.getIndexCoordinatesIndex()];
 	}
 }

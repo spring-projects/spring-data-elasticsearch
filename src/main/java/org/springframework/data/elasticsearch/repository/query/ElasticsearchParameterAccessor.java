@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.lang.NonNull;
 
 /**
  * @author Christoph Strobl
@@ -29,4 +31,6 @@ public interface ElasticsearchParameterAccessor extends ParameterAccessor {
 	 * @return
 	 */
 	Object[] getValues();
+
+	IndexCoordinates getIndexCoordinatesOrDefaults(@NonNull IndexCoordinates defaults);
 }
