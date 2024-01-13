@@ -361,3 +361,174 @@ would make an https://www.elastic.co/guide/en/elasticsearch/reference/current/qu
 }
 ----
 ====
+
+[[elasticsearch.query-methods.at-query.spel]]
+=== Using SpEL Expressions
+
+.Declare query on the method using the `@Query` annotation with SpEL expression.
+====
+https://docs.spring.io/spring-framework/reference/core/expressions.html[SpEL expression] is also supported when defining query in `@Query`.
+
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+        {
+          "bool":{
+            "must":[
+              {
+                "term":{
+                  "name":"#{#name}"
+                }
+              }
+            ]
+          }
+        }
+        """)
+    Page<Book> findByName(String name,Pageable pageable);
+}
+----
+
+If for example the function is called with the parameter _John_, it would produce the following query body:
+
+[source,json]
+----
+{
+  "bool":{
+    "must":[
+      {
+        "term":{
+          "name":"John"
+        }
+      }
+    ]
+  }
+}
+----
+====
+
+.accessing entity property.
+====
+Supposing that we have the following entity class as query parameter type:
+[source,java]
+----
+public record QueryParam(String q) {
+}
+----
+
+It's easy to access the parameter entity by `#` symbol, then reference the property `q` with a simple `.`:
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "term":{
+                      "name":"#{#entity.q}"
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(QueryParam entity,Pageable pageable);
+}
+----
+
+We can pass `new QueryParam("John")` as the parameter now, and it will produce the same query string as above.
+====
+
+.accessing bean property.
+====
+https://docs.spring.io/spring-framework/reference/core/expressions/language-ref/bean-references.html[Bean property] is also supported as entity property. Given that there is a bean named `queryParam` of type `QueryParam`, we can access the bean with symbol `@` rather than `#`:
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "term":{
+                      "name":"#{@queryParam.q}"
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(QueryParam entity,Pageable pageable);
+}
+----
+====
+
+.SpEL and `Collection` param.
+====
+`Collection` parameter is also supported and is as easy to use as normal `String`, such as the following `terms` query:
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "terms":{
+                      "name": #{#names}
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(Collection<String> names,Pageable pageable);
+}
+----
+A collection of `names` like `List.of("name1", "name2")` will produce the following terms query:
+[source,json]
+----
+{
+  "bool":{
+    "must":[
+      {
+        "terms":{
+          "name": ["name1", "name2"]
+        }
+      }
+    ]
+  }
+}
+----
+====
+
+.access property in the `Collection` param.
+====
+https://docs.spring.io/spring-framework/reference/core/expressions/language-ref/collection-projection.html[SpEL Collection Projection] is convenient to use when entities in the `Collection` parameter is not plain `String`:
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "terms":{
+                      "name": #{#entities.![q]}
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(Collection<QueryParam> entities,Pageable pageable);
+}
+----
+This will extract all the `q` property values as a new `Collection` from `QueryParam` collection, thus takes the same effect as above.
+====
+
