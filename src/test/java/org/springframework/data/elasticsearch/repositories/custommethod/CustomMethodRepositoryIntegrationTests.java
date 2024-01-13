@@ -1522,6 +1522,65 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
 
+	@Test
+	void shouldReturnSearchHitsForStringQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByStringSpEL("abc");
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		QueryParam param = new QueryParam("abc");
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertySpEL(param);
+		repository.queryByBeanPropertySpEL();
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsForBeanQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByBeanPropertySpEL();
+		repository.queryByBeanPropertySpEL();
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsForCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(List.of("abc"));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		QueryParam param = new QueryParam("abc");
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertyCollectionSpEL(List.of(param));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
 	@Test // DATAES-372
 	void shouldReturnHighlightsOnAnnotatedMethod() {
 		List<SampleEntity> entities = createSampleEntities("abc", 2);
@@ -1939,6 +1998,81 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
 		@Highlight(fields = { @HighlightField(name = "type") })
 		SearchHits<SampleEntity> queryByString(String type);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "type":"#{#type}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByStringSpEL(String type);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "type":"#{#entity.q}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByParameterPropertySpEL(QueryParam entity);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "type":"#{@queryParam.q}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByBeanPropertySpEL();
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "type": #{#types}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByCollectionSpEL(Collection<String> types);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "type": #{#entities.![q]}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpEL(Collection<QueryParam> entities);
 
 		@Query("""
 				{

@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
@@ -34,6 +37,8 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.expression.TypeConverter;
+import org.springframework.expression.spel.support.StandardTypeConverter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -54,6 +59,7 @@ import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  * @author Ezequiel Antúnez Camacho
+ * @author Haibo Liu
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -96,10 +102,23 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		return Optional.of(new ElasticsearchQueryLookupStrategy());
+		return Optional.of(new ElasticsearchQueryLookupStrategy(evaluationContextProvider));
 	}
 
 	private class ElasticsearchQueryLookupStrategy implements QueryLookupStrategy {
+
+		QueryMethodEvaluationContextProvider evaluationContextProvider;
+		private TypeConverter typeConverter;
+
+		ElasticsearchQueryLookupStrategy(QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			this.evaluationContextProvider = evaluationContextProvider;
+
+			// register elasticsearch custom type converter for conversion service
+			ConversionService conversionService = new DefaultConversionService();
+			ConverterRegistry converterRegistry = (ConverterRegistry) conversionService;
+			converterRegistry.addConverter(new ElasticsearchCollectionToStringConverter(conversionService));
+			typeConverter = new StandardTypeConverter(conversionService);
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -115,9 +134,11 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, namedQuery);
+				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, namedQuery,
+						evaluationContextProvider, typeConverter);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery());
+				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery(),
+						evaluationContextProvider, typeConverter);
 			}
 			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations);
 		}

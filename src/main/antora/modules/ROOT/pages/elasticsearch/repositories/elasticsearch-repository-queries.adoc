@@ -316,7 +316,7 @@ Repository methods can be defined to have the following return types for returni
 
 .Declare query on the method using the `@Query` annotation.
 ====
-The arguments passed to the method can be inserted into placeholders in the query string. the placeholders are of the form `?0`, `?1`, `?2` etc. for the first, second, third parameter and so on.
+The arguments passed to the method can be inserted into placeholders in the query string. The placeholders are of the form `?0`, `?1`, `?2` etc. for the first, second, third parameter and so on.
 [source,java]
 ----
 interface BookRepository extends ElasticsearchRepository<Book, String> {
