@@ -32,9 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.converter.ConverterRegistry;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -46,13 +43,10 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParam;
-import org.springframework.data.elasticsearch.repository.support.ElasticsearchCollectionToStringConverter;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.expression.TypeConverter;
-import org.springframework.expression.spel.support.StandardTypeConverter;
 import org.springframework.lang.Nullable;
 
 /**
@@ -99,7 +93,17 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 
 		assertThat(query).isInstanceOf(StringQuery.class);
 		assertThat(((StringQuery) query).getSource())
-				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'name' : 'Luke' } } } }");
+				.isEqualTo("{ \"bool\" : { \"must\" : { \"term\" : { \"name\" : \"Luke\" } } } }");
+	}
+
+	@Test
+	public void shouldReplaceParametersSpELWithQuotes() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameSpEL", "hello \"world\"");
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ \"bool\" : { \"must\" : { \"term\" : { \"name\" : \"hello \\\"world\\\"\" } } } }");
 	}
 
 	@Test
@@ -116,8 +120,8 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 	@Test
 	public void shouldReplaceCollectionSpEL() throws Exception {
 
-		final List<String> another_string = Arrays.asList("hello \"Stranger\"", "Another string");
-		List<String> params = new ArrayList<>(another_string);
+		final List<String> anotherString = Arrays.asList("hello \"Stranger\"", "Another string");
+		List<String> params = new ArrayList<>(anotherString);
 		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesSpEL", params);
 
 		assertThat(query).isInstanceOf(StringQuery.class);
@@ -126,10 +130,22 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 	}
 
 	@Test
+	public void shouldReplaceEmptyCollectionSpEL() throws Exception {
+
+		final List<String> anotherString = List.of();
+		List<String> params = new ArrayList<>(anotherString);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesSpEL", params);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource()).isEqualTo(
+				"{ 'bool' : { 'must' : { 'terms' : { 'name' : [] } } } }");
+	}
+
+	@Test
 	public void shouldReplaceCollectionParametersSpEL() throws Exception {
 
-		final List<QueryParam> another_string = List.of(new QueryParam("hello \"Stranger\""), new QueryParam("Another string"));
-		List<QueryParam> params = new ArrayList<>(another_string);
+		final List<QueryParam> anotherString = List.of(new QueryParam("hello \"Stranger\""), new QueryParam("Another string"));
+		List<QueryParam> params = new ArrayList<>(anotherString);
 		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesParameterSpEL", params);
 
 		assertThat(query).isInstanceOf(StringQuery.class);
@@ -220,13 +236,8 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 	}
 
 	private ElasticsearchStringQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {
-		ConversionService conversionService = new DefaultConversionService();
-		ConverterRegistry converterRegistry = (ConverterRegistry) conversionService;
-		converterRegistry.addConverter(new ElasticsearchCollectionToStringConverter(conversionService));
-		TypeConverter typeConverter = new StandardTypeConverter(conversionService);
-
 		return new ElasticsearchStringQuery(queryMethod, operations, queryMethod.getAnnotatedQuery(),
-				QueryMethodEvaluationContextProvider.DEFAULT, typeConverter);
+				QueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	private ElasticsearchQueryMethod getQueryMethod(String name, Class<?>... parameters) throws NoSuchMethodException {
@@ -247,7 +258,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
 		Person findByName(String name);
 
-		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '#{#name}' } } } }")
+		@Query("{ \"bool\" : { \"must\" : { \"term\" : { \"name\" : \"#{#name}\" } } } }")
 		Person findByNameSpEL(String name);
 
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '#{#param.q}' } } } }")

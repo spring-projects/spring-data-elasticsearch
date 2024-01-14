@@ -18,15 +18,20 @@ package org.springframework.data.elasticsearch.repository.query;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.repository.support.ElasticsearchCollectionValueToStringConverter;
+import org.springframework.data.elasticsearch.repository.support.ElasticsearchValueSpELConversionService;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.TypeConverter;
+import org.springframework.expression.common.CompositeStringExpression;
 import org.springframework.expression.common.LiteralExpression;
+import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.expression.spel.support.StandardTypeConverter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -45,23 +50,22 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
-	private final String queryString;
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 	private static final Map<String, Expression> QUERY_EXPRESSIONS = new ConcurrentHashMap<>();
+
+	private final String queryString;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
-	private final TypeConverter typeConverter;
+	private final TypeConverter elasticsearchSpELTypeConverter;
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
-			String queryString, QueryMethodEvaluationContextProvider evaluationContextProvider,
-			TypeConverter typeConverter) {
+			String queryString, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		super(queryMethod, elasticsearchOperations);
 		Assert.notNull(queryString, "Query cannot be empty");
 		Assert.notNull(evaluationContextProvider, "ExpressionEvaluationContextProvider must not be null");
-		Assert.notNull(typeConverter, "TypeConverter must not be null");
 
 		this.queryString = queryString;
 		this.evaluationContextProvider = evaluationContextProvider;
-		this.typeConverter = typeConverter;
+		this.elasticsearchSpELTypeConverter = new StandardTypeConverter(ElasticsearchValueSpELConversionService.CONVERSION_SERVICE_LAZY);
 	}
 
 	@Override
@@ -94,14 +98,43 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			EvaluationContext context = evaluationContextProvider.getEvaluationContext(parameterAccessor.getParameters(),
 					parameterAccessor.getValues());
 			if (context instanceof StandardEvaluationContext standardEvaluationContext) {
-				standardEvaluationContext.setTypeConverter(typeConverter);
+				standardEvaluationContext.setTypeConverter(elasticsearchSpELTypeConverter);
 			}
 
-			String parsed = expr.getValue(context, String.class);
+			String parsed = parseExpressions(expr, context);
 			Assert.notNull(parsed, "Query parsed by SpEL should not be null");
 			return parsed;
 		}
 		return queryString;
+	}
+
+	/**
+	 * {@link Expression#getValue(EvaluationContext, Class)} is not used because the value part in SpEL should be converted
+	 * by {@link org.springframework.data.elasticsearch.repository.support.ElasticsearchStringValueToStringConverter} or
+	 * {@link ElasticsearchCollectionValueToStringConverter} to
+	 * escape the quotations, but other literal parts in SpEL expression should not be processed with this converter.
+	 * So we just get the string value from {@link LiteralExpression} directly rather than
+	 * {@link LiteralExpression#getValue(EvaluationContext, Class)}.
+	 */
+	private String parseExpressions(Expression rootExpr, EvaluationContext context) {
+		StringBuilder parsed = new StringBuilder();
+		if (rootExpr instanceof CompositeStringExpression compositeStringExpression) {
+			Expression[] expressions = compositeStringExpression.getExpressions();
+
+			for (Expression exp : expressions) {
+				if (exp instanceof LiteralExpression literalExpression) {
+					// get the string literal directly
+					parsed.append(literalExpression.getExpressionString());
+				} else if (exp instanceof SpelExpression spelExpression) {
+					// evaluate the value
+					parsed.append(spelExpression.getValue(context, String.class));
+				} else {
+					//  then it should be another composite expression
+					parsed.append(parseExpressions(exp, context));
+				}
+			}
+		}
+		return parsed.toString();
 	}
 
 	@Nullable
@@ -110,6 +143,5 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			Expression expr = PARSER.parseExpression(queryString, ParserContext.TEMPLATE_EXPRESSION);
 			return expr instanceof LiteralExpression ? null : expr;
 		});
-
 	}
 }

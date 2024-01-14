@@ -1570,6 +1570,16 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	}
 
 	@Test
+	void shouldReturnSearchHitsForEmptyCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(List.of());
+		assertThat(searchHits.getTotalHits()).isEqualTo(0);
+	}
+
+	@Test
 	void shouldReturnSearchHitsForParameterPropertyCollectionQuerySpEL() {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);

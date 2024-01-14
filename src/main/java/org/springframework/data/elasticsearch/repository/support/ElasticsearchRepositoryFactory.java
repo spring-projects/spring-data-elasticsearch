@@ -15,9 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.converter.ConverterRegistry;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
@@ -107,17 +104,10 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
 	private class ElasticsearchQueryLookupStrategy implements QueryLookupStrategy {
 
-		QueryMethodEvaluationContextProvider evaluationContextProvider;
-		private TypeConverter typeConverter;
+		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 		ElasticsearchQueryLookupStrategy(QueryMethodEvaluationContextProvider evaluationContextProvider) {
 			this.evaluationContextProvider = evaluationContextProvider;
-
-			// register elasticsearch custom type converter for conversion service
-			ConversionService conversionService = new DefaultConversionService();
-			ConverterRegistry converterRegistry = (ConverterRegistry) conversionService;
-			converterRegistry.addConverter(new ElasticsearchCollectionToStringConverter(conversionService));
-			typeConverter = new StandardTypeConverter(conversionService);
 		}
 
 		/*
@@ -135,10 +125,10 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
 				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, namedQuery,
-						evaluationContextProvider, typeConverter);
+						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
 				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery(),
-						evaluationContextProvider, typeConverter);
+						evaluationContextProvider);
 			}
 			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations);
 		}

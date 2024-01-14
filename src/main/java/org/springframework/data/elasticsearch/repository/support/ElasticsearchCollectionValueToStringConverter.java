@@ -24,27 +24,25 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.regex.Matcher;
 
 /**
  * Convert a collection into string for value part of the elasticsearch query.
  * <p>
- * The string should be wrapped with square brackets, with each element quoted therefore escaped if quotes exist in the
- * original element.
+ * The string should be wrapped with square brackets, with each element quoted therefore
+ * escaped(by {@link ElasticsearchStringValueToStringConverter}) if quotations exist in the original element.
  * <p>
  * eg: The value part of an elasticsearch terms query should looks like {@code ["hello \"Stranger\"","Another string"]},
- * and the whole query string may be
- * {@code { 'bool' : { 'must' : { 'terms' : { 'name' : ["hello \"Stranger\"","Another string"] } } } }}
+ * for query {@code { 'bool' : { 'must' : { 'terms' : { 'name' : ["hello \"Stranger\"","Another string"] } } } }}
  *
  * @author Haibo Liu
  */
-public class ElasticsearchCollectionToStringConverter implements GenericConverter {
+public class ElasticsearchCollectionValueToStringConverter implements GenericConverter {
 
 	private static final String DELIMITER = ",";
 
 	private final ConversionService conversionService;
 
-	public ElasticsearchCollectionToStringConverter(ConversionService conversionService) {
+	public ElasticsearchCollectionValueToStringConverter(ConversionService conversionService) {
 		this.conversionService = conversionService;
 	}
 
@@ -57,7 +55,7 @@ public class ElasticsearchCollectionToStringConverter implements GenericConverte
 	@Nullable
 	public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 		if (source == null) {
-			return null;
+			return "[]";
 		}
 		Collection<?> sourceCollection = (Collection<?>) source;
 		if (sourceCollection.isEmpty()) {
@@ -67,13 +65,12 @@ public class ElasticsearchCollectionToStringConverter implements GenericConverte
 		for (Object sourceElement : sourceCollection) {
 			Object targetElement = this.conversionService.convert(
 					sourceElement, sourceType.elementTypeDescriptor(sourceElement), targetType);
-			sb.add("\"" + escape(targetElement) + "\"");
+			if (sourceElement instanceof String) {
+				sb.add("\"" + targetElement + "\"");
+			} else {
+				sb.add(String.valueOf(targetElement));
+			}
 		}
 		return sb.toString();
-	}
-
-	private String escape(@Nullable Object target) {
-		// escape the quotes in the string, because the string should already be quoted manually
-		return String.valueOf(target).replaceAll("\"", Matcher.quoteReplacement("\\\""));
 	}
 }
