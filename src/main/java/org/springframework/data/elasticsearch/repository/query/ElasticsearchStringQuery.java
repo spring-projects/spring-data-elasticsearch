@@ -112,27 +112,28 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	 * {@link Expression#getValue(EvaluationContext, Class)} is not used because the value part in SpEL should be converted
 	 * by {@link org.springframework.data.elasticsearch.repository.support.ElasticsearchStringValueToStringConverter} or
 	 * {@link ElasticsearchCollectionValueToStringConverter} to
-	 * escape the quotations, but other literal parts in SpEL expression should not be processed with this converter.
+	 * escape the quotations, but other literal parts in SpEL expression should not be processed with these converters.
 	 * So we just get the string value from {@link LiteralExpression} directly rather than
 	 * {@link LiteralExpression#getValue(EvaluationContext, Class)}.
 	 */
 	private String parseExpressions(Expression rootExpr, EvaluationContext context) {
 		StringBuilder parsed = new StringBuilder();
-		if (rootExpr instanceof CompositeStringExpression compositeStringExpression) {
+		if (rootExpr instanceof LiteralExpression literalExpression) {
+			// get the string literal directly
+			parsed.append(literalExpression.getExpressionString());
+		} else if (rootExpr instanceof SpelExpression spelExpression) {
+			// evaluate the value
+			parsed.append(spelExpression.getValue(context, String.class));
+		} else if (rootExpr instanceof CompositeStringExpression compositeStringExpression) {
+			// then it should be another composite expression
 			Expression[] expressions = compositeStringExpression.getExpressions();
 
 			for (Expression exp : expressions) {
-				if (exp instanceof LiteralExpression literalExpression) {
-					// get the string literal directly
-					parsed.append(literalExpression.getExpressionString());
-				} else if (exp instanceof SpelExpression spelExpression) {
-					// evaluate the value
-					parsed.append(spelExpression.getValue(context, String.class));
-				} else {
-					//  then it should be another composite expression
-					parsed.append(parseExpressions(exp, context));
-				}
+				parsed.append(parseExpressions(exp, context));
 			}
+		} else {
+			// no more
+			parsed.append(rootExpr.getValue(context, String.class));
 		}
 		return parsed.toString();
 	}

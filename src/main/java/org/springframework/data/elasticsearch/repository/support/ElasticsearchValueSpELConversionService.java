@@ -22,7 +22,6 @@ import org.springframework.data.util.Lazy;
 
 /**
  * To supply a {@link ConversionService} with custom converter to handle SpEL value in elasticsearch query.
- * This service should only be used in this situation.
  *
  * @author Haibo Liu
  */

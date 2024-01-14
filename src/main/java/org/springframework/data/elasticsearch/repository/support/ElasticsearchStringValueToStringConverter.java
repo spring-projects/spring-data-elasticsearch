@@ -25,7 +25,7 @@ import java.util.regex.Matcher;
 
 /**
  * Values in elasticsearch query may contain quotations and should be escaped when converting.
- * However, this converter should only be used in this situation, rather than common string to string conversions.
+ * However, the converter should only be used in this situation, rather than common string to string conversions.
  *
  * @author Haibo Liu
  */
