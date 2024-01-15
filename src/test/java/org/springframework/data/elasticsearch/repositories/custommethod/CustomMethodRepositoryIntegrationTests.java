@@ -63,6 +63,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
 /**
@@ -1591,6 +1592,19 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
 
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyCollectionQuerySpELWithParamAnnotation() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		QueryParam param = new QueryParam("abc");
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertyCollectionSpELWithParamAnnotation(
+				List.of(param));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
 	@Test // DATAES-372
 	void shouldReturnHighlightsOnAnnotatedMethod() {
 		List<SampleEntity> entities = createSampleEntities("abc", 2);
@@ -2083,6 +2097,22 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				}
 				""")
 		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpEL(Collection<QueryParam> entities);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "type": #{#e.![q]}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpELWithParamAnnotation(
+				@Param("e") Collection<QueryParam> entities);
 
 		@Query("""
 				{

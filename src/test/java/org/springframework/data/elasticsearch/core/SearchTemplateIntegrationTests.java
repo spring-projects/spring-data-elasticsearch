@@ -323,9 +323,9 @@ public abstract class SearchTemplateIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}-student")
 	record Student( //
-				   @Nullable @Id String id, //
-				   @Field(type = FieldType.Text) String firstName, //
-				   @Field(type = FieldType.Text) String lastName //
+			@Nullable @Id String id, //
+			@Field(type = FieldType.Text) String firstName, //
+			@Field(type = FieldType.Text) String lastName //
 	) {
 	}
 }
