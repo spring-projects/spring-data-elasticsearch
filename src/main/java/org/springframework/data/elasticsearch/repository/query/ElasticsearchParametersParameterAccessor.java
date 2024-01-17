@@ -21,7 +21,7 @@ import org.springframework.data.repository.query.ParametersParameterAccessor;
  * @author Christoph Strobl
  * @since 3.2
  */
-class ElasticsearchParametersParameterAccessor extends ParametersParameterAccessor
+public class ElasticsearchParametersParameterAccessor extends ParametersParameterAccessor
 		implements ElasticsearchParameterAccessor {
 
 	private final Object[] values;

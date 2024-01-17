@@ -43,6 +43,7 @@ import org.springframework.util.Assert;
  *
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 3.2
  */
 abstract class AbstractReactiveElasticsearchRepositoryQuery implements RepositoryQuery {
@@ -112,7 +113,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 	 * @param accessor must not be {@literal null}.
 	 * @return
 	 */
-	protected abstract BaseQuery createQuery(ElasticsearchParameterAccessor accessor);
+	protected abstract BaseQuery createQuery(ElasticsearchParametersParameterAccessor accessor);
 
 	private ReactiveElasticsearchQueryExecution getExecution(ElasticsearchParameterAccessor accessor,
 			Converter<Object, Object> resultProcessing) {

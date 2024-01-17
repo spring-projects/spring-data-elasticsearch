@@ -183,7 +183,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				  "bool":{
 				    "must":{
 				      "terms":{
-				        "name": [1, 2, 3]
+				        "age": [1, 2, 3]
 				      }
 				    }
 				  }
@@ -439,7 +439,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				  "bool":{
 				    "must":{
 				      "terms":{
-				        "name": #{#ages}
+				        "age": #{#ages}
 				      }
 				    }
 				  }

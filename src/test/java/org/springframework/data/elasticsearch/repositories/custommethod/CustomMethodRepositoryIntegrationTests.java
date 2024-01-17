@@ -1556,7 +1556,6 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		QueryParameter param = new QueryParameter("abc");
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertySpEL(param);
-		repository.queryByBeanPropertySpEL();
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
@@ -1568,7 +1567,6 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByBeanPropertySpEL();
-		repository.queryByBeanPropertySpEL();
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
@@ -1603,6 +1601,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(List.of());
+
 		assertThat(searchHits.getTotalHits()).isEqualTo(0);
 	}
 
@@ -1615,6 +1614,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		params.add(null);
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(params);
+
 		assertThat(searchHits.getTotalHits()).isEqualTo(0);
 	}
 
@@ -1625,6 +1625,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(Arrays.asList("abc", null));
+
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
 

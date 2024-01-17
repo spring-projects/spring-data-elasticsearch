@@ -19,12 +19,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 4.4
  */
 @ContextConfiguration(classes = { SimpleReactiveElasticsearchRepositoryELCIntegrationTests.Config.class })
@@ -38,6 +40,14 @@ public class SimpleReactiveElasticsearchRepositoryELCIntegrationTests
 		@Bean
 		IndexNameProvider indexNameProvider() {
 			return new IndexNameProvider("simple-reactive-repository");
+		}
+
+		/**
+		 * a normal bean referenced by SpEL in query
+		 */
+		@Bean
+		QueryParameter queryParameter() {
+			return new QueryParameter("message");
 		}
 	}
 
