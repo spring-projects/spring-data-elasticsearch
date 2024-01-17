@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.repositories.custommethod;
 
 /**
- * Used as a parameter referenced by SpEL in query method.
+ * Used as a parameter referenced by SpEL in query method tests.
  *
  * @param q content
  * @author Haibo Liu
