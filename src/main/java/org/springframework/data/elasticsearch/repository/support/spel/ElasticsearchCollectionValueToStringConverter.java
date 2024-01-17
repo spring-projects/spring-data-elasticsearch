@@ -20,15 +20,12 @@ import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.lang.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
-import java.util.StringJoiner;
+import java.util.*;
 
 /**
  * Convert a collection into string for value part of the elasticsearch query.
  * <p>
- * The string should be wrapped with square brackets, with each element quoted therefore
+ * If the value is type {@link String}, it should be wrapped with square brackets, with each element quoted therefore
  * escaped(by {@link ElasticsearchStringValueToStringConverter}) if quotations exist in the original element.
  * <p>
  * eg: The value part of an elasticsearch terms query should looks like {@code ["hello \"Stranger\"","Another string"]}
@@ -77,6 +74,11 @@ public class ElasticsearchCollectionValueToStringConverter implements GenericCon
 		}
 		StringJoiner sb = new StringJoiner(DELIMITER, "[", "]");
 		for (Object sourceElement : sourceCollection) {
+			// ignore the null value in collection
+			if (Objects.isNull(sourceElement)) {
+				continue;
+			}
+
 			Object targetElement = this.conversionService.convert(
 					sourceElement, sourceType.elementTypeDescriptor(sourceElement), targetType);
 			if (sourceElement instanceof String) {

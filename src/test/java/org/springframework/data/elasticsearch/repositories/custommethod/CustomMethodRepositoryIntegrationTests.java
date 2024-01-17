@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repositories.custommethod;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
@@ -52,6 +53,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchPage;
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -1535,6 +1537,18 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	}
 
 	@Test
+	void shouldRaiseExceptionForNullStringQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByStringSpEL(null));
+
+		assertThat(thrown.getMessage())
+				.isEqualTo("Parameter value can't be null for SpEL expression '#type' in method 'queryByStringSpEL'" +
+						" when querying elasticsearch");
+	}
+
+	@Test
 	void shouldReturnSearchHitsForParameterPropertyQuerySpEL() {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
@@ -1571,13 +1585,47 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	}
 
 	@Test
-	void shouldReturnSearchHitsForEmptyCollectionQuerySpEL() {
+	void shouldRaiseExceptionForNullCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByCollectionSpEL(null));
+
+		assertThat(thrown.getMessage())
+				.isEqualTo("Parameter value can't be null for SpEL expression '#types' in method 'queryByCollectionSpEL'" +
+						" when querying elasticsearch");
+	}
+
+	@Test
+	void shouldNotReturnSearchHitsForEmptyCollectionQuerySpEL() {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
 
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(List.of());
 		assertThat(searchHits.getTotalHits()).isEqualTo(0);
+	}
+
+	@Test
+	void shouldNotReturnSearchHitsForCollectionQueryWithOnlyNullValuesSpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		List<String> params = new ArrayList<>();
+		params.add(null);
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(params);
+		assertThat(searchHits.getTotalHits()).isEqualTo(0);
+	}
+
+	@Test
+	void shouldIgnoreNullValuesInCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(Arrays.asList("abc", null));
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
 
 	@Test

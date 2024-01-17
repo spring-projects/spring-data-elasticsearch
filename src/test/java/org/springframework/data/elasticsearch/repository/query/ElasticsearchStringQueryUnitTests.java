@@ -160,8 +160,30 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				{
 				  "bool":{
 				    "must":{
-				      "term":{
+				      "terms":{
 				        "name": ["hello \\"Stranger\\"", "Another string"]
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldReplaceNonStringCollectionSpEL() throws Exception {
+
+		final List<Integer> ages = List.of(1, 2, 3);
+		List<Integer> params = new ArrayList<>(ages);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAgesSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": [1, 2, 3]
 				      }
 				    }
 				  }
@@ -182,8 +204,56 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				{
 				  "bool":{
 				    "must":{
-				      "term":{
+				      "terms":{
 				        "name": []
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldBeEmptyWithNullValuesInCollectionSpEL() throws Exception {
+
+		final List<String> anotherString = List.of();
+		List<String> params = new ArrayList<>(anotherString);
+		// add a null value
+		params.add(null);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": []
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldIgnoreNullValuesInCollectionSpEL() throws Exception {
+
+		final List<String> anotherString = List.of("abc");
+		List<String> params = new ArrayList<>(anotherString);
+		// add a null value
+		params.add(null);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": ["abc"]
 				      }
 				    }
 				  }
@@ -355,7 +425,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				{
 				  "bool":{
 				    "must":{
-				      "term":{
+				      "terms":{
 				        "name": #{#names}
 				      }
 				    }
@@ -363,6 +433,19 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				}
 				""")
 		Person findByNamesSpEL(ArrayList<String> names);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": #{#ages}
+				      }
+				    }
+				  }
+				}
+				""")
+		Person findByAgesSpEL(ArrayList<Integer> ages);
 
 		@Query("""
 				{

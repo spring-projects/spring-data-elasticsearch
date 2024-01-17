@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.spel.ElasticsearchCollectionValueToStringConverter;
@@ -124,9 +125,15 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 			parsed.append(literalExpression.getExpressionString());
 		} else if (rootExpr instanceof SpelExpression spelExpression) {
 			// evaluate the value
-			parsed.append(spelExpression.getValue(context, String.class));
+			String value = spelExpression.getValue(context, String.class);
+			if (value == null) {
+				throw new ConversionException(String.format(
+						"Parameter value can't be null for SpEL expression '%s' in method '%s' when querying elasticsearch",
+						spelExpression.getExpressionString(), queryMethod.method.getName()));
+			}
+			parsed.append(value);
 		} else if (rootExpr instanceof CompositeStringExpression compositeStringExpression) {
-			// then it should be another composite expression
+			// parse one by one for composite expression
 			Expression[] expressions = compositeStringExpression.getExpressions();
 
 			for (Expression exp : expressions) {

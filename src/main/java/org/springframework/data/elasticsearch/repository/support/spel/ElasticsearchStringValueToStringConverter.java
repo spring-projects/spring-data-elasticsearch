@@ -41,7 +41,7 @@ public class ElasticsearchStringValueToStringConverter implements GenericConvert
 	@Nullable
 	public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
 		if (source == null) {
-			return "null";
+			return null;
 		}
 		return escape(source);
 	}
