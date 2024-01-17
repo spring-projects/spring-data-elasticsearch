@@ -46,8 +46,8 @@ public class CustomMethodRepositoryELCIntegrationTests extends CustomMethodRepos
 		 * a normal bean referenced by SpEL in query
 		 */
 		@Bean
-		QueryParam queryParam() {
-			return new QueryParam("abc");
+		QueryParameter queryParameter() {
+			return new QueryParameter("abc");
 		}
 	}
 }

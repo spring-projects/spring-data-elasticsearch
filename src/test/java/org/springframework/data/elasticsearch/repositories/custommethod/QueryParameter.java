@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.repositories.custommethod;
 /**
  * Used as a parameter referenced by SpEL in query method tests.
  *
- * @param q content
+ * @param value content
  * @author Haibo Liu
  */
-public record QueryParam(String q) {
+public record QueryParameter(String value) {
 }

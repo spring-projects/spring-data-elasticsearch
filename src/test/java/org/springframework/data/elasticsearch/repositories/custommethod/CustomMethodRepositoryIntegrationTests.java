@@ -1539,7 +1539,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
 
-		QueryParam param = new QueryParam("abc");
+		QueryParameter param = new QueryParameter("abc");
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertySpEL(param);
 		repository.queryByBeanPropertySpEL();
@@ -1585,7 +1585,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
 
-		QueryParam param = new QueryParam("abc");
+		QueryParameter param = new QueryParameter("abc");
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertyCollectionSpEL(List.of(param));
 
@@ -1597,7 +1597,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
 
-		QueryParam param = new QueryParam("abc");
+		QueryParameter param = new QueryParameter("abc");
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertyCollectionSpELWithParamAnnotation(
 				List.of(param));
@@ -2029,7 +2029,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				    "must":[
 				      {
 				        "term":{
-				          "type":"#{#type}"
+				          "type": "#{#type}"
 				        }
 				      }
 				    ]
@@ -2044,14 +2044,14 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				    "must":[
 				      {
 				        "term":{
-				          "type":"#{#entity.q}"
+				          "type": "#{#parameter.value}"
 				        }
 				      }
 				    ]
 				  }
 				}
 				""")
-		SearchHits<SampleEntity> queryByParameterPropertySpEL(QueryParam entity);
+		SearchHits<SampleEntity> queryByParameterPropertySpEL(QueryParameter parameter);
 
 		@Query("""
 				{
@@ -2059,7 +2059,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				    "must":[
 				      {
 				        "term":{
-				          "type":"#{@queryParam.q}"
+				          "type": "#{@queryParameter.value}"
 				        }
 				      }
 				    ]
@@ -2089,14 +2089,14 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				    "must":[
 				      {
 				        "terms":{
-				          "type": #{#entities.![q]}
+				          "type": #{#parameters.![value]}
 				        }
 				      }
 				    ]
 				  }
 				}
 				""")
-		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpEL(Collection<QueryParam> entities);
+		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpEL(Collection<QueryParameter> parameters);
 
 		@Query("""
 				{
@@ -2104,7 +2104,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				    "must":[
 				      {
 				        "terms":{
-				          "type": #{#e.![q]}
+				          "type": #{#e.![value]}
 				        }
 				      }
 				    ]
@@ -2112,7 +2112,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				}
 				""")
 		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpELWithParamAnnotation(
-				@Param("e") Collection<QueryParam> entities);
+				@Param("e") Collection<QueryParameter> parameters);
 
 		@Query("""
 				{

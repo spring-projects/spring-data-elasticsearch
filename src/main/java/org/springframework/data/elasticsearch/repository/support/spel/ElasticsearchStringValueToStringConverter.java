@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repository.support;
+package org.springframework.data.elasticsearch.repository.support.spel;
 
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.GenericConverter;
@@ -25,8 +25,9 @@ import java.util.regex.Matcher;
 
 /**
  * Values in elasticsearch query may contain quotations and should be escaped when converting.
- * However, the converter should only be used in this situation, rather than common string to string conversions.
+ * Note that the converter should only be used in this situation, rather than common string to string conversions.
  *
+ * @since 5.3
  * @author Haibo Liu
  */
 public class ElasticsearchStringValueToStringConverter implements GenericConverter {

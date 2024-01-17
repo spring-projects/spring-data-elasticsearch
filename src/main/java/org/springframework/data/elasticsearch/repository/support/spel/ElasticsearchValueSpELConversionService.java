@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repository.support;
+package org.springframework.data.elasticsearch.repository.support.spel;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.ConverterRegistry;
@@ -21,16 +21,17 @@ import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.util.Lazy;
 
 /**
- * To supply a {@link ConversionService} with custom converter to handle SpEL value in elasticsearch query.
+ * To supply a {@link ConversionService} with custom converters to handle SpEL values in elasticsearch query.
  *
+ * @since 5.3
  * @author Haibo Liu
  */
 public class ElasticsearchValueSpELConversionService {
 
 	public static final Lazy<ConversionService> CONVERSION_SERVICE_LAZY = Lazy.of(
-			ElasticsearchValueSpELConversionService::buildElasticsearchConversionService);
+			ElasticsearchValueSpELConversionService::buildSpELConversionService);
 
-	private static ConversionService buildElasticsearchConversionService() {
+	private static ConversionService buildSpELConversionService() {
 		// register elasticsearch custom type converter for conversion service
 		ConversionService conversionService = new DefaultConversionService();
 		ConverterRegistry converterRegistry = (ConverterRegistry) conversionService;

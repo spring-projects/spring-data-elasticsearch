@@ -18,8 +18,9 @@ package org.springframework.data.elasticsearch.repository.query;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.repository.support.ElasticsearchCollectionValueToStringConverter;
-import org.springframework.data.elasticsearch.repository.support.ElasticsearchValueSpELConversionService;
+import org.springframework.data.elasticsearch.repository.support.spel.ElasticsearchCollectionValueToStringConverter;
+import org.springframework.data.elasticsearch.repository.support.spel.ElasticsearchStringValueToStringConverter;
+import org.springframework.data.elasticsearch.repository.support.spel.ElasticsearchValueSpELConversionService;
 import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
@@ -110,7 +111,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 
 	/**
 	 * {@link Expression#getValue(EvaluationContext, Class)} is not used because the value part in SpEL should be converted
-	 * by {@link org.springframework.data.elasticsearch.repository.support.ElasticsearchStringValueToStringConverter} or
+	 * by {@link ElasticsearchStringValueToStringConverter} or
 	 * {@link ElasticsearchCollectionValueToStringConverter} to
 	 * escape the quotations, but other literal parts in SpEL expression should not be processed with these converters.
 	 * So we just get the string value from {@link LiteralExpression} directly rather than

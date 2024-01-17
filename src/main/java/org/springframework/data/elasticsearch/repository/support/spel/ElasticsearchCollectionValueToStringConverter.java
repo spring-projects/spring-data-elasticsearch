@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repository.support;
+package org.springframework.data.elasticsearch.repository.support.spel;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
@@ -31,9 +31,23 @@ import java.util.StringJoiner;
  * The string should be wrapped with square brackets, with each element quoted therefore
  * escaped(by {@link ElasticsearchStringValueToStringConverter}) if quotations exist in the original element.
  * <p>
- * eg: The value part of an elasticsearch terms query should looks like {@code ["hello \"Stranger\"","Another string"]},
- * for query {@code { 'bool' : { 'must' : { 'terms' : { 'name' : ["hello \"Stranger\"","Another string"] } } } }}
+ * eg: The value part of an elasticsearch terms query should looks like {@code ["hello \"Stranger\"","Another string"]}
+ * for query
+ * <pre>
+ * {@code
+ *  {
+ *    "bool":{
+ *      "must":{
+ *        "terms":{
+ *          "name": ["hello \"Stranger\"", "Another string"]
+ *        }
+ *      }
+ *    }
+ *  }
+ * }
+ * </pre>
  *
+ * @since 5.3
  * @author Haibo Liu
  */
 public class ElasticsearchCollectionValueToStringConverter implements GenericConverter {
