@@ -16,10 +16,12 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 import static org.springframework.data.elasticsearch.core.query.Query.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.repository.query.Param;
 import reactor.core.publisher.Flux;
@@ -252,6 +254,20 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 	}
 
 	@Test
+	void shouldRaiseExceptionForNullStringQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByStringSpEL(null));
+
+		assertThat(thrown.getMessage())
+				.isEqualTo("Parameter value can't be null for SpEL expression '#message' in method 'queryByStringSpEL'" +
+						" when querying elasticsearch");
+	}
+
+	@Test
 	void shouldReturnSearchHitsForParameterPropertyQuerySpEL() {
 		bulkIndex(new SampleEntity("id-one", "message"), //
 				new SampleEntity("id-two", "message"), //
@@ -293,6 +309,20 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
 				.expectNextCount(2) //
 				.verifyComplete();
+	}
+
+	@Test
+	void shouldRaiseExceptionForNullCollectionQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByCollectionSpEL(null));
+
+		assertThat(thrown.getMessage())
+				.isEqualTo("Parameter value can't be null for SpEL expression '#messages' in method 'queryByCollectionSpEL'" +
+						" when querying elasticsearch");
 	}
 
 	@Test
@@ -923,6 +953,10 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		@Query("{ \"bool\" : { \"must\" : { \"term\" : { \"message\" : \"?0\" } } } }")
 		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageLikePaged(String message, Pageable pageable);
 
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
+		 * will not accept a null parameter as query value.
+		 */
 		@Query("""
 				{
 				  "bool":{
@@ -936,7 +970,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				  }
 				}
 				""")
-		Flux<SearchHit<SampleEntity>> queryByStringSpEL(String message);
+		Flux<SearchHit<SampleEntity>> queryByStringSpEL(@Nullable String message);
 
 		@Query("""
 				{
@@ -968,6 +1002,10 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				""")
 		Flux<SearchHit<SampleEntity>> queryByBeanPropertySpEL();
 
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
+		 * will not accept a null parameter as query value.
+		 */
 		@Query("""
 				{
 				  "bool":{
@@ -981,7 +1019,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				  }
 				}
 				""")
-		Flux<SearchHit<SampleEntity>> queryByCollectionSpEL(Collection<String> messages);
+		Flux<SearchHit<SampleEntity>> queryByCollectionSpEL(@Nullable Collection<String> messages);
 
 		@Query("""
 				{

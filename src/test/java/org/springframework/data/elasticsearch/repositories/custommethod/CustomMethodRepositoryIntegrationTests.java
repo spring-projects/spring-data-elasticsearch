@@ -2072,6 +2072,10 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@Highlight(fields = { @HighlightField(name = "type") })
 		SearchHits<SampleEntity> queryByString(String type);
 
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
+		 * will not accept a null parameter as query value.
+		 */
 		@Query("""
 				{
 				  "bool":{
@@ -2085,7 +2089,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				  }
 				}
 				""")
-		SearchHits<SampleEntity> queryByStringSpEL(String type);
+		SearchHits<SampleEntity> queryByStringSpEL(@Nullable String type);
 
 		@Query("""
 				{
@@ -2117,6 +2121,10 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				""")
 		SearchHits<SampleEntity> queryByBeanPropertySpEL();
 
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
+		 * will not accept a null parameter as query value.
+		 */
 		@Query("""
 				{
 				  "bool":{
@@ -2130,7 +2138,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				  }
 				}
 				""")
-		SearchHits<SampleEntity> queryByCollectionSpEL(Collection<String> types);
+		SearchHits<SampleEntity> queryByCollectionSpEL(@Nullable Collection<String> types);
 
 		@Query("""
 				{
