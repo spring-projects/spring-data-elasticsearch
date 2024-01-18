@@ -48,13 +48,15 @@ public class QueryStringSpELEvaluator {
 
 	private final String queryString;
 	private final ElasticsearchParametersParameterAccessor parameterAccessor;
+	private final QueryMethod queryMethod;
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 	private final TypeConverter elasticsearchSpELTypeConverter;
 
 	public QueryStringSpELEvaluator(String queryString, ElasticsearchParametersParameterAccessor parameterAccessor,
-									QueryMethodEvaluationContextProvider evaluationContextProvider) {
+									QueryMethod queryMethod, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this.queryString = queryString;
 		this.parameterAccessor = parameterAccessor;
+		this.queryMethod = queryMethod;
 		this.evaluationContextProvider = evaluationContextProvider;
 		this.elasticsearchSpELTypeConverter = new StandardTypeConverter(ElasticsearchValueSpELConversionService.CONVERSION_SERVICE_LAZY);
 	}
@@ -62,10 +64,9 @@ public class QueryStringSpELEvaluator {
 	/**
 	 * Evaluate the SpEL parts of the query string.
 	 *
-	 * @param queryMethod the query method
 	 * @return a plain string with values evaluated
 	 */
-	public String evaluate(QueryMethod queryMethod) {
+	public String evaluate() {
 		Expression expr = getQueryExpression(queryString);
 		if (expr != null) {
 			EvaluationContext context = evaluationContextProvider.getEvaluationContext(parameterAccessor.getParameters(),
@@ -74,7 +75,7 @@ public class QueryStringSpELEvaluator {
 				standardEvaluationContext.setTypeConverter(elasticsearchSpELTypeConverter);
 			}
 
-			String parsed = parseExpressions(expr, context, queryMethod);
+			String parsed = parseExpressions(expr, context);
 			Assert.notNull(parsed, "Query parsed by SpEL should not be null");
 			return parsed;
 		}
@@ -89,7 +90,7 @@ public class QueryStringSpELEvaluator {
 	 * So we just get the string value from {@link LiteralExpression} directly rather than
 	 * {@link LiteralExpression#getValue(EvaluationContext, Class)}.
 	 */
-	private String parseExpressions(Expression rootExpr, EvaluationContext context, QueryMethod queryMethod) {
+	private String parseExpressions(Expression rootExpr, EvaluationContext context) {
 		StringBuilder parsed = new StringBuilder();
 		if (rootExpr instanceof LiteralExpression literalExpression) {
 			// get the string literal directly
@@ -108,7 +109,7 @@ public class QueryStringSpELEvaluator {
 			Expression[] expressions = compositeStringExpression.getExpressions();
 
 			for (Expression exp : expressions) {
-				parsed.append(parseExpressions(exp, context, queryMethod));
+				parsed.append(parseExpressions(exp, context));
 			}
 		} else {
 			// no more

@@ -55,8 +55,9 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 		String queryString = new StringQueryUtil(getElasticsearchOperations().getElasticsearchConverter().getConversionService())
 				.replacePlaceholders(this.query, parameterAccessor);
 
-		QueryStringSpELEvaluator evaluator = new QueryStringSpELEvaluator(queryString, parameterAccessor, evaluationContextProvider);
-		return new StringQuery(evaluator.evaluate(queryMethod));
+		QueryStringSpELEvaluator evaluator = new QueryStringSpELEvaluator(queryString, parameterAccessor, queryMethod,
+				evaluationContextProvider);
+		return new StringQuery(evaluator.evaluate());
 	}
 
 	@Override
