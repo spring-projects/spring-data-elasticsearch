@@ -25,6 +25,7 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 4.4
  */
 @ContextConfiguration(classes = { CustomMethodRepositoryELCIntegrationTests.Config.class })
@@ -39,6 +40,14 @@ public class CustomMethodRepositoryELCIntegrationTests extends CustomMethodRepos
 		@Bean
 		IndexNameProvider indexNameProvider() {
 			return new IndexNameProvider("custom-method-repository");
+		}
+
+		/**
+		 * a normal bean referenced by SpEL in query
+		 */
+		@Bean
+		QueryParameter queryParameter() {
+			return new QueryParameter("abc");
 		}
 	}
 }

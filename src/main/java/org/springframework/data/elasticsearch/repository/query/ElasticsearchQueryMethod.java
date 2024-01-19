@@ -69,9 +69,9 @@ import org.springframework.util.ClassUtils;
  */
 public class ElasticsearchQueryMethod extends QueryMethod {
 
-	// the following 2 variables exits in the base class, but are private. We need them for
+	// the following 2 variables exist in the base class, but are private. We need them for
 	// correct handling of return types (SearchHits), so we have our own values here.
-	// Alas this means that we have to copy code that initializes these variables and in the
+	// This means that we have to copy code that initializes these variables and in the
 	// base class uses them in order to use our variables
 	protected final Method method;
 	protected final Class<?> unwrappedReturnType;

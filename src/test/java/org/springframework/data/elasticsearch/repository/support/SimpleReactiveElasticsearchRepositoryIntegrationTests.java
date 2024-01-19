@@ -16,10 +16,14 @@
 package org.springframework.data.elasticsearch.repository.support;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 import static org.springframework.data.elasticsearch.core.query.Query.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
+import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
+import org.springframework.data.repository.query.Param;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -64,6 +68,7 @@ import org.springframework.lang.Nullable;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Jens Schauder
+ * @author Haibo Liu
  */
 @SpringIntegrationTest
 abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
@@ -228,6 +233,167 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				.block();
 
 		repository.queryByMessageWithString("message") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldReturnSearchHitsForStringQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		repository.queryByStringSpEL("message")
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldRaiseExceptionForNullStringQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByStringSpEL(null));
+
+		assertThat(thrown.getMessage())
+				.isEqualTo("Parameter value can't be null for SpEL expression '#message' in method 'queryByStringSpEL'" +
+						" when querying elasticsearch");
+	}
+
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		QueryParameter param = new QueryParameter("message");
+		
+		repository.queryByParameterPropertySpEL(param)
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldReturnSearchHitsForBeanQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		repository.queryByBeanPropertySpEL()
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldReturnSearchHitsForCollectionQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		repository.queryByCollectionSpEL(List.of("message"))
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldRaiseExceptionForNullCollectionQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByCollectionSpEL(null));
+
+		assertThat(thrown.getMessage())
+				.isEqualTo("Parameter value can't be null for SpEL expression '#messages' in method 'queryByCollectionSpEL'" +
+						" when querying elasticsearch");
+	}
+
+	@Test
+	void shouldNotReturnSearchHitsForEmptyCollectionQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		repository.queryByCollectionSpEL(List.of())
+				.as(StepVerifier::create) //
+				.expectNextCount(0) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldNotReturnSearchHitsForCollectionQueryWithOnlyNullValuesSpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		List<String> params = new ArrayList<>();
+		params.add(null);
+
+		repository.queryByCollectionSpEL(params)
+				.as(StepVerifier::create) //
+				.expectNextCount(0) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldIgnoreNullValuesInCollectionQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		repository.queryByCollectionSpEL(Arrays.asList("message", null))
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyCollectionQuerySpEL() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		QueryParameter param = new QueryParameter("message");
+		
+		repository.queryByParameterPropertyCollectionSpEL(List.of(param))
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyCollectionQuerySpELWithParamAnnotation() {
+		bulkIndex(new SampleEntity("id-one", "message"), //
+				new SampleEntity("id-two", "message"), //
+				new SampleEntity("id-three", "message")) //
+				.block();
+
+		QueryParameter param = new QueryParameter("message");
+		
+		repository.queryByParameterPropertyCollectionSpELWithParamAnnotation(List.of(param))
 				.as(StepVerifier::create) //
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
 				.expectNextCount(2) //
@@ -786,6 +952,105 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 		@Query("{ \"bool\" : { \"must\" : { \"term\" : { \"message\" : \"?0\" } } } }")
 		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageLikePaged(String message, Pageable pageable);
+
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
+		 * will not accept a null parameter as query value.
+		 */
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "message": "#{#message}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		Flux<SearchHit<SampleEntity>> queryByStringSpEL(@Nullable String message);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "message": "#{#parameter.value}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		Flux<SearchHit<SampleEntity>> queryByParameterPropertySpEL(QueryParameter parameter);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "message": "#{@queryParameter.value}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		Flux<SearchHit<SampleEntity>> queryByBeanPropertySpEL();
+
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
+		 * will not accept a null parameter as query value.
+		 */
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "message": #{#messages}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		Flux<SearchHit<SampleEntity>> queryByCollectionSpEL(@Nullable Collection<String> messages);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "message": #{#parameters.![value]}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		Flux<SearchHit<SampleEntity>> queryByParameterPropertyCollectionSpEL(Collection<QueryParameter> parameters);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "message": #{#e.![value]}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		Flux<SearchHit<SampleEntity>> queryByParameterPropertyCollectionSpELWithParamAnnotation(
+				@Param("e") Collection<QueryParameter> parameters);
 
 		Mono<SampleEntity> findFirstByMessageLike(String message);
 

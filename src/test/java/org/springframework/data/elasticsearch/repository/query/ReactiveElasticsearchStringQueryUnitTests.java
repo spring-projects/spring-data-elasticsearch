@@ -22,6 +22,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -29,12 +30,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -45,6 +47,7 @@ import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
@@ -55,6 +58,7 @@ import org.springframework.lang.Nullable;
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  */
 @ExtendWith(MockitoExtension.class)
 public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryUnitTestBase {
@@ -71,10 +75,7 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 	@Test // DATAES-519
 	public void bindsSimplePropertyCorrectly() throws Exception {
 
-		ReactiveElasticsearchStringQuery elasticsearchStringQuery = createQueryForMethod("findByName", String.class);
-		StubParameterAccessor accessor = new StubParameterAccessor("Luke");
-
-		org.springframework.data.elasticsearch.core.query.Query query = elasticsearchStringQuery.createQuery(accessor);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByName", "Luke");
 		StringQuery reference = new StringQuery("{ 'bool' : { 'must' : { 'term' : { 'name' : 'Luke' } } } }");
 
 		assertThat(query).isInstanceOf(StringQuery.class);
@@ -82,18 +83,212 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 	}
 
 	@Test // DATAES-519
-	@Disabled("TODO: fix spel query integration")
 	public void bindsExpressionPropertyCorrectly() throws Exception {
 
-		ReactiveElasticsearchStringQuery elasticsearchStringQuery = createQueryForMethod("findByNameWithExpression",
-				String.class);
-		StubParameterAccessor accessor = new StubParameterAccessor("Luke");
-
-		org.springframework.data.elasticsearch.core.query.Query query = elasticsearchStringQuery.createQuery(accessor);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameWithExpression", "Luke");
 		StringQuery reference = new StringQuery("{ 'bool' : { 'must' : { 'term' : { 'name' : 'Luke' } } } }");
 
 		assertThat(query).isInstanceOf(StringQuery.class);
 		assertThat(((StringQuery) query).getSource()).isEqualTo(reference.getSource());
+	}
+
+	@Test
+	public void shouldReplaceParametersSpEL() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameSpEL", "Luke");
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "term":{
+				        "name": "Luke"
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldReplaceParametersSpELWithQuotes() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameSpEL",
+				"hello \"world\"");
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "term":{
+				        "name": "hello \\"world\\""
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldUseParameterPropertySpEL() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByParameterPropertySpEL",
+				new QueryParameter("Luke"));
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "term":{
+				        "name": "Luke"
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldReplaceCollectionSpEL() throws Exception {
+
+		final List<String> anotherString = List.of("hello \"Stranger\"", "Another string");
+		List<String> params = new ArrayList<>(anotherString);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": ["hello \\"Stranger\\"", "Another string"]
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldReplaceNonStringCollectionSpEL() throws Exception {
+
+		final List<Integer> ages = List.of(1, 2, 3);
+		List<Integer> params = new ArrayList<>(ages);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAgesSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "age": [1, 2, 3]
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldReplaceEmptyCollectionSpEL() throws Exception {
+
+		final List<String> anotherString = List.of();
+		List<String> params = new ArrayList<>(anotherString);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": []
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldBeEmptyWithNullValuesInCollectionSpEL() throws Exception {
+
+		final List<String> anotherString = List.of();
+		List<String> params = new ArrayList<>(anotherString);
+		// add a null value
+		params.add(null);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": []
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldIgnoreNullValuesInCollectionSpEL() throws Exception {
+
+		final List<String> anotherString = List.of("abc");
+		List<String> params = new ArrayList<>(anotherString);
+		// add a null value
+		params.add(null);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": ["abc"]
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test
+	public void shouldReplaceCollectionParametersSpEL() throws Exception {
+
+		final List<QueryParameter> anotherString = List.of(new QueryParameter("hello \"Stranger\""),
+				new QueryParameter("Another string"));
+		List<QueryParameter> params = new ArrayList<>(anotherString);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNamesParameterSpEL", params);
+		String expected = """
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": ["hello \\"Stranger\\"", "Another string"]
+				      }
+				    }
+				  }
+				}
+				""";
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
 	}
 
 	@Test // DATAES-552
@@ -205,7 +400,59 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
 		Mono<Person> findByName(String name);
 
-		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?#{[0]}' } } } }")
+		@Query("""
+				{
+				  "bool":{
+				    "must":{
+				      "term":{
+				        "name": "#{#name}"
+				      }
+				    }
+				  }
+				}
+				""")
+		Mono<Person> findByNameSpEL(String name);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": #{#names}
+				      }
+				    }
+				  }
+				}
+				""")
+		Flux<Person> findByNamesSpEL(List<String> names);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":{
+				      "term":{
+				        "name": "#{#param.value}"
+				      }
+				    }
+				  }
+				}
+				""")
+		Flux<Person> findByParameterPropertySpEL(QueryParameter param);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "name": #{#names.![value]}
+				      }
+				    }
+				  }
+				}
+				""")
+		Flux<Person> findByNamesParameterSpEL(List<QueryParameter> names);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '#{[0]}' } } } }")
 		Flux<Person> findByNameWithExpression(String param0);
 
 		@Query(value = "name:(?0, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)")
@@ -228,6 +475,18 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 		@Query("{ 'bool' : { 'must' : { 'terms' : { 'ages' : ?0 } } } }")
 		Flux<Person> findByAges(List<Integer> ages);
 
+		@Query("""
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "age": #{#ages}
+				      }
+				    }
+				  }
+				}
+				""")
+		Flux<Person> findByAgesSpEL(List<Integer> ages);
 	}
 
 	/**

@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.repositories.custommethod;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
@@ -52,6 +53,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchPage;
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -63,6 +65,7 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
+import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
 
 /**
@@ -1522,6 +1525,135 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
 
+	@Test
+	void shouldReturnSearchHitsForStringQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByStringSpEL("abc");
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldRaiseExceptionForNullStringQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByStringSpEL(null));
+
+		assertThat(thrown.getMessage())
+				.isEqualTo("Parameter value can't be null for SpEL expression '#type' in method 'queryByStringSpEL'" +
+						" when querying elasticsearch");
+	}
+
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		QueryParameter param = new QueryParameter("abc");
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertySpEL(param);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsForBeanQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByBeanPropertySpEL();
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsForCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(List.of("abc"));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldRaiseExceptionForNullCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByCollectionSpEL(null));
+
+		assertThat(thrown.getMessage())
+				.isEqualTo("Parameter value can't be null for SpEL expression '#types' in method 'queryByCollectionSpEL'" +
+						" when querying elasticsearch");
+	}
+
+	@Test
+	void shouldNotReturnSearchHitsForEmptyCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(List.of());
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(0);
+	}
+
+	@Test
+	void shouldNotReturnSearchHitsForCollectionQueryWithOnlyNullValuesSpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		List<String> params = new ArrayList<>();
+		params.add(null);
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(params);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(0);
+	}
+
+	@Test
+	void shouldIgnoreNullValuesInCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(Arrays.asList("abc", null));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyCollectionQuerySpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		QueryParameter param = new QueryParameter("abc");
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertyCollectionSpEL(List.of(param));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsForParameterPropertyCollectionQuerySpELWithParamAnnotation() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		QueryParameter param = new QueryParameter("abc");
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertyCollectionSpELWithParamAnnotation(
+				List.of(param));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
 	@Test // DATAES-372
 	void shouldReturnHighlightsOnAnnotatedMethod() {
 		List<SampleEntity> entities = createSampleEntities("abc", 2);
@@ -1939,6 +2071,105 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
 		@Highlight(fields = { @HighlightField(name = "type") })
 		SearchHits<SampleEntity> queryByString(String type);
+
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
+		 * will not accept a null parameter as query value.
+		 */
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "type": "#{#type}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByStringSpEL(@Nullable String type);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "type": "#{#parameter.value}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByParameterPropertySpEL(QueryParameter parameter);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "type": "#{@queryParameter.value}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByBeanPropertySpEL();
+
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
+		 * will not accept a null parameter as query value.
+		 */
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "type": #{#types}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByCollectionSpEL(@Nullable Collection<String> types);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "type": #{#parameters.![value]}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpEL(Collection<QueryParameter> parameters);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "terms":{
+				          "type": #{#e.![value]}
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpELWithParamAnnotation(
+				@Param("e") Collection<QueryParameter> parameters);
 
 		@Query("""
 				{

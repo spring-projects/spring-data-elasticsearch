@@ -316,7 +316,7 @@ Repository methods can be defined to have the following return types for returni
 
 .Declare query on the method using the `@Query` annotation.
 ====
-The arguments passed to the method can be inserted into placeholders in the query string. the placeholders are of the form `?0`, `?1`, `?2` etc. for the first, second, third parameter and so on.
+The arguments passed to the method can be inserted into placeholders in the query string. The placeholders are of the form `?0`, `?1`, `?2` etc. for the first, second, third parameter and so on.
 [source,java]
 ----
 interface BookRepository extends ElasticsearchRepository<Book, String> {
@@ -360,4 +360,203 @@ would make an https://www.elastic.co/guide/en/elasticsearch/reference/current/qu
   }
 }
 ----
+====
+
+[[elasticsearch.query-methods.at-query.spel]]
+=== Using SpEL Expressions
+
+.Declare query on the method using the `@Query` annotation with SpEL expression.
+====
+https://docs.spring.io/spring-framework/reference/core/expressions.html[SpEL expression] is also supported when defining query in `@Query`.
+
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+        {
+          "bool":{
+            "must":[
+              {
+                "term":{
+                  "name": "#{#name}"
+                }
+              }
+            ]
+          }
+        }
+        """)
+    Page<Book> findByName(String name, Pageable pageable);
+}
+----
+
+If for example the function is called with the parameter _John_, it would produce the following query body:
+
+[source,json]
+----
+{
+  "bool":{
+    "must":[
+      {
+        "term":{
+          "name": "John"
+        }
+      }
+    ]
+  }
+}
+----
+====
+
+.accessing parameter property.
+====
+Supposing that we have the following class as query parameter type:
+[source,java]
+----
+public record QueryParameter(String value) {
+}
+----
+
+It's easy to access the parameter by `#` symbol, then reference the property `value` with a simple `.`:
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "term":{
+                      "name": "#{#parameter.value}"
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(QueryParameter parameter, Pageable pageable);
+}
+----
+
+We can pass `new QueryParameter("John")` as the parameter now, and it will produce the same query string as above.
+====
+
+.accessing bean property.
+====
+https://docs.spring.io/spring-framework/reference/core/expressions/language-ref/bean-references.html[Bean property] is also supported to access. Given that there is a bean named `queryParameter` of type `QueryParameter`, we can access the bean with symbol `@` rather than `#`, and there is no need to declare a parameter of type `QueryParameter` in the query method:
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "term":{
+                      "name": "#{@queryParameter.value}"
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(Pageable pageable);
+}
+----
+====
+
+.SpEL and `Collection` param.
+====
+`Collection` parameter is also supported and is as easy to use as normal `String`, such as the following `terms` query:
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "terms":{
+                      "name": #{#names}
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(Collection<String> names, Pageable pageable);
+}
+----
+
+NOTE: collection values should not be quoted when declaring the elasticsearch json query.
+
+A collection of `names` like `List.of("name1", "name2")` will produce the following terms query:
+[source,json]
+----
+{
+  "bool":{
+    "must":[
+      {
+        "terms":{
+          "name": ["name1", "name2"]
+        }
+      }
+    ]
+  }
+}
+----
+====
+
+.access property in the `Collection` param.
+====
+https://docs.spring.io/spring-framework/reference/core/expressions/language-ref/collection-projection.html[SpEL Collection Projection] is convenient to use when values in the `Collection` parameter is not plain `String`:
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "terms":{
+                      "name": #{#parameters.![value]}
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(Collection<QueryParameter> parameters, Pageable pageable);
+}
+----
+This will extract all the `value` property values as a new `Collection` from `QueryParameter` collection, thus takes the same effect as above.
+====
+
+.alter parameter name by using `@Param`
+====
+When accessing the parameter by SpEL, it's also useful to alter the parameter name to another one by `@Param` annotation in Sping Data:
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @Query("""
+            {
+              "bool":{
+                "must":[
+                  {
+                    "terms":{
+                      "name": #{#another.![value]}
+                    }
+                  }
+                ]
+              }
+            }
+            """)
+    Page<Book> findByName(@Param("another") Collection<QueryParameter> parameters, Pageable pageable);
+}
+----
+
 ====

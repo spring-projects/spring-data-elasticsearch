@@ -34,6 +34,8 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.expression.TypeConverter;
+import org.springframework.expression.spel.support.StandardTypeConverter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -54,6 +56,7 @@ import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
  * @author Sascha Woo
  * @author Peter-Josef Meisch
  * @author Ezequiel Antúnez Camacho
+ * @author Haibo Liu
  */
 public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
@@ -96,10 +99,16 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		return Optional.of(new ElasticsearchQueryLookupStrategy());
+		return Optional.of(new ElasticsearchQueryLookupStrategy(evaluationContextProvider));
 	}
 
 	private class ElasticsearchQueryLookupStrategy implements QueryLookupStrategy {
+
+		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+
+		ElasticsearchQueryLookupStrategy(QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			this.evaluationContextProvider = evaluationContextProvider;
+		}
 
 		/*
 		 * (non-Javadoc)
@@ -115,9 +124,11 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, namedQuery);
+				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, namedQuery,
+						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery());
+				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery(),
+						evaluationContextProvider);
 			}
 			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations);
 		}

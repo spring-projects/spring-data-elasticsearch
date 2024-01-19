@@ -40,7 +40,7 @@ public class ReactivePartTreeElasticsearchQuery extends AbstractReactiveElastics
 	}
 
 	@Override
-	protected BaseQuery createQuery(ElasticsearchParameterAccessor accessor) {
+	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor accessor) {
 		CriteriaQuery query = new ElasticsearchQueryCreator(tree, accessor, getMappingContext()).createQuery();
 
 		if (tree.isLimiting()) {
