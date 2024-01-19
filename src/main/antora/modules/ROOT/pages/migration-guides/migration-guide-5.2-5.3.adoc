@@ -9,3 +9,7 @@ This section describes breaking changes from version 5.2.x to 5.3.x and how remo
 
 [[elasticsearch-migration-guide-5.2-5.3.deprecations]]
 == Deprecations
+
+=== Removals
+The deprecated classes `org.springframework.data.elasticsearch.ELCQueries`
+ and `org.springframework.data.elasticsearch.client.elc.QueryBuilders` have been removed, use `org.springframework.data.elasticsearch.client.elc.Queries` instead.
