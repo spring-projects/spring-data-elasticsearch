@@ -16,11 +16,10 @@
 package org.springframework.data.elasticsearch.repositories.custommethod;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import java.lang.Long;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -2073,8 +2072,8 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		SearchHits<SampleEntity> queryByString(String type);
 
 		/**
-		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
-		 * will not accept a null parameter as query value.
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters will
+		 * not accept a null parameter as query value.
 		 */
 		@Query("""
 				{
@@ -2122,8 +2121,8 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		SearchHits<SampleEntity> queryByBeanPropertySpEL();
 
 		/**
-		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
-		 * will not accept a null parameter as query value.
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters will
+		 * not accept a null parameter as query value.
 		 */
 		@Query("""
 				{

@@ -15,6 +15,11 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import static org.springframework.data.querydsl.QuerydslUtils.*;
+
+import java.lang.reflect.Method;
+import java.util.Optional;
+
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
@@ -34,15 +39,8 @@ import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.expression.TypeConverter;
-import org.springframework.expression.spel.support.StandardTypeConverter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-
-import java.lang.reflect.Method;
-import java.util.Optional;
-
-import static org.springframework.data.querydsl.QuerydslUtils.QUERY_DSL_PRESENT;
 
 /**
  * Factory to create {@link ElasticsearchRepository}

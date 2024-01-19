@@ -343,8 +343,9 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 
 		assertThat(query).isInstanceOf(StringQuery.class);
 		assertThat(((StringQuery) query).getSource()).isEqualTo(
-			"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"param\\\\1\",\"param\\\\2\"] } } } }");
+				"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"param\\\\1\",\"param\\\\2\"] } } } }");
 	}
+
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
 			throws NoSuchMethodException {
 

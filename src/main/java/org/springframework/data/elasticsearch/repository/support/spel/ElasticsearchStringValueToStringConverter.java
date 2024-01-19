@@ -15,17 +15,17 @@
  */
 package org.springframework.data.elasticsearch.repository.support.spel;
 
-import org.springframework.core.convert.TypeDescriptor;
-import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.lang.Nullable;
-
 import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import org.springframework.core.convert.TypeDescriptor;
+import org.springframework.core.convert.converter.GenericConverter;
+import org.springframework.lang.Nullable;
+
 /**
- * Values in elasticsearch query may contain quotations and should be escaped when converting.
- * Note that the converter should only be used in this situation, rather than common string to string conversions.
+ * Values in elasticsearch query may contain quotations and should be escaped when converting. Note that the converter
+ * should only be used in this situation, rather than common string to string conversions.
  *
  * @since 5.3
  * @author Haibo Liu

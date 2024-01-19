@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.support.spel;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
@@ -31,9 +34,6 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.expression.spel.support.StandardTypeConverter;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * To evaluate the SpEL expressions of the query string.
@@ -53,12 +53,13 @@ public class QueryStringSpELEvaluator {
 	private final TypeConverter elasticsearchSpELTypeConverter;
 
 	public QueryStringSpELEvaluator(String queryString, ElasticsearchParametersParameterAccessor parameterAccessor,
-									QueryMethod queryMethod, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			QueryMethod queryMethod, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this.queryString = queryString;
 		this.parameterAccessor = parameterAccessor;
 		this.queryMethod = queryMethod;
 		this.evaluationContextProvider = evaluationContextProvider;
-		this.elasticsearchSpELTypeConverter = new StandardTypeConverter(ElasticsearchValueSpELConversionService.CONVERSION_SERVICE_LAZY);
+		this.elasticsearchSpELTypeConverter = new StandardTypeConverter(
+				ElasticsearchValueSpELConversionService.CONVERSION_SERVICE_LAZY);
 	}
 
 	/**
@@ -83,12 +84,11 @@ public class QueryStringSpELEvaluator {
 	}
 
 	/**
-	 * {@link Expression#getValue(EvaluationContext, Class)} is not used because the value part in SpEL should be converted
-	 * by {@link ElasticsearchStringValueToStringConverter} or
-	 * {@link ElasticsearchCollectionValueToStringConverter} to
-	 * escape the quotations, but other literal parts in SpEL expression should not be processed with these converters.
-	 * So we just get the string value from {@link LiteralExpression} directly rather than
-	 * {@link LiteralExpression#getValue(EvaluationContext, Class)}.
+	 * {@link Expression#getValue(EvaluationContext, Class)} is not used because the value part in SpEL should be
+	 * converted by {@link ElasticsearchStringValueToStringConverter} or
+	 * {@link ElasticsearchCollectionValueToStringConverter} to escape the quotations, but other literal parts in SpEL
+	 * expression should not be processed with these converters. So we just get the string value from
+	 * {@link LiteralExpression} directly rather than {@link LiteralExpression#getValue(EvaluationContext, Class)}.
 	 */
 	private String parseExpressions(Expression rootExpr, EvaluationContext context) {
 		StringBuilder parsed = new StringBuilder();

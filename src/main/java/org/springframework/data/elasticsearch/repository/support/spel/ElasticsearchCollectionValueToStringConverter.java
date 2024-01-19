@@ -15,12 +15,16 @@
  */
 package org.springframework.data.elasticsearch.repository.support.spel;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Objects;
+import java.util.Set;
+import java.util.StringJoiner;
+
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.GenericConverter;
 import org.springframework.lang.Nullable;
-
-import java.util.*;
 
 /**
  * Convert a collection into string for value part of the elasticsearch query.
@@ -30,6 +34,7 @@ import java.util.*;
  * <p>
  * eg: The value part of an elasticsearch terms query should looks like {@code ["hello \"Stranger\"","Another string"]}
  * for query
+ *
  * <pre>
  * {@code
  *  {

@@ -21,9 +21,6 @@ import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter
 import static org.springframework.data.elasticsearch.core.query.Query.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
-import org.springframework.data.elasticsearch.core.convert.ConversionException;
-import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
-import org.springframework.data.repository.query.Param;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -58,9 +55,12 @@ import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.SourceFilters;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
+import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.lang.Nullable;
 
@@ -275,7 +275,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				.block();
 
 		QueryParameter param = new QueryParameter("message");
-		
+
 		repository.queryByParameterPropertySpEL(param)
 				.as(StepVerifier::create) //
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
@@ -376,7 +376,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				.block();
 
 		QueryParameter param = new QueryParameter("message");
-		
+
 		repository.queryByParameterPropertyCollectionSpEL(List.of(param))
 				.as(StepVerifier::create) //
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
@@ -392,7 +392,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				.block();
 
 		QueryParameter param = new QueryParameter("message");
-		
+
 		repository.queryByParameterPropertyCollectionSpELWithParamAnnotation(List.of(param))
 				.as(StepVerifier::create) //
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
@@ -954,8 +954,8 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageLikePaged(String message, Pageable pageable);
 
 		/**
-		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
-		 * will not accept a null parameter as query value.
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters will
+		 * not accept a null parameter as query value.
 		 */
 		@Query("""
 				{
@@ -1003,8 +1003,8 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		Flux<SearchHit<SampleEntity>> queryByBeanPropertySpEL();
 
 		/**
-		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters
-		 * will not accept a null parameter as query value.
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters will
+		 * not accept a null parameter as query value.
 		 */
 		@Query("""
 				{
