@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -64,11 +65,12 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
-		String queryString = new StringQueryUtil(elasticsearchOperations.getElasticsearchConverter().getConversionService())
+		ConversionService conversionService = elasticsearchOperations.getElasticsearchConverter().getConversionService();
+		String queryString = new StringQueryUtil(conversionService)
 				.replacePlaceholders(this.queryString, parameterAccessor);
 
 		QueryStringSpELEvaluator evaluator = new QueryStringSpELEvaluator(queryString, parameterAccessor, queryMethod,
-				evaluationContextProvider);
+				evaluationContextProvider, conversionService);
 		var query = new StringQuery(evaluator.evaluate());
 		query.addSort(parameterAccessor.getSort());
 		return query;

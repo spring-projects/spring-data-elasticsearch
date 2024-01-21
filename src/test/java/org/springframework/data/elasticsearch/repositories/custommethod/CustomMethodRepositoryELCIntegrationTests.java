@@ -15,9 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repositories.custommethod;
 
+import java.util.List;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -48,6 +51,12 @@ public class CustomMethodRepositoryELCIntegrationTests extends CustomMethodRepos
 		@Bean
 		QueryParameter queryParameter() {
 			return new QueryParameter("abc");
+		}
+
+		@Bean
+		public ElasticsearchCustomConversions elasticsearchCustomConversions() {
+			return new ElasticsearchCustomConversions(List.of(SamplePropertyToStringConverter.INSTANCE,
+					StringToSamplePropertyConverter.INSTANCE));
 		}
 	}
 }

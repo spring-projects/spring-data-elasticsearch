@@ -18,8 +18,12 @@ package org.springframework.data.elasticsearch.repository.support.spel;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchParametersParameterAccessor;
+import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchQueryValueConversionService;
+import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchCollectionValueToStringConverter;
+import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchStringValueToStringConverter;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.EvaluationContext;
@@ -53,13 +57,14 @@ public class QueryStringSpELEvaluator {
 	private final TypeConverter elasticsearchSpELTypeConverter;
 
 	public QueryStringSpELEvaluator(String queryString, ElasticsearchParametersParameterAccessor parameterAccessor,
-			QueryMethod queryMethod, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			QueryMethod queryMethod, QueryMethodEvaluationContextProvider evaluationContextProvider,
+			ConversionService conversionService) {
 		this.queryString = queryString;
 		this.parameterAccessor = parameterAccessor;
 		this.queryMethod = queryMethod;
 		this.evaluationContextProvider = evaluationContextProvider;
 		this.elasticsearchSpELTypeConverter = new StandardTypeConverter(
-				ElasticsearchValueSpELConversionService.CONVERSION_SERVICE_LAZY);
+				ElasticsearchQueryValueConversionService.getInstance(conversionService));
 	}
 
 	/**

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.repository.support.spel;
+package org.springframework.data.elasticsearch.repository.support.value;
 
 import java.util.Collections;
 import java.util.Set;

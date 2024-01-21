@@ -33,6 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.domain.Page;
@@ -66,6 +67,7 @@ import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.repository.query.Param;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * @author Rizwan Idrees
@@ -1525,6 +1527,19 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	}
 
 	@Test
+	void shouldRaiseExceptionForNullStringQuery() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		repository.saveAll(entities);
+
+		// when
+		ConversionException thrown = assertThrows(ConversionException.class, () -> repository.queryByString(null));
+
+		assertThat(thrown.getMessage())
+				.contains("Parameter value can't be null for placeholder at index '0' in query",
+						"when querying elasticsearch");
+	}
+
+	@Test
 	void shouldReturnSearchHitsForStringQuerySpEL() {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
@@ -1649,6 +1664,32 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByParameterPropertyCollectionSpELWithParamAnnotation(
 				List.of(param));
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsBySampleProperty() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		entities.forEach(e -> e.setSampleProperty(new SampleProperty("hello", "world")));
+		repository.saveAll(entities);
+
+		SampleProperty sampleProperty = new SampleProperty("hello", "world");
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryBySampleProperty(sampleProperty);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(20);
+	}
+
+	@Test
+	void shouldReturnSearchHitsWithCustomConversionSpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc", 20);
+		entities.forEach(e -> e.setSampleProperty(new SampleProperty("hello", "world")));
+		repository.saveAll(entities);
+
+		SampleProperty sampleProperty = new SampleProperty("hello", "world");
+		// when
+		SearchHits<SampleEntity> searchHits = repository.queryBySamplePropertySpEL(sampleProperty);
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
@@ -2067,9 +2108,13 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@Highlight(fields = { @HighlightField(name = "type") })
 		SearchHits<SampleEntity> queryByType(String type);
 
+		/**
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our placeholder parameter will
+		 * not accept a null parameter as query value.
+		 */
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
 		@Highlight(fields = { @HighlightField(name = "type") })
-		SearchHits<SampleEntity> queryByString(String type);
+		SearchHits<SampleEntity> queryByString(@Nullable String type);
 
 		/**
 		 * The parameter is annotated with {@link Nullable} deliberately to test that our elasticsearch SpEL converters will
@@ -2169,6 +2214,36 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				""")
 		SearchHits<SampleEntity> queryByParameterPropertyCollectionSpELWithParamAnnotation(
 				@Param("e") Collection<QueryParameter> parameters);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "sample_property": "?0"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryBySampleProperty(SampleProperty sampleProperty);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "term":{
+				          "sample_property": "#{#sampleProperty}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		SearchHits<SampleEntity> queryBySamplePropertySpEL(SampleProperty sampleProperty);
 
 		@Query("""
 				{
@@ -2276,6 +2351,9 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@Field(name = "custom_field_name", type = Text)
 		@Nullable private String customFieldNameMessage;
 
+		@Field(name = "sample_property", type = Keyword)
+		@Nullable private SampleProperty sampleProperty;
+
 		@Nullable
 		public String getId() {
 			return id;
@@ -2310,6 +2388,15 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 
 		public void setCustomFieldNameMessage(@Nullable String customFieldNameMessage) {
 			this.customFieldNameMessage = customFieldNameMessage;
+		}
+
+		@Nullable
+		public SampleProperty getSampleProperty() {
+			return sampleProperty;
+		}
+
+		public void setSampleProperty(@Nullable SampleProperty sampleProperty) {
+			this.sampleProperty = sampleProperty;
 		}
 
 		@Nullable
@@ -2353,6 +2440,55 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 
 		public void setVersion(@Nullable java.lang.Long version) {
 			this.version = version;
+		}
+	}
+
+	static class SampleProperty {
+		@Nullable
+		private String first;
+		@Nullable private String last;
+
+		SampleProperty(@Nullable String first, @Nullable String last) {
+			this.first = first;
+			this.last = last;
+		}
+
+		@Nullable
+		public String getFirst() {
+			return first;
+		}
+
+		public void setFirst(@Nullable String first) {
+			this.first = first;
+		}
+
+		@Nullable
+		public String getLast() {
+			return last;
+		}
+
+		public void setLast(@Nullable String last) {
+			this.last = last;
+		}
+	}
+
+	enum SamplePropertyToStringConverter implements Converter<SampleProperty, String> {
+		INSTANCE;
+
+		@Override
+		public String convert(SampleProperty sampleProperty) {
+			return sampleProperty.getFirst() + '-' + sampleProperty.getLast();
+		}
+	}
+
+	enum StringToSamplePropertyConverter implements Converter<String, SampleProperty> {
+		INSTANCE;
+
+		@Override
+		public SampleProperty convert(String string) {
+			String[] splits = string.split("-");
+			Assert.isTrue(splits.length == 2, "only 1 '-' should be in sample property value");
+			return new SampleProperty(splits[0], splits[1]);
 		}
 	}
 }
