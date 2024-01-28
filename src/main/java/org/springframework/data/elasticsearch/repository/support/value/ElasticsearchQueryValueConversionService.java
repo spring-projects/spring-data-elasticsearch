@@ -44,6 +44,7 @@ public class ElasticsearchQueryValueConversionService implements ConversionServi
 	private final ConversionService delegate;
 
 	private ElasticsearchQueryValueConversionService(ConversionService delegate) {
+		Assert.notNull(delegate, "delegated ConversionService must not be null");
 		this.delegate = delegate;
 
 		// register elasticsearch custom type converters for conversion service
@@ -58,7 +59,7 @@ public class ElasticsearchQueryValueConversionService implements ConversionServi
 	 * @return a conversion service having the capability to convert query values in elasticsearch query
 	 */
 	public static ElasticsearchQueryValueConversionService getInstance(ConversionService conversionService) {
-		return CACHE.computeIfAbsent(conversionService, key -> new ElasticsearchQueryValueConversionService(conversionService));
+		return CACHE.computeIfAbsent(conversionService, ElasticsearchQueryValueConversionService::new);
 	}
 
 	@Override
