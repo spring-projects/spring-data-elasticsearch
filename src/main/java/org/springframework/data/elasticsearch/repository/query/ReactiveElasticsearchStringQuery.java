@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -56,8 +57,10 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 				getElasticsearchOperations().getElasticsearchConverter().getConversionService())
 				.replacePlaceholders(this.query, parameterAccessor);
 
+		ConversionService conversionService = getElasticsearchOperations().getElasticsearchConverter()
+				.getConversionService();
 		QueryStringSpELEvaluator evaluator = new QueryStringSpELEvaluator(queryString, parameterAccessor, queryMethod,
-				evaluationContextProvider);
+				evaluationContextProvider, conversionService);
 		return new StringQuery(evaluator.evaluate());
 	}
 

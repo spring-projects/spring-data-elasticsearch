@@ -15,18 +15,19 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
-import java.util.Collection;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.elasticsearch.core.convert.ConversionException;
+import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchQueryValueConversionService;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.util.NumberUtils;
 
 /**
  * @author Peter-Josef Meisch
  * @author Niklas Herder
+ * @author Haibo Liu
  */
 final public class StringQueryUtil {
 
@@ -35,7 +36,7 @@ final public class StringQueryUtil {
 	private final ConversionService conversionService;
 
 	public StringQueryUtil(ConversionService conversionService) {
-		this.conversionService = conversionService;
+		this.conversionService = ElasticsearchQueryValueConversionService.getInstance(conversionService);
 	}
 
 	public String replacePlaceholders(String input, ParameterAccessor accessor) {
@@ -46,7 +47,7 @@ final public class StringQueryUtil {
 
 			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
 			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
-			String replacement = Matcher.quoteReplacement(getParameterWithIndex(accessor, index));
+			String replacement = Matcher.quoteReplacement(getParameterWithIndex(accessor, index, input));
 			result = result.replaceAll(placeholder, replacement);
 			// need to escape backslashes that are not escapes for quotes so that they are sent as double-backslashes
 			// to Elasticsearch
@@ -55,47 +56,16 @@ final public class StringQueryUtil {
 		return result;
 	}
 
-	private String getParameterWithIndex(ParameterAccessor accessor, int index) {
+	private String getParameterWithIndex(ParameterAccessor accessor, int index, String input) {
 
 		Object parameter = accessor.getBindableValue(index);
-		String parameterValue = "null";
-
-		if (parameter != null) {
-			parameterValue = convert(parameter);
+		String value =  conversionService.convert(parameter, String.class);
+		if (value == null) {
+			throw new ConversionException(String.format(
+					"Parameter value can't be null for placeholder at index '%s' in query '%s' when querying elasticsearch",
+					index, input));
 		}
-
-		return parameterValue;
-
-	}
-
-	private String convert(Object parameter) {
-		if (Collection.class.isAssignableFrom(parameter.getClass())) {
-			Collection<?> collectionParam = (Collection<?>) parameter;
-			StringBuilder sb = new StringBuilder("[");
-			sb.append(collectionParam.stream().map(o -> {
-				if (o instanceof String) {
-					return "\"" + convert(o) + "\"";
-				} else {
-					return convert(o);
-				}
-			}).collect(Collectors.joining(",")));
-			sb.append("]");
-			return sb.toString();
-		} else {
-			String parameterValue = "null";
-			if (conversionService.canConvert(parameter.getClass(), String.class)) {
-				String converted = conversionService.convert(parameter, String.class);
-
-				if (converted != null) {
-					parameterValue = converted;
-				}
-			} else {
-				parameterValue = parameter.toString();
-			}
-
-			parameterValue = parameterValue.replaceAll("\"", Matcher.quoteReplacement("\\\""));
-			return parameterValue;
-		}
+		return value;
 	}
 
 }
