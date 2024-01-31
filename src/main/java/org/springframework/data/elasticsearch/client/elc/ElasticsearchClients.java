@@ -35,6 +35,9 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.apache.http.*;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.entity.ByteArrayEntity;
@@ -269,7 +272,14 @@ public final class ElasticsearchClients {
 		TransportOptions transportOptionsWithHeader = transportOptionsBuilder
 				.addHeader(X_SPRING_DATA_ELASTICSEARCH_CLIENT, clientType).build();
 
-		return new RestClientTransport(restClient, new JacksonJsonpMapper(), transportOptionsWithHeader);
+		// we need to create our own objectMapper that keeps null values in order to provide the storeNullValue
+		// functionality. The one Elasticsearch would provide removes the nulls. We remove unwanted nulls before they get
+		// into this mapper, so we can safely keep them here.
+		var objectMapper = (new ObjectMapper())
+				.configure(SerializationFeature.INDENT_OUTPUT, false)
+				.setSerializationInclusion(JsonInclude.Include.ALWAYS);
+
+		return new RestClientTransport(restClient, new JacksonJsonpMapper(objectMapper), transportOptionsWithHeader);
 	}
 
 	private static List<String> formattedHosts(List<InetSocketAddress> hosts, boolean useSsl) {
