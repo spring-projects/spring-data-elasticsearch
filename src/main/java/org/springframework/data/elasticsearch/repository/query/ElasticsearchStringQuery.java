@@ -42,6 +42,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
 			String queryString, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		super(queryMethod, elasticsearchOperations);
+
 		Assert.notNull(queryString, "Query cannot be empty");
 		Assert.notNull(evaluationContextProvider, "ExpressionEvaluationContextProvider must not be null");
 
@@ -65,11 +66,11 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
-		ConversionService conversionService = elasticsearchOperations.getElasticsearchConverter().getConversionService();
-		String queryString = new StringQueryUtil(conversionService)
-				.replacePlaceholders(this.queryString, parameterAccessor);
 
-		QueryStringSpELEvaluator evaluator = new QueryStringSpELEvaluator(queryString, parameterAccessor, queryMethod,
+		ConversionService conversionService = elasticsearchOperations.getElasticsearchConverter().getConversionService();
+		var replacedString = new StringQueryUtil(conversionService).replacePlaceholders(this.queryString,
+				parameterAccessor);
+		var evaluator = new QueryStringSpELEvaluator(replacedString, parameterAccessor, queryMethod,
 				evaluationContextProvider, conversionService);
 		var query = new StringQuery(evaluator.evaluate());
 		query.addSort(parameterAccessor.getSort());

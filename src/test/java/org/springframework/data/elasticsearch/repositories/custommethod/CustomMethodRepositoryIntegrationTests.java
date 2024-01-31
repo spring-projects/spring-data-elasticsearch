@@ -2109,8 +2109,8 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		SearchHits<SampleEntity> queryByType(String type);
 
 		/**
-		 * The parameter is annotated with {@link Nullable} deliberately to test that our placeholder parameter will
-		 * not accept a null parameter as query value.
+		 * The parameter is annotated with {@link Nullable} deliberately to test that our placeholder parameter will not
+		 * accept a null parameter as query value.
 		 */
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"type\": \"?0\"}}]}}")
 		@Highlight(fields = { @HighlightField(name = "type") })
@@ -2444,8 +2444,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	}
 
 	static class SampleProperty {
-		@Nullable
-		private String first;
+		@Nullable private String first;
 		@Nullable private String last;
 
 		SampleProperty(@Nullable String first, @Nullable String last) {

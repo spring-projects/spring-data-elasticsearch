@@ -22,6 +22,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchQueryValueConversionService;
 import org.springframework.data.repository.query.ParameterAccessor;
+import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 
 /**
@@ -36,6 +37,9 @@ final public class StringQueryUtil {
 	private final ConversionService conversionService;
 
 	public StringQueryUtil(ConversionService conversionService) {
+
+		Assert.notNull(conversionService, "conversionService must not be null");
+
 		this.conversionService = ElasticsearchQueryValueConversionService.getInstance(conversionService);
 	}
 
@@ -43,8 +47,8 @@ final public class StringQueryUtil {
 
 		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
 		String result = input;
-		while (matcher.find()) {
 
+		while (matcher.find()) {
 			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
 			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
 			String replacement = Matcher.quoteReplacement(getParameterWithIndex(accessor, index, input));
@@ -59,7 +63,8 @@ final public class StringQueryUtil {
 	private String getParameterWithIndex(ParameterAccessor accessor, int index, String input) {
 
 		Object parameter = accessor.getBindableValue(index);
-		String value =  conversionService.convert(parameter, String.class);
+		String value = conversionService.convert(parameter, String.class);
+
 		if (value == null) {
 			throw new ConversionException(String.format(
 					"Parameter value can't be null for placeholder at index '%s' in query '%s' when querying elasticsearch",

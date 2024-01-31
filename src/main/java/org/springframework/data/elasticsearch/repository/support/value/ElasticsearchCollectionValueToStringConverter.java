@@ -70,14 +70,18 @@ public class ElasticsearchCollectionValueToStringConverter implements GenericCon
 	@Override
 	@Nullable
 	public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
+
 		if (source == null) {
 			return "[]";
 		}
 		Collection<?> sourceCollection = (Collection<?>) source;
+
 		if (sourceCollection.isEmpty()) {
 			return "[]";
 		}
+
 		StringJoiner sb = new StringJoiner(DELIMITER, "[", "]");
+
 		for (Object sourceElement : sourceCollection) {
 			// ignore the null value in collection
 			if (Objects.isNull(sourceElement)) {
@@ -86,8 +90,9 @@ public class ElasticsearchCollectionValueToStringConverter implements GenericCon
 
 			Object targetElement = this.conversionService.convert(
 					sourceElement, sourceType.elementTypeDescriptor(sourceElement), targetType);
+
 			if (sourceElement instanceof String) {
-				sb.add("\"" + targetElement + "\"");
+				sb.add("\"" + targetElement + '"');
 			} else {
 				sb.add(String.valueOf(targetElement));
 			}

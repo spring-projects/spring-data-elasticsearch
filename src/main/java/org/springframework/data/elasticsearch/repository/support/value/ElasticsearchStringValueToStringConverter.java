@@ -40,10 +40,7 @@ public class ElasticsearchStringValueToStringConverter implements GenericConvert
 	@Override
 	@Nullable
 	public Object convert(@Nullable Object source, TypeDescriptor sourceType, TypeDescriptor targetType) {
-		if (source == null) {
-			return null;
-		}
-		return escape(source);
+		return source != null ? escape(source) : null;
 	}
 
 	private String escape(@Nullable Object source) {

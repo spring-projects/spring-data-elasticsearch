@@ -27,7 +27,8 @@ import org.springframework.util.Assert;
 
 /**
  * A {@link ConversionService} using custom converters to handle query values in elasticsearch query. If the value to be
- * converted beyond the scope of custom converters, it'll delegate to the {@link #delegate delegated conversion service}.
+ * converted beyond the scope of custom converters, it'll delegate to the {@link #delegate delegated conversion
+ * service}.
  * <p>
  * This is a better solution for converting query values in elasticsearch query, because it has all the capability the
  * {@link #delegate delegated conversion service} has, especially for user-registered {@link Converter}s.
@@ -44,7 +45,9 @@ public class ElasticsearchQueryValueConversionService implements ConversionServi
 	private final ConversionService delegate;
 
 	private ElasticsearchQueryValueConversionService(ConversionService delegate) {
+
 		Assert.notNull(delegate, "delegated ConversionService must not be null");
+
 		this.delegate = delegate;
 
 		// register elasticsearch custom type converters for conversion service
@@ -85,6 +88,7 @@ public class ElasticsearchQueryValueConversionService implements ConversionServi
 	@Override
 	@Nullable
 	public Object convert(@Nullable Object source, @Nullable TypeDescriptor sourceType, TypeDescriptor targetType) {
+
 		if (valueConversionService.canConvert(sourceType, targetType)) {
 			return valueConversionService.convert(source, sourceType, targetType);
 		} else {

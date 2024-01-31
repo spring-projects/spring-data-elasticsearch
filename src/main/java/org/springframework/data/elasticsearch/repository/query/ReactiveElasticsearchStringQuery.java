@@ -23,6 +23,7 @@ import org.springframework.data.elasticsearch.repository.support.StringQueryUtil
 import org.springframework.data.elasticsearch.repository.support.spel.QueryStringSpELEvaluator;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.util.Assert;
 
 /**
  * @author Christoph Strobl
@@ -45,8 +46,11 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 	public ReactiveElasticsearchStringQuery(String query, ReactiveElasticsearchQueryMethod queryMethod,
 			ReactiveElasticsearchOperations operations, SpelExpressionParser expressionParser,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-
 		super(queryMethod, operations);
+
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
+
 		this.query = query;
 		this.evaluationContextProvider = evaluationContextProvider;
 	}

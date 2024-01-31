@@ -21,8 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchParametersParameterAccessor;
-import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchQueryValueConversionService;
 import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchCollectionValueToStringConverter;
+import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchQueryValueConversionService;
 import org.springframework.data.elasticsearch.repository.support.value.ElasticsearchStringValueToStringConverter;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
@@ -59,6 +59,13 @@ public class QueryStringSpELEvaluator {
 	public QueryStringSpELEvaluator(String queryString, ElasticsearchParametersParameterAccessor parameterAccessor,
 			QueryMethod queryMethod, QueryMethodEvaluationContextProvider evaluationContextProvider,
 			ConversionService conversionService) {
+
+		Assert.notNull(queryString, "queryString must not be null");
+		Assert.notNull(parameterAccessor, "parameterAccessor must not be null");
+		Assert.notNull(queryMethod, "queryMethod must not be null");
+		Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
+		Assert.notNull(conversionService, "conversionService must not be null");
+
 		this.queryString = queryString;
 		this.parameterAccessor = parameterAccessor;
 		this.queryMethod = queryMethod;
@@ -74,9 +81,11 @@ public class QueryStringSpELEvaluator {
 	 */
 	public String evaluate() {
 		Expression expr = getQueryExpression(queryString);
+
 		if (expr != null) {
 			EvaluationContext context = evaluationContextProvider.getEvaluationContext(parameterAccessor.getParameters(),
 					parameterAccessor.getValues());
+
 			if (context instanceof StandardEvaluationContext standardEvaluationContext) {
 				standardEvaluationContext.setTypeConverter(elasticsearchSpELTypeConverter);
 			}
@@ -97,12 +106,14 @@ public class QueryStringSpELEvaluator {
 	 */
 	private String parseExpressions(Expression rootExpr, EvaluationContext context) {
 		StringBuilder parsed = new StringBuilder();
+
 		if (rootExpr instanceof LiteralExpression literalExpression) {
 			// get the string literal directly
 			parsed.append(literalExpression.getExpressionString());
 		} else if (rootExpr instanceof SpelExpression spelExpression) {
 			// evaluate the value
 			String value = spelExpression.getValue(context, String.class);
+
 			if (value == null) {
 				throw new ConversionException(String.format(
 						"Parameter value can't be null for SpEL expression '%s' in method '%s' when querying elasticsearch",
