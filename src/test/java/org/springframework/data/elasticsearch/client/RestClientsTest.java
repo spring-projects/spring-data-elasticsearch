@@ -17,9 +17,9 @@ package org.springframework.data.elasticsearch.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
-import static io.specto.hoverfly.junit.dsl.HoverflyDsl.service;
-import static io.specto.hoverfly.junit.verification.HoverflyVerifications.atLeast;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.specto.hoverfly.junit.dsl.HoverflyDsl.*;
+import static io.specto.hoverfly.junit.verification.HoverflyVerifications.*;
+import static org.assertj.core.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
@@ -51,6 +51,10 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 /**
  * We need hoverfly for testing the reactive code to use a proxy. Wiremock cannot intercept the proxy calls as WebClient
  * uses HTTP CONNECT on proxy requests which wiremock does not support.
+ * <br/>
+ * Note: since 5.0 we do not use the WebClient for
+ * the reactive code anymore, so this might be handled with two wiremocks, but there is no real need to change this test
+ * setup.
  *
  * @author Peter-Josef Meisch
  */
