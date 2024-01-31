@@ -31,6 +31,10 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.util.Assert;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+
 /**
  * Base class for a @{@link org.springframework.context.annotation.Configuration} class to set up the Elasticsearch
  * connection using the Elasticsearch Client. This class exposes different parts of the setup as Spring beans. Deriving
@@ -118,7 +122,13 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 	 */
 	@Bean
 	public JsonpMapper jsonpMapper() {
-		return new JacksonJsonpMapper();
+		// we need to create our own objectMapper that keeps null values in order to provide the storeNullValue
+		// functionality. The one Elasticsearch would provide removes the nulls. We remove unwanted nulls before they get
+		// into this mapper, so we can safely keep them here.
+		var objectMapper = (new ObjectMapper())
+				.configure(SerializationFeature.INDENT_OUTPUT, false)
+				.setSerializationInclusion(JsonInclude.Include.ALWAYS);
+		return new JacksonJsonpMapper(objectMapper);
 	}
 
 	/**
