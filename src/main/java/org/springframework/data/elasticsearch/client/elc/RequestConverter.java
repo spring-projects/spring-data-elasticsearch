@@ -1169,8 +1169,7 @@ class RequestConverter {
 							}
 
 							return bb;
-						})
-				);
+						}));
 			});
 			return mtrb;
 		});
@@ -1721,8 +1720,13 @@ class RequestConverter {
 		} else // noinspection StatementWithEmptyBody
 		if (query instanceof StringQuery) {
 			// no filter for StringQuery
-		} else if (query instanceof NativeQuery) {
-			builder.postFilter(((NativeQuery) query).getFilter());
+		} else if (query instanceof NativeQuery nativeQuery) {
+
+			if (nativeQuery.getFilter() != null) {
+				builder.postFilter(nativeQuery.getFilter());
+			} else if (nativeQuery.getSpringDataQuery() != null) {
+				addFilter(nativeQuery.getSpringDataQuery(), builder);
+			}
 		} else {
 			throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
 		}
