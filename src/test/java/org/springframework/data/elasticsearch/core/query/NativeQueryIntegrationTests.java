@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -50,7 +51,7 @@ public abstract class NativeQueryIntegrationTests {
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete();
 	}
 
 	@Test // #2391
@@ -73,6 +74,28 @@ public abstract class NativeQueryIntegrationTests {
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo(entity.getId());
+	}
+
+	@Test // #2840
+	@DisplayName("should be able to use CriteriaQuery with filter arguments in a NativeQuery")
+	void shouldBeAbleToUseCriteriaQueryWithFilterArgumentsInANativeQuery() {
+		var entity1 = new SampleEntity();
+		entity1.setId("60");
+		var location1 = new GeoPoint(60.0, 60.0);
+		entity1.setLocation(location1);
+		var entity2 = new SampleEntity();
+		entity2.setId("70");
+		var location70 = new GeoPoint(70.0, 70.0);
+		entity2.setLocation(location70);
+		operations.save(entity1, entity2);
+
+		var criteriaQuery = new CriteriaQuery(Criteria.where("location").within(location1, "10km"));
+		var nativeQuery = NativeQuery.builder().withQuery(criteriaQuery).build();
+
+		var searchHits = operations.search(nativeQuery, SampleEntity.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo(entity1.getId());
 	}
 
 	@Test // #2391
@@ -113,6 +136,14 @@ public abstract class NativeQueryIntegrationTests {
 	static class SampleEntity {
 
 		@Nullable
+		@Id private String id;
+
+		@Nullable
+		@Field(type = FieldType.Text) private String text;
+
+		@Nullable private GeoPoint location;
+
+		@Nullable
 		public String getId() {
 			return id;
 		}
@@ -121,6 +152,7 @@ public abstract class NativeQueryIntegrationTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getText() {
 			return text;
 		}
@@ -130,8 +162,12 @@ public abstract class NativeQueryIntegrationTests {
 		}
 
 		@Nullable
-		@Id private String id;
+		public GeoPoint getLocation() {
+			return location;
+		}
 
-		@Field(type = FieldType.Text) private String text;
+		public void setLocation(GeoPoint location) {
+			this.location = location;
+		}
 	}
 }
