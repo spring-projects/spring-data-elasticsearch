@@ -84,6 +84,8 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_SIMILARITY = "similarity";
 	static final String FIELD_PARAM_TERM_VECTOR = "term_vector";
 	static final String FIELD_PARAM_TYPE = "type";
+	static final String FIELD_PARAM_PATH = "path";
+	static final String FIELD_PARAM_TYPE_ALIAS = "alias";
 
 	private final String analyzer;
 	private final boolean coerce;

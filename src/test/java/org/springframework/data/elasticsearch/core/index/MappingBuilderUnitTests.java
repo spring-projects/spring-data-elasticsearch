@@ -19,12 +19,7 @@ package org.springframework.data.elasticsearch.core.index;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Object;
 
-import java.lang.Boolean;
-import java.lang.Double;
-import java.lang.Integer;
-import java.lang.Object;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -1179,6 +1174,39 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
+	@Test // #2845
+	@DisplayName("should write field aliases to the mapping")
+	void shouldWriteFieldAliasesToTheMapping() throws JSONException {
+
+		var expected = """
+					{
+					  "properties": {
+					    "_class": {
+					      "type": "keyword",
+					      "index": false,
+					      "doc_values": false
+					    },
+					    "someText": {
+					      "type": "text"
+					    },
+					    "otherText": {
+					      "type": "text"
+					    },
+					    "someAlly": {
+					      "type": "alias",
+					      "path": "someText"
+					    },
+					    "otherAlly": {
+					      "type": "alias",
+					      "path": "otherText"
+					    }
+					  }
+					}
+				""";
+		String mapping = getMappingBuilder().buildPropertyMapping(FieldAliasEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
 	// region entities
 
 	@Document(indexName = "ignore-above-index")
@@ -1298,8 +1326,8 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 			@Nullable
 			@MultiField(mainField = @Field(name = "alternate-description", type = FieldType.Text, analyzer = "whitespace"),
-							otherFields = {
-											@InnerField(suffix = "suff-ix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
+					otherFields = {
+							@InnerField(suffix = "suff-ix", type = FieldType.Text, analyzer = "stop", searchAnalyzer = "standard") }) //
 			public String getAlternateDescription() {
 				return alternateDescription;
 			}
@@ -1662,7 +1690,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@GeoPointField private String pointC;
 		@Nullable
 		@GeoPointField private double[] pointD;
-		// geo shape, until e have the classes for this, us a strng
+
 		@Nullable
 		@GeoShapeField private String shape1;
 		@Nullable
@@ -2389,6 +2417,19 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable private String id;
 		@Nullable
 		@Field(name = "dotted.field", type = Text) private String dottedField;
+	}
+
+	@Mapping(aliases = {
+			@MappingAlias(name = "someAlly", path = "someText"),
+			@MappingAlias(name = "otherAlly", path = "otherText")
+	})
+	private static class FieldAliasEntity {
+		@Id
+		@Nullable private String id;
+		@Nullable
+		@Field(type = Text) private String someText;
+		@Nullable
+		@Field(type = Text) private String otherText;
 	}
 	// endregion
 }

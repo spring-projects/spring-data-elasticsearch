@@ -214,8 +214,9 @@ public class MappingBuilder {
 				@Nullable Field parentFieldAnnotation, @Nullable Dynamic dynamicMapping, @Nullable Document runtimeFields)
 				throws IOException {
 
-			if (entity != null && entity.isAnnotationPresent(Mapping.class)) {
-				Mapping mappingAnnotation = entity.getRequiredAnnotation(Mapping.class);
+			var mappingAnnotation = entity != null ? entity.findAnnotation(Mapping.class) : null;
+
+			if (mappingAnnotation != null) {
 
 				if (!mappingAnnotation.enabled()) {
 					objectNode.put(MAPPING_ENABLED, false);
@@ -289,6 +290,16 @@ public class MappingBuilder {
 						LOGGER.warn(String.format("error mapping property with name %s", property.getName()), e);
 					}
 				});
+
+			}
+
+			// write the alias entries after the properties
+			if (mappingAnnotation != null) {
+				for (MappingAlias mappingAlias : mappingAnnotation.aliases()) {
+					var aliasNode = propertiesNode.putObject(mappingAlias.name());
+					aliasNode.put(FIELD_PARAM_TYPE, FIELD_PARAM_TYPE_ALIAS);
+					aliasNode.put(FIELD_PARAM_PATH, mappingAlias.path());
+				}
 			}
 		}
 

@@ -18,10 +18,7 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Object;
 
-import java.lang.Integer;
-import java.lang.Object;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -267,6 +264,12 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 	@DisplayName("should write correct mapping for dense vector property")
 	void shouldWriteCorrectMappingForDenseVectorProperty() {
 		operations.indexOps(SimilarityEntity.class).createWithMapping();
+	}
+
+	@Test // #2845
+	@DisplayName("should write mapping with field aliases")
+	void shouldWriteMappingWithFieldAliases() {
+		operations.indexOps(FieldAliasEntity.class).createWithMapping();
 	}
 
 	// region Entities
@@ -906,6 +909,20 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Id private String id;
 
 		@Field(type = FieldType.Dense_Vector, dims = 42, similarity = "cosine") private double[] denseVector;
+	}
+
+	@Mapping(aliases = {
+			@MappingAlias(name = "someAlly", path = "someText"),
+			@MappingAlias(name = "otherAlly", path = "otherText")
+	})
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	private static class FieldAliasEntity {
+		@Id
+		@Nullable private String id;
+		@Nullable
+		@Field(type = Text) private String someText;
+		@Nullable
+		@Field(type = Text) private String otherText;
 	}
 
 	// endregion

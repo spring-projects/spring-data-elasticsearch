@@ -74,6 +74,13 @@ public @interface Mapping {
 	 */
 	String runtimeFieldsPath() default "";
 
+	/**
+	 * field alias definitions to be written to the index mapping
+	 *
+	 * @since 5.3
+	 */
+	MappingAlias[] aliases() default {};
+
 	enum Detection {
 		DEFAULT, TRUE, FALSE;
 	}
