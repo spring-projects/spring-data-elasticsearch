@@ -9,6 +9,7 @@
 * Add shard statistics to the `SearchHit` class.
 * Add support for multi search template API.
 * Add support for SpEL in @Query.
+* Add support for field aliases in the index mapping.
 
 [[new-features.5-2-0]]
 == New in Spring Data Elasticsearch 5.2
