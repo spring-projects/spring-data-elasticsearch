@@ -19,10 +19,8 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
-import org.springframework.data.elasticsearch.repository.support.spel.QueryStringSpELEvaluator;
+import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 
 /**
@@ -37,16 +35,14 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	public ReactiveElasticsearchStringQuery(ReactiveElasticsearchQueryMethod queryMethod,
-			ReactiveElasticsearchOperations operations, SpelExpressionParser expressionParser,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ReactiveElasticsearchOperations operations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
-		this(queryMethod.getAnnotatedQuery(), queryMethod, operations, expressionParser, evaluationContextProvider);
+		this(queryMethod.getAnnotatedQuery(), queryMethod, operations, evaluationContextProvider);
 	}
 
 	public ReactiveElasticsearchStringQuery(String query, ReactiveElasticsearchQueryMethod queryMethod,
-			ReactiveElasticsearchOperations operations, SpelExpressionParser expressionParser,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(queryMethod, operations);
+			ReactiveElasticsearchOperations operations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+		super(queryMethod, operations, evaluationContextProvider);
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
@@ -57,15 +53,11 @@ public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsea
 
 	@Override
 	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
-		String queryString = new StringQueryUtil(
-				getElasticsearchOperations().getElasticsearchConverter().getConversionService())
-				.replacePlaceholders(this.query, parameterAccessor);
-
 		ConversionService conversionService = getElasticsearchOperations().getElasticsearchConverter()
 				.getConversionService();
-		QueryStringSpELEvaluator evaluator = new QueryStringSpELEvaluator(queryString, parameterAccessor, queryMethod,
-				evaluationContextProvider, conversionService);
-		return new StringQuery(evaluator.evaluate());
+		String processed = new QueryStringProcessor(query, queryMethod, conversionService, evaluationContextProvider)
+				.createQuery(parameterAccessor);
+		return new StringQuery(processed);
 	}
 
 	@Override

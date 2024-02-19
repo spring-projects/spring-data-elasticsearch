@@ -51,6 +51,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.HighlightField;
+import org.springframework.data.elasticsearch.annotations.HighlightParameters;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.SourceFilters;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
@@ -431,6 +432,60 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				.expectNextMatches(searchHit -> {
 					List<String> hitHighlightField = searchHit.getHighlightField("message");
 					return hitHighlightField.size() == 1 && hitHighlightField.get(0).equals("<em>message</em>");
+				}) //
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldReturnDifferentHighlightsOnAnnotatedStringQueryMethod() {
+
+		bulkIndex(new SampleEntity("id-one", "abc xyz"), //
+				new SampleEntity("id-two", "abc xyz"), //
+				new SampleEntity("id-three", "abc xyz")) //
+				.block();
+
+		repository.queryByMessageWithSeparateHighlight("abc", "abc") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> {
+					List<String> hitHighlightField = searchHit.getHighlightField("message");
+					return hitHighlightField.size() == 1 && hitHighlightField.get(0).equals("<em>abc</em> xyz");
+				}) //
+				.expectNextCount(2) //
+				.verifyComplete();
+
+		repository.queryByMessageWithSeparateHighlight("abc", "xyz") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> {
+					List<String> hitHighlightField = searchHit.getHighlightField("message");
+					return hitHighlightField.size() == 1 && hitHighlightField.get(0).equals("abc <em>xyz</em>");
+				}) //
+				.expectNextCount(2) //
+				.verifyComplete();
+	}
+
+	@Test
+	void shouldReturnDifferentHighlightsOnAnnotatedStringQueryMethodSpEL() {
+
+		bulkIndex(new SampleEntity("id-one", "abc xyz"), //
+				new SampleEntity("id-two", "abc xyz"), //
+				new SampleEntity("id-three", "abc xyz")) //
+				.block();
+
+		repository.queryByMessageWithSeparateHighlightSpEL("abc", "abc") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> {
+					List<String> hitHighlightField = searchHit.getHighlightField("message");
+					return hitHighlightField.size() == 1 && hitHighlightField.get(0).equals("<em>abc</em> xyz");
+				}) //
+				.expectNextCount(2) //
+				.verifyComplete();
+
+		repository.queryByMessageWithSeparateHighlightSpEL("abc", "xyz") //
+				.as(StepVerifier::create) //
+				.expectNextMatches(searchHit -> {
+					List<String> hitHighlightField = searchHit.getHighlightField("message");
+					return hitHighlightField.size() == 1 && hitHighlightField.get(0).equals("abc <em>xyz</em>");
 				}) //
 				.expectNextCount(2) //
 				.verifyComplete();
@@ -860,6 +915,29 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				.verifyComplete();
 	}
 
+	@Test
+	@DisplayName("should use sourceIncludes from parameter SpEL")
+	void shouldUseSourceIncludesFromParameterSpEL() {
+
+		var entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity).block();
+
+		repository.queryBy(List.of("message", "customFieldNameMessage")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(foundEntity -> { //
+					assertThat(foundEntity.getMessage()).isEqualTo("message"); //
+					assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage"); //
+					assertThat(foundEntity.getType()).isNull(); //
+					assertThat(foundEntity.getKeyword()).isNull(); //
+				}) //
+				.verifyComplete();
+	}
+
 	@Test // #2146
 	@DisplayName("should use sourceExcludes from annotation")
 	void shouldUseSourceExcludesFromAnnotation() {
@@ -896,6 +974,29 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		repository.save(entity).block();
 
 		repository.findBy(List.of("type", "keyword")) //
+				.as(StepVerifier::create) //
+				.consumeNextWith(foundEntity -> { //
+					assertThat(foundEntity.getMessage()).isEqualTo("message"); //
+					assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage"); //
+					assertThat(foundEntity.getType()).isNull(); //
+					assertThat(foundEntity.getKeyword()).isNull(); //
+				}) //
+				.verifyComplete();
+	}
+
+	@Test
+	@DisplayName("should use source excludes from parameter SpEL")
+	void shouldUseSourceExcludesFromParameterSpEL() {
+
+		var entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity).block();
+
+		repository.getBy(List.of("type", "keyword")) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(foundEntity -> { //
 					assertThat(foundEntity.getMessage()).isEqualTo("message"); //
@@ -946,6 +1047,68 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		@Query("{\"bool\": {\"must\": [{\"term\": {\"message\": \"?0\"}}]}}")
 		@Highlight(fields = { @HighlightField(name = "message") })
 		Flux<SearchHit<SampleEntity>> queryByMessageWithString(String message);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "match":{
+				          "message":"?0"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		@Highlight(
+				fields = { @HighlightField(name = "message") },
+				parameters = @HighlightParameters(
+						highlightQuery = @Query("""
+								{
+								  "bool":{
+								    "must":[
+								      {
+								        "match":{
+								          "message":"?1"
+								        }
+								      }
+								    ]
+								  }
+								}
+								""")))
+		Flux<SearchHit<SampleEntity>> queryByMessageWithSeparateHighlight(String message, String highlight);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "match":{
+				          "message":"#{#message}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		@Highlight(
+				fields = { @HighlightField(name = "message") },
+				parameters = @HighlightParameters(
+						highlightQuery = @Query("""
+								{
+								  "bool":{
+								    "must":[
+								      {
+								        "match":{
+								          "message":"#{#highlight}"
+								        }
+								      }
+								    ]
+								  }
+								}
+								""")))
+		Flux<SearchHit<SampleEntity>> queryByMessageWithSeparateHighlightSpEL(String message, String highlight);
 
 		@Query("{ \"bool\" : { \"must\" : { \"term\" : { \"message\" : \"?0\" } } } }")
 		Flux<SampleEntity> findAllViaAnnotatedQueryByMessageLike(String message);
@@ -1083,6 +1246,9 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		@SourceFilters(includes = "?0")
 		Flux<SampleEntity> searchBy(Collection<String> sourceIncludes);
 
+		@SourceFilters(includes = "#{#sourceIncludes}")
+		Flux<SampleEntity> queryBy(Collection<String> sourceIncludes);
+
 		@Query("""
 				{
 					"match_all": {}
@@ -1093,6 +1259,9 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 		@SourceFilters(excludes = "?0")
 		Flux<SampleEntity> findBy(Collection<String> sourceExcludes);
+
+		@SourceFilters(excludes = "#{#sourceExcludes}")
+		Flux<SampleEntity> getBy(Collection<String> sourceExcludes);
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")

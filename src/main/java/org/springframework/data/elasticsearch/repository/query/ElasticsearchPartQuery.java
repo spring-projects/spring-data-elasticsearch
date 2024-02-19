@@ -18,11 +18,9 @@ package org.springframework.data.elasticsearch.repository.query;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.RuntimeField;
-import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
 import org.springframework.data.mapping.context.MappingContext;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.parser.PartTree;
 
 /**
@@ -34,14 +32,16 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Mark Paluch
  * @author Rasmus Faber-Espensen
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  */
 public class ElasticsearchPartQuery extends AbstractElasticsearchRepositoryQuery {
 
 	private final PartTree tree;
 	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
 
-	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations) {
-		super(method, elasticsearchOperations);
+	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+		super(method, elasticsearchOperations, evaluationContextProvider);
 		this.tree = new PartTree(queryMethod.getName(), queryMethod.getResultProcessor().getReturnedType().getDomainType());
 		this.mappingContext = elasticsearchConverter.getMappingContext();
 	}

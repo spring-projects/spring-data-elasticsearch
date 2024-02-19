@@ -19,8 +19,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
-import org.springframework.data.elasticsearch.repository.support.spel.QueryStringSpELEvaluator;
+import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.util.Assert;
 
@@ -37,17 +36,15 @@ import org.springframework.util.Assert;
 public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQuery {
 
 	private final String queryString;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
 			String queryString, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(queryMethod, elasticsearchOperations);
+		super(queryMethod, elasticsearchOperations, evaluationContextProvider);
 
 		Assert.notNull(queryString, "Query cannot be empty");
 		Assert.notNull(evaluationContextProvider, "ExpressionEvaluationContextProvider must not be null");
 
 		this.queryString = queryString;
-		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	@Override
@@ -66,15 +63,12 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	}
 
 	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
-
 		ConversionService conversionService = elasticsearchOperations.getElasticsearchConverter().getConversionService();
-		var replacedString = new StringQueryUtil(conversionService).replacePlaceholders(this.queryString,
-				parameterAccessor);
-		var evaluator = new QueryStringSpELEvaluator(replacedString, parameterAccessor, queryMethod,
-				evaluationContextProvider, conversionService);
-		var query = new StringQuery(evaluator.evaluate());
-		query.addSort(parameterAccessor.getSort());
-		return query;
+		var processed = new QueryStringProcessor(queryString, queryMethod, conversionService, evaluationContextProvider)
+				.createQuery(parameterAccessor);
+
+		return new StringQuery(processed)
+				.addSort(parameterAccessor.getSort());
 	}
 
 }

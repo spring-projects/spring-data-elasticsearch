@@ -1740,6 +1740,26 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(highlightXyzHit.getHighlightField("type")).hasSize(1).contains("abc <em>xyz</em>");
 	}
 
+	@Test
+	void shouldReturnDifferentHighlightsOnAnnotatedStringQueryMethodSpEL() {
+		List<SampleEntity> entities = createSampleEntities("abc xyz", 2);
+		repository.saveAll(entities);
+
+		// when
+		SearchHits<SampleEntity> highlightAbcHits = repository.queryByStringWithSeparateHighlightSpEL("abc", "abc");
+
+		assertThat(highlightAbcHits.getTotalHits()).isEqualTo(2);
+		SearchHit<SampleEntity> highlightAbcHit = highlightAbcHits.getSearchHit(0);
+		assertThat(highlightAbcHit.getHighlightField("type")).hasSize(1).contains("<em>abc</em> xyz");
+
+		// when
+		SearchHits<SampleEntity> highlightXyzHits = repository.queryByStringWithSeparateHighlightSpEL("abc", "xyz");
+
+		assertThat(highlightXyzHits.getTotalHits()).isEqualTo(2);
+		SearchHit<SampleEntity> highlightXyzHit = highlightXyzHits.getSearchHit(0);
+		assertThat(highlightXyzHit.getHighlightField("type")).hasSize(1).contains("abc <em>xyz</em>");
+	}
+
 	@Test // DATAES-734
 	void shouldUseGeoSortParameter() {
 		GeoPoint munich = new GeoPoint(48.137154, 11.5761247);
@@ -1938,6 +1958,28 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		assertThat(foundEntity.getKeyword()).isNull();
 	}
 
+	@Test
+	@DisplayName("should use sourceIncludes from parameter SpEL")
+	void shouldUseSourceIncludesFromParameterSpEL() {
+
+		SampleEntity entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity);
+
+		var searchHits = repository.queryBy(List.of("message", "customFieldNameMessage"));
+
+		assertThat(searchHits.hasSearchHits()).isTrue();
+		var foundEntity = searchHits.getSearchHit(0).getContent();
+		assertThat(foundEntity.getMessage()).isEqualTo("message");
+		assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage");
+		assertThat(foundEntity.getType()).isNull();
+		assertThat(foundEntity.getKeyword()).isNull();
+	}
+
 	@Test // #2146
 	@DisplayName("should use sourceExcludes from annotation")
 	void shouldUseSourceExcludesFromAnnotation() {
@@ -1973,6 +2015,28 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		repository.save(entity);
 
 		var searchHits = repository.findBy(List.of("type", "keyword"));
+
+		assertThat(searchHits.hasSearchHits()).isTrue();
+		var foundEntity = searchHits.getSearchHit(0).getContent();
+		assertThat(foundEntity.getMessage()).isEqualTo("message");
+		assertThat(foundEntity.getCustomFieldNameMessage()).isEqualTo("customFieldNameMessage");
+		assertThat(foundEntity.getType()).isNull();
+		assertThat(foundEntity.getKeyword()).isNull();
+	}
+
+	@Test
+	@DisplayName("should use source excludes from parameter SpEL")
+	void shouldUseSourceExcludesFromParameterSpEL() {
+
+		SampleEntity entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("message");
+		entity.setCustomFieldNameMessage("customFieldNameMessage");
+		entity.setType("type");
+		entity.setKeyword("keyword");
+		repository.save(entity);
+
+		var searchHits = repository.getBy(List.of("type", "keyword"));
 
 		assertThat(searchHits.hasSearchHits()).isTrue();
 		var foundEntity = searchHits.getSearchHit(0).getContent();
@@ -2276,6 +2340,37 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 								""")))
 		SearchHits<SampleEntity> queryByStringWithSeparateHighlight(String type, String highlight);
 
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      {
+				        "match":{
+				          "type":"#{#type}"
+				        }
+				      }
+				    ]
+				  }
+				}
+				""")
+		@Highlight(
+				fields = { @HighlightField(name = "type") },
+				parameters = @HighlightParameters(
+						highlightQuery = @Query("""
+								{
+								  "bool":{
+								    "must":[
+								      {
+								        "match":{
+								          "type":"#{#highlight}"
+								        }
+								      }
+								    ]
+								  }
+								}
+								""")))
+		SearchHits<SampleEntity> queryByStringWithSeparateHighlightSpEL(String type, String highlight);
+
 		List<SearchHit<SampleEntity>> queryByMessage(String message);
 
 		Stream<SearchHit<SampleEntity>> readByMessage(String message);
@@ -2307,6 +2402,9 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@SourceFilters(includes = "?0")
 		SearchHits<SampleEntity> searchBy(Collection<String> sourceIncludes);
 
+		@SourceFilters(includes = "#{#sourceIncludes}")
+		SearchHits<SampleEntity> queryBy(Collection<String> sourceIncludes);
+
 		@Query("""
 				{
 					"match_all": {}
@@ -2317,6 +2415,9 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 
 		@SourceFilters(excludes = "?0")
 		SearchHits<SampleEntity> findBy(Collection<String> sourceExcludes);
+
+		@SourceFilters(excludes = "#{#sourceExcludes}")
+		SearchHits<SampleEntity> getBy(Collection<String> sourceExcludes);
 	}
 
 	public interface SampleStreamingCustomMethodRepository extends ElasticsearchRepository<SampleEntity, String> {

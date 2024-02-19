@@ -26,23 +26,32 @@ import org.springframework.util.Assert;
 import org.springframework.util.NumberUtils;
 
 /**
+ * To replace the placeholders like `?0`, `?1, `?2` of the query string.
+ *
  * @author Peter-Josef Meisch
  * @author Niklas Herder
  * @author Haibo Liu
  */
-final public class StringQueryUtil {
+final public class QueryStringPlaceholderReplacer {
 
 	private static final Pattern PARAMETER_PLACEHOLDER = Pattern.compile("\\?(\\d+)");
 
 	private final ConversionService conversionService;
 
-	public StringQueryUtil(ConversionService conversionService) {
+	public QueryStringPlaceholderReplacer(ConversionService conversionService) {
 
 		Assert.notNull(conversionService, "conversionService must not be null");
 
 		this.conversionService = ElasticsearchQueryValueConversionService.getInstance(conversionService);
 	}
 
+	/**
+	 * Replace the placeholders of the query string.
+	 *
+	 * @param input    raw query string
+	 * @param accessor parameter info
+	 * @return a plain string with placeholders replaced
+	 */
 	public String replacePlaceholders(String input, ParameterAccessor accessor) {
 
 		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);

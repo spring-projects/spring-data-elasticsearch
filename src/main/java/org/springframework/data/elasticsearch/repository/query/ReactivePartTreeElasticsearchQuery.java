@@ -19,12 +19,14 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.repository.query.parser.PartTree;
 
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Haibo Liu
  * @since 3.2
  */
 public class ReactivePartTreeElasticsearchQuery extends AbstractReactiveElasticsearchRepositoryQuery {
@@ -32,8 +34,9 @@ public class ReactivePartTreeElasticsearchQuery extends AbstractReactiveElastics
 	private final PartTree tree;
 
 	public ReactivePartTreeElasticsearchQuery(ReactiveElasticsearchQueryMethod queryMethod,
-			ReactiveElasticsearchOperations elasticsearchOperations) {
-		super(queryMethod, elasticsearchOperations);
+			ReactiveElasticsearchOperations elasticsearchOperations,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+		super(queryMethod, elasticsearchOperations, evaluationContextProvider);
 
 		ResultProcessor processor = queryMethod.getResultProcessor();
 		this.tree = new PartTree(queryMethod.getName(), processor.getReturnedType().getDomainType());
