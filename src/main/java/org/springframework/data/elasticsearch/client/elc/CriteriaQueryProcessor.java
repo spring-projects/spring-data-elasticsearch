@@ -174,6 +174,12 @@ class CriteriaQueryProcessor {
 					.scoreMode(ChildScoreMode.Avg));
 		}
 
+		if (criteria.isNegating() && criteria.isOr()) {
+			final Query query = queryBuilder.build();
+			queryBuilder = new Query.Builder();
+			queryBuilder.bool(mnqb -> mnqb.mustNot(query));
+		}
+
 		return queryBuilder.build();
 	}
 
