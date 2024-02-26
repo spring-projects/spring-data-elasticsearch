@@ -316,6 +316,9 @@ public class Criteria {
 		Criteria orCriteria = new OrCriteria(this.criteriaChain, criteria.getField());
 		orCriteria.queryCriteriaEntries.addAll(criteria.queryCriteriaEntries);
 		orCriteria.filterCriteriaEntries.addAll(criteria.filterCriteriaEntries);
+		orCriteria.subCriteria.addAll(criteria.subCriteria);
+		orCriteria.boost = criteria.boost;
+		orCriteria.negating = criteria.isNegating();
 		return orCriteria;
 	}
 
