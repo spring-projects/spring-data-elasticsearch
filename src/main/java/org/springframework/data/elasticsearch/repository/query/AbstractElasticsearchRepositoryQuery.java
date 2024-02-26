@@ -25,6 +25,7 @@ import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.util.StreamUtils;
@@ -47,12 +48,15 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	protected ElasticsearchQueryMethod queryMethod;
 	protected final ElasticsearchOperations elasticsearchOperations;
 	protected final ElasticsearchConverter elasticsearchConverter;
+	protected final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	public AbstractElasticsearchRepositoryQuery(ElasticsearchQueryMethod queryMethod,
-			ElasticsearchOperations elasticsearchOperations) {
+			ElasticsearchOperations elasticsearchOperations,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		this.queryMethod = queryMethod;
 		this.elasticsearchOperations = elasticsearchOperations;
 		this.elasticsearchConverter = elasticsearchOperations.getElasticsearchConverter();
+		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	@Override
@@ -128,7 +132,8 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 		var query = createQuery(parameterAccessor);
 		Assert.notNull(query, "unsupported query");
 
-		queryMethod.addMethodParameter(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter());
+		queryMethod.addMethodParameter(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter(),
+				evaluationContextProvider);
 
 		return query;
 	}

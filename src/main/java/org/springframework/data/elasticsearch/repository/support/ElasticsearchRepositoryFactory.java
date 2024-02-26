@@ -128,7 +128,7 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery(),
 						evaluationContextProvider);
 			}
-			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations);
+			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations, evaluationContextProvider);
 		}
 	}
 

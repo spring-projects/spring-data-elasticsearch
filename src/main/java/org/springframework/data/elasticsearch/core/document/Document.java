@@ -30,12 +30,12 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * A representation of a Elasticsearch document as extended {@link StringObjectMap Map}. All iterators preserve original
+ * A representation of an Elasticsearch document as extended {@link StringObjectMap Map}. All iterators preserve original
  * insertion order.
  * <p>
  * Document does not allow {@code null} keys. It allows {@literal null} values.
  * <p>
- * Implementing classes can bei either mutable or immutable. In case a subclass is immutable, its methods may throw
+ * Implementing classes can be either mutable or immutable. In case a subclass is immutable, its methods may throw
  * {@link UnsupportedOperationException} when calling modifying methods.
  *
  * @author Mark Paluch

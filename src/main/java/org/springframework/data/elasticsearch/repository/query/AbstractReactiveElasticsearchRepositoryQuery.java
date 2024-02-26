@@ -34,6 +34,7 @@ import org.springframework.data.elasticsearch.repository.query.ReactiveElasticse
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.util.Assert;
@@ -50,12 +51,15 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 
 	protected final ReactiveElasticsearchQueryMethod queryMethod;
 	private final ReactiveElasticsearchOperations elasticsearchOperations;
+	protected final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	AbstractReactiveElasticsearchRepositoryQuery(ReactiveElasticsearchQueryMethod queryMethod,
-			ReactiveElasticsearchOperations elasticsearchOperations) {
+			ReactiveElasticsearchOperations elasticsearchOperations,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		this.queryMethod = queryMethod;
 		this.elasticsearchOperations = elasticsearchOperations;
+		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	/*
@@ -96,7 +100,8 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		var query = createQuery(parameterAccessor);
 		Assert.notNull(query, "unsupported query");
 
-		queryMethod.addMethodParameter(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter());
+		queryMethod.addMethodParameter(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter(),
+				evaluationContextProvider);
 
 		String indexName = queryMethod.getEntityInformation().getIndexName();
 		IndexCoordinates index = IndexCoordinates.of(indexName);

@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.springframework.core.annotation.AnnotatedElementUtils;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.Query;
@@ -41,13 +42,13 @@ import org.springframework.data.elasticsearch.core.query.HighlightQuery;
 import org.springframework.data.elasticsearch.core.query.RuntimeField;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
-import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
+import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
-import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.TypeInformation;
@@ -146,9 +147,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		Assert.isTrue(hasAnnotatedHighlight(), "no Highlight annotation present on " + getName());
 		Assert.notNull(highlightAnnotation, "highlightAnnotation must not be null");
 
-		return new HighlightQuery(
-				highlightConverter.convert(highlightAnnotation),
-				getDomainClass());
+		return new HighlightQuery(highlightConverter.convert(highlightAnnotation), getDomainClass());
 	}
 
 	/**
@@ -288,42 +287,46 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 * @param parameterAccessor the accessor with the query method parameter details
 	 * @param converter {@link ElasticsearchConverter} needed to convert entity property names to the Elasticsearch field
 	 *          names and for parameter conversion when the includes or excludes are defined as parameters
+	 * @param evaluationContextProvider to provide an evaluation context for SpEL evaluation
 	 * @return source filter with includes and excludes for a query, {@literal null} when no {@link SourceFilters}
 	 *         annotation was set on the method.
 	 * @since 5.0
 	 */
 	@Nullable
-	SourceFilter getSourceFilter(ParameterAccessor parameterAccessor, ElasticsearchConverter converter) {
+	SourceFilter getSourceFilter(ElasticsearchParametersParameterAccessor parameterAccessor,
+			ElasticsearchConverter converter,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		if (sourceFilters == null || (sourceFilters.includes().length == 0 && sourceFilters.excludes().length == 0)) {
 			return null;
 		}
 
-		StringQueryUtil stringQueryUtil = new StringQueryUtil(converter.getConversionService());
+		ConversionService conversionService = converter.getConversionService();
 		FetchSourceFilterBuilder fetchSourceFilterBuilder = new FetchSourceFilterBuilder();
 
 		if (sourceFilters.includes().length > 0) {
-			fetchSourceFilterBuilder
-					.withIncludes(mapParameters(sourceFilters.includes(), parameterAccessor, stringQueryUtil));
+			fetchSourceFilterBuilder.withIncludes(mapParameters(sourceFilters.includes(), parameterAccessor,
+					conversionService, evaluationContextProvider));
 		}
 
 		if (sourceFilters.excludes().length > 0) {
-			fetchSourceFilterBuilder
-					.withExcludes(mapParameters(sourceFilters.excludes(), parameterAccessor, stringQueryUtil));
+			fetchSourceFilterBuilder.withExcludes(mapParameters(sourceFilters.excludes(), parameterAccessor,
+					conversionService, evaluationContextProvider));
 		}
 
 		return fetchSourceFilterBuilder.build();
 	}
 
-	private String[] mapParameters(String[] source, ParameterAccessor parameterAccessor,
-			StringQueryUtil stringQueryUtil) {
+	private String[] mapParameters(String[] source, ElasticsearchParametersParameterAccessor parameterAccessor,
+			ConversionService conversionService, QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		List<String> fieldNames = new ArrayList<>();
 
 		for (String s : source) {
 
 			if (!s.isBlank()) {
-				String fieldName = stringQueryUtil.replacePlaceholders(s, parameterAccessor);
+				String fieldName = new QueryStringProcessor(s, this, conversionService, evaluationContextProvider)
+						.createQuery(parameterAccessor);
 				// this could be "[\"foo\",\"bar\"]", must be split
 				if (fieldName.startsWith("[") && fieldName.endsWith("]")) {
 					// noinspection RegExpRedundantEscape
@@ -367,14 +370,16 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	void addMethodParameter(BaseQuery query, ElasticsearchParametersParameterAccessor parameterAccessor,
-			ElasticsearchConverter elasticsearchConverter) {
+			ElasticsearchConverter elasticsearchConverter,
+			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
 		if (hasAnnotatedHighlight()) {
-			query.setHighlightQuery(
-					getAnnotatedHighlightQuery(new HighlightConverter(parameterAccessor, elasticsearchConverter)));
+			var highlightQuery = getAnnotatedHighlightQuery(new HighlightConverter(parameterAccessor,
+					elasticsearchConverter.getConversionService(), evaluationContextProvider, this));
+			query.setHighlightQuery(highlightQuery);
 		}
 
-		var sourceFilter = getSourceFilter(parameterAccessor, elasticsearchConverter);
+		var sourceFilter = getSourceFilter(parameterAccessor, elasticsearchConverter, evaluationContextProvider);
 		if (sourceFilter != null) {
 			query.addSourceFilter(sourceFilter);
 		}

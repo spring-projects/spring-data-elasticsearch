@@ -18,13 +18,15 @@ package org.springframework.data.elasticsearch.repository.query;
 import java.util.Arrays;
 import java.util.List;
 
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
-import org.springframework.data.elasticsearch.repository.support.StringQueryUtil;
+import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
+import org.springframework.data.repository.query.QueryMethod;
+import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.util.Assert;
 
 /**
@@ -35,12 +37,24 @@ import org.springframework.util.Assert;
 public class HighlightConverter {
 
 	private final ElasticsearchParametersParameterAccessor parameterAccessor;
-	private final ElasticsearchConverter elasticsearchConverter;
+	private final ConversionService conversionService;
+	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final QueryMethod queryMethod;
 
 	HighlightConverter(ElasticsearchParametersParameterAccessor parameterAccessor,
-			ElasticsearchConverter elasticsearchConverter) {
+					   ConversionService conversionService,
+					   QueryMethodEvaluationContextProvider evaluationContextProvider,
+					   QueryMethod queryMethod) {
+
+		Assert.notNull(parameterAccessor, "parameterAccessor must not be null");
+		Assert.notNull(conversionService, "conversionService must not be null");
+		Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
+		Assert.notNull(queryMethod, "queryMethod must not be null");
+
 		this.parameterAccessor = parameterAccessor;
-		this.elasticsearchConverter = elasticsearchConverter;
+		this.conversionService = conversionService;
+		this.evaluationContextProvider = evaluationContextProvider;
+		this.queryMethod = queryMethod;
 	}
 
 	/**
@@ -58,10 +72,10 @@ public class HighlightConverter {
 		// replace placeholders in highlight query with actual parameters
 		Query highlightQuery = null;
 		if (!parameters.highlightQuery().value().isEmpty()) {
-			String rawString = parameters.highlightQuery().value();
-			String queryString = new StringQueryUtil(elasticsearchConverter.getConversionService())
-					.replacePlaceholders(rawString, parameterAccessor);
-			highlightQuery = new StringQuery(queryString);
+			String rawQuery = parameters.highlightQuery().value();
+			String query = new QueryStringProcessor(rawQuery, queryMethod, conversionService, evaluationContextProvider)
+					.createQuery(parameterAccessor);
+			highlightQuery = new StringQuery(query);
 		}
 
 		HighlightParameters highlightParameters = HighlightParameters.builder() //

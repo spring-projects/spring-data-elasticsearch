@@ -39,7 +39,6 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.query.RepositoryQuery;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -50,11 +49,10 @@ import org.springframework.util.Assert;
  * @author Christoph Strobl
  * @author Ivan Greene
  * @author Ezequiel Antúnez Camacho
+ * @author Haibo Liu
  * @since 3.2
  */
 public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFactorySupport {
-
-	private static final SpelExpressionParser EXPRESSION_PARSER = new SpelExpressionParser();
 
 	private final ReactiveElasticsearchOperations operations;
 	private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
@@ -163,13 +161,12 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
 
-				return new ReactiveElasticsearchStringQuery(namedQuery, queryMethod, operations, EXPRESSION_PARSER,
+				return new ReactiveElasticsearchStringQuery(namedQuery, queryMethod, operations,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ReactiveElasticsearchStringQuery(queryMethod, operations, EXPRESSION_PARSER,
-						evaluationContextProvider);
+				return new ReactiveElasticsearchStringQuery(queryMethod, operations, evaluationContextProvider);
 			} else {
-				return new ReactivePartTreeElasticsearchQuery(queryMethod, operations);
+				return new ReactivePartTreeElasticsearchQuery(queryMethod, operations, evaluationContextProvider);
 			}
 		}
 	}
