@@ -57,6 +57,10 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 			ReactiveElasticsearchOperations elasticsearchOperations,
 			QueryMethodEvaluationContextProvider evaluationContextProvider) {
 
+		Assert.notNull(queryMethod, "queryMethod must not be null");
+		Assert.notNull(elasticsearchOperations, "elasticsearchOperations must not be null");
+		Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
+
 		this.queryMethod = queryMethod;
 		this.elasticsearchOperations = elasticsearchOperations;
 		this.evaluationContextProvider = evaluationContextProvider;
