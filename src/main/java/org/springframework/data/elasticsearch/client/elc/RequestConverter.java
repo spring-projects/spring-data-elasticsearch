@@ -546,13 +546,12 @@ class RequestConverter {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			String id = StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject);
-			builder //
-					.id(id) //
+			builder
+					.id(StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject))
 					.document(elasticsearchConverter.mapObject(queryObject));
 		} else if (query.getSource() != null) {
-			builder //
-					.id(query.getId()) //
+			builder
+					.id(query.getId())
 					.document(new DefaultStringObjectMap<>().fromJson(query.getSource()));
 		} else {
 			throw new InvalidDataAccessApiUsageException(
@@ -598,12 +597,13 @@ class RequestConverter {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			String id = StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject);
-			builder //
-					.id(id) //
+			builder
+					.id(StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject))
 					.document(elasticsearchConverter.mapObject(queryObject));
 		} else if (query.getSource() != null) {
-			builder.document(new DefaultStringObjectMap<>().fromJson(query.getSource()));
+			builder
+					.id(query.getId())
+					.document(new DefaultStringObjectMap<>().fromJson(query.getSource()));
 		} else {
 			throw new InvalidDataAccessApiUsageException(
 					"object or source is null, failed to index the document [id: " + query.getId() + ']');
@@ -639,12 +639,13 @@ class RequestConverter {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-			String id = StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject);
-			builder //
-					.id(id) //
+            builder
+					.id(StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject))
 					.document(elasticsearchConverter.mapObject(queryObject));
 		} else if (query.getSource() != null) {
-			builder.document(new DefaultStringObjectMap<>().fromJson(query.getSource()));
+			builder
+					.id(query.getId())
+					.document(new DefaultStringObjectMap<>().fromJson(query.getSource()));
 		} else {
 			throw new InvalidDataAccessApiUsageException(
 					"object or source is null, failed to index the document [id: " + query.getId() + ']');
