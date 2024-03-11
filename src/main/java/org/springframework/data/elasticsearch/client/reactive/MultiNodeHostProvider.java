@@ -180,7 +180,7 @@ class MultiNodeHostProvider implements HostProvider<MultiNodeHostProvider> {
 					Mono<ClientResponse> clientResponseMono = createWebClient(host) //
 							.head().uri("/") //
 							.exchangeToMono(Mono::just) //
-							.timeout(Duration.ofSeconds(1)) //
+							.timeout(Duration.ofSeconds(10)) //
 							.doOnError(throwable -> {
 								if (LOGGER.isTraceEnabled()) {
 									LOGGER.trace("error checking host " + host + ", " + throwable.getMessage());
