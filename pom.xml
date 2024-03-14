@@ -27,7 +27,7 @@
 
 		<log4j>2.18.0</log4j>
 		<!-- netty dependency can be removed once the WebClient code is gone -->
-		<netty>4.1.90.Final</netty>
+		<netty>4.1.107.Final</netty>
 
 		<blockhound-junit>1.0.8.RELEASE</blockhound-junit>
 		<hoverfly>0.14.4</hoverfly>
