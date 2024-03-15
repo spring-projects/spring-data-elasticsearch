@@ -132,7 +132,6 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	public Query createQuery(Object[] parameters) {
 
 		ElasticsearchParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
-		ResultProcessor resultProcessor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
 
 		var query = createQuery(parameterAccessor);
 		Assert.notNull(query, "unsupported query");
