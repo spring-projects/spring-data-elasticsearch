@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
@@ -409,6 +410,11 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	@Override
 	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType) {
+		return delete(query, entityType, getIndexCoordinatesFor(entityType));
+	}
+
+	@Override
+	public Mono<ByQueryResponse> delete(DeleteQuery query, Class<?> entityType) {
 		return delete(query, entityType, getIndexCoordinatesFor(entityType));
 	}
 	// endregion

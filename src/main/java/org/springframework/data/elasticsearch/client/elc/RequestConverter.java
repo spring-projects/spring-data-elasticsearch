@@ -968,6 +968,60 @@ class RequestConverter {
 		});
 	}
 
+	public DeleteByQueryRequest documentDeleteByQueryRequest(DeleteQuery query, @Nullable String routing, Class<?> clazz,
+															 IndexCoordinates index, @Nullable RefreshPolicy refreshPolicy) {
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		// Old documentDeleteByQueryRequest needs to be refactored.
+		return DeleteByQueryRequest.of(dqb -> {
+			dqb.index(Arrays.asList(index.getIndexNames())) //
+					.query(getQuery(query, clazz))//
+					.refresh(deleteByQueryRefresh(refreshPolicy));
+
+			if (query.isLimiting()) {
+				// noinspection ConstantConditions
+				dqb.maxDocs(Long.valueOf(query.getMaxResults()));
+			}
+
+			dqb.scroll(time(query.getScrollTime()))
+					.scrollSize(query.getScrollSize());
+
+			if (query.getRoute() != null) {
+				dqb.routing(query.getRoute());
+			} else if (StringUtils.hasText(routing)) {
+				dqb.routing(routing);
+			}
+
+			if (query.getQ() != null) {
+				dqb.q(query.getQ())
+						.analyzer(query.getAnalyzer())
+						.analyzeWildcard(query.getAnalyzeWildcard())
+						.defaultOperator(query.getDefaultOperator())
+						.df(query.getDf())
+						.lenient(query.getLenient());
+			}
+
+			if (query.getExpandWildcards() != null && !query.getExpandWildcards().isEmpty()) {
+				dqb.expandWildcards(expandWildcards(query.getExpandWildcards()));
+			}
+			dqb.allowNoIndices(query.getAllowNoIndices())
+					.conflicts(query.getConflicts())
+					.ignoreUnavailable(query.getIgnoreUnavailable())
+					.preference(query.getPreference())
+					.requestCache(query.getRequestCache())
+					.searchType(searchType(query.getSearchType()))
+					.searchTimeout(time(query.getSearchTimeout()))
+					.slices(query.getSlices())
+					.stats(query.getStats())
+					.terminateAfter(query.getTerminateAfter())
+					.timeout(time(query.getTimeout()))
+					.version(query.getVersion());
+
+			return dqb;
+		});
+	}
+
 	public UpdateRequest<Document, ?> documentUpdateRequest(UpdateQuery query, IndexCoordinates index,
 			@Nullable RefreshPolicy refreshPolicy, @Nullable String routing) {
 

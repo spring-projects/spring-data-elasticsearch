@@ -25,6 +25,7 @@ import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -173,6 +174,15 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
     @Override
     public Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index) {
 
+        Assert.notNull(query, "query must not be null");
+
+        DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
+                entityType, index, getRefreshPolicy());
+        return Mono.from(execute(client -> client.deleteByQuery(request))).map(responseConverter::byQueryResponse);
+    }
+
+    @Override
+    public Mono<ByQueryResponse> delete(DeleteQuery query, Class<?> entityType, IndexCoordinates index) {
         Assert.notNull(query, "query must not be null");
 
         DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
