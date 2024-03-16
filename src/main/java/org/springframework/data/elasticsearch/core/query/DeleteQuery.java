@@ -140,11 +140,10 @@ public class DeleteQuery extends BaseQuery {
     /**
      * Query that specifies the documents to delete.
      */
-    @Nullable
     private final Query query;
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(Query query) {
+        return new Builder(query);
     }
 
     public DeleteQuery(Builder builder) {
@@ -252,7 +251,7 @@ public class DeleteQuery extends BaseQuery {
         return query;
     }
 
-    public static final class Builder extends BaseQueryBuilder<DeleteQuery, DeleteQuery.Builder> {
+    public static final class Builder extends BaseQueryBuilder<DeleteQuery, Builder> {
         // For Lucene query
         @Nullable
         private String luceneQuery;
@@ -288,10 +287,10 @@ public class DeleteQuery extends BaseQuery {
         private Boolean version;
 
         // Body
-        @Nullable
-        private Query query;
+        private final Query query;
 
-        private Builder() {
+        private Builder(Query query) {
+            this.query = query;
         }
 
         /**
@@ -439,15 +438,6 @@ public class DeleteQuery extends BaseQuery {
          */
         public Builder withVersion(@Nullable Boolean version) {
             this.version = version;
-
-            return this;
-        }
-
-        /**
-         * Query that specifies the documents to delete.
-         */
-        public Builder withQuery(Query query) {
-            this.query = query;
 
             return this;
         }

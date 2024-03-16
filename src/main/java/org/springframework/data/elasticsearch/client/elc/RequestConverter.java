@@ -1005,6 +1005,9 @@ class RequestConverter {
 			if (query.getExpandWildcards() != null && !query.getExpandWildcards().isEmpty()) {
 				dqb.expandWildcards(expandWildcards(query.getExpandWildcards()));
 			}
+			if (query.getStats() != null && !query.getStats().isEmpty()) {
+				dqb.stats(query.getStats());
+			}
 			dqb.allowNoIndices(query.getAllowNoIndices())
 					.conflicts(query.getConflicts())
 					.ignoreUnavailable(query.getIgnoreUnavailable())
@@ -1013,7 +1016,6 @@ class RequestConverter {
 					.searchType(searchType(query.getSearchType()))
 					.searchTimeout(time(query.getSearchTimeout()))
 					.slices(query.getSlices())
-					.stats(query.getStats())
 					.terminateAfter(query.getTerminateAfter())
 					.timeout(time(query.getTimeout()))
 					.version(query.getVersion());
