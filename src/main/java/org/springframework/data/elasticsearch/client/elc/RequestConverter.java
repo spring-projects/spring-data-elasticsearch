@@ -976,7 +976,7 @@ class RequestConverter {
 		// Old documentDeleteByQueryRequest needs to be refactored.
 		return DeleteByQueryRequest.of(dqb -> {
 			dqb.index(Arrays.asList(index.getIndexNames())) //
-					.query(getQuery(query, clazz))//
+					.query(getQuery(query.getQuery(), clazz))//
 					.refresh(deleteByQueryRefresh(refreshPolicy));
 
 			if (query.isLimiting()) {
