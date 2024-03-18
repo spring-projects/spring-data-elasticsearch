@@ -15,12 +15,14 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import co.elastic.clients.elasticsearch._types.Conflicts;
-import co.elastic.clients.elasticsearch._types.Slices;
-import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.query.Query.SearchType;
+import org.springframework.data.elasticsearch.core.query.types.ConflictsType;
+import org.springframework.data.elasticsearch.core.query.types.OperatorType;
 import org.springframework.lang.Nullable;
 
 import java.time.Duration;
+import java.util.EnumSet;
 import java.util.List;
 
 /**
@@ -29,7 +31,7 @@ import java.util.List;
  * @author Aouichaoui Youssef
  * @see <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-delete-by-query.html">docs</a>
  */
-public class DeleteQuery extends BaseQuery {
+public class DeleteQuery {
     // For Lucene query
     /**
      * Query in the Lucene query string syntax.
@@ -56,7 +58,7 @@ public class DeleteQuery extends BaseQuery {
      * This parameter can only be used when the lucene query {@code q} parameter is specified.
      */
     @Nullable
-    private final Operator defaultOperator;
+    private final OperatorType defaultOperator;
 
     /**
      * Field to be used as the default when no field prefix is specified in the query string.
@@ -75,12 +77,28 @@ public class DeleteQuery extends BaseQuery {
     private final Boolean lenient;
 
     // For ES query
+
+    /**
+     * An error will occur if the condition is {@code false} and any of the following are true: a wildcard expression,
+     * an index alias, or the {@literal _all value} only targets missing or closed indices.
+     * By default, this is set to {@code true}.
+     */
+    @Nullable
+    private final Boolean allowNoIndices;
+
     /**
      * Define the types of conflicts that occur when a query encounters version conflicts: abort or proceed.
      * Defaults to abort.
      */
     @Nullable
-    private final Conflicts conflicts;
+    private final ConflictsType conflicts;
+
+    /**
+     * Type of index that wildcard patterns can match.
+     * Defaults to {@literal open}.
+     */
+    @Nullable
+    private final EnumSet<IndicesOptions.WildcardStates> expandWildcards;
 
     /**
      * An error occurs if it is directed at an index that is missing or closed when it is {@code false}.
@@ -90,6 +108,33 @@ public class DeleteQuery extends BaseQuery {
     private final Boolean ignoreUnavailable;
 
     /**
+     * Maximum number of documents to process.
+     * Defaults to all documents.
+     */
+    @Nullable
+    private final Long maxDocs;
+
+    /**
+     * Specifies the node or shard the operation should be performed on.
+     */
+    @Nullable
+    private final String preference;
+
+    /**
+     * Use the request cache when it is {@code true}.
+     * By default, use the index-level setting.
+     */
+    @Nullable
+    private final Boolean requestCache;
+
+    /**
+     * Refreshes all shards involved in the deleting by query after the request completes when it is {@code true}.
+     * By default, this is set to {@code false}.
+     */
+    @Nullable
+    private final Boolean refresh;
+
+    /**
      * Limited this request to a certain number of sub-requests per second.
      * By default, this is set to {@code -1} (no throttle).
      */
@@ -97,11 +142,29 @@ public class DeleteQuery extends BaseQuery {
     private final Float requestsPerSecond;
 
     /**
+     * Custom value used to route operations to a specific shard.
+     */
+    @Nullable
+    private final String routing;
+
+    /**
+     * Period to retain the search context for scrolling.
+     */
+    @Nullable
+    private final Duration scroll;
+
+    /**
      * Size of the scroll request that powers the operation.
      * By default, this is set to {@code 1000}.
      */
     @Nullable
     private final Long scrollSize;
+
+    /**
+     * The type of the search operation.
+     */
+    @Nullable
+    private final SearchType searchType;
 
     /**
      * Explicit timeout for each search request.
@@ -115,7 +178,13 @@ public class DeleteQuery extends BaseQuery {
      * By default, this is set to {@code 1} meaning the task isn’t sliced into subtasks.
      */
     @Nullable
-    private Slices slices;
+    private final Integer slices;
+
+    /**
+     * Sort search results in a specific order.
+     */
+    @Nullable
+    private final Sort sort;
 
     /**
      * Specific {@code tag} of the request for logging and statistical purposes.
@@ -129,6 +198,13 @@ public class DeleteQuery extends BaseQuery {
      */
     @Nullable
     private final Long terminateAfter;
+
+    /**
+     * Period each deletion request waits for active shards.
+     * By default, this is set to {@code 1m} (one minute).
+     */
+    @Nullable
+    private final Duration timeout;
 
     /**
      * Returns the document version as part of a hit.
@@ -147,8 +223,6 @@ public class DeleteQuery extends BaseQuery {
     }
 
     public DeleteQuery(Builder builder) {
-        super(builder);
-
         this.q = builder.luceneQuery;
         this.analyzeWildcard = builder.analyzeWildcard;
         this.analyzer = builder.analyzer;
@@ -156,16 +230,25 @@ public class DeleteQuery extends BaseQuery {
         this.df = builder.defaultField;
         this.lenient = builder.lenient;
 
+        this.allowNoIndices = builder.allowNoIndices;
         this.conflicts = builder.conflicts;
+        this.expandWildcards = builder.expandWildcards;
         this.ignoreUnavailable = builder.ignoreUnavailable;
+        this.maxDocs = builder.maxDocs;
+        this.preference = builder.preference;
+        this.requestCache = builder.requestCache;
+        this.refresh = builder.refresh;
         this.requestsPerSecond = builder.requestsPerSecond;
+        this.routing = builder.routing;
+        this.scroll = builder.scrollTime;
         this.scrollSize = builder.scrollSize;
+        this.searchType = builder.searchType;
         this.searchTimeout = builder.searchTimeout;
-        if (builder.slices != null) {
-            this.slices = Slices.of(sb -> sb.value(builder.slices));
-        }
+        this.slices = builder.slices;
+        this.sort = builder.sort;
         this.stats = builder.stats;
         this.terminateAfter = builder.terminateAfter;
+        this.timeout = builder.timeout;
         this.version = builder.version;
 
         this.query = builder.query;
@@ -187,7 +270,7 @@ public class DeleteQuery extends BaseQuery {
     }
 
     @Nullable
-    public Operator getDefaultOperator() {
+    public OperatorType getDefaultOperator() {
         return defaultOperator;
     }
 
@@ -202,8 +285,18 @@ public class DeleteQuery extends BaseQuery {
     }
 
     @Nullable
-    public Conflicts getConflicts() {
+    public Boolean getAllowNoIndices() {
+        return allowNoIndices;
+    }
+
+    @Nullable
+    public ConflictsType getConflicts() {
         return conflicts;
+    }
+
+    @Nullable
+    public EnumSet<IndicesOptions.WildcardStates> getExpandWildcards() {
+        return expandWildcards;
     }
 
     @Nullable
@@ -212,8 +305,38 @@ public class DeleteQuery extends BaseQuery {
     }
 
     @Nullable
+    public Long getMaxDocs() {
+        return maxDocs;
+    }
+
+    @Nullable
+    public String getPreference() {
+        return preference;
+    }
+
+    @Nullable
+    public Boolean getRequestCache() {
+        return requestCache;
+    }
+
+    @Nullable
+    public Boolean getRefresh() {
+        return refresh;
+    }
+
+    @Nullable
     public Float getRequestsPerSecond() {
         return requestsPerSecond;
+    }
+
+    @Nullable
+    public String getRouting() {
+        return routing;
+    }
+
+    @Nullable
+    public Duration getScroll() {
+        return scroll;
     }
 
     @Nullable
@@ -222,13 +345,23 @@ public class DeleteQuery extends BaseQuery {
     }
 
     @Nullable
+    public SearchType getSearchType() {
+        return searchType;
+    }
+
+    @Nullable
     public Duration getSearchTimeout() {
         return searchTimeout;
     }
 
     @Nullable
-    public Slices getSlices() {
+    public Integer getSlices() {
         return slices;
+    }
+
+    @Nullable
+    public Sort getSort() {
+        return sort;
     }
 
     @Nullable
@@ -242,6 +375,11 @@ public class DeleteQuery extends BaseQuery {
     }
 
     @Nullable
+    public Duration getTimeout() {
+        return timeout;
+    }
+
+    @Nullable
     public Boolean getVersion() {
         return version;
     }
@@ -251,7 +389,7 @@ public class DeleteQuery extends BaseQuery {
         return query;
     }
 
-    public static final class Builder extends BaseQueryBuilder<DeleteQuery, Builder> {
+    public static final class Builder {
         // For Lucene query
         @Nullable
         private String luceneQuery;
@@ -260,7 +398,7 @@ public class DeleteQuery extends BaseQuery {
         @Nullable
         private String analyzer;
         @Nullable
-        private Operator defaultOperator;
+        private OperatorType defaultOperator;
         @Nullable
         private String defaultField;
         @Nullable
@@ -268,21 +406,43 @@ public class DeleteQuery extends BaseQuery {
 
         // For ES query
         @Nullable
-        private Conflicts conflicts;
+        private Boolean allowNoIndices;
+        @Nullable
+        private ConflictsType conflicts;
+        @Nullable
+        private EnumSet<IndicesOptions.WildcardStates> expandWildcards;
         @Nullable
         private Boolean ignoreUnavailable;
         @Nullable
+        private Long maxDocs;
+        @Nullable
+        private String preference;
+        @Nullable
+        private Boolean requestCache;
+        @Nullable
+        private Boolean refresh;
+        @Nullable
         private Float requestsPerSecond;
         @Nullable
+        private String routing;
+        @Nullable
+        private Duration scrollTime;
+        @Nullable
         private Long scrollSize;
+        @Nullable
+        private SearchType searchType;
         @Nullable
         private Duration searchTimeout;
         @Nullable
         private Integer slices;
         @Nullable
+        private Sort sort;
+        @Nullable
         private List<String> stats;
         @Nullable
         private Long terminateAfter;
+        @Nullable
+        private Duration timeout;
         @Nullable
         private Boolean version;
 
@@ -326,7 +486,7 @@ public class DeleteQuery extends BaseQuery {
          * The default operator for a query string query: {@literal AND} or {@literal OR}. Defaults to {@literal OR}.
          * This parameter can only be used when the lucene query {@code q} parameter is specified.
          */
-        public Builder withDefaultOperator(@Nullable Operator defaultOperator) {
+        public Builder withDefaultOperator(@Nullable OperatorType defaultOperator) {
             this.defaultOperator = defaultOperator;
 
             return this;
@@ -355,11 +515,32 @@ public class DeleteQuery extends BaseQuery {
         }
 
         /**
+         * An error will occur if the condition is {@code false} and any of the following are true: a wildcard expression,
+         * an index alias, or the {@literal _all value} only targets missing or closed indices.
+         * By default, this is set to {@code true}.
+         */
+        public Builder withAllowNoIndices(@Nullable Boolean allowNoIndices) {
+            this.allowNoIndices = allowNoIndices;
+
+            return this;
+        }
+
+        /**
          * Define the types of conflicts that occur when a query encounters version conflicts: abort or proceed.
          * Defaults to abort.
          */
-        public Builder withConflicts(@Nullable Conflicts conflicts) {
+        public Builder withConflicts(@Nullable ConflictsType conflicts) {
             this.conflicts = conflicts;
+
+            return this;
+        }
+
+        /**
+         * Type of index that wildcard patterns can match.
+         * Defaults to {@literal open}.
+         */
+        public Builder setExpandWildcards(@Nullable EnumSet<IndicesOptions.WildcardStates> expandWildcards) {
+            this.expandWildcards = expandWildcards;
 
             return this;
         }
@@ -375,6 +556,45 @@ public class DeleteQuery extends BaseQuery {
         }
 
         /**
+         * Maximum number of documents to process.
+         * Defaults to all documents.
+         */
+        public Builder withMaxDocs(@Nullable Long maxDocs) {
+            this.maxDocs = maxDocs;
+
+            return this;
+        }
+
+        /**
+         * Specifies the node or shard the operation should be performed on.
+         */
+        public Builder withPreference(@Nullable String preference) {
+            this.preference = preference;
+
+            return this;
+        }
+
+        /**
+         * Use the request cache when it is {@code true}.
+         * By default, use the index-level setting.
+         */
+        public Builder withRequestCache(@Nullable Boolean requestCache) {
+            this.requestCache = requestCache;
+
+            return this;
+        }
+
+        /**
+         * Refreshes all shards involved in the deleting by query after the request completes when it is {@code true}.
+         * By default, this is set to {@code false}.
+         */
+        public Builder withRefresh(@Nullable Boolean refresh) {
+            this.refresh = refresh;
+
+            return this;
+        }
+
+        /**
          * Limited this request to a certain number of sub-requests per second.
          * By default, this is set to {@code -1} (no throttle).
          */
@@ -385,11 +605,38 @@ public class DeleteQuery extends BaseQuery {
         }
 
         /**
+         * Custom value used to route operations to a specific shard.
+         */
+        public Builder withRouting(@Nullable String routing) {
+            this.routing = routing;
+
+            return this;
+        }
+
+        /**
+         * Period to retain the search context for scrolling.
+         */
+        public Builder withScrollTime(@Nullable Duration scrollTime) {
+            this.scrollTime = scrollTime;
+
+            return this;
+        }
+
+        /**
          * Size of the scroll request that powers the operation.
          * By default, this is set to {@code 1000}.
          */
         public Builder withScrollSize(@Nullable Long scrollSize) {
             this.scrollSize = scrollSize;
+
+            return this;
+        }
+
+        /**
+         * The type of the search operation.
+         */
+        public Builder withSearchType(@Nullable SearchType searchType) {
+            this.searchType = searchType;
 
             return this;
         }
@@ -415,6 +662,15 @@ public class DeleteQuery extends BaseQuery {
         }
 
         /**
+         * Sort search results in a specific order.
+         */
+        public Builder withSort(@Nullable Sort sort) {
+            this.sort = sort;
+
+            return this;
+        }
+
+        /**
          * Specific {@code tag} of the request for logging and statistical purposes.
          */
         public Builder withStats(@Nullable List<String> stats) {
@@ -434,6 +690,16 @@ public class DeleteQuery extends BaseQuery {
         }
 
         /**
+         * Period each deletion request waits for active shards.
+         * By default, this is set to {@code 1m} (one minute).
+         */
+        public Builder withTimeout(@Nullable Duration timeout) {
+            this.timeout = timeout;
+
+            return this;
+        }
+
+        /**
          * Returns the document version as part of a hit.
          */
         public Builder withVersion(@Nullable Boolean version) {
@@ -442,7 +708,6 @@ public class DeleteQuery extends BaseQuery {
             return this;
         }
 
-        @Override
         public DeleteQuery build() {
             if (luceneQuery == null) {
                 if (defaultField != null) {

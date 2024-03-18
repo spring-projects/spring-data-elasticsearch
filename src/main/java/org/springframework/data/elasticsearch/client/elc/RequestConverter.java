@@ -977,18 +977,14 @@ class RequestConverter {
 		return DeleteByQueryRequest.of(dqb -> {
 			dqb.index(Arrays.asList(index.getIndexNames())) //
 					.query(getQuery(query.getQuery(), clazz))//
-					.refresh(deleteByQueryRefresh(refreshPolicy));
-
-			if (query.isLimiting()) {
-				// noinspection ConstantConditions
-				dqb.maxDocs(Long.valueOf(query.getMaxResults()));
-			}
-
-			dqb.scroll(time(query.getScrollTime()))
+					.refresh(deleteByQueryRefresh(refreshPolicy))
+					.requestsPerSecond(query.getRequestsPerSecond())
+                    .maxDocs(query.getMaxDocs())
+					.scroll(time(query.getScroll()))
 					.scrollSize(query.getScrollSize());
 
-			if (query.getRoute() != null) {
-				dqb.routing(query.getRoute());
+			if (query.getRouting() != null) {
+				dqb.routing(query.getRouting());
 			} else if (StringUtils.hasText(routing)) {
 				dqb.routing(routing);
 			}
@@ -997,7 +993,7 @@ class RequestConverter {
 				dqb.q(query.getQ())
 						.analyzer(query.getAnalyzer())
 						.analyzeWildcard(query.getAnalyzeWildcard())
-						.defaultOperator(query.getDefaultOperator())
+						.defaultOperator(operator(query.getDefaultOperator()))
 						.df(query.getDf())
 						.lenient(query.getLenient());
 			}
@@ -1008,14 +1004,28 @@ class RequestConverter {
 			if (query.getStats() != null && !query.getStats().isEmpty()) {
 				dqb.stats(query.getStats());
 			}
+			if (query.getSlices() != null) {
+				dqb.slices(sb -> sb.value(query.getSlices()));
+			}
+			if (query.getSort() != null) {
+				ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(clazz);
+				List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
+
+				if (!sortOptions.isEmpty()) {
+					dqb.sort(
+							sortOptions.stream()
+									.map(sortOption -> sortOption.field().field() + ":" + sortOption.field().order().jsonValue())
+									.collect(Collectors.toList())
+					);
+				}
+			}
 			dqb.allowNoIndices(query.getAllowNoIndices())
-					.conflicts(query.getConflicts())
+					.conflicts(conflicts(query.getConflicts()))
 					.ignoreUnavailable(query.getIgnoreUnavailable())
 					.preference(query.getPreference())
 					.requestCache(query.getRequestCache())
 					.searchType(searchType(query.getSearchType()))
 					.searchTimeout(time(query.getSearchTimeout()))
-					.slices(query.getSlices())
 					.terminateAfter(query.getTerminateAfter())
 					.timeout(time(query.getTimeout()))
 					.version(query.getVersion());
