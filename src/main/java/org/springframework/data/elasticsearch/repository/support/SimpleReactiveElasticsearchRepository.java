@@ -66,7 +66,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 		}
 	}
 
-	private void createIndexAndMappingIfNeeded() {
+	public void createIndexAndMappingIfNeeded() {
 
 		var blockingIndexOperations = blocking(indexOperations);
 
