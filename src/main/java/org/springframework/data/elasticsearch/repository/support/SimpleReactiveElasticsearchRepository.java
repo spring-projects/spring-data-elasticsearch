@@ -61,7 +61,9 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 		this.operations = operations;
 		this.indexOperations = operations.indexOps(entityInformation.getJavaType());
 
-		createIndexAndMappingIfNeeded();
+		if (!"true".equals(System.getenv("SPRING_DATA_ELASTICSEARCH_SKIP_REPOSITORY_INIT"))) {
+			createIndexAndMappingIfNeeded();
+		}
 	}
 
 	private void createIndexAndMappingIfNeeded() {
