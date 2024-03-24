@@ -82,10 +82,12 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		this.entityClass = this.entityInformation.getJavaType();
 		this.indexOperations = operations.indexOps(this.entityClass);
 
-		if (shouldCreateIndexAndMapping() && !indexOperations.exists()) {
-			indexOperations.createWithMapping();
-		} else if (shouldAlwaysWriteMapping()) {
-			indexOperations.putMapping();
+		if (!"true".equals(System.getenv("SPRING_DATA_ELASTICSEARCH_SKIP_REPOSITORY_INIT"))) {
+			if (shouldCreateIndexAndMapping() && !indexOperations.exists()) {
+				indexOperations.createWithMapping();
+			} else if (shouldAlwaysWriteMapping()) {
+				indexOperations.putMapping();
+			}
 		}
 	}
 
