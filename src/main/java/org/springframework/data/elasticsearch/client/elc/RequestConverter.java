@@ -973,7 +973,6 @@ class RequestConverter {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		// Old documentDeleteByQueryRequest needs to be refactored.
 		return DeleteByQueryRequest.of(dqb -> {
 			dqb.index(Arrays.asList(index.getIndexNames())) //
 					.query(getQuery(query.getQuery(), clazz))//
@@ -1014,7 +1013,15 @@ class RequestConverter {
 				if (!sortOptions.isEmpty()) {
 					dqb.sort(
 							sortOptions.stream()
-									.map(sortOption -> sortOption.field().field() + ":" + sortOption.field().order().jsonValue())
+									.map(sortOption -> {
+										String order = "asc";
+										var sortField = sortOption.field();
+										if (sortField.order() != null) {
+											order = sortField.order().jsonValue();
+										}
+
+										return sortField.field() + ":" + order;
+									})
 									.collect(Collectors.toList())
 					);
 				}

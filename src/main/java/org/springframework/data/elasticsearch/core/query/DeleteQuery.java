@@ -20,6 +20,7 @@ import org.springframework.data.elasticsearch.core.query.Query.SearchType;
 import org.springframework.data.elasticsearch.core.query.types.ConflictsType;
 import org.springframework.data.elasticsearch.core.query.types.OperatorType;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 import java.time.Duration;
 import java.util.EnumSet;
@@ -222,7 +223,7 @@ public class DeleteQuery {
         return new Builder(query);
     }
 
-    public DeleteQuery(Builder builder) {
+    private DeleteQuery(Builder builder) {
         this.q = builder.luceneQuery;
         this.analyzeWildcard = builder.analyzeWildcard;
         this.analyzer = builder.analyzer;
@@ -450,6 +451,8 @@ public class DeleteQuery {
         private final Query query;
 
         private Builder(Query query) {
+            Assert.notNull(query, "query must not be null");
+
             this.query = query;
         }
 
