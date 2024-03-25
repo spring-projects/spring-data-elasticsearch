@@ -29,7 +29,6 @@ import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchCo
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -48,7 +47,6 @@ public class ReactiveElasticsearchConfigurationELCTests {
 			considerNestedRepositories = true)
 	static class Config extends ReactiveElasticsearchConfiguration {
 
-		@NonNull
 		@Override
 		public ClientConfiguration clientConfiguration() {
 			return ClientConfiguration.builder() //

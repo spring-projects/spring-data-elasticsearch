@@ -55,7 +55,6 @@ import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -575,7 +574,6 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		 * @param document the document to convert
 		 * @return a Mono of the entity
 		 */
-		@NonNull
 		Mono<T> toEntity(@Nullable Document document);
 	}
 
@@ -593,7 +591,6 @@ abstract public class AbstractReactiveElasticsearchTemplate
 			this.index = index;
 		}
 
-		@NonNull
 		public Mono<T> toEntity(@Nullable Document document) {
 			if (document == null) {
 				return Mono.empty();

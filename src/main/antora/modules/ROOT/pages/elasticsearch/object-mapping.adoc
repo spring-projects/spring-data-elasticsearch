@@ -192,8 +192,7 @@ public String getProperty() {
 
 This annotation can be set on a String property of an entity.
 This property will not be written to the mapping, it will not be stored in Elasticsearch and its value will not be read from an Elasticsearch document.
-After an entity is persisted, for example with a call to `ElasticsearchOperations.save(T entity)`, the entity
-returned from that call will contain the name of the index that an entity was saved to in that property.
+After an entity is persisted, for example with a call to `ElasticsearchOperations.save(T entity)`, the entity returned from that call will contain the name of the index that an entity was saved to in that property.
 This is useful when the index name is dynamically set by a bean, or when writing to a write alias.
 
 Putting some value into such a property does not set the index into which an entity is stored!
@@ -423,7 +422,6 @@ Looking at the `Configuration` from the xref:elasticsearch/object-mapping.adoc#e
 @Configuration
 public class Config extends ElasticsearchConfiguration  {
 
-	@NonNull
 	@Override
 	public ClientConfiguration clientConfiguration() {
 		return ClientConfiguration.builder() //

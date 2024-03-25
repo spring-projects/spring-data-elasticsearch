@@ -31,7 +31,6 @@ import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfigurat
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -50,7 +49,6 @@ public class ElasticsearchConfigurationELCTests {
 	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.config.configuration" },
 			considerNestedRepositories = true)
 	static class Config extends ElasticsearchConfiguration {
-		@NonNull
 		@Override
 		public ClientConfiguration clientConfiguration() {
 			return ClientConfiguration.builder() //

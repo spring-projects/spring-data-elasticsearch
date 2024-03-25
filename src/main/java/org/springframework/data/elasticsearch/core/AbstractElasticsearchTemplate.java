@@ -57,7 +57,6 @@ import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -779,8 +778,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	protected interface SearchDocumentResponseCallback<T> {
-		@NonNull
-		T doWith(@NonNull SearchDocumentResponse response);
+		T doWith(SearchDocumentResponse response);
 	}
 
 	protected class ReadSearchDocumentResponseCallback<T> implements SearchDocumentResponseCallback<SearchHits<T>> {
@@ -795,7 +793,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			this.type = type;
 		}
 
-		@NonNull
 		@Override
 		public SearchHits<T> doWith(SearchDocumentResponse response) {
 			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
@@ -816,7 +813,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 			this.type = type;
 		}
 
-		@NonNull
 		@Override
 		public SearchScrollHits<T> doWith(SearchDocumentResponse response) {
 			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
