@@ -19,7 +19,8 @@ package org.springframework.data.elasticsearch.core.query.types;
  * Define the types of conflicts that occur when a query encounters version conflicts.
  *
  * @author Aouichaoui Youssef
+ * @since 5.3
  */
 public enum ConflictsType {
-    Abort, Proceed
+	Abort, Proceed
 }

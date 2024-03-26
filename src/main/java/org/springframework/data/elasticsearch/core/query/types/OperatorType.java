@@ -19,7 +19,8 @@ package org.springframework.data.elasticsearch.core.query.types;
  * Define the default operator for a query string query.
  *
  * @author Aouichaoui Youssef
+ * @since 5.3
  */
 public enum OperatorType {
-    And, Or
+	And, Or
 }

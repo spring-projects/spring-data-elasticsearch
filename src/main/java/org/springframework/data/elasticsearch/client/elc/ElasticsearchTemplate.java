@@ -51,15 +51,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
-import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
-import org.springframework.data.elasticsearch.core.query.DeleteQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
-import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
-import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.query.*;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
@@ -517,18 +509,19 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	private List<SearchHits<?>> multiSearch(List<MultiSearchQueryParameter> multiSearchQueryParameters,
 			boolean isSearchTemplateQuery) {
-		return isSearchTemplateQuery ?
-				doMultiTemplateSearch(multiSearchQueryParameters.stream()
-						.map(p -> new MultiSearchTemplateQueryParameter((SearchTemplateQuery) p.query, p.clazz, p.index))
-						.toList())
+		return isSearchTemplateQuery ? doMultiTemplateSearch(multiSearchQueryParameters.stream()
+				.map(p -> new MultiSearchTemplateQueryParameter((SearchTemplateQuery) p.query, p.clazz, p.index))
+				.toList())
 				: doMultiSearch(multiSearchQueryParameters);
 	}
 
-	private List<SearchHits<?>> doMultiTemplateSearch(List<MultiSearchTemplateQueryParameter> mSearchTemplateQueryParameters) {
+	private List<SearchHits<?>> doMultiTemplateSearch(
+			List<MultiSearchTemplateQueryParameter> mSearchTemplateQueryParameters) {
 		MsearchTemplateRequest request = requestConverter.searchMsearchTemplateRequest(mSearchTemplateQueryParameters,
 				routingResolver.getRouting());
 
-		MsearchTemplateResponse<EntityAsMap> response = execute(client -> client.msearchTemplate(request, EntityAsMap.class));
+		MsearchTemplateResponse<EntityAsMap> response = execute(
+				client -> client.msearchTemplate(request, EntityAsMap.class));
 		List<MultiSearchResponseItem<EntityAsMap>> responseItems = response.responses();
 
 		Assert.isTrue(mSearchTemplateQueryParameters.size() == responseItems.size(),

@@ -639,7 +639,7 @@ class RequestConverter {
 		Object queryObject = query.getObject();
 
 		if (queryObject != null) {
-            builder
+			builder
 					.id(StringUtils.hasText(query.getId()) ? query.getId() : getPersistentEntityId(queryObject))
 					.document(elasticsearchConverter.mapObject(queryObject));
 		} else if (query.getSource() != null) {
@@ -969,7 +969,7 @@ class RequestConverter {
 	}
 
 	public DeleteByQueryRequest documentDeleteByQueryRequest(DeleteQuery query, @Nullable String routing, Class<?> clazz,
-															 IndexCoordinates index, @Nullable RefreshPolicy refreshPolicy) {
+			IndexCoordinates index, @Nullable RefreshPolicy refreshPolicy) {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
@@ -978,7 +978,7 @@ class RequestConverter {
 					.query(getQuery(query.getQuery(), clazz))//
 					.refresh(deleteByQueryRefresh(refreshPolicy))
 					.requestsPerSecond(query.getRequestsPerSecond())
-                    .maxDocs(query.getMaxDocs())
+					.maxDocs(query.getMaxDocs())
 					.scroll(time(query.getScroll()))
 					.scrollSize(query.getScrollSize());
 
@@ -1022,8 +1022,7 @@ class RequestConverter {
 
 										return sortField.field() + ":" + order;
 									})
-									.collect(Collectors.toList())
-					);
+									.collect(Collectors.toList()));
 				}
 			}
 			dqb.allowNoIndices(query.getAllowNoIndices())

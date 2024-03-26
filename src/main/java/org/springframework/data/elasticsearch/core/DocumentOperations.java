@@ -289,7 +289,7 @@ public interface DocumentOperations {
 	 *
 	 * @param query query defining the objects
 	 * @param clazz The entity class must be annotated with
-	 *              {@link org.springframework.data.elasticsearch.annotations.Document}
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @return response with detailed information
 	 * @since 5.3
 	 */
@@ -312,7 +312,7 @@ public interface DocumentOperations {
 	 *
 	 * @param query query defining the objects
 	 * @param clazz The entity class must be annotated with
-	 *              {@link org.springframework.data.elasticsearch.annotations.Document}
+	 *          {@link org.springframework.data.elasticsearch.annotations.Document}
 	 * @param index the index from which to delete
 	 * @return response with detailed information
 	 * @since 5.3

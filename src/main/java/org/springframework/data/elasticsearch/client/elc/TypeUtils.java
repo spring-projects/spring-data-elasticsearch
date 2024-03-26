@@ -504,25 +504,27 @@ final class TypeUtils {
 		return mappedParams;
 	}
 
-    /**
-     * Convert a spring-data-elasticsearch operator to an Elasticsearch operator.
-     *
-     * @param operator spring-data-elasticsearch operator.
-     * @return an Elasticsearch Operator.
-     */
-    @Nullable
-    static Operator operator(@Nullable OperatorType operator) {
-        return operator != null ? Operator.valueOf(operator.name()) : null;
-    }
+	/**
+	 * Convert a spring-data-elasticsearch operator to an Elasticsearch operator.
+	 *
+	 * @param operator spring-data-elasticsearch operator.
+	 * @return an Elasticsearch Operator.
+	 * @since 5.3
+	 */
+	@Nullable
+	static Operator operator(@Nullable OperatorType operator) {
+		return operator != null ? Operator.valueOf(operator.name()) : null;
+	}
 
-    /**
-     * Convert a spring-data-elasticsearch {@literal conflicts} to an Elasticsearch {@literal conflicts}.
-     *
-     * @param conflicts spring-data-elasticsearch {@literal conflicts}.
-     * @return an Elasticsearch {@literal conflicts}.
-     */
-    @Nullable
-    static Conflicts conflicts(@Nullable ConflictsType conflicts) {
-        return conflicts != null ? Conflicts.valueOf(conflicts.name()) : null;
-    }
+	/**
+	 * Convert a spring-data-elasticsearch {@literal conflicts} to an Elasticsearch {@literal conflicts}.
+	 *
+	 * @param conflicts spring-data-elasticsearch {@literal conflicts}.
+	 * @return an Elasticsearch {@literal conflicts}.
+	 * @since 5.3
+	 */
+	@Nullable
+	static Conflicts conflicts(@Nullable ConflictsType conflicts) {
+		return conflicts != null ? Conflicts.valueOf(conflicts.name()) : null;
+	}
 }

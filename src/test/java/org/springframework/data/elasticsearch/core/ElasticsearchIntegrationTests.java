@@ -19,16 +19,11 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.Document.VersionType.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 import static org.springframework.data.elasticsearch.core.document.Document.*;
 import static org.springframework.data.elasticsearch.core.query.StringQuery.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
-import java.lang.Double;
-import java.lang.Integer;
-import java.lang.Long;
-import java.lang.Object;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -2976,8 +2971,8 @@ public abstract class ElasticsearchIntegrationTests {
 				.build();
 		Query query = getBuilderWithTermQuery("message", "message") //
 				.withHighlightQuery(
-						new HighlightQuery(new Highlight(singletonList(new HighlightField("message", sameHighlightQuery))), HighlightEntity.class)
-				)
+						new HighlightQuery(new Highlight(singletonList(new HighlightField("message", sameHighlightQuery))),
+								HighlightEntity.class))
 				.build();
 		SearchHits<HighlightEntity> searchHits = operations.search(query, HighlightEntity.class, index);
 
@@ -3002,8 +2997,9 @@ public abstract class ElasticsearchIntegrationTests {
 		// highlight_query in field
 		Query highlightQueryInField = getBuilderWithTermQuery("message", "message") //
 				.withHighlightQuery(
-						new HighlightQuery(new Highlight(singletonList(new HighlightField("message", differentHighlightQueryInField))), HighlightEntity.class)
-				)
+						new HighlightQuery(
+								new Highlight(singletonList(new HighlightField("message", differentHighlightQueryInField))),
+								HighlightEntity.class))
 				.build();
 		assertThatHighlightFieldsIsDifferentFromHighlightQuery(highlightQueryInField, index);
 	}
@@ -3019,8 +3015,9 @@ public abstract class ElasticsearchIntegrationTests {
 		// highlight_query in param
 		Query highlightQueryInParam = getBuilderWithTermQuery("message", "message") //
 				.withHighlightQuery(
-						new HighlightQuery(new Highlight(differentHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
-				)
+						new HighlightQuery(
+								new Highlight(differentHighlightQueryInParam, singletonList(new HighlightField("message"))),
+								HighlightEntity.class))
 				.build();
 		assertThatHighlightFieldsIsDifferentFromHighlightQuery(highlightQueryInParam, index);
 	}
@@ -3035,8 +3032,9 @@ public abstract class ElasticsearchIntegrationTests {
 		// highlight_query in param
 		Query differentHighlightQueryUsingCriteria = getBuilderWithTermQuery("message", "message") //
 				.withHighlightQuery(
-						new HighlightQuery(new Highlight(criteriaHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
-				)
+						new HighlightQuery(
+								new Highlight(criteriaHighlightQueryInParam, singletonList(new HighlightField("message"))),
+								HighlightEntity.class))
 				.build();
 		assertThatHighlightFieldsIsDifferentFromHighlightQuery(differentHighlightQueryUsingCriteria, index);
 	}
@@ -3055,14 +3053,13 @@ public abstract class ElasticsearchIntegrationTests {
 								      }
 								    }
 								}
-								"""
-				))
+								"""))
 				.build();
 		// highlight_query in param
 		Query differentHighlightQueryUsingStringQuery = getBuilderWithTermQuery("message", "message") //
 				.withHighlightQuery(
-						new HighlightQuery(new Highlight(stringHighlightQueryInParam, singletonList(new HighlightField("message"))), HighlightEntity.class)
-				)
+						new HighlightQuery(new Highlight(stringHighlightQueryInParam, singletonList(new HighlightField("message"))),
+								HighlightEntity.class))
 				.build();
 		assertThatHighlightFieldsIsDifferentFromHighlightQuery(differentHighlightQueryUsingStringQuery, index);
 	}
