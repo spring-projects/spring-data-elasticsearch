@@ -968,6 +968,79 @@ class RequestConverter {
 		});
 	}
 
+	public DeleteByQueryRequest documentDeleteByQueryRequest(DeleteQuery query, @Nullable String routing, Class<?> clazz,
+															 IndexCoordinates index, @Nullable RefreshPolicy refreshPolicy) {
+		Assert.notNull(query, "query must not be null");
+		Assert.notNull(index, "index must not be null");
+
+		return DeleteByQueryRequest.of(dqb -> {
+			dqb.index(Arrays.asList(index.getIndexNames())) //
+					.query(getQuery(query.getQuery(), clazz))//
+					.refresh(deleteByQueryRefresh(refreshPolicy))
+					.requestsPerSecond(query.getRequestsPerSecond())
+                    .maxDocs(query.getMaxDocs())
+					.scroll(time(query.getScroll()))
+					.scrollSize(query.getScrollSize());
+
+			if (query.getRouting() != null) {
+				dqb.routing(query.getRouting());
+			} else if (StringUtils.hasText(routing)) {
+				dqb.routing(routing);
+			}
+
+			if (query.getQ() != null) {
+				dqb.q(query.getQ())
+						.analyzer(query.getAnalyzer())
+						.analyzeWildcard(query.getAnalyzeWildcard())
+						.defaultOperator(operator(query.getDefaultOperator()))
+						.df(query.getDf())
+						.lenient(query.getLenient());
+			}
+
+			if (query.getExpandWildcards() != null && !query.getExpandWildcards().isEmpty()) {
+				dqb.expandWildcards(expandWildcards(query.getExpandWildcards()));
+			}
+			if (query.getStats() != null && !query.getStats().isEmpty()) {
+				dqb.stats(query.getStats());
+			}
+			if (query.getSlices() != null) {
+				dqb.slices(sb -> sb.value(query.getSlices()));
+			}
+			if (query.getSort() != null) {
+				ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(clazz);
+				List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
+
+				if (!sortOptions.isEmpty()) {
+					dqb.sort(
+							sortOptions.stream()
+									.map(sortOption -> {
+										String order = "asc";
+										var sortField = sortOption.field();
+										if (sortField.order() != null) {
+											order = sortField.order().jsonValue();
+										}
+
+										return sortField.field() + ":" + order;
+									})
+									.collect(Collectors.toList())
+					);
+				}
+			}
+			dqb.allowNoIndices(query.getAllowNoIndices())
+					.conflicts(conflicts(query.getConflicts()))
+					.ignoreUnavailable(query.getIgnoreUnavailable())
+					.preference(query.getPreference())
+					.requestCache(query.getRequestCache())
+					.searchType(searchType(query.getSearchType()))
+					.searchTimeout(time(query.getSearchTimeout()))
+					.terminateAfter(query.getTerminateAfter())
+					.timeout(time(query.getTimeout()))
+					.version(query.getVersion());
+
+			return dqb;
+		});
+	}
+
 	public UpdateRequest<Document, ?> documentUpdateRequest(UpdateQuery query, IndexCoordinates index,
 			@Nullable RefreshPolicy refreshPolicy, @Nullable String routing) {
 

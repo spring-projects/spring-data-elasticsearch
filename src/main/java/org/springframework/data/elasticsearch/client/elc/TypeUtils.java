@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch.core.search.BoundaryScanner;
 import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
 import co.elastic.clients.elasticsearch.core.search.HighlighterFragmenter;
@@ -46,6 +47,8 @@ import org.springframework.data.elasticsearch.core.query.Order;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateResponse;
+import org.springframework.data.elasticsearch.core.query.types.ConflictsType;
+import org.springframework.data.elasticsearch.core.query.types.OperatorType;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
@@ -500,4 +503,26 @@ final class TypeUtils {
 		});
 		return mappedParams;
 	}
+
+    /**
+     * Convert a spring-data-elasticsearch operator to an Elasticsearch operator.
+     *
+     * @param operator spring-data-elasticsearch operator.
+     * @return an Elasticsearch Operator.
+     */
+    @Nullable
+    static Operator operator(@Nullable OperatorType operator) {
+        return operator != null ? Operator.valueOf(operator.name()) : null;
+    }
+
+    /**
+     * Convert a spring-data-elasticsearch {@literal conflicts} to an Elasticsearch {@literal conflicts}.
+     *
+     * @param conflicts spring-data-elasticsearch {@literal conflicts}.
+     * @return an Elasticsearch {@literal conflicts}.
+     */
+    @Nullable
+    static Conflicts conflicts(@Nullable ConflictsType conflicts) {
+        return conflicts != null ? Conflicts.valueOf(conflicts.name()) : null;
+    }
 }

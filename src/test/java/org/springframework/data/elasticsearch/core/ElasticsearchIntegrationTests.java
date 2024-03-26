@@ -3776,6 +3776,44 @@ public abstract class ElasticsearchIntegrationTests {
 		}).isInstanceOf(VersionConflictException.class);
 	}
 
+	@Test // GH-2865
+	public void shouldDeleteDocumentForGivenQueryUsingParameters() {
+		// Given
+		String documentId = nextIdAsString();
+		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
+				.version(System.currentTimeMillis()).build();
+
+		IndexQuery indexQuery = getIndexQuery(sampleEntity);
+		String indexName = indexNameProvider.indexName();
+
+		operations.index(indexQuery, IndexCoordinates.of(indexName));
+
+		// When
+		final Query query = getTermQuery("id", documentId);
+		final DeleteQuery deleteQuery = DeleteQuery.builder(query).withSlices(2).build();
+		ByQueryResponse result = operations.delete(deleteQuery, SampleEntity.class, IndexCoordinates.of(indexName));
+
+		// Then
+		assertThat(result.getDeleted()).isEqualTo(1);
+		SearchHits<SampleEntity> searchHits = operations.search(query, SampleEntity.class,
+				IndexCoordinates.of(indexName));
+		assertThat(searchHits.getTotalHits()).isEqualTo(0);
+	}
+
+	@Test
+	public void shouldDeleteDocumentForGivenQueryAndUnavailableIndex() {
+		// Given
+		String indexName = UUID.randomUUID().toString();
+
+		// When
+		final Query query = operations.matchAllQuery();
+		final DeleteQuery deleteQuery = DeleteQuery.builder(query).withIgnoreUnavailable(true).build();
+		ByQueryResponse result = operations.delete(deleteQuery, SampleEntity.class, IndexCoordinates.of(indexName));
+
+		// Then
+		assertThat(result.getDeleted()).isEqualTo(0);
+	}
+
 	// region entities
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(shards = 1, replicas = 0, refreshInterval = "-1")
