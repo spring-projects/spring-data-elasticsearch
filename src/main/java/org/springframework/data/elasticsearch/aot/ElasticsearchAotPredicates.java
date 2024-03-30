@@ -25,11 +25,11 @@ import org.springframework.data.util.ReactiveWrappers;
  */
 public class ElasticsearchAotPredicates {
 
-	public static final Predicate<ReactiveWrappers.ReactiveLibrary> IS_REACTIVE_LIBARARY_AVAILABLE = (
+	public static final Predicate<ReactiveWrappers.ReactiveLibrary> IS_REACTIVE_LIBRARY_AVAILABLE = (
 			lib) -> ReactiveWrappers.isAvailable(lib);
 
 	public static boolean isReactorPresent() {
-		return IS_REACTIVE_LIBARARY_AVAILABLE.test(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR);
+		return IS_REACTIVE_LIBRARY_AVAILABLE.test(ReactiveWrappers.ReactiveLibrary.PROJECT_REACTOR);
 	}
 
 }
