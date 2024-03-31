@@ -65,6 +65,8 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
+import javax.print.Doc;
+
 /**
  * Elasticsearch specific {@link org.springframework.data.convert.EntityConverter} implementation based on domain type
  * {@link ElasticsearchPersistentEntity metadata}.
@@ -333,46 +335,52 @@ public class MappingElasticsearchConverter
 				return instance;
 			}
 
+			Document document = (source instanceof Document) ? (Document) source : null;
+
 			ElasticsearchPropertyValueProvider valueProvider = new ElasticsearchPropertyValueProvider(accessor, evaluator);
-			R result = readProperties(targetEntity, instance, valueProvider);
+			try {
+				R result = readProperties(targetEntity, instance, valueProvider);
 
-			if (source instanceof Document document) {
-				if (document.hasId()) {
-					ElasticsearchPersistentProperty idProperty = targetEntity.getIdProperty();
-					PersistentPropertyAccessor<R> propertyAccessor = new ConvertingPropertyAccessor<>(
-							targetEntity.getPropertyAccessor(result), conversionService);
-					// Only deal with String because ES generated Ids are strings !
-					if (idProperty != null && idProperty.isReadable() && idProperty.getType().isAssignableFrom(String.class)) {
-						propertyAccessor.setProperty(idProperty, document.getId());
+				if (document != null) {
+					if (document.hasId()) {
+						ElasticsearchPersistentProperty idProperty = targetEntity.getIdProperty();
+						PersistentPropertyAccessor<R> propertyAccessor = new ConvertingPropertyAccessor<>(
+								targetEntity.getPropertyAccessor(result), conversionService);
+						// Only deal with String because ES generated Ids are strings !
+						if (idProperty != null && idProperty.isReadable() && idProperty.getType().isAssignableFrom(String.class)) {
+							propertyAccessor.setProperty(idProperty, document.getId());
+						}
+					}
+
+					if (document.hasVersion()) {
+						long version = document.getVersion();
+						ElasticsearchPersistentProperty versionProperty = targetEntity.getVersionProperty();
+						// Only deal with Long because ES versions are longs !
+						if (versionProperty != null && versionProperty.getType().isAssignableFrom(Long.class)) {
+							// check that a version was actually returned in the response, -1 would indicate that
+							// a search didn't request the version ids in the response, which would be an issue
+							Assert.isTrue(version != -1, "Version in response is -1");
+							targetEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
+						}
+					}
+
+					if (targetEntity.hasSeqNoPrimaryTermProperty() && document.hasSeqNo() && document.hasPrimaryTerm()) {
+						if (isAssignedSeqNo(document.getSeqNo()) && isAssignedPrimaryTerm(document.getPrimaryTerm())) {
+							SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm(document.getSeqNo(), document.getPrimaryTerm());
+							ElasticsearchPersistentProperty property = targetEntity.getRequiredSeqNoPrimaryTermProperty();
+							targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
+						}
 					}
 				}
 
-				if (document.hasVersion()) {
-					long version = document.getVersion();
-					ElasticsearchPersistentProperty versionProperty = targetEntity.getVersionProperty();
-					// Only deal with Long because ES versions are longs !
-					if (versionProperty != null && versionProperty.getType().isAssignableFrom(Long.class)) {
-						// check that a version was actually returned in the response, -1 would indicate that
-						// a search didn't request the version ids in the response, which would be an issue
-						Assert.isTrue(version != -1, "Version in response is -1");
-						targetEntity.getPropertyAccessor(result).setProperty(versionProperty, version);
-					}
+				if (source instanceof SearchDocument searchDocument) {
+					populateScriptFields(targetEntity, result, searchDocument);
 				}
-
-				if (targetEntity.hasSeqNoPrimaryTermProperty() && document.hasSeqNo() && document.hasPrimaryTerm()) {
-					if (isAssignedSeqNo(document.getSeqNo()) && isAssignedPrimaryTerm(document.getPrimaryTerm())) {
-						SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm(document.getSeqNo(), document.getPrimaryTerm());
-						ElasticsearchPersistentProperty property = targetEntity.getRequiredSeqNoPrimaryTermProperty();
-						targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
-					}
-				}
+				return result;
+			} catch (ConversionException e) {
+				String documentId = (document != null && document.hasId()) ? document.getId() : null;
+				throw new MappingConversionException(documentId, e);
 			}
-
-			if (source instanceof SearchDocument searchDocument) {
-				populateScriptFields(targetEntity, result, searchDocument);
-			}
-
-			return result;
 		}
 
 		private ParameterValueProvider<ElasticsearchPersistentProperty> getParameterProvider(
@@ -510,11 +518,9 @@ public class MappingElasticsearchConverter
 			}
 
 			if (source instanceof List<?> list) {
-				source = list.stream().map(it -> convertOnRead(propertyValueConverter, it))
-						.collect(Collectors.toList());
+				source = list.stream().map(it -> convertOnRead(propertyValueConverter, it)).collect(Collectors.toList());
 			} else if (source instanceof Set<?> set) {
-				source = set.stream().map(it -> convertOnRead(propertyValueConverter, it))
-						.collect(Collectors.toSet());
+				source = set.stream().map(it -> convertOnRead(propertyValueConverter, it)).collect(Collectors.toSet());
 			} else {
 				source = convertOnRead(propertyValueConverter, source);
 			}

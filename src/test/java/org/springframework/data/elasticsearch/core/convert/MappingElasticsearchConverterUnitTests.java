@@ -228,6 +228,13 @@ public class MappingElasticsearchConverterUnitTests {
 				"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Notification");
 	}
 
+	private Map<String, Object> writeToMap(Object source) {
+
+		Document sink = Document.create();
+		mappingElasticsearchConverter.write(source, sink);
+		return sink;
+	}
+
 	@Test
 	public void shouldFailToInitializeGivenMappingContextIsNull() {
 
@@ -993,7 +1000,7 @@ public class MappingElasticsearchConverterUnitTests {
 				  "nullRange": null,
 				  "integerRangeList": [
 				  	{
-				  	  "gte": "2", 
+				  	  "gte": "2",
 				  	  "lte": "5"
 				  	}
 				  ]
@@ -1178,11 +1185,13 @@ public class MappingElasticsearchConverterUnitTests {
 			public void setIntegerRangeList(List<Range<Integer>> integerRangeList) {
 				this.integerRangeList = integerRangeList;
 			}
+
 		}
 	}
 
 	@Nested
 	class GeoJsonUnitTests {
+
 		private GeoJsonEntity entity;
 
 		@BeforeEach
@@ -1476,6 +1485,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 			assertThat(entity).isEqualTo(mapped);
 		}
+
 	}
 
 	@Test // #1454
@@ -1942,13 +1952,6 @@ public class MappingElasticsearchConverterUnitTests {
 		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
 	}
 
-	private Map<String, Object> writeToMap(Object source) {
-
-		Document sink = Document.create();
-		mappingElasticsearchConverter.write(source, sink);
-		return sink;
-	}
-
 	@Test // #2364
 	@DisplayName("should not write id property to document source if configured so")
 	void shouldNotWriteIdPropertyToDocumentSourceIfConfiguredSo() throws JSONException {
@@ -2076,6 +2079,25 @@ public class MappingElasticsearchConverterUnitTests {
 		var mappedNames = mappingElasticsearchConverter.updateFieldNames(propertyPath, persistentEntity);
 
 		assertThat(mappedNames).isEqualTo("level-one.level-two.key-word");
+	}
+
+	@Test // #2879
+	@DisplayName("should throw MappingConversionException with document id on reading error")
+	void shouldThrowMappingConversionExceptionWithDocumentIdOnReadingError() {
+
+		@Language("JSON")
+		String json = """
+				{
+				  "birth-date": "this-is-not-a-local-date"
+				}""";
+
+		Document document = Document.parse(json);
+		document.setId("42");
+
+		assertThatThrownBy(() -> {
+			mappingElasticsearchConverter.read(Person.class, document);
+		}).isInstanceOf(MappingConversionException.class).hasFieldOrPropertyWithValue("documentId", "42")
+				.hasCauseInstanceOf(ConversionException.class);
 	}
 
 	// region entities
