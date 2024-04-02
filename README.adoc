@@ -1,5 +1,3 @@
-image:https://spring.io/badges/spring-data-elasticsearch/ga.svg[Spring Data Elasticsearch,link=https://projects.spring.io/spring-data-elasticsearch#quick-start] image:https://spring.io/badges/spring-data-elasticsearch/snapshot.svg[Spring Data Elasticsearch,link=https://projects.spring.io/spring-data-elasticsearch#quick-start]
-
 = Spring Data for Elasticsearch image:https://jenkins.spring.io/buildStatus/icon?job=spring-data-elasticsearch%2Fmain&subject=Build[link=https://jenkins.spring.io/view/SpringData/job/spring-data-elasticsearch/] https://gitter.im/spring-projects/spring-data[image:https://badges.gitter.im/spring-projects/spring-data.svg[Gitter]] image:https://img.shields.io/badge/Revved%20up%20by-Develocity-06A0CE?logo=Gradle&labelColor=02303A["Revved up by Develocity", link="https://ge.spring.io/scans?search.rootProjectNames=Spring Data Elasticsearch"]
 
 The primary goal of the https://projects.spring.io/spring-data[Spring Data] project is to make it easier to build Spring-powered applications that use new data access technologies such as non-relational databases, map-reduce frameworks, and cloud based data services.
