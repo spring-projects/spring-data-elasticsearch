@@ -177,7 +177,7 @@ public abstract class ReactiveIndexTemplateIntegrationTests {
 	void shouldDeleteComponentTemplate() {
 
 		var blockingIndexOps = blocking(operations.indexOps(IndexCoordinates.of("dont-care")));
-		String templateName = "template" + UUID.randomUUID().toString();
+		String templateName = "template" + UUID.randomUUID();
 		var putComponentTemplateRequest = PutComponentTemplateRequest.builder() //
 				.withName(templateName) //
 				.withTemplateData(ComponentTemplateRequestData.builder() //
@@ -321,7 +321,7 @@ public abstract class ReactiveIndexTemplateIntegrationTests {
 	@Test // DATAES-612
 	void shouldReturnNullOnNonExistingGetTemplate() {
 
-		String templateName = "template" + UUID.randomUUID().toString();
+		String templateName = "template" + UUID.randomUUID();
 
 		GetTemplateRequest getTemplateRequest = new GetTemplateRequest(templateName);
 		indexOperations.getTemplate(getTemplateRequest) //
@@ -373,7 +373,7 @@ public abstract class ReactiveIndexTemplateIntegrationTests {
 	@Test // DATAES-612
 	void shouldCheckTemplateExists() {
 
-		String templateName = "template" + UUID.randomUUID().toString();
+		String templateName = "template" + UUID.randomUUID();
 		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
 
 		boolean exists = blockingIndexOperations.existsTemplate(existsTemplateRequest);
@@ -394,7 +394,7 @@ public abstract class ReactiveIndexTemplateIntegrationTests {
 	@Test // DATAES-612
 	void shouldDeleteTemplate() {
 
-		String templateName = "template" + UUID.randomUUID().toString();
+		String templateName = "template" + UUID.randomUUID();
 		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
 
 		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder(templateName, "log-*") //

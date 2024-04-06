@@ -25,10 +25,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.lang.Boolean;
-import java.lang.Integer;
-import java.lang.Long;
-import java.lang.Object;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -608,7 +604,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		operations.delete(query, SampleEntity.class) //
+		operations.delete(DeleteQuery.builder(query).build(), SampleEntity.class) //
 				.as(StepVerifier::create) //
 				.consumeNextWith(byQueryResponse -> assertThat(byQueryResponse.getDeleted()).isEqualTo(0L)).verifyComplete();
 	}
@@ -631,7 +627,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		Query query = getBuilderWithTermQuery("message", "test").build();
 
-		operations.delete(query, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+		operations.delete(DeleteQuery.builder(query).build(), SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
 				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
@@ -658,7 +654,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		Query query = getBuilderWithTermQuery("message", "negative").build();
 
-		operations.delete(query, SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
+		operations.delete(DeleteQuery.builder(query).build(), SampleEntity.class, IndexCoordinates.of(indexPrefix + '*')) //
 				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
@@ -674,7 +670,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("test"));
 
-		operations.delete(query, SampleEntity.class) //
+		operations.delete(DeleteQuery.builder(query).build(), SampleEntity.class) //
 				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(2L) //
@@ -688,7 +684,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 		CriteriaQuery query = new CriteriaQuery(new Criteria("message").contains("luke"));
 
-		operations.delete(query, SampleEntity.class) //
+		operations.delete(DeleteQuery.builder(query).build(), SampleEntity.class) //
 				.map(ByQueryResponse::getDeleted) //
 				.as(StepVerifier::create) //
 				.expectNext(0L) //
@@ -1114,6 +1110,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 			try {
 				JSONAssert.assertEquals(expectedMappings, indexInformation.getMapping().toJson(), false);
 			} catch (JSONException e) {
+				// noinspection CallToPrintStackTrace
 				e.printStackTrace();
 			}
 		}).verifyComplete();

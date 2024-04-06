@@ -47,8 +47,8 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	private final Map<String, Aggregation> aggregations = new LinkedHashMap<>();
 	@Nullable private Suggester suggester;
 	@Nullable private FieldCollapse fieldCollapse;
-	private List<SortOptions> sortOptions = new ArrayList<>();
-	private Map<String, JsonData> searchExtensions = new LinkedHashMap<>();
+	private final List<SortOptions> sortOptions = new ArrayList<>();
+	private final Map<String, JsonData> searchExtensions = new LinkedHashMap<>();
 
 	@Nullable private org.springframework.data.elasticsearch.core.query.Query springDataQuery;
 	@Nullable private KnnQuery knnQuery;

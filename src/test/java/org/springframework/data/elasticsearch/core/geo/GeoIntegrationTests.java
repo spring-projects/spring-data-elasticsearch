@@ -23,12 +23,10 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledIf;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
-import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -391,7 +389,7 @@ public abstract class GeoIntegrationTests {
 
 	static class AuthorMarkerEntityBuilder {
 
-		private AuthorMarkerEntity result;
+		private final AuthorMarkerEntity result;
 
 		public AuthorMarkerEntityBuilder(String id) {
 			result = new AuthorMarkerEntity(id);

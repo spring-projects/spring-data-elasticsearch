@@ -19,6 +19,8 @@ import static org.assertj.core.api.Assertions.*;
 
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
+import java.util.List;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
@@ -29,11 +31,8 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.DocValueField;
-import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.lang.Nullable;
-
-import java.util.List;
 
 /**
  * @author Peter-Josef Meisch
@@ -42,16 +41,16 @@ class RequestConverterTest {
 
 	private static final SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 	private static final MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
-	private JacksonJsonpMapper jsonpMapper = new JacksonJsonpMapper();
-	private RequestConverter requestConverter = new RequestConverter(converter, jsonpMapper);
+	private final JacksonJsonpMapper jsonpMapper = new JacksonJsonpMapper();
+	private final RequestConverter requestConverter = new RequestConverter(converter, jsonpMapper);
 
 	@Test // #2316
 	@DisplayName("should add docvalue_fields")
 	void shouldAddDocvalueFields() {
 
 		var docValueFields = List.of( //
-			new DocValueField("field1"), //
-			new DocValueField("field2", "format2") //
+				new DocValueField("field1"), //
+				new DocValueField("field2", "format2") //
 		);
 		// doesn't matter what type of query is used, the relevant part for docvalue_fields is in the base builder.
 		var query = StringQuery.builder("""
@@ -59,10 +58,11 @@ class RequestConverterTest {
 					"match_all":{}
 				}
 				""") //
-			.withDocValueFields(docValueFields) //
-			.build();
+				.withDocValueFields(docValueFields) //
+				.build();
 
-		var searchRequest = requestConverter.searchRequest(query,null, SampleEntity.class, IndexCoordinates.of("foo"), true);
+		var searchRequest = requestConverter.searchRequest(query, null, SampleEntity.class, IndexCoordinates.of("foo"),
+				true);
 
 		var fieldAndFormats = searchRequest.docvalueFields();
 		assertThat(fieldAndFormats).hasSize(2);

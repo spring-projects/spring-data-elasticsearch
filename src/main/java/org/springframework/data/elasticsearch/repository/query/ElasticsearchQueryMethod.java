@@ -47,6 +47,7 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.util.QueryExecutionConverters;
@@ -101,9 +102,16 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		verifyCountQueryTypes();
 	}
 
+	@SuppressWarnings("removal")
 	@Override
+	@Deprecated
 	protected Parameters<?, ?> createParameters(Method method, TypeInformation<?> domainType) {
-		return new ElasticsearchParameters(method, domainType);
+		return new ElasticsearchParameters(ParametersSource.of(method));
+	}
+
+	@Override
+	protected Parameters<?, ?> createParameters(ParametersSource parametersSource) {
+		return new ElasticsearchParameters(parametersSource);
 	}
 
 	protected void verifyCountQueryTypes() {
@@ -347,7 +355,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	/*
 	 * Copied from the QueryMethod class adding support for collections of SearchHit instances. No static method here.
 	 */
-	private Class<? extends Object> potentiallyUnwrapReturnTypeFor(RepositoryMetadata metadata, Method method) {
+	private Class<?> potentiallyUnwrapReturnTypeFor(RepositoryMetadata metadata, Method method) {
 		TypeInformation<?> returnType = metadata.getReturnType(method);
 		if (!QueryExecutionConverters.supports(returnType.getType())
 				&& !ReactiveWrapperConverters.supports(returnType.getType())) {

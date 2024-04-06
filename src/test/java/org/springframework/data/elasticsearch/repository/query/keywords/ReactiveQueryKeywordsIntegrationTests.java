@@ -22,8 +22,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.lang.Boolean;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -139,7 +137,6 @@ public abstract class ReactiveQueryKeywordsIntegrationTests {
 				.verifyComplete();
 	}
 
-	@SuppressWarnings("SpringDataMethodInconsistencyInspection")
 	interface SampleRepository extends ReactiveElasticsearchRepository<SampleEntity, String> {
 		Flux<SearchHit<SampleEntity>> findByMessageExists();
 

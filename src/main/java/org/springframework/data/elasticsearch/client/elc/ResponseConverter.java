@@ -15,9 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.data.elasticsearch.client.elc.JsonUtils.toJson;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.removePrefixFromJson;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.typeMapping;
+import static org.springframework.data.elasticsearch.client.elc.JsonUtils.*;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
 import co.elastic.clients.elasticsearch._types.BulkIndexByScrollFailure;
 import co.elastic.clients.elasticsearch._types.ErrorCause;
@@ -36,7 +35,12 @@ import co.elastic.clients.elasticsearch.indices.get_index_template.IndexTemplate
 import co.elastic.clients.elasticsearch.indices.get_mapping.IndexMappingRecord;
 import co.elastic.clients.json.JsonpMapper;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -47,7 +51,11 @@ import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.*;
+import org.springframework.data.elasticsearch.core.index.AliasData;
+import org.springframework.data.elasticsearch.core.index.Settings;
+import org.springframework.data.elasticsearch.core.index.TemplateData;
+import org.springframework.data.elasticsearch.core.index.TemplateResponse;
+import org.springframework.data.elasticsearch.core.index.TemplateResponseData;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -182,7 +190,7 @@ class ResponseConverter {
 
 		Map<String, IndexMappingRecord> mappings = getMappingResponse.result();
 
-		if (mappings == null || mappings.size() == 0) {
+		if (mappings == null || mappings.isEmpty()) {
 			return Document.create();
 		}
 

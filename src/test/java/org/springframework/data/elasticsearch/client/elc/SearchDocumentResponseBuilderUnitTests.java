@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import static org.assertj.core.api.Assertions.*;
+
 import co.elastic.clients.elasticsearch._types.ShardFailure;
 import co.elastic.clients.elasticsearch._types.ShardStatistics;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
@@ -37,8 +39,6 @@ import org.springframework.data.elasticsearch.core.document.SearchDocumentRespon
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import static org.assertj.core.api.Assertions.*;
-
 /**
  * Tests for the factory class to create {@link SearchDocumentResponse} instances.
  *
@@ -48,7 +48,7 @@ import static org.assertj.core.api.Assertions.*;
  */
 class SearchDocumentResponseBuilderUnitTests {
 
-	private JacksonJsonpMapper jsonpMapper = new JacksonJsonpMapper();
+	private final JacksonJsonpMapper jsonpMapper = new JacksonJsonpMapper();
 
 	@Test // #2681
 	void shouldGetPhraseSuggestion() throws JSONException {

@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -400,7 +399,6 @@ abstract class QueryKeywordsIntegrationTests {
 		}
 	}
 
-	@SuppressWarnings({ "SpringDataRepositoryMethodParametersInspection", "SpringDataMethodInconsistencyInspection" })
 	interface ProductRepository extends ElasticsearchRepository<Product, String> {
 
 		List<Product> findByName(@Nullable String name);

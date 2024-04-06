@@ -37,6 +37,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration
 public class ReactiveElasticsearchConfigurationELCTests {
@@ -59,7 +60,6 @@ public class ReactiveElasticsearchConfigurationELCTests {
 	 * using a repository with an entity that is set to createIndex = false as we have no elastic running for this test
 	 * and just check that all the necessary beans are created.
 	 */
-	// @Autowired private WebClient webClient;
 	@Autowired private ReactiveElasticsearchClient reactiveElasticsearchClient;
 	@Autowired private ReactiveElasticsearchOperations reactiveElasticsearchOperations;
 	@Autowired private CreateIndexFalseRepository repository;

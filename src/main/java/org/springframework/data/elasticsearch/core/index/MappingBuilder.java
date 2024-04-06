@@ -443,7 +443,7 @@ public class MappingBuilder {
 						contextNode.put(FIELD_CONTEXT_NAME, context.name());
 						contextNode.put(FIELD_CONTEXT_TYPE, context.type().getMappedName());
 
-						if (context.precision().length() > 0) {
+						if (!context.precision().isEmpty()) {
 							contextNode.put(FIELD_CONTEXT_PRECISION, context.precision());
 						}
 

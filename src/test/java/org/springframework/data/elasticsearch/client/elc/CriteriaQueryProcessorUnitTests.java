@@ -33,7 +33,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 @SuppressWarnings("ConstantConditions")
 class CriteriaQueryProcessorUnitTests {
 
-	private JsonpMapper mapper = new JacksonJsonpMapper();
+	private final JsonpMapper mapper = new JacksonJsonpMapper();
 
 	private final CriteriaQueryProcessor queryProcessor = new CriteriaQueryProcessor();
 
@@ -99,7 +99,7 @@ class CriteriaQueryProcessorUnitTests {
 						]
 					}
 				}
-							""";
+				""";
 
 		Criteria criteria = new Criteria("field1").is("value1").or("field2").is("value2");
 
@@ -152,7 +152,7 @@ class CriteriaQueryProcessorUnitTests {
 						]
 					}
 				}
-							""";
+				""";
 
 		Criteria criteria = new Criteria("field1").is("value1") //
 				.or("field2").is("value2") //
@@ -295,7 +295,7 @@ class CriteriaQueryProcessorUnitTests {
 						]
 					}
 				}
-							""";
+				""";
 
 		Criteria criteria = Criteria.or()
 				.subCriteria(new Criteria("lastName").is("Miller")

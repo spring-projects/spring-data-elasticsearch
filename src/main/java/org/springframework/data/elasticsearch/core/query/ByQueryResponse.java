@@ -230,11 +230,17 @@ public class ByQueryResponse {
 			return aborted;
 		}
 
+		@Nullable
+		public ElasticsearchErrorCause getElasticsearchErrorCause() {
+			return elasticsearchErrorCause;
+		}
+
 		/**
 		 * Create a new {@link FailureBuilder} to build {@link Failure}
 		 *
 		 * @return a new {@link FailureBuilder} to build {@link Failure}
 		 */
+
 		public static FailureBuilder builder() {
 			return new FailureBuilder();
 		}

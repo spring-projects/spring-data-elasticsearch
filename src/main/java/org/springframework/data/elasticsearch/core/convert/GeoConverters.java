@@ -344,7 +344,7 @@ public class GeoConverters {
 			String type = GeoConverters.getGeoJsonType(source);
 			Assert.isTrue(type.equalsIgnoreCase(GeoJsonPolygon.TYPE), "does not contain a type 'Polygon'");
 			List<GeoJsonLineString> lines = geoJsonLineStringsFromMap(source);
-			Assert.isTrue(lines.size() > 0, "no linestrings defined in polygon");
+			Assert.isTrue(!lines.isEmpty(), "no linestrings defined in polygon");
 			GeoJsonPolygon geoJsonPolygon = GeoJsonPolygon.of(lines.get(0));
 			for (int i = 1; i < lines.size(); i++) {
 				geoJsonPolygon = geoJsonPolygon.withInnerRing(lines.get(i));

@@ -157,7 +157,6 @@ class RequestConverter {
 						aliasActions.getActions().forEach(aliasAction -> {
 							if (aliasAction instanceof AliasAction.Add add) {
 								var parameters = add.getParameters();
-								// noinspection DuplicatedCode
 								String[] parametersAliases = parameters.getAliases();
 								if (parametersAliases != null) {
 									for (String aliasName : parametersAliases) {
@@ -173,7 +172,6 @@ class RequestConverter {
 
 	private Alias.Builder buildAlias(AliasActionParameters parameters, Alias.Builder aliasBuilder) {
 
-		// noinspection DuplicatedCode
 		if (parameters.getRouting() != null) {
 			aliasBuilder.routing(parameters.getRouting());
 		}
@@ -416,7 +414,6 @@ class RequestConverter {
 		if (aliasActions != null) {
 			aliasActions.getActions().forEach(aliasAction -> {
 				AliasActionParameters parameters = aliasAction.getParameters();
-				// noinspection DuplicatedCode
 				String[] parametersAliases = parameters.getAliases();
 
 				if (parametersAliases != null) {
@@ -450,7 +447,6 @@ class RequestConverter {
 						aliasActions.getActions().forEach(aliasAction -> {
 							if (aliasAction instanceof AliasAction.Add add) {
 								var parameters = add.getParameters();
-								// noinspection DuplicatedCode
 								String[] parametersAliases = parameters.getAliases();
 								if (parametersAliases != null) {
 									for (String aliasName : parametersAliases) {

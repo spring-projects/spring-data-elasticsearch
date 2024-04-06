@@ -73,8 +73,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
 	private @Nullable ElasticsearchPersistentProperty indexedIndexNameProperty;
 	private @Nullable Document.VersionType versionType;
-	private boolean createIndexAndMapping;
-	private boolean alwaysWriteMapping;
+	private final boolean createIndexAndMapping;
+	private final boolean alwaysWriteMapping;
 	private final Dynamic dynamic;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, Expression> routingExpressions = new ConcurrentHashMap<>();

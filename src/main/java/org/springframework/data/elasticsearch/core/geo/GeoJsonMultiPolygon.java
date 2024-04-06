@@ -33,7 +33,7 @@ public class GeoJsonMultiPolygon implements GeoJson<Iterable<GeoJsonPolygon>> {
 
 	public static final String TYPE = "MultiPolygon";
 
-	private List<GeoJsonPolygon> coordinates = new ArrayList<>();
+	private final List<GeoJsonPolygon> coordinates = new ArrayList<>();
 
 	private GeoJsonMultiPolygon(List<GeoJsonPolygon> polygons) {
 		this.coordinates.addAll(polygons);

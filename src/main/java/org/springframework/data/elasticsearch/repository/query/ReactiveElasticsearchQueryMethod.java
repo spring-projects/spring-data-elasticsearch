@@ -101,11 +101,6 @@ public class ReactiveElasticsearchQueryMethod extends ElasticsearchQueryMethod {
 		}
 	}
 
-	@Override
-	protected ElasticsearchParameters createParameters(Method method, TypeInformation<?> domainType) {
-		return new ElasticsearchParameters(method, domainType);
-	}
-
 	/**
 	 * Check if the given {@link org.springframework.data.repository.query.QueryMethod} receives a reactive parameter
 	 * wrapper as one of its parameters.

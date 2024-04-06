@@ -19,10 +19,15 @@ import reactor.blockhound.BlockHound;
 import reactor.blockhound.BlockingOperationError;
 import reactor.blockhound.integration.BlockHoundIntegration;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * @author Peter-Josef Meisch
  */
 public class BlockHoundIntegrationCustomizer implements BlockHoundIntegration {
+
+	private static final Log LOGGER = LogFactory.getLog(BlockHoundIntegrationCustomizer.class);
 
 	@Override
 	public void applyTo(BlockHound.Builder builder) {
@@ -35,7 +40,7 @@ public class BlockHoundIntegrationCustomizer implements BlockHoundIntegration {
 				.allowBlockingCallsInside("jakarta.json.spi.JsonProvider", "provider") //
 		;
 		builder.blockingMethodCallback(it -> {
-			new Error(it.toString()).printStackTrace();
+			LOGGER.error("BlockHound error", new Error(it.toString()));
 			throw new BlockingOperationError(it);
 		});
 

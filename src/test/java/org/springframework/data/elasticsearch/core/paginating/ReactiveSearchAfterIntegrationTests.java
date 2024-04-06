@@ -87,7 +87,7 @@ public abstract class ReactiveSearchAfterIntegrationTests {
 			query.setSearchAfter(searchAfter);
 			List<SearchHit<Entity>> searchHits = operations.search(query, Entity.class).collectList().block();
 
-			if (searchHits.size() == 0) {
+			if (searchHits.isEmpty()) {
 				break;
 			}
 			foundEntities.addAll(searchHits.stream().map(SearchHit::getContent).collect(Collectors.toList()));

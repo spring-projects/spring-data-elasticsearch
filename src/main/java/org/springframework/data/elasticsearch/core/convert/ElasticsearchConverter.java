@@ -110,6 +110,6 @@ public interface ElasticsearchConverter
 	 * @return a String wihere the property names are replaced with field names
 	 * @since 5.2
 	 */
-	public String updateFieldNames(String propertyPath, ElasticsearchPersistentEntity<?> persistentEntity);
+	String updateFieldNames(String propertyPath, ElasticsearchPersistentEntity<?> persistentEntity);
 	// endregion
 }

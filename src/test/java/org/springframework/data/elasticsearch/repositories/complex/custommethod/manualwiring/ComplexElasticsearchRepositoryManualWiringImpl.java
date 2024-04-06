@@ -27,7 +27,7 @@ import org.springframework.data.elasticsearch.repositories.complex.custommethod.
  */
 public class ComplexElasticsearchRepositoryManualWiringImpl implements ComplexElasticsearchRepositoryCustom {
 
-	private ElasticsearchOperations operations;
+	private final ElasticsearchOperations operations;
 
 	public ComplexElasticsearchRepositoryManualWiringImpl(ElasticsearchOperations operations) {
 		this.operations = operations;

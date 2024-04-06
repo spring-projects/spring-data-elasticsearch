@@ -269,7 +269,7 @@ public abstract class CompletionIntegrationTests {
 
 	static class CompletionEntityBuilder {
 
-		private CompletionEntity result;
+		private final CompletionEntity result;
 
 		public CompletionEntityBuilder(String id) {
 			result = new CompletionEntity(id);
@@ -354,7 +354,7 @@ public abstract class CompletionIntegrationTests {
 	 */
 	static class AnnotatedCompletionEntityBuilder {
 
-		private AnnotatedCompletionEntity result;
+		private final AnnotatedCompletionEntity result;
 
 		public AnnotatedCompletionEntityBuilder(String id) {
 			result = new AnnotatedCompletionEntity(id);

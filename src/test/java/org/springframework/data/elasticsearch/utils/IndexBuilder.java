@@ -24,7 +24,7 @@ public class IndexBuilder {
 					indexQuery.setObject(object);
 					return indexQuery;
 				} catch (IllegalAccessException e) {
-					e.printStackTrace();
+					throw new RuntimeException(e);
 				}
 			}
 		}

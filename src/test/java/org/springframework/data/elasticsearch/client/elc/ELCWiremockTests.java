@@ -38,6 +38,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
  * Tests that need to check the data produced by the Elasticsearch client
  * @author Peter-Josef Meisch
  */
+@SuppressWarnings("UastIncorrectHttpHeaderInspection")
 @ExtendWith(SpringExtension.class)
 public class ELCWiremockTests {
 

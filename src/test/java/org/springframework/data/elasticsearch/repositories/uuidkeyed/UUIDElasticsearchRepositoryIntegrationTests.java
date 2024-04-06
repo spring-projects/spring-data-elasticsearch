@@ -61,20 +61,18 @@ public abstract class UUIDElasticsearchRepositoryIntegrationTests {
 	@Autowired private SampleUUIDKeyedElasticsearchRepository repository;
 
 	@Autowired ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
-	@Autowired IndexNameProvider indexNameProvider;
+    @Autowired IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
 		indexNameProvider.increment();
-		indexOperations = operations.indexOps(SampleEntityUUIDKeyed.class);
-		indexOperations.createWithMapping();
+        operations.indexOps(SampleEntityUUIDKeyed.class).createWithMapping();
 	}
 
 	@Test
 	@org.junit.jupiter.api.Order(Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete();
 	}
 
 	@Test

@@ -365,7 +365,7 @@ class CriteriaQueryProcessor {
 
 			if (item != null) {
 
-				if (sb.length() > 0) {
+				if (!sb.isEmpty()) {
 					sb.append(' ');
 				}
 				sb.append('"');

@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.cluster.ElasticsearchClusterClient;
 import co.elastic.clients.transport.ElasticsearchTransport;
 
 import org.elasticsearch.client.RestClient;
@@ -39,10 +38,5 @@ public class AutoCloseableElasticsearchClient extends ElasticsearchClient implem
 	@Override
 	public void close() throws Exception {
 		transport.close();
-	}
-
-	@Override
-	public ElasticsearchClusterClient cluster() {
-		return super.cluster();
 	}
 }

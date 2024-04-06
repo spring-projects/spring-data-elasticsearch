@@ -26,7 +26,7 @@ import org.springframework.util.Assert;
  */
 public class UpdateResponse {
 
-	private Result result;
+	private final Result result;
 
 	public UpdateResponse(Result result) {
 
@@ -47,6 +47,6 @@ public class UpdateResponse {
 	}
 
 	public enum Result {
-		CREATED, UPDATED, DELETED, NOT_FOUND, NOOP;
+		CREATED, UPDATED, DELETED, NOT_FOUND, NOOP
 	}
 }

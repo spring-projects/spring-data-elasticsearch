@@ -40,7 +40,7 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 		this(new LinkedHashMap<>());
 	}
 
-	public DefaultStringObjectMap(Map<String, ? extends Object> map) {
+	public DefaultStringObjectMap(Map<String, ?> map) {
 		this.delegate = new LinkedHashMap<>(map);
 	}
 

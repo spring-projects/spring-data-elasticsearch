@@ -26,8 +26,8 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomCo
  */
 class ElasticsearchCustomConversionsUnitTests {
 
-	private byte[] bytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
-	private String base64 = "AQIDBA==";
+	private final byte[] bytes = new byte[] { 0x01, 0x02, 0x03, 0x04 };
+	private final String base64 = "AQIDBA==";
 
 	@Test
 	void shouldConvertFromByteArrayToBase64() {

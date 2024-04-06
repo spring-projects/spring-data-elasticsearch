@@ -48,6 +48,7 @@ class ElasticsearchOperationsProducer {
 		return new ElasticsearchTemplate(elasticsearchClient);
 	}
 
+	@SuppressWarnings("EmptyMethod")
 	@PreDestroy
 	public void shutdown() {
 		// remove everything to avoid conflicts with other tests in case server not shut down properly

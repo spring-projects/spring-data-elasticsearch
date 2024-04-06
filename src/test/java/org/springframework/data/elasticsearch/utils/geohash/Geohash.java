@@ -130,7 +130,7 @@ public class Geohash {
 	 * @param neighbors list to add the neighbors to
 	 * @return the given list
 	 */
-	public static final <E extends Collection<? super String>> E addNeighbors(String geohash, E neighbors) {
+	public static <E extends Collection<? super String>> E addNeighbors(String geohash, E neighbors) {
 		return addNeighborsAtLevel(geohash, geohash.length(), neighbors);
 	}
 
@@ -142,8 +142,8 @@ public class Geohash {
 	 * @param neighbors list to add the neighbors to
 	 * @return the given list
 	 */
-	public static final <E extends Collection<? super String>> E addNeighborsAtLevel(String geohash, int level,
-			E neighbors) {
+	public static <E extends Collection<? super String>> E addNeighborsAtLevel(String geohash, int level,
+                                                                               E neighbors) {
 		String south = getNeighbor(geohash, level, 0, -1);
 		String north = getNeighbor(geohash, level, 0, +1);
 		if (north != null) {
@@ -173,7 +173,7 @@ public class Geohash {
 	 * @param dy delta of the second grid coordinate (must be -1, 0 or +1)
 	 * @return geohash of the defined cell
 	 */
-	public static final String getNeighbor(String geohash, int level, int dx, int dy) {
+	public static String getNeighbor(String geohash, int level, int dx, int dy) {
 		int cell = BASE_32_STRING.indexOf(geohash.charAt(level - 1));
 
 		// Decoding the Geohash bit pattern to determine grid coordinates
@@ -221,14 +221,14 @@ public class Geohash {
 	/**
 	 * Encode a string geohash to the geohash based long format (lon/lat interleaved, 4 least significant bits = level)
 	 */
-	public static final long longEncode(String hash) {
+	public static long longEncode(String hash) {
 		return longEncode(hash, hash.length());
 	}
 
 	/**
 	 * Encode lon/lat to the geohash based long format (lon/lat interleaved, 4 least significant bits = level)
 	 */
-	public static final long longEncode(final double lon, final double lat, final int level) {
+	public static long longEncode(final double lon, final double lat, final int level) {
 		// shift to appropriate level
 		final short msf = (short) (((12 - level) * 5) + (MORTON_OFFSET - 2));
 		return ((encodeLatLon(lat, lon) >>> msf) << 4) | level;
@@ -237,14 +237,14 @@ public class Geohash {
 	/**
 	 * Encode to a geohash string from full resolution longitude, latitude)
 	 */
-	public static final String stringEncode(final double lon, final double lat) {
+	public static String stringEncode(final double lon, final double lat) {
 		return stringEncode(lon, lat, 12);
 	}
 
 	/**
 	 * Encode to a level specific geohash string from full resolution longitude, latitude
 	 */
-	public static final String stringEncode(final double lon, final double lat, final int level) {
+	public static String stringEncode(final double lon, final double lat, final int level) {
 		// convert to geohashlong
 		long interleaved = encodeLatLon(lat, lon);
 		interleaved >>>= (((PRECISION - level) * 5) + (MORTON_OFFSET - 2));
@@ -255,7 +255,7 @@ public class Geohash {
 	/**
 	 * Encode to a geohash string from the geohash based long format
 	 */
-	public static final String stringEncode(long geoHashLong) {
+	public static String stringEncode(long geoHashLong) {
 		int level = (int) geoHashLong & 15;
 		geoHashLong >>>= 4;
 		char[] chars = new char[level];
@@ -350,12 +350,12 @@ public class Geohash {
 	}
 
 	/** returns the latitude value from the string based geohash */
-	public static final double decodeLatitude(final String geohash) {
+	public static double decodeLatitude(final String geohash) {
 		return decodeLatitude(Geohash.mortonEncode(geohash));
 	}
 
 	/** returns the latitude value from the string based geohash */
-	public static final double decodeLongitude(final String geohash) {
+	public static double decodeLongitude(final String geohash) {
 		return decodeLongitude(Geohash.mortonEncode(geohash));
 	}
 

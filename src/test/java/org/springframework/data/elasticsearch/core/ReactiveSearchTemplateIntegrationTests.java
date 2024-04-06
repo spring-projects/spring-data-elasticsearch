@@ -67,7 +67,7 @@ public abstract class ReactiveSearchTemplateIntegrationTests {
 				"size": 100
 			  }
 			""";
-	private Script script = Script.builder() //
+	private final Script script = Script.builder() //
 			.withId("testScript") //
 			.withLanguage("mustache") //
 			.withSource(SCRIPT) //

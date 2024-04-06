@@ -29,19 +29,19 @@ import org.springframework.test.context.ContextConfiguration
 @ContextConfiguration(classes = [CoroutineRepositoryELCIntegrationTests.Config::class])
 class CoroutineRepositoryELCIntegrationTests : CoroutineRepositoryIntegrationTests() {
 
-		@Configuration
-		@Import(ReactiveElasticsearchTemplateConfiguration::class)
-		@EnableReactiveElasticsearchRepositories(
-				considerNestedRepositories = true,
-				includeFilters = [ComponentScan.Filter(
-						type = FilterType.ASSIGNABLE_TYPE,
-						classes = [CoroutineElasticsearchRepository::class]
-				)]
-		)
-		open class Config {
-				@Bean
-				open fun indexNameProvider(): IndexNameProvider {
-						return IndexNameProvider("coroutine-repository")
-				}
-		}
+    @Configuration
+    @Import(ReactiveElasticsearchTemplateConfiguration::class)
+    @EnableReactiveElasticsearchRepositories(
+        considerNestedRepositories = true,
+        includeFilters = [ComponentScan.Filter(
+            type = FilterType.ASSIGNABLE_TYPE,
+            classes = [CoroutineElasticsearchRepository::class]
+        )]
+    )
+    open class Config {
+        @Bean
+        open fun indexNameProvider(): IndexNameProvider {
+            return IndexNameProvider("coroutine-repository")
+        }
+    }
 }

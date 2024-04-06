@@ -123,7 +123,7 @@ public abstract class NativeQueryIntegrationTests {
 				      ]
 				    }
 				  }
-								""").build();
+				""").build();
 		var nativeQuery = NativeQuery.builder().withQuery(stringQuery).build();
 
 		var searchHits = operations.search(nativeQuery, SampleEntity.class);

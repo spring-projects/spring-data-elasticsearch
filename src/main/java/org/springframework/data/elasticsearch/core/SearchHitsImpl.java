@@ -42,7 +42,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	private final Lazy<List<SearchHit<T>>> unmodifiableSearchHits;
 	@Nullable private final AggregationsContainer<?> aggregations;
 	@Nullable private final Suggest suggest;
-	@Nullable private String pointInTimeId;
+	@Nullable private final String pointInTimeId;
 	@Nullable private final SearchShardStatistics searchShardStatistics;
 
 	/**

@@ -38,6 +38,7 @@ import org.springframework.data.elasticsearch.core.SearchPage;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
@@ -186,7 +187,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(entity, "Cannot save 'null' entity.");
 
-		// noinspection DataFlowIssue
 		return executeAndRefresh(operations -> operations.save(entity, getIndexCoordinates()));
 	}
 
@@ -195,7 +195,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(entity, "entity must not be null");
 
-		// noinspection DataFlowIssue
 		return executeAndRefresh(operations -> operations.save(entity, getIndexCoordinates()), refreshPolicy);
 	}
 
@@ -309,7 +308,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Query query = operations.idsQuery(idStrings);
 		executeAndRefresh((OperationsCallback<Void>) operations -> {
-			operations.delete(query, entityClass, getIndexCoordinates());
+			operations.delete(DeleteQuery.builder(query).build(), entityClass, getIndexCoordinates());
 			return null;
 		});
 	}
@@ -331,7 +330,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Query query = operations.idsQuery(idStrings);
 		executeAndRefresh((OperationsCallback<Void>) operations -> {
-			operations.delete(query, entityClass, getIndexCoordinates());
+			operations.delete(DeleteQuery.builder(query).build(), entityClass, getIndexCoordinates());
 			return null;
 		});
 	}
@@ -365,7 +364,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		if (id != null) {
 			executeAndRefresh(operations -> {
 				var ops = routing != null ? operations.withRouting(RoutingResolver.just(routing)) : operations;
-				// noinspection DataFlowIssue
 				return ops.delete(stringIdRepresentation(id), indexCoordinates);
 			});
 		}
@@ -377,7 +375,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		if (id != null) {
 			executeAndRefresh(operations -> {
 				var ops = routing != null ? operations.withRouting(RoutingResolver.just(routing)) : operations;
-				// noinspection DataFlowIssue
 				return ops.delete(stringIdRepresentation(id), indexCoordinates);
 			}, refreshPolicy);
 		}
@@ -395,7 +392,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	@Override
 	public void deleteAll(@Nullable RefreshPolicy refreshPolicy) {
 		executeAndRefresh((OperationsCallback<Void>) operations -> {
-			operations.delete(Query.findAll(), entityClass, getIndexCoordinates());
+			operations.delete(DeleteQuery.builder(Query.findAll()).build(), entityClass, getIndexCoordinates());
 			return null;
 		}, refreshPolicy);
 	}

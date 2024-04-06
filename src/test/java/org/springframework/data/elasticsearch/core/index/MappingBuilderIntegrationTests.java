@@ -516,7 +516,7 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Id private String id;
 
-		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private Set<Group> groups = new HashSet<>();
+		@Field(type = FieldType.Nested, ignoreFields = { "users" }) private final Set<Group> groups = new HashSet<>();
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
@@ -525,7 +525,7 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Id String id;
 
-		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private Set<User> users = new HashSet<>();
+		@Field(type = FieldType.Nested, ignoreFields = { "groups" }) private final Set<User> users = new HashSet<>();
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")

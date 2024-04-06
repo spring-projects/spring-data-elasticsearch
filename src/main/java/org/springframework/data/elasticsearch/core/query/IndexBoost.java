@@ -23,8 +23,8 @@ package org.springframework.data.elasticsearch.core.query;
  */
 public class IndexBoost {
 
-	private String indexName;
-	private float boost;
+	private final String indexName;
+	private final float boost;
 
 	public IndexBoost(String indexName, float boost) {
 		this.indexName = indexName;

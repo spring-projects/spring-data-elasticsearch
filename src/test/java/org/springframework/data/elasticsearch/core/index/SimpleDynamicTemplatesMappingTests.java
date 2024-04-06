@@ -76,7 +76,7 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 		@Id private String id;
 
 		@Nullable
-		@Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
+		@Field(type = FieldType.Object) private final Map<String, String> names = new HashMap<>();
 	}
 
 	/**
@@ -91,7 +91,7 @@ public class SimpleDynamicTemplatesMappingTests extends MappingContextBaseTests 
 		@Id private String id;
 
 		@Nullable
-		@Field(type = FieldType.Object) private Map<String, String> names = new HashMap<>();
+		@Field(type = FieldType.Object) private final Map<String, String> names = new HashMap<>();
 	}
 
 }

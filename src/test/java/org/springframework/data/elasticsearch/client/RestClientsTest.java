@@ -50,14 +50,13 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 
 /**
  * We need hoverfly for testing the reactive code to use a proxy. Wiremock cannot intercept the proxy calls as WebClient
- * uses HTTP CONNECT on proxy requests which wiremock does not support.
- * <br/>
- * Note: since 5.0 we do not use the WebClient for
- * the reactive code anymore, so this might be handled with two wiremocks, but there is no real need to change this test
- * setup.
+ * uses HTTP CONNECT on proxy requests which wiremock does not support. <br/>
+ * Note: since 5.0 we do not use the WebClient for the reactive code anymore, so this might be handled with two
+ * wiremocks, but there is no real need to change this test setup.
  *
  * @author Peter-Josef Meisch
  */
+@SuppressWarnings("UastIncorrectHttpHeaderInspection")
 @HoverflyCapture(path = "target/hoverfly", config = @HoverflyConfig(proxyLocalHost = true, plainHttpTunneling = true))
 @ExtendWith(HoverflyExtension.class)
 public class RestClientsTest {
@@ -208,15 +207,14 @@ public class RestClientsTest {
 			ClientUnderTest clientUnderTest = clientUnderTestFactory.create(clientConfiguration);
 
 			class Foo {
-				public String id;
+				public final String id;
 
 				Foo(String id) {
 					this.id = id;
 				}
 			}
-			;
 
-			clientUnderTest.index(new Foo("42"));
+            clientUnderTest.index(new Foo("42"));
 
 			verify(putRequestedFor(urlMatching(urlPattern)) //
 					.withHeader("Accept", new EqualToPattern("application/vnd.elasticsearch+json;compatible-with=7")) //

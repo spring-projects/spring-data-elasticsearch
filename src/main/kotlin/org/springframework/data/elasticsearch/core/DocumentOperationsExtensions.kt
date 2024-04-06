@@ -1,11 +1,9 @@
+@file:Suppress("unused")
+
 package org.springframework.data.elasticsearch.core
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
-import org.springframework.data.elasticsearch.core.query.BulkOptions
-import org.springframework.data.elasticsearch.core.query.ByQueryResponse
-import org.springframework.data.elasticsearch.core.query.IndexQuery
-import org.springframework.data.elasticsearch.core.query.Query
-import org.springframework.data.elasticsearch.core.query.UpdateQuery
+import org.springframework.data.elasticsearch.core.query.*
 
 /**
  * Extension functions for [DocumentOperations] methods that take a Class parameter leveraging reified type parameters.
@@ -39,8 +37,8 @@ inline fun <reified T : Any> DocumentOperations.bulkIndex(
 inline fun <reified T : Any> DocumentOperations.bulkUpdate(queries: List<UpdateQuery>) =
     bulkUpdate(queries, T::class.java)
 
-inline fun <reified T : Any> DocumentOperations.delete(id: String): String =
+inline fun <reified T : Any> DocumentOperations.deleteById(id: String): String =
     delete(id, T::class.java)
 
-inline fun <reified T : Any> DocumentOperations.delete(query: Query): ByQueryResponse =
-    delete(query, T::class.java)
+inline fun <reified T : Any> DocumentOperations.deleteByQuery(query: Query): ByQueryResponse =
+    delete(DeleteQuery.builder(query).build(), T::class.java)

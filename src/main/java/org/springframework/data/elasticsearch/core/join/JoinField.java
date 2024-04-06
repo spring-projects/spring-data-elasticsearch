@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.join;
 
 import java.util.Objects;
 
-import org.springframework.data.annotation.PersistenceConstructor;
+import org.springframework.data.annotation.PersistenceCreator;
 import org.springframework.lang.Nullable;
 
 /**
@@ -39,7 +39,7 @@ public class JoinField<ID> {
 		this(name, null);
 	}
 
-	@PersistenceConstructor
+	@PersistenceCreator
 	public JoinField(String name, @Nullable ID parent) {
 		this.name = name;
 		this.parent = parent;
