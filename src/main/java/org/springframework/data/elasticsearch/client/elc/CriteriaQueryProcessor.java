@@ -16,12 +16,14 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.Queries.*;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.scoreMode;
 import static org.springframework.util.StringUtils.*;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.core.search.InnerHits;
 import co.elastic.clients.json.JsonData;
 
 import java.util.ArrayList;
@@ -30,7 +32,12 @@ import java.util.List;
 
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Field;
+import org.springframework.data.elasticsearch.core.query.HasChildQuery;
+import org.springframework.data.elasticsearch.core.query.HasParentQuery;
+import org.springframework.data.elasticsearch.core.query.InnerHitsQuery;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -343,6 +350,34 @@ class CriteriaQueryProcessor {
 								.value(value.toString()) //
 								.boost(boost)); //
 				break;
+			case HAS_CHILD:
+				if (value instanceof HasChildQuery query) {
+					queryBuilder.hasChild(hcb -> hcb
+							.type(query.getType())
+							.query(getQuery(query.getQuery()))
+							.innerHits(getInnerHits(query.getInnerHitsQuery()))
+							.ignoreUnmapped(query.getIgnoreUnmapped())
+                            .minChildren(query.getMinChildren())
+                            .maxChildren(query.getMaxChildren())
+                            .scoreMode(scoreMode(query.getScoreMode()))
+					);
+				} else {
+					throw new CriteriaQueryException("value for " + fieldName + " is not a has_child query");
+				}
+                break;
+            case HAS_PARENT:
+                if (value instanceof HasParentQuery query) {
+					queryBuilder.hasParent(hpb -> hpb
+							.parentType(query.getParentType())
+							.query(getQuery(query.getQuery()))
+							.innerHits(getInnerHits(query.getInnerHitsQuery()))
+							.ignoreUnmapped(query.getIgnoreUnmapped())
+							.score(query.getScore())
+					);
+                } else {
+                    throw new CriteriaQueryException("value for " + fieldName + " is not a has_parent query");
+                }
+                break;
 			default:
 				throw new CriteriaQueryException("Could not build query for " + entry);
 		}
@@ -396,5 +431,49 @@ class CriteriaQueryProcessor {
 		}
 		return sb.toString();
 	}
+
+    /**
+     * Convert a spring-data-elasticsearch {@literal query} to an Elasticsearch {@literal query}.
+     * <p>
+     * The reason it was copied from {@link RequestConverter#getQuery(org.springframework.data.elasticsearch.core.query.Query, Class)} is because of a circular dependency.
+     *
+     * @param query spring-data-elasticsearch {@literal query}.
+     * @return an Elasticsearch {@literal query}.
+     */
+    private static Query getQuery(org.springframework.data.elasticsearch.core.query.Query query) {
+        Query esQuery = null;
+
+        if (query instanceof CriteriaQuery) {
+            esQuery = createQuery(((CriteriaQuery) query).getCriteria());
+        } else if (query instanceof StringQuery) {
+            esQuery = Queries.wrapperQueryAsQuery(((StringQuery) query).getSource());
+        } else if (query instanceof NativeQuery nativeQuery) {
+            if (nativeQuery.getQuery() != null) {
+                esQuery = nativeQuery.getQuery();
+            } else if (nativeQuery.getSpringDataQuery() != null) {
+                esQuery = getQuery(nativeQuery.getSpringDataQuery());
+            }
+        } else {
+            throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
+        }
+
+        Assert.notNull(query, "query must not be null.");
+        return esQuery;
+    }
+
+    /**
+     * Convert a spring-data-elasticsearch {@literal inner_hits} to an Elasticsearch {@literal inner_hits} query.
+     *
+     * @param query spring-data-elasticsearch {@literal inner_hits}.
+     * @return an Elasticsearch {@literal inner_hits} query.
+     */
+    @Nullable
+    private static InnerHits getInnerHits(@Nullable InnerHitsQuery query) {
+        if (query == null) {
+            return null;
+        }
+
+        return InnerHits.of(iqb -> iqb.from(query.getFrom()).size(query.getSize()).name(query.getName()));
+    }
 
 }

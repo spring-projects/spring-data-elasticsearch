@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.mapping.FieldType;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
+import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch.core.search.BoundaryScanner;
 import co.elastic.clients.elasticsearch.core.search.HighlighterEncoder;
@@ -41,6 +42,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
+import org.springframework.data.elasticsearch.core.query.HasChildQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndicesOptions;
 import org.springframework.data.elasticsearch.core.query.Order;
@@ -526,5 +528,25 @@ final class TypeUtils {
 	@Nullable
 	static Conflicts conflicts(@Nullable ConflictsType conflicts) {
 		return conflicts != null ? Conflicts.valueOf(conflicts.name()) : null;
+	}
+
+	/**
+	 * Convert a spring-data-elasticsearch {@literal scoreMode} to an Elasticsearch {@literal scoreMode}.
+	 *
+	 * @param scoreMode spring-data-elasticsearch {@literal scoreMode}.
+	 * @return an Elasticsearch {@literal scoreMode}.
+	 */
+	static ChildScoreMode scoreMode(@Nullable HasChildQuery.ScoreMode scoreMode) {
+		if (scoreMode == null) {
+			return ChildScoreMode.None;
+		}
+
+		return switch (scoreMode) {
+			case Avg -> ChildScoreMode.Avg;
+			case Max -> ChildScoreMode.Max;
+			case Min -> ChildScoreMode.Min;
+			case Sum -> ChildScoreMode.Sum;
+			default -> ChildScoreMode.None;
+		};
 	}
 }
