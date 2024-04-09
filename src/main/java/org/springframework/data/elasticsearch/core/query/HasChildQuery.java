@@ -40,34 +40,29 @@ public class HasChildQuery {
      * Indicates whether to ignore an unmapped {@link #type} and not return any documents instead of an error.
      * Default, this is set to {@code false}.
      */
-    @Nullable
-    private final Boolean ignoreUnmapped;
+    @Nullable private final Boolean ignoreUnmapped;
 
     /**
      * The Maximum number of child documents that match the {@link #query} allowed for a returned parent document.
      * If the parent document exceeds this limit, it is excluded from the search results.
      */
-    @Nullable
-    private final Integer maxChildren;
+    @Nullable private final Integer maxChildren;
 
     /**
      * Minimum number of child documents that match the query required to match the {@link #query} for a returned parent document.
      * If the parent document does not meet this limit, it is excluded from the search results.
      */
-    @Nullable
-    private final Integer minChildren;
+    @Nullable private final Integer minChildren;
 
     /**
      * Indicates how scores for matching child documents affect the root parent document’s relevance score.
      */
-    @Nullable
-    private final ScoreMode scoreMode;
+    @Nullable private final ScoreMode scoreMode;
 
     /**
      * Obtaining nested objects and documents that have a parent-child relationship.
      */
-    @Nullable
-    private final InnerHitsQuery innerHitsQuery;
+    @Nullable private final InnerHitsQuery innerHitsQuery;
 
     public static Builder builder(String type) {
         return new Builder(type);
@@ -127,19 +122,14 @@ public class HasChildQuery {
         private final String type;
         private Query query;
 
-        @Nullable
-        private Boolean ignoreUnmapped;
+        @Nullable private Boolean ignoreUnmapped;
 
-        @Nullable
-        private Integer maxChildren;
-        @Nullable
-        private Integer minChildren;
+        @Nullable private Integer maxChildren;
+        @Nullable private Integer minChildren;
 
-        @Nullable
-        private ScoreMode scoreMode;
+        @Nullable private ScoreMode scoreMode;
 
-        @Nullable
-        private InnerHitsQuery innerHitsQuery;
+        @Nullable private InnerHitsQuery innerHitsQuery;
 
         private Builder(String type) {
             Assert.notNull(type, "type must not be null");

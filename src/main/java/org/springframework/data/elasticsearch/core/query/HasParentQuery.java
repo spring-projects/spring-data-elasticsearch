@@ -40,21 +40,18 @@ public class HasParentQuery {
      * Indicates whether the relevance score of a matching parent document is aggregated into its child documents.
      * Default, this is set to {@code false}.
      */
-    @Nullable
-    private final Boolean score;
+    @Nullable private final Boolean score;
 
     /**
      * Indicates whether to ignore an unmapped {@link #parentType} and not return any documents instead of an error.
      * Default, this is set to {@code false}.
      */
-    @Nullable
-    private final Boolean ignoreUnmapped;
+    @Nullable private final Boolean ignoreUnmapped;
 
     /**
      * Obtaining nested objects and documents that have a parent-child relationship.
      */
-    @Nullable
-    private final InnerHitsQuery innerHitsQuery;
+    @Nullable private final InnerHitsQuery innerHitsQuery;
 
     public static Builder builder(String parentType) {
         return new Builder(parentType);
@@ -96,13 +93,10 @@ public class HasParentQuery {
         private final String parentType;
         private Query query;
 
-        @Nullable
-        private Boolean score;
-        @Nullable
-        private Boolean ignoreUnmapped;
+        @Nullable private Boolean score;
+        @Nullable private Boolean ignoreUnmapped;
 
-        @Nullable
-        private InnerHitsQuery innerHitsQuery;
+        @Nullable private InnerHitsQuery innerHitsQuery;
 
         private Builder(String parentType) {
             Assert.notNull(parentType, "parent_type must not be null.");

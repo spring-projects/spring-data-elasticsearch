@@ -28,20 +28,17 @@ public class InnerHitsQuery {
     /**
      * The name to be used for the particular inner hit definition in the response.
      */
-    @Nullable
-    private final String name;
+    @Nullable private final String name;
 
     /**
      * The maximum number of hits to return.
      */
-    @Nullable
-    private final Integer size;
+    @Nullable private final Integer size;
 
     /**
      * The offset from where the first hit to fetch.
      */
-    @Nullable
-    private final Integer from;
+    @Nullable private final Integer from;
 
     public static Builder builder() {
         return new Builder();
@@ -70,12 +67,9 @@ public class InnerHitsQuery {
     }
 
     public static final class Builder {
-        @Nullable
-        private String name;
-        @Nullable
-        private Integer size;
-        @Nullable
-        private Integer from;
+        @Nullable private String name;
+        @Nullable private Integer size;
+        @Nullable private Integer from;
 
         private Builder() {
         }
