@@ -151,7 +151,7 @@ public abstract class IndexTemplateIntegrationTests {
 	void shouldDeleteComponentTemplate() {
 
 		IndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
-		String templateName = "template" + UUID.randomUUID().toString();
+		String templateName = "template" + UUID.randomUUID();
 		var putComponentTemplateRequest = PutComponentTemplateRequest.builder() //
 				.withName(templateName) //
 				.withTemplateData(ComponentTemplateRequestData.builder() //
@@ -293,7 +293,7 @@ public abstract class IndexTemplateIntegrationTests {
 	@Test // DATAES-612
 	void shouldReturnNullOnNonExistingGetTemplate() {
 
-		String templateName = "template" + UUID.randomUUID().toString();
+		String templateName = "template" + UUID.randomUUID();
 		IndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
 
 		GetTemplateRequest getTemplateRequest = new GetTemplateRequest(templateName);
@@ -349,7 +349,7 @@ public abstract class IndexTemplateIntegrationTests {
 	void shouldCheckExists() {
 		IndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
 
-		String templateName = "template" + UUID.randomUUID().toString();
+		String templateName = "template" + UUID.randomUUID();
 		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
 
 		boolean exists = indexOps.existsTemplate(existsTemplateRequest);
@@ -372,7 +372,7 @@ public abstract class IndexTemplateIntegrationTests {
 
 		IndexOperations indexOps = operations.indexOps(IndexCoordinates.of("dont-care"));
 
-		String templateName = "template" + UUID.randomUUID().toString();
+		String templateName = "template" + UUID.randomUUID();
 		ExistsTemplateRequest existsTemplateRequest = new ExistsTemplateRequest(templateName);
 
 		PutTemplateRequest putTemplateRequest = PutTemplateRequest.builder(templateName, "log-*") //

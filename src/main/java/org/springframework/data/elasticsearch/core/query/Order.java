@@ -15,12 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import java.util.function.Function;
+
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Extends the {@link Sort.Order} with properties that can be set on Elasticsearch order options.
@@ -143,18 +142,19 @@ public class Order extends Sort.Order {
 	}
 
 	public static class Nested {
-		private String path;
-		@Nullable private Query filter;
+		private final String path;
+		@Nullable private final Query filter;
 		@Nullable private Integer maxChildren = null;
-		@Nullable private Nested nested;
+		@Nullable private final Nested nested;
 
 		public static Nested of(String path, Function<Nested.Builder, Nested.Builder> builderFunction) {
 
-				Assert.notNull(path, "path must not be null");
-				Assert.notNull(builderFunction, "builderFunction must not be null");
+			Assert.notNull(path, "path must not be null");
+			Assert.notNull(builderFunction, "builderFunction must not be null");
 
-				return builderFunction.apply(builder(path)).build();
+			return builderFunction.apply(builder(path)).build();
 		}
+
 		public Nested(String path, @Nullable Query filter, @Nullable Integer maxChildren, @Nullable Nested nested) {
 
 			Assert.notNull(path, "path must not be null");
@@ -189,7 +189,7 @@ public class Order extends Sort.Order {
 		}
 
 		public static class Builder {
-			private String path;
+			private final String path;
 			@Nullable private Query filter = null;
 			@Nullable private Integer maxChildren = null;
 			@Nullable private Nested nested = null;
@@ -203,8 +203,9 @@ public class Order extends Sort.Order {
 
 			/**
 			 * Sets the filter query for a nested sort.<br/>
-			 * Note: This cannot be a {@link CriteriaQuery}, as that would be sent as a nested query within the filter,
-			 * use a {@link org.springframework.data.elasticsearch.client.elc.NativeQuery} or {@link StringQuery} instead.
+			 * Note: This cannot be a {@link CriteriaQuery}, as that would be sent as a nested query within the filter, use a
+			 * {@link org.springframework.data.elasticsearch.client.elc.NativeQuery} or {@link StringQuery} instead.
+			 *
 			 * @param filter the filter to set
 			 * @return this builder
 			 * @throws IllegalArgumentException when a {@link CriteriaQuery} is passed.

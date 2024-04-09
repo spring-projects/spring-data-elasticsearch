@@ -17,46 +17,61 @@ import kotlin.coroutines.Continuation
  */
 class ReactiveElasticsearchQueryMethodCoroutineUnitTests {
 
-		val projectionFactory = SpelAwareProxyProjectionFactory()
+    private val projectionFactory = SpelAwareProxyProjectionFactory()
 
-		interface PersonRepository : CoroutineElasticsearchRepository<Person, String> {
+    interface PersonRepository : CoroutineElasticsearchRepository<Person, String> {
 
-				suspend fun findSuspendAllByName(): Flow<Person>
+        suspend fun findSuspendAllByName(): Flow<Person>
 
-				fun findAllByName(): Flow<Person>
+        fun findAllByName(): Flow<Person>
 
-				suspend fun findSuspendByName(): List<Person>
-		}
+        suspend fun findSuspendByName(): List<Person>
+    }
 
-		@Test // #2545
-		internal fun `should consider methods returning Flow as collection queries`() {
+    @Test // #2545
+    internal fun `should consider methods returning Flow as collection queries`() {
 
-				val method = PersonRepository::class.java.getMethod("findAllByName")
-				val queryMethod = ReactiveElasticsearchQueryMethod(method, DefaultRepositoryMetadata(PersonRepository::class.java), projectionFactory, SimpleElasticsearchMappingContext())
+        val method = PersonRepository::class.java.getMethod("findAllByName")
+        val queryMethod = ReactiveElasticsearchQueryMethod(
+            method,
+            DefaultRepositoryMetadata(PersonRepository::class.java),
+            projectionFactory,
+            SimpleElasticsearchMappingContext()
+        )
 
-				assertThat(queryMethod.isCollectionQuery).isTrue()
-		}
+        assertThat(queryMethod.isCollectionQuery).isTrue()
+    }
 
-		@Test // #2545
-		internal fun `should consider suspended methods returning Flow as collection queries`() {
+    @Test // #2545
+    internal fun `should consider suspended methods returning Flow as collection queries`() {
 
-				val method = PersonRepository::class.java.getMethod("findSuspendAllByName", Continuation::class.java)
-				val queryMethod = ReactiveElasticsearchQueryMethod(method, DefaultRepositoryMetadata(PersonRepository::class.java), projectionFactory, SimpleElasticsearchMappingContext())
+        val method = PersonRepository::class.java.getMethod("findSuspendAllByName", Continuation::class.java)
+        val queryMethod = ReactiveElasticsearchQueryMethod(
+            method,
+            DefaultRepositoryMetadata(PersonRepository::class.java),
+            projectionFactory,
+            SimpleElasticsearchMappingContext()
+        )
 
-				assertThat(queryMethod.isCollectionQuery).isTrue()
-		}
+        assertThat(queryMethod.isCollectionQuery).isTrue()
+    }
 
-		@Test // #2545
-		internal fun `should consider suspended methods returning List as collection queries`() {
+    @Test // #2545
+    internal fun `should consider suspended methods returning List as collection queries`() {
 
-				val method = PersonRepository::class.java.getMethod("findSuspendByName", Continuation::class.java)
-				val queryMethod = ReactiveElasticsearchQueryMethod(method, DefaultRepositoryMetadata(PersonRepository::class.java), projectionFactory, SimpleElasticsearchMappingContext())
+        val method = PersonRepository::class.java.getMethod("findSuspendByName", Continuation::class.java)
+        val queryMethod = ReactiveElasticsearchQueryMethod(
+            method,
+            DefaultRepositoryMetadata(PersonRepository::class.java),
+            projectionFactory,
+            SimpleElasticsearchMappingContext()
+        )
 
-				assertThat(queryMethod.isCollectionQuery).isTrue()
-		}
+        assertThat(queryMethod.isCollectionQuery).isTrue()
+    }
 
-		data class Person(
-				@Id val id: String?,
-				@Field val name: String?
-		)
+    data class Person(
+        @Id val id: String?,
+        @Field val name: String?
+    )
 }

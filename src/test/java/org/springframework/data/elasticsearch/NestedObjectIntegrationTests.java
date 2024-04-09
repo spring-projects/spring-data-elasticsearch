@@ -249,6 +249,40 @@ public abstract class NestedObjectIntegrationTests {
 	public void shouldSearchBooksForPersonInitialLevelNestedType() {
 
 		// given
+		var foo = getPerson();
+
+		Car car = new Car();
+		car.setName("Saturn");
+		car.setModel("Imprezza");
+
+		Person bar = new Person();
+		bar.setId("2");
+		bar.setName("Bar");
+		bar.setCar(Collections.singletonList(car));
+
+		List<IndexQuery> indexQueries = new ArrayList<>();
+		IndexQuery indexQuery1 = new IndexQuery();
+		indexQuery1.setId(foo.getId());
+		indexQuery1.setObject(foo);
+
+		IndexQuery indexQuery2 = new IndexQuery();
+		indexQuery2.setId(bar.getId());
+		indexQuery2.setObject(bar);
+
+		indexQueries.add(indexQuery1);
+		indexQueries.add(indexQuery2);
+
+		operations.bulkIndex(indexQueries, Person.class);
+
+		// when
+		Query searchQuery = getNestedQuery3();
+		SearchHits<Person> persons = operations.search(searchQuery, Person.class);
+
+		// then
+		assertThat(persons).hasSize(1);
+	}
+
+	private static Person getPerson() {
 		List<Car> cars = new ArrayList<>();
 
 		Car saturn = new Car();
@@ -288,36 +322,7 @@ public abstract class NestedObjectIntegrationTests {
 		foo.setId("1");
 		foo.setCar(cars);
 		foo.setBooks(Arrays.asList(java, spring));
-
-		Car car = new Car();
-		car.setName("Saturn");
-		car.setModel("Imprezza");
-
-		Person bar = new Person();
-		bar.setId("2");
-		bar.setName("Bar");
-		bar.setCar(Collections.singletonList(car));
-
-		List<IndexQuery> indexQueries = new ArrayList<>();
-		IndexQuery indexQuery1 = new IndexQuery();
-		indexQuery1.setId(foo.getId());
-		indexQuery1.setObject(foo);
-
-		IndexQuery indexQuery2 = new IndexQuery();
-		indexQuery2.setId(bar.getId());
-		indexQuery2.setObject(bar);
-
-		indexQueries.add(indexQuery1);
-		indexQueries.add(indexQuery2);
-
-		operations.bulkIndex(indexQueries, Person.class);
-
-		// when
-		Query searchQuery = getNestedQuery3();
-		SearchHits<Person> persons = operations.search(searchQuery, Person.class);
-
-		// then
-		assertThat(persons).hasSize(1);
+		return foo;
 	}
 
 	@NotNull

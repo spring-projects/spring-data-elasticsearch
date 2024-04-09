@@ -409,6 +409,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	abstract protected Mono<String> doDeleteById(String id, @Nullable String routing, IndexCoordinates index);
 
 	@Override
+	@Deprecated
 	public Mono<ByQueryResponse> delete(Query query, Class<?> entityType) {
 		return delete(query, entityType, getIndexCoordinatesFor(entityType));
 	}

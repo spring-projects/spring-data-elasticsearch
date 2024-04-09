@@ -82,6 +82,6 @@ public @interface Mapping {
 	MappingAlias[] aliases() default {};
 
 	enum Detection {
-		DEFAULT, TRUE, FALSE;
+		DEFAULT, TRUE, FALSE
 	}
 }

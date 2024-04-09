@@ -24,8 +24,8 @@ import org.springframework.data.geo.Box;
  */
 public class GeoBox {
 
-	private GeoPoint topLeft;
-	private GeoPoint bottomRight;
+	private final GeoPoint topLeft;
+	private final GeoPoint bottomRight;
 
 	public GeoBox(GeoPoint topLeft, GeoPoint bottomRight) {
 		this.topLeft = topLeft;

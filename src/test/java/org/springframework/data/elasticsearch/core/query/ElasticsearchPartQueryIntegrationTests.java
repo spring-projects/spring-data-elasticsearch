@@ -23,7 +23,6 @@ import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -47,6 +46,7 @@ import org.springframework.lang.Nullable;
  * @author Peter-Josef Meisch
  * @author Haibo Liu
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @SpringIntegrationTest
 public abstract class ElasticsearchPartQueryIntegrationTests {
 
@@ -54,9 +54,6 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 	public static final int BOOK_PRICE = 42;
 
 	@Autowired protected ElasticsearchOperations operations;
-
-	@BeforeEach
-	public void setUp() {}
 
 	@Test
 	void findByName() throws NoSuchMethodException, JSONException {

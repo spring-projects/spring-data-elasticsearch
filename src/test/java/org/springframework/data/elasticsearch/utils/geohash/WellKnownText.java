@@ -36,11 +36,11 @@ public class WellKnownText {
 	public static final String COMMA = ",";
 	public static final String NAN = "NaN";
 
-	private final String NUMBER = "<NUMBER>";
-	private final String EOF = "END-OF-STREAM";
-	private final String EOL = "END-OF-LINE";
+	private static final String NUMBER = "<NUMBER>";
+	private static final String EOF = "END-OF-STREAM";
+	private static final String EOL = "END-OF-LINE";
 
-	private final boolean coerce;
+	@SuppressWarnings("FieldCanBeLocal") private final boolean coerce;
 	private final GeometryValidator validator;
 
 	public WellKnownText(boolean coerce, GeometryValidator validator) {
@@ -76,7 +76,7 @@ public class WellKnownText {
 
 				private void visitPoint(double lon, double lat, double alt) {
 					sb.append(lon).append(SPACE).append(lat);
-					if (Double.isNaN(alt) == false) {
+					if (!Double.isNaN(alt)) {
 						sb.append(SPACE).append(alt);
 					}
 				}
@@ -138,13 +138,11 @@ public class WellKnownText {
 	 */
 	private Geometry parseGeometry(StreamTokenizer stream) throws IOException, ParseException {
 		final String type = nextWord(stream).toLowerCase(Locale.ROOT);
-		switch (type) {
-			case "point":
-				return parsePoint(stream);
-			case "bbox":
-				return parseBBox(stream);
-		}
-		throw new IllegalArgumentException("Unknown geometry type: " + type);
+		return switch (type) {
+			case "point" -> parsePoint(stream);
+			case "bbox" -> parseBBox(stream);
+			default -> throw new IllegalArgumentException("Unknown geometry type: " + type);
+		};
 	}
 
 	private Point parsePoint(StreamTokenizer stream) throws IOException, ParseException {
@@ -178,7 +176,7 @@ public class WellKnownText {
 		if (isNumberNext(stream)) {
 			alts.add(nextNumber(stream));
 		}
-		if (alts.isEmpty() == false && alts.size() != lons.size()) {
+		if (!alts.isEmpty() && alts.size() != lons.size()) {
 			throw new ParseException("coordinate dimensions do not match: " + tokenString(stream), stream.lineno());
 		}
 	}
@@ -187,7 +185,6 @@ public class WellKnownText {
 		if (nextEmptyOrOpen(stream).equals(EMPTY)) {
 			return Rectangle.EMPTY;
 		}
-		// TODO: Add 3D support
 		double minLon = nextNumber(stream);
 		nextComma(stream);
 		double maxLon = nextNumber(stream);
@@ -203,18 +200,16 @@ public class WellKnownText {
 	 * next word in the stream
 	 */
 	private String nextWord(StreamTokenizer stream) throws ParseException, IOException {
-		switch (stream.nextToken()) {
-			case StreamTokenizer.TT_WORD:
+		return switch (stream.nextToken()) {
+			case StreamTokenizer.TT_WORD -> {
 				final String word = stream.sval;
-				return word.equalsIgnoreCase(EMPTY) ? EMPTY : word;
-			case '(':
-				return LPAREN;
-			case ')':
-				return RPAREN;
-			case ',':
-				return COMMA;
-		}
-		throw new ParseException("expected word but found: " + tokenString(stream), stream.lineno());
+				yield word.equalsIgnoreCase(EMPTY) ? EMPTY : word;
+			}
+			case '(' -> LPAREN;
+			case ')' -> RPAREN;
+			case ',' -> COMMA;
+			default -> throw new ParseException("expected word but found: " + tokenString(stream), stream.lineno());
+		};
 	}
 
 	private double nextNumber(StreamTokenizer stream) throws IOException, ParseException {
@@ -238,7 +233,7 @@ public class WellKnownText {
 			case StreamTokenizer.TT_EOF -> EOF;
 			case StreamTokenizer.TT_EOL -> EOL;
 			case StreamTokenizer.TT_NUMBER -> NUMBER;
-			default -> "'" + (char) stream.ttype + "'";
+			default -> "'" + (char) stream.ttype + '\'';
 		};
 	}
 

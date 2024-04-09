@@ -15,9 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.suggest;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.*;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
@@ -243,7 +247,7 @@ public abstract class CompletionWithContextsIntegrationTests {
 	 */
 	static class ContextCompletionEntityBuilder {
 
-		private ContextCompletionEntity result;
+		private final ContextCompletionEntity result;
 
 		public ContextCompletionEntityBuilder(String id) {
 			result = new ContextCompletionEntity(id);

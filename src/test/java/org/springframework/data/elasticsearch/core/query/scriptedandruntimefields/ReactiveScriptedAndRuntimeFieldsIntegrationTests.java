@@ -395,7 +395,7 @@ public abstract class ReactiveScriptedAndRuntimeFieldsIntegrationTests {
 				                  }
 				                }
 				              }
-				            """)
+				""")
 		Flux<SearchHit<SAREntity>> findWithScriptedFields(Integer value,
 				org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField1,
 				org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField2);
@@ -410,7 +410,7 @@ public abstract class ReactiveScriptedAndRuntimeFieldsIntegrationTests {
 				                  }
 				                }
 				              }
-				            """)
+				""")
 		Flux<SearchHit<SAREntity>> findWithRuntimeFields(Integer value, RuntimeField runtimeField1,
 				RuntimeField runtimeField2);
 	}

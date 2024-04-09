@@ -447,7 +447,7 @@ public interface Query {
 	@Nullable
 	default PointInTime getPointInTime() {
 		return null;
-	};
+	}
 
 	/**
 	 * returns the number of documents that are requested when the reactive code does a batched search operation. This is
@@ -469,7 +469,8 @@ public interface Query {
 	/**
 	 * @since 5.1
 	 */
-	@Nullable EnumSet<IndicesOptions.WildcardStates> getExpandWildcards();
+	@Nullable
+	EnumSet<IndicesOptions.WildcardStates> getExpandWildcards();
 
 	/**
 	 * @return a possible empty list of docvalue_field values to be set on the query.

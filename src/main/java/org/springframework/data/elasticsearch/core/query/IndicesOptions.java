@@ -25,8 +25,8 @@ import java.util.EnumSet;
  */
 public class IndicesOptions {
 
-	private EnumSet<Option> options;
-	private EnumSet<WildcardStates> expandWildcards;
+	private final EnumSet<Option> options;
+	private final EnumSet<WildcardStates> expandWildcards;
 
 	public static final IndicesOptions STRICT_EXPAND_OPEN = new IndicesOptions(
 			EnumSet.of(IndicesOptions.Option.ALLOW_NO_INDICES), EnumSet.of(IndicesOptions.WildcardStates.OPEN));
@@ -101,10 +101,10 @@ public class IndicesOptions {
 	}
 
 	public enum WildcardStates {
-		OPEN, CLOSED, HIDDEN, ALL, NONE;
+		OPEN, CLOSED, HIDDEN, ALL, NONE
 	}
 
 	public enum Option {
-		IGNORE_UNAVAILABLE, IGNORE_ALIASES, ALLOW_NO_INDICES, FORBID_ALIASES_TO_MULTIPLE_INDICES, FORBID_CLOSED_INDICES, IGNORE_THROTTLED;
+		IGNORE_UNAVAILABLE, IGNORE_ALIASES, ALLOW_NO_INDICES, FORBID_ALIASES_TO_MULTIPLE_INDICES, FORBID_CLOSED_INDICES, IGNORE_THROTTLED
 	}
 }

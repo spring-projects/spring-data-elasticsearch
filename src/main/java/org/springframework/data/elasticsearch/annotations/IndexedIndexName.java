@@ -15,9 +15,6 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
-import org.springframework.data.annotation.ReadOnlyProperty;
-import org.springframework.data.annotation.Transient;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -25,10 +22,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation to mark a String property of an entity to be filled with the name of the index where the entity was
- * stored after it is indexed into Elasticsearch. This can be used when the name of the index is dynamically created
- * or when a document was indexed into a write alias.
- *
+ * Annotation to mark a String property of an entity to be filled with the name of the index where the entity was stored
+ * after it is indexed into Elasticsearch. This can be used when the name of the index is dynamically created or when a
+ * document was indexed into a write alias.
+ * <p>
  * This can not be used to specify the index where an entity should be written to.
  *
  * @author Peter-Josef Meisch

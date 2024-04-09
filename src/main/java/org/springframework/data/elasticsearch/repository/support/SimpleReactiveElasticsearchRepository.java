@@ -32,6 +32,7 @@ import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
@@ -286,7 +287,8 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				.collectList() //
 				.map(operations::idsQuery) //
 				.flatMap(
-						query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
+						query -> operations.delete(DeleteQuery.builder(query).build(), entityInformation.getJavaType(),
+								entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());
 	}
 
@@ -301,7 +303,8 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				.collectList() //
 				.map(operations::idsQuery) //
 				.flatMap(
-						query -> operationsWithRefreshPolicy.delete(query, entityInformation.getJavaType(),
+						query -> operationsWithRefreshPolicy.delete(DeleteQuery.builder(query).build(),
+								entityInformation.getJavaType(),
 								entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());
 	}
@@ -333,7 +336,8 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				.collectList() //
 				.map(operations::idsQuery)
 				.flatMap(
-						query -> operations.delete(query, entityInformation.getJavaType(), entityInformation.getIndexCoordinates())) //
+						query -> operations.delete(DeleteQuery.builder(query).build(), entityInformation.getJavaType(),
+								entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());
 	}
 
@@ -349,21 +353,25 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 				.collectList() //
 				.map(operations::idsQuery)
 				.flatMap(
-						query -> operationsWithRefreshPolicy.delete(query, entityInformation.getJavaType(),
+						query -> operationsWithRefreshPolicy.delete(DeleteQuery.builder(query).build(),
+								entityInformation.getJavaType(),
 								entityInformation.getIndexCoordinates())) //
 				.then(doRefresh());
 	}
 
 	@Override
 	public Mono<Void> deleteAll() {
-		return operations.delete(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
+		return operations
+				.delete(DeleteQuery.builder(Query.findAll()).build(), entityInformation.getJavaType(),
+						entityInformation.getIndexCoordinates()) //
 				.then(doRefresh());
 	}
 
 	@Override
 	public Mono<Void> deleteAll(@Nullable RefreshPolicy refreshPolicy) {
 		return operations.withRefreshPolicy(refreshPolicy)
-				.delete(Query.findAll(), entityInformation.getJavaType(), entityInformation.getIndexCoordinates()) //
+				.delete(DeleteQuery.builder(Query.findAll()).build(), entityInformation.getJavaType(),
+						entityInformation.getIndexCoordinates()) //
 				.then(doRefresh());
 	}
 

@@ -28,6 +28,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingConverter;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingExecution;
@@ -133,7 +134,8 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 			ReactiveElasticsearchOperations operations) {
 
 		if (isDeleteQuery()) {
-			return (query, type, targetType, indexCoordinates) -> operations.delete(query, type, indexCoordinates)
+			return (query, type, targetType, indexCoordinates) -> operations
+					.delete(DeleteQuery.builder(query).build(), type, indexCoordinates)
 					.map(ByQueryResponse::getDeleted);
 		} else if (isCountQuery()) {
 			return (query, type, targetType, indexCoordinates) -> operations.count(query, type, indexCoordinates);

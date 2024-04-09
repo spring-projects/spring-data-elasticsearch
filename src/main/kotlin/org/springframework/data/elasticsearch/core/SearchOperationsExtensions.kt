@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("unused")
+
 package org.springframework.data.elasticsearch.core
 
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
@@ -28,27 +30,35 @@ import org.springframework.data.elasticsearch.core.query.Query
 inline fun <reified T : Any> SearchOperations.count(query: Query): Long = count(query, T::class.java)
 
 inline fun <reified T : Any> SearchOperations.searchOne(query: Query): SearchHit<T>? = searchOne(query, T::class.java)
-inline fun <reified T : Any> SearchOperations.searchOne(query: Query, index: IndexCoordinates): SearchHit<T>? = searchOne(query, T::class.java, index)
-inline fun <reified T : Any> SearchOperations.multiSearch(queries: List<out Query>): List<SearchHits<T>> =
-		multiSearch(queries, T::class.java)
+inline fun <reified T : Any> SearchOperations.searchOne(query: Query, index: IndexCoordinates): SearchHit<T>? =
+    searchOne(query, T::class.java, index)
 
-inline fun <reified T : Any> SearchOperations.multiSearch(queries: List<out Query>, index: IndexCoordinates): List<SearchHits<T>> =
-		multiSearch(queries, T::class.java, index)
+inline fun <reified T : Any> SearchOperations.multiSearch(queries: List<out Query>): List<SearchHits<T>> =
+    multiSearch(queries, T::class.java)
+
+inline fun <reified T : Any> SearchOperations.multiSearch(
+    queries: List<out Query>,
+    index: IndexCoordinates
+): List<SearchHits<T>> =
+    multiSearch(queries, T::class.java, index)
 
 inline fun <reified T : Any> SearchOperations.search(query: Query): SearchHits<T> =
-		search(query, T::class.java)
+    search(query, T::class.java)
 
 inline fun <reified T : Any> SearchOperations.search(query: Query, index: IndexCoordinates): SearchHits<T> =
-		search(query, T::class.java, index)
+    search(query, T::class.java, index)
 
 inline fun <reified T : Any> SearchOperations.search(query: MoreLikeThisQuery): SearchHits<T> =
-		search(query, T::class.java)
+    search(query, T::class.java)
 
 inline fun <reified T : Any> SearchOperations.search(query: MoreLikeThisQuery, index: IndexCoordinates): SearchHits<T> =
-		search(query, T::class.java, index)
+    search(query, T::class.java, index)
 
 inline fun <reified T : Any> SearchOperations.searchForStream(query: Query): SearchHitsIterator<T> =
-		searchForStream(query, T::class.java)
+    searchForStream(query, T::class.java)
 
-inline fun <reified T : Any> SearchOperations.searchForStream(query: Query, index: IndexCoordinates): SearchHitsIterator<T> =
-		searchForStream(query, T::class.java, index)
+inline fun <reified T : Any> SearchOperations.searchForStream(
+    query: Query,
+    index: IndexCoordinates
+): SearchHitsIterator<T> =
+    searchForStream(query, T::class.java, index)

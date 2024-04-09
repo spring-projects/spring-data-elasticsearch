@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
  * @author Peter-Josef Meisch
  * @since 5.0
  */
+@SuppressWarnings("UastIncorrectHttpHeaderInspection")
 class HttpHeadersTest {
 
 	public static final String X_TEST_HEADER = "X-Test-Header";

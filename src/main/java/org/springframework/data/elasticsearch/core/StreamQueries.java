@@ -61,10 +61,10 @@ abstract class StreamQueries {
 
 		return new SearchHitsIterator<>() {
 
-			private volatile AtomicInteger currentCount = new AtomicInteger();
+			private final AtomicInteger currentCount = new AtomicInteger();
 			private volatile Iterator<SearchHit<T>> currentScrollHits = searchHits.iterator();
 			private volatile boolean continueScroll = currentScrollHits.hasNext();
-			private volatile ScrollState scrollState = new ScrollState(searchHits.getScrollId());
+			private final ScrollState scrollState = new ScrollState(searchHits.getScrollId());
 			private volatile boolean isClosed = false;
 
 			@Override

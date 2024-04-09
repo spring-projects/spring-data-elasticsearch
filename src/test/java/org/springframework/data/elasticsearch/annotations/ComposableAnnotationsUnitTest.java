@@ -46,9 +46,9 @@ import org.springframework.lang.Nullable;
  */
 public class ComposableAnnotationsUnitTest {
 
-	private static SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
-	private static MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
-	private static MappingBuilder mappingBuilder = new MappingBuilder(converter);
+	private static final SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
+	private static final MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
+	private static final MappingBuilder mappingBuilder = new MappingBuilder(converter);
 
 	@Test // DATAES-362
 	@DisplayName("Document annotation should be composable")

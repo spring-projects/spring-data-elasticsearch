@@ -21,13 +21,16 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.annotation.Id
 import org.springframework.data.elasticsearch.annotations.Document
 import org.springframework.data.elasticsearch.annotations.Field
 import org.springframework.data.elasticsearch.annotations.FieldType
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations
 import org.springframework.data.elasticsearch.core.SearchHit
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest
 import org.springframework.data.elasticsearch.repository.CoroutineElasticsearchRepository
 import org.springframework.data.elasticsearch.utils.IndexNameProvider
@@ -37,65 +40,73 @@ import org.springframework.data.elasticsearch.utils.IndexNameProvider
  * @author Peter-Josef Meisch
  * @since 5.2
  */
-@Suppress("SpringJavaInjectionPointsAutowiringInspection")
 @SpringIntegrationTest
 abstract class CoroutineRepositoryIntegrationTests {
 
-		@Autowired
-		lateinit var indexNameProvider: IndexNameProvider
+    @Autowired
+    lateinit var indexNameProvider: IndexNameProvider
 
-		@Autowired
-		lateinit var repository: CoroutineEntityRepository
+    @Autowired
+    lateinit var operations: ReactiveElasticsearchOperations
 
-		val entities = listOf(
-				Entity("1", "test"),
-				Entity("2", "test"),
-		)
+    @Autowired
+    lateinit var repository: CoroutineEntityRepository
 
-		@BeforeEach
-		fun setUp() = runTest {
-				repository.saveAll(entities).last()
-		}
+    val entities = listOf(
+        Entity("1", "test"),
+        Entity("2", "test"),
+    )
 
-		@Test
-		fun `should instantiate repository`() = runTest {
-				assertThat(repository).isNotNull()
-		}
+    @BeforeEach
+    fun setUp() = runTest {
+        repository.saveAll(entities).last()
+    }
 
-		@Test
-		fun `should run with method returning a list of entities`() = runTest {
+    @Test
+    @Order(Int.MAX_VALUE)
+    fun cleanup() {
+        operations.indexOps(IndexCoordinates.of(indexNameProvider.prefix + "*")).delete().block()
+    }
 
-				val result = repository.searchByText("test")
+    @Test
+    fun `should instantiate repository`() = runTest {
+        assertThat(repository).isNotNull()
+    }
 
-				assertThat(result).containsExactlyInAnyOrderElementsOf(entities)
-		}
+    @Test
+    fun `should run with method returning a list of entities`() = runTest {
 
-		@Test
-		fun `should run with method returning a flow of entities`() = runTest {
+        val result = repository.searchByText("test")
 
-				val result = repository.findByText("test").toList(mutableListOf())
+        assertThat(result).containsExactlyInAnyOrderElementsOf(entities)
+    }
 
-				assertThat(result).containsExactlyInAnyOrderElementsOf(entities)
-		}
+    @Test
+    fun `should run with method returning a flow of entities`() = runTest {
 
-		@Test
-		fun `should run with method returning a flow of SearchHit`() = runTest {
+        val result = repository.findByText("test").toList(mutableListOf())
 
-				val result = repository.queryByText("test").toList(mutableListOf())
+        assertThat(result).containsExactlyInAnyOrderElementsOf(entities)
+    }
 
-				assertThat(result.map { it.content }).containsExactlyInAnyOrderElementsOf(entities)
-		}
+    @Test
+    fun `should run with method returning a flow of SearchHit`() = runTest {
 
-		@Document(indexName = "#{@indexNameProvider.indexName()}")
-		data class Entity(
-				@Id val id: String?,
-				@Field(type = FieldType.Text) val text: String?,
-		)
+        val result = repository.queryByText("test").toList(mutableListOf())
 
-		interface CoroutineEntityRepository : CoroutineElasticsearchRepository<Entity, String> {
+        assertThat(result.map { it.content }).containsExactlyInAnyOrderElementsOf(entities)
+    }
 
-				suspend fun searchByText(text: String): List<Entity>
-				suspend fun findByText(text: String): Flow<Entity>
-				suspend fun queryByText(text: String): Flow<SearchHit<Entity>>
-		}
+    @Document(indexName = "#{@indexNameProvider.indexName()}")
+    data class Entity(
+        @Id val id: String?,
+        @Field(type = FieldType.Text) val text: String?,
+    )
+
+    interface CoroutineEntityRepository : CoroutineElasticsearchRepository<Entity, String> {
+
+        suspend fun searchByText(text: String): List<Entity>
+        suspend fun findByText(text: String): Flow<Entity>
+        suspend fun queryByText(text: String): Flow<SearchHit<Entity>>
+    }
 }

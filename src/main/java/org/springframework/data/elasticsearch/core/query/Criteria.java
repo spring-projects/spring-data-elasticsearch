@@ -673,8 +673,8 @@ public class Criteria {
 	 */
 	public Criteria boundedBy(String topLeftGeohash, String bottomRightGeohash) {
 
-		Assert.isTrue(!StringUtils.isEmpty(topLeftGeohash), "topLeftGeohash must not be empty");
-		Assert.isTrue(!StringUtils.isEmpty(bottomRightGeohash), "bottomRightGeohash must not be empty");
+		Assert.isTrue(StringUtils.hasLength(topLeftGeohash), "topLeftGeohash must not be empty");
+		Assert.isTrue(StringUtils.hasLength(bottomRightGeohash), "bottomRightGeohash must not be empty");
 
 		filterCriteriaEntries
 				.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { topLeftGeohash, bottomRightGeohash }));
@@ -757,7 +757,7 @@ public class Criteria {
 	 */
 	public Criteria within(String geoLocation, String distance) {
 
-		Assert.isTrue(!StringUtils.isEmpty(geoLocation), "geoLocation value must not be null");
+		Assert.isTrue(StringUtils.hasLength(geoLocation), "geoLocation value must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.WITHIN, new Object[] { geoLocation, distance }));
 		return this;

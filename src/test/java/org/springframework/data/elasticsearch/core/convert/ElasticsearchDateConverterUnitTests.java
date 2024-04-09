@@ -27,7 +27,7 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
  */
 class ElasticsearchDateConverterUnitTests {
 
-	private ZonedDateTime zdt = ZonedDateTime.now(ZoneId.of("Europe/Berlin"));
+	private final ZonedDateTime zdt = ZonedDateTime.now(ZoneId.of("Europe/Berlin"));
 
 	@ParameterizedTest // DATAES-716
 	@EnumSource(DateFormat.class)

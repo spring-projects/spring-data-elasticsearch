@@ -22,5 +22,5 @@ package org.springframework.data.elasticsearch.core;
  * @since 4.2
  */
 public enum RefreshPolicy {
-	NONE, IMMEDIATE, WAIT_UNTIL;
+	NONE, IMMEDIATE, WAIT_UNTIL
 }

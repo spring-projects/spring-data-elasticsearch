@@ -18,8 +18,6 @@ package org.springframework.data.elasticsearch.config.notnested;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import java.lang.Double;
-import java.lang.Long;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +49,7 @@ import org.springframework.lang.Nullable;
  * @author Gad Akuka
  * @author Peter-Josef Meisch
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @SpringIntegrationTest
 public abstract class EnableRepositoriesIntegrationTests implements ApplicationContextAware {
 

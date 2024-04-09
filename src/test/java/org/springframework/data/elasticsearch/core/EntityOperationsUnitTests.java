@@ -291,7 +291,7 @@ class EntityOperationsUnitTests {
 	}
 
 	@Document(indexName = "entity-operations-test")
-	static record EntityFromRecord(
+	record EntityFromRecord(
 			@Id @Nullable String id,
 			@Field(type = FieldType.Text) @Nullable String text,
 			@Version @Nullable Long version,

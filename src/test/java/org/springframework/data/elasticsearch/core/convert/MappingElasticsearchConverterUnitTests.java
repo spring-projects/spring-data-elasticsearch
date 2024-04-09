@@ -1707,7 +1707,6 @@ public class MappingElasticsearchConverterUnitTests {
 		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenList()).hasSize(1);
-		// noinspection ConstantConditions
 		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child");
 	}
 
@@ -1727,13 +1726,12 @@ public class MappingElasticsearchConverterUnitTests {
 						}
 					]
 				}
-								""";
+				""";
 		Document source = Document.parse(json);
 
 		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenList()).hasSize(2);
-		// noinspection ConstantConditions
 		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child1");
 		assertThat(entity.getChildrenList().get(1).getName()).isEqualTo("child2");
 	}
@@ -1755,7 +1753,6 @@ public class MappingElasticsearchConverterUnitTests {
 		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenSet()).hasSize(1);
-		// noinspection ConstantConditions
 		assertThat(entity.getChildrenSet().iterator().next().getName()).isEqualTo("child");
 	}
 
@@ -1781,7 +1778,6 @@ public class MappingElasticsearchConverterUnitTests {
 		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenSet()).hasSize(2);
-		// noinspection ConstantConditions
 		List<String> names = entity.getChildrenSet().stream().map(EntityWithCollections.Child::getName)
 				.collect(Collectors.toList());
 		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
@@ -1872,7 +1868,6 @@ public class MappingElasticsearchConverterUnitTests {
 		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenList()).hasSize(1);
-		// noinspection ConstantConditions
 		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child");
 	}
 
@@ -1892,13 +1887,12 @@ public class MappingElasticsearchConverterUnitTests {
 						}
 					]
 				}
-								""";
+				""";
 		Document source = Document.parse(json);
 
 		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenList()).hasSize(2);
-		// noinspection ConstantConditions
 		assertThat(entity.getChildrenList().get(0).getName()).isEqualTo("child1");
 		assertThat(entity.getChildrenList().get(1).getName()).isEqualTo("child2");
 	}
@@ -1920,7 +1914,6 @@ public class MappingElasticsearchConverterUnitTests {
 		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenSet()).hasSize(1);
-		// noinspection ConstantConditions
 		assertThat(entity.getChildrenSet().iterator().next().getName()).isEqualTo("child");
 	}
 
@@ -1946,7 +1939,6 @@ public class MappingElasticsearchConverterUnitTests {
 		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenSet()).hasSize(2);
-		// noinspection ConstantConditions
 		List<String> names = entity.getChildrenSet().stream().map(ImmutableEntityWithCollections.Child::getName)
 				.collect(Collectors.toList());
 		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
@@ -2338,7 +2330,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 		MAN("1"), MACHINE("0");
 
-		String theValue;
+		final String theValue;
 
 		Gender(String theValue) {
 			this.theValue = theValue;
@@ -2973,16 +2965,16 @@ public class MappingElasticsearchConverterUnitTests {
 
 	private static final class ImmutableEntityWithCollections {
 		@Field(type = FieldType.Keyword)
-		@Nullable private List<String> stringList;
+		@Nullable private final List<String> stringList;
 
 		@Field(type = FieldType.Keyword)
-		@Nullable private Set<String> stringSet;
+		@Nullable private final Set<String> stringSet;
 
 		@Field(type = FieldType.Object)
-		@Nullable private List<Child> childrenList;
+		@Nullable private final List<Child> childrenList;
 
 		@Field(type = FieldType.Object)
-		@Nullable private Set<Child> childrenSet;
+		@Nullable private final Set<Child> childrenSet;
 
 		public ImmutableEntityWithCollections(@Nullable List<String> stringList, @Nullable Set<String> stringSet,
 				@Nullable List<Child> childrenList, @Nullable Set<Child> childrenSet) {
@@ -3015,7 +3007,7 @@ public class MappingElasticsearchConverterUnitTests {
 		public static class Child {
 
 			@Field(type = FieldType.Keyword)
-			@Nullable private String name;
+			@Nullable private final String name;
 
 			public Child(@Nullable String name) {
 				this.name = name;
@@ -3254,6 +3246,6 @@ public class MappingElasticsearchConverterUnitTests {
 
 		Assert.notNull(o, "o must not be null");
 
-		return new StringBuilder().append(o.toString()).reverse().toString();
+		return new StringBuilder().append(o).reverse().toString();
 	}
 }

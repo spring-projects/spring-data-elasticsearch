@@ -44,25 +44,7 @@ package org.springframework.data.elasticsearch.utils.geohash;
  */
 public interface GeometryVisitor<T, E extends Exception> {
 
-	/*
-	T visit(Circle circle) throws E;
-
-	T visit(GeometryCollection<?> collection) throws E;
-
-	T visit(Line line) throws E;
-
-	T visit(LinearRing ring) throws E;
-
-	T visit(MultiLine multiLine) throws E;
-
-	T visit(MultiPoint multiPoint) throws E;
-
-	T visit(MultiPolygon multiPolygon) throws E;
-	*/
 	T visit(Point point) throws E;
 
-	/*
-		T visit(Polygon polygon) throws E;
-	*/
 	T visit(Rectangle rectangle) throws E;
 }

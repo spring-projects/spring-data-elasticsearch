@@ -18,11 +18,7 @@ package org.springframework.data.elasticsearch.core.document;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 import java.util.function.Function;
-import java.util.function.IntSupplier;
-import java.util.function.LongSupplier;
-import java.util.function.Supplier;
 
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.support.StringObjectMap;
@@ -30,8 +26,8 @@ import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
- * A representation of an Elasticsearch document as extended {@link StringObjectMap Map}. All iterators preserve original
- * insertion order.
+ * A representation of an Elasticsearch document as extended {@link StringObjectMap Map}. All iterators preserve
+ * original insertion order.
  * <p>
  * Document does not allow {@code null} keys. It allows {@literal null} values.
  * <p>
@@ -60,7 +56,7 @@ public interface Document extends StringObjectMap<Document> {
 	 * @param map source map containing key-value pairs and sub-documents. must not be {@literal null}.
 	 * @return a new {@link Document}.
 	 */
-	static Document from(Map<String, ? extends Object> map) {
+	static Document from(Map<String, ?> map) {
 
 		Assert.notNull(map, "Map must not be null");
 

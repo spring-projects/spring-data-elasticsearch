@@ -79,7 +79,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 							}
 						}
 					}
-					""";
+				""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleTransientEntity.class);
 
@@ -122,7 +122,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 							}
 						}
 					}
-					""";
+				""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(SampleInheritedEntity.class);
 
@@ -257,7 +257,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 						}
 					}
 				}
-					          """;
+				""";
 
 		String mapping = getMappingBuilder().buildPropertyMapping(FieldNameEntity.MappingEntity.class);
 

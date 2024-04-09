@@ -67,7 +67,7 @@ import org.springframework.lang.Nullable;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class DevTests {
 
-	private static Log LOGGER = LogFactory.getLog(DevTests.class);
+	private static final Log LOGGER = LogFactory.getLog(DevTests.class);
 
 	private static final String INDEX = "appdata-index";
 
@@ -218,13 +218,13 @@ public class DevTests {
 		try {
 			HealthResponse healthResponse = clusterHealthImperative(healthRequest);
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error("error", e);
 		}
 
 		try {
 			HealthResponse healthResponse = clusterHealthReactive(healthRequest);
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error("error", e);
 		}
 	}
 
@@ -301,12 +301,12 @@ public class DevTests {
 		try {
 			indexImperative(indexRequestBuilder.apply(1));
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error("error", e);
 		}
 		try {
 			indexReactive(indexRequestBuilder.apply(2));
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error("error", e);
 		}
 
 	}
@@ -334,14 +334,14 @@ public class DevTests {
 			searchResponse = searchImperative(searchRequest);
 			assertThat(searchResponse).isNotNull();
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error("error", e);
 		}
 
 		try {
 			searchResponse = searchReactive(searchRequest);
 			assertThat(searchResponse).isNotNull();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error("error", e);
 		}
 	}
 

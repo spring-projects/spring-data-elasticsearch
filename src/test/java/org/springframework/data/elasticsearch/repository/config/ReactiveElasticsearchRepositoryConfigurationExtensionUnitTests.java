@@ -26,7 +26,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.type.StandardAnnotationMetadata;
+import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.data.repository.config.AnnotationRepositoryConfigurationSource;
@@ -40,13 +40,13 @@ import org.springframework.data.repository.reactive.ReactiveCrudRepository;
  */
 public class ReactiveElasticsearchRepositoryConfigurationExtensionUnitTests {
 
-	StandardAnnotationMetadata metadata = new StandardAnnotationMetadata(Config.class, true);
+	AnnotationMetadata metadata = AnnotationMetadata.introspect(Config.class);
 	ResourceLoader loader = new PathMatchingResourcePatternResolver();
 	Environment environment = new StandardEnvironment();
 	BeanDefinitionRegistry registry = new DefaultListableBeanFactory();
 
 	RepositoryConfigurationSource configurationSource = new AnnotationRepositoryConfigurationSource(metadata,
-			EnableReactiveElasticsearchRepositories.class, loader, environment, registry);
+			EnableReactiveElasticsearchRepositories.class, loader, environment, registry, null);
 
 	@Test // DATAES-519
 	public void isStrictMatchIfDomainTypeIsAnnotatedWithDocument() {

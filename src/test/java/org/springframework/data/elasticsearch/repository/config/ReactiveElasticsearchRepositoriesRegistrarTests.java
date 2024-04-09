@@ -58,7 +58,7 @@ public class ReactiveElasticsearchRepositoriesRegistrarTests {
 		Assertions.assertThat(repository).isNotNull();
 
 		// there is an index to delete after this test
-		operations.indexOps(ReactiveElasticsearchRepositoryConfigurationExtensionUnitTests.SwCharacter.class).delete()
+		operations.indexOps(SampleEntity.class).delete()
 				.block();
 	}
 

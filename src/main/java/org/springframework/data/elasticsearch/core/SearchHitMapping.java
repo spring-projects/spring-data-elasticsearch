@@ -167,7 +167,7 @@ public class SearchHitMapping<T> {
 		Map<String, SearchHits<?>> innerHits = new LinkedHashMap<>();
 		Map<String, SearchDocumentResponse> documentInnerHits = searchDocument.getInnerHits();
 
-		if (documentInnerHits != null && documentInnerHits.size() > 0) {
+		if (documentInnerHits != null && !documentInnerHits.isEmpty()) {
 
 			SearchHitMapping<SearchDocument> searchDocumentSearchHitMapping = SearchHitMapping
 					.mappingFor(SearchDocument.class, converter);
@@ -287,8 +287,8 @@ public class SearchHitMapping<T> {
 	}
 
 	private static class ElasticsearchPersistentEntityWithNestedMetaData {
-		@Nullable private ElasticsearchPersistentEntity<?> entity;
-		private NestedMetaData nestedMetaData;
+		@Nullable private final ElasticsearchPersistentEntity<?> entity;
+		private final NestedMetaData nestedMetaData;
 
 		public ElasticsearchPersistentEntityWithNestedMetaData(@Nullable ElasticsearchPersistentEntity<?> entity,
 				NestedMetaData nestedMetaData) {

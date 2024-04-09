@@ -19,7 +19,6 @@ import co.elastic.clients.json.JsonpMapper;
 import jakarta.json.stream.JsonGenerator;
 
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.logging.Log;
@@ -44,17 +43,13 @@ final class JsonUtils {
 		mapper.serialize(object, generator);
 		generator.close();
 		String json = "{}";
-		try {
-			json = baos.toString("UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			LOGGER.warn("could not read json", e);
-		}
-
+		json = baos.toString(StandardCharsets.UTF_8);
 		return json;
 	}
 
 	@Nullable
-	public static String queryToJson(@Nullable co.elastic.clients.elasticsearch._types.query_dsl.Query query, JsonpMapper mapper) {
+	public static String queryToJson(@Nullable co.elastic.clients.elasticsearch._types.query_dsl.Query query,
+			JsonpMapper mapper) {
 
 		if (query == null) {
 			return null;

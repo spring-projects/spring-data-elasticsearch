@@ -29,7 +29,7 @@ import org.springframework.data.util.TypeInformation;
  * @author Peter-Josef Meisch
  * @since 5.2
  */
-class ElasticsearchParameter extends Parameter {
+public class ElasticsearchParameter extends Parameter {
 
 	/**
 	 * Creates a new {@link ElasticsearchParameter}.

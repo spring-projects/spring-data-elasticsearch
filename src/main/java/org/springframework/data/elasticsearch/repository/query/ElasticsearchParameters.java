@@ -15,12 +15,12 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.data.repository.query.Parameters;
+import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.util.TypeInformation;
 
 /**
@@ -33,10 +33,13 @@ public class ElasticsearchParameters extends Parameters<ElasticsearchParameters,
 	private final List<ElasticsearchParameter> scriptedFields = new ArrayList<>();
 	private final List<ElasticsearchParameter> runtimeFields = new ArrayList<>();
 
-	public ElasticsearchParameters(Method method, TypeInformation<?> domainType) {
+	public ElasticsearchParameters(ParametersSource parametersSource) {
 
-		super(method, parameter -> new ElasticsearchParameter(parameter, domainType));
+		super(parametersSource,
+				parameter -> new ElasticsearchParameter(parameter, parametersSource.getDomainTypeInformation()));
 
+		var domainType = parametersSource.getDomainTypeInformation();
+		var method = parametersSource.getMethod();
 		int parameterCount = method.getParameterCount();
 		for (int i = 0; i < parameterCount; i++) {
 			MethodParameter methodParameter = new MethodParameter(method, i);
@@ -50,7 +53,6 @@ public class ElasticsearchParameters extends Parameters<ElasticsearchParameters,
 				runtimeFields.add(parameter);
 			}
 		}
-
 	}
 
 	private ElasticsearchParameter parameterFactory(MethodParameter methodParameter, TypeInformation<?> domainType) {

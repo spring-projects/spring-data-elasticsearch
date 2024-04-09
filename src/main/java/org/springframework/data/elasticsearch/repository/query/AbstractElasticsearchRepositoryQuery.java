@@ -22,6 +22,7 @@ import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
+import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
@@ -94,7 +95,7 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 		if (isDeleteQuery()) {
 			result = countOrGetDocumentsForDelete(query, parameterAccessor);
-			elasticsearchOperations.delete(query, clazz, index);
+			elasticsearchOperations.delete(DeleteQuery.builder(query).build(), clazz, index);
 			elasticsearchOperations.indexOps(index).refresh();
 		} else if (isCountQuery()) {
 			result = elasticsearchOperations.count(query, clazz, index);

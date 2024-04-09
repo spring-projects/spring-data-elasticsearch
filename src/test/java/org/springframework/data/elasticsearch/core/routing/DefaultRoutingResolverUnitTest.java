@@ -39,9 +39,8 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 class DefaultRoutingResolverUnitTest {
 
 	@Autowired private ApplicationContext applicationContext;
-	private SimpleElasticsearchMappingContext mappingContext;
 
-	@Nullable private RoutingResolver routingResolver;
+    @Nullable private RoutingResolver routingResolver;
 
 	@Configuration
 	static class Config {
@@ -53,7 +52,7 @@ class DefaultRoutingResolverUnitTest {
 
 	@BeforeEach
 	void setUp() {
-		mappingContext = new SimpleElasticsearchMappingContext();
+        SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		mappingContext.setApplicationContext(applicationContext);
 
 		routingResolver = new DefaultRoutingResolver(mappingContext);

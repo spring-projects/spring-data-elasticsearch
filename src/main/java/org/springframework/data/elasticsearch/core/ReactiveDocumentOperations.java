@@ -334,6 +334,7 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 * @deprecated since 5.3.0, use {@link #delete(DeleteQuery, Class)}
 	 */
+	@Deprecated
 	Mono<ByQueryResponse> delete(Query query, Class<?> entityType);
 
 	/**
@@ -355,6 +356,7 @@ public interface ReactiveDocumentOperations {
 	 * @return a {@link Mono} emitting the number of the removed documents.
 	 * @deprecated since 5.3.0, use {@link #delete(DeleteQuery, Class, IndexCoordinates)}
 	 */
+	@Deprecated
 	Mono<ByQueryResponse> delete(Query query, Class<?> entityType, IndexCoordinates index);
 
 	/**

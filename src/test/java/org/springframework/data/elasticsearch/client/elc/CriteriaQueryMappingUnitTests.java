@@ -60,7 +60,7 @@ import org.springframework.lang.Nullable;
  */
 public class CriteriaQueryMappingUnitTests {
 
-	private JsonpMapper mapper = new JacksonJsonpMapper();
+	private final JsonpMapper mapper = new JacksonJsonpMapper();
 
 	MappingElasticsearchConverter mappingElasticsearchConverter;
 

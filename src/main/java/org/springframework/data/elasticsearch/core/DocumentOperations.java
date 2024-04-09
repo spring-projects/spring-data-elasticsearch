@@ -282,6 +282,7 @@ public interface DocumentOperations {
 	 * @since 4.1
 	 * @deprecated since 5.3.0, use {@link #delete(DeleteQuery, Class)}
 	 */
+	@Deprecated
 	ByQueryResponse delete(Query query, Class<?> clazz);
 
 	/**
@@ -305,6 +306,7 @@ public interface DocumentOperations {
 	 * @return response with detailed information
 	 * @deprecated since 5.3.0, use {@link #delete(DeleteQuery, Class, IndexCoordinates)}
 	 */
+	@Deprecated
 	ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index);
 
 	/**

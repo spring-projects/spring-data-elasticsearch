@@ -159,7 +159,7 @@ public abstract class ReactiveSuggestIntegrationTests {
 
 	static class CompletionEntityBuilder {
 
-		private CompletionEntity result;
+		private final CompletionEntity result;
 
 		public CompletionEntityBuilder(String id) {
 			result = new CompletionEntity(id);
