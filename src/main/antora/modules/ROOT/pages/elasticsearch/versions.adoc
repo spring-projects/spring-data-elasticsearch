@@ -6,7 +6,7 @@ The following table shows the Elasticsearch and Spring versions that are used by
 [cols="^,^,^,^",options="header"]
 |===
 | Spring Data Release Train | Spring Data Elasticsearch | Elasticsearch | Spring Framework
-| 2024.0 (?) | 5.3.x | 8.12.2 | ?
+| 2024.0 (?) | 5.3.x | 8.13.2 | ?
 | 2023.1 (Vaughan) | 5.2.x | 8.11.1 | 6.1.x
 | 2023.0 (Ullmann) | 5.1.x | 8.7.1 | 6.0.x
 | 2022.0 (Turing) | 5.0.xfootnote:oom[Out of maintenance] | 8.5.3 | 6.0.x
