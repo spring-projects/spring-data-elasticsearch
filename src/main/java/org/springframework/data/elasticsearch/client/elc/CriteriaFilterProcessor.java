@@ -39,6 +39,7 @@ import org.springframework.data.elasticsearch.core.geo.GeoBox;
 import org.springframework.data.elasticsearch.core.geo.GeoJson;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.Criteria;
+import org.springframework.data.elasticsearch.utils.geohash.Geohash;
 import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
@@ -73,6 +74,9 @@ class CriteriaFilterProcessor {
 				queriesForEntries(chainedCriteria).forEach(boolQueryBuilder::should);
 				filterQueries.add(new Query(boolQueryBuilder.build()));
 			} else if (chainedCriteria.isNegating()) {
+
+				Assert.notNull(criteria.getField(), "criteria must have a field");
+
 				Collection<? extends Query> negatingFilters = buildNegatingFilter(criteria.getField().getName(),
 						criteria.getFilterCriteriaEntries());
 				filterQueries.addAll(negatingFilters);
@@ -116,6 +120,7 @@ class CriteriaFilterProcessor {
 	private static Collection<? extends Query> queriesForEntries(Criteria criteria) {
 
 		Assert.notNull(criteria.getField(), "criteria must have a field");
+
 		String fieldName = criteria.getField().getName();
 		Assert.notNull(fieldName, "Unknown field");
 
@@ -177,7 +182,7 @@ class CriteriaFilterProcessor {
 				.distance(dist) //
 				.distanceType(GeoDistanceType.Plane) //
 				.location(location -> {
-					if (values[0]instanceof GeoPoint loc) {
+					if (values[0] instanceof GeoPoint loc) {
 						location.latlon(latlon -> latlon.lat(loc.getLat()).lon(loc.getLon()));
 					} else if (values[0] instanceof Point point) {
 						GeoPoint loc = GeoPoint.fromPoint(point);
@@ -245,7 +250,7 @@ class CriteriaFilterProcessor {
 		Assert.isTrue(allElementsAreOfType(values, GeoPoint.class) || allElementsAreOfType(values, String.class),
 				" both elements of boundedBy filter must be type of GeoPoint or text(format lat,lon or geohash)");
 
-		if (values[0]instanceof GeoPoint topLeft) {
+		if (values[0] instanceof GeoPoint topLeft) {
 			GeoPoint bottomRight = (GeoPoint) values[1];
 			queryBuilder.boundingBox(bb -> bb //
 					.tlbr(tlbr -> tlbr //
@@ -267,7 +272,10 @@ class CriteriaFilterProcessor {
 					.tlbr(tlbr -> tlbr //
 							.topLeft(glb -> {
 								if (isGeoHash) {
-									glb.geohash(gh -> gh.geohash(topLeft));
+									// although the builder in 8.13.2 supports geohash, the server throws an error, so we convert to a
+									// lat,lon string here
+									glb.text(Geohash.toLatLon(topLeft));
+									// glb.geohash(gh -> gh.geohash(topLeft));
 								} else {
 									glb.text(topLeft);
 								}
@@ -275,7 +283,8 @@ class CriteriaFilterProcessor {
 							}) //
 							.bottomRight(glb -> {
 								if (isGeoHash) {
-									glb.geohash(gh -> gh.geohash(bottomRight));
+									glb.text(Geohash.toLatLon(bottomRight));
+									// glb.geohash(gh -> gh.geohash(bottomRight));
 								} else {
 									glb.text(bottomRight);
 								}

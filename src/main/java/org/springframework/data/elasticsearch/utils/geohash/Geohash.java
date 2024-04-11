@@ -18,6 +18,8 @@ package org.springframework.data.elasticsearch.utils.geohash;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.springframework.util.Assert;
+
 /**
  * Code copied from Elasticsearch 7.10, Apache License V2
  * https://github.com/elastic/elasticsearch/blob/7.10/libs/geo/src/main/java/org/elasticsearch/geometry/utils/Geohash.java
@@ -68,6 +70,21 @@ public class Geohash {
 	public static Point toPoint(final String geohash) throws IllegalArgumentException {
 		final long hash = mortonEncode(geohash);
 		return new Point(decodeLongitude(hash), decodeLatitude(hash));
+	}
+
+	/**
+	 * Converts a geohash to a string in the format "lat,lon"
+	 *
+	 * @param geohash the geohash to convert
+	 * @return the lat lon pair in a String
+	 * @since 5.3
+	 */
+	public static String toLatLon(final String geohash) {
+
+		Assert.notNull(geohash, "geohash must not be null");
+
+		var point = Geohash.toPoint(geohash);
+		return String.format("%f,%f", point.getLat(), point.getLon());
 	}
 
 	/**
@@ -143,7 +160,7 @@ public class Geohash {
 	 * @return the given list
 	 */
 	public static <E extends Collection<? super String>> E addNeighborsAtLevel(String geohash, int level,
-                                                                               E neighbors) {
+			E neighbors) {
 		String south = getNeighbor(geohash, level, 0, -1);
 		String north = getNeighbor(geohash, level, 0, +1);
 		if (north != null) {
