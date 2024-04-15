@@ -69,7 +69,7 @@ public class Order extends Sort.Order {
 
 	public Order(Sort.Direction direction, String property, Sort.NullHandling nullHandlingHint, @Nullable Mode mode,
 			@Nullable String unmappedType) {
-		this(direction, property, nullHandlingHint, null, unmappedType, null);
+		this(direction, property, nullHandlingHint, mode, unmappedType, null);
 	}
 
 	public Order(Sort.Direction direction, String property, Sort.NullHandling nullHandlingHint, @Nullable Mode mode,
