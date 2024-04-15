@@ -112,7 +112,7 @@ import org.springframework.util.StringUtils;
  * @since 4.4
  */
 @SuppressWarnings("ClassCanBeRecord")
-class RequestConverter {
+class RequestConverter extends AbstractQueryProcessor {
 
 	private static final Log LOGGER = LogFactory.getLog(RequestConverter.class);
 
@@ -1755,31 +1755,7 @@ class RequestConverter {
 	@Nullable
 	co.elastic.clients.elasticsearch._types.query_dsl.Query getQuery(@Nullable Query query,
 			@Nullable Class<?> clazz) {
-
-		if (query == null) {
-			return null;
-		}
-
-		elasticsearchConverter.updateQuery(query, clazz);
-
-		co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = null;
-
-		if (query instanceof CriteriaQuery) {
-			esQuery = CriteriaQueryProcessor.createQuery(((CriteriaQuery) query).getCriteria());
-		} else if (query instanceof StringQuery) {
-			esQuery = Queries.wrapperQueryAsQuery(((StringQuery) query).getSource());
-		} else if (query instanceof NativeQuery nativeQuery) {
-
-			if (nativeQuery.getQuery() != null) {
-				esQuery = nativeQuery.getQuery();
-			} else if (nativeQuery.getSpringDataQuery() != null) {
-				esQuery = getQuery(nativeQuery.getSpringDataQuery(), clazz);
-			}
-		} else {
-			throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
-		}
-
-		return esQuery;
+		return getEsQuery(query, (q) -> elasticsearchConverter.updateQuery(q, clazz));
 	}
 
 	private void addFilter(Query query, SearchRequest.Builder builder) {

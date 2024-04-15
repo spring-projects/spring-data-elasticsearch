@@ -49,7 +49,7 @@ import org.springframework.util.Assert;
  * @author Ezequiel Antúnez Camacho
  * @since 4.4
  */
-class CriteriaQueryProcessor {
+class CriteriaQueryProcessor extends AbstractQueryProcessor {
 
 	/**
 	 * creates a query from the criteria
@@ -354,7 +354,7 @@ class CriteriaQueryProcessor {
 				if (value instanceof HasChildQuery query) {
 					queryBuilder.hasChild(hcb -> hcb
 							.type(query.getType())
-							.query(getQuery(query.getQuery()))
+							.query(getEsQuery(query.getQuery(), null))
 							.innerHits(getInnerHits(query.getInnerHitsQuery()))
 							.ignoreUnmapped(query.getIgnoreUnmapped())
                             .minChildren(query.getMinChildren())
@@ -369,7 +369,7 @@ class CriteriaQueryProcessor {
                 if (value instanceof HasParentQuery query) {
 					queryBuilder.hasParent(hpb -> hpb
 							.parentType(query.getParentType())
-							.query(getQuery(query.getQuery()))
+							.query(getEsQuery(query.getQuery(), null))
 							.innerHits(getInnerHits(query.getInnerHitsQuery()))
 							.ignoreUnmapped(query.getIgnoreUnmapped())
 							.score(query.getScore())
@@ -431,35 +431,6 @@ class CriteriaQueryProcessor {
 		}
 		return sb.toString();
 	}
-
-    /**
-     * Convert a spring-data-elasticsearch {@literal query} to an Elasticsearch {@literal query}.
-     * <p>
-     * The reason it was copied from {@link RequestConverter#getQuery(org.springframework.data.elasticsearch.core.query.Query, Class)} is because of a circular dependency.
-     *
-     * @param query spring-data-elasticsearch {@literal query}.
-     * @return an Elasticsearch {@literal query}.
-     */
-    private static Query getQuery(org.springframework.data.elasticsearch.core.query.Query query) {
-        Query esQuery = null;
-
-        if (query instanceof CriteriaQuery) {
-            esQuery = createQuery(((CriteriaQuery) query).getCriteria());
-        } else if (query instanceof StringQuery) {
-            esQuery = Queries.wrapperQueryAsQuery(((StringQuery) query).getSource());
-        } else if (query instanceof NativeQuery nativeQuery) {
-            if (nativeQuery.getQuery() != null) {
-                esQuery = nativeQuery.getQuery();
-            } else if (nativeQuery.getSpringDataQuery() != null) {
-                esQuery = getQuery(nativeQuery.getSpringDataQuery());
-            }
-        } else {
-            throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
-        }
-
-        Assert.notNull(query, "query must not be null.");
-        return esQuery;
-    }
 
     /**
      * Convert a spring-data-elasticsearch {@literal inner_hits} to an Elasticsearch {@literal inner_hits} query.
