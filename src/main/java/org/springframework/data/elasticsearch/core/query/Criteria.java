@@ -816,6 +816,32 @@ public class Criteria {
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_CONTAINS, geoShape));
 		return this;
 	}
+
+	/**
+	 * Adds a new filter CriteriaEntry for HAS_CHILD.
+	 *
+	 * @param query the has_child query.
+	 * @return the current Criteria.
+	 */
+	public Criteria hasChild(HasChildQuery query) {
+		Assert.notNull(query, "has_child query must not be null.");
+
+		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.HAS_CHILD, query));
+		return this;
+	}
+
+	/**
+	 * Adds a new filter CriteriaEntry for HAS_PARENT.
+	 *
+	 * @param query the has_parent query.
+	 * @return the current Criteria.
+	 */
+	public Criteria hasParent(HasParentQuery query) {
+		Assert.notNull(query, "has_parent query must not be null.");
+
+		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.HAS_PARENT, query));
+		return this;
+	}
 	// endregion
 
 	// region helper functions
@@ -977,7 +1003,12 @@ public class Criteria {
 		/**
 		 * @since 5.1
 		 */
-		REGEXP;
+		REGEXP,
+		/**
+		 * @since 5.3
+		 */
+		HAS_CHILD,
+		HAS_PARENT;
 
 		/**
 		 * @return true if this key does not have an associated value
