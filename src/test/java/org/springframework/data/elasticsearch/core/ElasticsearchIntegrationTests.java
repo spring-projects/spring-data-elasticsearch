@@ -5013,21 +5013,18 @@ public abstract class ElasticsearchIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}-join")
 	private static class RootEntity {
-		@Id
-		private String id;
+		@Id private String id;
 
-		@Field(type = FieldType.Object)
-		private Child child;
+		@Field(type = FieldType.Object) private Child child;
 
-		@Field(type = FieldType.Object)
-		private Parent parent;
+		@Field(type = FieldType.Object) private Parent parent;
 
 		@JoinTypeRelations(relations = {
-            @JoinTypeRelation(parent = "parent", children = {"child"})
-    	})
-    	private JoinField<String> relation = new JoinField<>("parent");
+				@JoinTypeRelation(parent = "parent", children = { "child" })
+		}) private JoinField<String> relation = new JoinField<>("parent");
 
 		private static final class Child {}
+
 		private static final class Parent {}
 
 		public static Builder builder() {

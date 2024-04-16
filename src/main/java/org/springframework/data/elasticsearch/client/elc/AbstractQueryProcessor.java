@@ -15,57 +15,56 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import java.util.function.Consumer;
+
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-
-import java.util.function.Consumer;
 
 /**
- * An abstract class that serves as a base for query processors.
- * It provides a common interface and basic functionality for query processing.
+ * An abstract class that serves as a base for query processors. It provides a common interface and basic functionality
+ * for query processing.
  *
  * @author Aouichaoui Youssef
  * @since 5.3
  */
 public abstract class AbstractQueryProcessor {
 
-    /**
-     * Convert a spring-data-elasticsearch {@literal query} to an Elasticsearch {@literal query}.
-     *
-     * @param query          spring-data-elasticsearch {@literal query}.
-     * @param queryConverter correct mapped field names and the values to the converted values.
-     * @return an Elasticsearch {@literal query}.
-     */
-    @Nullable
-    static co.elastic.clients.elasticsearch._types.query_dsl.Query getEsQuery(@Nullable Query query,
-                                                                              @Nullable Consumer<Query> queryConverter) {
-        if (query == null) {
-            return null;
-        }
+	/**
+	 * Convert a spring-data-elasticsearch {@literal query} to an Elasticsearch {@literal query}.
+	 *
+	 * @param query spring-data-elasticsearch {@literal query}.
+	 * @param queryConverter correct mapped field names and the values to the converted values.
+	 * @return an Elasticsearch {@literal query}.
+	 */
+	@Nullable
+	static co.elastic.clients.elasticsearch._types.query_dsl.Query getEsQuery(@Nullable Query query,
+			@Nullable Consumer<Query> queryConverter) {
+		if (query == null) {
+			return null;
+		}
 
-        if (queryConverter != null) {
-            queryConverter.accept(query);
-        }
+		if (queryConverter != null) {
+			queryConverter.accept(query);
+		}
 
-        co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = null;
+		co.elastic.clients.elasticsearch._types.query_dsl.Query esQuery = null;
 
-        if (query instanceof CriteriaQuery criteriaQuery) {
-            esQuery = CriteriaQueryProcessor.createQuery(criteriaQuery.getCriteria());
-        } else if (query instanceof StringQuery stringQuery) {
-            esQuery = Queries.wrapperQueryAsQuery(stringQuery.getSource());
-        } else if (query instanceof NativeQuery nativeQuery) {
-            if (nativeQuery.getQuery() != null) {
-                esQuery = nativeQuery.getQuery();
-            } else if (nativeQuery.getSpringDataQuery() != null) {
-                esQuery = getEsQuery(nativeQuery.getSpringDataQuery(), queryConverter);
-            }
-        } else {
-            throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
-        }
+		if (query instanceof CriteriaQuery criteriaQuery) {
+			esQuery = CriteriaQueryProcessor.createQuery(criteriaQuery.getCriteria());
+		} else if (query instanceof StringQuery stringQuery) {
+			esQuery = Queries.wrapperQueryAsQuery(stringQuery.getSource());
+		} else if (query instanceof NativeQuery nativeQuery) {
+			if (nativeQuery.getQuery() != null) {
+				esQuery = nativeQuery.getQuery();
+			} else if (nativeQuery.getSpringDataQuery() != null) {
+				esQuery = getEsQuery(nativeQuery.getSpringDataQuery(), queryConverter);
+			}
+		} else {
+			throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
+		}
 
-        return esQuery;
-    }
+		return esQuery;
+	}
 }

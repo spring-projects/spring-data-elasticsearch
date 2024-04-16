@@ -1007,8 +1007,7 @@ public class Criteria {
 		/**
 		 * @since 5.3
 		 */
-		HAS_CHILD,
-		HAS_PARENT;
+		HAS_CHILD, HAS_PARENT;
 
 		/**
 		 * @return true if this key does not have an associated value

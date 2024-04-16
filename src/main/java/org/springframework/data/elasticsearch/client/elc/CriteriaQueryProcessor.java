@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.Queries.*;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.scoreMode;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 import static org.springframework.util.StringUtils.*;
 
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -32,12 +32,10 @@ import java.util.List;
 
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.query.Criteria;
-import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Field;
 import org.springframework.data.elasticsearch.core.query.HasChildQuery;
 import org.springframework.data.elasticsearch.core.query.HasParentQuery;
 import org.springframework.data.elasticsearch.core.query.InnerHitsQuery;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -357,27 +355,25 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 							.query(getEsQuery(query.getQuery(), null))
 							.innerHits(getInnerHits(query.getInnerHitsQuery()))
 							.ignoreUnmapped(query.getIgnoreUnmapped())
-                            .minChildren(query.getMinChildren())
-                            .maxChildren(query.getMaxChildren())
-                            .scoreMode(scoreMode(query.getScoreMode()))
-					);
+							.minChildren(query.getMinChildren())
+							.maxChildren(query.getMaxChildren())
+							.scoreMode(scoreMode(query.getScoreMode())));
 				} else {
 					throw new CriteriaQueryException("value for " + fieldName + " is not a has_child query");
 				}
-                break;
-            case HAS_PARENT:
-                if (value instanceof HasParentQuery query) {
+				break;
+			case HAS_PARENT:
+				if (value instanceof HasParentQuery query) {
 					queryBuilder.hasParent(hpb -> hpb
 							.parentType(query.getParentType())
 							.query(getEsQuery(query.getQuery(), null))
 							.innerHits(getInnerHits(query.getInnerHitsQuery()))
 							.ignoreUnmapped(query.getIgnoreUnmapped())
-							.score(query.getScore())
-					);
-                } else {
-                    throw new CriteriaQueryException("value for " + fieldName + " is not a has_parent query");
-                }
-                break;
+							.score(query.getScore()));
+				} else {
+					throw new CriteriaQueryException("value for " + fieldName + " is not a has_parent query");
+				}
+				break;
 			default:
 				throw new CriteriaQueryException("Could not build query for " + entry);
 		}
@@ -432,19 +428,19 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 		return sb.toString();
 	}
 
-    /**
-     * Convert a spring-data-elasticsearch {@literal inner_hits} to an Elasticsearch {@literal inner_hits} query.
-     *
-     * @param query spring-data-elasticsearch {@literal inner_hits}.
-     * @return an Elasticsearch {@literal inner_hits} query.
-     */
-    @Nullable
-    private static InnerHits getInnerHits(@Nullable InnerHitsQuery query) {
-        if (query == null) {
-            return null;
-        }
+	/**
+	 * Convert a spring-data-elasticsearch {@literal inner_hits} to an Elasticsearch {@literal inner_hits} query.
+	 *
+	 * @param query spring-data-elasticsearch {@literal inner_hits}.
+	 * @return an Elasticsearch {@literal inner_hits} query.
+	 */
+	@Nullable
+	private static InnerHits getInnerHits(@Nullable InnerHitsQuery query) {
+		if (query == null) {
+			return null;
+		}
 
-        return InnerHits.of(iqb -> iqb.from(query.getFrom()).size(query.getSize()).name(query.getName()));
-    }
+		return InnerHits.of(iqb -> iqb.from(query.getFrom()).size(query.getSize()).name(query.getName()));
+	}
 
 }

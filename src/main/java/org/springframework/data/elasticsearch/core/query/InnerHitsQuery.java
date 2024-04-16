@@ -25,84 +25,83 @@ import org.springframework.lang.Nullable;
  * @since 5.3
  */
 public class InnerHitsQuery {
-    /**
-     * The name to be used for the particular inner hit definition in the response.
-     */
-    @Nullable private final String name;
+	/**
+	 * The name to be used for the particular inner hit definition in the response.
+	 */
+	@Nullable private final String name;
 
-    /**
-     * The maximum number of hits to return.
-     */
-    @Nullable private final Integer size;
+	/**
+	 * The maximum number of hits to return.
+	 */
+	@Nullable private final Integer size;
 
-    /**
-     * The offset from where the first hit to fetch.
-     */
-    @Nullable private final Integer from;
+	/**
+	 * The offset from where the first hit to fetch.
+	 */
+	@Nullable private final Integer from;
 
-    public static Builder builder() {
-        return new Builder();
-    }
+	public static Builder builder() {
+		return new Builder();
+	}
 
-    private InnerHitsQuery(Builder builder) {
-        this.name = builder.name;
+	private InnerHitsQuery(Builder builder) {
+		this.name = builder.name;
 
-        this.from = builder.from;
-        this.size = builder.size;
-    }
+		this.from = builder.from;
+		this.size = builder.size;
+	}
 
-    @Nullable
-    public String getName() {
-        return name;
-    }
+	@Nullable
+	public String getName() {
+		return name;
+	}
 
-    @Nullable
-    public Integer getSize() {
-        return size;
-    }
+	@Nullable
+	public Integer getSize() {
+		return size;
+	}
 
-    @Nullable
-    public Integer getFrom() {
-        return from;
-    }
+	@Nullable
+	public Integer getFrom() {
+		return from;
+	}
 
-    public static final class Builder {
-        @Nullable private String name;
-        @Nullable private Integer size;
-        @Nullable private Integer from;
+	public static final class Builder {
+		@Nullable private String name;
+		@Nullable private Integer size;
+		@Nullable private Integer from;
 
-        private Builder() {
-        }
+		private Builder() {}
 
-        /**
-         * The name to be used for the particular inner hit definition in the response.
-         */
-        public Builder withName(@Nullable String name) {
-            this.name = name;
+		/**
+		 * The name to be used for the particular inner hit definition in the response.
+		 */
+		public Builder withName(@Nullable String name) {
+			this.name = name;
 
-            return this;
-        }
+			return this;
+		}
 
-        /**
-         * The maximum number of hits to return.
-         */
-        public Builder withSize(@Nullable Integer size) {
-            this.size = size;
+		/**
+		 * The maximum number of hits to return.
+		 */
+		public Builder withSize(@Nullable Integer size) {
+			this.size = size;
 
-            return this;
-        }
+			return this;
+		}
 
-        /**
-         * The offset from where the first hit to fetch.
-         */
-        public Builder withFrom(@Nullable Integer from) {
-            this.from = from;
+		/**
+		 * The offset from where the first hit to fetch.
+		 */
+		public Builder withFrom(@Nullable Integer from) {
+			this.from = from;
 
-            return this;
-        }
+			return this;
+		}
 
-        public InnerHitsQuery build() {
-            return new InnerHitsQuery(this);
-        }
-    }
+		public InnerHitsQuery build() {
+			return new InnerHitsQuery(this);
+		}
+	}
 }

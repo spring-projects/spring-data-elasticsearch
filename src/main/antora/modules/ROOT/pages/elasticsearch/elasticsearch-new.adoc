@@ -10,6 +10,7 @@
 * Add support for multi search template API.
 * Add support for SpEL in @Query.
 * Add support for field aliases in the index mapping.
+* Add support for has_child and has_parent queries.
 
 [[new-features.5-2-0]]
 == New in Spring Data Elasticsearch 5.2
