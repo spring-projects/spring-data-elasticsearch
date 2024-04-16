@@ -66,7 +66,6 @@ public abstract class AbstractQueryProcessor {
             throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
         }
 
-        Assert.notNull(esQuery, "query must not be null.");
         return esQuery;
     }
 }
