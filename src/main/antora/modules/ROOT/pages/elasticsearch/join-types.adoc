@@ -52,7 +52,7 @@ public class Statement {
         return routing;
     }
 
-    public void setRouting(Routing routing) {
+    public void setRouting(String routing) {
         this.routing = routing;
     }
 
@@ -199,7 +199,7 @@ void init() {
     repository.save(
         Statement.builder()
             .withText("+1 for the sun")
-            ,withRouting(savedWeather.getId())
+            .withRouting(savedWeather.getId())
             .withRelation(new JoinField<>("vote", sunnyAnswer.getId()))         <5>
             .build());
 }
@@ -226,6 +226,7 @@ SearchHits<Statement> hasVotes() {
 	Query query = NativeQuery.builder()
 		.withQuery(co.elastic.clients.elasticsearch._types.query_dsl.Query.of(qb -> qb
 			.hasChild(hc -> hc
+				.type("answer")
 				.queryName("vote")
 				.query(matchAllQueryAsQuery())
 				.scoreMode(ChildScoreMode.None)
