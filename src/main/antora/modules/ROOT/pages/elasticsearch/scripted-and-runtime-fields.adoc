@@ -194,7 +194,7 @@ In the following code this is used to run a query for a given gender and maximum
 
         var runtimeField = new RuntimeField("age", "long", """                    <.>
                                 Instant currentDate = Instant.ofEpochMilli(new Date().getTime());
-                                Instant startDate = doc['birth-date'].value.toInstant();
+                                Instant startDate = doc['birthDate'].value.toInstant();
                                 emit (ChronoUnit.DAYS.between(startDate, currentDate) / 365);
                 """);
 
