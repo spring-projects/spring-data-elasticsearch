@@ -88,6 +88,7 @@ import org.springframework.data.elasticsearch.core.index.GetIndexTemplateRequest
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.mapping.AliasCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -240,9 +241,22 @@ class RequestConverter extends AbstractQueryProcessor {
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 		Assert.notNull(settings, "settings must not be null");
 
+		Map<String, Alias> aliases = new HashMap<>();
+		for (AliasCoordinates aliasCoordinates : indexCoordinates.getAliases()) {
+			Alias alias = Alias.of(ab -> ab.filter(getQuery(aliasCoordinates.getFilter(), null))
+					.routing(aliasCoordinates.getRouting())
+					.indexRouting(aliasCoordinates.getIndexRouting())
+					.searchRouting(aliasCoordinates.getSearchRouting())
+					.isHidden(aliasCoordinates.getHidden())
+					.isWriteIndex(aliasCoordinates.getWriteIndex())
+			);
+			aliases.put(aliasCoordinates.getAlias(), alias);
+		}
+
 		// note: the new client does not support the index.storeType anymore
 		return new CreateIndexRequest.Builder() //
 				.index(indexCoordinates.getIndexName()) //
+				.aliases(aliases)
 				.settings(indexSettings(settings)) //
 				.mappings(typeMapping(mapping)) //
 				.build();

@@ -101,6 +101,13 @@ public @interface Document {
 	boolean storeVersionInSource() default true;
 
 	/**
+	 * Aliases for the index.
+	 *
+	 * @since 5.3
+	 */
+	Alias[] aliases() default {};
+
+	/**
 	 * @since 4.3
 	 */
 	enum VersionType {

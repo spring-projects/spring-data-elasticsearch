@@ -16,11 +16,14 @@
 package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,13 +33,18 @@ import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Alias;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
@@ -171,6 +179,29 @@ public abstract class IndexOperationsIntegrationTests {
 		softly.assertAll();
 	}
 
+	@Test
+	void shouldCreateIndexWithAliases() {
+		// Given
+		indexNameProvider.increment();
+		String indexName = indexNameProvider.indexName();
+		indexOperations = operations.indexOps(EntityWithAliases.class);
+		indexOperations.createWithMapping();
+
+		// When
+		Map<String, Set<AliasData>> aliases = indexOperations.getAliasesForIndex(indexName);
+
+		// Then
+		AliasData result = aliases.values().stream().findFirst().orElse(new HashSet<>()).stream().findFirst().orElse(null);
+		assertThat(result).isNotNull();
+		assertThat(result.getAlias()).isEqualTo("first_alias");
+		assertThat(result.getFilterQuery()).asInstanceOf(InstanceOfAssertFactories.type(StringQuery.class))
+				.extracting(StringQuery::getSource)
+				.asString()
+				.contains(Queries.wrapperQuery("""
+					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
+					""").query());
+	}
+
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(settingPath = "settings/test-settings.json")
 	@Mapping(mappingPath = "mappings/test-mappings.json")
@@ -184,6 +215,33 @@ public abstract class IndexOperationsIntegrationTests {
 
 		public void setId(@Nullable String id) {
 			this.id = id;
+		}
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}", aliases = {
+			@Alias(value = "first_alias", filter =@Query("""
+					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
+					"""))
+	})
+	private static class EntityWithAliases {
+		@Nullable private @Id String id;
+		@Field(type = Text) private String type;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
 		}
 	}
 }

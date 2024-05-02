@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.elasticsearch.annotations.Alias;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -31,6 +32,8 @@ import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -135,7 +138,28 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
-		return resolve(IndexCoordinates.of(getIndexName()));
+		IndexCoordinates coordinates = IndexCoordinates.of(getIndexName());
+		if (document != null) {
+			for (Alias alias : document.aliases()) {
+				Query query = null;
+				if (!alias.filter().value().isEmpty()) {
+					query = new StringQuery(alias.filter().value());
+				}
+
+				coordinates.withAlias(
+						AliasCoordinates.builder(alias.value())
+								.withFilter(query)
+								.withIndexRouting(alias.indexRouting())
+								.withSearchRouting(alias.searchRouting())
+								.withRouting(alias.routing())
+								.withHidden(alias.isHidden())
+								.withWriteIndex(alias.isWriteIndex())
+						.build()
+				);
+			}
+		}
+
+		return resolve(coordinates);
 	}
 
 	@Nullable
@@ -343,7 +367,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			resolvedNames[i] = resolve(indexName);
 		}
 
-		return IndexCoordinates.of(resolvedNames);
+		IndexCoordinates coordinates = IndexCoordinates.of(resolvedNames);
+		for (AliasCoordinates alias : indexCoordinates.getAliases()) {
+			coordinates.withAlias(alias);
+		}
+		return coordinates;
 	}
 
 	/**
