@@ -79,11 +79,6 @@ abstract class QueryKeywordsIntegrationTests {
 	@Test
 	public void shouldSupportAND() {
 
-		// given
-
-		// when
-
-		// then
 		assertThat(repository.findByNameAndText("Sugar", "Cane sugar")).hasSize(2);
 		assertThat(repository.findByNameAndPrice("Sugar", 1.1f)).hasSize(1);
 	}
@@ -91,11 +86,6 @@ abstract class QueryKeywordsIntegrationTests {
 	@Test
 	public void shouldSupportOR() {
 
-		// given
-
-		// when
-
-		// then
 		assertThat(repository.findByNameOrPrice("Sugar", 1.9f)).hasSize(4);
 		assertThat(repository.findByNameOrText("Salt", "Beet sugar")).hasSize(3);
 	}
@@ -103,11 +93,6 @@ abstract class QueryKeywordsIntegrationTests {
 	@Test
 	public void shouldSupportTrueAndFalse() {
 
-		// given
-
-		// when
-
-		// then
 		assertThat(repository.findByAvailableTrue()).hasSize(3);
 		assertThat(repository.findByAvailableFalse()).hasSize(4);
 	}
@@ -115,11 +100,6 @@ abstract class QueryKeywordsIntegrationTests {
 	@Test
 	public void shouldSupportInAndNotInAndNot() {
 
-		// given
-
-		// when
-
-		// then
 		assertThat(repository.findByPriceIn(Arrays.asList(1.2f, 1.1f))).hasSize(2);
 		assertThat(repository.findByPriceNotIn(Arrays.asList(1.2f, 1.1f))).hasSize(5);
 		assertThat(repository.findByPriceNot(1.2f)).hasSize(6);
@@ -128,33 +108,18 @@ abstract class QueryKeywordsIntegrationTests {
 	@Test // DATAES-171
 	public void shouldWorkWithNotIn() {
 
-		// given
-
-		// when
-
-		// then
 		assertThat(repository.findByIdNotIn(Arrays.asList("2", "3"))).hasSize(5);
 	}
 
 	@Test
 	public void shouldSupportBetween() {
 
-		// given
-
-		// when
-
-		// then
 		assertThat(repository.findByPriceBetween(1.0f, 2.0f)).hasSize(4);
 	}
 
 	@Test
 	public void shouldSupportLessThanAndGreaterThan() {
 
-		// given
-
-		// when
-
-		// then
 		assertThat(repository.findByPriceLessThan(1.1f)).hasSize(1);
 		assertThat(repository.findByPriceLessThanEqual(1.1f)).hasSize(2);
 

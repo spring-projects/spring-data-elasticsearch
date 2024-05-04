@@ -70,9 +70,13 @@ class CriteriaFilterProcessor {
 		for (Criteria chainedCriteria : criteria.getCriteriaChain()) {
 
 			if (chainedCriteria.isOr()) {
-				BoolQuery.Builder boolQueryBuilder = QueryBuilders.bool();
-				queriesForEntries(chainedCriteria).forEach(boolQueryBuilder::should);
-				filterQueries.add(new Query(boolQueryBuilder.build()));
+				Collection<? extends Query> queriesForEntries = queriesForEntries(chainedCriteria);
+
+				if (!queriesForEntries.isEmpty()) {
+					BoolQuery.Builder boolQueryBuilder = QueryBuilders.bool();
+					queriesForEntries.forEach(boolQueryBuilder::should);
+					filterQueries.add(new Query(boolQueryBuilder.build()));
+				}
 			} else if (chainedCriteria.isNegating()) {
 
 				Assert.notNull(criteria.getField(), "criteria must have a field");

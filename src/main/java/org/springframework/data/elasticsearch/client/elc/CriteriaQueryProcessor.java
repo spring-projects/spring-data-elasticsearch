@@ -29,6 +29,7 @@ import co.elastic.clients.json.JsonData;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.query.Criteria;
@@ -115,11 +116,18 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 			}
 		}
 
+		var filterQuery = CriteriaFilterProcessor.createQuery(criteria);
 		if (shouldQueries.isEmpty() && mustNotQueries.isEmpty() && mustQueries.isEmpty()) {
-			return null;
+
+			if (filterQuery.isEmpty()) {
+				return null;
+			}
+
+			// we need something to add the filter to
+			mustQueries.add(Query.of(qb -> qb.matchAll(m -> m)));
 		}
 
-		Query query = new Query.Builder().bool(boolQueryBuilder -> {
+        return new Query.Builder().bool(boolQueryBuilder -> {
 
 			if (!shouldQueries.isEmpty()) {
 				boolQueryBuilder.should(shouldQueries);
@@ -133,10 +141,10 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 				boolQueryBuilder.must(mustQueries);
 			}
 
+			filterQuery.ifPresent(boolQueryBuilder::filter);
+
 			return boolQueryBuilder;
 		}).build();
-
-		return query;
 	}
 
 	@Nullable
@@ -238,7 +246,7 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 				queryBuilder.queryString(queryStringQuery(fieldName, '*' + searchText, true, boost));
 				break;
 			case EXPRESSION:
-				queryBuilder.queryString(queryStringQuery(fieldName, value.toString(), boost));
+				queryBuilder.queryString(queryStringQuery(fieldName, Objects.requireNonNull(value).toString(), boost));
 				break;
 			case LESS:
 				queryBuilder //
@@ -270,6 +278,7 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 				break;
 			case BETWEEN:
 				Object[] ranges = (Object[]) value;
+				Assert.notNull(value, "value for a between condition must not be null");
 				queryBuilder //
 						.range(rb -> {
 							rb.field(fieldName);
@@ -293,10 +302,10 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 								.boost(boost)); //
 				break;
 			case MATCHES:
-				queryBuilder.match(matchQuery(fieldName, value.toString(), Operator.Or, boost));
+				queryBuilder.match(matchQuery(fieldName, Objects.requireNonNull(value).toString(), Operator.Or, boost));
 				break;
 			case MATCHES_ALL:
-				queryBuilder.match(matchQuery(fieldName, value.toString(), Operator.And, boost));
+				queryBuilder.match(matchQuery(fieldName, Objects.requireNonNull(value).toString(), Operator.And, boost));
 
 				break;
 			case IN:
@@ -345,7 +354,7 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 				queryBuilder //
 						.regexp(rb -> rb //
 								.field(fieldName) //
-								.value(value.toString()) //
+								.value(Objects.requireNonNull(value).toString()) //
 								.boost(boost)); //
 				break;
 			case HAS_CHILD:
