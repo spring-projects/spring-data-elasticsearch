@@ -17,6 +17,11 @@ package org.springframework.data.elasticsearch.core.query;
 
 import static org.assertj.core.api.Assertions.*;
 
+import co.elastic.clients.elasticsearch._types.GeoHashPrecision;
+import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
+
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -26,6 +31,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
@@ -96,6 +102,40 @@ public abstract class NativeQueryIntegrationTests {
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo(entity1.getId());
+	}
+
+	@Test // #2857
+	@DisplayName("should apply CriteriaQuery with filter arguments in a NativeQuery to aggregations")
+	void shouldBeAbleToUseCriteriaQueryWithFilterArgumentsInANativeQueryToAggregations() {
+		var entity1 = new SampleEntity();
+		entity1.setId("60");
+		var location1 = new GeoPoint(60.0, 60.0);
+		entity1.setLocation(location1);
+		entity1.setText("60");
+		var entity2 = new SampleEntity();
+		entity2.setId("70");
+		entity2.setText("70");
+		var location70 = new GeoPoint(70.0, 70.0);
+		entity2.setLocation(location70);
+		operations.save(entity1, entity2);
+
+		var criteriaQuery = new CriteriaQuery(Criteria.where("location").within(location1, "10km"));
+		var nativeQuery = NativeQuery.builder()
+				.withQuery(criteriaQuery)
+				.withAggregation("geohashgrid", Aggregation.of(ab -> ab
+						.geohashGrid(ghg -> ghg
+								.field("location")
+								.precision(GeoHashPrecision.of(ghp -> ghp.distance("10000km"))))))
+				.build();
+
+		var searchHits = operations.search(nativeQuery, SampleEntity.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo(entity1.getId());
+		assertThat(searchHits.getAggregations()).isNotNull();
+		// noinspection unchecked
+		var aggregations = (List<ElasticsearchAggregation>) searchHits.getAggregations().aggregations();
+		assertThat(aggregations).hasSize(1);
 	}
 
 	@Test // #2391

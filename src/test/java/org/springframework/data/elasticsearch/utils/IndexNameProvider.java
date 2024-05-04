@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.utils;
 
 /**
- * Class providing an index name with a prefix and an index number
+ * Class providing an index name with a prefix, an index number and a random 6-digit number.
  *
  * @author Peter-Josef Meisch
  */
@@ -35,7 +35,7 @@ public class IndexNameProvider {
 	}
 
 	public void increment() {
-		indexName = prefix + '-' + ++idx;
+		indexName = prefix + '-' + ++idx + '-' + sixDigits();
 	}
 
 	public String indexName() {
@@ -47,5 +47,9 @@ public class IndexNameProvider {
 	 */
 	public String getPrefix() {
 		return prefix;
+	}
+
+	private String sixDigits() {
+		return String.valueOf((int) (100000 + Math.random() * 900000));
 	}
 }

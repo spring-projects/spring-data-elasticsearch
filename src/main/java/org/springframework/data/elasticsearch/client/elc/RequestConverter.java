@@ -1210,7 +1210,7 @@ class RequestConverter extends AbstractQueryProcessor {
 			builder.routing(routing);
 		}
 
-		addFilter(query, builder);
+		addPostFilter(query, builder);
 
 		return builder.build();
 	}
@@ -1758,22 +1758,18 @@ class RequestConverter extends AbstractQueryProcessor {
 		return getEsQuery(query, (q) -> elasticsearchConverter.updateQuery(q, clazz));
 	}
 
-	private void addFilter(Query query, SearchRequest.Builder builder) {
+	@SuppressWarnings("StatementWithEmptyBody")
+	private void addPostFilter(Query query, SearchRequest.Builder builder) {
 
-		if (query instanceof CriteriaQuery) {
-			CriteriaFilterProcessor.createQuery(((CriteriaQuery) query).getCriteria()).ifPresent(builder::postFilter);
-		} else // noinspection StatementWithEmptyBody
-		if (query instanceof StringQuery) {
-			// no filter for StringQuery
-		} else if (query instanceof NativeQuery nativeQuery) {
+		// we only need to handle NativeQuery here. filter from a CriteriaQuery are added into the query and not as post
+		// filter anymore, StringQuery do not have post filters
+		if (query instanceof NativeQuery nativeQuery) {
 
 			if (nativeQuery.getFilter() != null) {
 				builder.postFilter(nativeQuery.getFilter());
 			} else if (nativeQuery.getSpringDataQuery() != null) {
-				addFilter(nativeQuery.getSpringDataQuery(), builder);
+				addPostFilter(nativeQuery.getSpringDataQuery(), builder);
 			}
-		} else {
-			throw new IllegalArgumentException("unhandled Query implementation " + query.getClass().getName());
 		}
 	}
 
