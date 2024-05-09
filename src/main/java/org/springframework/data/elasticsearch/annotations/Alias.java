@@ -39,7 +39,11 @@ public @interface Alias {
     /**
      * @return Index alias name.
      */
+    @AliasFor("alias")
     String value();
+    
+    @AliasFor("value")
+    String alias()
 
     /**
      * @return Query used to limit documents the alias can access.
