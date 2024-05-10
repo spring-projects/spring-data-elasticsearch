@@ -89,6 +89,7 @@ import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
 import org.springframework.data.elasticsearch.core.mapping.AliasCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.CreateIndexSettings;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -235,14 +236,9 @@ class RequestConverter extends AbstractQueryProcessor {
 		return new ExistsRequest.Builder().index(Arrays.asList(indexCoordinates.getIndexNames())).build();
 	}
 
-	public CreateIndexRequest indicesCreateRequest(IndexCoordinates indexCoordinates, Map<String, Object> settings,
-			@Nullable Document mapping) {
-
-		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
-		Assert.notNull(settings, "settings must not be null");
-
+	public CreateIndexRequest indicesCreateRequest(CreateIndexSettings indexSettings) {
 		Map<String, Alias> aliases = new HashMap<>();
-		for (AliasCoordinates aliasCoordinates : indexCoordinates.getAliases()) {
+		for (AliasCoordinates aliasCoordinates : indexSettings.getAliasCoordinates()) {
 			Alias alias = Alias.of(ab -> ab.filter(getQuery(aliasCoordinates.getFilter(), null))
 					.routing(aliasCoordinates.getRouting())
 					.indexRouting(aliasCoordinates.getIndexRouting())
@@ -255,10 +251,10 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		// note: the new client does not support the index.storeType anymore
 		return new CreateIndexRequest.Builder() //
-				.index(indexCoordinates.getIndexName()) //
+				.index(indexSettings.getIndexCoordinates().getIndexName()) //
 				.aliases(aliases)
-				.settings(indexSettings(settings)) //
-				.mappings(typeMapping(mapping)) //
+				.settings(indexSettings(indexSettings.getSettings())) //
+				.mappings(typeMapping(indexSettings.getMapping())) //
 				.build();
 	}
 

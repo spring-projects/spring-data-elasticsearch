@@ -21,6 +21,7 @@ import co.elastic.clients.elasticsearch.indices.*;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,6 +47,8 @@ import org.springframework.data.elasticsearch.core.index.GetIndexTemplateRequest
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.mapping.AliasCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.CreateIndexSettings;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.lang.Nullable;
@@ -137,11 +140,15 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 	protected boolean doCreate(IndexCoordinates indexCoordinates, Map<String, Object> settings,
 			@Nullable Document mapping) {
+		Set<AliasCoordinates> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
+		CreateIndexSettings indexSettings = CreateIndexSettings.builder()
+				.withIndexCoordinates(indexCoordinates)
+				.withAliases(aliases)
+				.withSettings(settings)
+				.withMapping(mapping)
+				.build();
 
-		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
-		Assert.notNull(settings, "settings must not be null");
-
-		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexCoordinates, settings, mapping);
+		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
 		CreateIndexResponse createIndexResponse = execute(client -> client.create(createIndexRequest));
 		return Boolean.TRUE.equals(createIndexResponse.acknowledged());
 	}
@@ -448,6 +455,15 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 	public IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
 		return getRequiredPersistentEntity(clazz).getIndexCoordinates();
+	}
+
+	/**
+	 * Get the {@link AliasCoordinates} of the provided class.
+	 *
+	 * @param clazz provided class that can be used to extract aliases.
+	 */
+	public Set<AliasCoordinates> getAliasesFor(Class<?> clazz) {
+		return getRequiredPersistentEntity(clazz).getAliases();
 	}
 	// endregion
 }

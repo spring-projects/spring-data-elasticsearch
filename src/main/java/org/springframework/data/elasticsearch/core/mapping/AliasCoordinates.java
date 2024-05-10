@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 import java.util.Objects;
 
@@ -158,6 +159,7 @@ public class AliasCoordinates {
         private Boolean isWriteIndex;
 
         public Builder(String alias) {
+            Assert.notNull(alias, "alias must not be null");
             this.alias = alias;
         }
 

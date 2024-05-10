@@ -21,9 +21,12 @@ import co.elastic.clients.elasticsearch._types.AcknowledgedResponseBase;
 import co.elastic.clients.elasticsearch.indices.*;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
+import org.springframework.data.elasticsearch.core.mapping.AliasCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.CreateIndexSettings;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -130,8 +133,15 @@ public class ReactiveIndicesTemplate
 
 	private Mono<Boolean> doCreate(IndexCoordinates indexCoordinates, Map<String, Object> settings,
 			@Nullable Document mapping) {
+		Set<AliasCoordinates> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
+		CreateIndexSettings indexSettings = CreateIndexSettings.builder()
+				.withIndexCoordinates(indexCoordinates)
+				.withAliases(aliases)
+				.withSettings(settings)
+				.withMapping(mapping)
+				.build();
 
-		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexCoordinates, settings, mapping);
+		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
 		Mono<CreateIndexResponse> createIndexResponse = Mono.from(execute(client -> client.create(createIndexRequest)));
 		return createIndexResponse.map(CreateIndexResponse::acknowledged);
 	}
@@ -433,6 +443,15 @@ public class ReactiveIndicesTemplate
 	// region helper functions
 	private IndexCoordinates getIndexCoordinatesFor(Class<?> clazz) {
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz).getIndexCoordinates();
+	}
+
+	/**
+	 * Get the {@link AliasCoordinates} of the provided class.
+	 *
+	 * @param clazz provided class that can be used to extract aliases.
+	 */
+	private Set<AliasCoordinates> getAliasesFor(Class<?> clazz) {
+		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz).getAliases();
 	}
 
 	private Class<?> checkForBoundClass() {

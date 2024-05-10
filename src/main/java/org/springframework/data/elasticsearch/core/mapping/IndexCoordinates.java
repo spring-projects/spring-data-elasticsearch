@@ -16,9 +16,6 @@
 package org.springframework.data.elasticsearch.core.mapping;
 
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
 
 import org.springframework.util.Assert;
 
@@ -35,7 +32,6 @@ public class IndexCoordinates {
 	public static final String TYPE = "_doc";
 
 	private final String[] indexNames;
-	private final Set<AliasCoordinates> aliases = new HashSet<>();
 
 	public static IndexCoordinates of(String... indexNames) {
 		Assert.notNull(indexNames, "indexNames must not be null");
@@ -55,16 +51,6 @@ public class IndexCoordinates {
 		return Arrays.copyOf(indexNames, indexNames.length);
 	}
 
-	public IndexCoordinates withAlias(AliasCoordinates alias) {
-		aliases.add(alias);
-
-		return this;
-	}
-
-	public AliasCoordinates[] getAliases() {
-		return aliases.toArray(AliasCoordinates[]::new);
-	}
-
 	/**
 	 * @since 4.2
 	 */
@@ -75,7 +61,7 @@ public class IndexCoordinates {
 		if (o == null || getClass() != o.getClass())
 			return false;
 		IndexCoordinates that = (IndexCoordinates) o;
-		return Arrays.equals(indexNames, that.indexNames) && Objects.equals(aliases, that.aliases);
+		return Arrays.equals(indexNames, that.indexNames);
 	}
 
 	/**
@@ -83,7 +69,7 @@ public class IndexCoordinates {
 	 */
 	@Override
 	public int hashCode() {
-		return Arrays.hashCode(indexNames) + aliases.hashCode();
+		return Arrays.hashCode(indexNames);
 	}
 
 	@Override

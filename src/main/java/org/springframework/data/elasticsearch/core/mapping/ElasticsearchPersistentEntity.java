@@ -25,6 +25,8 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.lang.Nullable;
 
+import java.util.Set;
+
 /**
  * ElasticsearchPersistentEntity
  *
@@ -41,6 +43,7 @@ import org.springframework.lang.Nullable;
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
 	IndexCoordinates getIndexCoordinates();
+	Set<AliasCoordinates> getAliases();
 
 	short getShards();
 

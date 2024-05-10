@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -138,15 +140,25 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
-		IndexCoordinates coordinates = IndexCoordinates.of(getIndexName());
+		return resolve(IndexCoordinates.of(getIndexName()));
+	}
+
+	@Override
+	public Set<AliasCoordinates> getAliases() {
+		final Set<AliasCoordinates> aliases = new HashSet<>();
+
 		if (document != null) {
 			for (Alias alias : document.aliases()) {
+				if (alias.value().isEmpty()) {
+					continue;
+				}
+
 				Query query = null;
 				if (!alias.filter().value().isEmpty()) {
 					query = new StringQuery(alias.filter().value());
 				}
 
-				coordinates.withAlias(
+				aliases.add(
 						AliasCoordinates.builder(alias.value())
 								.withFilter(query)
 								.withIndexRouting(alias.indexRouting())
@@ -154,12 +166,12 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 								.withRouting(alias.routing())
 								.withHidden(alias.isHidden())
 								.withWriteIndex(alias.isWriteIndex())
-						.build()
+								.build()
 				);
 			}
 		}
 
-		return resolve(coordinates);
+		return aliases;
 	}
 
 	@Nullable
@@ -367,11 +379,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			resolvedNames[i] = resolve(indexName);
 		}
 
-		IndexCoordinates coordinates = IndexCoordinates.of(resolvedNames);
-		for (AliasCoordinates alias : indexCoordinates.getAliases()) {
-			coordinates.withAlias(alias);
-		}
-		return coordinates;
+		return IndexCoordinates.of(resolvedNames);
 	}
 
 	/**

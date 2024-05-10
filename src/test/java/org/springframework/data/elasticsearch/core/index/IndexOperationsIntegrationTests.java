@@ -36,8 +36,8 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Alias;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.Filter;
 import org.springframework.data.elasticsearch.annotations.Mapping;
-import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -219,7 +219,7 @@ public abstract class IndexOperationsIntegrationTests {
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}", aliases = {
-			@Alias(value = "first_alias", filter =@Query("""
+			@Alias(value = "first_alias", filter =@Filter("""
 					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
 					"""))
 	})

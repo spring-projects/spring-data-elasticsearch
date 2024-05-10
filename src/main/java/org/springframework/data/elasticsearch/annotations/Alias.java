@@ -37,18 +37,21 @@ import java.lang.annotation.Target;
 @Repeatable(Aliases.class)
 public @interface Alias {
     /**
-     * @return Index alias name.
+     * @return Index alias name. Alias for {@link #alias}.
      */
     @AliasFor("alias")
-    String value();
-    
+    String value() default "";
+
+    /**
+     * @return Index alias name. Alias for {@link #value}.
+     */
     @AliasFor("value")
-    String alias()
+    String alias() default "";
 
     /**
      * @return Query used to limit documents the alias can access.
      */
-    Query filter() default @Query;
+    Filter filter() default @Filter;
 
     /**
      * @return Used to route indexing operations to a specific shard.
