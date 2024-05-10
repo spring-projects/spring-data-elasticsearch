@@ -453,9 +453,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 	@Nullable
 	public <R> R executeAndRefresh(OperationsCallback<R> callback, @Nullable RefreshPolicy refreshPolicy) {
-		R result = callback.doWithOperations(operations.withRefreshPolicy(refreshPolicy));
-		doRefresh();
-		return result;
+        return callback.doWithOperations(operations.withRefreshPolicy(refreshPolicy));
 	}
 	// endregion
 }
