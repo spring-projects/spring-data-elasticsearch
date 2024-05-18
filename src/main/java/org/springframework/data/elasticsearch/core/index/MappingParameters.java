@@ -171,8 +171,8 @@ public final class MappingParameters {
 		positiveScoreImpact = field.positiveScoreImpact();
 		dims = field.dims();
 		if (type == FieldType.Dense_Vector) {
-			Assert.isTrue(dims >= 1 && dims <= 2048,
-					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
+			Assert.isTrue(dims >= 1 && dims <= 4096,
+					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 4096.");
 		}
 		Assert.isTrue(field.enabled() || type == FieldType.Object, "enabled false is only allowed for field type object");
 		enabled = field.enabled();
@@ -214,8 +214,8 @@ public final class MappingParameters {
 		positiveScoreImpact = field.positiveScoreImpact();
 		dims = field.dims();
 		if (type == FieldType.Dense_Vector) {
-			Assert.isTrue(dims >= 1 && dims <= 2048,
-					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 2048.");
+			Assert.isTrue(dims >= 1 && dims <= 4096,
+					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 4096.");
 		}
 		enabled = true;
 		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
