@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch._types.KnnQuery;
+import co.elastic.clients.elasticsearch._types.KnnSearch;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -26,6 +27,7 @@ import co.elastic.clients.util.ObjectBuilder;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,7 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 
 	@Nullable private org.springframework.data.elasticsearch.core.query.Query springDataQuery;
 	@Nullable private KnnQuery knnQuery;
+	@Nullable private List<KnnSearch> knnSearches = Collections.emptyList();
 
 	public NativeQueryBuilder() {}
 
@@ -90,6 +93,14 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	@Nullable
 	public KnnQuery getKnnQuery() {
 		return knnQuery;
+	}
+
+	/**
+	 * @since 5.3.1
+	 */
+	@Nullable
+	public List<KnnSearch> getKnnSearches() {
+		return knnSearches;
 	}
 
 	@Nullable
