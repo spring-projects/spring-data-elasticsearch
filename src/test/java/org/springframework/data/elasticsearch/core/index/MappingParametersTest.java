@@ -70,8 +70,8 @@ public class MappingParametersTest extends MappingContextBaseTests {
 	}
 
 	@Test // #1700
-	@DisplayName("should not allow dims length greater than 2048 for dense_vector type")
-	void shouldNotAllowDimsLengthGreaterThan2048ForDenseVectorType() {
+	@DisplayName("should not allow dims length greater than 4096 for dense_vector type")
+	void shouldNotAllowDimsLengthGreaterThan4096ForDenseVectorType() {
 		ElasticsearchPersistentEntity<?> failEntity = elasticsearchConverter.get().getMappingContext()
 				.getRequiredPersistentEntity(DenseVectorInvalidDimsClass.class);
 		Annotation annotation = failEntity.getRequiredPersistentProperty("dense_vector").findAnnotation(Field.class);
@@ -90,21 +90,28 @@ public class MappingParametersTest extends MappingContextBaseTests {
 	}
 
 	static class AnnotatedClass {
-		@Nullable @Field private String field;
-		@Nullable @MultiField(mainField = @Field,
+		@Nullable
+		@Field private String field;
+		@Nullable
+		@MultiField(mainField = @Field,
 				otherFields = { @InnerField(suffix = "test", type = FieldType.Text) }) private String mainField;
-		@Nullable @Field(type = FieldType.Text, docValues = false) private String docValuesText;
-		@Nullable @Field(type = FieldType.Nested, docValues = false) private String docValuesNested;
-		@Nullable @Field(type = Object, enabled = true) private String enabledObject;
-		@Nullable @Field(type = Object, enabled = false) private String disabledObject;
+		@Nullable
+		@Field(type = FieldType.Text, docValues = false) private String docValuesText;
+		@Nullable
+		@Field(type = FieldType.Nested, docValues = false) private String docValuesNested;
+		@Nullable
+		@Field(type = Object, enabled = true) private String enabledObject;
+		@Nullable
+		@Field(type = Object, enabled = false) private String disabledObject;
 	}
 
 	static class InvalidEnabledFieldClass {
-		@Nullable @Field(type = FieldType.Text, enabled = false) private String disabledObject;
+		@Nullable
+		@Field(type = FieldType.Text, enabled = false) private String disabledObject;
 	}
 
 	static class DenseVectorInvalidDimsClass {
-		@Field(type = Dense_Vector, dims = 2049) private float[] dense_vector;
+		@Field(type = Dense_Vector, dims = 4097) private float[] dense_vector;
 	}
 
 	static class DenseVectorMissingDimsClass {
