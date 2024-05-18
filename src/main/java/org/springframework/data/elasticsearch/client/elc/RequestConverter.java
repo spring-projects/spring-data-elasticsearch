@@ -1719,7 +1719,18 @@ class RequestConverter extends AbstractQueryProcessor {
 		;
 
 		if (query.getKnnQuery() != null) {
-			builder.knn(query.getKnnQuery());
+			var kq = query.getKnnQuery();
+			builder.knn(ksb -> ksb
+					.field(kq.field())
+					.queryVector(kq.queryVector())
+					.numCandidates(kq.numCandidates())
+					.filter(kq.filter())
+					.similarity(kq.similarity()));
+
+		}
+
+		if (!isEmpty(query.getKnnSearches())) {
+			builder.knn(query.getKnnSearches());
 		}
 
 		if (!isEmpty(query.getAggregations())) {
@@ -1740,7 +1751,18 @@ class RequestConverter extends AbstractQueryProcessor {
 				.sort(query.getSortOptions());
 
 		if (query.getKnnQuery() != null) {
-			builder.knn(query.getKnnQuery());
+			var kq = query.getKnnQuery();
+			builder.knn(ksb -> ksb
+					.field(kq.field())
+					.queryVector(kq.queryVector())
+					.numCandidates(kq.numCandidates())
+					.filter(kq.filter())
+					.similarity(kq.similarity()));
+
+		}
+
+		if (!isEmpty(query.getKnnSearches())) {
+			builder.knn(query.getKnnSearches());
 		}
 
 		if (!isEmpty(query.getAggregations())) {
