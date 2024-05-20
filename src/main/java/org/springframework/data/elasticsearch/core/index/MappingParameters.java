@@ -23,15 +23,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.data.elasticsearch.annotations.DateFormat;
-import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.IndexOptions;
-import org.springframework.data.elasticsearch.annotations.IndexPrefixes;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.NullValueType;
-import org.springframework.data.elasticsearch.annotations.Similarity;
-import org.springframework.data.elasticsearch.annotations.TermVector;
+import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -49,6 +41,7 @@ import com.fasterxml.jackson.databind.node.TextNode;
  * @author Brian Kimmig
  * @author Morgan Lutz
  * @author Sascha Woo
+ * @author Haibo Liu
  * @since 4.0
  */
 public final class MappingParameters {
@@ -78,6 +71,10 @@ public final class MappingParameters {
 	static final String FIELD_PARAM_ORIENTATION = "orientation";
 	static final String FIELD_PARAM_POSITIVE_SCORE_IMPACT = "positive_score_impact";
 	static final String FIELD_PARAM_DIMS = "dims";
+	static final String FIELD_PARAM_ELEMENT_TYPE = "element_type";
+	static final String FIELD_PARAM_M = "m";
+	static final String FIELD_PARAM_EF_CONSTRUCTION = "ef_construction";
+	static final String FIELD_PARAM_CONFIDENCE_INTERVAL = "confidence_interval";
 	static final String FIELD_PARAM_SCALING_FACTOR = "scaling_factor";
 	static final String FIELD_PARAM_SEARCH_ANALYZER = "search_analyzer";
 	static final String FIELD_PARAM_STORE = "store";
@@ -110,6 +107,9 @@ public final class MappingParameters {
 	private final Integer positionIncrementGap;
 	private final boolean positiveScoreImpact;
 	private final Integer dims;
+	private final String elementType;
+	private final KnnSimilarity knnSimilarity;
+	@Nullable private final KnnIndexOptions knnIndexOptions;
 	private final String searchAnalyzer;
 	private final double scalingFactor;
 	private final String similarity;
@@ -174,6 +174,9 @@ public final class MappingParameters {
 			Assert.isTrue(dims >= 1 && dims <= 4096,
 					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 4096.");
 		}
+		elementType = field.elementType();
+		knnSimilarity = field.knnSimilarity();
+		knnIndexOptions = field.knnIndexOptions().length > 0 ? field.knnIndexOptions()[0] : null;
 		Assert.isTrue(field.enabled() || type == FieldType.Object, "enabled false is only allowed for field type object");
 		enabled = field.enabled();
 		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
@@ -217,6 +220,9 @@ public final class MappingParameters {
 			Assert.isTrue(dims >= 1 && dims <= 4096,
 					"Invalid required parameter! Dense_Vector value \"dims\" must be between 1 and 4096.");
 		}
+		elementType = field.elementType();
+		knnSimilarity = field.knnSimilarity();
+		knnIndexOptions = field.knnIndexOptions().length > 0 ? field.knnIndexOptions()[0] : null;
 		enabled = true;
 		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
 	}
@@ -356,6 +362,45 @@ public final class MappingParameters {
 
 		if (type == FieldType.Dense_Vector) {
 			objectNode.put(FIELD_PARAM_DIMS, dims);
+
+			if (!FieldElementType.DEFAULT.equals(elementType)) {
+				objectNode.put(FIELD_PARAM_ELEMENT_TYPE, elementType);
+			}
+
+			if (knnSimilarity != KnnSimilarity.DEFAULT) {
+				objectNode.put(FIELD_PARAM_SIMILARITY, knnSimilarity.getSimilarity());
+			}
+
+			if (knnSimilarity != KnnSimilarity.DEFAULT) {
+				Assert.isTrue(index, "knn similarity can only be specified when \"index\" is true.");
+				objectNode.put(FIELD_PARAM_SIMILARITY, knnSimilarity.getSimilarity());
+			}
+
+			if (knnIndexOptions != null) {
+				Assert.isTrue(index, "knn similarity can only be specified when \"index\" is true.");
+				ObjectNode indexOptionsNode = objectNode.putObject(FIELD_PARAM_INDEX_OPTIONS);
+				if (knnIndexOptions.type() != KnnAlgorithmType.DEFAULT) {
+					indexOptionsNode.put(FIELD_PARAM_TYPE, knnIndexOptions.type().getType());
+				}
+				if (knnIndexOptions.m() >= 0) {
+					Assert.isTrue(knnIndexOptions.type() == KnnAlgorithmType.HNSW
+							|| knnIndexOptions.type() == KnnAlgorithmType.INT8_HNSW,
+							"knn 'm' parameter can only be applicable to hnsw and int8_hnsw index types.");
+					indexOptionsNode.put(FIELD_PARAM_M, knnIndexOptions.m());
+				}
+				if (knnIndexOptions.efConstruction() >= 0) {
+					Assert.isTrue(knnIndexOptions.type() == KnnAlgorithmType.HNSW
+							|| knnIndexOptions.type() == KnnAlgorithmType.INT8_HNSW,
+							"knn 'ef_construction' can only be applicable to hnsw and int8_hnsw index types.");
+					indexOptionsNode.put(FIELD_PARAM_EF_CONSTRUCTION, knnIndexOptions.efConstruction());
+				}
+				if (knnIndexOptions.confidenceInterval() >= 0) {
+					Assert.isTrue(knnIndexOptions.type() == KnnAlgorithmType.INT8_HNSW
+							|| knnIndexOptions.type() == KnnAlgorithmType.INT8_FLAT,
+							"knn 'confidence_interval' can only be applicable to int8_hnsw and int8_flat index types.");
+					indexOptionsNode.put(FIELD_PARAM_CONFIDENCE_INTERVAL, knnIndexOptions.confidenceInterval());
+				}
+			}
 		}
 
 		if (!enabled) {

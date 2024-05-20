@@ -40,6 +40,7 @@ import org.springframework.util.Assert;
 /**
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author Haibo Liu
  * @since 4.4
  */
 public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQueryBuilder> {
@@ -212,11 +213,8 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		return this;
 	}
 
-	/**
-	 * @since 5.1
-	 */
-	public NativeQueryBuilder withKnnQuery(KnnQuery knnQuery) {
-		this.knnQuery = knnQuery;
+	public NativeQueryBuilder withKnnSearches(List<KnnSearch> knnSearches) {
+		this.knnSearches = knnSearches;
 		return this;
 	}
 
