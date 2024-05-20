@@ -372,31 +372,34 @@ public final class MappingParameters {
 			}
 
 			if (knnSimilarity != KnnSimilarity.DEFAULT) {
-				Assert.isTrue(index, "knn similarity can only be specified when \"index\" is true.");
+				Assert.isTrue(index, "knn similarity can only be specified when 'index' is true.");
 				objectNode.put(FIELD_PARAM_SIMILARITY, knnSimilarity.getSimilarity());
 			}
 
 			if (knnIndexOptions != null) {
-				Assert.isTrue(index, "knn similarity can only be specified when \"index\" is true.");
+				Assert.isTrue(index, "knn index options can only be specified when 'index' is true.");
 				ObjectNode indexOptionsNode = objectNode.putObject(FIELD_PARAM_INDEX_OPTIONS);
-				if (knnIndexOptions.type() != KnnAlgorithmType.DEFAULT) {
-					indexOptionsNode.put(FIELD_PARAM_TYPE, knnIndexOptions.type().getType());
+				KnnAlgorithmType algoType = knnIndexOptions.type();
+				if (algoType != KnnAlgorithmType.DEFAULT) {
+					if (algoType == KnnAlgorithmType.INT8_HNSW || algoType == KnnAlgorithmType.INT8_FLAT) {
+						Assert.isTrue(!FieldElementType.BYTE.equals(elementType),
+								"'element_type' can only be float when using vector quantization.");
+					}
+					indexOptionsNode.put(FIELD_PARAM_TYPE, algoType.getType());
 				}
 				if (knnIndexOptions.m() >= 0) {
-					Assert.isTrue(knnIndexOptions.type() == KnnAlgorithmType.HNSW
-							|| knnIndexOptions.type() == KnnAlgorithmType.INT8_HNSW,
+					Assert.isTrue(algoType == KnnAlgorithmType.HNSW || algoType == KnnAlgorithmType.INT8_HNSW,
 							"knn 'm' parameter can only be applicable to hnsw and int8_hnsw index types.");
 					indexOptionsNode.put(FIELD_PARAM_M, knnIndexOptions.m());
 				}
 				if (knnIndexOptions.efConstruction() >= 0) {
-					Assert.isTrue(knnIndexOptions.type() == KnnAlgorithmType.HNSW
-							|| knnIndexOptions.type() == KnnAlgorithmType.INT8_HNSW,
+					Assert.isTrue(algoType == KnnAlgorithmType.HNSW || algoType == KnnAlgorithmType.INT8_HNSW,
 							"knn 'ef_construction' can only be applicable to hnsw and int8_hnsw index types.");
 					indexOptionsNode.put(FIELD_PARAM_EF_CONSTRUCTION, knnIndexOptions.efConstruction());
 				}
 				if (knnIndexOptions.confidenceInterval() >= 0) {
-					Assert.isTrue(knnIndexOptions.type() == KnnAlgorithmType.INT8_HNSW
-							|| knnIndexOptions.type() == KnnAlgorithmType.INT8_FLAT,
+					Assert.isTrue(algoType == KnnAlgorithmType.INT8_HNSW
+							|| algoType == KnnAlgorithmType.INT8_FLAT,
 							"knn 'confidence_interval' can only be applicable to int8_hnsw and int8_flat index types.");
 					indexOptionsNode.put(FIELD_PARAM_CONFIDENCE_INTERVAL, knnIndexOptions.confidenceInterval());
 				}
