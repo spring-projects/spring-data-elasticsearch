@@ -103,7 +103,7 @@ public @interface Document {
 	/**
 	 * Aliases for the index.
 	 *
-	 * @since 5.3
+	 * @since 5.4
 	 */
 	Alias[] aliases() default {};
 

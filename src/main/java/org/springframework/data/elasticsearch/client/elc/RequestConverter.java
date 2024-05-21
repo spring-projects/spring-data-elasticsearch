@@ -88,7 +88,7 @@ import org.springframework.data.elasticsearch.core.index.GetIndexTemplateRequest
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.mapping.AliasCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.Alias;
 import org.springframework.data.elasticsearch.core.mapping.CreateIndexSettings;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -172,7 +172,7 @@ class RequestConverter extends AbstractQueryProcessor {
 				}));
 	}
 
-	private Alias.Builder buildAlias(AliasActionParameters parameters, Alias.Builder aliasBuilder) {
+	private co.elastic.clients.elasticsearch.indices.Alias.Builder buildAlias(AliasActionParameters parameters, co.elastic.clients.elasticsearch.indices.Alias.Builder aliasBuilder) {
 
 		if (parameters.getRouting() != null) {
 			aliasBuilder.routing(parameters.getRouting());
@@ -237,16 +237,16 @@ class RequestConverter extends AbstractQueryProcessor {
 	}
 
 	public CreateIndexRequest indicesCreateRequest(CreateIndexSettings indexSettings) {
-		Map<String, Alias> aliases = new HashMap<>();
-		for (AliasCoordinates aliasCoordinates : indexSettings.getAliasCoordinates()) {
-			Alias alias = Alias.of(ab -> ab.filter(getQuery(aliasCoordinates.getFilter(), null))
-					.routing(aliasCoordinates.getRouting())
-					.indexRouting(aliasCoordinates.getIndexRouting())
-					.searchRouting(aliasCoordinates.getSearchRouting())
-					.isHidden(aliasCoordinates.getHidden())
-					.isWriteIndex(aliasCoordinates.getWriteIndex())
+		Map<String, co.elastic.clients.elasticsearch.indices.Alias> aliases = new HashMap<>();
+		for (Alias alias : indexSettings.getAliases()) {
+			co.elastic.clients.elasticsearch.indices.Alias esAlias = co.elastic.clients.elasticsearch.indices.Alias.of(ab -> ab.filter(getQuery(alias.getFilter(), null))
+					.routing(alias.getRouting())
+					.indexRouting(alias.getIndexRouting())
+					.searchRouting(alias.getSearchRouting())
+					.isHidden(alias.getHidden())
+					.isWriteIndex(alias.getWriteIndex())
 			);
-			aliases.put(aliasCoordinates.getAlias(), alias);
+			aliases.put(alias.getAlias(), esAlias);
 		}
 
 		// note: the new client does not support the index.storeType anymore

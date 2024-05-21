@@ -25,9 +25,9 @@ import java.util.Objects;
  * Immutable Value object encapsulating index alias(es).
  *
  * @author Youssef Aouichaoui
- * @since 5.3
+ * @since 5.4
  */
-public class AliasCoordinates {
+public class Alias {
     /**
      * Alias name for the index.
      */
@@ -71,7 +71,7 @@ public class AliasCoordinates {
     @Nullable
     private final Boolean isWriteIndex;
 
-    private AliasCoordinates(Builder builder) {
+    private Alias(Builder builder) {
         this.alias = builder.alias;
 
         this.filter = builder.filter;
@@ -125,7 +125,7 @@ public class AliasCoordinates {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof AliasCoordinates that)) return false;
+        if (!(o instanceof Alias that)) return false;
 
         return Objects.equals(alias, that.alias) && Objects.equals(filter, that.filter)
                && Objects.equals(indexRouting, that.indexRouting)
@@ -225,8 +225,8 @@ public class AliasCoordinates {
             return this;
         }
 
-        public AliasCoordinates build() {
-            return new AliasCoordinates(this);
+        public Alias build() {
+            return new Alias(this);
         }
     }
 }

@@ -21,7 +21,7 @@ import co.elastic.clients.elasticsearch._types.AcknowledgedResponseBase;
 import co.elastic.clients.elasticsearch.indices.*;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
-import org.springframework.data.elasticsearch.core.mapping.AliasCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.Alias;
 import org.springframework.data.elasticsearch.core.mapping.CreateIndexSettings;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -133,9 +133,8 @@ public class ReactiveIndicesTemplate
 
 	private Mono<Boolean> doCreate(IndexCoordinates indexCoordinates, Map<String, Object> settings,
 			@Nullable Document mapping) {
-		Set<AliasCoordinates> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
-		CreateIndexSettings indexSettings = CreateIndexSettings.builder()
-				.withIndexCoordinates(indexCoordinates)
+		Set<Alias> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
+		CreateIndexSettings indexSettings = CreateIndexSettings.builder(indexCoordinates)
 				.withAliases(aliases)
 				.withSettings(settings)
 				.withMapping(mapping)
@@ -446,11 +445,11 @@ public class ReactiveIndicesTemplate
 	}
 
 	/**
-	 * Get the {@link AliasCoordinates} of the provided class.
+	 * Get the {@link Alias} of the provided class.
 	 *
 	 * @param clazz provided class that can be used to extract aliases.
 	 */
-	private Set<AliasCoordinates> getAliasesFor(Class<?> clazz) {
+	private Set<Alias> getAliasesFor(Class<?> clazz) {
 		return elasticsearchConverter.getMappingContext().getRequiredPersistentEntity(clazz).getAliases();
 	}
 

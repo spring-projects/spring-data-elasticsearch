@@ -25,7 +25,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
-import org.springframework.data.elasticsearch.annotations.Alias;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -85,6 +84,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final ConcurrentHashMap<String, Expression> routingExpressions = new ConcurrentHashMap<>();
 	private @Nullable String routing;
 	private final ContextConfiguration contextConfiguration;
+	private final Set<Alias> aliases = new HashSet<>();
 
 	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
 	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
@@ -117,6 +117,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.dynamic = document.dynamic();
 			this.storeIdInSource = document.storeIdInSource();
 			this.storeVersionInSource = document.storeVersionInSource();
+			buildAliases();
 		} else {
 			this.dynamic = Dynamic.INHERIT;
 			this.storeIdInSource = true;
@@ -144,33 +145,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	}
 
 	@Override
-	public Set<AliasCoordinates> getAliases() {
-		final Set<AliasCoordinates> aliases = new HashSet<>();
-
-		if (document != null) {
-			for (Alias alias : document.aliases()) {
-				if (alias.value().isEmpty()) {
-					continue;
-				}
-
-				Query query = null;
-				if (!alias.filter().value().isEmpty()) {
-					query = new StringQuery(alias.filter().value());
-				}
-
-				aliases.add(
-						AliasCoordinates.builder(alias.value())
-								.withFilter(query)
-								.withIndexRouting(alias.indexRouting())
-								.withSearchRouting(alias.searchRouting())
-								.withRouting(alias.routing())
-								.withHidden(alias.isHidden())
-								.withWriteIndex(alias.isWriteIndex())
-								.build()
-				);
-			}
-		}
-
+	public Set<Alias> getAliases() {
 		return aliases;
 	}
 
@@ -650,5 +625,37 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public Dynamic dynamic() {
 		return dynamic;
+	}
+
+	/**
+	 * Building once the aliases for the current document.
+	 */
+	private void buildAliases() {
+		// Clear the existing aliases.
+		aliases.clear();
+
+		if (document != null) {
+			for (org.springframework.data.elasticsearch.annotations.Alias alias : document.aliases()) {
+				if (alias.value().isEmpty()) {
+					continue;
+				}
+
+				Query query = null;
+				if (!alias.filter().value().isEmpty()) {
+					query = new StringQuery(alias.filter().value());
+				}
+
+				aliases.add(
+						Alias.builder(alias.value())
+								.withFilter(query)
+								.withIndexRouting(alias.indexRouting())
+								.withSearchRouting(alias.searchRouting())
+								.withRouting(alias.routing())
+								.withHidden(alias.isHidden())
+								.withWriteIndex(alias.isWriteIndex())
+								.build()
+				);
+			}
+		}
 	}
 }

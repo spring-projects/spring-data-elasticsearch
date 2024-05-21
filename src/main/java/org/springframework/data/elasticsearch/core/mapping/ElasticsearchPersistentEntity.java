@@ -43,7 +43,14 @@ import java.util.Set;
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
 	IndexCoordinates getIndexCoordinates();
-	Set<AliasCoordinates> getAliases();
+
+	/**
+	 * Retrieves the aliases associated with the current entity.
+	 *
+	 * @return Returns a set of aliases of the {@link PersistentEntity}.
+	 * @since 5.4
+	 */
+	Set<Alias> getAliases();
 
 	short getShards();
 

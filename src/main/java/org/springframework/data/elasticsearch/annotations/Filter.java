@@ -22,7 +22,7 @@ import org.springframework.core.annotation.AliasFor;
  * Query used to limit documents.
  *
  * @author Youssef Aouichaoui
- * @since 5.3
+ * @since 5.4
  */
 public @interface Filter {
     /**

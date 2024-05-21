@@ -31,8 +31,9 @@ import java.util.Set;
  */
 public class CreateIndexSettings {
     private final IndexCoordinates indexCoordinates;
-    private final Set<AliasCoordinates> aliasCoordinates;
+    private final Set<Alias> aliases;
 
+    @Nullable
     private final Map<String, Object> settings;
 
     @Nullable
@@ -40,22 +41,22 @@ public class CreateIndexSettings {
 
     private CreateIndexSettings(Builder builder) {
         this.indexCoordinates = builder.indexCoordinates;
-        this.aliasCoordinates = builder.aliasCoordinates;
+        this.aliases = builder.aliases;
 
         this.settings = builder.settings;
         this.mapping = builder.mapping;
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public static Builder builder(IndexCoordinates indexCoordinates) {
+        return new Builder(indexCoordinates);
     }
 
     public IndexCoordinates getIndexCoordinates() {
         return indexCoordinates;
     }
 
-    public AliasCoordinates[] getAliasCoordinates() {
-        return aliasCoordinates.toArray(AliasCoordinates[]::new);
+    public Alias[] getAliases() {
+        return aliases.toArray(Alias[]::new);
     }
 
     public Map<String, Object> getSettings() {
@@ -69,30 +70,29 @@ public class CreateIndexSettings {
 
     public static class Builder {
         private IndexCoordinates indexCoordinates;
-        private Set<AliasCoordinates> aliasCoordinates = new HashSet<>();
+        private final Set<Alias> aliases = new HashSet<>();
 
+        @Nullable
         private Map<String, Object> settings;
 
         @Nullable
         private Document mapping;
 
-        public Builder withIndexCoordinates(IndexCoordinates indexCoordinates) {
+        public Builder(IndexCoordinates indexCoordinates) {
             Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
             this.indexCoordinates = indexCoordinates;
+        }
+
+        public Builder withAlias(Alias alias) {
+            Assert.notNull(alias, "alias must not be null");
+            this.aliases.add(alias);
 
             return this;
         }
 
-        public Builder withAliasCoordinates(AliasCoordinates aliasCoordinates) {
-            Assert.notNull(aliasCoordinates, "aliasCoordinates must not be null");
-            this.aliasCoordinates.add(aliasCoordinates);
-
-            return this;
-        }
-
-        public Builder withAliases(Set<AliasCoordinates> aliases) {
+        public Builder withAliases(Set<Alias> aliases) {
             Assert.notNull(aliases, "aliases must not be null");
-            this.aliasCoordinates.addAll(aliases);
+            this.aliases.addAll(aliases);
 
             return this;
         }

@@ -29,7 +29,7 @@ import java.lang.annotation.Target;
  * Identifies an alias for the index.
  *
  * @author Youssef Aouichaoui
- * @since 5.3
+ * @since 5.4
  */
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)

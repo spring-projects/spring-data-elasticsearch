@@ -27,7 +27,7 @@ import java.lang.annotation.Target;
  *
  * @author Youssef Aouichaoui
  * @see Alias
- * @since 5.3
+ * @since 5.4
  */
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)

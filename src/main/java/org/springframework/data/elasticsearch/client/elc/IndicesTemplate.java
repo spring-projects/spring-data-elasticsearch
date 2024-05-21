@@ -47,7 +47,7 @@ import org.springframework.data.elasticsearch.core.index.GetIndexTemplateRequest
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
-import org.springframework.data.elasticsearch.core.mapping.AliasCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.Alias;
 import org.springframework.data.elasticsearch.core.mapping.CreateIndexSettings;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -140,9 +140,8 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 	protected boolean doCreate(IndexCoordinates indexCoordinates, Map<String, Object> settings,
 			@Nullable Document mapping) {
-		Set<AliasCoordinates> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
-		CreateIndexSettings indexSettings = CreateIndexSettings.builder()
-				.withIndexCoordinates(indexCoordinates)
+		Set<Alias> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
+		CreateIndexSettings indexSettings = CreateIndexSettings.builder(indexCoordinates)
 				.withAliases(aliases)
 				.withSettings(settings)
 				.withMapping(mapping)
@@ -458,11 +457,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 	}
 
 	/**
-	 * Get the {@link AliasCoordinates} of the provided class.
+	 * Get the {@link Alias} of the provided class.
 	 *
 	 * @param clazz provided class that can be used to extract aliases.
 	 */
-	public Set<AliasCoordinates> getAliasesFor(Class<?> clazz) {
+	public Set<Alias> getAliasesFor(Class<?> clazz) {
 		return getRequiredPersistentEntity(clazz).getAliases();
 	}
 	// endregion
