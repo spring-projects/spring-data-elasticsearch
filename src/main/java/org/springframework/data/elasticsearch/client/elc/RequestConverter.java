@@ -88,6 +88,8 @@ import org.springframework.data.elasticsearch.core.index.GetIndexTemplateRequest
 import org.springframework.data.elasticsearch.core.index.GetTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.PutTemplateRequest;
+import org.springframework.data.elasticsearch.core.mapping.Alias;
+import org.springframework.data.elasticsearch.core.mapping.CreateIndexSettings;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -170,7 +172,7 @@ class RequestConverter extends AbstractQueryProcessor {
 				}));
 	}
 
-	private Alias.Builder buildAlias(AliasActionParameters parameters, Alias.Builder aliasBuilder) {
+	private co.elastic.clients.elasticsearch.indices.Alias.Builder buildAlias(AliasActionParameters parameters, co.elastic.clients.elasticsearch.indices.Alias.Builder aliasBuilder) {
 
 		if (parameters.getRouting() != null) {
 			aliasBuilder.routing(parameters.getRouting());
@@ -234,17 +236,25 @@ class RequestConverter extends AbstractQueryProcessor {
 		return new ExistsRequest.Builder().index(Arrays.asList(indexCoordinates.getIndexNames())).build();
 	}
 
-	public CreateIndexRequest indicesCreateRequest(IndexCoordinates indexCoordinates, Map<String, Object> settings,
-			@Nullable Document mapping) {
-
-		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
-		Assert.notNull(settings, "settings must not be null");
+	public CreateIndexRequest indicesCreateRequest(CreateIndexSettings indexSettings) {
+		Map<String, co.elastic.clients.elasticsearch.indices.Alias> aliases = new HashMap<>();
+		for (Alias alias : indexSettings.getAliases()) {
+			co.elastic.clients.elasticsearch.indices.Alias esAlias = co.elastic.clients.elasticsearch.indices.Alias.of(ab -> ab.filter(getQuery(alias.getFilter(), null))
+					.routing(alias.getRouting())
+					.indexRouting(alias.getIndexRouting())
+					.searchRouting(alias.getSearchRouting())
+					.isHidden(alias.getHidden())
+					.isWriteIndex(alias.getWriteIndex())
+			);
+			aliases.put(alias.getAlias(), esAlias);
+		}
 
 		// note: the new client does not support the index.storeType anymore
 		return new CreateIndexRequest.Builder() //
-				.index(indexCoordinates.getIndexName()) //
-				.settings(indexSettings(settings)) //
-				.mappings(typeMapping(mapping)) //
+				.index(indexSettings.getIndexCoordinates().getIndexName()) //
+				.aliases(aliases)
+				.settings(indexSettings(indexSettings.getSettings())) //
+				.mappings(typeMapping(indexSettings.getMapping())) //
 				.build();
 	}
 

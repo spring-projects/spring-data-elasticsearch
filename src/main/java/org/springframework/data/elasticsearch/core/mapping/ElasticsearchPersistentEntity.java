@@ -25,6 +25,8 @@ import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.lang.Nullable;
 
+import java.util.Set;
+
 /**
  * ElasticsearchPersistentEntity
  *
@@ -41,6 +43,14 @@ import org.springframework.lang.Nullable;
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 
 	IndexCoordinates getIndexCoordinates();
+
+	/**
+	 * Retrieves the aliases associated with the current entity.
+	 *
+	 * @return Returns a set of aliases of the {@link PersistentEntity}.
+	 * @since 5.4
+	 */
+	Set<Alias> getAliases();
 
 	short getShards();
 

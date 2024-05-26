@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,6 +33,8 @@ import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
+import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -80,6 +84,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final ConcurrentHashMap<String, Expression> routingExpressions = new ConcurrentHashMap<>();
 	private @Nullable String routing;
 	private final ContextConfiguration contextConfiguration;
+	private final Set<Alias> aliases = new HashSet<>();
 
 	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
 	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
@@ -112,6 +117,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.dynamic = document.dynamic();
 			this.storeIdInSource = document.storeIdInSource();
 			this.storeVersionInSource = document.storeVersionInSource();
+			buildAliases();
 		} else {
 			this.dynamic = Dynamic.INHERIT;
 			this.storeIdInSource = true;
@@ -136,6 +142,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
 		return resolve(IndexCoordinates.of(getIndexName()));
+	}
+
+	@Override
+	public Set<Alias> getAliases() {
+		return aliases;
 	}
 
 	@Nullable
@@ -614,5 +625,37 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public Dynamic dynamic() {
 		return dynamic;
+	}
+
+	/**
+	 * Building once the aliases for the current document.
+	 */
+	private void buildAliases() {
+		// Clear the existing aliases.
+		aliases.clear();
+
+		if (document != null) {
+			for (org.springframework.data.elasticsearch.annotations.Alias alias : document.aliases()) {
+				if (alias.value().isEmpty()) {
+					continue;
+				}
+
+				Query query = null;
+				if (!alias.filter().value().isEmpty()) {
+					query = new StringQuery(alias.filter().value());
+				}
+
+				aliases.add(
+						Alias.builder(alias.value())
+								.withFilter(query)
+								.withIndexRouting(alias.indexRouting())
+								.withSearchRouting(alias.searchRouting())
+								.withRouting(alias.routing())
+								.withHidden(alias.isHidden())
+								.withWriteIndex(alias.isWriteIndex())
+								.build()
+				);
+			}
+		}
 	}
 }

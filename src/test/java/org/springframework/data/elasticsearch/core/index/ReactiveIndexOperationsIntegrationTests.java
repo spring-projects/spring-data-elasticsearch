@@ -17,12 +17,19 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
+import org.springframework.data.elasticsearch.annotations.Alias;
+import org.springframework.data.elasticsearch.annotations.Filter;
+import org.springframework.data.elasticsearch.client.elc.Queries;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.json.JSONException;
@@ -346,6 +353,33 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 				.verifyComplete();
 	}
 
+	@Test
+	void shouldCreateIndexWithAliases() {
+		// Given
+		indexNameProvider.increment();
+		String indexName = indexNameProvider.indexName();
+		indexOperations = operations.indexOps(EntityWithAliases.class);
+		blocking(indexOperations).createWithMapping();
+
+		// When
+
+		// Then
+		indexOperations.getAliasesForIndex(indexName)
+				.as(StepVerifier::create)
+				.assertNext(aliases -> {
+					AliasData result = aliases.values().stream().findFirst().orElse(new HashSet<>()).stream().findFirst().orElse(null);
+
+					assertThat(result).isNotNull();
+					assertThat(result.getAlias()).isEqualTo("first_alias");
+					assertThat(result.getFilterQuery()).asInstanceOf(InstanceOfAssertFactories.type(StringQuery.class))
+							.extracting(StringQuery::getSource)
+							.asString()
+							.contains(Queries.wrapperQuery("""
+					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
+					""").query());
+				}).verifyComplete();
+	}
+
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(shards = 3, replicas = 2, refreshInterval = "4s")
 	static class Entity {
@@ -399,6 +433,33 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 
 		public void setId(@Nullable String id) {
 			this.id = id;
+		}
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}", aliases = {
+			@Alias(value = "first_alias", filter =@Filter("""
+					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
+					"""))
+	})
+	private static class EntityWithAliases {
+		@Nullable private @Id String id;
+		@Field(type = Text) private String type;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		public String getType() {
+			return type;
+		}
+
+		public void setType(String type) {
+			this.type = type;
 		}
 	}
 }
