@@ -15,13 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
-import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.lang.Nullable;
+import org.springframework.util.Assert;
 
 /**
  * Encapsulating index mapping fields, settings, and index alias(es).
@@ -30,88 +30,85 @@ import java.util.Set;
  * @since 5.3
  */
 public class CreateIndexSettings {
-    private final IndexCoordinates indexCoordinates;
-    private final Set<Alias> aliases;
+	private final IndexCoordinates indexCoordinates;
+	private final Set<Alias> aliases;
 
-    @Nullable
-    private final Map<String, Object> settings;
+	@Nullable private final Map<String, Object> settings;
 
-    @Nullable
-    private final Document mapping;
+	@Nullable private final Document mapping;
 
-    private CreateIndexSettings(Builder builder) {
-        this.indexCoordinates = builder.indexCoordinates;
-        this.aliases = builder.aliases;
+	private CreateIndexSettings(Builder builder) {
+		this.indexCoordinates = builder.indexCoordinates;
+		this.aliases = builder.aliases;
 
-        this.settings = builder.settings;
-        this.mapping = builder.mapping;
-    }
+		this.settings = builder.settings;
+		this.mapping = builder.mapping;
+	}
 
-    public static Builder builder(IndexCoordinates indexCoordinates) {
-        return new Builder(indexCoordinates);
-    }
+	public static Builder builder(IndexCoordinates indexCoordinates) {
+		return new Builder(indexCoordinates);
+	}
 
-    public IndexCoordinates getIndexCoordinates() {
-        return indexCoordinates;
-    }
+	public IndexCoordinates getIndexCoordinates() {
+		return indexCoordinates;
+	}
 
-    public Alias[] getAliases() {
-        return aliases.toArray(Alias[]::new);
-    }
+	public Alias[] getAliases() {
+		return aliases.toArray(Alias[]::new);
+	}
 
-    public Map<String, Object> getSettings() {
-        return settings;
-    }
+	@Nullable
+	public Map<String, Object> getSettings() {
+		return settings;
+	}
 
-    @Nullable
-    public Document getMapping() {
-        return mapping;
-    }
+	@Nullable
+	public Document getMapping() {
+		return mapping;
+	}
 
-    public static class Builder {
-        private IndexCoordinates indexCoordinates;
-        private final Set<Alias> aliases = new HashSet<>();
+	public static class Builder {
+		private final IndexCoordinates indexCoordinates;
+		private final Set<Alias> aliases = new HashSet<>();
 
-        @Nullable
-        private Map<String, Object> settings;
+		@Nullable private Map<String, Object> settings;
 
-        @Nullable
-        private Document mapping;
+		@Nullable private Document mapping;
 
-        public Builder(IndexCoordinates indexCoordinates) {
-            Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
-            this.indexCoordinates = indexCoordinates;
-        }
+		public Builder(IndexCoordinates indexCoordinates) {
+			Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
+			this.indexCoordinates = indexCoordinates;
+		}
 
-        public Builder withAlias(Alias alias) {
-            Assert.notNull(alias, "alias must not be null");
-            this.aliases.add(alias);
+		public Builder withAlias(Alias alias) {
+			Assert.notNull(alias, "alias must not be null");
+			this.aliases.add(alias);
 
-            return this;
-        }
+			return this;
+		}
 
-        public Builder withAliases(Set<Alias> aliases) {
-            Assert.notNull(aliases, "aliases must not be null");
-            this.aliases.addAll(aliases);
+		public Builder withAliases(Set<Alias> aliases) {
+			Assert.notNull(aliases, "aliases must not be null");
+			this.aliases.addAll(aliases);
 
-            return this;
-        }
+			return this;
+		}
 
-        public Builder withSettings(Map<String, Object> settings) {
-            Assert.notNull(settings, "settings must not be null");
-            this.settings = settings;
+		public Builder withSettings(Map<String, Object> settings) {
+			Assert.notNull(settings, "settings must not be null");
+			this.settings = settings;
 
-            return this;
-        }
+			return this;
+		}
 
-        public Builder withMapping(@Nullable Document mapping) {
-            this.mapping = mapping;
+		public Builder withMapping(@Nullable Document mapping) {
+			this.mapping = mapping;
 
-            return this;
-        }
+			return this;
+		}
 
-        public CreateIndexSettings build() {
-            return new CreateIndexSettings(this);
-        }
-    }
+		public CreateIndexSettings build() {
+			return new CreateIndexSettings(this);
+		}
+	}
 }

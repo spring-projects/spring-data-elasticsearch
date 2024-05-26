@@ -258,12 +258,12 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		if (property.isIndexedIndexNameProperty()) {
 
 			if (!property.getActualType().isAssignableFrom(String.class)) {
-				throw new MappingException(String.format("@IndexedIndexName annotation must be put on String property"));
+				throw new MappingException("@IndexedIndexName annotation must be put on String property");
 			}
 
 			if (indexedIndexNameProperty != null) {
 				throw new MappingException(
-						String.format("@IndexedIndexName annotation can only be put on one property in an entity"));
+						"@IndexedIndexName annotation can only be put on one property in an entity");
 			}
 
 			this.indexedIndexNameProperty = property;
@@ -653,8 +653,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 								.withRouting(alias.routing())
 								.withHidden(alias.isHidden())
 								.withWriteIndex(alias.isWriteIndex())
-								.build()
-				);
+								.build());
 			}
 		}
 	}

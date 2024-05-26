@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.util.Set;
+
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -24,8 +26,6 @@ import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.lang.Nullable;
-
-import java.util.Set;
 
 /**
  * ElasticsearchPersistentEntity
@@ -76,7 +76,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	boolean isCreateIndexAndMapping();
 
 	/**
-	 * returns the {@link ElasticsearchPersistentProperty} with the given fieldName (may be set by the {@link Field}
+	 * returns the {@link ElasticsearchPersistentProperty} with the given fieldName (can be set by the {@link Field})
 	 * annotation.
 	 *
 	 * @param fieldName to field name for the search, must not be {@literal null}
@@ -199,7 +199,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	boolean storeVersionInSource();
 
 	/**
-	 * @return if the mapping should be written to the index on repositry bootstrap even if the index already exists.
+	 * @return if the mapping should be written to the index on repository bootstrap even if the index already exists.
 	 * @since 5.2
 	 */
 	boolean isAlwaysWriteMapping();

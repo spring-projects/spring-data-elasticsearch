@@ -113,7 +113,6 @@ import org.springframework.util.StringUtils;
  * @author Haibo Liu
  * @since 4.4
  */
-@SuppressWarnings("ClassCanBeRecord")
 class RequestConverter extends AbstractQueryProcessor {
 
 	private static final Log LOGGER = LogFactory.getLog(RequestConverter.class);
@@ -172,7 +171,8 @@ class RequestConverter extends AbstractQueryProcessor {
 				}));
 	}
 
-	private co.elastic.clients.elasticsearch.indices.Alias.Builder buildAlias(AliasActionParameters parameters, co.elastic.clients.elasticsearch.indices.Alias.Builder aliasBuilder) {
+	private co.elastic.clients.elasticsearch.indices.Alias.Builder buildAlias(AliasActionParameters parameters,
+			co.elastic.clients.elasticsearch.indices.Alias.Builder aliasBuilder) {
 
 		if (parameters.getRouting() != null) {
 			aliasBuilder.routing(parameters.getRouting());
@@ -239,13 +239,13 @@ class RequestConverter extends AbstractQueryProcessor {
 	public CreateIndexRequest indicesCreateRequest(CreateIndexSettings indexSettings) {
 		Map<String, co.elastic.clients.elasticsearch.indices.Alias> aliases = new HashMap<>();
 		for (Alias alias : indexSettings.getAliases()) {
-			co.elastic.clients.elasticsearch.indices.Alias esAlias = co.elastic.clients.elasticsearch.indices.Alias.of(ab -> ab.filter(getQuery(alias.getFilter(), null))
-					.routing(alias.getRouting())
-					.indexRouting(alias.getIndexRouting())
-					.searchRouting(alias.getSearchRouting())
-					.isHidden(alias.getHidden())
-					.isWriteIndex(alias.getWriteIndex())
-			);
+			co.elastic.clients.elasticsearch.indices.Alias esAlias = co.elastic.clients.elasticsearch.indices.Alias
+					.of(ab -> ab.filter(getQuery(alias.getFilter(), null))
+							.routing(alias.getRouting())
+							.indexRouting(alias.getIndexRouting())
+							.searchRouting(alias.getSearchRouting())
+							.isHidden(alias.getHidden())
+							.isWriteIndex(alias.getWriteIndex()));
 			aliases.put(alias.getAlias(), esAlias);
 		}
 
@@ -1026,7 +1026,7 @@ class RequestConverter extends AbstractQueryProcessor {
 											order = sortField.order().jsonValue();
 										}
 
-										return sortField.field() + ":" + order;
+										return sortField.field() + ':' + order;
 									})
 									.collect(Collectors.toList()));
 				}
@@ -1790,7 +1790,6 @@ class RequestConverter extends AbstractQueryProcessor {
 		return getEsQuery(query, (q) -> elasticsearchConverter.updateQuery(q, clazz));
 	}
 
-	@SuppressWarnings("StatementWithEmptyBody")
 	private void addPostFilter(Query query, SearchRequest.Builder builder) {
 
 		// we only need to handle NativeQuery here. filter from a CriteriaQuery are added into the query and not as post

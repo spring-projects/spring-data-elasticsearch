@@ -15,15 +15,14 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
-
-import org.springframework.core.annotation.AliasFor;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
+import org.springframework.core.annotation.AliasFor;
 
 /**
  * Identifies an alias for the index.
@@ -33,48 +32,48 @@ import java.lang.annotation.Target;
  */
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE})
+@Target({ ElementType.TYPE })
 @Repeatable(Aliases.class)
 public @interface Alias {
-    /**
-     * @return Index alias name. Alias for {@link #alias}.
-     */
-    @AliasFor("alias")
-    String value() default "";
+	/**
+	 * @return Index alias name. Alias for {@link #alias}.
+	 */
+	@AliasFor("alias")
+	String value() default "";
 
-    /**
-     * @return Index alias name. Alias for {@link #value}.
-     */
-    @AliasFor("value")
-    String alias() default "";
+	/**
+	 * @return Index alias name. Alias for {@link #value}.
+	 */
+	@AliasFor("value")
+	String alias() default "";
 
-    /**
-     * @return Query used to limit documents the alias can access.
-     */
-    Filter filter() default @Filter;
+	/**
+	 * @return Query used to limit documents the alias can access.
+	 */
+	Filter filter() default @Filter;
 
-    /**
-     * @return Used to route indexing operations to a specific shard.
-     */
-    String indexRouting() default "";
+	/**
+	 * @return Used to route indexing operations to a specific shard.
+	 */
+	String indexRouting() default "";
 
-    /**
-     * @return Used to route indexing and search operations to a specific shard.
-     */
-    String routing() default "";
+	/**
+	 * @return Used to route indexing and search operations to a specific shard.
+	 */
+	String routing() default "";
 
-    /**
-     * @return Used to route search operations to a specific shard.
-     */
-    String searchRouting() default "";
+	/**
+	 * @return Used to route search operations to a specific shard.
+	 */
+	String searchRouting() default "";
 
-    /**
-     * @return Is the alias hidden?
-     */
-    boolean isHidden() default false;
+	/**
+	 * @return Is the alias hidden?
+	 */
+	boolean isHidden() default false;
 
-    /**
-     * @return Is it the 'write index' for the alias?
-     */
-    boolean isWriteIndex() default false;
+	/**
+	 * @return Is it the 'write index' for the alias?
+	 */
+	boolean isWriteIndex() default false;
 }

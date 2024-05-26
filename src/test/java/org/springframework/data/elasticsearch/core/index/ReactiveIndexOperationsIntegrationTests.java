@@ -17,14 +17,9 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
-import org.springframework.data.elasticsearch.annotations.Alias;
-import org.springframework.data.elasticsearch.annotations.Filter;
-import org.springframework.data.elasticsearch.client.elc.Queries;
-import org.springframework.data.elasticsearch.core.query.StringQuery;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -32,22 +27,27 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.json.JSONException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.elasticsearch.annotations.Alias;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Filter;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
@@ -367,7 +367,8 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 		indexOperations.getAliasesForIndex(indexName)
 				.as(StepVerifier::create)
 				.assertNext(aliases -> {
-					AliasData result = aliases.values().stream().findFirst().orElse(new HashSet<>()).stream().findFirst().orElse(null);
+					AliasData result = aliases.values().stream().findFirst().orElse(new HashSet<>()).stream().findFirst()
+							.orElse(null);
 
 					assertThat(result).isNotNull();
 					assertThat(result.getAlias()).isEqualTo("first_alias");
@@ -375,8 +376,8 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 							.extracting(StringQuery::getSource)
 							.asString()
 							.contains(Queries.wrapperQuery("""
-					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
-					""").query());
+									{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
+									""").query());
 				}).verifyComplete();
 	}
 
@@ -437,7 +438,7 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}", aliases = {
-			@Alias(value = "first_alias", filter =@Filter("""
+			@Alias(value = "first_alias", filter = @Filter("""
 					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
 					"""))
 	})

@@ -27,8 +27,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
@@ -63,8 +61,6 @@ import org.springframework.util.Assert;
 public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, ElasticsearchIndicesClient>
 		implements IndexOperations {
 
-	private static final Log LOGGER = LogFactory.getLog(IndicesTemplate.class);
-
 	// we need a cluster client as well because ES has put some methods from the indices API into the cluster client
 	// (component templates)
 	private final ClusterTemplate clusterTemplate;
@@ -88,7 +84,7 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 	}
 
 	public IndicesTemplate(ElasticsearchIndicesClient client, ClusterTemplate clusterTemplate,
-												 ElasticsearchConverter elasticsearchConverter, IndexCoordinates boundIndex) {
+			ElasticsearchConverter elasticsearchConverter, IndexCoordinates boundIndex) {
 		super(client, elasticsearchConverter);
 
 		Assert.notNull(clusterTemplate, "cluster must not be null");
@@ -242,8 +238,7 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		GetMappingRequest getMappingRequest = requestConverter.indicesGetMappingRequest(indexCoordinates);
 		GetMappingResponse getMappingResponse = execute(client -> client.getMapping(getMappingRequest));
 
-		Document mappingResponse = responseConverter.indicesGetMapping(getMappingResponse, indexCoordinates);
-		return mappingResponse;
+		return responseConverter.indicesGetMapping(getMappingResponse, indexCoordinates);
 	}
 
 	@Override

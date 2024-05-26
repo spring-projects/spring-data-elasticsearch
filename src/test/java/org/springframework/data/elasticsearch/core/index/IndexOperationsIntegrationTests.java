@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -71,7 +71,7 @@ public abstract class IndexOperationsIntegrationTests {
 	@Test
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
-		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
+		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete();
 	}
 
 	@Test // #1646, #1718
@@ -198,8 +198,8 @@ public abstract class IndexOperationsIntegrationTests {
 				.extracting(StringQuery::getSource)
 				.asString()
 				.contains(Queries.wrapperQuery("""
-					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
-					""").query());
+						{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
+						""").query());
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
@@ -219,12 +219,13 @@ public abstract class IndexOperationsIntegrationTests {
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}", aliases = {
-			@Alias(value = "first_alias", filter =@Filter("""
+			@Alias(value = "first_alias", filter = @Filter("""
 					{"bool" : {"must" : {"term" : {"type" : "abc"}}}}
 					"""))
 	})
 	private static class EntityWithAliases {
 		@Nullable private @Id String id;
+		@Nullable
 		@Field(type = Text) private String type;
 
 		@Nullable
@@ -236,6 +237,7 @@ public abstract class IndexOperationsIntegrationTests {
 			this.id = id;
 		}
 
+		@Nullable
 		public String getType() {
 			return type;
 		}

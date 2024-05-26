@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.annotations;
 
-
 import org.springframework.core.annotation.AliasFor;
 
 /**
@@ -25,15 +24,15 @@ import org.springframework.core.annotation.AliasFor;
  * @since 5.4
  */
 public @interface Filter {
-    /**
-     * @return Query used to limit documents. Alias for {@link #query}.
-     */
-    @AliasFor("query")
-    String value() default "";
+	/**
+	 * @return Query used to limit documents. Alias for {@link #query}.
+	 */
+	@AliasFor("query")
+	String value() default "";
 
-    /**
-     * @return Query used to limit documents. Alias for {@link #value}.
-     */
-    @AliasFor("value")
-    String query() default "";
+	/**
+	 * @return Query used to limit documents. Alias for {@link #value}.
+	 */
+	@AliasFor("value")
+	String query() default "";
 }
