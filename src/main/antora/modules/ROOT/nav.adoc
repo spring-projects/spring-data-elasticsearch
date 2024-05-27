@@ -9,7 +9,7 @@
 *** xref:migration-guides/migration-guide-4.4-5.0.adoc[]
 *** xref:migration-guides/migration-guide-5.0-5.1.adoc[]
 *** xref:migration-guides/migration-guide-5.1-5.2.adoc[]
-
+*** xref:migration-guides/migration-guide-5.2-5.3.adoc[]
 
 * xref:elasticsearch.adoc[]
 ** xref:elasticsearch/clients.adoc[]
