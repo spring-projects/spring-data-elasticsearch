@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.annotations;
 
 /**
  * @author Haibo Liu
- * @since 5.3.1
+ * @since 5.4
  */
 public enum KnnSimilarity {
 	L2_NORM("l2_norm"),

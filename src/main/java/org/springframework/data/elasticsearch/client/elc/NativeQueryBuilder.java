@@ -213,6 +213,9 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		return this;
 	}
 
+	/**
+	 * @since 5.4
+	 */
 	public NativeQueryBuilder withKnnSearches(List<KnnSearch> knnSearches) {
 		this.knnSearches = knnSearches;
 		return this;

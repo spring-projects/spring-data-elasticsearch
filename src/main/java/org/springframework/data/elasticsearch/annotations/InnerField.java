@@ -154,21 +154,21 @@ public @interface InnerField {
 	/**
 	 * to be used in combination with {@link FieldType#Dense_Vector}
 	 *
-	 * @since 5.3.1
+	 * @since 5.4
 	 */
 	String elementType() default FieldElementType.DEFAULT;
 
 	/**
 	 * to be used in combination with {@link FieldType#Dense_Vector}
 	 *
-	 * @since 5.3.1
+	 * @since 5.4
 	 */
 	KnnSimilarity knnSimilarity() default KnnSimilarity.DEFAULT;
 
 	/**
 	 * to be used in combination with {@link FieldType#Dense_Vector}
 	 *
-	 * @since 5.3.1
+	 * @since 5.4
 	 */
 	KnnIndexOptions[] knnIndexOptions() default {};
 }

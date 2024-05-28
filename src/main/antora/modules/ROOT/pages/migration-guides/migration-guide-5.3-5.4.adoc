@@ -6,6 +6,17 @@ This section describes breaking changes from version 5.3.x to 5.4.x and how remo
 [[elasticsearch-migration-guide-5.3-5.4.breaking-changes]]
 == Breaking Changes
 
+[[elasticsearch-migration-guide-5.3-5.4.breaking-changes.knn-search]]
+=== knn search
+The `withKnnQuery` method in `NativeQueryBuilder` has been replaced with `withKnnSearches` to build a `NativeQuery` with knn search.
+
+`KnnQuery` and `KnnSearch` are two different classes in elasticsearch java client and are used for different queries, with different parameters supported:
+
+- `KnnSearch`: is https://www.elastic.co/guide/en/elasticsearch/reference/8.13/search-search.html#search-api-knn[the top level `knn` query] in the elasticsearch request;
+- `KnnQuery`: is https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-knn-query.html[the `knn` query inside `query` clause];
+
+If `KnnQuery` is still preferable, please be sure to construct it inside `query` clause manually, by means of `withQuery(co.elastic.clients.elasticsearch._types.query_dsl.Query query)` clause in `NativeQueryBuilder`.
+
 [[elasticsearch-migration-guide-5.3-5.4.deprecations]]
 == Deprecations
 
