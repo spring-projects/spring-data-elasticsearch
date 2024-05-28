@@ -221,6 +221,23 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		return this;
 	}
 
+	/**
+	 * @since 5.4
+	 */
+	public NativeQueryBuilder withKnnSearches(Function<KnnSearch.Builder, ObjectBuilder<KnnSearch>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return withKnnSearches(fn.apply(new KnnSearch.Builder()).build());
+	}
+
+	/**
+	 * @since 5.4
+	 */
+	public NativeQueryBuilder withKnnSearches(KnnSearch knnSearch) {
+		return withKnnSearches(List.of(knnSearch));
+	}
+
 	public NativeQuery build() {
 		Assert.isTrue(query == null || springDataQuery == null, "Cannot have both a native query and a Spring Data query");
 		return new NativeQuery(this);
