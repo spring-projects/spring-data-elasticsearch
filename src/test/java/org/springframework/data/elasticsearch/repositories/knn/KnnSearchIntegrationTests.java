@@ -27,7 +27,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.elasticsearch.annotations.*;
+import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.KnnAlgorithmType;
+import org.springframework.data.elasticsearch.annotations.KnnIndexOptions;
+import org.springframework.data.elasticsearch.annotations.KnnSimilarity;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -71,7 +76,7 @@ public abstract class KnnSearchIntegrationTests {
 			entity.setMessage("top" + (i + 1));
 
 			// The generated vector is always in the first quadrant, from the x-axis direction to the y-axis direction
-			float[] vector = new float[] {1.0f - i * increment, increment};
+			float[] vector = new float[] { 1.0f - i * increment, increment };
 			entity.setVector(vector);
 			entities.add(entity);
 		}
@@ -127,27 +132,24 @@ public abstract class KnnSearchIntegrationTests {
 		assertThat(vectorEntities.get(0).getMessage()).isEqualTo("top10");
 	}
 
-	public interface VectorEntityRepository extends ElasticsearchRepository<VectorEntity, String> {
-	}
+	public interface VectorEntityRepository extends ElasticsearchRepository<VectorEntity, String> {}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class VectorEntity {
 		@Nullable
-		@Id
-		private String id;
+		@Id private String id;
 
 		@Nullable
-		@Field(type = Keyword)
-		private String message;
+		@Field(type = Keyword) private String message;
 
 		// TODO: `elementType = FieldElementType.FLOAT,` is to be added here later
 		// TODO: element_type can not be set here, because it's left out in elasticsearch-specification
-		// TODO: the issue is fixed in https://github.com/elastic/elasticsearch-java/pull/800, but still not released in 8.13.x
+		// TODO: the issue is fixed in https://github.com/elastic/elasticsearch-java/pull/800, but still not released in
+		// 8.13.x
 		// TODO: will be fixed later by either upgrading to 8.14.0 or a newer 8.13.x
 		@Field(type = FieldType.Dense_Vector, dims = 2,
 				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, efConstruction = 100),
-				knnSimilarity = KnnSimilarity.COSINE)
-		private float[] vector;
+				knnSimilarity = KnnSimilarity.COSINE) private float[] vector;
 
 		@Nullable
 		public String getId() {

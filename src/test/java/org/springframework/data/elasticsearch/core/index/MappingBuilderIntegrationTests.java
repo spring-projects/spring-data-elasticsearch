@@ -909,8 +909,7 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Id private String id;
 
-		@Field(type = FieldType.Dense_Vector, dims = 42, knnSimilarity = KnnSimilarity.COSINE)
-		private double[] denseVector;
+		@Field(type = FieldType.Dense_Vector, dims = 42, knnSimilarity = KnnSimilarity.COSINE) private double[] denseVector;
 	}
 
 	@Mapping(aliases = {
