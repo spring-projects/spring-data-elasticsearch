@@ -1377,7 +1377,7 @@ class RequestConverter extends AbstractQueryProcessor {
 	private Function<MultisearchHeader.Builder, ObjectBuilder<MultisearchHeader>> msearchHeaderBuilder(Query query,
 			IndexCoordinates index, @Nullable String routing) {
 		return h -> {
-			var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
+			var searchType = (query instanceof NativeQuery nativeQuery && !isEmpty(nativeQuery.getKnnSearches())) ? null
 					: searchType(query.getSearchType());
 
 			h //
@@ -1409,7 +1409,7 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(clazz);
 
-		var searchType = (query instanceof NativeQuery nativeQuery && nativeQuery.getKnnQuery() != null) ? null
+		var searchType = (query instanceof NativeQuery nativeQuery && !isEmpty(nativeQuery.getKnnSearches())) ? null
 				: searchType(query.getSearchType());
 
 		builder //
@@ -1728,17 +1728,6 @@ class RequestConverter extends AbstractQueryProcessor {
 				.sort(query.getSortOptions()) //
 		;
 
-		if (query.getKnnQuery() != null) {
-			var kq = query.getKnnQuery();
-			builder.knn(ksb -> ksb
-					.field(kq.field())
-					.queryVector(kq.queryVector())
-					.numCandidates(kq.numCandidates())
-					.filter(kq.filter())
-					.similarity(kq.similarity()));
-
-		}
-
 		if (!isEmpty(query.getKnnSearches())) {
 			builder.knn(query.getKnnSearches());
 		}
@@ -1759,17 +1748,6 @@ class RequestConverter extends AbstractQueryProcessor {
 				.suggest(query.getSuggester()) //
 				.collapse(query.getFieldCollapse()) //
 				.sort(query.getSortOptions());
-
-		if (query.getKnnQuery() != null) {
-			var kq = query.getKnnQuery();
-			builder.knn(ksb -> ksb
-					.field(kq.field())
-					.queryVector(kq.queryVector())
-					.numCandidates(kq.numCandidates())
-					.filter(kq.filter())
-					.similarity(kq.similarity()));
-
-		}
 
 		if (!isEmpty(query.getKnnSearches())) {
 			builder.knn(query.getKnnSearches());

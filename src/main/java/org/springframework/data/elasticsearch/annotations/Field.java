@@ -37,6 +37,7 @@ import org.springframework.core.annotation.AliasFor;
  * @author Brian Kimmig
  * @author Morgan Lutz
  * @author Sascha Woo
+ * @author Haibo Liu
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.METHOD })
@@ -194,6 +195,27 @@ public @interface Field {
 	 * @since 4.2
 	 */
 	int dims() default -1;
+
+	/**
+	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 *
+	 * @since 5.4
+	 */
+	String elementType() default FieldElementType.DEFAULT;
+
+	/**
+	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 *
+	 * @since 5.4
+	 */
+	KnnSimilarity knnSimilarity() default KnnSimilarity.DEFAULT;
+
+	/**
+	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 *
+	 * @since 5.4
+	 */
+	KnnIndexOptions[] knnIndexOptions() default {};
 
 	/**
 	 * Controls how Elasticsearch dynamically adds fields to the inner object within the document.<br>

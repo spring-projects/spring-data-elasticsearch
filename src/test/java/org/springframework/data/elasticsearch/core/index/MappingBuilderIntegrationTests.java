@@ -58,6 +58,7 @@ import org.springframework.lang.Nullable;
  * @author Roman Puchkovskiy
  * @author Brian Kimmig
  * @author Morgan Lutz
+ * @author Haibo Liu
  */
 @SpringIntegrationTest
 public abstract class MappingBuilderIntegrationTests extends MappingContextBaseTests {
@@ -908,7 +909,8 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Id private String id;
 
-		@Field(type = FieldType.Dense_Vector, dims = 42, similarity = "cosine") private double[] denseVector;
+		@Field(type = FieldType.Dense_Vector, dims = 42, knnSimilarity = KnnSimilarity.COSINE)
+		private double[] denseVector;
 	}
 
 	@Mapping(aliases = {

@@ -40,6 +40,7 @@ import org.springframework.util.Assert;
 /**
  * @author Peter-Josef Meisch
  * @author Sascha Woo
+ * @author Haibo Liu
  * @since 4.4
  */
 public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQueryBuilder> {
@@ -213,11 +214,28 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	}
 
 	/**
-	 * @since 5.1
+	 * @since 5.4
 	 */
-	public NativeQueryBuilder withKnnQuery(KnnQuery knnQuery) {
-		this.knnQuery = knnQuery;
+	public NativeQueryBuilder withKnnSearches(List<KnnSearch> knnSearches) {
+		this.knnSearches = knnSearches;
 		return this;
+	}
+
+	/**
+	 * @since 5.4
+	 */
+	public NativeQueryBuilder withKnnSearches(Function<KnnSearch.Builder, ObjectBuilder<KnnSearch>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return withKnnSearches(fn.apply(new KnnSearch.Builder()).build());
+	}
+
+	/**
+	 * @since 5.4
+	 */
+	public NativeQueryBuilder withKnnSearches(KnnSearch knnSearch) {
+		return withKnnSearches(List.of(knnSearch));
 	}
 
 	public NativeQuery build() {

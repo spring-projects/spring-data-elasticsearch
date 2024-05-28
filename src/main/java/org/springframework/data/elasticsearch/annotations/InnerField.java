@@ -29,6 +29,7 @@ import java.lang.annotation.Target;
  * @author Aleksei Arsenev
  * @author Brian Kimmig
  * @author Morgan Lutz
+ * @author Haibo Liu
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
@@ -149,4 +150,25 @@ public @interface InnerField {
 	 * @since 4.2
 	 */
 	int dims() default -1;
+
+	/**
+	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 *
+	 * @since 5.4
+	 */
+	String elementType() default FieldElementType.DEFAULT;
+
+	/**
+	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 *
+	 * @since 5.4
+	 */
+	KnnSimilarity knnSimilarity() default KnnSimilarity.DEFAULT;
+
+	/**
+	 * to be used in combination with {@link FieldType#Dense_Vector}
+	 *
+	 * @since 5.4
+	 */
+	KnnIndexOptions[] knnIndexOptions() default {};
 }
