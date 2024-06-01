@@ -23,12 +23,12 @@
 		<!-- version of the ElasticsearchClient	-->
 		<elasticsearch-java>8.13.4</elasticsearch-java>
 
-		<blockhound-junit>1.0.8.RELEASE</blockhound-junit>
-		<hoverfly>0.14.4</hoverfly>
-		<log4j>2.18.0</log4j>
+		<blockhound-junit>1.0.9.RELEASE</blockhound-junit>
+		<hoverfly>0.18.1</hoverfly>
+		<log4j>2.23.1</log4j>
 		<jsonassert>1.5.1</jsonassert>
-		<testcontainers>1.18.0</testcontainers>
-		<wiremock>2.35.1</wiremock>
+		<testcontainers>1.19.8</testcontainers>
+		<wiremock>3.0.1</wiremock>
 
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 
