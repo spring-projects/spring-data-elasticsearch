@@ -94,7 +94,7 @@ public abstract class KnnSearchIntegrationTests {
 
 		// when
 		NativeQuery query = new NativeQueryBuilder()
-				.withKnnSearches(ksb -> ksb.queryVector(xAxisVector).k(3L).field("vector"))
+				.withKnnSearches(ksb -> ksb.queryVector(xAxisVector).k(3).field("vector"))
 				.withPageable(Pageable.ofSize(2))
 				.build();
 		SearchHits<VectorEntity> result = operations.search(query, VectorEntity.class);
@@ -118,7 +118,7 @@ public abstract class KnnSearchIntegrationTests {
 
 		// when
 		NativeQuery query = new NativeQueryBuilder()
-				.withKnnSearches(ksb -> ksb.queryVector(yAxisVector).k(3L).field("vector"))
+				.withKnnSearches(ksb -> ksb.queryVector(yAxisVector).k(3).field("vector"))
 				.withPageable(Pageable.ofSize(2))
 				.build();
 		SearchHits<VectorEntity> result = operations.search(query, VectorEntity.class);

@@ -409,7 +409,7 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		if (putTemplateRequest.getSettings() != null) {
 			Map<String, JsonData> settings = getTemplateParams(putTemplateRequest.getSettings().entrySet());
-			builder.settings(settings);
+			builder.settings(sb -> sb.otherSettings(settings));
 		}
 
 		if (putTemplateRequest.getMappings() != null) {
