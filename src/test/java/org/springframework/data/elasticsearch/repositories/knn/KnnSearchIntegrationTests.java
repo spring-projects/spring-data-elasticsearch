@@ -29,6 +29,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldElementType;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.KnnAlgorithmType;
 import org.springframework.data.elasticsearch.annotations.KnnIndexOptions;
@@ -142,12 +143,7 @@ public abstract class KnnSearchIntegrationTests {
 		@Nullable
 		@Field(type = Keyword) private String message;
 
-		// TODO: `elementType = FieldElementType.FLOAT,` is to be added here later
-		// TODO: element_type can not be set here, because it's left out in elasticsearch-specification
-		// TODO: the issue is fixed in https://github.com/elastic/elasticsearch-java/pull/800, but still not released in
-		// 8.13.x
-		// TODO: will be fixed later by either upgrading to 8.14.0 or a newer 8.13.x
-		@Field(type = FieldType.Dense_Vector, dims = 2,
+		@Field(type = FieldType.Dense_Vector, dims = 2, elementType = FieldElementType.FLOAT,
 				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, efConstruction = 100),
 				knnSimilarity = KnnSimilarity.COSINE) private float[] vector;
 
