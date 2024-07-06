@@ -395,7 +395,28 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 			Function<PitSearchAfter, Publisher<? extends ResponseBody<EntityAsMap>>> resourceClosure = psa -> {
 
 				baseQuery.setPointInTime(new Query.PointInTime(psa.getPit(), pitKeepAlive));
-				baseQuery.addSort(Sort.by("_shard_doc"));
+
+				// only add _shard_doc if there is not a field_collapse and a sort with the same name
+				boolean addShardDoc = true;
+
+				if (query instanceof NativeQuery nativeQuery && nativeQuery.getFieldCollapse() != null) {
+					var field = nativeQuery.getFieldCollapse().field();
+
+					if (nativeQuery.getSortOptions().stream()
+							.anyMatch(sortOptions -> sortOptions.isField() && sortOptions.field().field().equals(field))) {
+						addShardDoc = false;
+					}
+
+					if (query.getSort() != null
+							&& query.getSort().stream().anyMatch(order -> order.getProperty().equals(field))) {
+						addShardDoc = false;
+					}
+				}
+
+				if (addShardDoc) {
+					baseQuery.addSort(Sort.by("_shard_doc"));
+				}
+
 				SearchRequest firstSearchRequest = requestConverter.searchRequest(baseQuery, routingResolver.getRouting(),
 						clazz, index, false, true);
 
