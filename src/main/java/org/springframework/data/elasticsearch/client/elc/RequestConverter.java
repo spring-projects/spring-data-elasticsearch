@@ -1487,8 +1487,8 @@ class RequestConverter extends AbstractQueryProcessor {
 		if (query instanceof NativeQuery nativeQuery) {
 			prepareNativeSearch(nativeQuery, builder);
 		}
-		// query.getSort() must be checked after prepareNativeSearch as this already might hav a sort set that must have
-		// higher priority
+		// query.getSort() must be checked after prepareNativeSearch as this already might have a sort set
+		// that must have higher priority
 		if (query.getSort() != null) {
 			List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
 
@@ -1510,7 +1510,15 @@ class RequestConverter extends AbstractQueryProcessor {
 		}
 
 		if (!isEmpty(query.getSearchAfter())) {
-			builder.searchAfter(query.getSearchAfter().stream().map(TypeUtils::toFieldValue).toList());
+			var fieldValues = query.getSearchAfter().stream().map(TypeUtils::toFieldValue).toList();
+
+			// when there is a field collapse on a native query, and we have a search_after, then the search_after
+			// must only have one entry
+			if (query instanceof NativeQuery nativeQuery && nativeQuery.getFieldCollapse() != null) {
+				builder.searchAfter(fieldValues.get(0));
+			} else {
+				builder.searchAfter(fieldValues);
+			}
 		}
 
 		query.getRescorerQueries().forEach(rescorerQuery -> builder.rescore(getRescore(rescorerQuery)));

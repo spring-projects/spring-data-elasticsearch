@@ -15,14 +15,22 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
+import reactor.test.StepVerifier;
 
 /**
  * @author Peter-Josef Meisch
@@ -50,5 +58,34 @@ public class SimpleReactiveElasticsearchRepositoryELCIntegrationTests
 			return new QueryParameter("message");
 		}
 	}
+
+	/**
+	 * search_after is used by the reactive search operation, it normally always adds _shard_doc as a tiebreaker sort
+	 * parameter. This must not be done when a collapse field is used as sort field, as in that case the collapse field
+	 * must be the only sort field.
+	 */
+	@Test // #2935
+	@DisplayName("should use collapse_field for search_after in pit search")
+	void shouldUseCollapseFieldForSearchAfterI() {
+		var entity = new SampleEntity();
+		entity.setId("42");
+		entity.setMessage("m");
+		entity.setKeyword("kw");
+		repository.save(entity).block();
+
+		var query = NativeQuery.builder()
+				.withQuery(Queries.matchAllQueryAsQuery())
+				.withPageable(Pageable.unpaged())
+				.withFieldCollapse(FieldCollapse.of(fcb -> fcb
+						.field("keyword")))
+				.withSort(Sort.by("keyword"))
+				.build();
+
+		operations.search(query, SampleEntity.class)
+				.as(StepVerifier::create)
+				.expectNextCount(1)
+				.verifyComplete();
+	}
+
 
 }
