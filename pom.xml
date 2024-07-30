@@ -24,11 +24,11 @@
 		<elasticsearch-java>8.14.1</elasticsearch-java>
 
 		<blockhound-junit>1.0.9.RELEASE</blockhound-junit>
-		<hoverfly>0.18.1</hoverfly>
+		<hoverfly>0.19.0</hoverfly>
 		<log4j>2.23.1</log4j>
-		<jsonassert>1.5.1</jsonassert>
-		<testcontainers>1.19.8</testcontainers>
-		<wiremock>3.0.1</wiremock>
+		<jsonassert>1.5.3</jsonassert>
+		<testcontainers>1.20.0</testcontainers>
+		<wiremock>3.9.1</wiremock>
 
 		<java-module-name>spring.data.elasticsearch</java-module-name>
 
@@ -124,17 +124,6 @@
 		<dependency>
 			<groupId>co.elastic.clients</groupId>
 			<artifactId>elasticsearch-java</artifactId>
-			<version>${elasticsearch-java}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
-			<groupId>org.elasticsearch.client</groupId>
-			<artifactId>elasticsearch-rest-client</artifactId> <!-- is Apache 2-->
 			<version>${elasticsearch-java}</version>
 			<exclusions>
 				<exclusion>
@@ -263,8 +252,8 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.github.tomakehurst</groupId>
-			<artifactId>wiremock-jre8</artifactId>
+			<groupId>org.wiremock</groupId>
+			<artifactId>wiremock</artifactId>
 			<version>${wiremock}</version>
 			<scope>test</scope>
 			<exclusions>
