@@ -41,4 +41,5 @@
 ** xref:repositories/query-keywords-reference.adoc[]
 ** xref:repositories/query-return-types-reference.adoc[]
 
-* https://github.com/spring-projects/spring-data-commons/wiki[Wiki]
+* xref:attachment$api/java/index.html[Javadoc,role=link-external,window=_blank]
+* https://github.com/spring-projects/spring-data-commons/wiki[Wiki,role=link-external,window=_blank]

@@ -132,7 +132,7 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 			DockerImageName dockerImageName = getDockerImageName(testcontainersProperties);
 
 			ElasticsearchContainer elasticsearchContainer = new SpringDataElasticsearchContainer(dockerImageName)
-					.withEnv(testcontainersProperties).withStartupTimeout(Duration.ofMinutes(2));
+					.withEnv(testcontainersProperties).withStartupTimeout(Duration.ofMinutes(2)).withReuse(true);
 			elasticsearchContainer.start();
 
 			return ClusterConnectionInfo.builder() //
@@ -192,16 +192,7 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 	@Override
 	public void close() {
 
-		if (clusterConnectionInfo != null && clusterConnectionInfo.getElasticsearchContainer() != null) {
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug("Stopping container");
-			}
-			clusterConnectionInfo.getElasticsearchContainer().stop();
-		}
 
-		if (LOGGER.isDebugEnabled()) {
-			LOGGER.debug("closed");
-		}
 	}
 
 	private static class SpringDataElasticsearchContainer extends ElasticsearchContainer {

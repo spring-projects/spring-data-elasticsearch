@@ -31,7 +31,7 @@ public class MyClientConfig extends ElasticsearchConfiguration {
 <.> for a detailed description of the builder methods see xref:elasticsearch/clients.adoc#elasticsearch.clients.configuration[Client Configuration]
 ====
 
-The `ElasticsearchConfiguration` class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
+The javadoc:org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration[]] class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
 
 
 The following beans can then be injected in other Spring components:
@@ -52,13 +52,13 @@ RestClient restClient;                   <.>
 JsonpMapper jsonpMapper;                 <.>
 ----
 
-<.> an implementation of `ElasticsearchOperations`
+<.> an implementation of javadoc:org.springframework.data.elasticsearch.core.ElasticsearchOperations[]
 <.> the `co.elastic.clients.elasticsearch.ElasticsearchClient` that is used.
 <.> the low level `RestClient` from the Elasticsearch libraries
 <.> the `JsonpMapper` user by the Elasticsearch `Transport`
 ====
 
-Basically one should just use the `ElasticsearchOperations` to interact with the Elasticsearch cluster.
+Basically one should just use the javadoc:org.springframework.data.elasticsearch.core.ElasticsearchOperations[] to interact with the Elasticsearch cluster.
 When using repositories, this instance is used under the hood as well.
 
 [[elasticsearch.clients.reactiverestclient]]
@@ -86,7 +86,7 @@ public class MyClientConfig extends ReactiveElasticsearchConfiguration {
 <.> for a detailed description of the builder methods see xref:elasticsearch/clients.adoc#elasticsearch.clients.configuration[Client Configuration]
 ====
 
-The `ReactiveElasticsearchConfiguration` class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
+The javadoc:org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchConfiguration[] class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
 
 The following beans can then be injected in other Spring components:
 
@@ -108,20 +108,20 @@ JsonpMapper jsonpMapper;                         <.>
 
 the following can be injected:
 
-<.> an implementation of `ReactiveElasticsearchOperations`
+<.> an implementation of javadoc:org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations[]
 <.> the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient` that is used.
 This is a reactive implementation based on the Elasticsearch client implementation.
 <.> the low level `RestClient` from the Elasticsearch libraries
 <.> the `JsonpMapper` user by the Elasticsearch `Transport`
 ====
 
-Basically one should just use the `ReactiveElasticsearchOperations` to interact with the Elasticsearch cluster.
+Basically one should just use the javadoc:org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations[] to interact with the Elasticsearch cluster.
 When using repositories, this instance is used under the hood as well.
 
 [[elasticsearch.clients.configuration]]
 == Client Configuration
 
-Client behaviour can be changed via the `ClientConfiguration` that allows to set options for SSL, connect and socket timeouts, headers and other parameters.
+Client behaviour can be changed via the javadoc:org.springframework.data.elasticsearch.client.ClientConfiguration[] that allows to set options for SSL, connect and socket timeouts, headers and other parameters.
 
 .Client Configuration
 ====
@@ -178,7 +178,7 @@ If this is used in the reactive setup, the supplier function *must not* block!
 [[elasticsearch.clients.configuration.callbacks]]
 === Client configuration callbacks
 
-The `ClientConfiguration` class offers the most common parameters to configure the client.
+The javadoc:org.springframework.data.elasticsearch.client.ClientConfiguration[] class offers the most common parameters to configure the client.
 In the case this is not enough, the user can add callback functions by using the `withClientConfigurer(ClientConfigurationCallback<?>)` method.
 
 The following callbacks are provided:
