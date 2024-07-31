@@ -30,6 +30,7 @@ import java.lang.annotation.Target;
  * @author Brian Kimmig
  * @author Morgan Lutz
  * @author Haibo Liu
+ * @author Andriy Redko
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.ANNOTATION_TYPE)
@@ -171,4 +172,11 @@ public @interface InnerField {
 	 * @since 5.4
 	 */
 	KnnIndexOptions[] knnIndexOptions() default {};
+	
+	/**
+	 * overrides the mapping field type which otherwise will be taken from corresponding {@link FieldType}
+	 *
+	 * @since 5.4
+	 */
+	String mappedName() default "";
 }
