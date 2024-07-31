@@ -10,3 +10,8 @@ ext:
         local: true
       scan:
         dir: target/classes/
+    - run:
+        command: ./mvnw package -Pdistribute
+        local: true
+      scan:
+        dir: target/antora
