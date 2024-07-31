@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
+import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.json;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Time;
@@ -23,6 +24,8 @@ import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.core.msearch.MultiSearchResponseItem;
 import co.elastic.clients.elasticsearch.core.search.ResponseBody;
+import co.elastic.clients.elasticsearch.sql.ElasticsearchSqlClient;
+import co.elastic.clients.elasticsearch.sql.QueryResponse;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 
@@ -34,6 +37,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -56,6 +60,7 @@ import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.script.Script;
+import org.springframework.data.elasticsearch.core.sql.SqlResponse;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -74,6 +79,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	private static final Log LOGGER = LogFactory.getLog(ElasticsearchTemplate.class);
 
 	private final ElasticsearchClient client;
+	private final ElasticsearchSqlClient sqlClient;
 	private final RequestConverter requestConverter;
 	private final ResponseConverter responseConverter;
 	private final JsonpMapper jsonpMapper;
@@ -85,6 +91,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(client, "client must not be null");
 
 		this.client = client;
+		this.sqlClient = client.sql();
 		this.jsonpMapper = client._transport().jsonpMapper();
 		requestConverter = new RequestConverter(elasticsearchConverter, jsonpMapper);
 		responseConverter = new ResponseConverter(jsonpMapper);
@@ -97,6 +104,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(client, "client must not be null");
 
 		this.client = client;
+		this.sqlClient = client.sql();
 		this.jsonpMapper = client._transport().jsonpMapper();
 		requestConverter = new RequestConverter(elasticsearchConverter, jsonpMapper);
 		responseConverter = new ResponseConverter(jsonpMapper);
@@ -655,6 +663,32 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		DeleteScriptRequest request = requestConverter.scriptDelete(name);
 		return execute(client -> client.deleteScript(request)).acknowledged();
+	}
+
+	@Override
+	public SqlResponse search(SqlQuery query) {
+		Assert.notNull(query, "Query must not be null.");
+		Assert.isTrue(query.getFormat() == null || json.equals(query.getFormat()),
+				"The Elasticsearch Java Client only supports JSON format.");
+
+		try {
+			QueryResponse response = sqlClient.query(sqb -> {
+				sqb.query(query.getQuery()).catalog(query.getCatalog()).columnar(query.getColumnar()).cursor(query.getCursor())
+						.fetchSize(query.getFetchSize()).fieldMultiValueLeniency(query.getFieldMultiValueLeniency())
+						.indexUsingFrozen(query.getIndexIncludeFrozen()).keepAlive(time(query.getKeepAlive()))
+						.keepOnCompletion(query.getKeepOnCompletion()).pageTimeout(time(query.getPageTimeout()))
+						.requestTimeout(time(query.getRequestTimeout()))
+						.waitForCompletionTimeout(time(query.getWaitForCompletionTimeout()))
+						.filter(requestConverter.getQuery(query.getFilter(), null))
+						.timeZone(Objects.toString(query.getTimeZone(), null)).format(Objects.toString(query.getFormat(), null));
+
+				return sqb;
+			});
+
+			return responseConverter.sqlResponse(response);
+		} catch (IOException e) {
+			throw exceptionTranslator.translateException(e);
+		}
 	}
 	// endregion
 
