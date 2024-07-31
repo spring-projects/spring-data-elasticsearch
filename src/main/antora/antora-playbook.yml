@@ -3,8 +3,7 @@
 # The purpose of this Antora playbook is to build the docs in the current branch.
 antora:
   extensions:
-    - '@antora/collector-extension'
-    - require: '@springio/antora-extensions/root-component-extension'
+    - require: '@springio/antora-extensions'
       root_component_name: 'data-elasticsearch'
 site:
   title: Spring Data Elasticsearch
@@ -22,13 +21,12 @@ content:
       start_path: src/main/antora
 asciidoc:
   attributes:
-    page-pagination: ''
     hide-uri-scheme: '@'
     tabs-sync-option: '@'
-    chomp: 'all'
   extensions:
     - '@asciidoctor/tabs'
     - '@springio/asciidoctor-extensions'
+    - '@springio/asciidoctor-extensions/javadoc-extension'
   sourcemap: true
 urls:
   latest_version_segment: ''
@@ -38,5 +36,5 @@ runtime:
     format: pretty
 ui:
   bundle:
-    url: https://github.com/spring-io/antora-ui-spring/releases/download/v0.3.5/ui-bundle.zip
+    url: https://github.com/spring-io/antora-ui-spring/releases/download/v0.4.16/ui-bundle.zip
     snapshot: true

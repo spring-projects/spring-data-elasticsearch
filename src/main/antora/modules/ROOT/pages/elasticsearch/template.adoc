@@ -3,10 +3,10 @@
 
 Spring Data Elasticsearch uses several interfaces to define the operations that can be called against an Elasticsearch index (for a description of the reactive interfaces see xref:elasticsearch/reactive-template.adoc[]).
 
-* `IndexOperations` defines actions on index level like creating or deleting an index.
-* `DocumentOperations` defines actions to store, update and retrieve entities based on their id.
-* `SearchOperations` define the actions to search for multiple entities using queries
-* `ElasticsearchOperations` combines the `DocumentOperations` and `SearchOperations` interfaces.
+* javadoc:org.springframework.data.elasticsearch.core.IndexOperations[] defines actions on index level like creating or deleting an index.
+* javadoc:org.springframework.data.elasticsearch.core.DocumentOperations[] defines actions to store, update and retrieve entities based on their id.
+* javadoc:org.springframework.data.elasticsearch.core.SearchOperations[] define the actions to search for multiple entities using queries
+* javadoc:org.springframework.data.elasticsearch.core.ElasticsearchOperations[] combines the `DocumentOperations` and `SearchOperations` interfaces.
 
 These interfaces correspond to the structuring of the https://www.elastic.co/guide/en/elasticsearch/reference/current/rest-apis.html[Elasticsearch API].
 

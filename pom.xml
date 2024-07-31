@@ -472,7 +472,7 @@
 			<build>
 				<plugins>
 					<plugin>
-						<groupId>io.spring.maven.antora</groupId>
+						<groupId>org.antora</groupId>
 						<artifactId>antora-maven-plugin</artifactId>
 					</plugin>
 				</plugins>
