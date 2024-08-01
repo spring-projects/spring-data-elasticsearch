@@ -17,19 +17,21 @@ package org.springframework.data.elasticsearch.core.sql;
 
 import org.springframework.data.elasticsearch.core.query.SqlQuery;
 
+import reactor.core.publisher.Mono;
+
 /**
- * The operations for the
+ * The reactive version of operations for the
  * <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/sql-search-api.html">SQL search API</a>.
  *
  * @author Aouichaoui Youssef
  * @since 5.4
  */
-public interface SqlOperations {
+public interface ReactiveSqlOperations {
 	/**
 	 * Execute the criteria {@code query} against elasticsearch and return result as {@link SqlResponse}
 	 *
 	 * @param query the query to execute
 	 * @return {@link SqlResponse} containing the list of found objects
 	 */
-	SqlResponse search(SqlQuery query);
+	Mono<SqlResponse> search(SqlQuery query);
 }

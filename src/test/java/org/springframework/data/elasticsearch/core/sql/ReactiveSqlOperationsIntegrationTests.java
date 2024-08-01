@@ -15,11 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.sql;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.yaml;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.blocking;
+
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,47 +28,47 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.SqlQuery;
-import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
+import reactor.test.StepVerifier;
+
 /**
- * Testing the querying using SQL syntax.
+ * Testing the reactive querying using SQL syntax.
  *
  * @author Youssef Aouichaoui
  */
 @SpringIntegrationTest
-@ContextConfiguration(classes = { SqlOperationsIntegrationTests.Config.class })
-@DisplayName("Using Elasticsearch SQL Client")
-class SqlOperationsIntegrationTests {
-	@Autowired ElasticsearchOperations operations;
-	@Nullable IndexOperations indexOps;
+@ContextConfiguration(classes = { ReactiveSqlOperationsIntegrationTests.Config.class })
+@DisplayName("Using Elasticsearch SQL Reactive Client")
+public class ReactiveSqlOperationsIntegrationTests {
+	@Autowired ReactiveElasticsearchOperations operations;
 
 	@BeforeEach
 	void setUp() {
 		// create index
-		indexOps = operations.indexOps(EntityForSQL.class);
-		indexOps.createWithMapping();
+		blocking(operations.indexOps(EntityForSQL.class)).createWithMapping();
 
 		// add data
-		operations.save(EntityForSQL.builder().withViews(3).build(), EntityForSQL.builder().withViews(0).build());
+		operations
+				.saveAll(List.of(EntityForSQL.builder().withViews(3).build(), EntityForSQL.builder().withViews(0).build()),
+						EntityForSQL.class)
+				.blockLast();
 	}
 
 	@AfterEach
 	void tearDown() {
 		// delete index
-		if (indexOps != null) {
-			indexOps.delete();
-		}
+		blocking(operations.indexOps(EntityForSQL.class)).delete();
 	}
 
 	// begin configuration region
 	@Configuration
-	@Import({ ElasticsearchTemplateConfiguration.class })
+	@Import({ ReactiveElasticsearchTemplateConfiguration.class })
 	static class Config {}
 	// end region
 
@@ -82,22 +80,7 @@ class SqlOperationsIntegrationTests {
 		// When
 
 		// Then
-		SqlResponse response = operations.search(query);
-		assertNotNull(response);
-		assertFalse(response.getRows().isEmpty());
-		assertEquals(1, response.getRows().size());
-	}
-
-	@Test
-	void when_search_with_an_sql_query_and_txt_format() {
-		// Given
-		SqlQuery query = SqlQuery.builder("SELECT * FROM entity_for_sql WHERE views = 0").withFormat(yaml).build();
-
-		// When
-
-		// Then
-		assertThrows(IllegalArgumentException.class, () -> operations.search(query),
-				"The Elasticsearch Java Client only supports JSON format.");
+		operations.search(query).as(StepVerifier::create).expectNextCount(1).verifyComplete();
 	}
 
 	// begin region
@@ -106,7 +89,7 @@ class SqlOperationsIntegrationTests {
 		@Id private String id;
 		private final Integer views;
 
-		public EntityForSQL(Builder builder) {
+		public EntityForSQL(EntityForSQL.Builder builder) {
 			this.views = builder.views;
 		}
 
@@ -119,14 +102,14 @@ class SqlOperationsIntegrationTests {
 			return views;
 		}
 
-		public static Builder builder() {
-			return new Builder();
+		public static EntityForSQL.Builder builder() {
+			return new EntityForSQL.Builder();
 		}
 
 		static class Builder {
 			private Integer views = 0;
 
-			public Builder withViews(Integer views) {
+			public EntityForSQL.Builder withViews(Integer views) {
 				this.views = views;
 
 				return this;
@@ -138,5 +121,4 @@ class SqlOperationsIntegrationTests {
 		}
 	}
 	// end region
-
 }

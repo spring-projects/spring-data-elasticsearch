@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static co.elastic.clients.util.ApiTypeHelper.*;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
+import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.json;
 
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch.core.*;
@@ -25,6 +26,8 @@ import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
+import org.springframework.data.elasticsearch.core.query.SqlQuery;
+import org.springframework.data.elasticsearch.core.sql.SqlResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -88,6 +91,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	private static final Log LOGGER = LogFactory.getLog(ReactiveElasticsearchTemplate.class);
 
 	private final ReactiveElasticsearchClient client;
+	private final ReactiveElasticsearchSqlClient sqlClient;
 	private final RequestConverter requestConverter;
 	private final ResponseConverter responseConverter;
 	private final JsonpMapper jsonpMapper;
@@ -99,6 +103,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(client, "client must not be null");
 
 		this.client = client;
+		this.sqlClient = client.sql();
 		this.jsonpMapper = client._transport().jsonpMapper();
 		requestConverter = new RequestConverter(converter, jsonpMapper);
 		responseConverter = new ResponseConverter(jsonpMapper);
@@ -644,6 +649,16 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	@Override
 	public BaseQueryBuilder queryBuilderWithIds(List<String> ids) {
 		return NativeQuery.builder().withIds(ids);
+	}
+
+	@Override
+	public Mono<SqlResponse> search(SqlQuery query) {
+		Assert.notNull(query, "Query must not be null.");
+		Assert.isTrue(query.getFormat() == null || json.equals(query.getFormat()),
+				"The Elasticsearch Java Client only supports JSON format.");
+
+		co.elastic.clients.elasticsearch.sql.QueryRequest request = requestConverter.sqlQueryRequest(query);
+		return sqlClient.query(request).onErrorMap(this::translateException).map(responseConverter::sqlResponse);
 	}
 
 	/**
