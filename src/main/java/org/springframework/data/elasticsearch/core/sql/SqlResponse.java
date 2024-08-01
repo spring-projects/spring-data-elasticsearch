@@ -116,6 +116,11 @@ public class SqlResponse {
 			return row.entrySet().iterator();
 		}
 
+		@Nullable
+		public JsonValue get(Column column) {
+			return row.get(column);
+		}
+
 		/**
 		 * This method should attempt to convert the SQL response into a document if the columns selected in an SQL query
 		 * correspond to the fields in the document.
