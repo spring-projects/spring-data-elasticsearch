@@ -32,4 +32,4 @@ node_modules
 node
 package-lock.json
 
-.mvn/.gradle-enterprise
+.mvn/.develocity
