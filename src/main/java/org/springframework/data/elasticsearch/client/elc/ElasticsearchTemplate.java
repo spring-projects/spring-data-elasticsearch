@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -672,18 +671,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 				"The Elasticsearch Java Client only supports JSON format.");
 
 		try {
-			QueryResponse response = sqlClient.query(sqb -> {
-				sqb.query(query.getQuery()).catalog(query.getCatalog()).columnar(query.getColumnar()).cursor(query.getCursor())
-						.fetchSize(query.getFetchSize()).fieldMultiValueLeniency(query.getFieldMultiValueLeniency())
-						.indexUsingFrozen(query.getIndexIncludeFrozen()).keepAlive(time(query.getKeepAlive()))
-						.keepOnCompletion(query.getKeepOnCompletion()).pageTimeout(time(query.getPageTimeout()))
-						.requestTimeout(time(query.getRequestTimeout()))
-						.waitForCompletionTimeout(time(query.getWaitForCompletionTimeout()))
-						.filter(requestConverter.getQuery(query.getFilter(), null))
-						.timeZone(Objects.toString(query.getTimeZone(), null)).format(Objects.toString(query.getFormat(), null));
-
-				return sqb;
-			});
+			QueryResponse response = sqlClient.query(requestConverter.sqlQueryRequest(query));
 
 			return responseConverter.sqlResponse(response);
 		} catch (IOException e) {
