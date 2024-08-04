@@ -28,7 +28,7 @@ import reactor.core.publisher.Mono;
  */
 public interface ReactiveSqlOperations {
 	/**
-	 * Execute the criteria {@code query} against elasticsearch and return result as {@link SqlResponse}
+	 * Execute the sql {@code query} against elasticsearch and return result as {@link SqlResponse}
 	 *
 	 * @param query the query to execute
 	 * @return {@link SqlResponse} containing the list of found objects

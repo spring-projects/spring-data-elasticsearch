@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static co.elastic.clients.util.ApiTypeHelper.*;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.json;
 
 import co.elastic.clients.elasticsearch._types.Result;
 import co.elastic.clients.elasticsearch.core.*;
@@ -654,8 +653,6 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	@Override
 	public Mono<SqlResponse> search(SqlQuery query) {
 		Assert.notNull(query, "Query must not be null.");
-		Assert.isTrue(query.getFormat() == null || json.equals(query.getFormat()),
-				"The Elasticsearch Java Client only supports JSON format.");
 
 		co.elastic.clients.elasticsearch.sql.QueryRequest request = requestConverter.sqlQueryRequest(query);
 		return sqlClient.query(request).onErrorMap(this::translateException).map(responseConverter::sqlResponse);

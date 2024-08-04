@@ -15,18 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.cbor;
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.csv;
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.json;
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.smile;
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.yaml;
-
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.springframework.data.elasticsearch.core.sql.types.ResponseFormat;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -38,20 +31,6 @@ import org.springframework.util.Assert;
  * @since 5.4
  */
 public class SqlQuery {
-	/**
-	 * Separator for CSV results.
-	 * <p>
-	 * Default, this is set to {@code ,}.
-	 */
-	@Nullable private final String delimiter;
-
-	/**
-	 * The format for the response, such as csv, json, txt, can be viewed at the {@link ResponseFormat}. The java client
-	 * of Elasticsearch only supports JSON. See {@link co.elastic.clients.transport.JsonEndpoint}
-	 * <p>
-	 * Default, this is set to {@code json}.
-	 */
-	@Nullable private final ResponseFormat format;
 
 	/**
 	 * If true, returns partial results if there are shard request timeouts or shard failures.
@@ -157,9 +136,6 @@ public class SqlQuery {
 	@Nullable private final Duration waitForCompletionTimeout;
 
 	private SqlQuery(Builder builder) {
-		this.delimiter = builder.delimiter;
-		this.format = builder.format;
-
 		this.allowPartialSearchResults = builder.allowPartialSearchResults;
 
 		this.catalog = builder.catalog;
@@ -183,16 +159,6 @@ public class SqlQuery {
 
 		this.timeZone = builder.timeZone;
 		this.waitForCompletionTimeout = builder.waitForCompletionTimeout;
-	}
-
-	@Nullable
-	public String getDelimiter() {
-		return delimiter;
-	}
-
-	@Nullable
-	public ResponseFormat getFormat() {
-		return format;
 	}
 
 	@Nullable
@@ -279,9 +245,6 @@ public class SqlQuery {
 	}
 
 	public static class Builder {
-		@Nullable private String delimiter;
-		@Nullable private ResponseFormat format;
-
 		@Nullable private Boolean allowPartialSearchResults;
 
 		@Nullable private String catalog;
@@ -311,24 +274,6 @@ public class SqlQuery {
 			Assert.notNull(query, "query must not be null");
 
 			this.query = query;
-		}
-
-		/**
-		 * Separator for CSV results.
-		 */
-		public Builder withDelimiter(String delimiter) {
-			this.delimiter = delimiter;
-
-			return this;
-		}
-
-		/**
-		 * The format for the response, such as csv, json, txt, can be viewed at the {@link ResponseFormat}.
-		 */
-		public Builder withFormat(ResponseFormat format) {
-			this.format = format;
-
-			return this;
 		}
 
 		/**
@@ -482,16 +427,6 @@ public class SqlQuery {
 		}
 
 		public SqlQuery build() {
-			if (Boolean.TRUE.equals(columnar)) {
-				if (!(cbor.equals(format) || json.equals(format) || smile.equals(format) || yaml.equals(format))) {
-					throw new IllegalArgumentException("Columnar format support only YAML, CBOR, JSON and SMILE.");
-				}
-			}
-
-			if (delimiter != null && !csv.equals(format)) {
-				throw new IllegalArgumentException("Delimiter support is only available for CSV responses.");
-			}
-
 			return new SqlQuery(this);
 		}
 	}

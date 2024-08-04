@@ -72,7 +72,7 @@ public class ReactiveSqlOperationsIntegrationTests {
 	static class Config {}
 	// end region
 
-	@Test
+	@Test // #2683
 	void when_search_with_an_sql_query() {
 		// Given
 		SqlQuery query = SqlQuery.builder("SELECT * FROM entity_for_sql WHERE views = 0").build();

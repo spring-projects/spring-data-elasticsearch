@@ -121,18 +121,6 @@ public class SqlResponse {
 			return row.get(column);
 		}
 
-		/**
-		 * This method should attempt to convert the SQL response into a document if the columns selected in an SQL query
-		 * correspond to the fields in the document.
-		 * 
-		 * @param documentClass The class that represents the document.
-		 * @return an instance of Document {@link T}.
-		 * @param <T> Document type.
-		 */
-		public <T> T toDocument(Class<T> documentClass) {
-			throw new UnsupportedOperationException("Not implemented yet.");
-		}
-
 		public static class Builder {
 			private final Map<Column, JsonValue> row = new HashMap<>();
 

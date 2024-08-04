@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.json;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Time;
@@ -667,8 +666,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	@Override
 	public SqlResponse search(SqlQuery query) {
 		Assert.notNull(query, "Query must not be null.");
-		Assert.isTrue(query.getFormat() == null || json.equals(query.getFormat()),
-				"The Elasticsearch Java Client only supports JSON format.");
 
 		try {
 			QueryResponse response = sqlClient.query(requestConverter.sqlQueryRequest(query));

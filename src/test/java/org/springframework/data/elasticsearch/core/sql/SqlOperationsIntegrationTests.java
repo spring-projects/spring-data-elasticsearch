@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.springframework.data.elasticsearch.core.sql.types.ResponseFormat.yaml;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,7 +73,7 @@ class SqlOperationsIntegrationTests {
 	static class Config {}
 	// end region
 
-	@Test
+	@Test // #2683
 	void when_search_with_an_sql_query() {
 		// Given
 		SqlQuery query = SqlQuery.builder("SELECT * FROM entity_for_sql WHERE views = 0").build();
@@ -89,19 +87,7 @@ class SqlOperationsIntegrationTests {
 		assertEquals(1, response.getRows().size());
 	}
 
-	@Test
-	void when_search_with_an_sql_query_and_txt_format() {
-		// Given
-		SqlQuery query = SqlQuery.builder("SELECT * FROM entity_for_sql WHERE views = 0").withFormat(yaml).build();
-
-		// When
-
-		// Then
-		assertThrows(IllegalArgumentException.class, () -> operations.search(query),
-				"The Elasticsearch Java Client only supports JSON format.");
-	}
-
-	@Test
+	@Test // #2683
 	void when_search_with_an_sql_query_that_has_aggregated_column() {
 		// Given
 		SqlQuery query = SqlQuery.builder("SELECT SUM(views) AS TOTAL FROM entity_for_sql").build();

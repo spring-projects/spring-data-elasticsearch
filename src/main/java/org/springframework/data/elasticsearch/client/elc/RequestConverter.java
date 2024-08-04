@@ -541,7 +541,7 @@ class RequestConverter extends AbstractQueryProcessor {
 					.keepOnCompletion(query.getKeepOnCompletion()).pageTimeout(time(query.getPageTimeout()))
 					.requestTimeout(time(query.getRequestTimeout()))
 					.waitForCompletionTimeout(time(query.getWaitForCompletionTimeout())).filter(getQuery(query.getFilter(), null))
-					.timeZone(Objects.toString(query.getTimeZone(), null)).format(Objects.toString(query.getFormat(), null));
+					.timeZone(Objects.toString(query.getTimeZone(), null)).format("json");
 
 			return sqb;
 		});
