@@ -212,7 +212,7 @@ public class MappingBuilder {
 		}
 
 		private void mapEntity(ObjectNode objectNode, @Nullable ElasticsearchPersistentEntity<?> entity,
-				boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType, String mappedName,
+				boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType, String fieldTypeMappedName,
 				@Nullable Field parentFieldAnnotation, @Nullable Dynamic dynamicMapping, @Nullable Document runtimeFields)
 				throws IOException {
 
@@ -246,7 +246,7 @@ public class MappingBuilder {
 			boolean writeNestedProperties = !isRootObject && (isAnyPropertyAnnotatedWithField(entity) || nestedOrObjectField);
 			if (writeNestedProperties) {
 
-				String type = nestedOrObjectField ? mappedName : FieldType.Object.getMappedName();
+				String type = nestedOrObjectField ? fieldTypeMappedName : FieldType.Object.getMappedName();
 
 				ObjectNode nestedObjectNode = objectMapper.createObjectNode();
 				nestedObjectNode.put(FIELD_PARAM_TYPE, type);
@@ -372,7 +372,7 @@ public class MappingBuilder {
 					nestedPropertyPrefix = nestedPropertyPath;
 
 					mapEntity(propertiesNode, persistentEntity, false, property.getFieldName(), true, fieldAnnotation.type(),
-							getMappedName(fieldAnnotation), fieldAnnotation, dynamicMapping, null);
+							getMappedTypeName(fieldAnnotation), fieldAnnotation, dynamicMapping, null);
 
 					nestedPropertyPrefix = currentNestedPropertyPrefix;
 					return;
@@ -475,7 +475,7 @@ public class MappingBuilder {
 				}
 
 				propertiesNode.set(property.getFieldName(), objectMapper.createObjectNode() //
-						.put(FIELD_PARAM_TYPE, getMappedName(field)) //
+						.put(FIELD_PARAM_TYPE, getMappedTypeName(field)) //
 						.put(MAPPING_ENABLED, false) //
 				);
 
@@ -489,8 +489,8 @@ public class MappingBuilder {
 		 * @param field field to return the mapping type name for
 		 * @return the mapping type name
 		 */
-		private String getMappedName(Field field) {
-			return StringUtils.hasText(field.mappedName()) ? field.mappedName() : field.type().getMappedName();
+		private String getMappedTypeName(Field field) {
+			return StringUtils.hasText(field.mappedTypeName()) ? field.mappedTypeName() : field.type().getMappedName();
 		}
 
 		/**

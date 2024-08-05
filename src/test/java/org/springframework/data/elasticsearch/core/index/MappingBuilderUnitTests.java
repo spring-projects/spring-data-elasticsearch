@@ -2561,14 +2561,14 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@SuppressWarnings("unused")
 	private static class FieldMappedNameEntity {
 		@Nullable
-		@Field(type = Text, mappedName = "match_only_text") private String someText;
+		@Field(type = Text, mappedTypeName = "match_only_text") private String someText;
 	}
 
 	@SuppressWarnings("unused")
 	private static class MultiFieldMappedNameEntity {
 		@Nullable
-		@MultiField(mainField = @Field(type = FieldType.Text, mappedName = "match_only_text"), otherFields = { @InnerField(suffix = "lower_case",
-				type = FieldType.Keyword, normalizer = "lower_case_normalizer", mappedName = "constant_keyword") }) private String description;
+		@MultiField(mainField = @Field(type = FieldType.Text, mappedTypeName = "match_only_text"), otherFields = { @InnerField(suffix = "lower_case",
+				type = FieldType.Keyword, normalizer = "lower_case_normalizer", mappedTypeName = "constant_keyword") }) private String description;
 	}
 	// endregion
 }
