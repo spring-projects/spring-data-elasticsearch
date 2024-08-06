@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.sql;
 
-import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.blocking;
+import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
+
+import reactor.test.StepVerifier;
 
 import java.util.List;
 
@@ -34,8 +36,6 @@ import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearc
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
-
-import reactor.test.StepVerifier;
 
 /**
  * Testing the reactive querying using SQL syntax.

@@ -15,11 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import java.io.IOException;
-import java.util.function.Function;
-
-import org.jetbrains.annotations.Nullable;
-
 import co.elastic.clients.ApiClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.sql.QueryRequest;
@@ -28,6 +23,11 @@ import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
 import co.elastic.clients.util.ObjectBuilder;
 import reactor.core.publisher.Mono;
+
+import java.io.IOException;
+import java.util.function.Function;
+
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Reactive version of {@link co.elastic.clients.elasticsearch.sql.ElasticsearchSqlClient}.

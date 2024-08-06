@@ -5,7 +5,8 @@
 == New in Spring Data Elasticsearch 5.4
 
 * Upgrade to Elasticsearch 8.14.3.
-* Allow to customize the mapped type name for @InnerField and @Field annotations.
+* Allow to customize the mapped type name for `@InnerField` and `@Field` annotations.
+* Support for Elasticsearch SQL.
 
 [[new-features.5-3-0]]
 == New in Spring Data Elasticsearch 5.3

@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.sql;
 
-import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.*;
+
+import jakarta.json.JsonValue;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,8 +27,6 @@ import java.util.Map;
 
 import org.springframework.lang.NonNull;
 import org.springframework.lang.Nullable;
-
-import jakarta.json.JsonValue;
 
 /**
  * Defines an SQL response.

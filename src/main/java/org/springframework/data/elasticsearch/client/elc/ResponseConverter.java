@@ -15,9 +15,27 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import static org.springframework.data.elasticsearch.client.elc.JsonUtils.toJson;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.removePrefixFromJson;
-import static org.springframework.data.elasticsearch.client.elc.TypeUtils.typeMapping;
+import static org.springframework.data.elasticsearch.client.elc.JsonUtils.*;
+import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
+
+import co.elastic.clients.elasticsearch._types.BulkIndexByScrollFailure;
+import co.elastic.clients.elasticsearch._types.ErrorCause;
+import co.elastic.clients.elasticsearch._types.Time;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch.cluster.ComponentTemplateSummary;
+import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateResponse;
+import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
+import co.elastic.clients.elasticsearch.core.GetScriptResponse;
+import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
+import co.elastic.clients.elasticsearch.core.mget.MultiGetError;
+import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
+import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.elasticsearch.indices.get_index_template.IndexTemplateItem;
+import co.elastic.clients.elasticsearch.indices.get_mapping.IndexMappingRecord;
+import co.elastic.clients.elasticsearch.sql.QueryResponse;
+import co.elastic.clients.json.JsonData;
+import co.elastic.clients.json.JsonpMapper;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -49,36 +67,6 @@ import org.springframework.data.elasticsearch.core.sql.SqlResponse;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
-
-import co.elastic.clients.elasticsearch._types.BulkIndexByScrollFailure;
-import co.elastic.clients.elasticsearch._types.ErrorCause;
-import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch.cluster.ComponentTemplateSummary;
-import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateResponse;
-import co.elastic.clients.elasticsearch.cluster.HealthResponse;
-import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
-import co.elastic.clients.elasticsearch.core.GetScriptResponse;
-import co.elastic.clients.elasticsearch.core.UpdateByQueryResponse;
-import co.elastic.clients.elasticsearch.core.mget.MultiGetError;
-import co.elastic.clients.elasticsearch.core.mget.MultiGetResponseItem;
-import co.elastic.clients.elasticsearch.indices.Alias;
-import co.elastic.clients.elasticsearch.indices.AliasDefinition;
-import co.elastic.clients.elasticsearch.indices.GetAliasResponse;
-import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
-import co.elastic.clients.elasticsearch.indices.GetIndexTemplateResponse;
-import co.elastic.clients.elasticsearch.indices.GetIndicesSettingsResponse;
-import co.elastic.clients.elasticsearch.indices.GetMappingResponse;
-import co.elastic.clients.elasticsearch.indices.GetTemplateResponse;
-import co.elastic.clients.elasticsearch.indices.IndexSettings;
-import co.elastic.clients.elasticsearch.indices.IndexState;
-import co.elastic.clients.elasticsearch.indices.IndexTemplateSummary;
-import co.elastic.clients.elasticsearch.indices.TemplateMapping;
-import co.elastic.clients.elasticsearch.indices.get_index_template.IndexTemplateItem;
-import co.elastic.clients.elasticsearch.indices.get_mapping.IndexMappingRecord;
-import co.elastic.clients.elasticsearch.sql.QueryResponse;
-import co.elastic.clients.json.JsonData;
-import co.elastic.clients.json.JsonpMapper;
 
 /**
  * Class to convert Elasticsearch responses into Spring Data Elasticsearch classes.
