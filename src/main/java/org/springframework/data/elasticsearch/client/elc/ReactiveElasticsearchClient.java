@@ -69,6 +69,10 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		return new ReactiveElasticsearchIndicesClient(transport, transportOptions);
 	}
 
+	public ReactiveElasticsearchSqlClient sql() {
+		return new ReactiveElasticsearchSqlClient(transport, transportOptions);
+	}
+
 	// endregion
 	// region info
 

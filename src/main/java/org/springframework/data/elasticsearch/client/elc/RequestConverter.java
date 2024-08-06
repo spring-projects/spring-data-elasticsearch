@@ -68,6 +68,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -528,6 +529,22 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		return co.elastic.clients.elasticsearch.indices.GetTemplateRequest
 				.of(gtr -> gtr.name(getTemplateRequest.getTemplateName()).flatSettings(true));
+	}
+
+	public co.elastic.clients.elasticsearch.sql.QueryRequest sqlQueryRequest(SqlQuery query) {
+		Assert.notNull(query, "Query must not be null.");
+
+		return co.elastic.clients.elasticsearch.sql.QueryRequest.of(sqb -> {
+			sqb.query(query.getQuery()).catalog(query.getCatalog()).columnar(query.getColumnar()).cursor(query.getCursor())
+					.fetchSize(query.getFetchSize()).fieldMultiValueLeniency(query.getFieldMultiValueLeniency())
+					.indexUsingFrozen(query.getIndexIncludeFrozen()).keepAlive(time(query.getKeepAlive()))
+					.keepOnCompletion(query.getKeepOnCompletion()).pageTimeout(time(query.getPageTimeout()))
+					.requestTimeout(time(query.getRequestTimeout()))
+					.waitForCompletionTimeout(time(query.getWaitForCompletionTimeout())).filter(getQuery(query.getFilter(), null))
+					.timeZone(Objects.toString(query.getTimeZone(), null)).format("json");
+
+			return sqb;
+		});
 	}
 
 	// endregion

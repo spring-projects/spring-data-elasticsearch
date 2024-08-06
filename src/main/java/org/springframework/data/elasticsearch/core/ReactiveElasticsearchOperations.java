@@ -21,6 +21,7 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.core.script.ReactiveScriptOperations;
+import org.springframework.data.elasticsearch.core.sql.ReactiveSqlOperations;
 import org.springframework.lang.Nullable;
 
 /**
@@ -31,7 +32,7 @@ import org.springframework.lang.Nullable;
  * @since 3.2
  */
 public interface ReactiveElasticsearchOperations
-		extends ReactiveDocumentOperations, ReactiveSearchOperations, ReactiveScriptOperations {
+		extends ReactiveDocumentOperations, ReactiveSearchOperations, ReactiveScriptOperations, ReactiveSqlOperations {
 
 	/**
 	 * Get the {@link ElasticsearchConverter} used.
