@@ -116,6 +116,7 @@ public final class MappingParameters {
 	private final boolean store;
 	private final TermVector termVector;
 	private final FieldType type;
+	private final String mappedTypeName;
 
 	/**
 	 * extracts the mapping parameters from the relevant annotations.
@@ -141,6 +142,7 @@ public final class MappingParameters {
 		store = field.store();
 		fielddata = field.fielddata();
 		type = field.type();
+		mappedTypeName = StringUtils.hasText(field.mappedTypeName()) ? field.mappedTypeName() : type.getMappedName();
 		dateFormats = field.format();
 		dateFormatPatterns = field.pattern();
 		analyzer = field.analyzer();
@@ -187,6 +189,7 @@ public final class MappingParameters {
 		store = field.store();
 		fielddata = field.fielddata();
 		type = field.type();
+		mappedTypeName = StringUtils.hasText(field.mappedTypeName()) ? field.mappedTypeName() : type.getMappedName();
 		dateFormats = field.format();
 		dateFormatPatterns = field.pattern();
 		analyzer = field.analyzer();
@@ -245,7 +248,7 @@ public final class MappingParameters {
 		}
 
 		if (type != FieldType.Auto) {
-			objectNode.put(FIELD_PARAM_TYPE, type.getMappedName());
+			objectNode.put(FIELD_PARAM_TYPE, mappedTypeName);
 
 			if (type == FieldType.Date || type == FieldType.Date_Nanos || type == FieldType.Date_Range) {
 				List<String> formats = new ArrayList<>();

@@ -59,6 +59,7 @@ import org.springframework.lang.Nullable;
  * @author Brian Kimmig
  * @author Morgan Lutz
  * @author Haibo Liu
+ * @author Andriy Redko
  */
 @SpringIntegrationTest
 public abstract class MappingBuilderIntegrationTests extends MappingContextBaseTests {
@@ -75,6 +76,12 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 	@Order(java.lang.Integer.MAX_VALUE)
 	void cleanup() {
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + "*")).delete();
+	}
+
+	@Test
+	public void shouldSupportAllTypes() {
+		IndexOperations indexOperations = operations.indexOps(EntityWithAllTypes.class);
+		indexOperations.createWithMapping();
 	}
 
 	@Test

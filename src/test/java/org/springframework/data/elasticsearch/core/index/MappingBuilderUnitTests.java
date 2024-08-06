@@ -63,6 +63,7 @@ import org.springframework.lang.Nullable;
  * @author Brian Kimmig
  * @author Morgan Lutz
  * @author Haibo Liu
+ * @author Andriy Redko
  */
 public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
@@ -1242,6 +1243,59 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		assertEquals(expected, mapping, true);
 	}
+	
+	@Test // #2942
+	@DisplayName("should use custom  mapped name")
+	void shouldUseCustomMappedName() throws JSONException {
+
+		var expected = """
+					{
+					  "properties": {
+						"_class": {
+						  "type": "keyword",
+						  "index": false,
+						  "doc_values": false
+						},
+						"someText": {
+						  "type": "match_only_text"
+						}
+					  }
+					}
+				""";
+		String mapping = getMappingBuilder().buildPropertyMapping(FieldMappedNameEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
+	@Test // #2942
+	@DisplayName("should use custom  mapped name for multifield")
+	void shouldUseCustomMappedNameMultiField() throws JSONException {
+
+		var expected = """
+					{
+					  "properties": {
+						"_class": {
+						  "type": "keyword",
+						  "index": false,
+						  "doc_values": false
+						},
+						"description": {
+						  "type": "match_only_text",
+						  "fields": {
+							"lower_case": {
+							  "type": "constant_keyword",
+							  "normalizer": "lower_case_normalizer"
+							}
+						  }
+						}
+					  }
+					}
+				""";
+		String mapping = getMappingBuilder().buildPropertyMapping(MultiFieldMappedNameEntity.class);
+
+		assertEquals(expected, mapping, true);
+	}
+
 	// region entities
 
 	@Document(indexName = "ignore-above-index")
@@ -2502,6 +2556,19 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = Text) private String someText;
 		@Nullable
 		@Field(type = Text) private String otherText;
+	}
+
+	@SuppressWarnings("unused")
+	private static class FieldMappedNameEntity {
+		@Nullable
+		@Field(type = Text, mappedTypeName = "match_only_text") private String someText;
+	}
+
+	@SuppressWarnings("unused")
+	private static class MultiFieldMappedNameEntity {
+		@Nullable
+		@MultiField(mainField = @Field(type = FieldType.Text, mappedTypeName = "match_only_text"), otherFields = { @InnerField(suffix = "lower_case",
+				type = FieldType.Keyword, normalizer = "lower_case_normalizer", mappedTypeName = "constant_keyword") }) private String description;
 	}
 	// endregion
 }

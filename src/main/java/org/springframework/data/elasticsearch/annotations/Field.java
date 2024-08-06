@@ -38,6 +38,7 @@ import org.springframework.core.annotation.AliasFor;
  * @author Morgan Lutz
  * @author Sascha Woo
  * @author Haibo Liu
+ * @author Andriy Redko
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.METHOD })
@@ -240,4 +241,11 @@ public @interface Field {
 	 * @since 5.1
 	 */
 	boolean storeEmptyValue() default true;
+	
+	/**
+	 * overrides the field type in the mapping which otherwise will be taken from corresponding {@link FieldType}
+	 *
+	 * @since 5.4
+	 */
+	String mappedTypeName() default "";
 }
