@@ -241,7 +241,7 @@ public @interface Field {
 	 * @since 5.1
 	 */
 	boolean storeEmptyValue() default true;
-	
+
 	/**
 	 * overrides the field type in the mapping which otherwise will be taken from corresponding {@link FieldType}
 	 *

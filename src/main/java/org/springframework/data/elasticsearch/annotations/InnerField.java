@@ -172,7 +172,7 @@ public @interface InnerField {
 	 * @since 5.4
 	 */
 	KnnIndexOptions[] knnIndexOptions() default {};
-	
+
 	/**
 	 * overrides the field type in the mapping which otherwise will be taken from corresponding {@link FieldType}
 	 *

@@ -177,7 +177,8 @@ public class MappingBuilder {
 				var dynamicMapping = docAnnotation != null ? docAnnotation.dynamic() : null;
 
 				final FieldType fieldType = FieldType.Auto;
-				mapEntity(objectNode, entity, true, "", false, fieldType, fieldType.getMappedName(), null, dynamicMapping, runtimeFields);
+				mapEntity(objectNode, entity, true, "", false, fieldType, fieldType.getMappedName(), null, dynamicMapping,
+						runtimeFields);
 
 				if (!excludeFromSource.isEmpty()) {
 					ObjectNode sourceNode = objectNode.putObject(SOURCE);
@@ -212,7 +213,8 @@ public class MappingBuilder {
 		}
 
 		private void mapEntity(ObjectNode objectNode, @Nullable ElasticsearchPersistentEntity<?> entity,
-				boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType, String fieldTypeMappedName,
+				boolean isRootObject, String nestedObjectFieldName, boolean nestedOrObjectField, FieldType fieldType,
+				String fieldTypeMappedName,
 				@Nullable Field parentFieldAnnotation, @Nullable Dynamic dynamicMapping, @Nullable Document runtimeFields)
 				throws IOException {
 
@@ -486,6 +488,7 @@ public class MappingBuilder {
 
 		/**
 		 * Return the mapping type name to be used for the {@link Field}
+		 *
 		 * @param field field to return the mapping type name for
 		 * @return the mapping type name
 		 */
