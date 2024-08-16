@@ -86,6 +86,7 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Nullable private PropertyValueConverter propertyValueConverter;
 	private final boolean storeNullValue;
 	private final boolean storeEmptyValue;
+	private final boolean isDynamicFieldMapping;
 
 	public SimpleElasticsearchPersistentProperty(Property property,
 			PersistentEntity<?, ElasticsearchPersistentProperty> owner, SimpleTypeHolder simpleTypeHolder) {
@@ -114,6 +115,7 @@ public class SimpleElasticsearchPersistentProperty extends
 				: isMultiField && getRequiredAnnotation(MultiField.class).mainField().storeNullValue();
 		storeEmptyValue = isField ? getRequiredAnnotation(Field.class).storeEmptyValue()
 				: !isMultiField || getRequiredAnnotation(MultiField.class).mainField().storeEmptyValue();
+		isDynamicFieldMapping = isField && getRequiredAnnotation(Field.class).dynamicTemplate();
 	}
 
 	@Override
@@ -392,5 +394,10 @@ public class SimpleElasticsearchPersistentProperty extends
 	@Override
 	public boolean isIndexedIndexNameProperty() {
 		return isAnnotationPresent(IndexedIndexName.class);
+	}
+
+	@Override
+	public boolean isDynamicFieldMapping() {
+		return isDynamicFieldMapping;
 	}
 }

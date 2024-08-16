@@ -1035,7 +1035,14 @@ public class MappingElasticsearchConverter
 
 			if (valueType.isMap()) {
 				Map<String, Object> mapDbObj = createMap((Map<?, ?>) value, property);
-				sink.set(property, mapDbObj);
+				if (property.isDynamicFieldMapping()) {
+					for (Entry<String, Object> entry : mapDbObj.entrySet()) {
+						sink.set(entry.getKey(), entry.getValue());
+					}
+				} else {
+					sink.set(property, mapDbObj);
+				}
+				
 				return;
 			}
 
@@ -1499,7 +1506,11 @@ public class MappingElasticsearchConverter
 				}
 			}
 
-			target.put(property.getFieldName(), value);
+			set(property.getFieldName(), value);
+		}
+
+		public void set(String key, @Nullable Object value) {
+			target.put(key, value);
 		}
 
 		private Map<String, Object> getAsMap(Object result) {

@@ -1,0 +1,12 @@
+{
+  "dynamic_templates": [
+    {
+      "_str": {
+        "match": "*_str",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    }
+  ]
+}

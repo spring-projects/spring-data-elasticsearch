@@ -16,8 +16,10 @@
 
 package org.springframework.data.elasticsearch.core.index;
 
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.core.query.StringQuery.MATCH_ALL;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -40,7 +42,9 @@ import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
+import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
@@ -278,6 +282,24 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 	@DisplayName("should write mapping with field aliases")
 	void shouldWriteMappingWithFieldAliases() {
 		operations.indexOps(FieldAliasEntity.class).createWithMapping();
+	}
+
+	@Test
+	void shouldMapDynamicFields() {
+		// Given
+		IndexOperations documentOperations = operations.indexOps(DynamicFieldDocument.class);
+		documentOperations.createWithMapping();
+
+		DynamicFieldDocument document = new DynamicFieldDocument();
+		document.dynamicFields = Map.of("a_str", randomUUID().toString(), "b_str", randomUUID().toString());
+		operations.save(document);
+
+		// When
+		SearchHits<DynamicFieldDocument> results = operations.search(new StringQuery(MATCH_ALL), DynamicFieldDocument.class);
+
+		// Then
+		assertThat(results.getTotalHits()).isEqualTo(1);
+		documentOperations.delete();
 	}
 
 	// region Entities
@@ -933,5 +955,14 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Field(type = Text) private String otherText;
 	}
 
+	@SuppressWarnings("unused")
+	@Document(indexName = "foo")
+	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings_three.json")
+	private static class DynamicFieldDocument {
+		@Nullable
+		@Id String id;
+
+		@Field(name = "*_str", dynamicTemplate = true) private Map<String, String> dynamicFields = new HashMap<>();
+	}
 	// endregion
 }
