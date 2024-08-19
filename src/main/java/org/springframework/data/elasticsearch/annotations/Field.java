@@ -130,6 +130,10 @@ public @interface Field {
 	boolean norms() default true;
 
 	/**
+	 * NOte that null_value setting are not supported in Elasticsearch for all types. For example setting a null_value on
+	 * a field with type text will throw an exception in the server when the mapping is written to Elasticsearch. Alas,
+	 * the Elasticsearch documentation does not specify on which types it is allowed on which it is not.
+	 *
 	 * @since 4.0
 	 */
 	String nullValue() default "";

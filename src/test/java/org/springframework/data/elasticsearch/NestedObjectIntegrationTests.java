@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch;
 
-import static co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders.match;
-import static java.util.UUID.randomUUID;
+import static co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders.*;
+import static java.util.UUID.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 

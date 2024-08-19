@@ -18,9 +18,6 @@ package org.springframework.data.elasticsearch.core.index;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.InnerField;
-import org.springframework.data.elasticsearch.annotations.MultiField;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -34,7 +31,10 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.Mapping;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.lang.Nullable;
 
@@ -82,7 +82,7 @@ public class ReactiveMappingBuilderUnitTests extends MappingContextBaseTests {
 
 		assertEquals(expected, mapping, true);
 	}
-	
+
 	@Test // #2952
 	void shouldMapNullityParameters() throws JSONException {
 		// Given
@@ -108,9 +108,10 @@ public class ReactiveMappingBuilderUnitTests extends MappingContextBaseTests {
 				   }
 				 }
 				""";
-		
+
 		// When
-		String result = Mono.defer(() -> mappingBuilder.buildReactivePropertyMapping(MultiFieldWithNullEmptyParameters.class))
+		String result = Mono
+				.defer(() -> mappingBuilder.buildReactivePropertyMapping(MultiFieldWithNullEmptyParameters.class))
 				.subscribeOn(Schedulers.parallel()).block();
 
 		// Then
