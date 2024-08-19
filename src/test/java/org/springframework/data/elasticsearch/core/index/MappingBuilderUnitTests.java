@@ -1296,6 +1296,38 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, mapping, true);
 	}
 
+	@Test // #2952
+	void shouldMapNullityParameters() throws JSONException {
+		// Given
+		String expected = """
+				{
+				   "properties": {
+				     "_class": {
+				       "type": "keyword",
+				       "index": false,
+				       "doc_values": false
+				     },
+				     "empty-field": {
+				       "type": "keyword",
+				       "null_value": "EMPTY",
+				       "fields": {
+				         "suffix": {
+				           "type": "keyword",
+				           "null_value": "EMPTY_TEXT"
+				         }
+				       }
+				     }
+				   }
+				 }
+				""";
+
+		// When
+		String result = getMappingBuilder().buildPropertyMapping(MultiFieldWithNullEmptyParameters.class);
+
+		// Then
+		assertEquals(expected, result, true);
+	}
+
 	// region entities
 
 	@Document(indexName = "ignore-above-index")
@@ -2569,6 +2601,15 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable
 		@MultiField(mainField = @Field(type = FieldType.Text, mappedTypeName = "match_only_text"), otherFields = { @InnerField(suffix = "lower_case",
 				type = FieldType.Keyword, normalizer = "lower_case_normalizer", mappedTypeName = "constant_keyword") }) private String description;
+	}
+
+	@SuppressWarnings("unused")
+	private static class MultiFieldWithNullEmptyParameters {
+		@Nullable
+		@MultiField(
+				mainField = @Field(name = "empty-field", type = FieldType.Keyword, nullValue = "EMPTY", storeNullValue = true),
+				otherFields = {
+						@InnerField(suffix = "suffix", type = Keyword, nullValue = "EMPTY_TEXT") }) private List<String> emptyField;
 	}
 	// endregion
 }

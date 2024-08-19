@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch;
 
+import static co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders.match;
+import static java.util.UUID.randomUUID;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 
@@ -28,6 +30,7 @@ import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +40,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
+import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -373,6 +377,42 @@ public abstract class NestedObjectIntegrationTests {
 		assertThat(books.getSearchHit(0).getContent().getId()).isEqualTo(book2.getId());
 	}
 
+	@Test // #2952
+	@DisplayName("should handle null and empty field parameters in the mapping process")
+	void shouldSupportMappingNullAndEmptyFieldParameter() {
+		// Given
+		operations.indexOps(MultiFieldWithNullEmptyParameters.class).createWithMapping();
+		List<IndexQuery> indexQueries = new ArrayList<>();
+		MultiFieldWithNullEmptyParameters nullObj = new MultiFieldWithNullEmptyParameters();
+		nullObj.addFieldWithInner(randomUUID().toString());
+		MultiFieldWithNullEmptyParameters objWithValue = new MultiFieldWithNullEmptyParameters();
+		objWithValue.addEmptyField(randomUUID().toString());
+
+		IndexQuery indexQuery1 = new IndexQuery();
+		indexQuery1.setId(nextIdAsString());
+		indexQuery1.setObject(nullObj);
+		indexQueries.add(indexQuery1);
+
+		IndexQuery indexQuery2 = new IndexQuery();
+		indexQuery2.setId(nextIdAsString());
+		indexQuery2.setObject(objWithValue);
+		indexQueries.add(indexQuery2);
+
+		// When
+		operations.bulkIndex(indexQueries, MultiFieldWithNullEmptyParameters.class);
+
+		// Then
+		SearchHits<MultiFieldWithNullEmptyParameters> nullResults = operations.search(
+				NativeQuery.builder().withQuery(match(bm -> bm.field("empty-field").query("EMPTY"))).build(),
+				MultiFieldWithNullEmptyParameters.class);
+		assertThat(nullResults.getSearchHits()).hasSize(1);
+
+		nullResults = operations.search(
+				NativeQuery.builder().withQuery(match(bm -> bm.field("inner-field.prefix").query("EMPTY"))).build(),
+				MultiFieldWithNullEmptyParameters.class);
+		assertThat(nullResults.getSearchHits()).hasSize(1);
+	}
+
 	@NotNull
 	abstract protected Query getNestedQuery4();
 
@@ -619,6 +659,42 @@ public abstract class NestedObjectIntegrationTests {
 
 		public void setName(@Nullable String name) {
 			this.name = name;
+		}
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}-multi-field")
+	static class MultiFieldWithNullEmptyParameters {
+		@Nullable
+		@MultiField(mainField = @Field(name = "empty-field", type = FieldType.Keyword, nullValue = "EMPTY",
+				storeNullValue = true)) private List<String> emptyField;
+
+		@Nullable
+		@MultiField(mainField = @Field(name = "inner-field", type = FieldType.Text, storeNullValue = true),
+				otherFields = { @InnerField(suffix = "prefix", type = FieldType.Keyword,
+						nullValue = "EMPTY") }) private List<String> fieldWithInner;
+
+		public List<String> getEmptyField() {
+			if (emptyField == null) {
+				emptyField = new ArrayList<>();
+			}
+
+			return emptyField;
+		}
+
+		public void addEmptyField(String value) {
+			getEmptyField().add(value);
+		}
+
+		public List<String> getFieldWithInner() {
+			if (fieldWithInner == null) {
+				fieldWithInner = new ArrayList<>();
+			}
+
+			return fieldWithInner;
+		}
+
+		public void addFieldWithInner(@Nullable String value) {
+			getFieldWithInner().add(value);
 		}
 	}
 

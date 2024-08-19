@@ -18,10 +18,14 @@ package org.springframework.data.elasticsearch.core.index;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.InnerField;
+import org.springframework.data.elasticsearch.annotations.MultiField;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
+import java.util.List;
 
 import org.json.JSONException;
 import org.junit.jupiter.api.DisplayName;
@@ -78,6 +82,40 @@ public class ReactiveMappingBuilderUnitTests extends MappingContextBaseTests {
 
 		assertEquals(expected, mapping, true);
 	}
+	
+	@Test // #2952
+	void shouldMapNullityParameters() throws JSONException {
+		// Given
+		ReactiveMappingBuilder mappingBuilder = getReactiveMappingBuilder();
+		String expected = """
+				{
+				   "properties": {
+				     "_class": {
+				       "type": "keyword",
+				       "index": false,
+				       "doc_values": false
+				     },
+				     "empty-field": {
+				       "type": "keyword",
+				       "null_value": "EMPTY",
+				       "fields": {
+				         "suffix": {
+				           "type": "keyword",
+				           "null_value": "EMPTY_TEXT"
+				         }
+				       }
+				     }
+				   }
+				 }
+				""";
+		
+		// When
+		String result = Mono.defer(() -> mappingBuilder.buildReactivePropertyMapping(MultiFieldWithNullEmptyParameters.class))
+				.subscribeOn(Schedulers.parallel()).block();
+
+		// Then
+		assertEquals(expected, result, true);
+	}
 
 	// region entities
 	@Document(indexName = "runtime-fields")
@@ -87,6 +125,15 @@ public class ReactiveMappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable private String id;
 		@Field(type = Date, format = DateFormat.epoch_millis, name = "@timestamp")
 		@Nullable private Instant timestamp;
+	}
+
+	@SuppressWarnings("unused")
+	private static class MultiFieldWithNullEmptyParameters {
+		@Nullable
+		@MultiField(
+				mainField = @Field(name = "empty-field", type = FieldType.Keyword, nullValue = "EMPTY", storeNullValue = true),
+				otherFields = {
+						@InnerField(suffix = "suffix", type = Keyword, nullValue = "EMPTY_TEXT") }) private List<String> emptyField;
 	}
 	// endregion
 }

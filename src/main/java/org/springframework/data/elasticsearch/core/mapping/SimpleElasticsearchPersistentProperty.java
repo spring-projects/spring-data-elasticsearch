@@ -98,6 +98,7 @@ public class SimpleElasticsearchPersistentProperty extends
 		this.isSeqNoPrimaryTerm = SeqNoPrimaryTerm.class.isAssignableFrom(getRawType());
 
 		boolean isField = isAnnotationPresent(Field.class);
+		boolean isMultiField = isAnnotationPresent(MultiField.class);
 
 		if (isVersionProperty() && !getType().equals(Long.class)) {
 			throw new MappingException(String.format("Version property %s must be of type Long!", property.getName()));
@@ -109,8 +110,10 @@ public class SimpleElasticsearchPersistentProperty extends
 
 		initPropertyValueConverter();
 
-		storeNullValue = isField && getRequiredAnnotation(Field.class).storeNullValue();
-		storeEmptyValue = isField ? getRequiredAnnotation(Field.class).storeEmptyValue() : true;
+		storeNullValue = isField ? getRequiredAnnotation(Field.class).storeNullValue()
+				: isMultiField && getRequiredAnnotation(MultiField.class).mainField().storeNullValue();
+		storeEmptyValue = isField ? getRequiredAnnotation(Field.class).storeEmptyValue()
+				: !isMultiField || getRequiredAnnotation(MultiField.class).mainField().storeEmptyValue();
 	}
 
 	@Override
