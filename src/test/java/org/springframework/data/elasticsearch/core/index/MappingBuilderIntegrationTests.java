@@ -42,6 +42,7 @@ import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
@@ -299,6 +300,8 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 
 		// Then
 		assertThat(results.getTotalHits()).isEqualTo(1);
+		assertThat(results.getSearchHits()).first().extracting(SearchHit::getContent).extracting(doc -> doc.dynamicFields)
+				.isEqualTo(document.dynamicFields);
 		documentOperations.delete();
 	}
 
@@ -962,7 +965,7 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Id String id;
 
-		@Field(name = "*_str", dynamicTemplate = true) private Map<String, String> dynamicFields = new HashMap<>();
+		@Field(name = "_str", dynamicTemplate = true) private Map<String, String> dynamicFields = new HashMap<>();
 	}
 	// endregion
 }

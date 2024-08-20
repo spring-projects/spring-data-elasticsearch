@@ -15,6 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import static org.springframework.util.PatternMatchUtils.simpleMatch;
+import static org.springframework.util.StringUtils.hasText;
+
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.Map.Entry;
@@ -38,8 +41,10 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.EnvironmentCapable;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
+import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -53,6 +58,7 @@ import org.springframework.data.elasticsearch.core.query.Field;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
+import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
 import org.springframework.data.mapping.InstanceCreatorMetadata;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.Parameter;
@@ -386,6 +392,40 @@ public class MappingElasticsearchConverter
 							SeqNoPrimaryTerm seqNoPrimaryTerm = new SeqNoPrimaryTerm(document.getSeqNo(), document.getPrimaryTerm());
 							ElasticsearchPersistentProperty property = targetEntity.getRequiredSeqNoPrimaryTermProperty();
 							targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
+						}
+					}
+
+					if (targetEntity.isAnnotationPresent(DynamicTemplates.class)) {
+						String mappingPath = targetEntity.getRequiredAnnotation(DynamicTemplates.class).mappingPath();
+						if (hasText(mappingPath)) {
+							String jsonString = ResourceUtil.readFileFromClasspath(mappingPath);
+							if (hasText(jsonString)) {
+								Object templates = new DefaultStringObjectMap<>().fromJson(jsonString).get("dynamic_templates");
+								if (templates instanceof List<?> array) {
+									for (Object node : array) {
+										if (node instanceof Map<?, ?> entry) {
+											Entry<?, ?> templateEntry = entry.entrySet().stream().findFirst().orElse(null);
+											if (templateEntry != null) {
+												ElasticsearchPersistentProperty property = targetEntity
+														.getPersistentPropertyWithFieldName((String) templateEntry.getKey());
+												if (property != null && property.isDynamicFieldMapping()) {
+													targetEntity.getPropertyAccessor(result).getProperty(property);
+													targetEntity.getPropertyAccessor(result).setProperty(property,
+															document.entrySet().stream().filter(fieldKey -> {
+																if (templateEntry.getValue() instanceof Map<?, ?> templateValue) {
+																	if (templateValue.containsKey("match")) {
+																		return simpleMatch((String) templateValue.get("match"), fieldKey.getKey());
+																	}
+																}
+
+																return false;
+															}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+												}
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				}
