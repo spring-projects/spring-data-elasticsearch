@@ -396,37 +396,7 @@ public class MappingElasticsearchConverter
 					}
 
 					if (targetEntity.isAnnotationPresent(DynamicTemplates.class)) {
-						String mappingPath = targetEntity.getRequiredAnnotation(DynamicTemplates.class).mappingPath();
-						if (hasText(mappingPath)) {
-							String jsonString = ResourceUtil.readFileFromClasspath(mappingPath);
-							if (hasText(jsonString)) {
-								Object templates = new DefaultStringObjectMap<>().fromJson(jsonString).get("dynamic_templates");
-								if (templates instanceof List<?> array) {
-									for (Object node : array) {
-										if (node instanceof Map<?, ?> entry) {
-											Entry<?, ?> templateEntry = entry.entrySet().stream().findFirst().orElse(null);
-											if (templateEntry != null) {
-												ElasticsearchPersistentProperty property = targetEntity
-														.getPersistentPropertyWithFieldName((String) templateEntry.getKey());
-												if (property != null && property.isDynamicFieldMapping()) {
-													targetEntity.getPropertyAccessor(result).getProperty(property);
-													targetEntity.getPropertyAccessor(result).setProperty(property,
-															document.entrySet().stream().filter(fieldKey -> {
-																if (templateEntry.getValue() instanceof Map<?, ?> templateValue) {
-																	if (templateValue.containsKey("match")) {
-																		return simpleMatch((String) templateValue.get("match"), fieldKey.getKey());
-																	}
-																}
-
-																return false;
-															}).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-												}
-											}
-										}
-									}
-								}
-							}
-						}
+						populateFieldsUsingDynamicTemplates(targetEntity, result, document);
 					}
 				}
 
@@ -702,6 +672,40 @@ public class MappingElasticsearchConverter
 					entity.getPropertyAccessor(result).setProperty(property, value);
 				}
 			});
+		}
+
+		private <R> void populateFieldsUsingDynamicTemplates(ElasticsearchPersistentEntity<?> targetEntity, R result, Document document) {
+			String mappingPath = targetEntity.getRequiredAnnotation(DynamicTemplates.class).mappingPath();
+			if (hasText(mappingPath)) {
+				String jsonString = ResourceUtil.readFileFromClasspath(mappingPath);
+				if (hasText(jsonString)) {
+					Object templates = new DefaultStringObjectMap<>().fromJson(jsonString).get("dynamic_templates");
+					if (templates instanceof List<?> array) {
+						for (Object node : array) {
+							if (node instanceof Map<?, ?> entry) {
+								Entry<?, ?> templateEntry = entry.entrySet().stream().findFirst().orElse(null);
+								if (templateEntry != null) {
+									ElasticsearchPersistentProperty property = targetEntity
+											.getPersistentPropertyWithFieldName((String) templateEntry.getKey());
+									if (property != null && property.isDynamicFieldMapping()) {
+										targetEntity.getPropertyAccessor(result).getProperty(property);
+										targetEntity.getPropertyAccessor(result).setProperty(property,
+												document.entrySet().stream().filter(fieldKey -> {
+													if (templateEntry.getValue() instanceof Map<?, ?> templateValue) {
+														if (templateValue.containsKey("match")) {
+															return simpleMatch((String) templateValue.get("match"), fieldKey.getKey());
+														}
+													}
+
+													return false;
+												}).collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 
 		/**
