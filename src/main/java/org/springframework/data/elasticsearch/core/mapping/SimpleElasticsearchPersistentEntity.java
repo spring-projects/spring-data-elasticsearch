@@ -15,7 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -51,6 +54,8 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
+import static java.util.Collections.unmodifiableMap;
+
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentEntity} implementation holding
  *
@@ -85,6 +90,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable String routing;
 	private final ContextConfiguration contextConfiguration;
 	private final Set<Alias> aliases = new HashSet<>();
+	private final Map<String, DynamicTemplate> dynamicTemplates = new HashMap<>();
 
 	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
 	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
@@ -625,6 +631,48 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public Dynamic dynamic() {
 		return dynamic;
+	}
+
+	@Override
+	public Map<String, DynamicTemplate> getDynamicTemplates() {
+		return unmodifiableMap(dynamicTemplates);
+	}
+
+	@Override
+	public boolean hasDynamicTemplates() {
+		return !dynamicTemplates.isEmpty();
+	}
+
+	@Override
+	public void buildDynamicTemplates(List<?> dynamicTemplates) {
+		for (Object dynamicTemplate : dynamicTemplates) {
+			if (dynamicTemplate instanceof Map<?, ?> template) {
+				template.forEach((name, value) -> {
+					if (value instanceof Map<?, ?> settings) {
+						this.dynamicTemplates.put((String) name,
+								DynamicTemplate.builder()
+										.withMatch(parseMapValue(settings.get("match")))
+										.withPathMatch(parseMapValue(settings.get("path_match")))
+										.withUnmatch(parseMapValue(settings.get("unmatch")))
+										.withPathUnmatch(parseMapValue(settings.get("path_unmatch")))
+										.withMatchMappingType(parseMapValue(settings.get("match_mapping_type")))
+										.withUnmatchMappingType(parseMapValue(settings.get("unmatch_mapping_type")))
+										.build());
+					}
+				});
+			}
+		}
+	}
+
+	/**
+	 * Parses the provided value and converts it into an array of Strings.
+	 */
+	private String[] parseMapValue(@Nullable Object value) {
+		if (value instanceof List<?> values) {
+			return values.toArray(new String[0]);
+		}
+
+		return new String[0];
 	}
 
 	/**

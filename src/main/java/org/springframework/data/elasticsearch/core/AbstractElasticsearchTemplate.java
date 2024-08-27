@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -601,6 +602,15 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	// region Entity callbacks
 	protected <T> T maybeCallbackBeforeConvert(T entity, IndexCoordinates index) {
+
+		// get entity metadata
+		Map<String, Object> mapping = indexOps(index).getMapping();
+		if (mapping.containsKey("dynamic_templates")) {
+			Object dynamicTemplates = mapping.get("dynamic_templates");
+			if (dynamicTemplates instanceof List<?> value) {
+				getRequiredPersistentEntity(entity.getClass()).buildDynamicTemplates(value);
+			}
+		}
 
 		if (entityCallbacks != null) {
 			return entityCallbacks.callback(BeforeConvertCallback.class, entity, index);
