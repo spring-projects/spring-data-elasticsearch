@@ -23,14 +23,7 @@ import static org.springframework.data.elasticsearch.core.query.StringQuery.MATC
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -293,15 +286,24 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 
 		DynamicFieldDocument document = new DynamicFieldDocument();
 		document.dynamicFields = Map.of("a_str", randomUUID().toString(), "b_str", randomUUID().toString());
+		document.value = new DynamicFieldDocument.Value(1L, new Date());
 		operations.save(document);
 
 		// When
-		SearchHits<DynamicFieldDocument> results = operations.search(new StringQuery(MATCH_ALL), DynamicFieldDocument.class);
+		SearchHits<DynamicFieldDocument> results = operations.search(new StringQuery(MATCH_ALL),
+				DynamicFieldDocument.class);
 
 		// Then
 		assertThat(results.getTotalHits()).isEqualTo(1);
-		assertThat(results.getSearchHits()).first().extracting(SearchHit::getContent).extracting(doc -> doc.dynamicFields)
+		assertThat(results.getSearchHits()).first()
+				.extracting(SearchHit::getContent)
+				.extracting(doc -> doc.dynamicFields)
 				.isEqualTo(document.dynamicFields);
+		assertThat(results.getSearchHits()).first()
+				.extracting(SearchHit::getContent)
+				.extracting(doc -> doc.value)
+				.isEqualTo(document.value);
+
 		documentOperations.delete();
 	}
 
@@ -966,6 +968,39 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Id String id;
 
 		@Field(name = "_str", dynamicTemplate = true) private Map<String, String> dynamicFields = new HashMap<>();
+
+		@Nullable
+		@Field(name = "obj", dynamicTemplate = true) private Value value;
+
+		static class Value {
+			@Nullable
+			@Field(name = "value_sum", type = FieldType.Long)
+			private Long sum;
+
+			@Nullable
+			@Field(name = "value_date", type = FieldType.Long)
+			private Date date;
+
+			public Value() {
+			}
+
+			public Value(Long sum, Date date) {
+				this.sum = sum;
+				this.date = date;
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if (this == o) return true;
+				if (!(o instanceof Value value)) return false;
+                return Objects.equals(sum, value.sum) && Objects.equals(date, value.date);
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(sum, date);
+			}
+		}
 	}
 	// endregion
 }

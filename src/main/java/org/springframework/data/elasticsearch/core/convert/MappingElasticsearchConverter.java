@@ -677,13 +677,18 @@ public class MappingElasticsearchConverter
 				ElasticsearchPersistentProperty property = targetEntity
 						.getPersistentPropertyWithFieldName(templateEntry.getKey());
 				if (property != null && property.isDynamicFieldMapping()) {
-					targetEntity.getPropertyAccessor(result).setProperty(property,
-							document.entrySet().stream()
-									.filter(fieldKey -> templateEntry.getValue().getMatch().stream()
-											.anyMatch(regex -> simpleMatch(regex, fieldKey.getKey()))
-											&& templateEntry.getValue().getUnmatch().stream()
-													.noneMatch(regex -> simpleMatch(regex, fieldKey.getKey())))
-									.collect(Collectors.toMap(Entry::getKey, Entry::getValue)));
+					// prepare value
+					Map<String, Object> values = new HashMap<>();
+					// TODO: Path match and unmatched
+					document.entrySet().stream()
+							.filter(fieldKey -> templateEntry.getValue().getMatch().stream()
+									.anyMatch(regex -> simpleMatch(regex, fieldKey.getKey()))
+									&& templateEntry.getValue().getUnmatch().stream()
+											.noneMatch(regex -> simpleMatch(regex, fieldKey.getKey())))
+							.forEach(entry -> values.put(entry.getKey(), entry.getValue()));
+
+					// set property
+					targetEntity.getPropertyAccessor(result).setProperty(property, read(property.getType(), Document.from(values)));
 				}
 			}
 		}
@@ -1089,7 +1094,14 @@ public class MappingElasticsearchConverter
 
 			addCustomTypeKeyIfNecessary(value, document, TypeInformation.of(property.getRawType()));
 			writeInternal(value, document, entity);
-			sink.set(property, document);
+			if (property.isDynamicFieldMapping()) {
+				// flatten
+				for (Entry<String, Object> entry : document.entrySet()) {
+					sink.set(entry.getKey(), entry.getValue());
+				}
+			} else {
+				sink.set(property, document);
+			}
 		}
 
 		/**
