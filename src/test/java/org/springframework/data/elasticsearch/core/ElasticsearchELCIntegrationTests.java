@@ -190,44 +190,42 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 	@Override
 	protected Query getQueryWithRescorer() {
 
-		return NativeQuery.builder() //
-				.withQuery(q -> q //
-						.bool(b -> b //
-								.filter(f -> f.exists(e -> e.field("rate"))) //
-								.should(s -> s.term(t -> t.field("message").value("message"))) //
-						)) //
-				.withRescorerQuery( //
-						new RescorerQuery(NativeQuery.builder() //
-								.withQuery(q -> q //
-										.functionScore(fs -> fs //
-												.functions(f1 -> f1 //
-														.filter(matchAllQueryAsQuery()) //
-														.weight(1.0) //
-														.gauss(d -> d //
-																.field("rate") //
-																.placement(dp -> dp //
-																		.origin(JsonData.of(0)) //
-																		.scale(JsonData.of(10)) //
-																		.decay(0.5)) //
-														)) //
-												.functions(f2 -> f2 //
-														.filter(matchAllQueryAsQuery()).weight(100.0) //
-														.gauss(d -> d //
-																.field("rate") //
-																.placement(dp -> dp //
-																		.origin(JsonData.of(0)) //
-																		.scale(JsonData.of(10)) //
-																		.decay(0.5)) //
+		return NativeQuery.builder()
+				.withQuery(q -> q
+						.bool(b -> b
+								.filter(f -> f.exists(e -> e.field("rate")))
+								.should(s -> s.term(t -> t.field("message").value("message")))))
+				.withRescorerQuery(
+						new RescorerQuery(NativeQuery.builder()
+								.withQuery(q -> q
+										.functionScore(fs -> fs
+												.functions(f1 -> f1
+														.filter(matchAllQueryAsQuery())
+														.weight(1.0)
+														.gauss(d -> d
+																.untyped(ut -> ut
+																		.field("rate")
+																		.placement(dp -> dp
+																				.origin(JsonData.of(0))
+																				.scale(JsonData.of(10))
+																				.decay(0.5)))))
+												.functions(f2 -> f2
+														.filter(matchAllQueryAsQuery()).weight(100.0)
+														.gauss(d -> d
+																.untyped(ut -> ut
+																		.field("rate")
+																		.placement(dp -> dp
+																				.origin(JsonData.of(0))
+																				.scale(JsonData.of(10))
+																				.decay(0.5)))
 
-														)) //
-												.scoreMode(FunctionScoreMode.Sum) //
-												.maxBoost(80.0) //
-												.boostMode(FunctionBoostMode.Replace)) //
-								) //
-								.build() //
-						) //
-								.withScoreMode(RescorerQuery.ScoreMode.Max) //
-								.withWindowSize(100)) //
+														))
+												.scoreMode(FunctionScoreMode.Sum)
+												.maxBoost(80.0)
+												.boostMode(FunctionBoostMode.Replace)))
+								.build())
+								.withScoreMode(RescorerQuery.ScoreMode.Max)
+								.withWindowSize(100))
 				.build();
 	}
 }
