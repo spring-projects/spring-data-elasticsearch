@@ -54,12 +54,13 @@ public class LogEntityELCIntegrationTests extends LogEntityIntegrationTests {
 
 	@Override
 	Query rangeQueryForIp(String from, String to) {
-		return NativeQuery.builder() //
-				.withQuery(qb -> qb //
-						.range(rqb -> rqb //
-								.field("ip") //
-								.gte(JsonData.of(from))//
-								.lte(JsonData.of(to))//
-						)).build();
+		return NativeQuery.builder()
+				.withQuery(qb -> qb
+						.range(rqb -> rqb
+								.untyped(ut -> ut
+										.field("ip")
+										.gte(JsonData.of(from))
+										.lte(JsonData.of(to)))))
+				.build();
 	}
 }

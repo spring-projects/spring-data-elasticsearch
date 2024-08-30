@@ -127,7 +127,7 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 			mustQueries.add(Query.of(qb -> qb.matchAll(m -> m)));
 		}
 
-        return new Query.Builder().bool(boolQueryBuilder -> {
+		return new Query.Builder().bool(boolQueryBuilder -> {
 
 			if (!shouldQueries.isEmpty()) {
 				boolQueryBuilder.should(shouldQueries);
@@ -249,49 +249,54 @@ class CriteriaQueryProcessor extends AbstractQueryProcessor {
 				queryBuilder.queryString(queryStringQuery(fieldName, Objects.requireNonNull(value).toString(), boost));
 				break;
 			case LESS:
-				queryBuilder //
-						.range(rb -> rb //
-								.field(fieldName) //
-								.lt(JsonData.of(value)) //
-								.boost(boost)); //
+				queryBuilder
+						.range(rb -> rb
+								.untyped(ut -> ut
+										.field(fieldName)
+										.lt(JsonData.of(value))
+										.boost(boost)));
 				break;
 			case LESS_EQUAL:
-				queryBuilder //
-						.range(rb -> rb //
-								.field(fieldName) //
-								.lte(JsonData.of(value)) //
-								.boost(boost)); //
+				queryBuilder
+						.range(rb -> rb
+								.untyped(ut -> ut
+										.field(fieldName)
+										.lte(JsonData.of(value))
+										.boost(boost)));
 				break;
 			case GREATER:
-				queryBuilder //
-						.range(rb -> rb //
-								.field(fieldName) //
-								.gt(JsonData.of(value)) //
-								.boost(boost)); //
+				queryBuilder
+						.range(rb -> rb
+								.untyped(ut -> ut
+										.field(fieldName)
+										.gt(JsonData.of(value))
+										.boost(boost)));
 				break;
 			case GREATER_EQUAL:
-				queryBuilder //
-						.range(rb -> rb //
-								.field(fieldName) //
-								.gte(JsonData.of(value)) //
-								.boost(boost)); //
+				queryBuilder
+						.range(rb -> rb
+								.untyped(ut -> ut
+										.field(fieldName)
+										.gte(JsonData.of(value))
+										.boost(boost)));
 				break;
 			case BETWEEN:
 				Object[] ranges = (Object[]) value;
 				Assert.notNull(value, "value for a between condition must not be null");
-				queryBuilder //
-						.range(rb -> {
-							rb.field(fieldName);
-							if (ranges[0] != null) {
-								rb.gte(JsonData.of(ranges[0]));
-							}
+				queryBuilder
+						.range(rb -> rb
+								.untyped(ut -> {
+									ut.field(fieldName);
+									if (ranges[0] != null) {
+										ut.gte(JsonData.of(ranges[0]));
+									}
 
-							if (ranges[1] != null) {
-								rb.lte(JsonData.of(ranges[1]));
-							}
-							rb.boost(boost); //
-							return rb;
-						}); //
+									if (ranges[1] != null) {
+										ut.lte(JsonData.of(ranges[1]));
+									}
+									ut.boost(boost); //
+									return ut;
+								}));
 
 				break;
 			case FUZZY:

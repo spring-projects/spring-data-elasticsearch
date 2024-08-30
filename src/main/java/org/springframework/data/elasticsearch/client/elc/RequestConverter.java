@@ -20,7 +20,6 @@ import static org.springframework.util.CollectionUtils.*;
 
 import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.ExpandWildcard;
-import co.elastic.clients.elasticsearch._types.InlineScript;
 import co.elastic.clients.elasticsearch._types.NestedSortValue;
 import co.elastic.clients.elasticsearch._types.OpType;
 import co.elastic.clients.elasticsearch._types.SortOptions;
@@ -744,16 +743,12 @@ class RequestConverter extends AbstractQueryProcessor {
 			scriptData.params().forEach((key, value) -> params.put(key, JsonData.of(value, jsonpMapper)));
 		}
 		return co.elastic.clients.elasticsearch._types.Script.of(sb -> {
+			sb.lang(scriptData.language())
+					.params(params);
 			if (scriptData.type() == ScriptType.INLINE) {
-				sb.inline(is -> is //
-						.lang(scriptData.language()) //
-						.source(scriptData.script()) //
-						.params(params)); //
+				sb.source(scriptData.script());
 			} else if (scriptData.type() == ScriptType.STORED) {
-				sb.stored(ss -> ss //
-						.id(scriptData.script()) //
-						.params(params) //
-				);
+				sb.id(scriptData.script());
 			}
 			return sb;
 		});
@@ -925,7 +920,9 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		ReindexRequest.Script script = reindexRequest.getScript();
 		if (script != null) {
-			builder.script(s -> s.inline(InlineScript.of(i -> i.lang(script.getLang()).source(script.getSource()))));
+			builder.script(sb -> sb
+					.lang(script.getLang())
+					.source(script.getSource()));
 		}
 
 		builder.timeout(time(reindexRequest.getTimeout())) //
@@ -1078,21 +1075,15 @@ class RequestConverter extends AbstractQueryProcessor {
 				}
 
 				uqb.script(sb -> {
+					sb.lang(query.getLang()).params(params);
+
 					if (query.getScriptType() == ScriptType.INLINE) {
-						sb.inline(is -> is //
-								.lang(query.getLang()) //
-								.source(query.getScript()) //
-								.params(params)); //
+						sb.source(query.getScript()); //
 					} else if (query.getScriptType() == ScriptType.STORED) {
-						sb.stored(ss -> ss //
-								.id(query.getScript()) //
-								.params(params) //
-						);
+						sb.id(query.getScript());
 					}
 					return sb;
-				}
-
-				);
+				});
 			}
 
 			uqb //
@@ -1347,17 +1338,16 @@ class RequestConverter extends AbstractQueryProcessor {
 										String script = runtimeField.getScript();
 
 										if (script != null) {
-											rfb
-													.script(s -> s
-															.inline(is -> {
-																is.source(script);
+											rfb.script(s -> {
+												s.source(script);
 
-																if (runtimeField.getParams() != null) {
-																	is.params(TypeUtils.paramsMap(runtimeField.getParams()));
-																}
-																return is;
-															}));
+												if (runtimeField.getParams() != null) {
+													s.params(TypeUtils.paramsMap(runtimeField.getParams()));
+												}
+												return s;
+											});
 										}
+
 										return rfb;
 									});
 									runtimeMappings.put(runtimeField.getName(), esRuntimeField);
@@ -1548,16 +1538,14 @@ class RequestConverter extends AbstractQueryProcessor {
 						rfb.type(RuntimeFieldType._DESERIALIZER.parse(runtimeField.getType()));
 						String script = runtimeField.getScript();
 						if (script != null) {
-							rfb
-									.script(s -> s
-											.inline(is -> {
-												is.source(script);
+							rfb.script(s -> {
+								s.source(script);
 
-												if (runtimeField.getParams() != null) {
-													is.params(TypeUtils.paramsMap(runtimeField.getParams()));
-												}
-												return is;
-											}));
+								if (runtimeField.getParams() != null) {
+									s.params(TypeUtils.paramsMap(runtimeField.getParams()));
+								}
+								return s;
+							});
 						}
 
 						return rfb;

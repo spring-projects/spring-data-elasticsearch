@@ -23,11 +23,12 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 /**
  * @author Peter-Josef Meisch
  */
+@SuppressWarnings("DataFlowIssue")
 class IndexCoordinatesUnitTests {
 
 	@Test
 	void cannotBeInitializedWithNullIndexName() {
-		assertThatThrownBy(() -> IndexCoordinates.of(null)).isInstanceOf(IllegalArgumentException.class);
+		assertThatThrownBy(() -> IndexCoordinates.of((String) null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
 	@Test

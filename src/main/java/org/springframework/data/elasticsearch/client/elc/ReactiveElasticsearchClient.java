@@ -126,7 +126,7 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		// java.lang.Class<TDocument>)
 		// noinspection unchecked
 		JsonEndpoint<GetRequest, GetResponse<T>, ErrorResponse> endpoint = (JsonEndpoint<GetRequest, GetResponse<T>, ErrorResponse>) GetRequest._ENDPOINT;
-		endpoint = new EndpointWithResponseMapperAttr<>(endpoint, "co.elastic.clients:Deserializer:_global.get.TDocument",
+		endpoint = new EndpointWithResponseMapperAttr<>(endpoint, "co.elastic.clients:Deserializer:_global.get.Response.TDocument",
 				getDeserializer(tClass));
 
 		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, transportOptions));
@@ -145,7 +145,7 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 
 		// noinspection unchecked
 		JsonEndpoint<UpdateRequest<?, ?>, UpdateResponse<T>, ErrorResponse> endpoint = new EndpointWithResponseMapperAttr(
-				UpdateRequest._ENDPOINT, "co.elastic.clients:Deserializer:_global.update.TDocument",
+				UpdateRequest._ENDPOINT, "co.elastic.clients:Deserializer:_global.update.Response.TDocument",
 				this.getDeserializer(clazz));
 		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, this.transportOptions));
 	}
@@ -171,7 +171,7 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 
 		// noinspection unchecked
 		JsonEndpoint<MgetRequest, MgetResponse<T>, ErrorResponse> endpoint = (JsonEndpoint<MgetRequest, MgetResponse<T>, ErrorResponse>) MgetRequest._ENDPOINT;
-		endpoint = new EndpointWithResponseMapperAttr<>(endpoint, "co.elastic.clients:Deserializer:_global.mget.TDocument",
+		endpoint = new EndpointWithResponseMapperAttr<>(endpoint, "co.elastic.clients:Deserializer:_global.mget.Response.TDocument",
 				this.getDeserializer(clazz));
 
 		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, transportOptions));
@@ -282,7 +282,7 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		// noinspection unchecked
 		JsonEndpoint<ScrollRequest, ScrollResponse<T>, ErrorResponse> endpoint = (JsonEndpoint<ScrollRequest, ScrollResponse<T>, ErrorResponse>) ScrollRequest._ENDPOINT;
 		endpoint = new EndpointWithResponseMapperAttr<>(endpoint,
-				"co.elastic.clients:Deserializer:_global.scroll.TDocument", getDeserializer(tDocumentClass));
+				"co.elastic.clients:Deserializer:_global.scroll.Response.TDocument", getDeserializer(tDocumentClass));
 
 		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, transportOptions));
 	}

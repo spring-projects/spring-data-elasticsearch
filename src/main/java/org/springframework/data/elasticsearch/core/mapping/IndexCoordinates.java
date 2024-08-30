@@ -34,12 +34,12 @@ public class IndexCoordinates {
 	private final String[] indexNames;
 
 	public static IndexCoordinates of(String... indexNames) {
-		Assert.notNull(indexNames, "indexNames must not be null");
 		return new IndexCoordinates(indexNames);
 	}
 
 	private IndexCoordinates(String... indexNames) {
 		Assert.notEmpty(indexNames, "indexNames may not be null or empty");
+		Assert.noNullElements(indexNames, "indexNames may not contain null elements");
 		this.indexNames = indexNames;
 	}
 
