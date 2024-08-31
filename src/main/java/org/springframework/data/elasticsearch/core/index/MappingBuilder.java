@@ -345,8 +345,10 @@ public class MappingBuilder {
 					: nestedPropertyPrefix + '.' + property.getFieldName();
 
 			Field fieldAnnotation = property.findAnnotation(Field.class);
+			MultiField multiFieldAnnotation = property.findAnnotation(MultiField.class);
 
-			if (fieldAnnotation != null && fieldAnnotation.excludeFromSource()) {
+			if ((fieldAnnotation != null && fieldAnnotation.excludeFromSource()) ||
+					multiFieldAnnotation != null && multiFieldAnnotation.mainField().excludeFromSource()) {
 				excludeFromSource.add(nestedPropertyPath);
 			}
 
@@ -377,8 +379,6 @@ public class MappingBuilder {
 				}
 			}
 
-			MultiField multiField = property.findAnnotation(MultiField.class);
-
 			if (isCompletionProperty) {
 				CompletionField completionField = property.findAnnotation(CompletionField.class);
 				applyCompletionFieldMapping(propertiesNode, property, completionField);
@@ -386,8 +386,8 @@ public class MappingBuilder {
 
 			if (isRootObject && fieldAnnotation != null && property.isIdProperty()) {
 				applyDefaultIdFieldMapping(propertiesNode, property);
-			} else if (multiField != null) {
-				addMultiFieldMapping(propertiesNode, property, multiField, isNestedOrObjectProperty, dynamicMapping);
+			} else if (multiFieldAnnotation != null) {
+				addMultiFieldMapping(propertiesNode, property, multiFieldAnnotation, isNestedOrObjectProperty, dynamicMapping);
 			} else if (fieldAnnotation != null) {
 				addSingleFieldMapping(propertiesNode, property, fieldAnnotation, isNestedOrObjectProperty, dynamicMapping);
 			}
