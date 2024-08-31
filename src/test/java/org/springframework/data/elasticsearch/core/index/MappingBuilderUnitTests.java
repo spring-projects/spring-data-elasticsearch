@@ -1126,38 +1126,49 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		String expected = """
 				{
-				  "properties": {
-				    "_class": {
-				      "type": "keyword",
-				      "index": false,
-				      "doc_values": false
-				    },
-				    "excluded-date": {
-				      "type": "date",
-				      "format": "date"
-				    },
-				    "nestedEntity": {
-				      "type": "nested",
-				      "properties": {
-				        "_class": {
-				          "type": "keyword",
-				          "index": false,
-				          "doc_values": false
-				        },
-				        "excluded-text": {
-				          "type": "text"
-				        }
-				      }
-				    }
-				  },
-				  "_source": {
-				    "excludes": [
-				      "excluded-date",
-				      "nestedEntity.excluded-text"
-				    ]
-				  }
-				}
-				"""; //
+                 "properties": {
+                   "_class": {
+                     "type": "keyword",
+                     "index": false,
+                     "doc_values": false
+                   },
+                   "excluded-date": {
+                     "type": "date",
+                     "format": "date"
+                   },
+                   "nestedEntity": {
+                     "type": "nested",
+                     "properties": {
+                       "_class": {
+                         "type": "keyword",
+                         "index": false,
+                         "doc_values": false
+                       },
+                       "excluded-text": {
+                         "type": "text"
+                       }
+                     }
+                   },
+                   "excluded-multifield": {
+                     "type": "text",
+                     "fields": {
+                       "keyword": {
+                         "type": "keyword"
+                       }
+                     }
+                   }
+                 },
+                 "_source": {
+                   "excludes": [
+                     "excluded-date",
+                     "nestedEntity.excluded-text",
+                     "excluded-multifield"
+                   ]
+                 }
+
+				              }
+               
+               """; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ExcludedFieldEntity.class);
 
@@ -1243,7 +1254,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		assertEquals(expected, mapping, true);
 	}
-	
+
 	@Test // #2942
 	@DisplayName("should use custom  mapped name")
 	void shouldUseCustomMappedName() throws JSONException {
@@ -2192,8 +2203,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable
 		@Field(type = FieldType.Dense_Vector, dims = 16, elementType = FieldElementType.FLOAT,
 				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, efConstruction = 100),
-				knnSimilarity = KnnSimilarity.DOT_PRODUCT)
-		private float[] my_vector;
+				knnSimilarity = KnnSimilarity.DOT_PRODUCT) private float[] my_vector;
 
 		@Nullable
 		public String getId() {
@@ -2269,8 +2279,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	static class DenseVectorMisMatchConfidenceIntervalClass {
 		@Field(type = Dense_Vector, dims = 16, elementType = FieldElementType.FLOAT,
 				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, confidenceInterval = 0.95F),
-				knnSimilarity = KnnSimilarity.DOT_PRODUCT)
-		private float[] dense_vector;
+				knnSimilarity = KnnSimilarity.DOT_PRODUCT) private float[] dense_vector;
 	}
 
 	static class DisabledMappingProperty {
@@ -2553,6 +2562,10 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 				excludeFromSource = true) private LocalDate excludedDate;
 		@Nullable
 		@Field(type = Nested) private NestedExcludedFieldEntity nestedEntity;
+		@Nullable
+		@MultiField(mainField = @Field(name = "excluded-multifield", type = Text, excludeFromSource = true), otherFields = {
+				@InnerField(suffix = "keyword", type = Keyword)
+		}) private String excludedMultifield;
 	}
 
 	@SuppressWarnings("unused")
@@ -2599,8 +2612,10 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@SuppressWarnings("unused")
 	private static class MultiFieldMappedNameEntity {
 		@Nullable
-		@MultiField(mainField = @Field(type = FieldType.Text, mappedTypeName = "match_only_text"), otherFields = { @InnerField(suffix = "lower_case",
-				type = FieldType.Keyword, normalizer = "lower_case_normalizer", mappedTypeName = "constant_keyword") }) private String description;
+		@MultiField(mainField = @Field(type = FieldType.Text, mappedTypeName = "match_only_text"),
+				otherFields = { @InnerField(suffix = "lower_case",
+						type = FieldType.Keyword, normalizer = "lower_case_normalizer",
+						mappedTypeName = "constant_keyword") }) private String description;
 	}
 
 	@SuppressWarnings("unused")
