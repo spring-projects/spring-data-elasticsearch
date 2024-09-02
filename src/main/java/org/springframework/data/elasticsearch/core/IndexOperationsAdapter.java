@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.springframework.data.elasticsearch.core.cluster.ClusterMapping;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -94,6 +95,11 @@ public interface IndexOperationsAdapter extends IndexOperations {
 			@Override
 			public Map<String, Object> getMapping() {
 				return Objects.requireNonNull(reactiveIndexOperations.getMapping().block());
+			}
+
+			@Override
+			public ClusterMapping getClusterMapping() {
+				return Objects.requireNonNull(reactiveIndexOperations.getClusterMapping().block());
 			}
 
 			@Override

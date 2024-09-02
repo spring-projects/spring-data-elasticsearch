@@ -52,6 +52,7 @@ import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
+import org.springframework.data.elasticsearch.core.cluster.ClusterMapping;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.Settings;
@@ -211,6 +212,16 @@ class ResponseConverter {
 		}
 
 		return Document.parse(toJson(indexMappingRecord.mappings(), jsonpMapper));
+	}
+
+	public ClusterMapping indicesGetMapping(GetMappingResponse getMappingResponse) {
+		ClusterMapping.Builder builder = ClusterMapping.builder();
+		for (String indexName : getMappingResponse.result().keySet()) {
+			Map<String, Object> mappings = indicesGetMapping(getMappingResponse, IndexCoordinates.of(indexName));
+			builder.withMapping(ClusterMapping.ClusterMappingEntry.builder(indexName).withMappings(mappings).build());
+		}
+
+		return builder.build();
 	}
 
 	public List<IndexInformation> indicesGetIndexInformations(GetIndexResponse getIndexResponse) {

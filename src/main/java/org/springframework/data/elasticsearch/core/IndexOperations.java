@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.data.elasticsearch.core.cluster.ClusterMapping;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -143,6 +144,13 @@ public interface IndexOperations {
 	 * @return the mapping
 	 */
 	Map<String, Object> getMapping();
+
+	/**
+	 * Get mappings of all indices in a cluster.
+	 *
+	 * @return Retrieve the mappings for all indices within a cluster.
+	 */
+	ClusterMapping getClusterMapping();
 
 	// endregion
 

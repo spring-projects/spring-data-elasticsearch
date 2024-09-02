@@ -36,6 +36,7 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.ReactiveResourceUtil;
+import org.springframework.data.elasticsearch.core.cluster.ClusterMapping;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
@@ -216,6 +217,14 @@ public class ReactiveIndicesTemplate
 		GetMappingRequest getMappingRequest = requestConverter.indicesGetMappingRequest(indexCoordinates);
 		Mono<GetMappingResponse> getMappingResponse = Mono.from(execute(client -> client.getMapping(getMappingRequest)));
 		return getMappingResponse.map(response -> responseConverter.indicesGetMapping(response, indexCoordinates));
+	}
+
+	@Override
+	public Mono<ClusterMapping> getClusterMapping() {
+		GetMappingRequest getMappingRequest = requestConverter.indicesGetMappingRequest(IndexCoordinates.of("*"));
+		Mono<GetMappingResponse> getMappingResponse = Mono.from(execute(client -> client.getMapping(getMappingRequest)));
+
+		return getMappingResponse.map(responseConverter::indicesGetMapping);
 	}
 
 	@Override
