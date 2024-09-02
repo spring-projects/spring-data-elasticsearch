@@ -1048,6 +1048,9 @@ class RequestConverter extends AbstractQueryProcessor {
 									.collect(Collectors.toList()));
 				}
 			}
+			if (query.getRefresh() != null) {
+				dqb.refresh(query.getRefresh());
+			}
 			dqb.allowNoIndices(query.getAllowNoIndices())
 					.conflicts(conflicts(query.getConflicts()))
 					.ignoreUnavailable(query.getIgnoreUnavailable())
