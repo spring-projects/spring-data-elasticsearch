@@ -23,7 +23,6 @@
 		<!-- version of the ElasticsearchClient	-->
 		<elasticsearch-java>8.11.4</elasticsearch-java>
 
-		<blockhound-junit>1.0.8.RELEASE</blockhound-junit>
 		<hoverfly>0.14.4</hoverfly>
 		<log4j>2.18.0</log4j>
 		<jsonassert>1.5.1</jsonassert>
@@ -249,13 +248,6 @@
 		</dependency>
 
 		<dependency>
-			<groupId>io.projectreactor.tools</groupId>
-			<artifactId>blockhound-junit-platform</artifactId>
-			<version>${blockhound-junit}</version>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
 			<groupId>org.skyscreamer</groupId>
 			<artifactId>jsonassert</artifactId>
 			<version>${jsonassert}</version>
@@ -430,25 +422,6 @@
 								.git/**/*,target/**/*,**/target/**/*,.idea/**/*,**/spring.schemas,**/*.svg,mvnw,mvnw.cmd,**/*.policy
 							</excludes>
 							<sourceDirectories>./</sourceDirectories>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-
-		<profile>
-			<id>jdk13+</id>
-			<!-- on jDK13+, Blockhound needs this JVM flag set -->
-			<activation>
-				<jdk>[13,)</jdk>
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<configuration>
-							<argLine>-XX:+AllowRedefinitionToAddDeleteMethods</argLine>
 						</configuration>
 					</plugin>
 				</plugins>
