@@ -961,7 +961,7 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 	}
 
 	@SuppressWarnings("unused")
-	@Document(indexName = "foo")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-foo")
 	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings_three.json")
 	private static class DynamicFieldDocument {
 		@Nullable

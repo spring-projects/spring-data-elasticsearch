@@ -265,10 +265,10 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		ClusterMapping clusterMapping = getClusterMapping();
 		for (ClusterMapping.ClusterMappingEntry mappingEntry : clusterMapping) {
 			// Get entity
-			Class<?> entity = null;
+			ElasticsearchPersistentEntity<?> entity = null;
 			for (ElasticsearchPersistentEntity<?> persistentEntity : this.elasticsearchConverter.getMappingContext().getPersistentEntities()) {
 				if (mappingEntry.getName().equals(persistentEntity.getIndexCoordinates().getIndexName())) {
-					entity = persistentEntity.getType();
+					entity = persistentEntity;
 
 					break;
 				}
@@ -281,7 +281,7 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 			if (mappingEntry.getMappings().containsKey("dynamic_templates")) {
 				Object dynamicTemplates = mappingEntry.getMappings().get("dynamic_templates");
 				if (dynamicTemplates instanceof List<?> value) {
-					getRequiredPersistentEntity(entity).buildDynamicTemplates(value);
+					entity.buildDynamicTemplates(value);
 				}
 			}
 		}
