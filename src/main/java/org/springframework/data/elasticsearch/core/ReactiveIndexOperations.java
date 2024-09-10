@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.data.elasticsearch.core.cluster.ClusterMapping;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -145,13 +144,6 @@ public interface ReactiveIndexOperations {
 	 * @return the mapping
 	 */
 	Mono<Document> getMapping();
-
-	/**
-	 * Get mappings of all indices in a cluster.
-	 *
-	 * @return Retrieve the mappings for all indices within a cluster.
-	 */
-	Mono<ClusterMapping> getClusterMapping();
 	// endregion
 
 	// region settings

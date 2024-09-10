@@ -34,7 +34,6 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
-import org.springframework.data.elasticsearch.core.cluster.ClusterMapping;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
@@ -81,9 +80,6 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		this.elasticsearchConverter = elasticsearchConverter;
 		this.boundClass = boundClass;
 		this.boundIndex = null;
-
-		// cache entities metadata
-		refreshEntitiesMapping();
 	}
 
 	public IndicesTemplate(ElasticsearchIndicesClient client, ClusterTemplate clusterTemplate,
@@ -98,9 +94,6 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		this.elasticsearchConverter = elasticsearchConverter;
 		this.boundClass = null;
 		this.boundIndex = boundIndex;
-
-		// cache entities metadata
-		refreshEntitiesMapping();
 	}
 
 	protected Class<?> checkForBoundClass() {
@@ -151,7 +144,7 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
 		CreateIndexResponse createIndexResponse = execute(client -> client.create(createIndexRequest));
 		// refresh cached mappings
-		refreshEntitiesMapping();
+		refreshMapping();
 		return Boolean.TRUE.equals(createIndexResponse.acknowledged());
 	}
 
@@ -248,42 +241,25 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		return responseConverter.indicesGetMapping(getMappingResponse, indexCoordinates);
 	}
 
-	@Override
-	public ClusterMapping getClusterMapping() {
-		GetMappingRequest getMappingRequest = requestConverter.indicesGetMappingRequest(IndexCoordinates.of("*"));
-		GetMappingResponse getMappingResponse = execute(client -> client.getMapping(getMappingRequest));
-
-		return responseConverter.indicesGetMapping(getMappingResponse);
-	}
-
 	/**
-	 * Refreshes the mapping of entities.
+	 * Refreshes the mapping for the current entity.
 	 * <p>
-	 * This method is responsible for retrieving and updating the metadata related to the entities.
+	 * This method is responsible for retrieving and updating the metadata related to the current entity.
 	 */
-	private void refreshEntitiesMapping() {
-		ClusterMapping clusterMapping = getClusterMapping();
-		for (ClusterMapping.ClusterMappingEntry mappingEntry : clusterMapping) {
-			// Get entity
-			ElasticsearchPersistentEntity<?> entity = null;
-			for (ElasticsearchPersistentEntity<?> persistentEntity : this.elasticsearchConverter.getMappingContext().getPersistentEntities()) {
-				if (mappingEntry.getName().equals(persistentEntity.getIndexCoordinates().getIndexName())) {
-					entity = persistentEntity;
+	private void refreshMapping() {
+		if (boundClass == null) {
+			return;
+		}
 
-					break;
-				}
-			}
+		ElasticsearchPersistentEntity<?> entity = this.elasticsearchConverter.getMappingContext()
+				.getPersistentEntity(boundClass);
+		if (entity == null) {
+			return;
+		}
 
-			if (entity == null) {
-				continue;
-			}
-
-			if (mappingEntry.getMappings().containsKey("dynamic_templates")) {
-				Object dynamicTemplates = mappingEntry.getMappings().get("dynamic_templates");
-				if (dynamicTemplates instanceof List<?> value) {
-					entity.buildDynamicTemplates(value);
-				}
-			}
+		Object dynamicTemplates = getMapping().get("dynamic_templates");
+		if (dynamicTemplates instanceof List<?> value) {
+			entity.buildDynamicTemplates(value);
 		}
 	}
 

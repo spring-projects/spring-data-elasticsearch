@@ -25,6 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -36,7 +37,6 @@ import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
 import org.springframework.data.elasticsearch.core.ReactiveResourceUtil;
-import org.springframework.data.elasticsearch.core.cluster.ClusterMapping;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
@@ -143,7 +143,12 @@ public class ReactiveIndicesTemplate
 
 		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
 		Mono<CreateIndexResponse> createIndexResponse = Mono.from(execute(client -> client.create(createIndexRequest)));
-		return createIndexResponse.map(CreateIndexResponse::acknowledged);
+		return createIndexResponse
+				.doOnNext((result) -> {
+					// refresh cached mappings
+					refreshMapping();
+				})
+				.map(CreateIndexResponse::acknowledged);
 	}
 
 	@Override
@@ -219,12 +224,28 @@ public class ReactiveIndicesTemplate
 		return getMappingResponse.map(response -> responseConverter.indicesGetMapping(response, indexCoordinates));
 	}
 
-	@Override
-	public Mono<ClusterMapping> getClusterMapping() {
-		GetMappingRequest getMappingRequest = requestConverter.indicesGetMappingRequest(IndexCoordinates.of("*"));
-		Mono<GetMappingResponse> getMappingResponse = Mono.from(execute(client -> client.getMapping(getMappingRequest)));
+	/**
+	 * Refreshes the mapping for the current entity.
+	 * <p>
+	 * This method is responsible for retrieving and updating the metadata related to the current entity.
+	 */
+	private void refreshMapping() {
+		if (boundClass == null) {
+			return;
+		}
 
-		return getMappingResponse.map(responseConverter::indicesGetMapping);
+		ElasticsearchPersistentEntity<?> entity = this.elasticsearchConverter.getMappingContext()
+				.getPersistentEntity(boundClass);
+		if (entity == null) {
+			return;
+		}
+
+		getMapping().subscribe((mappings) -> {
+			Object dynamicTemplates = mappings.get("dynamic_templates");
+			if (dynamicTemplates instanceof List<?> value) {
+				entity.buildDynamicTemplates(value);
+			}
+		});
 	}
 
 	@Override
