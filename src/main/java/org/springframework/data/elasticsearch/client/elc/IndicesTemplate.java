@@ -80,7 +80,6 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		this.elasticsearchConverter = elasticsearchConverter;
 		this.boundClass = boundClass;
 		this.boundIndex = null;
-
 	}
 
 	public IndicesTemplate(ElasticsearchIndicesClient client, ClusterTemplate clusterTemplate,
@@ -95,7 +94,6 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		this.elasticsearchConverter = elasticsearchConverter;
 		this.boundClass = null;
 		this.boundIndex = boundIndex;
-
 	}
 
 	protected Class<?> checkForBoundClass() {
@@ -145,6 +143,8 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
 		CreateIndexResponse createIndexResponse = execute(client -> client.create(createIndexRequest));
+		// refresh cached mappings
+		refreshMapping();
 		return Boolean.TRUE.equals(createIndexResponse.acknowledged());
 	}
 
@@ -239,6 +239,28 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		GetMappingResponse getMappingResponse = execute(client -> client.getMapping(getMappingRequest));
 
 		return responseConverter.indicesGetMapping(getMappingResponse, indexCoordinates);
+	}
+
+	/**
+	 * Refreshes the mapping for the current entity.
+	 * <p>
+	 * This method is responsible for retrieving and updating the metadata related to the current entity.
+	 */
+	private void refreshMapping() {
+		if (boundClass == null) {
+			return;
+		}
+
+		ElasticsearchPersistentEntity<?> entity = this.elasticsearchConverter.getMappingContext()
+				.getPersistentEntity(boundClass);
+		if (entity == null) {
+			return;
+		}
+
+		Object dynamicTemplates = getMapping().get("dynamic_templates");
+		if (dynamicTemplates instanceof List<?> value) {
+			entity.buildDynamicTemplates(value);
+		}
 	}
 
 	@Override
