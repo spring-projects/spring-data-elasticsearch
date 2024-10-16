@@ -22,6 +22,8 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
 import co.elastic.clients.elasticsearch.cluster.HealthRequest;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.elasticsearch.core.CountRequest;
+import co.elastic.clients.elasticsearch.core.CountResponse;
 import co.elastic.clients.elasticsearch.core.IndexRequest;
 import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
@@ -62,6 +64,7 @@ import org.springframework.lang.Nullable;
  * on port 9200 and an intercepting proxy on port 8080.
  *
  * @author Peter-Josef Meisch
+ * @author maryantocinn
  */
 @Disabled
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -351,6 +354,43 @@ public class DevTests {
 
 	private ResponseBody<EntityAsMap> searchReactive(SearchRequest searchRequest) {
 		return Objects.requireNonNull(reactiveElasticsearchClient.search(searchRequest, EntityAsMap.class).block());
+	}
+
+	// endregion
+	// region count
+	@Test
+	@Order(40)
+	void count() {
+
+		CountRequest countRequest = new CountRequest.Builder().index(INDEX)
+				.query(query -> query.match(matchQuery -> matchQuery.field("content").query(FieldValue.of("content1"))))
+				.build();
+
+		CountResponse countResponse = null;
+
+		try {
+			countResponse = countImperative(countRequest);
+			assertThat(countResponse).isNotNull();
+			assertThat(countResponse.count()).isEqualTo(1);
+		} catch (IOException e) {
+			LOGGER.error("error", e);
+		}
+
+		try {
+			countResponse = countReactive(countRequest);
+			assertThat(countResponse).isNotNull();
+			assertThat(countResponse.count()).isEqualTo(1);
+		} catch (Exception e) {
+			LOGGER.error("error", e);
+		}
+	}
+
+	private CountResponse countImperative(CountRequest countRequest) throws IOException {
+		return imperativeElasticsearchClient.count(countRequest);
+	}
+
+	private CountResponse countReactive(CountRequest countRequest) {
+		return Objects.requireNonNull(reactiveElasticsearchClient.count(countRequest).block());
 	}
 	// endregion
 

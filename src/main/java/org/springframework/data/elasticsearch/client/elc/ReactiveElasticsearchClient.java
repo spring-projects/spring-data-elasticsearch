@@ -36,6 +36,7 @@ import org.springframework.util.Assert;
  * Reactive version of {@link co.elastic.clients.elasticsearch.ElasticsearchClient}.
  *
  * @author Peter-Josef Meisch
+ * @author maryantocinn
  * @since 4.4
  */
 public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTransport, ReactiveElasticsearchClient>
@@ -225,6 +226,26 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		Assert.notNull(fn, "fn must not be null");
 
 		return deleteByQuery(fn.apply(new DeleteByQueryRequest.Builder()).build());
+	}
+
+	/**
+	 * @since 5.4
+	 */
+	public Mono<CountResponse> count(CountRequest request) {
+
+		Assert.notNull(request, "request must not be null");
+
+		return Mono.fromFuture(transport.performRequestAsync(request, CountRequest._ENDPOINT, transportOptions));
+	}
+
+	/**
+	 * @since 5.4
+	 */
+	public Mono<CountResponse> count(Function<CountRequest.Builder, ObjectBuilder<CountRequest>> fn) {
+
+		Assert.notNull(fn, "fn must not be null");
+
+		return count(fn.apply(new CountRequest.Builder()).build());
 	}
 
 	// endregion
