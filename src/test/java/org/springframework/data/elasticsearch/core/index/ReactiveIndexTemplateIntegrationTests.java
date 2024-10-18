@@ -18,12 +18,12 @@ package org.springframework.data.elasticsearch.core.index;
 import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
+import static org.springframework.data.elasticsearch.core.query.StringQuery.MATCH_ALL;
 
+import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
@@ -34,16 +34,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.elasticsearch.annotations.DynamicTemplates;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.IndexOperationsAdapter;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.lang.Nullable;
@@ -415,6 +419,40 @@ public abstract class ReactiveIndexTemplateIntegrationTests {
 		assertThat(exists).isFalse();
 	}
 
+	@Test
+	void shouldMapDynamicFields() {
+		// Given
+		IndexOperationsAdapter documentOperations = blocking(operations.indexOps(DynamicFieldDocument.class));
+		documentOperations.createWithMapping();
+
+		DynamicFieldDocument document = new DynamicFieldDocument();
+		document.dynamicFields = Map.of("a_str", UUID.randomUUID().toString(), "b_str", UUID.randomUUID().toString());
+		document.value = new DynamicFieldDocument.Value(1L, new Date());
+		operations.save(document).block();
+
+		// When
+		Flux<SearchHit<DynamicFieldDocument>> results = operations.search(new StringQuery(MATCH_ALL),
+				DynamicFieldDocument.class);
+
+		// Then
+		results.as(StepVerifier::create)
+				.expectNextMatches((hits) -> {
+					assertThat(hits)
+							.extracting(SearchHit::getContent)
+							.extracting(doc -> doc.dynamicFields)
+							.isEqualTo(document.dynamicFields);
+
+					assertThat(hits)
+							.extracting(SearchHit::getContent)
+							.extracting(doc -> doc.value)
+							.isEqualTo(document.value);
+
+					return true;
+				}).verifyComplete();
+
+		documentOperations.delete();
+	}
+
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	@Setting(refreshInterval = "5s")
 	static class TemplateClass {
@@ -442,4 +480,46 @@ public abstract class ReactiveIndexTemplateIntegrationTests {
 		}
 	}
 
+	@SuppressWarnings("unused")
+	@Document(indexName = "#{@indexNameProvider.indexName()}-foo")
+	@DynamicTemplates(mappingPath = "/mappings/test-dynamic_templates_mappings_three.json")
+	private static class DynamicFieldDocument {
+		@Nullable
+		@Id String id;
+
+		@Field(name = "_str", dynamicTemplate = true) private Map<String, String> dynamicFields = new HashMap<>();
+
+		@Nullable
+		@Field(name = "obj", dynamicTemplate = true) private Value value;
+
+		static class Value {
+			@Nullable
+			@Field(name = "value_sum", type = FieldType.Long)
+			private Long sum;
+
+			@Nullable
+			@Field(name = "value_date", type = FieldType.Long)
+			private Date date;
+
+			public Value() {
+			}
+
+			public Value(Long sum, Date date) {
+				this.sum = sum;
+				this.date = date;
+			}
+
+			@Override
+			public boolean equals(Object o) {
+				if (this == o) return true;
+				if (!(o instanceof Value value)) return false;
+                return Objects.equals(sum, value.sum) && Objects.equals(date, value.date);
+			}
+
+			@Override
+			public int hashCode() {
+				return Objects.hash(sum, date);
+			}
+		}
+	}
 }
