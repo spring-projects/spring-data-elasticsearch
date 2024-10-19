@@ -24,6 +24,7 @@ import static org.springframework.data.elasticsearch.core.query.StringQuery.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -99,6 +100,7 @@ import org.springframework.lang.Nullable;
  * @author scoobyzhang
  * @author Hamid Rahimi
  * @author Illia Ulianov
+ * @author Mohamed El Harrougui
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests {
@@ -1855,7 +1857,7 @@ public abstract class ElasticsearchIntegrationTests {
 	protected abstract Query getBoolQueryWithWildcardsFirstMustSecondShouldAndMinScore(String firstField,
 			String firstValue, String secondField, String secondValue, float minScore);
 
-	@Test // DATAES-462
+	@Test // DATAES-462, #2986
 	public void shouldReturnScores() {
 
 		List<IndexQuery> indexQueries = new ArrayList<>();
@@ -1872,6 +1874,7 @@ public abstract class ElasticsearchIntegrationTests {
 				IndexCoordinates.of(indexNameProvider.indexName()));
 
 		assertThat(searchHits.getMaxScore()).isGreaterThan(0f);
+		assertThat(searchHits.getExecutionDuration().toMillis()).isGreaterThan(0);
 		assertThat(searchHits.getSearchHit(0).getScore()).isGreaterThan(0f);
 	}
 

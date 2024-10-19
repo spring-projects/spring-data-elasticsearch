@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -47,6 +48,7 @@ import org.springframework.util.Assert;
  * @author Sascha Woo
  * @author Jakob Hoeper
  * @author Haibo Liu
+ * @author Mohamed El Harrougui
  * @since 4.0
  */
 public class SearchHitMapping<T> {
@@ -87,6 +89,7 @@ public class SearchHitMapping<T> {
 		long totalHits = searchDocumentResponse.getTotalHits();
 		SearchShardStatistics shardStatistics = searchDocumentResponse.getSearchShardStatistics();
 		float maxScore = searchDocumentResponse.getMaxScore();
+		Duration executionDuration = searchDocumentResponse.getExecutionDuration();
 		String scrollId = searchDocumentResponse.getScrollId();
 		String pointInTimeId = searchDocumentResponse.getPointInTimeId();
 
@@ -104,8 +107,8 @@ public class SearchHitMapping<T> {
 		Suggest suggest = searchDocumentResponse.getSuggest();
 		mapHitsInCompletionSuggestion(suggest);
 
-		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, scrollId, pointInTimeId, searchHits,
-				aggregations, suggest, shardStatistics);
+		return new SearchHitsImpl<>(totalHits, totalHitsRelation, maxScore, executionDuration, scrollId, pointInTimeId,
+				searchHits, aggregations, suggest, shardStatistics);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -238,6 +241,7 @@ public class SearchHitMapping<T> {
 				return new SearchHitsImpl<>(searchHits.getTotalHits(),
 						searchHits.getTotalHitsRelation(),
 						searchHits.getMaxScore(),
+						searchHits.getExecutionDuration(),
 						scrollId,
 						searchHits.getPointInTimeId(),
 						convertedSearchHits,
