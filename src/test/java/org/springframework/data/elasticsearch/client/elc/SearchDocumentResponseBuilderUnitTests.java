@@ -44,6 +44,7 @@ import com.google.common.collect.ImmutableMap;
  *
  * @author Sébastien Comeau
  * @author Haibo Liu
+ * @author Mohamed El Harrougui
  * @since 5.2
  */
 class SearchDocumentResponseBuilderUnitTests {
@@ -54,35 +55,21 @@ class SearchDocumentResponseBuilderUnitTests {
 	void shouldGetPhraseSuggestion() throws JSONException {
 		// arrange
 		final var hitsMetadata = new HitsMetadata.Builder<EntityAsMap>()
-				.total(total -> total
-						.value(0)
-						.relation(TotalHitsRelation.Eq))
-				.hits(new ArrayList<>())
-				.build();
+				.total(total -> total.value(0).relation(TotalHitsRelation.Eq)).hits(new ArrayList<>()).build();
 
-		final var suggestionTest = new Suggestion.Builder<EntityAsMap>()
-				.phrase(phrase -> phrase
-						.text("National")
-						.offset(0)
-						.length(8)
-						.options(option -> option
-								.text("nations")
-								.highlighted("highlighted-nations")
-								.score(0.11480146)
-								.collateMatch(false))
-						.options(option -> option
-								.text("national")
-								.highlighted("highlighted-national")
-								.score(0.08063514)
-								.collateMatch(false)))
+		final var suggestionTest = new Suggestion.Builder<EntityAsMap>().phrase(phrase -> phrase.text("National").offset(0)
+				.length(8)
+				.options(
+						option -> option.text("nations").highlighted("highlighted-nations").score(0.11480146).collateMatch(false))
+				.options(option -> option.text("national").highlighted("highlighted-national").score(0.08063514)
+						.collateMatch(false)))
 				.build();
 
 		final var sortProperties = ImmutableMap.<String, List<Suggestion<EntityAsMap>>> builder()
-				.put("suggestionTest", ImmutableList.of(suggestionTest))
-				.build();
+				.put("suggestionTest", ImmutableList.of(suggestionTest)).build();
 
 		// act
-		final var actual = SearchDocumentResponseBuilder.from(hitsMetadata, null, null, null, null, sortProperties, null,
+		final var actual = SearchDocumentResponseBuilder.from(hitsMetadata, null, null, null, 0, null, sortProperties, null,
 				jsonpMapper);
 
 		// assert
@@ -122,35 +109,19 @@ class SearchDocumentResponseBuilderUnitTests {
 	void shouldGetShardStatisticsInfo() {
 		// arrange
 		HitsMetadata<EntityAsMap> hitsMetadata = new HitsMetadata.Builder<EntityAsMap>()
-				.total(t -> t
-						.value(0)
-						.relation(TotalHitsRelation.Eq))
-				.hits(new ArrayList<>())
-				.build();
+				.total(t -> t.value(0).relation(TotalHitsRelation.Eq)).hits(new ArrayList<>()).build();
 
-		ShardStatistics shards = new ShardStatistics.Builder()
-				.total(15)
-				.successful(14)
-				.skipped(0)
-				.failed(1)
-				.failures(List.of(
-						ShardFailure.of(sfb -> sfb
-								.index("test-index")
-								.node("test-node")
-								.shard(1)
-								.reason(rb -> rb
-										.reason("this is a mock failure in shards")
-										.causedBy(cbb -> cbb.reason("inner reason")
-												.metadata(Map.of("hello", JsonData.of("world"))))
-										.type("reason-type")
+		ShardStatistics shards = new ShardStatistics.Builder().total(15).successful(14).skipped(0).failed(1)
+				.failures(List.of(ShardFailure.of(sfb -> sfb.index("test-index").node("test-node").shard(1)
+						.reason(rb -> rb.reason("this is a mock failure in shards")
+								.causedBy(cbb -> cbb.reason("inner reason").metadata(Map.of("hello", JsonData.of("world"))))
+								.type("reason-type")
 
-								)
-								.status("fail"))))
-				.build();
+						).status("fail")))).build();
 
 		// act
-		SearchDocumentResponse response = SearchDocumentResponseBuilder.from(hitsMetadata, shards, null, null,
-				null, null, null, jsonpMapper);
+		SearchDocumentResponse response = SearchDocumentResponseBuilder.from(hitsMetadata, shards, null, null, 0, null,
+				null, null, jsonpMapper);
 
 		// assert
 		SearchShardStatistics shardStatistics = response.getSearchShardStatistics();
@@ -164,11 +135,9 @@ class SearchDocumentResponseBuilderUnitTests {
 		assertThat(failures.size()).isEqualTo(1);
 		assertThat(failures).extracting(SearchShardStatistics.Failure::getIndex).containsExactly("test-index");
 		assertThat(failures).extracting(SearchShardStatistics.Failure::getElasticsearchErrorCause)
-				.extracting(ElasticsearchErrorCause::getReason)
-				.containsExactly("this is a mock failure in shards");
+				.extracting(ElasticsearchErrorCause::getReason).containsExactly("this is a mock failure in shards");
 		assertThat(failures).extracting(SearchShardStatistics.Failure::getElasticsearchErrorCause)
-				.extracting(ElasticsearchErrorCause::getCausedBy)
-				.extracting(ElasticsearchErrorCause::getReason)
+				.extracting(ElasticsearchErrorCause::getCausedBy).extracting(ElasticsearchErrorCause::getReason)
 				.containsExactly("inner reason");
 	}
 }

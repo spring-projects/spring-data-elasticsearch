@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.core;
 
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
+
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.lang.Nullable;
 
@@ -25,6 +27,7 @@ import org.springframework.lang.Nullable;
  *
  * @param <T> the result data class.
  * @author Peter-Josef Meisch
+ * @author Mohamed El Harrougui
  * @since 4.4
  */
 public interface ReactiveSearchHits<T> {
@@ -36,6 +39,11 @@ public interface ReactiveSearchHits<T> {
 	AggregationsContainer<?> getAggregations();
 
 	float getMaxScore();
+
+	/**
+	 * @return the execution duration it took to complete the request
+	 */
+	Duration getExecutionDuration();
 
 	/**
 	 * @return the {@link SearchHit}s from the search result.

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 
@@ -28,6 +29,7 @@ import org.springframework.lang.Nullable;
  * @param <T> the result data class.
  * @author Sascha Woo
  * @author Haibo Liu
+ * @author Mohamed El Harrougui
  * @since 4.0
  */
 public interface SearchHits<T> extends Streamable<SearchHit<T>> {
@@ -42,6 +44,11 @@ public interface SearchHits<T> extends Streamable<SearchHit<T>> {
 	 * @return the maximum score
 	 */
 	float getMaxScore();
+
+	/**
+	 * @return the execution duration it took to complete the request
+	 */
+	Duration getExecutionDuration();
 
 	/**
 	 * @param index position in List.

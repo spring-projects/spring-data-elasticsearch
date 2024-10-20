@@ -17,11 +17,14 @@ package org.springframework.data.elasticsearch.core;
 
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
+
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Mohamed El Harrougui
  * @since 4.4
  */
 public class ReactiveSearchHitsImpl<T> implements ReactiveSearchHits<T> {
@@ -56,6 +59,11 @@ public class ReactiveSearchHitsImpl<T> implements ReactiveSearchHits<T> {
 	@Override
 	public float getMaxScore() {
 		return delegate.getMaxScore();
+	}
+
+	@Override
+	public Duration getExecutionDuration() {
+		return delegate.getExecutionDuration();
 	}
 
 	@Override

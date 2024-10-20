@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.time.Duration;
+
 import org.springframework.data.util.CloseableIterator;
 import org.springframework.lang.Nullable;
 
@@ -23,6 +25,7 @@ import org.springframework.lang.Nullable;
  * {@link java.util.stream.Stream}.
  *
  * @author Sascha Woo
+ * @author Mohamed El Harrougui
  * @param <T>
  * @since 4.0
  */
@@ -38,6 +41,11 @@ public interface SearchHitsIterator<T> extends CloseableIterator<SearchHit<T>> {
 	 * @return the maximum score
 	 */
 	float getMaxScore();
+
+	/**
+	 * @return the execution duration it took to complete the request
+	 */
+	Duration getExecutionDuration();
 
 	/**
 	 * @return the number of total hits.

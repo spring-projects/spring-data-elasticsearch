@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
@@ -30,6 +31,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Sascha Woo
  * @author Haibo Liu
+ * @author Mohamed El Harrougui
  * @since 4.0
  */
 public class SearchHitsImpl<T> implements SearchScrollHits<T> {
@@ -37,6 +39,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	private final long totalHits;
 	private final TotalHitsRelation totalHitsRelation;
 	private final float maxScore;
+	private final Duration executionDuration;
 	@Nullable private final String scrollId;
 	private final List<? extends SearchHit<T>> searchHits;
 	private final Lazy<List<SearchHit<T>>> unmodifiableSearchHits;
@@ -49,12 +52,13 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	 * @param totalHits the number of total hits for the search
 	 * @param totalHitsRelation the relation {@see TotalHitsRelation}, must not be {@literal null}
 	 * @param maxScore the maximum score
+	 * @param executionDuration the execution duration it took to complete the request
 	 * @param scrollId the scroll id if available
 	 * @param searchHits must not be {@literal null}
 	 * @param aggregations the aggregations if available
 	 */
-	public SearchHitsImpl(long totalHits, TotalHitsRelation totalHitsRelation, float maxScore, @Nullable String scrollId,
-			@Nullable String pointInTimeId, List<? extends SearchHit<T>> searchHits,
+	public SearchHitsImpl(long totalHits, TotalHitsRelation totalHitsRelation, float maxScore, Duration executionDuration,
+			@Nullable String scrollId, @Nullable String pointInTimeId, List<? extends SearchHit<T>> searchHits,
 			@Nullable AggregationsContainer<?> aggregations, @Nullable Suggest suggest,
 			@Nullable SearchShardStatistics searchShardStatistics) {
 
@@ -63,6 +67,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 		this.totalHits = totalHits;
 		this.totalHitsRelation = totalHitsRelation;
 		this.maxScore = maxScore;
+		this.executionDuration = executionDuration;
 		this.scrollId = scrollId;
 		this.pointInTimeId = pointInTimeId;
 		this.searchHits = searchHits;
@@ -86,6 +91,11 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	@Override
 	public float getMaxScore() {
 		return maxScore;
+	}
+
+	@Override
+	public Duration getExecutionDuration() {
+		return executionDuration;
 	}
 
 	@Override
@@ -133,6 +143,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 				"totalHits=" + totalHits + //
 				", totalHitsRelation=" + totalHitsRelation + //
 				", maxScore=" + maxScore + //
+				", executionDuration=" + executionDuration + //
 				", scrollId='" + scrollId + '\'' + //
 				", pointInTimeId='" + pointInTimeId + '\'' + //
 				", searchHits={" + searchHits.size() + " elements}" + //

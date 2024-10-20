@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.document;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -29,6 +30,7 @@ import org.springframework.lang.Nullable;
  *
  * @author Peter-Josef Meisch
  * @author Haibo Liu
+ * @author Mohamed El Harrougui
  * @since 4.0
  */
 public class SearchDocumentResponse {
@@ -36,6 +38,7 @@ public class SearchDocumentResponse {
 	private final long totalHits;
 	private final String totalHitsRelation;
 	private final float maxScore;
+	private final Duration executionDuration;
 	@Nullable private final String scrollId;
 	private final List<SearchDocument> searchDocuments;
 	@Nullable private final AggregationsContainer<?> aggregations;
@@ -44,13 +47,14 @@ public class SearchDocumentResponse {
 	@Nullable String pointInTimeId;
 	@Nullable private final SearchShardStatistics searchShardStatistics;
 
-	public SearchDocumentResponse(long totalHits, String totalHitsRelation, float maxScore, @Nullable String scrollId,
-			@Nullable String pointInTimeId, List<SearchDocument> searchDocuments,
+	public SearchDocumentResponse(long totalHits, String totalHitsRelation, float maxScore, Duration executionDuration,
+			@Nullable String scrollId, @Nullable String pointInTimeId, List<SearchDocument> searchDocuments,
 			@Nullable AggregationsContainer<?> aggregationsContainer, @Nullable Suggest suggest,
 			@Nullable SearchShardStatistics searchShardStatistics) {
 		this.totalHits = totalHits;
 		this.totalHitsRelation = totalHitsRelation;
 		this.maxScore = maxScore;
+		this.executionDuration = executionDuration;
 		this.scrollId = scrollId;
 		this.pointInTimeId = pointInTimeId;
 		this.searchDocuments = searchDocuments;
@@ -69,6 +73,10 @@ public class SearchDocumentResponse {
 
 	public float getMaxScore() {
 		return maxScore;
+	}
+
+	public Duration getExecutionDuration() {
+		return executionDuration;
 	}
 
 	@Nullable

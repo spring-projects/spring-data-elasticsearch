@@ -81,7 +81,7 @@ When a document is retrieved with the methods of the  `DocumentOperations` inter
 When searching with the methods of the `SearchOperations` interface, additional information is available for each entity, for example the _score_ or the _sortValues_ of the found entity.
 
 In order to return this information, each entity is wrapped in a `SearchHit` object that contains this entity-specific additional information.
-These `SearchHit` objects themselves are returned within a `SearchHits` object which additionally contains informations about the whole search like the _maxScore_ or requested aggregations.
+These `SearchHit` objects themselves are returned within a `SearchHits` object which additionally contains informations about the whole search like the _maxScore_ or requested aggregations or the execution duration it took to complete the request.
 The following classes and interfaces are now available:
 
 .SearchHit<T>
