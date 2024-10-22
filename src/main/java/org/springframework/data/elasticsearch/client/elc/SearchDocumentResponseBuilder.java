@@ -29,6 +29,7 @@ import co.elastic.clients.elasticsearch.core.search.Suggestion;
 import co.elastic.clients.elasticsearch.core.search.TotalHits;
 import co.elastic.clients.json.JsonpMapper;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -56,6 +57,7 @@ import org.springframework.util.CollectionUtils;
  *
  * @author Peter-Josef Meisch
  * @author Haibo Liu
+ * @author Mohamed El Harrougui
  * @since 4.4
  */
 class SearchDocumentResponseBuilder {
@@ -83,8 +85,10 @@ class SearchDocumentResponseBuilder {
 		Map<String, List<Suggestion<EntityAsMap>>> suggest = responseBody.suggest();
 		var pointInTimeId = responseBody.pitId();
 		var shards = responseBody.shards();
+		var executionDurationInMillis = responseBody.took();
 
-		return from(hitsMetadata, shards, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
+		return from(hitsMetadata, shards, scrollId, pointInTimeId, executionDurationInMillis, aggregations, suggest,
+				entityCreator, jsonpMapper);
 	}
 
 	/**
@@ -109,8 +113,10 @@ class SearchDocumentResponseBuilder {
 		var aggregations = response.aggregations();
 		var suggest = response.suggest();
 		var pointInTimeId = response.pitId();
+		var executionDurationInMillis = response.took();
 
-		return from(hitsMetadata, shards, scrollId, pointInTimeId, aggregations, suggest, entityCreator, jsonpMapper);
+		return from(hitsMetadata, shards, scrollId, pointInTimeId, executionDurationInMillis, aggregations, suggest,
+				entityCreator, jsonpMapper);
 	}
 
 	/**
@@ -127,7 +133,7 @@ class SearchDocumentResponseBuilder {
 	 * @return the {@link SearchDocumentResponse}
 	 */
 	public static <T> SearchDocumentResponse from(HitsMetadata<?> hitsMetadata, @Nullable ShardStatistics shards,
-			@Nullable String scrollId, @Nullable String pointInTimeId, @Nullable Map<String, Aggregate> aggregations,
+			@Nullable String scrollId, @Nullable String pointInTimeId, long executionDurationInMillis, @Nullable Map<String, Aggregate> aggregations,
 			Map<String, List<Suggestion<EntityAsMap>>> suggestES, SearchDocumentResponse.EntityCreator<T> entityCreator,
 			JsonpMapper jsonpMapper) {
 
@@ -151,6 +157,8 @@ class SearchDocumentResponseBuilder {
 
 		float maxScore = hitsMetadata.maxScore() != null ? hitsMetadata.maxScore().floatValue() : Float.NaN;
 
+		Duration executionDuration = Duration.ofMillis(executionDurationInMillis);
+
 		List<SearchDocument> searchDocuments = new ArrayList<>();
 		for (Hit<?> hit : hitsMetadata.hits()) {
 			searchDocuments.add(DocumentAdapters.from(hit, jsonpMapper));
@@ -163,7 +171,7 @@ class SearchDocumentResponseBuilder {
 
 		SearchShardStatistics shardStatistics = shards != null ? shardsFrom(shards) : null;
 
-		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, scrollId, pointInTimeId, searchDocuments,
+		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, executionDuration, scrollId, pointInTimeId, searchDocuments,
 				aggregationsContainer, suggest, shardStatistics);
 	}
 

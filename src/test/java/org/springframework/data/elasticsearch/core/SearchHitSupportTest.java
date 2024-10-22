@@ -19,6 +19,7 @@ import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -33,6 +34,7 @@ import org.springframework.data.util.CloseableIterator;
  * @author Roman Puchkovskiy
  * @author Peter-Josef Meisch
  * @author Haibo Liu
+ * @author Mohamed El Harrougui
  */
 class SearchHitSupportTest {
 
@@ -65,8 +67,8 @@ class SearchHitSupportTest {
 		hits.add(new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "four"));
 		hits.add(new SearchHit<>(null, null, null, 0, null, null, null, null, null, null, "five"));
 
-		SearchHits<String> originalSearchHits = new SearchHitsImpl<>(hits.size(), TotalHitsRelation.EQUAL_TO, 0, "scroll",
-				null, hits, null, null, null);
+		SearchHits<String> originalSearchHits = new SearchHitsImpl<>(hits.size(), TotalHitsRelation.EQUAL_TO, 0,
+				Duration.ofMillis(1), "scroll", null, hits, null, null, null);
 
 		SearchPage<String> searchPage = SearchHitSupport.searchPageFor(originalSearchHits, PageRequest.of(0, 3));
 		SearchHits<String> searchHits = searchPage.getSearchHits();
@@ -87,6 +89,11 @@ class SearchHitSupportTest {
 		@Override
 		public float getMaxScore() {
 			return 0;
+		}
+
+		@Override
+		public Duration getExecutionDuration() {
+			return Duration.ofMillis(1);
 		}
 
 		@Override

@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -31,6 +32,7 @@ import org.springframework.util.Assert;
  *
  * @author Mark Paluch
  * @author Sascha Woo
+ * @author Mohamed El Harrougui
  * @since 3.2
  */
 abstract class StreamQueries {
@@ -56,6 +58,7 @@ abstract class StreamQueries {
 
 		AggregationsContainer<?> aggregations = searchHits.getAggregations();
 		float maxScore = searchHits.getMaxScore();
+		Duration executionDuration = searchHits.getExecutionDuration();
 		long totalHits = searchHits.getTotalHits();
 		TotalHitsRelation totalHitsRelation = searchHits.getTotalHitsRelation();
 
@@ -84,6 +87,11 @@ abstract class StreamQueries {
 			@Override
 			public float getMaxScore() {
 				return maxScore;
+			}
+
+			@Override
+			public Duration getExecutionDuration() {
+				return executionDuration;
 			}
 
 			@Override
