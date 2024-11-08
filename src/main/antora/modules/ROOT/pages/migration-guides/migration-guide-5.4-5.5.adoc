@@ -9,4 +9,14 @@ This section describes breaking changes from version 5.4.x to 5.5.x and how remo
 [[elasticsearch-migration-guide-5.4-5.5.deprecations]]
 == Deprecations
 
+Some classes that probably are not used by a library user have been renamed, the classes with the old names are still there, but are deprecated:
+
+|===
+|old name|new name
+
+|ElasticsearchPartQuery|RepositoryPartQuery
+|ElasticsearchStringQuery|RepositoryStringQuery
+|ReactiveElasticsearchStringQuery|ReactiveRepositoryStringQuery
+|===
+
 === Removals

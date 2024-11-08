@@ -3,7 +3,9 @@
 
 [[new-features.5-5-0]]
 == New in Spring Data Elasticsearch 5.5
+
 * Upgrade to Elasticsearch 8.17.0.
+* Add support for the `@SearchTemplateQuery` annotation on repository methods.
 
 [[new-features.5-4-0]]
 == New in Spring Data Elasticsearch 5.4

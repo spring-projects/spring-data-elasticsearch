@@ -365,6 +365,8 @@ operations.putScript(                            <.>
 
 To use a search template in a search query, Spring Data Elasticsearch provides the `SearchTemplateQuery`, an implementation of the `org.springframework.data.elasticsearch.core.query.Query` interface.
 
+NOTE: Although `SearchTemplateQuery` is an implementation of the `Query` interface, not all of the functionality provided by the base class is available for a `SearchTemplateQuery` like setting a `Pageable` or a `Sort`. Values for this functionality must be added to the stored script like shown in the following example for paging parameters. If these values are set on the `Query` object, they will be ignored.
+
 In the following code, we will add a call using a search template query to a custom repository implementation (see
 xref:repositories/custom-implementations.adoc[]) as an example how this can be integrated into a repository call.
 
@@ -449,4 +451,3 @@ var query = Query.findAll().addSort(Sort.by(order));
 About the filter query: It is not possible to use a `CriteriaQuery` here, as this query would be converted into a Elasticsearch nested query which does not work in the filter context. So only `StringQuery` or `NativeQuery` can be used here. When using one of these, like the term query above, the Elasticsearch field names must be used, so take care, when these are redefined with the `@Field(name="...")` definition.
 
 For the definition of the order path and the nested paths, the Java entity property names should be used.
-

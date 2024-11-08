@@ -16,9 +16,10 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-import java.lang.reflect.Method;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,66 +27,104 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.convert.CustomConversions;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.annotations.Query;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.SearchHit;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
-import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
-import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.lang.Nullable;
 
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
- * @author Niklas Herder
  * @author Haibo Liu
  */
 @ExtendWith(MockitoExtension.class)
-public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryUnitTestBase {
+public class ReactiveRepositoryStringQueryUnitTests extends ReactiveRepositoryQueryUnitTestsBase {
 
-	@Mock ElasticsearchOperations operations;
+	/**
+	 * Adds some data class and custom conversion to the base class implementation.
+	 */
+	protected MappingElasticsearchConverter setupConverter() {
 
-	@BeforeEach
-	public void setUp() {
-		when(operations.getElasticsearchConverter()).thenReturn(setupConverter());
+		Collection<Converter<?, ?>> converters = new ArrayList<>();
+		converters.add(CarConverter.INSTANCE);
+		CustomConversions customConversions = new ElasticsearchCustomConversions(converters);
+
+		MappingElasticsearchConverter converter = super.setupConverter();
+		converter.setConversions(customConversions);
+		converter.afterPropertiesSet();
+		return converter;
 	}
 
-	@Test // DATAES-552
-	public void shouldReplaceParametersCorrectly() throws Exception {
+	static class Car {
+		@Nullable private String name;
+		@Nullable private String model;
+
+		@Nullable
+		public String getName() {
+			return name;
+		}
+
+		public void setName(@Nullable String name) {
+			this.name = name;
+		}
+
+		@Nullable
+		public String getModel() {
+			return model;
+		}
+
+		public void setModel(@Nullable String model) {
+			this.model = model;
+		}
+	}
+
+	enum CarConverter implements Converter<Car, String> {
+		INSTANCE;
+
+		@Override
+		public String convert(Car car) {
+			return (car.getName() != null ? car.getName() : "null") + '-'
+					+ (car.getModel() != null ? car.getModel() : "null");
+		}
+	}
+
+	@Test // DATAES-519
+	public void bindsSimplePropertyCorrectly() throws Exception {
 
 		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByName", "Luke");
+		StringQuery reference = new StringQuery("{ 'bool' : { 'must' : { 'term' : { 'name' : 'Luke' } } } }");
 
 		assertThat(query).isInstanceOf(StringQuery.class);
-		assertThat(((StringQuery) query).getSource())
-				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'name' : 'Luke' } } } }");
+		assertThat(((StringQuery) query).getSource()).isEqualTo(reference.getSource());
 	}
 
-	@Test // DATAES-552
-	public void shouldReplaceRepeatedParametersCorrectly() throws Exception {
+	@Test // DATAES-519
+	public void bindsExpressionPropertyCorrectly() throws Exception {
 
-		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findWithRepeatedPlaceholder", "zero",
-				"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven");
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameWithExpression", "Luke");
+		StringQuery reference = new StringQuery("{ 'bool' : { 'must' : { 'term' : { 'name' : 'Luke' } } } }");
 
 		assertThat(query).isInstanceOf(StringQuery.class);
-		assertThat(((StringQuery) query).getSource())
-				.isEqualTo("name:(zero, eleven, one, two, three, four, five, six, seven, eight, nine, ten, eleven, zero, one)");
+		assertThat(((StringQuery) query).getSource()).isEqualTo(reference.getSource());
 	}
 
 	@Test
@@ -287,6 +326,28 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
 	}
 
+	@Test // DATAES-552
+	public void shouldReplaceLotsOfParametersCorrectly() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findWithQuiteSomeParameters", "zero",
+				"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven");
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("name:(zero, one, two, three, four, five, six, seven, eight, nine, ten, eleven)");
+	}
+
+	@Test // DATAES-552
+	public void shouldReplaceRepeatedParametersCorrectly() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findWithRepeatedPlaceholder", "zero",
+				"one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven");
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("name:(zero, eleven, one, two, three, four, five, six, seven, eight, nine, ten, eleven, zero, one)");
+	}
+
 	@Test // #1790
 	@DisplayName("should escape Strings in query parameters")
 	void shouldEscapeStringsInQueryParameters() throws Exception {
@@ -298,66 +359,9 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				.isEqualTo("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"hello \\\"Stranger\\\"\"}}]}}");
 	}
 
-	@Test // #1858
-	@DisplayName("should only quote String query parameters")
-	void shouldOnlyEscapeStringQueryParameters() throws Exception {
-		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAge", 30);
-
-		assertThat(query).isInstanceOf(StringQuery.class);
-		assertThat(((StringQuery) query).getSource()).isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : 30 } } } }");
-
-	}
-
-	@Test // #1858
-	@DisplayName("should only quote String collection query parameters")
-	void shouldOnlyEscapeStringCollectionQueryParameters() throws Exception {
-		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAgeIn",
-				new ArrayList<>(Arrays.asList(30, 35, 40)));
-
-		assertThat(query).isInstanceOf(StringQuery.class);
-		assertThat(((StringQuery) query).getSource())
-				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'age' : [30,35,40] } } } }");
-
-	}
-
-	@Test // #1858
-	@DisplayName("should escape Strings in collection query parameters")
-	void shouldEscapeStringsInCollectionsQueryParameters() throws Exception {
-
-		final List<String> another_string = Arrays.asList("hello \"Stranger\"", "Another string");
-		List<String> params = new ArrayList<>(another_string);
-		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameIn", params);
-
-		assertThat(query).isInstanceOf(StringQuery.class);
-		assertThat(((StringQuery) query).getSource()).isEqualTo(
-				"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"hello \\\"Stranger\\\"\",\"Another string\"] } } } }");
-	}
-
-	@Test // #2326
-	@DisplayName("should escape backslashes in collection query parameters")
-	void shouldEscapeBackslashesInCollectionQueryParameters() throws NoSuchMethodException {
-
-		final List<String> parameters = Arrays.asList("param\\1", "param\\2");
-		List<String> params = new ArrayList<>(parameters);
-		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameIn", params);
-
-		assertThat(query).isInstanceOf(StringQuery.class);
-		assertThat(((StringQuery) query).getSource()).isEqualTo(
-				"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"param\\\\1\",\"param\\\\2\"] } } } }");
-	}
-
-	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
-			throws NoSuchMethodException {
-
-		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass).toArray(Class[]::new);
-		ElasticsearchQueryMethod queryMethod = getQueryMethod(methodName, argTypes);
-		ElasticsearchStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
-		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
-	}
-
 	@Test // #1866
 	@DisplayName("should use converter on parameters")
-	void shouldUseConverterOnParameters() throws NoSuchMethodException {
+	void shouldUseConverterOnParameters() throws Exception {
 
 		Car car = new Car();
 		car.setName("Toyota");
@@ -370,28 +374,58 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota-Prius' } } } }");
 	}
 
-	private ElasticsearchStringQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {
-		return new ElasticsearchStringQuery(queryMethod, operations, queryMethod.getAnnotatedQuery(),
-				QueryMethodEvaluationContextProvider.DEFAULT);
+	@Test // #2135
+	@DisplayName("should handle array-of-strings parameters correctly")
+	void shouldHandleArrayOfStringsParametersCorrectly() throws Exception {
+
+		List<String> otherNames = List.of("Wesley", "Emmett");
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByOtherNames", otherNames);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'terms' : { 'otherNames' : [\"Wesley\",\"Emmett\"] } } } }");
 	}
 
-	private ElasticsearchQueryMethod getQueryMethod(String name, Class<?>... parameters) throws NoSuchMethodException {
+	@Test // #2135
+	@DisplayName("should handle array-of-Integers parameters correctly")
+	void shouldHandleArrayOfIntegerParametersCorrectly() throws Exception {
 
-		Method method = SampleRepository.class.getMethod(name, parameters);
-		return new ElasticsearchQueryMethod(method, new DefaultRepositoryMetadata(SampleRepository.class),
-				new SpelAwareProxyProjectionFactory(), operations.getElasticsearchConverter().getMappingContext());
+		List<Integer> ages = List.of(42, 57);
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByAges", ages);
+
+		assertThat(query).isInstanceOf(StringQuery.class);
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'terms' : { 'ages' : [42,57] } } } }");
+	}
+
+	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
+			throws NoSuchMethodException {
+
+		Class<?>[] argTypes = Arrays.stream(args).map(Object::getClass)
+				.map(clazz -> Collection.class.isAssignableFrom(clazz) ? List.class : clazz).toArray(Class[]::new);
+		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(SampleRepository.class, methodName, argTypes);
+		ReactiveRepositoryStringQuery elasticsearchStringQuery = queryForMethod(queryMethod);
+
+		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
+	}
+
+	private ReactiveRepositoryStringQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
+
+		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(SampleRepository.class, name, parameters);
+		return queryForMethod(queryMethod);
+	}
+
+	private ReactiveRepositoryStringQuery queryForMethod(ReactiveElasticsearchQueryMethod queryMethod) {
+		return new ReactiveRepositoryStringQuery(queryMethod, operations,
+				QueryMethodEvaluationContextProvider.DEFAULT);
 	}
 
 	private interface SampleRepository extends Repository<Person, String> {
 
-		@Query("{ 'bool' : { 'must' : { 'term' : { 'age' : ?0 } } } }")
-		List<Person> findByAge(Integer age);
-
-		@Query("{ 'bool' : { 'must' : { 'term' : { 'age' : ?0 } } } }")
-		List<Person> findByAgeIn(ArrayList<Integer> age);
-
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
-		Person findByName(String name);
+		Mono<Person> findByName(String name);
 
 		@Query("""
 				{
@@ -404,23 +438,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				  }
 				}
 				""")
-		Person findByNameSpEL(String name);
-
-		@Query("""
-				{
-				  "bool":{
-				    "must":{
-				      "term":{
-				        "name": "#{#param.value}"
-				      }
-				    }
-				  }
-				}
-				""")
-		Person findByParameterPropertySpEL(QueryParameter param);
-
-		@Query("{ 'bool' : { 'must' : { 'terms' : { 'name' : ?0 } } } }")
-		Person findByNameIn(ArrayList<String> names);
+		Mono<Person> findByNameSpEL(String name);
 
 		@Query("""
 				{
@@ -433,20 +451,20 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				  }
 				}
 				""")
-		Person findByNamesSpEL(ArrayList<String> names);
+		Flux<Person> findByNamesSpEL(List<String> names);
 
 		@Query("""
 				{
 				  "bool":{
 				    "must":{
-				      "terms":{
-				        "age": #{#ages}
+				      "term":{
+				        "name": "#{#param.value}"
 				      }
 				    }
 				  }
 				}
 				""")
-		Person findByAgesSpEL(ArrayList<Integer> ages);
+		Flux<Person> findByParameterPropertySpEL(QueryParameter param);
 
 		@Query("""
 				{
@@ -459,46 +477,66 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 				  }
 				}
 				""")
-		Person findByNamesParameterSpEL(ArrayList<QueryParameter> names);
+		Flux<Person> findByNamesParameterSpEL(List<QueryParameter> names);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '#{[0]}' } } } }")
+		Flux<Person> findByNameWithExpression(String param0);
+
+		@Query(value = "name:(?0, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)")
+		Person findWithQuiteSomeParameters(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
+				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
 
 		@Query(value = "name:(?0, ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?0, ?1)")
 		Person findWithRepeatedPlaceholder(String arg0, String arg1, String arg2, String arg3, String arg4, String arg5,
 				String arg6, String arg7, String arg8, String arg9, String arg10, String arg11);
 
 		@Query("{\"bool\":{\"must\": [{\"match\": {\"prefix\": {\"name\" : \"?0\"}}]}}")
-		SearchHits<Book> findByPrefix(String prefix);
+		Flux<SearchHit<Book>> findByPrefix(String prefix);
 
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'car' : '?0' } } } }")
-		Person findByCar(Car car);
+		Mono<Person> findByCar(Car car);
+
+		@Query("{ 'bool' : { 'must' : { 'terms' : { 'otherNames' : ?0 } } } }")
+		Flux<Person> findByOtherNames(List<String> otherNames);
+
+		@Query("{ 'bool' : { 'must' : { 'terms' : { 'ages' : ?0 } } } }")
+		Flux<Person> findByAges(List<Integer> ages);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":{
+				      "terms":{
+				        "age": #{#ages}
+				      }
+				    }
+				  }
+				}
+				""")
+		Flux<Person> findByAgesSpEL(List<Integer> ages);
 	}
 
 	/**
 	 * @author Rizwan Idrees
 	 * @author Mohsin Husen
 	 * @author Artur Konczak
-	 * @author Niklas Herder
 	 */
 
-	@Document(indexName = "test-index-person-query-unittest")
-	static class Person {
+	@Document(indexName = "test-index-person-reactive-repository-string-query")
+	public class Person {
 
-		@Nullable public int age;
 		@Nullable
 		@Id private String id;
+
 		@Nullable private String name;
+
+		@Nullable private List<String> otherNames;
+
 		@Nullable
 		@Field(type = FieldType.Nested) private List<Car> car;
+
 		@Nullable
 		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
-
-		@Nullable
-		public int getAge() {
-			return age;
-		}
-
-		public void setAge(int age) {
-			this.age = age;
-		}
 
 		@Nullable
 		public String getId() {
@@ -516,6 +554,15 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 
 		public void setName(String name) {
 			this.name = name;
+		}
+
+		@Nullable
+		public List<String> getOtherNames() {
+			return otherNames;
+		}
+
+		public void setOtherNames(List<String> otherNames) {
+			this.otherNames = otherNames;
 		}
 
 		@Nullable
@@ -537,7 +584,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 		}
 	}
 
-	@Document(indexName = "test-index-book-query-unittest")
+	@Document(indexName = "test-index-book-reactive-repository-string-query")
 	static class Book {
 		@Nullable
 		@Id private String id;

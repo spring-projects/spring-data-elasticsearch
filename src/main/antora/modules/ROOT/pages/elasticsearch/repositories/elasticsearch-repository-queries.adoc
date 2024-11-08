@@ -10,7 +10,9 @@ The Elasticsearch module supports all basic query building feature as string que
 === Declared queries
 
 Deriving the query from the method name is not always sufficient and/or may result in unreadable method names.
-In this case one might make use of the `@Query` annotation (see xref:elasticsearch/repositories/elasticsearch-repository-queries.adoc#elasticsearch.query-methods.at-query[Using @Query Annotation] ).
+In this case one might make use of the `@Query` annotation (see xref:elasticsearch/repositories/elasticsearch-repository-queries.adoc#elasticsearch.query-methods.at-query[Using the @Query Annotation] ).
+
+Another possibility is the use of a search-template, (see xref:elasticsearch/repositories/elasticsearch-repository-queries.adoc#elasticsearch.query-methods.at-searchtemplate-query[Using the @SearchTemplateQuery Annotation] ).
 
 [[elasticsearch.query-methods.criterions]]
 == Query creation
@@ -312,11 +314,13 @@ Repository methods can be defined to have the following return types for returni
 * `SearchPage<T>`
 
 [[elasticsearch.query-methods.at-query]]
-== Using @Query Annotation
+== Using the @Query Annotation
 
 .Declare query on the method using the `@Query` annotation.
 ====
-The arguments passed to the method can be inserted into placeholders in the query string. The placeholders are of the form `?0`, `?1`, `?2` etc. for the first, second, third parameter and so on.
+The arguments passed to the method can be inserted into placeholders in the query string.
+The placeholders are of the form `?0`, `?1`, `?2` etc. for the first, second, third parameter and so on.
+
 [source,java]
 ----
 interface BookRepository extends ElasticsearchRepository<Book, String> {
@@ -341,15 +345,20 @@ It will be sent to Easticsearch as value of the query element; if for example th
 }
 ----
 ====
+
 .`@Query` annotation on a method taking a Collection argument
 ====
 A repository method such as
+
 [source,java]
 ----
 @Query("{\"ids\": {\"values\": ?0 }}")
 List<SampleEntity> getByIds(Collection<String> ids);
 ----
-would make an https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html[IDs query] to return all the matching documents. So calling the method with a `List` of `["id1", "id2", "id3"]` would produce the query body
+
+would make an https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html[IDs query] to return all the matching documents.
+So calling the method with a `List` of `["id1", "id2", "id3"]` would produce the query body
+
 [source,json]
 ----
 {
@@ -368,7 +377,6 @@ would make an https://www.elastic.co/guide/en/elasticsearch/reference/current/qu
 .Declare query on the method using the `@Query` annotation with SpEL expression.
 ====
 https://docs.spring.io/spring-framework/reference/core/expressions.html[SpEL expression] is also supported when defining query in `@Query`.
-
 
 [source,java]
 ----
@@ -411,6 +419,7 @@ If for example the function is called with the parameter _John_, it would produc
 .accessing parameter property.
 ====
 Supposing that we have the following class as query parameter type:
+
 [source,java]
 ----
 public record QueryParameter(String value) {
@@ -444,7 +453,9 @@ We can pass `new QueryParameter("John")` as the parameter now, and it will produ
 
 .accessing bean property.
 ====
-https://docs.spring.io/spring-framework/reference/core/expressions/language-ref/bean-references.html[Bean property] is also supported to access. Given that there is a bean named `queryParameter` of type `QueryParameter`, we can access the bean with symbol `@` rather than `#`, and there is no need to declare a parameter of type `QueryParameter` in the query method:
+https://docs.spring.io/spring-framework/reference/core/expressions/language-ref/bean-references.html[Bean property] is also supported to access.
+Given that there is a bean named `queryParameter` of type `QueryParameter`, we can access the bean with symbol `@` rather than `#`, and there is no need to declare a parameter of type `QueryParameter` in the query method:
+
 [source,java]
 ----
 interface BookRepository extends ElasticsearchRepository<Book, String> {
@@ -493,6 +504,7 @@ interface BookRepository extends ElasticsearchRepository<Book, String> {
 NOTE: collection values should not be quoted when declaring the elasticsearch json query.
 
 A collection of `names` like `List.of("name1", "name2")` will produce the following terms query:
+
 [source,json]
 ----
 {
@@ -532,6 +544,7 @@ interface BookRepository extends ElasticsearchRepository<Book, String> {
     Page<Book> findByName(Collection<QueryParameter> parameters, Pageable pageable);
 }
 ----
+
 This will extract all the `value` property values as a new `Collection` from `QueryParameter` collection, thus takes the same effect as above.
 ====
 
@@ -560,3 +573,20 @@ interface BookRepository extends ElasticsearchRepository<Book, String> {
 ----
 
 ====
+
+[[elasticsearch.query-methods.at-searchtemplate-query]]
+== Using the @SearchTemplateQuery Annotation
+
+When using Elasticsearch search templates - (see xref:elasticsearch/misc.adoc#elasticsearch.misc.searchtemplates [Search Template support]) it is possible to specify that a repository method should use a template by adding the `@SearchTemplateQuery` annotation to that method.
+
+Let's assume that there is a search template stored with the name "book-by-title" and this template need a parameter named "title", then a repository method using that search template can be defined like this:
+
+[source,java]
+----
+interface BookRepository extends ElasticsearchRepository<Book, String> {
+    @SearchTemplateQuery(id = "book-by-title")
+    SearchHits<Book> findByTitle(String title);
+}
+----
+
+The parameters of the repository method are sent to the seacrh template as key/value pairs where the key is the parameter name and the value is taken from the actual value when the method is invoked.
