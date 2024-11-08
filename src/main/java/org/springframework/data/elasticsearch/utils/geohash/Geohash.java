@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.utils.geohash;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Locale;
 
 import org.springframework.util.Assert;
 
@@ -84,7 +85,7 @@ public class Geohash {
 		Assert.notNull(geohash, "geohash must not be null");
 
 		var point = Geohash.toPoint(geohash);
-		return String.format("%f,%f", point.getLat(), point.getLon());
+		return String.format(Locale.ROOT, "%f,%f", point.getLat(), point.getLon());
 	}
 
 	/**
