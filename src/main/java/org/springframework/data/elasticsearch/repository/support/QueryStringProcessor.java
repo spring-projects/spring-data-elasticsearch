@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.repository.support;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchParametersParameterAccessor;
 import org.springframework.data.elasticsearch.repository.support.spel.QueryStringSpELEvaluator;
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.util.Assert;
 
 /**
@@ -34,10 +34,10 @@ public class QueryStringProcessor {
 	private final String query;
 	private final QueryMethod queryMethod;
 	private final ConversionService conversionService;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final ValueEvaluationContextProvider evaluationContextProvider;
 
 	public QueryStringProcessor(String query, QueryMethod queryMethod, ConversionService conversionService,
-								QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ValueEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(queryMethod, "queryMethod must not be null");
@@ -57,8 +57,8 @@ public class QueryStringProcessor {
 	 * @return processed string
 	 */
 	public String createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
-		String queryString = new QueryStringPlaceholderReplacer(conversionService)
-				.replacePlaceholders(query, parameterAccessor);
+		String queryString = new QueryStringPlaceholderReplacer(conversionService).replacePlaceholders(query,
+				parameterAccessor);
 
 		QueryStringSpELEvaluator evaluator = new QueryStringSpELEvaluator(queryString, parameterAccessor, queryMethod,
 				evaluationContextProvider, conversionService);
