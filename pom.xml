@@ -10,7 +10,7 @@
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>3.5.0-SNAPSHOT</version>
+		<version>4.0.0-SNAPSHOT</version>
 	</parent>
 
 	<name>Spring Data Elasticsearch</name>
@@ -18,7 +18,7 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<springdata.commons>3.5.0-SNAPSHOT</springdata.commons>
+		<springdata.commons>4.0.0-SNAPSHOT</springdata.commons>
 
 		<!-- version of the ElasticsearchClient	-->
 		<elasticsearch-java>8.17.2</elasticsearch-java>
