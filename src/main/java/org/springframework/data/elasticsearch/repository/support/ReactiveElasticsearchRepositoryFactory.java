@@ -36,9 +36,9 @@ import org.springframework.data.repository.core.support.RepositoryComposition;
 import org.springframework.data.repository.core.support.RepositoryFragment;
 import org.springframework.data.repository.query.QueryLookupStrategy;
 import org.springframework.data.repository.query.QueryLookupStrategy.Key;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.query.RepositoryQuery;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
@@ -98,8 +98,8 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 	 */
 	@Override
 	protected Optional<QueryLookupStrategy> getQueryLookupStrategy(@Nullable Key key,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		return Optional.of(new ElasticsearchQueryLookupStrategy(operations, evaluationContextProvider, mappingContext));
+			ValueExpressionDelegate valueExpressionDelegate) {
+		return Optional.of(new ElasticsearchQueryLookupStrategy(operations, valueExpressionDelegate, mappingContext));
 	}
 
 	/*
@@ -130,19 +130,19 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 	private static class ElasticsearchQueryLookupStrategy implements QueryLookupStrategy {
 
 		private final ReactiveElasticsearchOperations operations;
-		private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+		private final ValueExpressionDelegate valueExpressionDelegate;
 		private final MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext;
 
 		public ElasticsearchQueryLookupStrategy(ReactiveElasticsearchOperations operations,
-				QueryMethodEvaluationContextProvider evaluationContextProvider,
+				ValueExpressionDelegate valueExpressionDelegate,
 				MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext) {
 
 			Assert.notNull(operations, "operations must not be null");
-			Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
+			Assert.notNull(valueExpressionDelegate, "ValueExpressionDelegate must not be null");
 			Assert.notNull(mappingContext, "mappingContext must not be null");
 
 			this.operations = operations;
-			this.evaluationContextProvider = evaluationContextProvider;
+			this.valueExpressionDelegate = valueExpressionDelegate;
 			this.mappingContext = mappingContext;
 		}
 
@@ -161,12 +161,11 @@ public class ReactiveElasticsearchRepositoryFactory extends ReactiveRepositoryFa
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
 
-				return new ReactiveElasticsearchStringQuery(namedQuery, queryMethod, operations,
-						evaluationContextProvider);
+				return new ReactiveElasticsearchStringQuery(namedQuery, queryMethod, operations, valueExpressionDelegate);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ReactiveElasticsearchStringQuery(queryMethod, operations, evaluationContextProvider);
+				return new ReactiveElasticsearchStringQuery(queryMethod, operations, valueExpressionDelegate);
 			} else {
-				return new ReactivePartTreeElasticsearchQuery(queryMethod, operations, evaluationContextProvider);
+				return new ReactivePartTreeElasticsearchQuery(queryMethod, operations, valueExpressionDelegate);
 			}
 		}
 	}
