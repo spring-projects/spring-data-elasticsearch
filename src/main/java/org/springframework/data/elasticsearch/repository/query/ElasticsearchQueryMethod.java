@@ -43,13 +43,13 @@ import org.springframework.data.elasticsearch.core.query.RuntimeField;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.TypeInformation;
@@ -100,13 +100,6 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		this.unwrappedReturnType = potentiallyUnwrapReturnTypeFor(repositoryMetadata, method);
 
 		verifyCountQueryTypes();
-	}
-
-	@SuppressWarnings("removal")
-	@Override
-	@Deprecated
-	protected Parameters<?, ?> createParameters(Method method, TypeInformation<?> domainType) {
-		return new ElasticsearchParameters(ParametersSource.of(method));
 	}
 
 	@Override
@@ -302,8 +295,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	 */
 	@Nullable
 	SourceFilter getSourceFilter(ElasticsearchParametersParameterAccessor parameterAccessor,
-			ElasticsearchConverter converter,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ElasticsearchConverter converter, ValueEvaluationContextProvider evaluationContextProvider) {
 
 		if (sourceFilters == null || (sourceFilters.includes().length == 0 && sourceFilters.excludes().length == 0)) {
 			return null;
@@ -313,20 +305,20 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		FetchSourceFilterBuilder fetchSourceFilterBuilder = new FetchSourceFilterBuilder();
 
 		if (sourceFilters.includes().length > 0) {
-			fetchSourceFilterBuilder.withIncludes(mapParameters(sourceFilters.includes(), parameterAccessor,
-					conversionService, evaluationContextProvider));
+			fetchSourceFilterBuilder.withIncludes(
+					mapParameters(sourceFilters.includes(), parameterAccessor, conversionService, evaluationContextProvider));
 		}
 
 		if (sourceFilters.excludes().length > 0) {
-			fetchSourceFilterBuilder.withExcludes(mapParameters(sourceFilters.excludes(), parameterAccessor,
-					conversionService, evaluationContextProvider));
+			fetchSourceFilterBuilder.withExcludes(
+					mapParameters(sourceFilters.excludes(), parameterAccessor, conversionService, evaluationContextProvider));
 		}
 
 		return fetchSourceFilterBuilder.build();
 	}
 
 	private String[] mapParameters(String[] source, ElasticsearchParametersParameterAccessor parameterAccessor,
-			ConversionService conversionService, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ConversionService conversionService, ValueEvaluationContextProvider evaluationContextProvider) {
 
 		List<String> fieldNames = new ArrayList<>();
 
@@ -378,8 +370,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	void addMethodParameter(BaseQuery query, ElasticsearchParametersParameterAccessor parameterAccessor,
-			ElasticsearchConverter elasticsearchConverter,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ElasticsearchConverter elasticsearchConverter, ValueEvaluationContextProvider evaluationContextProvider) {
 
 		if (hasAnnotatedHighlight()) {
 			var highlightQuery = getAnnotatedHighlightQuery(new HighlightConverter(parameterAccessor,
@@ -415,8 +406,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 			});
 
 			var needToAddSourceFilter = sourceFilter == null
-					&& !(methodParameters.getRuntimeFields().isEmpty()
-							&& methodParameters.getScriptedFields().isEmpty());
+					&& !(methodParameters.getRuntimeFields().isEmpty() && methodParameters.getScriptedFields().isEmpty());
 			if (needToAddSourceFilter) {
 				query.addSourceFilter(FetchSourceFilter.of(b -> b.withIncludes("*")));
 			}

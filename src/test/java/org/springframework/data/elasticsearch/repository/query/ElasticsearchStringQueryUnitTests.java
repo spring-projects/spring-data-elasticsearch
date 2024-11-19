@@ -48,7 +48,7 @@ import org.springframework.data.elasticsearch.repositories.custommethod.QueryPar
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 
 /**
@@ -111,8 +111,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 	@Test
 	public void shouldReplaceParametersSpELWithQuotes() throws Exception {
 
-		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameSpEL",
-				"hello \"world\"");
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameSpEL", "hello \"world\"");
 		String expected = """
 				{
 				  "bool":{
@@ -342,8 +341,8 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameIn", params);
 
 		assertThat(query).isInstanceOf(StringQuery.class);
-		assertThat(((StringQuery) query).getSource()).isEqualTo(
-				"{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"param\\\\1\",\"param\\\\2\"] } } } }");
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'terms' : { 'name' : [\"param\\\\1\",\"param\\\\2\"] } } } }");
 	}
 
 	private org.springframework.data.elasticsearch.core.query.Query createQuery(String methodName, Object... args)
@@ -372,7 +371,7 @@ public class ElasticsearchStringQueryUnitTests extends ElasticsearchStringQueryU
 
 	private ElasticsearchStringQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {
 		return new ElasticsearchStringQuery(queryMethod, operations, queryMethod.getAnnotatedQuery(),
-				QueryMethodEvaluationContextProvider.DEFAULT);
+				ValueExpressionDelegate.create());
 	}
 
 	private ElasticsearchQueryMethod getQueryMethod(String name, Class<?>... parameters) throws NoSuchMethodException {

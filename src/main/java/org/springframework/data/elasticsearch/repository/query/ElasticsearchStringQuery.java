@@ -20,7 +20,7 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.util.Assert;
 
 /**
@@ -38,11 +38,11 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 	private final String queryString;
 
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
-			String queryString, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(queryMethod, elasticsearchOperations, evaluationContextProvider);
+			String queryString, ValueExpressionDelegate valueExpressionDelegate) {
+		super(queryMethod, elasticsearchOperations,
+				valueExpressionDelegate.createValueContextProvider(queryMethod.getParameters()));
 
 		Assert.notNull(queryString, "Query cannot be empty");
-		Assert.notNull(evaluationContextProvider, "ExpressionEvaluationContextProvider must not be null");
 
 		this.queryString = queryString;
 	}
@@ -67,8 +67,7 @@ public class ElasticsearchStringQuery extends AbstractElasticsearchRepositoryQue
 		var processed = new QueryStringProcessor(queryString, queryMethod, conversionService, evaluationContextProvider)
 				.createQuery(parameterAccessor);
 
-		return new StringQuery(processed)
-				.addSort(parameterAccessor.getSort());
+		return new StringQuery(processed).addSort(parameterAccessor.getSort());
 	}
 
 }

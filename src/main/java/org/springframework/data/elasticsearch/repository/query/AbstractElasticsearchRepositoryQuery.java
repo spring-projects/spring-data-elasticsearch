@@ -24,9 +24,9 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.repository.query.ParametersParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.data.util.StreamUtils;
@@ -49,11 +49,10 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	protected ElasticsearchQueryMethod queryMethod;
 	protected final ElasticsearchOperations elasticsearchOperations;
 	protected final ElasticsearchConverter elasticsearchConverter;
-	protected final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	protected final ValueEvaluationContextProvider evaluationContextProvider;
 
 	public AbstractElasticsearchRepositoryQuery(ElasticsearchQueryMethod queryMethod,
-			ElasticsearchOperations elasticsearchOperations,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ElasticsearchOperations elasticsearchOperations, ValueEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(queryMethod, "queryMethod must not be null");
 		Assert.notNull(elasticsearchOperations, "elasticsearchOperations must not be null");

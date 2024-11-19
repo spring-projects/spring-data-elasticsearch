@@ -37,6 +37,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -51,7 +52,7 @@ import org.springframework.data.elasticsearch.repositories.custommethod.QueryPar
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 
 /**
@@ -112,8 +113,7 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 	@Test
 	public void shouldReplaceParametersSpELWithQuotes() throws Exception {
 
-		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameSpEL",
-				"hello \"world\"");
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameSpEL", "hello \"world\"");
 		String expected = """
 				{
 				  "bool":{
@@ -374,8 +374,7 @@ public class ReactiveElasticsearchStringQueryUnitTests extends ElasticsearchStri
 	}
 
 	private ReactiveElasticsearchStringQuery queryForMethod(ReactiveElasticsearchQueryMethod queryMethod) {
-		return new ReactiveElasticsearchStringQuery(queryMethod, operations,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+		return new ReactiveElasticsearchStringQuery(queryMethod, operations, ValueExpressionDelegate.create());
 	}
 
 	private ReactiveElasticsearchQueryMethod getQueryMethod(String name, Class<?>... parameters)

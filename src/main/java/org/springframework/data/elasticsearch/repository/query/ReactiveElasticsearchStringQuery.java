@@ -20,7 +20,7 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.util.Assert;
 
 /**
@@ -32,23 +32,20 @@ import org.springframework.util.Assert;
 public class ReactiveElasticsearchStringQuery extends AbstractReactiveElasticsearchRepositoryQuery {
 
 	private final String query;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	public ReactiveElasticsearchStringQuery(ReactiveElasticsearchQueryMethod queryMethod,
-			ReactiveElasticsearchOperations operations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ReactiveElasticsearchOperations operations, ValueExpressionDelegate evaluationContextProvider) {
 
 		this(queryMethod.getAnnotatedQuery(), queryMethod, operations, evaluationContextProvider);
 	}
 
 	public ReactiveElasticsearchStringQuery(String query, ReactiveElasticsearchQueryMethod queryMethod,
-			ReactiveElasticsearchOperations operations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(queryMethod, operations, evaluationContextProvider);
+			ReactiveElasticsearchOperations operations, ValueExpressionDelegate valueExpressionDelegate) {
+		super(queryMethod, operations, valueExpressionDelegate.createValueContextProvider(queryMethod.getParameters()));
 
 		Assert.notNull(query, "query must not be null");
-		Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
 
 		this.query = query;
-		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	@Override
