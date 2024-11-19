@@ -19,6 +19,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import org.reactivestreams.Publisher;
+
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
@@ -32,10 +33,10 @@ import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingConverter;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingExecution;
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ResultProcessor;
 import org.springframework.util.Assert;
@@ -52,11 +53,11 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 
 	protected final ReactiveElasticsearchQueryMethod queryMethod;
 	private final ReactiveElasticsearchOperations elasticsearchOperations;
-	protected final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	protected final ValueEvaluationContextProvider evaluationContextProvider;
 
 	AbstractReactiveElasticsearchRepositoryQuery(ReactiveElasticsearchQueryMethod queryMethod,
 			ReactiveElasticsearchOperations elasticsearchOperations,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ValueEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(queryMethod, "queryMethod must not be null");
 		Assert.notNull(elasticsearchOperations, "elasticsearchOperations must not be null");
@@ -135,8 +136,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 
 		if (isDeleteQuery()) {
 			return (query, type, targetType, indexCoordinates) -> operations
-					.delete(DeleteQuery.builder(query).build(), type, indexCoordinates)
-					.map(ByQueryResponse::getDeleted);
+					.delete(DeleteQuery.builder(query).build(), type, indexCoordinates).map(ByQueryResponse::getDeleted);
 		} else if (isCountQuery()) {
 			return (query, type, targetType, indexCoordinates) -> operations.count(query, type, indexCoordinates);
 		} else if (isExistsQuery()) {
