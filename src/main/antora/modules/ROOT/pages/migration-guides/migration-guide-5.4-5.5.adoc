@@ -1,0 +1,12 @@
+[[elasticsearch-migration-guide-5.4-5.5]]
+= Upgrading from 5.4.x to 5.5.x
+
+This section describes breaking changes from version 5.4.x to 5.5.x and how removed features can be replaced by new introduced features.
+
+[[elasticsearch-migration-guide-5.4-5.5.breaking-changes]]
+== Breaking Changes
+
+[[elasticsearch-migration-guide-5.4-5.5.deprecations]]
+== Deprecations
+
+=== Removals

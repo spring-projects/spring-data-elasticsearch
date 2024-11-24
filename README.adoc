@@ -168,7 +168,7 @@ Building the documentation builds also the project without running tests.
  $ ./mvnw clean install -Pantora
 ----
 
-The generated documentation is available from `target/antora/site/index.html`.
+The generated documentation is available from `target/site/index.html`.
 
 == Examples
 
