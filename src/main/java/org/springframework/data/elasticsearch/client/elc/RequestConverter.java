@@ -2014,9 +2014,12 @@ class RequestConverter extends AbstractQueryProcessor {
 	private SourceConfig getSourceConfig(Query query) {
 
 		if (query.getSourceFilter() != null) {
-			return SourceConfig.of(s -> s //
-					.filter(sfb -> {
-						SourceFilter sourceFilter = query.getSourceFilter();
+			return SourceConfig.of(s -> {
+				SourceFilter sourceFilter = query.getSourceFilter();
+				if (sourceFilter.fetchSource() != null) {
+					s.fetch(sourceFilter.fetchSource());
+				} else {
+					s.filter(sfb -> {
 						String[] includes = sourceFilter.getIncludes();
 						String[] excludes = sourceFilter.getExcludes();
 
@@ -2029,7 +2032,10 @@ class RequestConverter extends AbstractQueryProcessor {
 						}
 
 						return sfb;
-					}));
+					});
+				}
+				return s;
+			});
 		} else {
 			return null;
 		}

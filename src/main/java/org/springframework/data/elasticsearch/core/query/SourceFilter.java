@@ -40,4 +40,15 @@ public interface SourceFilter {
 	 */
 	@Nullable
 	String[] getExcludes();
+
+	/**
+	 * Flag to set the _source parameter in a query to true or false. If this is not null, the values returned from
+	 * getIncludes() and getExcludes() are ignored
+	 *
+	 * @since 5.5
+	 */
+	@Nullable
+	default Boolean fetchSource() {
+		return null;
+	}
 }

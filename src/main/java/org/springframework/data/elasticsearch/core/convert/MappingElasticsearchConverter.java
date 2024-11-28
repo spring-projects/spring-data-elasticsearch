@@ -1273,7 +1273,7 @@ public class MappingElasticsearchConverter
 							.toArray(new String[] {});
 				}
 
-				query.addSourceFilter(new FetchSourceFilter(includes, excludes));
+				query.addSourceFilter(new FetchSourceFilter(sourceFilter.fetchSource(), includes, excludes));
 			}
 		}
 	}

@@ -28,14 +28,16 @@ import org.springframework.util.Assert;
  */
 public class FetchSourceFilter implements SourceFilter {
 
+	@Nullable private final Boolean fetchSource;
 	@Nullable private final String[] includes;
 	@Nullable private final String[] excludes;
 
 	/**
 	 * @since 5.2
 	 */
-	public static SourceFilter of(@Nullable final String[] includes, @Nullable final String[] excludes) {
-		return new FetchSourceFilter(includes, excludes);
+	public static SourceFilter of(@Nullable Boolean fetchSource, @Nullable final String[] includes,
+			@Nullable final String[] excludes) {
+		return new FetchSourceFilter(fetchSource, includes, excludes);
 	}
 
 	/**
@@ -48,9 +50,16 @@ public class FetchSourceFilter implements SourceFilter {
 		return builderFunction.apply(new FetchSourceFilterBuilder()).build();
 	}
 
-	public FetchSourceFilter(@Nullable final String[] includes, @Nullable final String[] excludes) {
+	public FetchSourceFilter(@Nullable Boolean fetchSource, @Nullable final String[] includes,
+			@Nullable final String[] excludes) {
+		this.fetchSource = fetchSource;
 		this.includes = includes;
 		this.excludes = excludes;
+	}
+
+	@Override
+	public Boolean fetchSource() {
+		return fetchSource;
 	}
 
 	@Override
