@@ -30,6 +30,7 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
@@ -184,6 +185,38 @@ public abstract class SourceFilterIntegrationTests {
 		assertThat(entity.getField1()).isNull();
 		assertThat(entity.getField2()).isNotNull();
 		assertThat(entity.getField3()).isNull();
+	}
+
+	@Test // #3009
+	@DisplayName("should not return any fields when source is set to false")
+	void shouldNotReturnAnyFieldsWhenSourceIsSetToFalse() {
+
+		Query query = Query.findAll();
+		query.addSourceFilter(FetchSourceFilter.of(b -> b.withFetchSource(false)));
+
+		SearchHits<Entity> entities = operations.search(query, Entity.class);
+
+		assertThat(entities).hasSize(1);
+		Entity entity = entities.getSearchHit(0).getContent();
+		assertThat(entity.getField1()).isNull();
+		assertThat(entity.getField2()).isNull();
+		assertThat(entity.getField3()).isNull();
+	}
+
+	@Test // #3009
+	@DisplayName("should return all fields when source is set to true")
+	void shouldReturnAllFieldsWhenSourceIsSetToTrue() {
+
+		Query query = Query.findAll();
+        query.addSourceFilter(FetchSourceFilter.of(b -> b.withFetchSource(true)));
+
+		SearchHits<Entity> entities = operations.search(query, Entity.class);
+
+		assertThat(entities).hasSize(1);
+		Entity entity = entities.getSearchHit(0).getContent();
+		assertThat(entity.getField1()).isNotNull();
+		assertThat(entity.getField2()).isNotNull();
+		assertThat(entity.getField3()).isNotNull();
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
