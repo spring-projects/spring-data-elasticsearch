@@ -77,7 +77,7 @@ public class DevTests {
 	private static final SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 	private static final MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
 
-	private final TransportOptions transportOptions = new RestClientOptions(RequestOptions.DEFAULT).toBuilder()
+	private final TransportOptions transportOptions = new RestClientOptions(RequestOptions.DEFAULT, false).toBuilder()
 			.addHeader("X-SpringDataElasticsearch-AlwaysThere", "true").setParameter("pretty", "true").build();
 
 	private final JsonpMapper jsonpMapper = new JacksonJsonpMapper();

@@ -27,6 +27,7 @@ import co.elastic.clients.transport.endpoints.EndpointWithResponseMapperAttr;
 import co.elastic.clients.util.ObjectBuilder;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.function.Function;
 
 import org.springframework.lang.Nullable;
@@ -56,8 +57,11 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 	}
 
 	@Override
-	public void close() throws Exception {
-		transport.close();
+	public void close() throws IOException {
+		// since Elasticsearch 8.16 the ElasticsearchClient implements (through ApiClient) the Closeable interface and
+		// handles closing of the underlying transport. We now just call the base class, but keep this as we
+		// have been implementing AutoCloseable since 4.4 and won't change that to a mere Closeable
+		super.close();
 	}
 
 	// region child clients
@@ -127,7 +131,8 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 		// java.lang.Class<TDocument>)
 		// noinspection unchecked
 		JsonEndpoint<GetRequest, GetResponse<T>, ErrorResponse> endpoint = (JsonEndpoint<GetRequest, GetResponse<T>, ErrorResponse>) GetRequest._ENDPOINT;
-		endpoint = new EndpointWithResponseMapperAttr<>(endpoint, "co.elastic.clients:Deserializer:_global.get.Response.TDocument",
+		endpoint = new EndpointWithResponseMapperAttr<>(endpoint,
+				"co.elastic.clients:Deserializer:_global.get.Response.TDocument",
 				getDeserializer(tClass));
 
 		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, transportOptions));
@@ -172,7 +177,8 @@ public class ReactiveElasticsearchClient extends ApiClient<ElasticsearchTranspor
 
 		// noinspection unchecked
 		JsonEndpoint<MgetRequest, MgetResponse<T>, ErrorResponse> endpoint = (JsonEndpoint<MgetRequest, MgetResponse<T>, ErrorResponse>) MgetRequest._ENDPOINT;
-		endpoint = new EndpointWithResponseMapperAttr<>(endpoint, "co.elastic.clients:Deserializer:_global.mget.Response.TDocument",
+		endpoint = new EndpointWithResponseMapperAttr<>(endpoint,
+				"co.elastic.clients:Deserializer:_global.mget.Response.TDocument",
 				this.getDeserializer(clazz));
 
 		return Mono.fromFuture(transport.performRequestAsync(request, endpoint, transportOptions));

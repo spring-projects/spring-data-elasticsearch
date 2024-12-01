@@ -51,6 +51,7 @@ import co.elastic.clients.elasticsearch.indices.*;
 import co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
+import co.elastic.clients.elasticsearch.sql.query.SqlFormat;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
 import co.elastic.clients.json.JsonpMapper;
@@ -533,17 +534,22 @@ class RequestConverter extends AbstractQueryProcessor {
 	public co.elastic.clients.elasticsearch.sql.QueryRequest sqlQueryRequest(SqlQuery query) {
 		Assert.notNull(query, "Query must not be null.");
 
-		return co.elastic.clients.elasticsearch.sql.QueryRequest.of(sqb -> {
-			sqb.query(query.getQuery()).catalog(query.getCatalog()).columnar(query.getColumnar()).cursor(query.getCursor())
-					.fetchSize(query.getFetchSize()).fieldMultiValueLeniency(query.getFieldMultiValueLeniency())
-					.indexUsingFrozen(query.getIndexIncludeFrozen()).keepAlive(time(query.getKeepAlive()))
-					.keepOnCompletion(query.getKeepOnCompletion()).pageTimeout(time(query.getPageTimeout()))
-					.requestTimeout(time(query.getRequestTimeout()))
-					.waitForCompletionTimeout(time(query.getWaitForCompletionTimeout())).filter(getQuery(query.getFilter(), null))
-					.timeZone(Objects.toString(query.getTimeZone(), null)).format("json");
-
-			return sqb;
-		});
+		return co.elastic.clients.elasticsearch.sql.QueryRequest.of(sqb -> sqb
+				.query(query.getQuery())
+				.catalog(query.getCatalog())
+				.columnar(query.getColumnar())
+				.cursor(query.getCursor())
+				.fetchSize(query.getFetchSize())
+				.fieldMultiValueLeniency(query.getFieldMultiValueLeniency())
+				.indexUsingFrozen(query.getIndexIncludeFrozen())
+				.keepAlive(time(query.getKeepAlive()))
+				.keepOnCompletion(query.getKeepOnCompletion())
+				.pageTimeout(time(query.getPageTimeout()))
+				.requestTimeout(time(query.getRequestTimeout()))
+				.waitForCompletionTimeout(time(query.getWaitForCompletionTimeout()))
+				.filter(getQuery(query.getFilter(), null))
+				.timeZone(Objects.toString(query.getTimeZone(), null))
+				.format(SqlFormat.Json));
 	}
 
 	// endregion
