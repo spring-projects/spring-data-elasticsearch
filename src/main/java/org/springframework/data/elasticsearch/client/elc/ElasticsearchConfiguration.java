@@ -135,6 +135,6 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 	 * @return the options that should be added to every request. Must not be {@literal null}
 	 */
 	public TransportOptions transportOptions() {
-		return new RestClientOptions(RequestOptions.DEFAULT);
+		return new RestClientOptions(RequestOptions.DEFAULT, false);
 	}
 }

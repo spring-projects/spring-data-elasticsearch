@@ -33,11 +33,11 @@ inline fun <reified T : Any> SearchOperations.searchOne(query: Query): SearchHit
 inline fun <reified T : Any> SearchOperations.searchOne(query: Query, index: IndexCoordinates): SearchHit<T>? =
     searchOne(query, T::class.java, index)
 
-inline fun <reified T : Any> SearchOperations.multiSearch(queries: List<out Query>): List<SearchHits<T>> =
+inline fun <reified T : Any> SearchOperations.multiSearch(queries: List<Query>): List<SearchHits<T>> =
     multiSearch(queries, T::class.java)
 
 inline fun <reified T : Any> SearchOperations.multiSearch(
-    queries: List<out Query>,
+    queries: List<Query>,
     index: IndexCoordinates
 ): List<SearchHits<T>> =
     multiSearch(queries, T::class.java, index)

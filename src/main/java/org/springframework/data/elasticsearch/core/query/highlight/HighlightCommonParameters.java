@@ -80,6 +80,10 @@ public abstract class HighlightCommonParameters {
 		return boundaryScannerLocale;
 	}
 
+	/**
+	 * @deprecated the underlying functionality is deprecated since Elasticsearch 8.8.
+	 */
+	@Deprecated(since = "5.5")
 	public boolean getForceSource() {
 		return forceSource;
 	}
@@ -173,6 +177,10 @@ public abstract class HighlightCommonParameters {
 			return (SELF) this;
 		}
 
+		/**
+		 * @deprecated the underlying functionality is deprecated since Elasticsearch 8.8.
+		 */
+		@Deprecated(since = "5.5")
 		public SELF withForceSource(boolean forceSource) {
 			this.forceSource = forceSource;
 			return (SELF) this;

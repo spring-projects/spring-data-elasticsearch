@@ -329,7 +329,7 @@ public final class ElasticsearchClients {
 		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
 
 		TransportOptions.Builder transportOptionsBuilder = transportOptions != null ? transportOptions.toBuilder()
-				: new RestClientOptions(RequestOptions.DEFAULT).toBuilder();
+				: new RestClientOptions(RequestOptions.DEFAULT, false).toBuilder();
 
 		RestClientOptions.Builder restClientOptionsBuilder = getRestClientOptionsBuilder(transportOptions);
 
