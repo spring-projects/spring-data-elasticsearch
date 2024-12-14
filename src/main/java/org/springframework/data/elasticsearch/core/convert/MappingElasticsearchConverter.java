@@ -85,6 +85,7 @@ import org.springframework.util.ObjectUtils;
  * @author Anton Naydenov
  * @author vdisk
  * @author Junghoon Ban
+ * @author llosimura
  * @since 3.2
  */
 public class MappingElasticsearchConverter
@@ -653,13 +654,14 @@ public class MappingElasticsearchConverter
 				SearchDocument searchDocument) {
 			Map<String, List<Object>> fields = searchDocument.getFields();
 			entity.doWithProperties((SimplePropertyHandler) property -> {
-				if (property.isAnnotationPresent(ScriptedField.class) && fields.containsKey(property.getName())) {
+				if (property.isAnnotationPresent(ScriptedField.class)) {
 					ScriptedField scriptedField = property.findAnnotation(ScriptedField.class);
 					// noinspection ConstantConditions
 					String name = scriptedField.name().isEmpty() ? property.getName() : scriptedField.name();
-					Object value = searchDocument.getFieldValue(name);
-
-					entity.getPropertyAccessor(result).setProperty(property, value);
+					if (fields.containsKey(name)) {
+						Object value = searchDocument.getFieldValue(name);
+						entity.getPropertyAccessor(result).setProperty(property, value);
+					}
 				}
 			});
 		}

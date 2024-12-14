@@ -49,8 +49,10 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
+import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.annotations.ValueConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.data.elasticsearch.core.document.SearchDocumentAdapter;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonEntity;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonGeometryCollection;
 import org.springframework.data.elasticsearch.core.geo.GeoJsonLineString;
@@ -83,6 +85,7 @@ import org.springframework.util.Assert;
  * @author Konrad Kurdej
  * @author Roman Puchkovskiy
  * @author Sascha Woo
+ * @author llosimura
  */
 public class MappingElasticsearchConverterUnitTests {
 
@@ -1799,6 +1802,68 @@ public class MappingElasticsearchConverterUnitTests {
 
 		assertThat(entity.getStringList()).containsExactly("foo");
 	}
+
+	@Test
+	void shouldPopulateScriptedFields() {
+		SearchDocumentAdapter document = new SearchDocumentAdapter(Document.create(),
+				0.0f,
+				new Object[]{},
+				Map.of(
+						"scriptedField" , List.of("scriptedField"),
+						"custom-name-scripted-field" , List.of("custom-name-scripted-field")
+				),
+				emptyMap(),
+				emptyMap(),
+				null,
+				null,
+				null,
+				null
+		);
+		// Create a SearchDocument instance
+		var entity = mappingElasticsearchConverter.read(ScriptedEntity.class, document);
+		assertThat(entity.customScriptedField).isEqualTo("custom-name-scripted-field");
+		assertThat(entity.scriptedField).isEqualTo("scriptedField");
+	}
+
+	static class ScriptedEntity {
+		@ScriptedField
+		private String scriptedField;
+		@ScriptedField(name = "custom-name-scripted-field") String customScriptedField;
+
+		ScriptedEntity() {
+			customScriptedField = "";
+			scriptedField = "";
+		}
+
+		public String getScriptedField() {
+			return scriptedField;
+		}
+
+		public void setScriptedField(String scriptedField) {
+			this.scriptedField = scriptedField;
+		}
+
+		public String getCustomScriptedField() {
+			return customScriptedField;
+		}
+
+		public void setCustomScriptedField(String customScriptedField) {
+			this.customScriptedField = customScriptedField;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (o == null || getClass() != o.getClass()) return false;
+			ScriptedEntity that = (ScriptedEntity) o;
+			return Objects.equals(scriptedField, that.scriptedField) && Objects.equals(customScriptedField, that.customScriptedField);
+		}
+
+		@Override
+		public int hashCode() {
+			return Objects.hash(scriptedField, customScriptedField);
+		}
+	}
+
 
 	@Test // #2280
 	@DisplayName("should read a String array into a List property immutable")
