@@ -252,4 +252,11 @@ public @interface Field {
 	 * @since 5.4
 	 */
 	String mappedTypeName() default "";
+
+	/**
+	 * Maps your data beyond the dynamic field mapping rules.
+	 * 
+	 * @since 5.4
+	 */
+	boolean dynamicTemplate() default false;
 }
