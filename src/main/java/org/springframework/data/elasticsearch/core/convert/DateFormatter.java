@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the original author or authors.
+ * Copyright 2021-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ import java.time.temporal.TemporalAccessor;
 
 /**
  * Interface to convert from and to {@link TemporalAccessor}s.
- * 
+ *
  * @author Peter-Josef Meisch
  * @since 4.2
  */
 public interface DateFormatter {
 	/**
 	 * Formats a {@link TemporalAccessor} into a String.
-	 * 
+	 *
 	 * @param accessor must not be {@literal null}
 	 * @return the formatted String
 	 */
@@ -34,7 +34,7 @@ public interface DateFormatter {
 
 	/**
 	 * Parses a String into a {@link TemporalAccessor}.
-	 * 
+	 *
 	 * @param input the String to parse, must not be {@literal null}
 	 * @param type the class of T
 	 * @param <T> the {@link TemporalAccessor} implementation
