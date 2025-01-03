@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the original author or authors.
+ * Copyright 2020-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ public interface ReactiveBeforeConvertCallback<T> extends EntityCallback<T> {
 	/**
 	 * Callback method that will be invoked before an entity is persisted. Can return the same or a different instance of
 	 * the domain entity class.
-	 * 
+	 *
 	 * @param entity the entity being converted
 	 * @param index must not be {@literal null}.
 	 * @return the entity to be converted

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the original author or authors.
+ * Copyright 2021-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ public @interface ValueConverter {
 	 * Defines the class implementing the {@link PropertyValueConverter} interface. If this is a normal class, it must
 	 * provide a default constructor with no arguments. If this is an enum and thus implementing a singleton by enum it
 	 * must only have one enum value.
-	 * 
+	 *
 	 * @return the class to use for conversion
 	 */
 	Class<? extends PropertyValueConverter> value();
