@@ -78,7 +78,8 @@ class HttpHeadersTest {
 		springHttpHeaders.add(headerName, "true");
 
 		var httpHeaders = new HttpHeaders();
-		httpHeaders.addAll(springHttpHeaders);
+
+		springHttpHeaders.forEach(httpHeaders::addAll);
 
 		assertThat(httpHeaders.get(X_TEST_HEADER)).containsExactly("foo", "bar");
 		assertThat(httpHeaders.get(headerName)).containsExactly("true");
