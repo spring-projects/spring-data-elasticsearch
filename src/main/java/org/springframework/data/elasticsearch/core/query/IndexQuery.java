@@ -54,6 +54,13 @@ public class IndexQuery {
 		this.indexName = indexName;
 	}
 
+	/**
+	 * @since 5.5
+	 */
+	public static IndexQueryBuilder builder() {
+		return new IndexQueryBuilder();
+	}
+
 	@Nullable
 	public String getId() {
 		return id;
