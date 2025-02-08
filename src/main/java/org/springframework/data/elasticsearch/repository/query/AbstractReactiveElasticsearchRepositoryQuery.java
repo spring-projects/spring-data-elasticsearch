@@ -105,7 +105,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		var query = createQuery(parameterAccessor);
 		Assert.notNull(query, "unsupported query");
 
-		queryMethod.addMethodParameter(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter(),
+		queryMethod.addSpecialMethodParameters(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter(),
 				evaluationContextProvider);
 
 		String indexName = queryMethod.getEntityInformation().getIndexName();

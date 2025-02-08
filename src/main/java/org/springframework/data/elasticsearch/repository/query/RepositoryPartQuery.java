@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the original author or authors.
+ * Copyright 2013-2024 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,8 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 import org.springframework.data.repository.query.parser.PartTree;
 
 /**
- * ElasticsearchPartQuery
+ * A repository query that is built from the the method name in the repository definition.
+ * Was originally named ElasticsearchPartQuery.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -33,11 +34,42 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Rasmus Faber-Espensen
  * @author Peter-Josef Meisch
  * @author Haibo Liu
- * @deprecated since 5.5, use {@link RepositoryPartQuery} instead
  */
-@Deprecated(forRemoval = true)
-public class ElasticsearchPartQuery extends RepositoryPartQuery {
-	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+public class RepositoryPartQuery extends AbstractElasticsearchRepositoryQuery {
+
+	private final PartTree tree;
+	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
+
+	public RepositoryPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations,
+                               QueryMethodEvaluationContextProvider evaluationContextProvider) {
 		super(method, elasticsearchOperations, evaluationContextProvider);
+		this.tree = new PartTree(queryMethod.getName(), queryMethod.getResultProcessor().getReturnedType().getDomainType());
+		this.mappingContext = elasticsearchConverter.getMappingContext();
+	}
+
+	@Override
+	public boolean isCountQuery() {
+		return tree.isCountProjection();
+	}
+
+	@Override
+	protected boolean isDeleteQuery() {
+		return tree.isDelete();
+	}
+
+	@Override
+	protected boolean isExistsQuery() {
+		return tree.isExistsProjection();
+	}
+
+	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor accessor) {
+
+		BaseQuery query = new ElasticsearchQueryCreator(tree, accessor, mappingContext).createQuery();
+
+		if (tree.getMaxResults() != null) {
+			query.setMaxResults(tree.getMaxResults());
+		}
+
+		return query;
 	}
 }

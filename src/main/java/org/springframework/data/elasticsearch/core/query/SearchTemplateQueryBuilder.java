@@ -15,9 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.springframework.lang.Nullable;
-
 import java.util.Map;
+
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
@@ -25,12 +27,10 @@ import java.util.Map;
  */
 public class SearchTemplateQueryBuilder extends BaseQueryBuilder<SearchTemplateQuery, SearchTemplateQueryBuilder> {
 
-	@Nullable
-	private String id;
+	@Nullable private String id;
 	@Nullable String source;
 
-	@Nullable
-	Map<String, Object> params;
+	@Nullable Map<String, Object> params;
 
 	@Nullable
 	public String getId() {
@@ -60,6 +60,18 @@ public class SearchTemplateQueryBuilder extends BaseQueryBuilder<SearchTemplateQ
 	public SearchTemplateQueryBuilder withParams(@Nullable Map<String, Object> params) {
 		this.params = params;
 		return this;
+	}
+
+	@Override
+	public SearchTemplateQueryBuilder withSort(Sort sort) {
+		throw new IllegalArgumentException(
+				"sort is not supported in a searchtemplate query. Sort values must be defined in the stored template");
+	}
+
+	@Override
+	public SearchTemplateQueryBuilder withPageable(Pageable pageable) {
+		throw new IllegalArgumentException(
+				"paging is not supported in a searchtemplate query. from and size values must be defined in the stored template");
 	}
 
 	@Override

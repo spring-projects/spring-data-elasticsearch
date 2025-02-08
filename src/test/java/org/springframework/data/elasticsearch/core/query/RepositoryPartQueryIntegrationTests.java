@@ -31,15 +31,15 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchQueryMethod;
+import org.springframework.data.elasticsearch.repository.query.RepositoryPartQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.lang.Nullable;
 
 /**
- * Tests for {@link ElasticsearchPartQuery}. The tests make sure that queries are built according to the method naming.
+ * Tests for {@link RepositoryPartQuery}. The tests make sure that queries are built according to the method naming.
  * Classes implementing this abstract class are in the packages of their request factories and converters as these are
  * kept package private.
  *
@@ -48,7 +48,7 @@ import org.springframework.lang.Nullable;
  */
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @SpringIntegrationTest
-public abstract class ElasticsearchPartQueryIntegrationTests {
+public abstract class RepositoryPartQueryIntegrationTests {
 
 	public static final String BOOK_TITLE = "Title";
 	public static final int BOOK_PRICE = 42;
@@ -646,7 +646,7 @@ public abstract class ElasticsearchPartQueryIntegrationTests {
 		ElasticsearchQueryMethod queryMethod = new ElasticsearchQueryMethod(method,
 				new DefaultRepositoryMetadata(SampleRepository.class), new SpelAwareProxyProjectionFactory(),
 				operations.getElasticsearchConverter().getMappingContext());
-		ElasticsearchPartQuery partQuery = new ElasticsearchPartQuery(queryMethod, operations,
+		RepositoryPartQuery partQuery = new RepositoryPartQuery(queryMethod, operations,
 				QueryMethodEvaluationContextProvider.DEFAULT);
 		Query query = partQuery.createQuery(parameters);
 		return buildQueryString(query, Book.class);

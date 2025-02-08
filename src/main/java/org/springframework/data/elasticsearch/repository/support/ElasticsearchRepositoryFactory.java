@@ -22,9 +22,10 @@ import java.util.Optional;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.query.ElasticsearchPartQuery;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchQueryMethod;
-import org.springframework.data.elasticsearch.repository.query.ElasticsearchStringQuery;
+import org.springframework.data.elasticsearch.repository.query.RepositoryPartQuery;
+import org.springframework.data.elasticsearch.repository.query.RepositorySearchTemplateQuery;
+import org.springframework.data.elasticsearch.repository.query.RepositoryStringQuery;
 import org.springframework.data.elasticsearch.repository.support.querybyexample.QueryByExampleElasticsearchExecutor;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
@@ -122,13 +123,17 @@ public class ElasticsearchRepositoryFactory extends RepositoryFactorySupport {
 
 			if (namedQueries.hasQuery(namedQueryName)) {
 				String namedQuery = namedQueries.getQuery(namedQueryName);
-				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, namedQuery,
+				return new RepositoryStringQuery(queryMethod, elasticsearchOperations, namedQuery,
 						evaluationContextProvider);
 			} else if (queryMethod.hasAnnotatedQuery()) {
-				return new ElasticsearchStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery(),
+				return new RepositoryStringQuery(queryMethod, elasticsearchOperations, queryMethod.getAnnotatedQuery(),
 						evaluationContextProvider);
+			} else if (queryMethod.hasAnnotatedSearchTemplateQuery()) {
+				var searchTemplateQuery = queryMethod.getAnnotatedSearchTemplateQuery();
+				return new RepositorySearchTemplateQuery(queryMethod, elasticsearchOperations, evaluationContextProvider,
+						searchTemplateQuery.id());
 			}
-			return new ElasticsearchPartQuery(queryMethod, elasticsearchOperations, evaluationContextProvider);
+			return new RepositoryPartQuery(queryMethod, elasticsearchOperations, evaluationContextProvider);
 		}
 	}
 
