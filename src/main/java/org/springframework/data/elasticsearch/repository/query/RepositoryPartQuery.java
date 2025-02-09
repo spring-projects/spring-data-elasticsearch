@@ -20,12 +20,12 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.repository.query.parser.PartTree;
 
 /**
- * A repository query that is built from the the method name in the repository definition.
- * Was originally named ElasticsearchPartQuery.
+ * A repository query that is built from the the method name in the repository definition. Was originally named
+ * ElasticsearchPartQuery.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -41,8 +41,9 @@ public class RepositoryPartQuery extends AbstractElasticsearchRepositoryQuery {
 	private final MappingContext<?, ElasticsearchPersistentProperty> mappingContext;
 
 	public RepositoryPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations,
-                               QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(method, elasticsearchOperations, evaluationContextProvider);
+			ValueExpressionDelegate valueExpressionDelegate) {
+		super(method, elasticsearchOperations,
+				valueExpressionDelegate.createValueContextProvider(method.getParameters()));
 		this.tree = new PartTree(queryMethod.getName(), queryMethod.getResultProcessor().getReturnedType().getDomainType());
 		this.mappingContext = elasticsearchConverter.getMappingContext();
 	}

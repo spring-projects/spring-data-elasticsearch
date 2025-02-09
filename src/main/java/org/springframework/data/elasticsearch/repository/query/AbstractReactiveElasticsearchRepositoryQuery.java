@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -52,11 +53,11 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 
 	protected final ReactiveElasticsearchQueryMethod queryMethod;
 	private final ReactiveElasticsearchOperations elasticsearchOperations;
-	protected final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	protected final ValueEvaluationContextProvider evaluationContextProvider;
 
 	AbstractReactiveElasticsearchRepositoryQuery(ReactiveElasticsearchQueryMethod queryMethod,
 			ReactiveElasticsearchOperations elasticsearchOperations,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+												 ValueEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(queryMethod, "queryMethod must not be null");
 		Assert.notNull(elasticsearchOperations, "elasticsearchOperations must not be null");

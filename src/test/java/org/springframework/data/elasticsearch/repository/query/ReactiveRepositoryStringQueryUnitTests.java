@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -419,7 +420,7 @@ public class ReactiveRepositoryStringQueryUnitTests extends ReactiveRepositoryQu
 
 	private ReactiveRepositoryStringQuery queryForMethod(ReactiveElasticsearchQueryMethod queryMethod) {
 		return new ReactiveRepositoryStringQuery(queryMethod, operations,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+				ValueExpressionDelegate.create());
 	}
 
 	private interface SampleRepository extends Repository<Person, String> {

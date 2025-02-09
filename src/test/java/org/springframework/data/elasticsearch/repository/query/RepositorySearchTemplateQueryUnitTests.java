@@ -28,7 +28,7 @@ import org.springframework.data.elasticsearch.annotations.SearchTemplateQuery;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 
 public class RepositorySearchTemplateQueryUnitTests extends RepositoryQueryUnitTestsBase {
@@ -71,7 +71,7 @@ public class RepositorySearchTemplateQueryUnitTests extends RepositoryQueryUnitT
 	}
 
 	private RepositorySearchTemplateQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {
-		return new RepositorySearchTemplateQuery(queryMethod, operations, QueryMethodEvaluationContextProvider.DEFAULT,
+		return new RepositorySearchTemplateQuery(queryMethod, operations, ValueExpressionDelegate.create(),
 				queryMethod.getAnnotatedSearchTemplateQuery().id());
 	}
 	// endregion

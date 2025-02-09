@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 /**
  * @author Christoph Strobl
@@ -29,12 +29,12 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 public class ReactiveElasticsearchStringQuery extends ReactiveRepositoryStringQuery {
 
 	public ReactiveElasticsearchStringQuery(ReactiveElasticsearchQueryMethod queryMethod,
-			ReactiveElasticsearchOperations operations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(queryMethod, operations, evaluationContextProvider);
+			ReactiveElasticsearchOperations operations, ValueExpressionDelegate valueExpressionDelegate) {
+		super(queryMethod, operations, valueExpressionDelegate);
 	}
 
 	public ReactiveElasticsearchStringQuery(String query, ReactiveElasticsearchQueryMethod queryMethod,
-			ReactiveElasticsearchOperations operations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(query, queryMethod, operations, evaluationContextProvider);
+			ReactiveElasticsearchOperations operations, ValueExpressionDelegate valueExpressionDelegate) {
+		super(query, queryMethod, operations, valueExpressionDelegate);
 	}
 }

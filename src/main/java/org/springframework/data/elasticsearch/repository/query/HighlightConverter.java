@@ -25,8 +25,8 @@ import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightField;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.util.Assert;
 
 /**
@@ -38,13 +38,13 @@ public class HighlightConverter {
 
 	private final ElasticsearchParametersParameterAccessor parameterAccessor;
 	private final ConversionService conversionService;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
+	private final ValueEvaluationContextProvider evaluationContextProvider;
 	private final QueryMethod queryMethod;
 
 	HighlightConverter(ElasticsearchParametersParameterAccessor parameterAccessor,
-					   ConversionService conversionService,
-					   QueryMethodEvaluationContextProvider evaluationContextProvider,
-					   QueryMethod queryMethod) {
+			ConversionService conversionService,
+			ValueEvaluationContextProvider evaluationContextProvider,
+			QueryMethod queryMethod) {
 
 		Assert.notNull(parameterAccessor, "parameterAccessor must not be null");
 		Assert.notNull(conversionService, "conversionService must not be null");

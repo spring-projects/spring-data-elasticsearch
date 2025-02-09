@@ -5,12 +5,11 @@ import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.util.Assert;
 
 /**
- * A repository query that is defined by a String containing the query.
- * Was originally named ElasticsearchStringQuery.
+ * A repository query that is defined by a String containing the query. Was originally named ElasticsearchStringQuery.
  *
  * @author Rizwan Idrees
  * @author Mohsin Husen
@@ -20,39 +19,39 @@ import org.springframework.util.Assert;
  * @author Haibo Liu
  */
 public class RepositoryStringQuery extends AbstractElasticsearchRepositoryQuery {
-    private final String queryString;
+	private final String queryString;
 
-    public RepositoryStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
-                                    String queryString, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-        super(queryMethod, elasticsearchOperations, evaluationContextProvider);
+	public RepositoryStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
+			String queryString, ValueExpressionDelegate valueExpressionDelegate) {
+		super(queryMethod, elasticsearchOperations,
+				valueExpressionDelegate.createValueContextProvider(queryMethod.getParameters()));
 
-        Assert.notNull(queryString, "Query cannot be empty");
-        Assert.notNull(evaluationContextProvider, "ExpressionEvaluationContextProvider must not be null");
+		Assert.notNull(queryString, "Query cannot be empty");
 
-        this.queryString = queryString;
-    }
+		this.queryString = queryString;
+	}
 
-    @Override
-    public boolean isCountQuery() {
-        return queryMethod.hasCountQueryAnnotation();
-    }
+	@Override
+	public boolean isCountQuery() {
+		return queryMethod.hasCountQueryAnnotation();
+	}
 
-    @Override
-    protected boolean isDeleteQuery() {
-        return false;
-    }
+	@Override
+	protected boolean isDeleteQuery() {
+		return false;
+	}
 
-    @Override
-    protected boolean isExistsQuery() {
-        return false;
-    }
+	@Override
+	protected boolean isExistsQuery() {
+		return false;
+	}
 
-    protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
-        ConversionService conversionService = elasticsearchOperations.getElasticsearchConverter().getConversionService();
-        var processed = new QueryStringProcessor(queryString, queryMethod, conversionService, evaluationContextProvider)
-                .createQuery(parameterAccessor);
+	protected BaseQuery createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
+		ConversionService conversionService = elasticsearchOperations.getElasticsearchConverter().getConversionService();
+		var processed = new QueryStringProcessor(queryString, queryMethod, conversionService, evaluationContextProvider)
+				.createQuery(parameterAccessor);
 
-        return new StringQuery(processed)
-                .addSort(parameterAccessor.getSort());
-    }
+		return new StringQuery(processed)
+				.addSort(parameterAccessor.getSort());
+	}
 }

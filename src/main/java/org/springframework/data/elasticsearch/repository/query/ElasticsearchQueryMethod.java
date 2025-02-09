@@ -44,6 +44,7 @@ import org.springframework.data.elasticsearch.core.query.RuntimeField;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
 import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
@@ -103,13 +104,6 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		this.searchTemplateQueryAnnotation = AnnotatedElementUtils.findMergedAnnotation(method, SearchTemplateQuery.class);
 
 		verifyCountQueryTypes();
-	}
-
-	@SuppressWarnings("removal")
-	@Override
-	@Deprecated
-	protected Parameters<?, ?> createParameters(Method method, TypeInformation<?> domainType) {
-		return new ElasticsearchParameters(ParametersSource.of(method));
 	}
 
 	@Override
@@ -331,7 +325,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	@Nullable
 	SourceFilter getSourceFilter(ElasticsearchParametersParameterAccessor parameterAccessor,
 			ElasticsearchConverter converter,
-			QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ValueEvaluationContextProvider evaluationContextProvider) {
 
 		if (sourceFilters == null || (sourceFilters.includes().length == 0 && sourceFilters.excludes().length == 0)) {
 			return null;
@@ -354,7 +348,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	private String[] mapParameters(String[] source, ElasticsearchParametersParameterAccessor parameterAccessor,
-			ConversionService conversionService, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ConversionService conversionService, ValueEvaluationContextProvider evaluationContextProvider) {
 
 		List<String> fieldNames = new ArrayList<>();
 
@@ -407,7 +401,7 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 
 	void addSpecialMethodParameters(BaseQuery query, ElasticsearchParametersParameterAccessor parameterAccessor,
 									ElasticsearchConverter elasticsearchConverter,
-									QueryMethodEvaluationContextProvider evaluationContextProvider) {
+									ValueEvaluationContextProvider evaluationContextProvider) {
 
 		if (hasAnnotatedHighlight()) {
 			var highlightQuery = getAnnotatedHighlightQuery(new HighlightConverter(parameterAccessor,
