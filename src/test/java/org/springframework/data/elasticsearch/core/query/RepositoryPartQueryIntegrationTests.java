@@ -36,6 +36,7 @@ import org.springframework.data.elasticsearch.repository.query.RepositoryPartQue
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 
 /**
@@ -647,7 +648,7 @@ public abstract class RepositoryPartQueryIntegrationTests {
 				new DefaultRepositoryMetadata(SampleRepository.class), new SpelAwareProxyProjectionFactory(),
 				operations.getElasticsearchConverter().getMappingContext());
 		RepositoryPartQuery partQuery = new RepositoryPartQuery(queryMethod, operations,
-				QueryMethodEvaluationContextProvider.DEFAULT);
+				ValueExpressionDelegate.create());
 		Query query = partQuery.createQuery(parameters);
 		return buildQueryString(query, Book.class);
 	}

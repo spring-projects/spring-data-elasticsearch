@@ -18,11 +18,10 @@ package org.springframework.data.elasticsearch.repository.query;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.util.Assert;
 
 /**
@@ -37,9 +36,11 @@ public class ReactiveRepositorySearchTemplateQuery extends AbstractReactiveElast
 	private Map<String, Object> params;
 
 	public ReactiveRepositorySearchTemplateQuery(ReactiveElasticsearchQueryMethod queryMethod,
-												 ReactiveElasticsearchOperations elasticsearchOperations, QueryMethodEvaluationContextProvider evaluationContextProvider,
-												 String id) {
-		super(queryMethod, elasticsearchOperations, evaluationContextProvider);
+			ReactiveElasticsearchOperations elasticsearchOperations,
+			ValueExpressionDelegate valueExpressionDelegate,
+			String id) {
+		super(queryMethod, elasticsearchOperations,
+				valueExpressionDelegate.createValueContextProvider(queryMethod.getParameters()));
 		Assert.hasLength(id, "id must not be null or empty");
 		this.id = id;
 	}
@@ -84,9 +85,9 @@ public class ReactiveRepositorySearchTemplateQuery extends AbstractReactiveElast
 			}
 		});
 
-        return SearchTemplateQuery.builder()
-                .withId(id)
-                .withParams(searchTemplateParameters)
+		return SearchTemplateQuery.builder()
+				.withId(id)
+				.withParams(searchTemplateParameters)
 				.build();
 	}
 }

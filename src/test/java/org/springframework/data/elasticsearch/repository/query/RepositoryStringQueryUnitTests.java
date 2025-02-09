@@ -43,7 +43,7 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.repository.Repository;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 
 /**
@@ -407,7 +407,7 @@ public class RepositoryStringQueryUnitTests extends RepositoryStringQueryUnitTes
 
 	private RepositoryStringQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {
 		return new RepositoryStringQuery(queryMethod, operations, queryMethod.getAnnotatedQuery(),
-				QueryMethodEvaluationContextProvider.DEFAULT);
+				ValueExpressionDelegate.create());
 	}
 
 	private interface SampleRepository extends Repository<Person, String> {

@@ -16,12 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
-import org.springframework.data.elasticsearch.core.query.BaseQuery;
-import org.springframework.data.elasticsearch.repository.query.parser.ElasticsearchQueryCreator;
-import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
-import org.springframework.data.repository.query.parser.PartTree;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 /**
  * ElasticsearchPartQuery
@@ -37,7 +32,8 @@ import org.springframework.data.repository.query.parser.PartTree;
  */
 @Deprecated(forRemoval = true)
 public class ElasticsearchPartQuery extends RepositoryPartQuery {
-	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(method, elasticsearchOperations, evaluationContextProvider);
+	public ElasticsearchPartQuery(ElasticsearchQueryMethod method, ElasticsearchOperations elasticsearchOperations,
+			ValueExpressionDelegate valueExpressionDelegate) {
+		super(method, elasticsearchOperations, valueExpressionDelegate);
 	}
 }

@@ -21,10 +21,12 @@ import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repository.support.QueryStringProcessor;
 import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.util.Assert;
 
 /**
  * Was originally named ReactiveElasticsearchStringQuery.
+ *
  * @author Christoph Strobl
  * @author Taylor Ono
  * @author Haibo Liu
@@ -33,23 +35,20 @@ import org.springframework.util.Assert;
 public class ReactiveRepositoryStringQuery extends AbstractReactiveElasticsearchRepositoryQuery {
 
 	private final String query;
-	private final QueryMethodEvaluationContextProvider evaluationContextProvider;
 
 	public ReactiveRepositoryStringQuery(ReactiveElasticsearchQueryMethod queryMethod,
-                                         ReactiveElasticsearchOperations operations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
+			ReactiveElasticsearchOperations operations, ValueExpressionDelegate valueExpressionDelegate) {
 
-		this(queryMethod.getAnnotatedQuery(), queryMethod, operations, evaluationContextProvider);
+		this(queryMethod.getAnnotatedQuery(), queryMethod, operations, valueExpressionDelegate);
 	}
 
 	public ReactiveRepositoryStringQuery(String query, ReactiveElasticsearchQueryMethod queryMethod,
-                                         ReactiveElasticsearchOperations operations, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(queryMethod, operations, evaluationContextProvider);
+			ReactiveElasticsearchOperations operations, ValueExpressionDelegate valueExpressionDelegate) {
+		super(queryMethod, operations, valueExpressionDelegate.createValueContextProvider(queryMethod.getParameters()));
 
 		Assert.notNull(query, "query must not be null");
-		Assert.notNull(evaluationContextProvider, "evaluationContextProvider must not be null");
 
 		this.query = query;
-		this.evaluationContextProvider = evaluationContextProvider;
 	}
 
 	@Override

@@ -16,7 +16,7 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 /**
  * ElasticsearchStringQuery
@@ -32,7 +32,7 @@ import org.springframework.data.repository.query.QueryMethodEvaluationContextPro
 @Deprecated(since = "5.5", forRemoval = true)
 public class ElasticsearchStringQuery extends RepositoryStringQuery {
 	public ElasticsearchStringQuery(ElasticsearchQueryMethod queryMethod, ElasticsearchOperations elasticsearchOperations,
-			String queryString, QueryMethodEvaluationContextProvider evaluationContextProvider) {
-		super(queryMethod, elasticsearchOperations, queryString, evaluationContextProvider);
+			String queryString, ValueExpressionDelegate valueExpressionDelegate) {
+		super(queryMethod, elasticsearchOperations, queryString, valueExpressionDelegate);
 	}
 }

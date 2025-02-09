@@ -21,7 +21,7 @@ import java.util.Map;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.util.Assert;
 
 /**
@@ -36,9 +36,10 @@ public class RepositorySearchTemplateQuery extends AbstractElasticsearchReposito
 	private Map<String, Object> params;
 
 	public RepositorySearchTemplateQuery(ElasticsearchQueryMethod queryMethod,
-			ElasticsearchOperations elasticsearchOperations, QueryMethodEvaluationContextProvider evaluationContextProvider,
+			ElasticsearchOperations elasticsearchOperations, ValueExpressionDelegate valueExpressionDelegate,
 			String id) {
-		super(queryMethod, elasticsearchOperations, evaluationContextProvider);
+		super(queryMethod, elasticsearchOperations,
+				valueExpressionDelegate.createValueContextProvider(queryMethod.getParameters()));
 		Assert.hasLength(id, "id must not be null or empty");
 		this.id = id;
 	}
@@ -78,9 +79,9 @@ public class RepositorySearchTemplateQuery extends AbstractElasticsearchReposito
 			}
 		});
 
-        return SearchTemplateQuery.builder()
-                .withId(id)
-                .withParams(searchTemplateParameters)
+		return SearchTemplateQuery.builder()
+				.withId(id)
+				.withParams(searchTemplateParameters)
 				.build();
 	}
 }
