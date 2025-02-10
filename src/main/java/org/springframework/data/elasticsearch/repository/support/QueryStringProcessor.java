@@ -20,7 +20,6 @@ import org.springframework.data.elasticsearch.repository.query.ElasticsearchPara
 import org.springframework.data.elasticsearch.repository.support.spel.QueryStringSpELEvaluator;
 import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.util.Assert;
 
 /**
