@@ -35,7 +35,6 @@ import org.springframework.data.elasticsearch.repository.query.ElasticsearchQuer
 import org.springframework.data.elasticsearch.repository.query.RepositoryPartQuery;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.lang.Nullable;
 
