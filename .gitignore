@@ -33,3 +33,4 @@ node
 package-lock.json
 
 .mvn/.develocity
+/src/test/resources/testcontainers-local.properties
