@@ -129,6 +129,9 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 			Map<String, String> testcontainersProperties = testcontainersProperties(
 					"testcontainers-" + testcontainersConfiguration + ".properties");
 
+			var testcontainersPropertiesLocal = testcontainersProperties("testcontainers-local.properties");
+			testcontainersProperties.putAll(testcontainersPropertiesLocal);
+
 			DockerImageName dockerImageName = getDockerImageName(testcontainersProperties);
 
 			ElasticsearchContainer elasticsearchContainer = new SpringDataElasticsearchContainer(dockerImageName)
