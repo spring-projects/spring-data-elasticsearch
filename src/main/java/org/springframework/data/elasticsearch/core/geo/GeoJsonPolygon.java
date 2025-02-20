@@ -189,6 +189,12 @@ public class GeoJsonPolygon implements GeoJson<Iterable<GeoJsonLineString>> {
 	@SafeVarargs
 	private static <T> List<T> asList(T first, T second, T third, T fourth, T... others) {
 
+		Assert.notNull(first, "First element must not be null!");
+		Assert.notNull(second, "Second element must not be null!");
+		Assert.notNull(third, "Third element must not be null!");
+		Assert.notNull(fourth, "Fourth element must not be null!");
+		Assert.notNull(others, "Additional elements must not be null!");
+
 		ArrayList<T> result = new ArrayList<>(4 + others.length);
 
 		result.add(first);
