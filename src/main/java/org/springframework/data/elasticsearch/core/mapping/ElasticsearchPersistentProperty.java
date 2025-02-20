@@ -111,6 +111,13 @@ public interface ElasticsearchPersistentProperty extends PersistentProperty<Elas
 	boolean isIndexedIndexNameProperty();
 
 	/**
+	 * Maps your data beyond the dynamic field mapping rules.
+	 *
+	 * @since 5.4
+	 */
+	boolean isDynamicFieldMapping();
+
+	/**
 	 * calls {@link #getActualType()} but returns null when an exception is thrown
 	 *
 	 * @since 4.1
