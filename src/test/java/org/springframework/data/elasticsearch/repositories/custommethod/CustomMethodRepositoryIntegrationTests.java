@@ -29,6 +29,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -66,7 +67,6 @@ import org.springframework.data.geo.Distance;
 import org.springframework.data.geo.Metrics;
 import org.springframework.data.geo.Point;
 import org.springframework.data.repository.query.Param;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -2534,12 +2534,11 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 			this.location = location;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 	}

@@ -15,13 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.core.script.ScriptOperations;
 import org.springframework.data.elasticsearch.core.sql.SqlOperations;
-import org.springframework.lang.Nullable;
 
 /**
  * ElasticsearchOperations. Since 4.0 this interface only contains common helper functions, the other methods have been

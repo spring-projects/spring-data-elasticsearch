@@ -19,12 +19,12 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.FactoryBeanNotInitializedException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

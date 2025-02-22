@@ -28,8 +28,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -44,7 +44,7 @@ import org.springframework.util.Assert;
 public class NativeQuery extends BaseQuery {
 
 	@Nullable private final Query query;
-	@Nullable private org.springframework.data.elasticsearch.core.query.Query springDataQuery;
+	private org.springframework.data.elasticsearch.core.query.@Nullable Query springDataQuery;
 	@Nullable private Query filter;
 	// note: the new client does not have pipeline aggs, these are just set up as normal aggs
 	private final Map<String, Aggregation> aggregations = new LinkedHashMap<>();
@@ -117,7 +117,7 @@ public class NativeQuery extends BaseQuery {
 	 * @see NativeQueryBuilder#withQuery(org.springframework.data.elasticsearch.core.query.Query).
 	 * @since 5.1
 	 */
-	public void setSpringDataQuery(@Nullable org.springframework.data.elasticsearch.core.query.Query springDataQuery) {
+	public void setSpringDataQuery(org.springframework.data.elasticsearch.core.query.@Nullable Query springDataQuery) {
 		this.springDataQuery = springDataQuery;
 	}
 
@@ -129,8 +129,7 @@ public class NativeQuery extends BaseQuery {
 		return knnSearches;
 	}
 
-	@Nullable
-	public org.springframework.data.elasticsearch.core.query.Query getSpringDataQuery() {
+	public org.springframework.data.elasticsearch.core.query.@Nullable Query getSpringDataQuery() {
 		return springDataQuery;
 	}
 }

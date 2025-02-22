@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.client.elc;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.*;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,13 +30,13 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 
 /**
  * Tests that need to check the data produced by the Elasticsearch client
+ *
  * @author Peter-Josef Meisch
  */
 @SuppressWarnings("UastIncorrectHttpHeaderInspection")

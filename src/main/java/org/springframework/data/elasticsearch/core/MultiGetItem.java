@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
-import org.springframework.lang.Nullable;
 
 /**
  * Response object for items returned from multiget requests, encapsulating the returned data and potential error

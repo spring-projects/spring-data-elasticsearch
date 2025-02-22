@@ -40,6 +40,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.client.UnsupportedBackendOperation;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
@@ -59,7 +60,6 @@ import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.core.sql.SqlResponse;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

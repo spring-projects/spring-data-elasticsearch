@@ -15,9 +15,9 @@
  */
 package org.springframework.data.elasticsearch.core.suggest.response;
 
-import org.springframework.lang.Nullable;
-
 import java.util.List;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Peter-Josef Meisch

@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 
 /**
  * LogEntityIntegrationTests
@@ -137,8 +137,7 @@ public abstract class LogEntityIntegrationTests {
 		@Nullable private long sequenceCode;
 		@Nullable
 		@Field(type = Ip) private String ip;
-		@Nullable
-		@Field(type = Date, format = DateFormat.date_time) private java.util.Date date;
+		@Field(type = Date, format = DateFormat.date_time) private java.util.@Nullable Date date;
 
 		private LogEntity() {}
 

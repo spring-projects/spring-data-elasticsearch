@@ -48,6 +48,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
 import org.springframework.data.elasticsearch.core.IndexInformation;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
@@ -65,7 +66,6 @@ import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.core.sql.SqlResponse;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -417,8 +417,7 @@ class ResponseConverter {
 				.withErrorCause(toErrorCause(failure.cause())).build();
 	}
 
-	@Nullable
-	public static MultiGetItem.Failure getFailure(MultiGetResponseItem<EntityAsMap> itemResponse) {
+	public static MultiGetItem.@Nullable Failure getFailure(MultiGetResponseItem<EntityAsMap> itemResponse) {
 
 		MultiGetError responseFailure = itemResponse.isFailure() ? itemResponse.failure() : null;
 

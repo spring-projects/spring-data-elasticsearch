@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import org.intellij.lang.annotations.Language;
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -73,7 +74,6 @@ import org.springframework.data.geo.Box;
 import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -1807,18 +1807,16 @@ public class MappingElasticsearchConverterUnitTests {
 	void shouldPopulateScriptedFields() {
 		SearchDocumentAdapter document = new SearchDocumentAdapter(Document.create(),
 				0.0f,
-				new Object[]{},
+				new Object[] {},
 				Map.of(
-						"scriptedField" , List.of("scriptedField"),
-						"custom-name-scripted-field" , List.of("custom-name-scripted-field")
-				),
+						"scriptedField", List.of("scriptedField"),
+						"custom-name-scripted-field", List.of("custom-name-scripted-field")),
 				emptyMap(),
 				emptyMap(),
 				null,
 				null,
 				null,
-				null
-		);
+				null);
 		// Create a SearchDocument instance
 		var entity = mappingElasticsearchConverter.read(ScriptedEntity.class, document);
 		assertThat(entity.customScriptedField).isEqualTo("custom-name-scripted-field");
@@ -1826,8 +1824,7 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	static class ScriptedEntity {
-		@ScriptedField
-		private String scriptedField;
+		@ScriptedField private String scriptedField;
 		@ScriptedField(name = "custom-name-scripted-field") String customScriptedField;
 
 		ScriptedEntity() {
@@ -1853,9 +1850,11 @@ public class MappingElasticsearchConverterUnitTests {
 
 		@Override
 		public boolean equals(Object o) {
-			if (o == null || getClass() != o.getClass()) return false;
+			if (o == null || getClass() != o.getClass())
+				return false;
 			ScriptedEntity that = (ScriptedEntity) o;
-			return Objects.equals(scriptedField, that.scriptedField) && Objects.equals(customScriptedField, that.customScriptedField);
+			return Objects.equals(scriptedField, that.scriptedField)
+					&& Objects.equals(customScriptedField, that.customScriptedField);
 		}
 
 		@Override
@@ -1863,7 +1862,6 @@ public class MappingElasticsearchConverterUnitTests {
 			return Objects.hash(scriptedField, customScriptedField);
 		}
 	}
-
 
 	@Test // #2280
 	@DisplayName("should read a String array into a List property immutable")

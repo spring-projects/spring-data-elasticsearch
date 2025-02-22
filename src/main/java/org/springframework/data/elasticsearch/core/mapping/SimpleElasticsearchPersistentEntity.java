@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -48,7 +49,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -76,7 +76,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
 	private @Nullable ElasticsearchPersistentProperty indexedIndexNameProperty;
-	private @Nullable Document.VersionType versionType;
+	private Document.@Nullable VersionType versionType;
 	private final boolean createIndexAndMapping;
 	private final boolean alwaysWriteMapping;
 	private final Dynamic dynamic;
@@ -176,9 +176,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		return settingsParameter.get().refreshIntervall;
 	}
 
-	@Nullable
 	@Override
-	public Document.VersionType getVersionType() {
+	public Document.@Nullable VersionType getVersionType() {
 		return versionType;
 	}
 

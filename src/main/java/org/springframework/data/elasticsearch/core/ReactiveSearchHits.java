@@ -19,8 +19,8 @@ import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
-import org.springframework.lang.Nullable;
 
 /**
  * Encapsulates a Flux of {@link SearchHit}s with additional information from the search.

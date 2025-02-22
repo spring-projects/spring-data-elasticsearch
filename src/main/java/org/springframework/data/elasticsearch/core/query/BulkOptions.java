@@ -18,10 +18,10 @@ package org.springframework.data.elasticsearch.core.query;
 import java.time.Duration;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.ActiveShardCount;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.lang.Nullable;
 
 /**
  * Options that may be passed to an

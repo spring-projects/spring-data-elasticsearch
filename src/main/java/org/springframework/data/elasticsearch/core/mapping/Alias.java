@@ -17,8 +17,8 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

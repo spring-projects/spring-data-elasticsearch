@@ -15,11 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-
 import java.util.Map;
+
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.elasticsearch.core.document.Document;
+import org.springframework.util.Assert;
 
 /**
  * Request to create an index template. This is to create legacy templates (@see

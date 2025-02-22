@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentProperty;
-import org.springframework.lang.Nullable;
 
 /**
  * ElasticsearchPersistentProperty

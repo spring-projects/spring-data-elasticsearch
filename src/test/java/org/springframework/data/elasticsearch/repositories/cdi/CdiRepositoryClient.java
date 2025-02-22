@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 
 import jakarta.inject.Inject;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Mohsin Husen

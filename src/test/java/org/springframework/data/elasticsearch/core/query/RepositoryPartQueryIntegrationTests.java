@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
@@ -36,7 +37,6 @@ import org.springframework.data.elasticsearch.repository.query.RepositoryPartQue
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
 import org.springframework.data.repository.core.support.DefaultRepositoryMetadata;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
-import org.springframework.lang.Nullable;
 
 /**
  * Tests for {@link RepositoryPartQuery}. The tests make sure that queries are built according to the method naming.

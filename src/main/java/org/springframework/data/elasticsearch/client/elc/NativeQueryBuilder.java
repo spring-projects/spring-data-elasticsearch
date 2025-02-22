@@ -33,8 +33,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -53,7 +53,7 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 	private final List<SortOptions> sortOptions = new ArrayList<>();
 	private final Map<String, JsonData> searchExtensions = new LinkedHashMap<>();
 
-	@Nullable private org.springframework.data.elasticsearch.core.query.Query springDataQuery;
+	private org.springframework.data.elasticsearch.core.query.@Nullable Query springDataQuery;
 	@Nullable private KnnQuery knnQuery;
 	@Nullable private List<KnnSearch> knnSearches = Collections.emptyList();
 
@@ -104,8 +104,7 @@ public class NativeQueryBuilder extends BaseQueryBuilder<NativeQuery, NativeQuer
 		return knnSearches;
 	}
 
-	@Nullable
-	public org.springframework.data.elasticsearch.core.query.Query getSpringDataQuery() {
+	public org.springframework.data.elasticsearch.core.query.@Nullable Query getSpringDataQuery() {
 		return springDataQuery;
 	}
 

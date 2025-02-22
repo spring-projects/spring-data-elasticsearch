@@ -20,6 +20,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,6 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.repository.Repository;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Rizwan Idrees
@@ -158,12 +158,11 @@ public abstract class EnableRepositoriesIntegrationTests implements ApplicationC
 			this.rate = rate;
 		}
 
-		@Nullable
-		public java.lang.Double getScriptedRate() {
+		public java.lang.@Nullable Double getScriptedRate() {
 			return scriptedRate;
 		}
 
-		public void setScriptedRate(@Nullable java.lang.Double scriptedRate) {
+		public void setScriptedRate(java.lang.@Nullable Double scriptedRate) {
 			this.scriptedRate = scriptedRate;
 		}
 
@@ -193,12 +192,11 @@ public abstract class EnableRepositoriesIntegrationTests implements ApplicationC
 			this.location = location;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 	}
@@ -254,12 +252,11 @@ public abstract class EnableRepositoriesIntegrationTests implements ApplicationC
 			this.rate = rate;
 		}
 
-		@Nullable
-		public java.lang.Long getScriptedRate() {
+		public java.lang.@Nullable Long getScriptedRate() {
 			return scriptedRate;
 		}
 
-		public void setScriptedRate(@Nullable java.lang.Long scriptedRate) {
+		public void setScriptedRate(java.lang.@Nullable Long scriptedRate) {
 			this.scriptedRate = scriptedRate;
 		}
 
@@ -289,12 +286,11 @@ public abstract class EnableRepositoriesIntegrationTests implements ApplicationC
 			this.location = location;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 	}

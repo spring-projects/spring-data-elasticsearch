@@ -15,9 +15,9 @@
  */
 package org.springframework.data.elasticsearch;
 
-import org.springframework.lang.Nullable;
-
 import java.util.List;
+
+import org.jspecify.annotations.Nullable;
 
 /**
  * Object describing an Elasticsearch error
@@ -26,8 +26,7 @@ import java.util.List;
  * @since 4.4
  */
 public class ElasticsearchErrorCause {
-	@Nullable
-	private final String type;
+	@Nullable private final String type;
 
 	private final String reason;
 

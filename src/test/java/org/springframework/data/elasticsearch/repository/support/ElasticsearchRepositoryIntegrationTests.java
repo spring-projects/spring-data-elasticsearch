@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.assertj.core.api.Assertions;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,7 +48,6 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.util.StreamUtils;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Rizwan Idrees
@@ -712,12 +712,11 @@ abstract class ElasticsearchRepositoryIntegrationTests {
 			this.available = available;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 

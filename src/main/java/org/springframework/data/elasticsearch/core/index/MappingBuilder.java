@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.elasticsearch.annotations.*;
@@ -42,7 +43,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 
@@ -130,14 +130,13 @@ public class MappingBuilder {
 	}
 
 	protected String buildPropertyMapping(ElasticsearchPersistentEntity<?> entity,
-			@Nullable org.springframework.data.elasticsearch.core.document.Document runtimeFields) {
+			org.springframework.data.elasticsearch.core.document.@Nullable Document runtimeFields) {
 
 		InternalBuilder internalBuilder = new InternalBuilder();
 		return internalBuilder.buildPropertyMapping(entity, runtimeFields);
 	}
 
-	@Nullable
-	private org.springframework.data.elasticsearch.core.document.Document getRuntimeFields(
+	private org.springframework.data.elasticsearch.core.document.@Nullable Document getRuntimeFields(
 			@Nullable ElasticsearchPersistentEntity<?> entity) {
 
 		if (entity != null) {
@@ -161,7 +160,7 @@ public class MappingBuilder {
 		private String nestedPropertyPrefix = "";
 
 		protected String buildPropertyMapping(ElasticsearchPersistentEntity<?> entity,
-				@Nullable org.springframework.data.elasticsearch.core.document.Document runtimeFields) {
+				org.springframework.data.elasticsearch.core.document.@Nullable Document runtimeFields) {
 
 			try {
 

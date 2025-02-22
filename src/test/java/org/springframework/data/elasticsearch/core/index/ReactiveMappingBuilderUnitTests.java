@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.List;
 
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
@@ -36,7 +37,6 @@ import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
