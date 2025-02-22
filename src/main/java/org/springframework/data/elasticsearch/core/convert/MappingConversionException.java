@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @since 5.3

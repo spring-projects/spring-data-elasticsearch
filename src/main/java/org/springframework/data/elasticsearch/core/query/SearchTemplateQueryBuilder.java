@@ -17,9 +17,9 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch

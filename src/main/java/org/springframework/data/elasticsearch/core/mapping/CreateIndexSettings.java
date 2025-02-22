@@ -19,8 +19,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

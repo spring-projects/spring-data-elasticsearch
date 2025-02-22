@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.UncategorizedDataAccessException;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch

@@ -20,6 +20,7 @@ import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -36,7 +37,6 @@ import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

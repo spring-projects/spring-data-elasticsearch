@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.query.valueconverter;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -35,7 +36,6 @@ import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverte
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 
 /**
  * Integration tests to check that {@link org.springframework.data.elasticsearch.annotations.ValueConverter} annotated

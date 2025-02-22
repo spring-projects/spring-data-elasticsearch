@@ -76,6 +76,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
@@ -99,7 +100,6 @@ import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 import org.springframework.data.elasticsearch.core.reindex.Remote;
 import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -736,8 +736,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		return uob.build();
 	}
 
-	@Nullable
-	private co.elastic.clients.elasticsearch._types.Script getScript(@Nullable ScriptData scriptData) {
+	private co.elastic.clients.elasticsearch._types.@Nullable Script getScript(@Nullable ScriptData scriptData) {
 
 		if (scriptData == null) {
 			return null;
@@ -1720,7 +1719,7 @@ class RequestConverter extends AbstractQueryProcessor {
 	}
 
 	@Nullable
-	private NestedSortValue getNestedSort(@Nullable Order.Nested nested,
+	private NestedSortValue getNestedSort(Order.@Nullable Nested nested,
 			@Nullable ElasticsearchPersistentEntity<?> persistentEntity) {
 		return (nested == null || persistentEntity == null) ? null
 				: NestedSortValue.of(b -> b //
@@ -1784,8 +1783,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		}
 	}
 
-	@Nullable
-	co.elastic.clients.elasticsearch._types.query_dsl.Query getQuery(@Nullable Query query,
+	co.elastic.clients.elasticsearch._types.query_dsl.@Nullable Query getQuery(@Nullable Query query,
 			@Nullable Class<?> clazz) {
 		return getEsQuery(query, (q) -> elasticsearchConverter.updateQuery(q, clazz));
 	}

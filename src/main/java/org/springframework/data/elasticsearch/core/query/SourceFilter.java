@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.Field;
-import org.springframework.lang.Nullable;
 
 /**
  * SourceFilter for providing includes and excludes. Using these helps in reducing the amount of data that is returned

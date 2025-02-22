@@ -17,6 +17,5 @@
 /**
  * classes to define highlight settings parameters of a query
  */
-@org.springframework.lang.NonNullApi
-@org.springframework.lang.NonNullFields
+@org.jspecify.annotations.NullMarked
 package org.springframework.data.elasticsearch.core.query.highlight;

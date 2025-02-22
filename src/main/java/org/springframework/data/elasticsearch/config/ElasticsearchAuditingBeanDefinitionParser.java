@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.config;
 
 import static org.springframework.data.config.ParsingUtils.*;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.support.AbstractBeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
@@ -28,7 +29,6 @@ import org.springframework.data.auditing.config.IsNewAwareAuditingHandlerBeanDef
 import org.springframework.data.elasticsearch.core.event.AuditingEntityCallback;
 import org.springframework.data.elasticsearch.core.event.ReactiveAuditingEntityCallback;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 import org.w3c.dom.Element;

@@ -28,6 +28,7 @@ import java.util.List;
 
 import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,6 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
-import org.springframework.lang.Nullable;
 
 /**
  * Tests for the mapping of {@link CriteriaQuery} by a {@link MappingElasticsearchConverter}. In the same package as

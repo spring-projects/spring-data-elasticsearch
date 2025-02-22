@@ -24,6 +24,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,13 +39,11 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Gad Akuka
@@ -61,12 +60,12 @@ public abstract class UUIDElasticsearchRepositoryIntegrationTests {
 	@Autowired private SampleUUIDKeyedElasticsearchRepository repository;
 
 	@Autowired ElasticsearchOperations operations;
-    @Autowired IndexNameProvider indexNameProvider;
+	@Autowired IndexNameProvider indexNameProvider;
 
 	@BeforeEach
 	public void before() {
 		indexNameProvider.increment();
-        operations.indexOps(SampleEntityUUIDKeyed.class).createWithMapping();
+		operations.indexOps(SampleEntityUUIDKeyed.class).createWithMapping();
 	}
 
 	@Test

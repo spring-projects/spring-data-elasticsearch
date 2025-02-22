@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -34,7 +35,6 @@ import org.springframework.data.auditing.IsNewAwareAuditingHandler;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.mapping.context.PersistentEntities;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
