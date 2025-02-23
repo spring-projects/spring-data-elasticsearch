@@ -182,19 +182,6 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	@Override
-	public ByQueryResponse delete(Query query, Class<?> clazz, IndexCoordinates index) {
-
-		Assert.notNull(query, "query must not be null");
-
-		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
-				clazz, index, getRefreshPolicy());
-
-		DeleteByQueryResponse response = execute(client -> client.deleteByQuery(request));
-
-		return responseConverter.byQueryResponse(response);
-	}
-
-	@Override
 	public ByQueryResponse delete(DeleteQuery query, Class<?> clazz, IndexCoordinates index) {
 		Assert.notNull(query, "query must not be null");
 

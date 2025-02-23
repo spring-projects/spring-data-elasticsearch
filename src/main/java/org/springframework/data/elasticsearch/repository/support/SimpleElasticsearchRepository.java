@@ -384,7 +384,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 	public void deleteAll() {
 
 		executeAndRefresh((OperationsCallback<Void>) operations -> {
-			operations.delete(Query.findAll(), entityClass, getIndexCoordinates());
+			operations.delete(DeleteQuery.builder(Query.findAll()).build(), entityClass, getIndexCoordinates());
 			return null;
 		});
 	}
