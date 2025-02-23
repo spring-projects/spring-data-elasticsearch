@@ -299,12 +299,6 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	@Override
-	@Deprecated
-	public ByQueryResponse delete(Query query, Class<?> clazz) {
-		return delete(query, clazz, getIndexCoordinatesFor(clazz));
-	}
-
-	@Override
 	public String delete(Object entity) {
 		return delete(entity, getIndexCoordinatesFor(entity.getClass()));
 	}
