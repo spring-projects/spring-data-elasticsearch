@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 import org.springframework.beans.BeansException;
@@ -56,7 +57,6 @@ import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

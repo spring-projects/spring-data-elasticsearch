@@ -37,7 +37,7 @@ public class QueryStringProcessor {
 	private final ValueEvaluationContextProvider evaluationContextProvider;
 
 	public QueryStringProcessor(String query, QueryMethod queryMethod, ConversionService conversionService,
-								ValueEvaluationContextProvider evaluationContextProvider) {
+			ValueEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(queryMethod, "queryMethod must not be null");

@@ -19,13 +19,13 @@ import static org.springframework.util.StringUtils.*;
 
 import reactor.core.publisher.Mono;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.ReactiveResourceUtil;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.lang.Nullable;
 
 /**
  * Subclass of {@link MappingBuilder} with specialized methods To inhibit blocking calls

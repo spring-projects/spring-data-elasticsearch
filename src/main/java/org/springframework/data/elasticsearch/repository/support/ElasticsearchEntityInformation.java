@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.repository.core.EntityInformation;
-import org.springframework.lang.Nullable;
 
 /**
  * @param <T>
@@ -39,6 +39,5 @@ public interface ElasticsearchEntityInformation<T, ID> extends EntityInformation
 	@Nullable
 	Long getVersion(T entity);
 
-	@Nullable
-	Document.VersionType getVersionType();
+	Document.@Nullable VersionType getVersionType();
 }

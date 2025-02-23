@@ -21,10 +21,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
-import org.springframework.data.elasticsearch.support.StringObjectMap;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.lang.Nullable;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

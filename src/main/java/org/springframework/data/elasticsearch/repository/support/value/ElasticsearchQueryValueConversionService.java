@@ -18,11 +18,11 @@ package org.springframework.data.elasticsearch.repository.support.value;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.core.convert.support.GenericConversionService;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

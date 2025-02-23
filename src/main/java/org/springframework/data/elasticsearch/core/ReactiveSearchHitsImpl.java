@@ -19,8 +19,8 @@ import reactor.core.publisher.Flux;
 
 import java.time.Duration;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch

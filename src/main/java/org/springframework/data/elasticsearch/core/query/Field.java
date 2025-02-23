@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.lang.Nullable;
 
 /**
  * Defines a Field that can be used within a Criteria.

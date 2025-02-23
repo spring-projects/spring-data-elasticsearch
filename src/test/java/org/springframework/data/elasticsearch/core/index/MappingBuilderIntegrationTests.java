@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -43,7 +44,6 @@ import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Stuart Stevenson
@@ -711,12 +711,11 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 			this.text = text;
 		}
 
-		@Nullable
-		public java.lang.Object getObject() {
+		public java.lang.@Nullable Object getObject() {
 			return object;
 		}
 
-		public void setObject(@Nullable java.lang.Object object) {
+		public void setObject(java.lang.@Nullable Object object) {
 			this.object = object;
 		}
 	}

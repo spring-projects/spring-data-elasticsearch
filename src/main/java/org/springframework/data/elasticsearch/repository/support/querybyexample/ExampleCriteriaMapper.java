@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.support.querybyexample
 import java.util.Map;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
@@ -27,7 +28,6 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.support.ExampleMatcherAccessor;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**

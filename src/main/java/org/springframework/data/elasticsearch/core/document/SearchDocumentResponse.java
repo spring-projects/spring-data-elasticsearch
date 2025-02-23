@@ -20,10 +20,10 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.AggregationsContainer;
 import org.springframework.data.elasticsearch.core.SearchShardStatistics;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
-import org.springframework.lang.Nullable;
 
 /**
  * This represents the complete search response from Elasticsearch, including the returned documents.

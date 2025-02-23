@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.lang.Nullable;
 
 /**
  * value object to describe alias information.

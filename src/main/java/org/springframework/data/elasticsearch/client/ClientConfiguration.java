@@ -25,8 +25,8 @@ import java.util.function.Supplier;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
-import org.springframework.lang.Nullable;
 
 /**
  * Configuration interface exposing common client configuration properties for Elasticsearch clients.

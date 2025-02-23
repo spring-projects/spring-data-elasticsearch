@@ -19,9 +19,9 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.regex.Matcher;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.lang.Nullable;
 
 /**
  * Values in elasticsearch query may contain quotations and should be escaped when converting. Note that the converter

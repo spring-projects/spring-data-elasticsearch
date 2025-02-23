@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.convert.EntityConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -23,7 +24,6 @@ import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverte
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.projection.SpelAwareProxyProjectionFactory;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

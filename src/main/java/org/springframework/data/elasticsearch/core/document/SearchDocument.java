@@ -18,7 +18,7 @@ package org.springframework.data.elasticsearch.core.document;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Extension to {@link Document} exposing search response related data.
