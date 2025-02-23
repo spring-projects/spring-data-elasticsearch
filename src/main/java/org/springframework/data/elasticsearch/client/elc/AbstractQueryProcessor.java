@@ -17,10 +17,10 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import java.util.function.Consumer;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.lang.Nullable;
 
 /**
  * An abstract class that serves as a base for query processors. It provides a common interface and basic functionality
@@ -38,8 +38,8 @@ public abstract class AbstractQueryProcessor {
 	 * @param queryConverter correct mapped field names and the values to the converted values.
 	 * @return an Elasticsearch {@literal query}.
 	 */
-	@Nullable
-	static co.elastic.clients.elasticsearch._types.query_dsl.Query getEsQuery(@Nullable Query query,
+
+	static co.elastic.clients.elasticsearch._types.query_dsl.@Nullable Query getEsQuery(@Nullable Query query,
 			@Nullable Consumer<Query> queryConverter) {
 		if (query == null) {
 			return null;

@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This interface is used to expose the current {@code scrollId} from the underlying scroll context.

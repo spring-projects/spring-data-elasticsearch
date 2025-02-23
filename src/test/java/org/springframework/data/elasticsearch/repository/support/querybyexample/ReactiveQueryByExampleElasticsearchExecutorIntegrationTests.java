@@ -24,6 +24,7 @@ import reactor.test.StepVerifier;
 import java.util.List;
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,6 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Ezequiel Antúnez Camacho
@@ -483,9 +483,9 @@ abstract class ReactiveQueryByExampleElasticsearchExecutorIntegrationTests {
 		@Field(type = FieldType.Keyword, store = true) private String message;
 		@Nullable private Integer rate;
 		@Nullable private Boolean available;
-		@Nullable
+
 		@Field(type = FieldType.Nested, store = true,
-				fielddata = true) private SampleEntity.SampleNestedEntity sampleNestedEntity;
+				fielddata = true) private SampleEntity.@Nullable SampleNestedEntity sampleNestedEntity;
 		@Nullable
 		@Version private Long version;
 
@@ -534,8 +534,7 @@ abstract class ReactiveQueryByExampleElasticsearchExecutorIntegrationTests {
 			this.available = available;
 		}
 
-		@Nullable
-		public SampleEntity.SampleNestedEntity getSampleNestedEntity() {
+		public SampleEntity.@Nullable SampleNestedEntity getSampleNestedEntity() {
 			return sampleNestedEntity;
 		}
 
@@ -543,12 +542,11 @@ abstract class ReactiveQueryByExampleElasticsearchExecutorIntegrationTests {
 			this.sampleNestedEntity = sampleNestedEntity;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 

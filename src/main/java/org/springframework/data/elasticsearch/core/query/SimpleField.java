@@ -15,11 +15,11 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.lang.Nullable;
-import org.springframework.util.Assert;
-
 import java.util.Objects;
+
+import org.jspecify.annotations.Nullable;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.util.Assert;
 
 /**
  * The most trivial implementation of a Field. The {@link #name} is updatable, so it may be changed during query
@@ -84,9 +84,12 @@ public class SimpleField implements Field {
 
 	@Override
 	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (!(o instanceof SimpleField that)) return false;
-        return Objects.equals(name, that.name) && Objects.equals(fieldType, that.fieldType) && Objects.equals(path, that.path);
+		if (this == o)
+			return true;
+		if (!(o instanceof SimpleField that))
+			return false;
+		return Objects.equals(name, that.name) && Objects.equals(fieldType, that.fieldType)
+				&& Objects.equals(path, that.path);
 	}
 
 	@Override

@@ -23,9 +23,9 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -45,7 +45,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	private float minScore;
 	private final Collection<String> ids = new ArrayList<>();
 	@Nullable private String route;
-	@Nullable private Query.SearchType searchType = Query.SearchType.QUERY_THEN_FETCH;
+	private Query.@Nullable SearchType searchType = Query.SearchType.QUERY_THEN_FETCH;
 	@Nullable private IndicesOptions indicesOptions;
 	private boolean trackScores;
 	@Nullable private String preference;
@@ -64,7 +64,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	@Nullable private Boolean requestCache;
 	private final List<Query.IdWithRouting> idsWithRouting = new ArrayList<>();
 	private final List<RuntimeField> runtimeFields = new ArrayList<>();
-	@Nullable private Query.PointInTime pointInTime;
+	private Query.@Nullable PointInTime pointInTime;
 	@Nullable private Boolean allowNoIndices;
 	private EnumSet<IndicesOptions.WildcardStates> expandWildcards = EnumSet.noneOf(IndicesOptions.WildcardStates.class);
 
@@ -139,8 +139,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return indicesBoost;
 	}
 
-	@Nullable
-	public Query.SearchType getSearchType() {
+	public Query.@Nullable SearchType getSearchType() {
 		return searchType;
 	}
 
@@ -193,8 +192,8 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	/**
 	 * @since 5.0
 	 */
-	@Nullable
-	public Query.PointInTime getPointInTime() {
+
+	public Query.@Nullable PointInTime getPointInTime() {
 		return pointInTime;
 	}
 
@@ -342,7 +341,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return self();
 	}
 
-	public SELF withSearchType(@Nullable Query.SearchType searchType) {
+	public SELF withSearchType(Query.@Nullable SearchType searchType) {
 		this.searchType = searchType;
 		return self();
 	}
@@ -426,7 +425,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	/**
 	 * @since 5.0
 	 */
-	public SELF withPointInTime(@Nullable Query.PointInTime pointInTime) {
+	public SELF withPointInTime(Query.@Nullable PointInTime pointInTime) {
 		this.pointInTime = pointInTime;
 		return self();
 	}

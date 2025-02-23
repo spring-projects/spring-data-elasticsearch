@@ -17,6 +17,9 @@ package org.springframework.data.elasticsearch.repositories.cdi;
 
 import static org.assertj.core.api.Assertions.*;
 
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -24,9 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import jakarta.enterprise.inject.se.SeContainer;
-import jakarta.enterprise.inject.se.SeContainerInitializer;
-
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +41,6 @@ import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.IntegrationTest;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Mohsin Husen

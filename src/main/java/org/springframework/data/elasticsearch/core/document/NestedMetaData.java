@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.document;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * meta data returned for nested inner hits.

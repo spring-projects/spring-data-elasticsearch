@@ -22,6 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -45,7 +46,6 @@ import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -457,7 +457,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 	@Nullable
 	public <R> R executeAndRefresh(OperationsCallback<R> callback, @Nullable RefreshPolicy refreshPolicy) {
-        return callback.doWithOperations(operations.withRefreshPolicy(refreshPolicy));
+		return callback.doWithOperations(operations.withRefreshPolicy(refreshPolicy));
 	}
 	// endregion
 }

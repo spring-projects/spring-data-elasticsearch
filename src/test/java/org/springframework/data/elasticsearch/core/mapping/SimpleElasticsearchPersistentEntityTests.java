@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,6 @@ import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -172,7 +172,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 
 			assertThatThrownBy(() -> elasticsearchConverter.get().getMappingContext()
 					.getRequiredPersistentEntity(SettingsInvalidSortParameterSizes.class).getDefaultSettings())
-							.isInstanceOf(IllegalArgumentException.class);
+					.isInstanceOf(IllegalArgumentException.class);
 		}
 
 		@Test // #1719, #2158

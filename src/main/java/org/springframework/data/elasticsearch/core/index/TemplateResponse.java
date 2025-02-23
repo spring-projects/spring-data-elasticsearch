@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -23,6 +23,7 @@ import org.springframework.util.Assert;
  * @since 5.1
  */
 public record TemplateResponse(String name, @Nullable Long version, @Nullable TemplateResponseData templateData) {
+
 	public TemplateResponse {
 		Assert.notNull(name, "name must not be null");
 	}

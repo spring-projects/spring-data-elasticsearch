@@ -18,12 +18,12 @@ package org.springframework.data.elasticsearch.repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.repository.NoRepositoryBean;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import org.springframework.data.repository.reactive.ReactiveSortingRepository;
-import org.springframework.lang.Nullable;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.repository.Repository} interface with reactive support.

@@ -34,9 +34,9 @@ import java.util.Base64;
 import java.util.List;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

@@ -17,8 +17,8 @@ package org.springframework.data.elasticsearch.core.index;
 
 import java.io.IOException;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;

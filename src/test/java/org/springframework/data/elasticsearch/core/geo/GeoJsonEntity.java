@@ -17,10 +17,10 @@ package org.springframework.data.elasticsearch.core.geo;
 
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.geo.Point;
-import org.springframework.lang.Nullable;
 
 /**
  * this class contains each GeoJson type as explicit type and as GeoJson interface. Used by several test classes

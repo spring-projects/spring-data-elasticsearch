@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
 import java.time.LocalDate;
 
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.annotation.AliasFor;
@@ -39,7 +40,6 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.suggest.Completion;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch

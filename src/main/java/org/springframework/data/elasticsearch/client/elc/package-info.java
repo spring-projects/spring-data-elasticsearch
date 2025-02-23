@@ -18,6 +18,5 @@
  * This package contains classes that use the new Elasticsearch client library (co.elastic.clients:elasticsearch-java)
  * to access Elasticsearch.
  */
-@org.springframework.lang.NonNullApi
-@org.springframework.lang.NonNullFields
+@org.jspecify.annotations.NullMarked
 package org.springframework.data.elasticsearch.client.elc;

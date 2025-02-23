@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.springframework.data.repository.query.ValueExpressionDelegate;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -28,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,7 +49,7 @@ import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchC
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.repository.Repository;
-import org.springframework.lang.Nullable;
+import org.springframework.data.repository.query.ValueExpressionDelegate;
 
 /**
  * @author Christoph Strobl

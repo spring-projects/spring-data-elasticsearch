@@ -19,9 +19,9 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.util.Lazy;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
