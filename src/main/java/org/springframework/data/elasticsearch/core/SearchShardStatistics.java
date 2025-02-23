@@ -17,8 +17,8 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Haibo Liu

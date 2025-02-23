@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
@@ -22,7 +23,6 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.core.script.ReactiveScriptOperations;
 import org.springframework.data.elasticsearch.core.sql.ReactiveSqlOperations;
-import org.springframework.lang.Nullable;
 
 /**
  * Interface that specifies a basic set of Elasticsearch operations executed in a reactive way.

@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
@@ -47,7 +48,6 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.MappingException;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Stuart Stevenson
@@ -1126,49 +1126,49 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		String expected = """
 				{
-                 "properties": {
-                   "_class": {
-                     "type": "keyword",
-                     "index": false,
-                     "doc_values": false
-                   },
-                   "excluded-date": {
-                     "type": "date",
-                     "format": "date"
-                   },
-                   "nestedEntity": {
-                     "type": "nested",
-                     "properties": {
-                       "_class": {
-                         "type": "keyword",
-                         "index": false,
-                         "doc_values": false
-                       },
-                       "excluded-text": {
-                         "type": "text"
-                       }
-                     }
-                   },
-                   "excluded-multifield": {
-                     "type": "text",
-                     "fields": {
-                       "keyword": {
-                         "type": "keyword"
-                       }
-                     }
-                   }
-                 },
-                 "_source": {
-                   "excludes": [
-                     "excluded-date",
-                     "nestedEntity.excluded-text",
-                     "excluded-multifield"
-                   ]
-                 }
+				             "properties": {
+				               "_class": {
+				                 "type": "keyword",
+				                 "index": false,
+				                 "doc_values": false
+				               },
+				               "excluded-date": {
+				                 "type": "date",
+				                 "format": "date"
+				               },
+				               "nestedEntity": {
+				                 "type": "nested",
+				                 "properties": {
+				                   "_class": {
+				                     "type": "keyword",
+				                     "index": false,
+				                     "doc_values": false
+				                   },
+				                   "excluded-text": {
+				                     "type": "text"
+				                   }
+				                 }
+				               },
+				               "excluded-multifield": {
+				                 "type": "text",
+				                 "fields": {
+				                   "keyword": {
+				                     "type": "keyword"
+				                   }
+				                 }
+				               }
+				             },
+				             "_source": {
+				               "excludes": [
+				                 "excluded-date",
+				                 "nestedEntity.excluded-text",
+				                 "excluded-multifield"
+				               ]
+				             }
 
 				              }
-               
-               """; //
+
+				           """; //
 
 		String mapping = getMappingBuilder().buildPropertyMapping(ExcludedFieldEntity.class);
 
@@ -2141,21 +2141,19 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			this.id = id;
 		}
 
-		@Nullable
-		public java.lang.Integer getPageRank() {
+		public java.lang.@Nullable Integer getPageRank() {
 			return pageRank;
 		}
 
-		public void setPageRank(@Nullable java.lang.Integer pageRank) {
+		public void setPageRank(java.lang.@Nullable Integer pageRank) {
 			this.pageRank = pageRank;
 		}
 
-		@Nullable
-		public java.lang.Integer getUrlLength() {
+		public java.lang.@Nullable Integer getUrlLength() {
 			return urlLength;
 		}
 
-		public void setUrlLength(@Nullable java.lang.Integer urlLength) {
+		public void setUrlLength(java.lang.@Nullable Integer urlLength) {
 			this.urlLength = urlLength;
 		}
 
@@ -2309,12 +2307,11 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			this.text = text;
 		}
 
-		@Nullable
-		public java.lang.Object getObject() {
+		public java.lang.@Nullable Object getObject() {
 			return object;
 		}
 
-		public void setObject(@Nullable java.lang.Object object) {
+		public void setObject(java.lang.@Nullable Object object) {
 			this.object = object;
 		}
 	}

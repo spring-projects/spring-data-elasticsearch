@@ -28,6 +28,7 @@ import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.Bean;
@@ -42,7 +43,6 @@ import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**

@@ -21,6 +21,7 @@ import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 import java.time.LocalDateTime;
 
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
@@ -28,7 +29,6 @@ import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Jakub Vavrik

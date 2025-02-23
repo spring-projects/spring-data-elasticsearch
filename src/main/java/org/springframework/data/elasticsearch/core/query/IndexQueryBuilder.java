@@ -15,8 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
-import org.springframework.lang.Nullable;
 
 /**
  * IndexQuery Builder
@@ -36,7 +36,7 @@ public class IndexQueryBuilder {
 	@Nullable private Long seqNo;
 	@Nullable private Long primaryTerm;
 	@Nullable private String routing;
-	@Nullable private IndexQuery.OpType opType;
+	private IndexQuery.@Nullable OpType opType;
 	@Nullable private RefreshPolicy refreshPolicy;
 	@Nullable private String indexName;
 

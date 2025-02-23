@@ -19,6 +19,7 @@ import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -40,7 +41,6 @@ import org.springframework.data.repository.query.QueryLookupStrategy.Key;
 import org.springframework.data.repository.query.ReactiveQueryByExampleExecutor;
 import org.springframework.data.repository.query.RepositoryQuery;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

@@ -21,7 +21,7 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This class is used to log the versions of Spring Data Elasticsearch, the Elasticsearch client libs used to built, the

@@ -15,21 +15,10 @@
  */
 package org.springframework.data.elasticsearch.repository.query.valueconverter;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-
-import org.springframework.data.elasticsearch.annotations.FieldType;
-import org.springframework.data.elasticsearch.annotations.Query;
-import org.springframework.data.elasticsearch.annotations.ValueConverter;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.lang.Boolean;
-
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -38,13 +27,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.annotations.FieldType;
+import org.springframework.data.elasticsearch.annotations.Query;
+import org.springframework.data.elasticsearch.annotations.ValueConverter;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 
 /**
  * Integration tests to check that {@link org.springframework.data.elasticsearch.annotations.ValueConverter} annotated
@@ -73,7 +65,6 @@ public abstract class ReactiveValueConverterIntegrationTests {
 		operations.indexOps(IndexCoordinates.of(indexNameProvider.getPrefix() + '*')).delete().block();
 	}
 
-
 	@Test // #2338
 	@DisplayName("should apply ValueConverter")
 	void shouldApplyValueConverter() {
@@ -84,14 +75,14 @@ public abstract class ReactiveValueConverterIntegrationTests {
 		operations.save(entity).block();
 
 		repository.queryByText("text-answer") //
-			.as(StepVerifier::create) //
-			.expectNextCount(1) //
-			.verifyComplete();
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 
 		repository.findByText("answer") //
-			.as(StepVerifier::create) //
-			.expectNextCount(1) //
-			.verifyComplete();
+				.as(StepVerifier::create) //
+				.expectNextCount(1) //
+				.verifyComplete();
 	}
 
 	interface EntityRepository extends ReactiveElasticsearchRepository<Entity, String> {

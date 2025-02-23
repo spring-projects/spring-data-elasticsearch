@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Map;
 
 import org.json.JSONException;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -40,7 +41,6 @@ import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
 import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 
 /**
  * Integration tests for the point in time API.

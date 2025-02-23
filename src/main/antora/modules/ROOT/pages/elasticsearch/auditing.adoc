@@ -10,7 +10,7 @@ In order for the auditing code to be able to decide whether an entity instance i
 ----
 package org.springframework.data.domain;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public interface Persistable<ID> {
     @Nullable
@@ -81,5 +81,5 @@ class MyConfiguration {
 }
 ----
 
-If your code contains more than one `AuditorAware` bean for different types, you must provide the name of the bean to use as an argument to the `auditorAwareRef` parameter of the 
- `@EnableElasticsearchAuditing` annotation. 
+If your code contains more than one `AuditorAware` bean for different types, you must provide the name of the bean to use as an argument to the `auditorAwareRef` parameter of the
+ `@EnableElasticsearchAuditing` annotation.

@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.SearchShardStatistics;
 import org.springframework.data.elasticsearch.core.TotalHitsRelation;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
@@ -48,7 +49,6 @@ import org.springframework.data.elasticsearch.core.suggest.response.PhraseSugges
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.core.suggest.response.TermSuggestion;
 import org.springframework.data.elasticsearch.support.ScoreDoc;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
@@ -133,7 +133,8 @@ class SearchDocumentResponseBuilder {
 	 * @return the {@link SearchDocumentResponse}
 	 */
 	public static <T> SearchDocumentResponse from(HitsMetadata<?> hitsMetadata, @Nullable ShardStatistics shards,
-			@Nullable String scrollId, @Nullable String pointInTimeId, long executionDurationInMillis, @Nullable Map<String, Aggregate> aggregations,
+			@Nullable String scrollId, @Nullable String pointInTimeId, long executionDurationInMillis,
+			@Nullable Map<String, Aggregate> aggregations,
 			Map<String, List<Suggestion<EntityAsMap>>> suggestES, SearchDocumentResponse.EntityCreator<T> entityCreator,
 			JsonpMapper jsonpMapper) {
 
@@ -171,7 +172,8 @@ class SearchDocumentResponseBuilder {
 
 		SearchShardStatistics shardStatistics = shards != null ? shardsFrom(shards) : null;
 
-		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, executionDuration, scrollId, pointInTimeId, searchDocuments,
+		return new SearchDocumentResponse(totalHits, totalHitsRelation, maxScore, executionDuration, scrollId,
+				pointInTimeId, searchDocuments,
 				aggregationsContainer, suggest, shardStatistics);
 	}
 

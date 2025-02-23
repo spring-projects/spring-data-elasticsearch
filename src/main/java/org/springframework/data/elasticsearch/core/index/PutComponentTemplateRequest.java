@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core.index;
 
 import java.time.Duration;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -26,6 +26,7 @@ import org.springframework.util.Assert;
  */
 public record PutComponentTemplateRequest(String name, @Nullable Long version, @Nullable Boolean create,
 		@Nullable Duration masterTimeout, ComponentTemplateRequestData template) {
+
 	public PutComponentTemplateRequest {
 		Assert.notNull(name, "name must not be null");
 		Assert.notNull(template, "template must not be null");

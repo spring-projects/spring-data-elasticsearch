@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.support.spel;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchParametersParameterAccessor;
@@ -36,7 +37,6 @@ import org.springframework.expression.spel.standard.SpelExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.expression.spel.support.StandardTypeConverter;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
