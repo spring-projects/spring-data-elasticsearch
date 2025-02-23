@@ -16,7 +16,15 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.ApiClient;
-import co.elastic.clients.elasticsearch.cluster.*;
+import co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateResponse;
+import co.elastic.clients.elasticsearch.cluster.ExistsComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateResponse;
+import co.elastic.clients.elasticsearch.cluster.HealthRequest;
+import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest;
+import co.elastic.clients.elasticsearch.cluster.PutComponentTemplateResponse;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
@@ -25,7 +33,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Reactive version of the {@link co.elastic.clients.elasticsearch.cluster.ElasticsearchClusterClient}

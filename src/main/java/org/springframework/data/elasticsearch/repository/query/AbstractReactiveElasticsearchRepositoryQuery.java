@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import org.springframework.data.expression.ValueEvaluationContextProvider;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -33,6 +32,7 @@ import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingConverter;
 import org.springframework.data.elasticsearch.repository.query.ReactiveElasticsearchQueryExecution.ResultProcessingExecution;
+import org.springframework.data.expression.ValueEvaluationContextProvider;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.repository.query.ParameterAccessor;
 import org.springframework.data.repository.query.QueryMethod;
@@ -56,7 +56,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 
 	AbstractReactiveElasticsearchRepositoryQuery(ReactiveElasticsearchQueryMethod queryMethod,
 			ReactiveElasticsearchOperations elasticsearchOperations,
-												 ValueEvaluationContextProvider evaluationContextProvider) {
+			ValueEvaluationContextProvider evaluationContextProvider) {
 
 		Assert.notNull(queryMethod, "queryMethod must not be null");
 		Assert.notNull(elasticsearchOperations, "elasticsearchOperations must not be null");
@@ -105,7 +105,8 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		var query = createQuery(parameterAccessor);
 		Assert.notNull(query, "unsupported query");
 
-		queryMethod.addSpecialMethodParameters(query, parameterAccessor, elasticsearchOperations.getElasticsearchConverter(),
+		queryMethod.addSpecialMethodParameters(query, parameterAccessor,
+				elasticsearchOperations.getElasticsearchConverter(),
 				evaluationContextProvider);
 
 		String indexName = queryMethod.getEntityInformation().getIndexName();

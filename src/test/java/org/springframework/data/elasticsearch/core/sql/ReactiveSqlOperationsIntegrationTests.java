@@ -21,6 +21,7 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,7 +35,6 @@ import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperatio
 import org.springframework.data.elasticsearch.core.query.SqlQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.ContextConfiguration;
 
 /**

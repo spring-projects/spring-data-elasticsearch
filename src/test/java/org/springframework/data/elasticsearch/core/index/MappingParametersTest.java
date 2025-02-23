@@ -2,10 +2,10 @@ package org.springframework.data.elasticsearch.core.index;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Object;
 
 import java.lang.annotation.Annotation;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -14,7 +14,6 @@ import org.springframework.data.elasticsearch.annotations.InnerField;
 import org.springframework.data.elasticsearch.annotations.MultiField;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch

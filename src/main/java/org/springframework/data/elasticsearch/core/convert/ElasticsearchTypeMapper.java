@@ -17,11 +17,11 @@ package org.springframework.data.elasticsearch.core.convert;
 
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.convert.TypeMapper;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.lang.Nullable;
 
 /**
  * Elasticsearch specific {@link TypeMapper} definition.

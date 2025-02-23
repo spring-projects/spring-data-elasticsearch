@@ -20,9 +20,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.support.StringObjectMap;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

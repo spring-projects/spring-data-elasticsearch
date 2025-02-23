@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * @author Peter-Josef Meisch
@@ -48,7 +48,7 @@ final class JsonUtils {
 	}
 
 	@Nullable
-	public static String queryToJson(@Nullable co.elastic.clients.elasticsearch._types.query_dsl.Query query,
+	public static String queryToJson(co.elastic.clients.elasticsearch._types.query_dsl.@Nullable Query query,
 			JsonpMapper mapper) {
 
 		if (query == null) {

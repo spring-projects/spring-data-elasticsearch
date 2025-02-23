@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.join.JoinField;
@@ -29,7 +30,6 @@ import org.springframework.data.mapping.IdentifierAccessor;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -123,7 +123,7 @@ public class EntityOperations {
 
 			// Only deal with text because ES generated Ids are strings!
 			if (indexedObjectInformation.id() != null && idProperty != null
-					// isReadable from the base class is false in case of records
+			// isReadable from the base class is false in case of records
 					&& (idProperty.isReadable() || idProperty.getOwner().getType().isRecord())
 					&& idProperty.getType().isAssignableFrom(String.class)) {
 				propertyAccessor.setProperty(idProperty, indexedObjectInformation.id());

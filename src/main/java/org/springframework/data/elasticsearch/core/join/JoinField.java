@@ -17,8 +17,8 @@ package org.springframework.data.elasticsearch.core.join;
 
 import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.PersistenceCreator;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Subhobrata Dey

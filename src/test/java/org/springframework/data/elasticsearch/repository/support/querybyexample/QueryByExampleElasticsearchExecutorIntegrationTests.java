@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.assertj.core.api.AbstractThrowableAssert;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,6 @@ import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTes
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.repository.query.QueryByExampleExecutor;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Ezequiel Antúnez Camacho
@@ -526,12 +526,11 @@ abstract class QueryByExampleElasticsearchExecutorIntegrationTests {
 			this.sampleNestedEntity = sampleNestedEntity;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 

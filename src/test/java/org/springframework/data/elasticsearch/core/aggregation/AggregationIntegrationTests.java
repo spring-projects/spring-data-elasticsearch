@@ -17,12 +17,11 @@ package org.springframework.data.elasticsearch.core.aggregation;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.Integer;
 
-import java.lang.Integer;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -41,7 +40,6 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Rizwan Idrees

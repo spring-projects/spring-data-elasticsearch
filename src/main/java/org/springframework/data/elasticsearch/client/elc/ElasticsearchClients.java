@@ -46,9 +46,9 @@ import org.apache.http.protocol.HttpContext;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
