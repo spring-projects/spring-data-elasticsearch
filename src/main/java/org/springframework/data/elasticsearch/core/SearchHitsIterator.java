@@ -17,8 +17,8 @@ package org.springframework.data.elasticsearch.core;
 
 import java.time.Duration;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.util.CloseableIterator;
-import org.springframework.lang.Nullable;
 
 /**
  * A {@link SearchHitsIterator} encapsulates {@link SearchHit} results that can be wrapped in a Java 8

@@ -21,8 +21,8 @@ import java.util.function.IntSupplier;
 import java.util.function.LongSupplier;
 import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

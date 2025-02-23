@@ -19,11 +19,11 @@ import java.time.Duration;
 import java.util.EnumSet;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.query.Query.SearchType;
 import org.springframework.data.elasticsearch.core.query.types.ConflictsType;
 import org.springframework.data.elasticsearch.core.query.types.OperatorType;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

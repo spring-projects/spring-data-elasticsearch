@@ -19,11 +19,11 @@ import static org.springframework.data.elasticsearch.aot.ElasticsearchAotPredica
 
 import java.util.Arrays;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.aot.hint.TypeReference;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch

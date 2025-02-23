@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.routing;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
-import org.springframework.lang.Nullable;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 /**
@@ -40,7 +40,7 @@ class DefaultRoutingResolverUnitTest {
 
 	@Autowired private ApplicationContext applicationContext;
 
-    @Nullable private RoutingResolver routingResolver;
+	@Nullable private RoutingResolver routingResolver;
 
 	@Configuration
 	static class Config {
@@ -52,7 +52,7 @@ class DefaultRoutingResolverUnitTest {
 
 	@BeforeEach
 	void setUp() {
-        SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
+		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 		mappingContext.setApplicationContext(applicationContext);
 
 		routingResolver = new DefaultRoutingResolver(mappingContext);
@@ -92,7 +92,8 @@ class DefaultRoutingResolverUnitTest {
 	@Document(indexName = "routing-resolver-test")
 	@Routing("theRouting")
 	static class ValidRoutingEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String theRouting;
 
 		public ValidRoutingEntity(@Nullable String id, @Nullable String theRouting) {
@@ -122,7 +123,8 @@ class DefaultRoutingResolverUnitTest {
 	@Document(indexName = "routing-resolver-test")
 	@Routing(value = "@spelRouting.getRouting(#entity)")
 	static class ValidSpelRoutingEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String theRouting;
 
 		public ValidSpelRoutingEntity(@Nullable String id, @Nullable String theRouting) {
@@ -152,7 +154,8 @@ class DefaultRoutingResolverUnitTest {
 	@Document(indexName = "routing-resolver-test")
 	@Routing("unknownProperty")
 	static class InvalidRoutingEntity {
-		@Nullable @Id private String id;
+		@Nullable
+		@Id private String id;
 		@Nullable private String theRouting;
 
 		public InvalidRoutingEntity(@Nullable String id, @Nullable String theRouting) {

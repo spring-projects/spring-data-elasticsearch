@@ -18,9 +18,9 @@ package org.springframework.data.elasticsearch.core.query;
 import java.util.List;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.lang.Nullable;
 
 /**
  * Defines an update request.

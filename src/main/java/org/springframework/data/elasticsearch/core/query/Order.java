@@ -17,8 +17,8 @@ package org.springframework.data.elasticsearch.core.query;
 
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**

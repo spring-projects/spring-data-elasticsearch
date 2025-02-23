@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Defines an inner_hits request.
