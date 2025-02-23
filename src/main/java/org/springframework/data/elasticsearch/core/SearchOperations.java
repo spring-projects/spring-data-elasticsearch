@@ -18,11 +18,11 @@ package org.springframework.data.elasticsearch.core;
 import java.time.Duration;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
-import org.springframework.lang.Nullable;
 
 /**
  * The operations for the
@@ -233,7 +233,8 @@ public interface SearchOperations {
 	Query idsQuery(List<String> ids);
 
 	/**
-	 * Creates a {@link BaseQueryBuilder} that has the given ids setto the parameter value. No other properties of the bulder are set.
+	 * Creates a {@link BaseQueryBuilder} that has the given ids setto the parameter value. No other properties of the
+	 * bulder are set.
 	 *
 	 * @param ids the list of ids must not be {@literal null}
 	 * @return query returning the documents with the given ids

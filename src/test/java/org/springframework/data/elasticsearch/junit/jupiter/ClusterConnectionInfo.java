@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.junit.jupiter;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 

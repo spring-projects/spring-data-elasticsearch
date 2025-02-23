@@ -1,6 +1,5 @@
 /**
  * Classes related to Elasticsearch index management.
  */
-@org.springframework.lang.NonNullApi
-@org.springframework.lang.NonNullFields
+@org.jspecify.annotations.NullMarked
 package org.springframework.data.elasticsearch.core.index;

@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -48,7 +49,6 @@ import org.springframework.data.elasticsearch.core.query.ScriptType;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
@@ -263,8 +263,7 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 				"priceWithTax",
 				"double",
 				"emit(doc['price'].value * params.tax)",
-				Map.of("tax", 1.19)
-		);
+				Map.of("tax", 1.19));
 		var query = CriteriaQuery.builder(
 				Criteria.where("priceWithTax").greaterThan(100.0))
 				.withRuntimeFields(List.of(runtimeField))

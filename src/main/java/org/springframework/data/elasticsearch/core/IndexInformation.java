@@ -18,10 +18,10 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.AliasData;
 import org.springframework.data.elasticsearch.core.index.Settings;
-import org.springframework.lang.Nullable;
 
 /**
  * Immutable object that holds information(name, settings, mappings, aliases) about an Index

@@ -18,8 +18,8 @@ package org.springframework.data.elasticsearch.core.reindex;
 import java.util.Collections;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.ElasticsearchErrorCause;
-import org.springframework.lang.Nullable;
 
 /**
  * Response of reindex request. (@see

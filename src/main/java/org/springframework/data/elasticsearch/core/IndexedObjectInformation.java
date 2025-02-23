@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Value class capturing information about a newly indexed document in Elasticsearch.

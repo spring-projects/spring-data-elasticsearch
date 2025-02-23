@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.client.util.ScrollState;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
