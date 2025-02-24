@@ -62,7 +62,7 @@ public class MyService {
 
 === Using the RestClient
 
-Please check the https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#elasticsearch.clients.configuration[official documentation] 
+Please check the https://docs.spring.io/spring-data/elasticsearch/docs/current/reference/html/#elasticsearch.clients.configuration[official documentation].
 
 === Maven configuration
 
