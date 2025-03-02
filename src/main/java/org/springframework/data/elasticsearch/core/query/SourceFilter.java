@@ -20,7 +20,7 @@ import org.springframework.lang.Nullable;
 
 /**
  * SourceFilter for providing includes and excludes. Using these helps in reducing the amount of data that is returned
- * from Elasticsearch especially when the stored docuements are large and only some fields from these documents are
+ * from Elasticsearch especially when the stored documents are large and only some fields from these documents are
  * needed. If the SourceFilter includes the name of a property that has a different name mapped in Elasticsearch (see
  * {@link Field#name()} this will automatically be mapped.
  *
