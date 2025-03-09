@@ -38,6 +38,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.core.env.EnvironmentCapable;
 import org.springframework.core.env.StandardEnvironment;
 import org.springframework.data.convert.CustomConversions;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -50,6 +51,7 @@ import org.springframework.data.elasticsearch.core.query.Criteria;
 import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilter;
 import org.springframework.data.elasticsearch.core.query.Field;
+import org.springframework.data.elasticsearch.core.query.Order;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
@@ -1231,7 +1233,7 @@ public class MappingElasticsearchConverter
 			return;
 		}
 
-		updatePropertiesInFieldsAndSourceFilter(query, domainClass);
+		updatePropertiesInFieldsSortAndSourceFilter(query, domainClass);
 
 		if (query instanceof CriteriaQuery criteriaQuery) {
 			updatePropertiesInCriteriaQuery(criteriaQuery, domainClass);
@@ -1242,7 +1244,14 @@ public class MappingElasticsearchConverter
 		}
 	}
 
-	private void updatePropertiesInFieldsAndSourceFilter(Query query, Class<?> domainClass) {
+	/**
+	 * replaces the names of fields in the query, the sort or soucre filters with the field names used in Elasticsearch
+	 * when they are defined on the ElasticsearchProperties
+	 *
+	 * @param query the query to process
+	 * @param domainClass the domain class (persistent entity)
+	 */
+	private void updatePropertiesInFieldsSortAndSourceFilter(Query query, Class<?> domainClass) {
 
 		ElasticsearchPersistentEntity<?> persistentEntity = mappingContext.getPersistentEntity(domainClass);
 
@@ -1250,12 +1259,12 @@ public class MappingElasticsearchConverter
 			List<String> fields = query.getFields();
 
 			if (!fields.isEmpty()) {
-				query.setFields(updateFieldNames(fields, persistentEntity));
+				query.setFields(propertyToFieldNames(fields, persistentEntity));
 			}
 
 			List<String> storedFields = query.getStoredFields();
 			if (!CollectionUtils.isEmpty(storedFields)) {
-				query.setStoredFields(updateFieldNames(storedFields, persistentEntity));
+				query.setStoredFields(propertyToFieldNames(storedFields, persistentEntity));
 			}
 
 			SourceFilter sourceFilter = query.getSourceFilter();
@@ -1266,37 +1275,60 @@ public class MappingElasticsearchConverter
 				String[] excludes = null;
 
 				if (sourceFilter.getIncludes() != null) {
-					includes = updateFieldNames(Arrays.asList(sourceFilter.getIncludes()), persistentEntity)
+					includes = propertyToFieldNames(Arrays.asList(sourceFilter.getIncludes()), persistentEntity)
 							.toArray(new String[] {});
 				}
 
 				if (sourceFilter.getExcludes() != null) {
-					excludes = updateFieldNames(Arrays.asList(sourceFilter.getExcludes()), persistentEntity)
+					excludes = propertyToFieldNames(Arrays.asList(sourceFilter.getExcludes()), persistentEntity)
 							.toArray(new String[] {});
 				}
 
 				query.addSourceFilter(new FetchSourceFilter(sourceFilter.fetchSource(), includes, excludes));
 			}
+
+			if (query.getSort() != null) {
+				var sort = query.getSort();
+				// stream the orders and map them to a new order with the changed names,
+				// then replace the existing sort with a new sort containing the new orders.
+				var newOrders = sort.stream().map(order -> {
+					var fieldNames = updateFieldNames(order.getProperty(), persistentEntity);
+
+					if (order instanceof Order springDataElasticsearchOrder) {
+						return springDataElasticsearchOrder.withProperty(fieldNames);
+					} else {
+						return new Sort.Order(order.getDirection(),
+								fieldNames,
+								order.isIgnoreCase(),
+								order.getNullHandling());
+					}
+				}).toList();
+
+				if (query instanceof BaseQuery baseQuery) {
+					baseQuery.setSort(Sort.by(newOrders));
+				}
+			}
 		}
 	}
 
 	/**
-	 * relaces the fieldName with the property name of a property of the persistentEntity with the corresponding
-	 * fieldname. If no such property exists, the original fieldName is kept.
+	 * replaces property name of a property of the persistentEntity with the corresponding fieldname. If no such property
+	 * exists, the original fieldName is kept.
 	 *
-	 * @param fieldNames list of fieldnames
+	 * @param propertyNames list of fieldnames
 	 * @param persistentEntity the persistent entity to check
 	 * @return an updated list of field names
 	 */
-	private List<String> updateFieldNames(List<String> fieldNames, ElasticsearchPersistentEntity<?> persistentEntity) {
-		return fieldNames.stream().map(fieldName -> updateFieldName(persistentEntity, fieldName))
+	private List<String> propertyToFieldNames(List<String> propertyNames,
+			ElasticsearchPersistentEntity<?> persistentEntity) {
+		return propertyNames.stream().map(propertyName -> propertyToFieldName(persistentEntity, propertyName))
 				.collect(Collectors.toList());
 	}
 
 	@NotNull
-	private String updateFieldName(ElasticsearchPersistentEntity<?> persistentEntity, String fieldName) {
-		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(fieldName);
-		return persistentProperty != null ? persistentProperty.getFieldName() : fieldName;
+	private String propertyToFieldName(ElasticsearchPersistentEntity<?> persistentEntity, String propertyName) {
+		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(propertyName);
+		return persistentProperty != null ? persistentProperty.getFieldName() : propertyName;
 	}
 
 	private void updatePropertiesInCriteriaQuery(CriteriaQuery criteriaQuery, Class<?> domainClass) {
@@ -1410,7 +1442,7 @@ public class MappingElasticsearchConverter
 
 		if (properties.length > 0) {
 			var propertyName = properties[0];
-			var fieldName = updateFieldName(persistentEntity, propertyName);
+			var fieldName = propertyToFieldName(persistentEntity, propertyName);
 
 			if (properties.length > 1) {
 				var persistentProperty = persistentEntity.getPersistentProperty(propertyName);
@@ -1431,7 +1463,6 @@ public class MappingElasticsearchConverter
 		}
 
 	}
-
 	// endregion
 
 	@SuppressWarnings("ClassCanBeRecord")
