@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -203,4 +205,25 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 * @since 5.2
 	 */
 	boolean isAlwaysWriteMapping();
+
+	/**
+	 * Retrieves the dynamic templates defined for the current document.
+	 *
+	 * @since 5.4
+	 */
+	Map<String, DynamicTemplate> getDynamicTemplates();
+
+	/**
+	 * if the mapping should be written to the index on repository bootstrap even if the index already exists.
+	 *
+	 * @since 5.4
+	 */
+	boolean hasDynamicTemplates();
+
+	/**
+	 * Building the dynamic templates for the current document.
+	 *
+	 * @since 5.4
+	 */
+	void buildDynamicTemplates(List<?> dynamicTemplates);
 }
