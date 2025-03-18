@@ -99,6 +99,8 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 	@DisplayName("should use runtime-field without script")
 	void shouldUseRuntimeFieldWithoutScript() {
 
+		// a runtime field without a script can be used to redefine the type of a field for the search,
+		// here we change the type from text to double
 		insert("1", "11", 10);
 		Query query = new CriteriaQuery(new Criteria("description").matches(11.0));
 		RuntimeField runtimeField = new RuntimeField("description", "double");
@@ -133,6 +135,25 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 		assertThat(foundPerson.getBirthDate()).isEqualTo(birthDate);
 	}
 
+	@Test // #3076
+	@DisplayName("should return scripted fields that are lists")
+	void shouldReturnScriptedFieldsThatAreLists() {
+		var person = new Person();
+		person.setFirstName("John");
+		person.setLastName("Doe");
+		operations.save(person);
+		var query = Query.findAll();
+		query.addFields("allNames");
+		query.addSourceFilter(new FetchSourceFilterBuilder().withIncludes("*").build());
+
+		var searchHits = operations.search(query, Person.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		var foundPerson = searchHits.getSearchHit(0).getContent();
+		// the painless script seems to return the data sorted no matter in which order the values are emitted
+		assertThat(foundPerson.getAllNames()).containsExactlyInAnyOrderElementsOf(List.of("John", "Doe"));
+	}
+
 	@Test // #2035
 	@DisplayName("should use repository method with ScriptedField parameters")
 	void shouldUseRepositoryMethodWithScriptedFieldParameters() {
@@ -143,9 +164,11 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		repository.save(entity);
 
-		org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField1 = getScriptedField("scriptedValue1",
+		org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField1 = buildScriptedField(
+				"scriptedValue1",
 				2);
-		org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField2 = getScriptedField("scriptedValue2",
+		org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField2 = buildScriptedField(
+				"scriptedValue2",
 				3);
 
 		var searchHits = repository.findByValue(3, scriptedField1, scriptedField2);
@@ -155,17 +178,6 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 		assertThat(foundEntity.value).isEqualTo(3);
 		assertThat(foundEntity.getScriptedValue1()).isEqualTo(6);
 		assertThat(foundEntity.getScriptedValue2()).isEqualTo(9);
-	}
-
-	@NotNull
-	private static org.springframework.data.elasticsearch.core.query.ScriptedField getScriptedField(String fieldName,
-			int factor) {
-		return org.springframework.data.elasticsearch.core.query.ScriptedField.of(
-				fieldName,
-				ScriptData.of(b -> b
-						.withType(ScriptType.INLINE)
-						.withScript("doc['value'].size() > 0 ? doc['value'].value * params['factor'] : 0")
-						.withParams(Map.of("factor", factor))));
 	}
 
 	@Test // #2035
@@ -178,9 +190,11 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		repository.save(entity);
 
-		org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField1 = getScriptedField("scriptedValue1",
+		org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField1 = buildScriptedField(
+				"scriptedValue1",
 				2);
-		org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField2 = getScriptedField("scriptedValue2",
+		org.springframework.data.elasticsearch.core.query.ScriptedField scriptedField2 = buildScriptedField(
+				"scriptedValue2",
 				3);
 
 		var searchHits = repository.findWithScriptedFields(3, scriptedField1, scriptedField2);
@@ -202,8 +216,8 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		repository.save(entity);
 
-		var runtimeField1 = getRuntimeField("scriptedValue1", 3);
-		var runtimeField2 = getRuntimeField("scriptedValue2", 4);
+		var runtimeField1 = buildRuntimeField("scriptedValue1", 3);
+		var runtimeField2 = buildRuntimeField("scriptedValue2", 4);
 
 		var searchHits = repository.findByValue(3, runtimeField1, runtimeField2);
 
@@ -212,14 +226,6 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 		assertThat(foundEntity.value).isEqualTo(3);
 		assertThat(foundEntity.getScriptedValue1()).isEqualTo(9);
 		assertThat(foundEntity.getScriptedValue2()).isEqualTo(12);
-	}
-
-	@NotNull
-	private static RuntimeField getRuntimeField(String fieldName, int factor) {
-		return new RuntimeField(
-				fieldName,
-				"long",
-				String.format("emit(doc['value'].size() > 0 ? doc['value'].value * %d : 0)", factor));
 	}
 
 	@Test // #2035
@@ -232,8 +238,8 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		repository.save(entity);
 
-		var runtimeField1 = getRuntimeField("scriptedValue1", 3);
-		var runtimeField2 = getRuntimeField("scriptedValue2", 4);
+		var runtimeField1 = buildRuntimeField("scriptedValue1", 3);
+		var runtimeField2 = buildRuntimeField("scriptedValue2", 4);
 
 		var searchHits = repository.findWithRuntimeFields(3, runtimeField1, runtimeField2);
 
@@ -263,8 +269,7 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 				"priceWithTax",
 				"double",
 				"emit(doc['price'].value * params.tax)",
-				Map.of("tax", 1.19)
-		);
+				Map.of("tax", 1.19));
 		var query = CriteriaQuery.builder(
 				Criteria.where("priceWithTax").greaterThan(100.0))
 				.withRuntimeFields(List.of(runtimeField))
@@ -273,6 +278,56 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 		var searchHits = operations.search(query, SomethingToBuy.class);
 
 		assertThat(searchHits).hasSize(1);
+	}
+
+	@Test // #3076
+	@DisplayName("should use runtime fields in queries returning lists")
+	void shouldUseRuntimeFieldsInQueriesReturningLists() {
+
+		insert("1", "item 1", 80.0);
+
+		var runtimeField = new RuntimeField(
+				"someStrings",
+				"keyword",
+				"emit('foo'); emit('bar');",
+				null);
+
+		var query = Query.findAll();
+		query.addRuntimeField(runtimeField);
+		query.addFields("someStrings");
+		query.addSourceFilter(new FetchSourceFilterBuilder().withIncludes("*").build());
+
+		var searchHits = operations.search(query, SomethingToBuy.class);
+
+		assertThat(searchHits).hasSize(1);
+		var somethingToBuy = searchHits.getSearchHit(0).getContent();
+		assertThat(somethingToBuy.someStrings).containsExactlyInAnyOrder("foo", "bar");
+	}
+
+	/**
+	 * build a {@link org.springframework.data.elasticsearch.core.query.ScriptedField} to return the product of the
+	 * document's value property and the given factor
+	 */
+	@NotNull
+	private static org.springframework.data.elasticsearch.core.query.ScriptedField buildScriptedField(String fieldName,
+			int factor) {
+		return org.springframework.data.elasticsearch.core.query.ScriptedField.of(
+				fieldName,
+				ScriptData.of(b -> b
+						.withType(ScriptType.INLINE)
+						.withScript("doc['value'].size() > 0 ? doc['value'].value * params['factor'] : 0")
+						.withParams(Map.of("factor", factor))));
+	}
+
+	/**
+	 * build a {@link RuntimeField} to return the product of the document's value property and the given factor
+	 */
+	@NotNull
+	private static RuntimeField buildRuntimeField(String fieldName, int factor) {
+		return new RuntimeField(
+				fieldName,
+				"long",
+				String.format("emit(doc['value'].size() > 0 ? doc['value'].value * %d : 0)", factor));
 	}
 
 	@SuppressWarnings("unused")
@@ -285,6 +340,9 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		@Nullable
 		@Field(type = FieldType.Double) private Double price;
+
+		@Nullable
+		@ScriptedField private List<String> someStrings;
 
 		@Nullable
 		public String getId() {
@@ -312,6 +370,15 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 		public void setPrice(@Nullable Double price) {
 			this.price = price;
 		}
+
+		@Nullable
+		public List<String> getSomeStrings() {
+			return someStrings;
+		}
+
+		public void setSomeStrings(@Nullable List<String> someStrings) {
+			this.someStrings = someStrings;
+		}
 	}
 
 	@SuppressWarnings("unused")
@@ -319,6 +386,13 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 	@Mapping(runtimeFieldsPath = "/runtime-fields-person.json")
 	public static class Person {
 		@Nullable private String id;
+
+		// need keywords as we are using them in the script
+		@Nullable
+		@Field(type = FieldType.Keyword) private String firstName;
+		@Nullable
+		@Field(type = FieldType.Keyword) private String lastName;
+		@ScriptedField private List<String> allNames = List.of();
 
 		@Field(type = FieldType.Date, format = DateFormat.basic_date)
 		@Nullable private LocalDate birthDate;
@@ -333,6 +407,24 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		public void setId(@Nullable String id) {
 			this.id = id;
+		}
+
+		@Nullable
+		public String getFirstName() {
+			return firstName;
+		}
+
+		public void setFirstName(@Nullable String firstName) {
+			this.firstName = firstName;
+		}
+
+		@Nullable
+		public String getLastName() {
+			return lastName;
+		}
+
+		public void setLastName(@Nullable String lastName) {
+			this.lastName = lastName;
 		}
 
 		@Nullable
@@ -351,6 +443,14 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 
 		public void setAge(@Nullable Integer age) {
 			this.age = age;
+		}
+
+		public List<String> getAllNames() {
+			return allNames;
+		}
+
+		public void setAllNames(List<String> allNames) {
+			this.allNames = allNames;
 		}
 	}
 

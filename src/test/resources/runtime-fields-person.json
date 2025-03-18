@@ -5,5 +5,12 @@
             "lang": "painless",
             "source": "Instant currentDate = Instant.ofEpochMilli(new Date().getTime()); Instant startDate = doc['birthDate'].value.toInstant(); emit(ChronoUnit.DAYS.between(startDate, currentDate) / 365);"
         }
+    },
+    "allNames": {
+        "type": "keyword",
+        "script": {
+            "lang": "painless",
+            "source": "emit(doc['firstName'].value);emit(doc['lastName'].value);"
+        }
     }
 }

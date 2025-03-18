@@ -58,6 +58,20 @@ public interface SearchDocument extends Document {
 	}
 
 	/**
+	 * @param name the field name
+	 * @param <V> the type of elements
+	 * @return the values of the given field.
+	 */
+	@Nullable
+	default <V> List<V> getFieldValues(final String name) {
+		List<Object> values = getFields().get(name);
+		if (values == null) {
+			return null;
+		}
+		return (List<V>) values;
+	}
+
+	/**
 	 * @return the sort values for the search hit
 	 */
 	@Nullable

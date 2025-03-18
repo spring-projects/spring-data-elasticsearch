@@ -394,7 +394,7 @@ public class MappingElasticsearchConverter
 				}
 
 				if (source instanceof SearchDocument searchDocument) {
-					populateScriptFields(targetEntity, result, searchDocument);
+					populateScriptedFields(targetEntity, result, searchDocument);
 				}
 				return result;
 			} catch (ConversionException e) {
@@ -652,7 +652,16 @@ public class MappingElasticsearchConverter
 			return conversionService.convert(value, target);
 		}
 
-		private <T> void populateScriptFields(ElasticsearchPersistentEntity<?> entity, T result,
+		/**
+		 * Checks if any of the properties of the entity is annotated with
+		 *
+		 * @{@link ScriptedField}. If so, the value of this property is set from the returned fields in the document.
+		 * @param entity the entity to defining the persistent property
+		 * @param result the rsult to populate
+		 * @param searchDocument the search result caontaining the fields
+		 * @param <T> the result type
+		 */
+		private <T> void populateScriptedFields(ElasticsearchPersistentEntity<?> entity, T result,
 				SearchDocument searchDocument) {
 			Map<String, List<Object>> fields = searchDocument.getFields();
 			entity.doWithProperties((SimplePropertyHandler) property -> {
@@ -661,8 +670,13 @@ public class MappingElasticsearchConverter
 					// noinspection ConstantConditions
 					String name = scriptedField.name().isEmpty() ? property.getName() : scriptedField.name();
 					if (fields.containsKey(name)) {
-						Object value = searchDocument.getFieldValue(name);
-						entity.getPropertyAccessor(result).setProperty(property, value);
+						if (property.isCollectionLike()) {
+							List<Object> values = searchDocument.getFieldValues(name);
+							entity.getPropertyAccessor(result).setProperty(property, values);
+						} else {
+							Object value = searchDocument.getFieldValue(name);
+							entity.getPropertyAccessor(result).setProperty(property, value);
+						}
 					}
 				}
 			});
