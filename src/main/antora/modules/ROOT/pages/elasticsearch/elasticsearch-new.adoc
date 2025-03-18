@@ -6,6 +6,7 @@
 
 * Upgrade to Elasticsearch 8.17.2.
 * Add support for the `@SearchTemplateQuery` annotation on repository methods.
+* Scripted field properties of type collection can be populated from scripts returning arrays.
 
 [[new-features.5-4-0]]
 == New in Spring Data Elasticsearch 5.4
