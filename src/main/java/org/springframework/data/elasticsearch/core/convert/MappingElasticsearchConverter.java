@@ -1372,15 +1372,85 @@ public class MappingElasticsearchConverter
 			return;
 		}
 
-		String[] fieldNames = field.getName().split("\\.");
+		var propertyNamesUpdate = updatePropertyNames(persistentEntity, field.getName());
+
+		var fieldNames = propertyNamesUpdate.names();
+		field.setName(String.join(".", fieldNames));
+
+		if (propertyNamesUpdate.propertyCount() > 1 && propertyNamesUpdate.nestedProperty()) {
+			List<String> propertyNames = Arrays.asList(fieldNames);
+			field.setPath(String.join(".", propertyNames.subList(0, propertyNamesUpdate.propertyCount - 1)));
+		}
+
+		if (propertyNamesUpdate.persistentProperty != null) {
+
+			if (propertyNamesUpdate.persistentProperty.hasPropertyValueConverter()) {
+				PropertyValueConverter propertyValueConverter = Objects
+						.requireNonNull(propertyNamesUpdate.persistentProperty.getPropertyValueConverter());
+				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
+
+					if (criteriaEntry.getKey().hasValue()) {
+						Object value = criteriaEntry.getValue();
+
+						if (value.getClass().isArray()) {
+							Object[] objects = (Object[]) value;
+
+							for (int i = 0; i < objects.length; i++) {
+								objects[i] = propertyValueConverter.write(objects[i]);
+							}
+						} else {
+							criteriaEntry.setValue(propertyValueConverter.write(value));
+						}
+					}
+				});
+			}
+
+			org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = propertyNamesUpdate.persistentProperty
+					.findAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
+
+			if (fieldAnnotation != null) {
+				field.setFieldType(fieldAnnotation.type());
+			}
+		}
+	}
+
+	static record PropertyNamesUpdate(
+			String[] names,
+			Boolean nestedProperty,
+			Integer propertyCount,
+			ElasticsearchPersistentProperty persistentProperty) {
+	}
+
+	@Override
+	public String updateFieldNames(String propertyPath, ElasticsearchPersistentEntity<?> persistentEntity) {
+
+		Assert.notNull(propertyPath, "propertyPath must not be null");
+		Assert.notNull(persistentEntity, "persistentEntity must not be null");
+
+		var propertyNamesUpdate = updatePropertyNames(persistentEntity, propertyPath);
+		return String.join(".", propertyNamesUpdate.names());
+	}
+
+	/**
+	 * Parse a propertyPath and replace the path values with the field names from a persistentEntity. path entries not
+	 * found in the entity are kept as they are.
+	 *
+	 * @return the eventually modified names, a flag if a nested entity was encountered the number of processed
+	 *         propertiesand the last processed PersistentProperty.
+	 */
+	PropertyNamesUpdate updatePropertyNames(ElasticsearchPersistentEntity<?> persistentEntity, String propertyPath) {
+
+		String[] propertyNames = propertyPath.split("\\.");
+		String[] fieldNames = Arrays.copyOf(propertyNames, propertyNames.length);
 
 		ElasticsearchPersistentEntity<?> currentEntity = persistentEntity;
 		ElasticsearchPersistentProperty persistentProperty = null;
+
 		int propertyCount = 0;
 		boolean isNested = false;
 
-		for (int i = 0; i < fieldNames.length; i++) {
-			persistentProperty = currentEntity.getPersistentProperty(fieldNames[i]);
+		for (int i = 0; i < propertyNames.length; i++) {
+			persistentProperty = currentEntity.getPersistentProperty(propertyNames[i]);
 
 			if (persistentProperty != null) {
 				propertyCount++;
@@ -1407,75 +1477,7 @@ public class MappingElasticsearchConverter
 			}
 		}
 
-		field.setName(String.join(".", fieldNames));
-
-		if (propertyCount > 1 && isNested) {
-			List<String> propertyNames = Arrays.asList(fieldNames);
-			field.setPath(String.join(".", propertyNames.subList(0, propertyCount - 1)));
-		}
-
-		if (persistentProperty != null) {
-
-			if (persistentProperty.hasPropertyValueConverter()) {
-				PropertyValueConverter propertyValueConverter = Objects
-						.requireNonNull(persistentProperty.getPropertyValueConverter());
-				criteria.getQueryCriteriaEntries().forEach(criteriaEntry -> {
-
-					if (criteriaEntry.getKey().hasValue()) {
-						Object value = criteriaEntry.getValue();
-
-						if (value.getClass().isArray()) {
-							Object[] objects = (Object[]) value;
-
-							for (int i = 0; i < objects.length; i++) {
-								objects[i] = propertyValueConverter.write(objects[i]);
-							}
-						} else {
-							criteriaEntry.setValue(propertyValueConverter.write(value));
-						}
-					}
-				});
-			}
-
-			org.springframework.data.elasticsearch.annotations.Field fieldAnnotation = persistentProperty
-					.findAnnotation(org.springframework.data.elasticsearch.annotations.Field.class);
-
-			if (fieldAnnotation != null) {
-				field.setFieldType(fieldAnnotation.type());
-			}
-		}
-	}
-
-	@Override
-	public String updateFieldNames(String propertyPath, ElasticsearchPersistentEntity<?> persistentEntity) {
-
-		Assert.notNull(propertyPath, "propertyPath must not be null");
-		Assert.notNull(persistentEntity, "persistentEntity must not be null");
-
-		var properties = propertyPath.split("\\.", 2);
-
-		if (properties.length > 0) {
-			var propertyName = properties[0];
-			var fieldName = propertyToFieldName(persistentEntity, propertyName);
-
-			if (properties.length > 1) {
-				var persistentProperty = persistentEntity.getPersistentProperty(propertyName);
-
-				if (persistentProperty != null) {
-					ElasticsearchPersistentEntity<?> nestedPersistentEntity = mappingContext
-							.getPersistentEntity(persistentProperty);
-					if (nestedPersistentEntity != null) {
-						return fieldName + '.' + updateFieldNames(properties[1], nestedPersistentEntity);
-					} else {
-						return fieldName;
-					}
-				}
-			}
-			return fieldName;
-		} else {
-			return propertyPath;
-		}
-
+		return new PropertyNamesUpdate(fieldNames, isNested, propertyCount, persistentProperty);
 	}
 	// endregion
 

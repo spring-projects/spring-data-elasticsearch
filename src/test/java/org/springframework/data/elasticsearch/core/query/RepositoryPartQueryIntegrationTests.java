@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import java.lang.reflect.Method;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -679,6 +681,45 @@ public abstract class RepositoryPartQueryIntegrationTests {
 		assertEquals(expected, query, false);
 	}
 
+	@Test // #3081
+	@DisplayName("should build sort object with unknown field names")
+	void shouldBuildSortObjectWithUnknownFieldNames() throws NoSuchMethodException, JSONException {
+
+		String methodName = "findByName";
+		Class<?>[] parameterClasses = new Class[] { String.class, Sort.class };
+		Object[] parameters = new Object[] { BOOK_TITLE, Sort.by("sortAuthor.sortName.raw") };
+
+		String query = getQueryString(methodName, parameterClasses, parameters);
+
+		String expected = """
+
+				{
+				              "query": {
+				                "bool": {
+				                  "must": [
+				                    {
+				                      "query_string": {
+				                        "query": "Title",
+				                        "fields": [
+				                          "name"
+				                        ]
+				                      }
+				                    }
+				                  ]
+				                }
+				              },
+				              "sort": [
+				                {
+				                  "sort_author.sort_name.raw": {
+				                    "order": "asc"
+				                  }
+				                }
+				              ]
+				            }""";
+
+		assertEquals(expected, query, false);
+	}
+
 	private String getQueryString(String methodName, Class<?>[] parameterClasses, Object[] parameters)
 			throws NoSuchMethodException {
 
@@ -768,6 +809,7 @@ public abstract class RepositoryPartQueryIntegrationTests {
 
 		List<Book> findByNameOrderBySortAuthor_SortName(String name);
 
+		List<Book> findByName(String name, Sort sort);
 	}
 
 	public static class Book {
