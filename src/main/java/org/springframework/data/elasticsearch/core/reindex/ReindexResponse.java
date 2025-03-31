@@ -187,7 +187,6 @@ public class ReindexResponse {
 	public static class Failure {
 
 		@Nullable private final String index;
-		@Nullable private final String type;
 		@Nullable private final String id;
 		@Nullable private final Exception cause;
 		@Nullable private final Integer status;
@@ -196,11 +195,10 @@ public class ReindexResponse {
 		@Nullable private final Boolean aborted;
 		@Nullable private final ElasticsearchErrorCause elasticsearchErrorCause;
 
-		private Failure(@Nullable String index, @Nullable String type, @Nullable String id, @Nullable Exception cause,
+		private Failure(@Nullable String index, @Nullable String id, @Nullable Exception cause,
 				@Nullable Integer status, @Nullable Long seqNo, @Nullable Long term, @Nullable Boolean aborted,
 				@Nullable ElasticsearchErrorCause elasticsearchErrorCause) {
 			this.index = index;
-			this.type = type;
 			this.id = id;
 			this.cause = cause;
 			this.status = status;
@@ -213,11 +211,6 @@ public class ReindexResponse {
 		@Nullable
 		public String getIndex() {
 			return index;
-		}
-
-		@Nullable
-		public String getType() {
-			return type;
 		}
 
 		@Nullable
@@ -269,7 +262,6 @@ public class ReindexResponse {
 		 */
 		public static final class FailureBuilder {
 			@Nullable private String index;
-			@Nullable private String type;
 			@Nullable private String id;
 			@Nullable private Exception cause;
 			@Nullable private Integer status;
@@ -282,11 +274,6 @@ public class ReindexResponse {
 
 			public Failure.FailureBuilder withIndex(String index) {
 				this.index = index;
-				return this;
-			}
-
-			public Failure.FailureBuilder withType(String type) {
-				this.type = type;
 				return this;
 			}
 
@@ -326,7 +313,7 @@ public class ReindexResponse {
 			}
 
 			public Failure build() {
-				return new Failure(index, type, id, cause, status, seqNo, term, aborted, elasticsearchErrorCause);
+				return new Failure(index, id, cause, status, seqNo, term, aborted, elasticsearchErrorCause);
 			}
 		}
 	}
