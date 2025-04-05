@@ -22,6 +22,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.elasticsearch.core.geo.GeoBox;
@@ -859,6 +860,7 @@ public class Criteria {
 
 	// endregion
 
+	// region equals/hashcode
 	@Override
 	public boolean equals(Object o) {
 		if (this == o)
@@ -874,6 +876,8 @@ public class Criteria {
 			return false;
 		if (!Objects.equals(field, criteria.field))
 			return false;
+		if (!criteriaChain.filter(this).equals(criteria.criteriaChain.filter(criteria)))
+			return false;
 		if (!queryCriteriaEntries.equals(criteria.queryCriteriaEntries))
 			return false;
 		if (!filterCriteriaEntries.equals(criteria.filterCriteriaEntries))
@@ -886,11 +890,16 @@ public class Criteria {
 		int result = field != null ? field.hashCode() : 0;
 		result = 31 * result + (boost != +0.0f ? Float.floatToIntBits(boost) : 0);
 		result = 31 * result + (negating ? 1 : 0);
+		// the criteriaChain contains "this" object, so we need to filter it out
+		// to avoid a stackoverflow here, because the hashcode implementation
+		// uses the element's hashcodes
+		result = 31 * result + criteriaChain.filter(this).hashCode();
 		result = 31 * result + queryCriteriaEntries.hashCode();
 		result = 31 * result + filterCriteriaEntries.hashCode();
 		result = 31 * result + subCriteria.hashCode();
 		return result;
 	}
+	// endregion
 
 	@Override
 	public String toString() {
@@ -938,7 +947,17 @@ public class Criteria {
 	 *
 	 * @since 4.1
 	 */
-	public static class CriteriaChain extends LinkedList<Criteria> {}
+	public static class CriteriaChain extends LinkedList<Criteria> {
+		/**
+		 * return a copy of this list with the given element filtered out.
+		 *
+		 * @param criteria the element to filter
+		 * @return the filtered list
+		 */
+		List<Criteria> filter(Criteria criteria) {
+			return this.stream().filter(c -> c != criteria).collect(Collectors.toList());
+		}
+	}
 
 	/**
 	 * Operator to join the entries of the criteria chain
