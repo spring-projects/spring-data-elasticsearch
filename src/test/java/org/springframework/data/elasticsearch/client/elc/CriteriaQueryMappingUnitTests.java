@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.client.elc.JsonUtils.*;
 
@@ -22,6 +23,7 @@ import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -445,6 +447,108 @@ public class CriteriaQueryMappingUnitTests {
 		softly.assertAll();
 	}
 
+	// the following test failed because of a wrong implementation in Criteria
+	// equals and hscode methods.
+	@Test // #3083
+	@DisplayName("should map correct subcriteria")
+	void shouldMapCorrectSubcriteria() throws JSONException {
+		Criteria criteria = new Criteria("first").is("hello");
+
+		List<Criteria> criterias = new ArrayList<>();
+		criterias.add(new Criteria().or("second").exists());
+
+		List<Criteria> subCriterias = new ArrayList<>();
+		subCriterias.add(new Criteria("third").exists()
+				.and(new Criteria("fourth").is("ciao")));
+		subCriterias.add(new Criteria("third").exists()
+				.and(new Criteria("fourth").is("hi")));
+
+		Criteria result = Criteria.or();
+
+		for (Criteria c : criterias) {
+			result = result.or(c);
+		}
+
+		for (Criteria c : subCriterias) {
+			result = result.subCriteria(c);
+		}
+		criteria = criteria.subCriteria(result);
+		CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
+
+		String expected = """
+                {
+                  "bool": {
+                    "must": [
+                      {
+                        "query_string": {
+                          "default_operator": "and",
+                          "fields": [
+                            "first"
+                          ],
+                          "query": "hello"
+                        }
+                      },
+                      {
+                        "bool": {
+                          "should": [
+                            {
+                              "exists": {
+                                "field": "second"
+                              }
+                            },
+                            {
+                              "bool": {
+                                "must": [
+                                  {
+                                    "exists": {
+                                      "field": "third"
+                                    }
+                                  },
+                                  {
+                                    "query_string": {
+                                      "default_operator": "and",
+                                      "fields": [
+                                        "fourth"
+                                      ],
+                                      "query": "ciao"
+                                    }
+                                  }
+                                ]
+                              }
+                            },
+                            {
+                              "bool": {
+                                "must": [
+                                  {
+                                    "exists": {
+                                      "field": "third"
+                                    }
+                                  },
+                                  {
+                                    "query_string": {
+                                      "default_operator": "and",
+                                      "fields": [
+                                        "fourth"
+                                      ],
+                                      "query": "hi"
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+                """;
+
+		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
+		var queryString = queryToJson(CriteriaQueryProcessor.createQuery(criteriaQuery.getCriteria()), mapper);
+
+		assertEquals(expected, queryString, false);
+	}
 	// endregion
 	// region helper functions
 
