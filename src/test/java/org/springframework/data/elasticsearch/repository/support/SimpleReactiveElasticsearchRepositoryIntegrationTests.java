@@ -105,6 +105,26 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		return operations.exists(id, IndexCoordinates.of(indexNameProvider.indexName()));
 	}
 
+	@Test // #3093
+	@DisplayName("should save all from empty collection")
+	void shouldSaveAllFromEmptyCollection() {
+
+		repository.saveAll(Collections.emptyList())
+				.as(StepVerifier::create)
+				.expectNextCount(0)
+				.verifyComplete();
+	}
+
+	@Test // #3093
+	@DisplayName("should save all from empty flux")
+	void shouldSaveAllFromEmptyFlux() {
+
+		repository.saveAll(Flux.empty())
+				.as(StepVerifier::create)
+				.expectNextCount(0)
+				.verifyComplete();
+	}
+
 	@Test // DATAES-519
 	void saveShouldComputeMultipleEntities() {
 

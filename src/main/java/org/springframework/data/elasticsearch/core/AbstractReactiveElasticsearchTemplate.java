@@ -233,6 +233,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 					.subscribe(new Subscriber<>() {
 						@Nullable private Subscription subscription = null;
 						private final AtomicBoolean upstreamComplete = new AtomicBoolean(false);
+						private final AtomicBoolean onNextHasBeenCalled = new AtomicBoolean(false);
 
 						@Override
 						public void onSubscribe(Subscription subscription) {
@@ -242,6 +243,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 						@Override
 						public void onNext(List<T> entityList) {
+							onNextHasBeenCalled.set(true);
 							saveAll(entityList, index)
 									.map(sink::tryEmitNext)
 									.doOnComplete(() -> {
@@ -267,6 +269,10 @@ abstract public class AbstractReactiveElasticsearchTemplate
 						@Override
 						public void onComplete() {
 							upstreamComplete.set(true);
+							if (!onNextHasBeenCalled.get()) {
+								// this happens when an empty flux is saved
+								sink.tryEmitComplete();
+							}
 						}
 					});
 			return sink.asFlux();
