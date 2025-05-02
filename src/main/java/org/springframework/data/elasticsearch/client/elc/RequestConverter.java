@@ -55,6 +55,7 @@ import co.elastic.clients.elasticsearch.sql.query.SqlFormat;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpDeserializer;
 import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.util.NamedValue;
 import co.elastic.clients.util.ObjectBuilder;
 import jakarta.json.stream.JsonParser;
 
@@ -72,6 +73,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -1365,9 +1367,14 @@ class RequestConverter extends AbstractQueryProcessor {
 							}
 
 							if (!isEmpty(query.getIndicesBoost())) {
-								bb.indicesBoost(query.getIndicesBoost().stream()
-										.map(indexBoost -> Map.of(indexBoost.getIndexName(), (double) indexBoost.getBoost()))
-										.collect(Collectors.toList()));
+								Stream<NamedValue<Double>> namedValueStream = query.getIndicesBoost().stream()
+										.map(indexBoost -> {
+											var namedValue = new NamedValue(indexBoost.getIndexName(),
+													Float.valueOf(indexBoost.getBoost()).doubleValue());
+											return namedValue;
+										});
+								List<NamedValue<Double>> namedValueList = namedValueStream.collect(Collectors.toList());
+								bb.indicesBoost(namedValueList);
 							}
 
 							query.getScriptedFields().forEach(scriptedField -> bb.scriptFields(scriptedField.getFieldName(),
@@ -1576,9 +1583,14 @@ class RequestConverter extends AbstractQueryProcessor {
 		}
 
 		if (!isEmpty(query.getIndicesBoost())) {
-			builder.indicesBoost(query.getIndicesBoost().stream()
-					.map(indexBoost -> Map.of(indexBoost.getIndexName(), (double) indexBoost.getBoost()))
-					.collect(Collectors.toList()));
+			Stream<NamedValue<Double>> namedValueStream = query.getIndicesBoost().stream()
+					.map(indexBoost -> {
+						var namedValue = new NamedValue(indexBoost.getIndexName(),
+								Float.valueOf(indexBoost.getBoost()).doubleValue());
+						return namedValue;
+					});
+			List<NamedValue<Double>> namedValueList = namedValueStream.collect(Collectors.toList());
+			builder.indicesBoost(namedValueList);
 		}
 
 		if (!isEmpty(query.getDocValueFields())) {
