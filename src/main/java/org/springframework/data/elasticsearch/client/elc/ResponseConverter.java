@@ -92,7 +92,7 @@ class ResponseConverter {
 		return ClusterHealth.builder() //
 				.withActivePrimaryShards(healthResponse.activePrimaryShards()) //
 				.withActiveShards(healthResponse.activeShards()) //
-				.withActiveShardsPercent(Double.parseDouble(healthResponse.activeShardsPercentAsNumber()))//
+				.withActiveShardsPercent(healthResponse.activeShardsPercentAsNumber())//
 				.withClusterName(healthResponse.clusterName()) //
 				.withDelayedUnassignedShards(healthResponse.delayedUnassignedShards()) //
 				.withInitializingShards(healthResponse.initializingShards()) //

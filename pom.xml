@@ -21,7 +21,7 @@
 		<springdata.commons>3.5.0-SNAPSHOT</springdata.commons>
 
 		<!-- version of the ElasticsearchClient	-->
-		<elasticsearch-java>8.17.4</elasticsearch-java>
+		<elasticsearch-java>8.18.0</elasticsearch-java>
 
 		<hoverfly>0.19.0</hoverfly>
 		<log4j>2.23.1</log4j>
@@ -131,6 +131,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		<dependency>
+			<groupId>org.elasticsearch.client</groupId>
+			<artifactId>elasticsearch-rest-client</artifactId>
+			<version>${elasticsearch-java}</version>
+		</dependency>
+
 
 		<!-- Jackson JSON Mapper -->
 		<dependency>
