@@ -1295,11 +1295,15 @@ class RequestConverter extends AbstractQueryProcessor {
 									.timeout(timeStringMs(query.getTimeout())) //
 							;
 
-							if (query.getPageable().isPaged()) {
-								bb //
-										.from((int) query.getPageable().getOffset()) //
-										.size(query.getPageable().getPageSize());
-							}
+							var offset = query.getPageable().isPaged() ? query.getPageable().getOffset() : 0;
+							var pageSize = query.getPageable().isPaged() ? query.getPageable().getPageSize()
+									: INDEX_MAX_RESULT_WINDOW;
+							// if we have both a page size and a max results, we take the min, this is necessary for
+							// searchForStream to work correctly (#3098) as there the page size defines what is
+							// returned in a single request, and the max result determines the total number of
+							// documents returned
+							var size = query.isLimiting() ? Math.min(pageSize, query.getMaxResults()) : pageSize;
+							bb.from((int) offset).size(size);
 
 							if (!isEmpty(query.getFields())) {
 								bb.fields(fb -> {
@@ -1310,10 +1314,6 @@ class RequestConverter extends AbstractQueryProcessor {
 
 							if (!isEmpty(query.getStoredFields())) {
 								bb.storedFields(query.getStoredFields());
-							}
-
-							if (query.isLimiting()) {
-								bb.size(query.getMaxResults());
 							}
 
 							if (query.getMinScore() > 0) {
@@ -1473,13 +1473,14 @@ class RequestConverter extends AbstractQueryProcessor {
 			builder.seqNoPrimaryTerm(true);
 		}
 
-		if (query.getPageable().isPaged()) {
-			builder //
-					.from((int) query.getPageable().getOffset()) //
-					.size(query.getPageable().getPageSize());
-		} else {
-			builder.from(0).size(INDEX_MAX_RESULT_WINDOW);
-		}
+		var offset = query.getPageable().isPaged() ? query.getPageable().getOffset() : 0;
+		var pageSize = query.getPageable().isPaged() ? query.getPageable().getPageSize() : INDEX_MAX_RESULT_WINDOW;
+		// if we have both a page size and a max results, we take the min, this is necessary for
+		// searchForStream to work correctly (#3098) as there the page size defines what is
+		// returned in a single request, and the max result determines the total number of
+		// documents returned
+		var size = query.isLimiting() ? Math.min(pageSize, query.getMaxResults()) : pageSize;
+		builder.from((int) offset).size(size);
 
 		if (!isEmpty(query.getFields())) {
 			var fieldAndFormats = query.getFields().stream().map(field -> FieldAndFormat.of(b -> b.field(field))).toList();
@@ -1492,10 +1493,6 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		if (query.getIndicesOptions() != null) {
 			addIndicesOptions(builder, query.getIndicesOptions());
-		}
-
-		if (query.isLimiting()) {
-			builder.size(query.getMaxResults());
 		}
 
 		if (query.getMinScore() > 0) {
