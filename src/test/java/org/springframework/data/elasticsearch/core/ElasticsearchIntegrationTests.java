@@ -1636,7 +1636,9 @@ public abstract class ElasticsearchIntegrationTests {
 				.withParams(Collections.singletonMap("newMessage", messageAfterUpdate)).withAbortOnVersionConflict(true)
 				.build();
 
-		operations.updateByQuery(updateQuery, IndexCoordinates.of(indexNameProvider.indexName()));
+		var byQueryResponse = operations.updateByQuery(updateQuery, IndexCoordinates.of(indexNameProvider.indexName()));
+
+		assertThat(byQueryResponse.getUpdated()).isEqualTo(1);
 
 		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));

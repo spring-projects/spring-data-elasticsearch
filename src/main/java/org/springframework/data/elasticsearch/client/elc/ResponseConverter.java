@@ -498,6 +498,10 @@ class ResponseConverter {
 			builder.withDeleted(response.deleted());
 		}
 
+		if(response.updated() != null) {
+			builder.withUpdated(response.updated());
+		}
+
 		if (response.batches() != null) {
 			builder.withBatches(Math.toIntExact(response.batches()));
 		}
