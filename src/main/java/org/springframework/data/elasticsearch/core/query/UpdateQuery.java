@@ -76,7 +76,7 @@ public class UpdateQuery {
 			@Nullable String timeout, @Nullable String waitForActiveShards, @Nullable Query query,
 			@Nullable Boolean abortOnVersionConflict, @Nullable Integer batchSize, @Nullable Integer maxDocs,
 			@Nullable Integer maxRetries, @Nullable String pipeline, @Nullable Float requestsPerSecond,
-			@Nullable Boolean shouldStoreResult, @Nullable Integer slices, @Nullable ScriptType scriptType,
+			@Nullable Boolean shouldStoreResult, @Nullable Integer slices,
 			@Nullable String scriptName, @Nullable String indexName) {
 
 		this.id = id;
@@ -105,8 +105,8 @@ public class UpdateQuery {
 		this.slices = slices;
 		this.indexName = indexName;
 
-		if (scriptType != null || lang != null || script != null || scriptName != null || params != null) {
-			this.scriptData = new ScriptData(scriptType, lang, script, scriptName, params);
+		if (lang != null || script != null || scriptName != null || params != null) {
+			this.scriptData = new ScriptData(lang, script, scriptName, params);
 		} else {
 			this.scriptData = null;
 		}
@@ -247,11 +247,6 @@ public class UpdateQuery {
 	}
 
 	@Nullable
-	public ScriptType getScriptType() {
-		return scriptData != null ? scriptData.type() : null;
-	}
-
-	@Nullable
 	public String getScriptName() {
 		return scriptData != null ? scriptData.scriptName() : null;
 	}
@@ -300,7 +295,6 @@ public class UpdateQuery {
 		@Nullable private Float requestsPerSecond;
 		@Nullable private Boolean shouldStoreResult;
 		@Nullable private Integer slices;
-		@Nullable private ScriptType scriptType;
 		@Nullable private String scriptName;
 		@Nullable private String indexName;
 
@@ -437,11 +431,6 @@ public class UpdateQuery {
 			return this;
 		}
 
-		public Builder withScriptType(ScriptType scriptType) {
-			this.scriptType = scriptType;
-			return this;
-		}
-
 		public Builder withScriptName(String scriptName) {
 			this.scriptName = scriptName;
 			return this;
@@ -456,7 +445,7 @@ public class UpdateQuery {
 			return new UpdateQuery(id, script, params, document, upsert, lang, routing, scriptedUpsert, docAsUpsert,
 					fetchSource, fetchSourceIncludes, fetchSourceExcludes, ifSeqNo, ifPrimaryTerm, refreshPolicy, retryOnConflict,
 					timeout, waitForActiveShards, query, abortOnVersionConflict, batchSize, maxDocs, maxRetries, pipeline,
-					requestsPerSecond, shouldStoreResult, slices, scriptType, scriptName, indexName);
+					requestsPerSecond, shouldStoreResult, slices, scriptName, indexName);
 		}
 
 		public Builder withIndex(@Nullable String indexName) {

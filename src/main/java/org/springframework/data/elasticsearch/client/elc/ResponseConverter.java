@@ -191,7 +191,7 @@ class ResponseConverter {
 		Assert.notNull(getMappingResponse, "getMappingResponse must not be null");
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
-		Map<String, IndexMappingRecord> mappings = getMappingResponse.result();
+		Map<String, IndexMappingRecord> mappings = getMappingResponse.mappings();
 
 		if (mappings == null || mappings.isEmpty()) {
 			return Document.create();
@@ -219,7 +219,7 @@ class ResponseConverter {
 
 		List<IndexInformation> indexInformationList = new ArrayList<>();
 
-		getIndexResponse.result().forEach((indexName, indexState) -> {
+		getIndexResponse.indices().forEach((indexName, indexState) -> {
 			Settings settings = indexState.settings() != null ? Settings.parse(toJson(indexState.settings(), jsonpMapper))
 					: new Settings();
 			Document mappings = indexState.mappings() != null ? Document.parse(toJson(indexState.mappings(), jsonpMapper))
@@ -239,7 +239,7 @@ class ResponseConverter {
 		Assert.notNull(getAliasResponse, "getAliasResponse must not be null");
 
 		Map<String, Set<AliasData>> aliasDataMap = new HashMap<>();
-		getAliasResponse.result().forEach((indexName, alias) -> {
+		getAliasResponse.aliases().forEach((indexName, alias) -> {
 			Set<AliasData> aliasDataSet = new HashSet<>();
 			alias.aliases()
 					.forEach((aliasName, aliasDefinition) -> aliasDataSet.add(indicesGetAliasData(aliasName, aliasDefinition)));
@@ -536,7 +536,7 @@ class ResponseConverter {
 				? Script.builder() //
 						.withId(response.id()) //
 						.withLanguage(response.script().lang()) //
-						.withSource(response.script().source()).build() //
+						.withSource(response.script().source().scriptString()).build() //
 				: null;
 	}
 	// endregion

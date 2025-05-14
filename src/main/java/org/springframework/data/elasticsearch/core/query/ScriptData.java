@@ -27,15 +27,12 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.4
  */
-public record ScriptData(ScriptType type, @Nullable String language, @Nullable String script,
+public record ScriptData(@Nullable String language, @Nullable String script,
 		@Nullable String scriptName, @Nullable Map<String, Object> params) {
 
-	public ScriptData(ScriptType type, @Nullable String language, @Nullable String script, @Nullable String scriptName,
+	public ScriptData(@Nullable String language, @Nullable String script, @Nullable String scriptName,
 			@Nullable Map<String, Object> params) {
 
-		Assert.notNull(type, "type must not be null");
-
-		this.type = type;
 		this.language = language;
 		this.script = script;
 		this.scriptName = scriptName;
@@ -45,9 +42,9 @@ public record ScriptData(ScriptType type, @Nullable String language, @Nullable S
 	/**
 	 * @since 5.2
 	 */
-	public static ScriptData of(ScriptType type, @Nullable String language, @Nullable String script,
+	public static ScriptData of(@Nullable String language, @Nullable String script,
 			@Nullable String scriptName, @Nullable Map<String, Object> params) {
-		return new ScriptData(type, language, script, scriptName, params);
+		return new ScriptData(language, script, scriptName, params);
 	}
 
 	public static ScriptData of(Function<Builder, Builder> builderFunction) {
@@ -68,21 +65,12 @@ public record ScriptData(ScriptType type, @Nullable String language, @Nullable S
 	 * @since 5.2
 	 */
 	public static final class Builder {
-		@Nullable private ScriptType type;
 		@Nullable private String language;
 		@Nullable private String script;
 		@Nullable private String scriptName;
 		@Nullable private Map<String, Object> params;
 
 		private Builder() {}
-
-		public Builder withType(ScriptType type) {
-
-			Assert.notNull(type, "type must not be null");
-
-			this.type = type;
-			return this;
-		}
 
 		public Builder withLanguage(@Nullable String language) {
 			this.language = language;
@@ -106,9 +94,7 @@ public record ScriptData(ScriptType type, @Nullable String language, @Nullable S
 
 		public ScriptData build() {
 
-			Assert.notNull(type, "type must be set");
-
-			return new ScriptData(type, language, script, scriptName, params);
+			return new ScriptData(language, script, scriptName, params);
 		}
 	}
 }
