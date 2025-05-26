@@ -19,9 +19,9 @@ import java.time.Duration;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.util.Streamable;
-import org.springframework.lang.Nullable;
 
 /**
  * Encapsulates a list of {@link SearchHit}s with additional information from the search.

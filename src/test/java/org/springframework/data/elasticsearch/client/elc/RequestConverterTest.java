@@ -21,6 +21,7 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.annotation.Id;
@@ -35,7 +36,6 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.DocValueField;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
-import org.springframework.lang.Nullable;
 
 /**
  * @author Peter-Josef Meisch
@@ -83,8 +83,8 @@ class RequestConverterTest {
 		var deleteQuery = DeleteQuery.builder(query).withRefresh(true).build();
 
 		var deleteByQueryRequest = requestConverter.documentDeleteByQueryRequest(deleteQuery, null, SampleEntity.class,
-			IndexCoordinates.of("foo"),
-			null);
+				IndexCoordinates.of("foo"),
+				null);
 
 		assertThat(deleteByQueryRequest.refresh()).isTrue();
 	}

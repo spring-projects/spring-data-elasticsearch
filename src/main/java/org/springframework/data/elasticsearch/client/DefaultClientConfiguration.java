@@ -24,9 +24,8 @@ import java.util.function.Supplier;
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
-import org.elasticsearch.client.RestClientBuilder.HttpClientConfigCallback;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
-import org.springframework.lang.Nullable;
 
 /**
  * Default {@link ClientConfiguration} implementation.

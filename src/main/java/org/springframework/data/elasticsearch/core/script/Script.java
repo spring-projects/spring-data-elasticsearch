@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.script;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -23,6 +23,7 @@ import org.springframework.util.Assert;
  * @since 5.1
  */
 public record Script(String id, String language, String source) {
+
 	public Script {
 
 		Assert.notNull(id, "id must not be null");

@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -25,7 +26,6 @@ import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.PersistentEntity;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
-import org.springframework.lang.Nullable;
 
 /**
  * ElasticsearchPersistentEntity
@@ -70,8 +70,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	@Nullable
 	String settingPath();
 
-	@Nullable
-	Document.VersionType getVersionType();
+	Document.@Nullable VersionType getVersionType();
 
 	boolean isCreateIndexAndMapping();
 

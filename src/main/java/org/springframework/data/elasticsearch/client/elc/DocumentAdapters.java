@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.Explanation;
@@ -41,7 +42,6 @@ import org.springframework.data.elasticsearch.core.document.NestedMetaData;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentAdapter;
 import org.springframework.data.elasticsearch.core.document.SearchDocumentResponse;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -160,7 +160,7 @@ final class DocumentAdapters {
 	}
 
 	@Nullable
-	private static Explanation from(@Nullable co.elastic.clients.elasticsearch.core.explain.Explanation explanation) {
+	private static Explanation from(co.elastic.clients.elasticsearch.core.explain.@Nullable Explanation explanation) {
 
 		if (explanation == null) {
 			return null;

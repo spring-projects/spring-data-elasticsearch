@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Reactive version of the {@link co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient}

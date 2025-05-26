@@ -24,13 +24,13 @@ import static org.springframework.data.elasticsearch.core.query.StringQuery.*;
 import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.assertj.core.api.SoftAssertions;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Order;
@@ -67,7 +67,6 @@ import org.springframework.data.elasticsearch.core.query.highlight.HighlightPara
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.util.StreamUtils;
-import org.springframework.lang.Nullable;
 
 /**
  * All the integration tests that are not in separate files.
@@ -4003,12 +4002,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.rate = rate;
 		}
 
-		@Nullable
-		public java.lang.Double getScriptedRate() {
+		public java.lang.@Nullable Double getScriptedRate() {
 			return scriptedRate;
 		}
 
-		public void setScriptedRate(@Nullable java.lang.Double scriptedRate) {
+		public void setScriptedRate(java.lang.@Nullable Double scriptedRate) {
 			this.scriptedRate = scriptedRate;
 		}
 
@@ -4029,12 +4027,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.location = location;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 
@@ -4163,12 +4160,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.rate = rate;
 		}
 
-		@Nullable
-		public java.lang.Long getScriptedRate() {
+		public java.lang.@Nullable Long getScriptedRate() {
 			return scriptedRate;
 		}
 
-		public void setScriptedRate(@Nullable java.lang.Long scriptedRate) {
+		public void setScriptedRate(java.lang.@Nullable Long scriptedRate) {
 			this.scriptedRate = scriptedRate;
 		}
 
@@ -4189,12 +4185,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.location = location;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 	}
@@ -4340,12 +4335,11 @@ public abstract class ElasticsearchIntegrationTests {
 		@Id private String id;
 		@Nullable private String name;
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 
@@ -4400,12 +4394,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.firstName = firstName;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 	}
@@ -4443,12 +4436,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.lastName = lastName;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 	}
@@ -4533,7 +4525,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		public SearchHitsEntity() {}
 
-		public SearchHitsEntity(@Nullable String id, @Nullable java.lang.Long number, @Nullable String keyword) {
+		public SearchHitsEntity(@Nullable String id, java.lang.@Nullable Long number, @Nullable String keyword) {
 			this.id = id;
 			this.number = number;
 			this.keyword = keyword;
@@ -4548,12 +4540,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.id = id;
 		}
 
-		@Nullable
-		public java.lang.Long getNumber() {
+		public java.lang.@Nullable Long getNumber() {
 			return number;
 		}
 
-		public void setNumber(@Nullable java.lang.Long number) {
+		public void setNumber(java.lang.@Nullable Long number) {
 			this.number = number;
 		}
 
@@ -4668,12 +4659,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.seqNoPrimaryTerm = seqNoPrimaryTerm;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 	}
@@ -4687,7 +4677,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		public VersionedEntity() {}
 
-		public VersionedEntity(@Nullable String id, @Nullable java.lang.Long version) {
+		public VersionedEntity(@Nullable String id, java.lang.@Nullable Long version) {
 			this.id = id;
 			this.version = version;
 		}
@@ -4701,12 +4691,11 @@ public abstract class ElasticsearchIntegrationTests {
 			this.id = id;
 		}
 
-		@Nullable
-		public java.lang.Long getVersion() {
+		public java.lang.@Nullable Long getVersion() {
 			return version;
 		}
 
-		public void setVersion(@Nullable java.lang.Long version) {
+		public void setVersion(java.lang.@Nullable Long version) {
 			this.version = version;
 		}
 	}
@@ -4824,7 +4813,7 @@ public abstract class ElasticsearchIntegrationTests {
 		@Nullable
 		@ScriptedField private final Double scriptedRate;
 
-		public ImmutableWithScriptedEntity(String id, int rate, @Nullable java.lang.Double scriptedRate) {
+		public ImmutableWithScriptedEntity(String id, int rate, java.lang.@Nullable Double scriptedRate) {
 			this.id = id;
 			this.rate = rate;
 			this.scriptedRate = scriptedRate;

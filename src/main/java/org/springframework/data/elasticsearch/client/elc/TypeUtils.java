@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -52,7 +53,6 @@ import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.query.types.ConflictsType;
 import org.springframework.data.elasticsearch.core.query.types.OperatorType;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -220,7 +220,7 @@ final class TypeUtils {
 	}
 
 	@Nullable
-	static SortOrder sortOrder(@Nullable Sort.Direction direction) {
+	static SortOrder sortOrder(Sort.@Nullable Direction direction) {
 
 		if (direction == null) {
 			return null;
@@ -301,7 +301,7 @@ final class TypeUtils {
 	}
 
 	@Nullable
-	static OpType opType(@Nullable IndexQuery.OpType opType) {
+	static OpType opType(IndexQuery.@Nullable OpType opType) {
 
 		if (opType != null) {
 			return switch (opType) {
@@ -325,8 +325,7 @@ final class TypeUtils {
 		};
 	}
 
-	@Nullable
-	static UpdateResponse.Result result(@Nullable Result result) {
+	static UpdateResponse.@Nullable Result result(@Nullable Result result) {
 
 		if (result == null) {
 			return null;
@@ -343,7 +342,7 @@ final class TypeUtils {
 	}
 
 	@Nullable
-	static ScoreMode scoreMode(@Nullable RescorerQuery.ScoreMode scoreMode) {
+	static ScoreMode scoreMode(RescorerQuery.@Nullable ScoreMode scoreMode) {
 
 		if (scoreMode == null) {
 			return null;
@@ -361,7 +360,7 @@ final class TypeUtils {
 	}
 
 	@Nullable
-	static SearchType searchType(@Nullable Query.SearchType searchType) {
+	static SearchType searchType(Query.@Nullable SearchType searchType) {
 
 		if (searchType == null) {
 			return null;
@@ -418,7 +417,7 @@ final class TypeUtils {
 
 	@Nullable
 	static VersionType versionType(
-			@Nullable org.springframework.data.elasticsearch.annotations.Document.VersionType versionType) {
+			org.springframework.data.elasticsearch.annotations.Document.@Nullable VersionType versionType) {
 
 		if (versionType != null) {
 			return switch (versionType) {
@@ -536,7 +535,7 @@ final class TypeUtils {
 	 * @param scoreMode spring-data-elasticsearch {@literal scoreMode}.
 	 * @return an Elasticsearch {@literal scoreMode}.
 	 */
-	static ChildScoreMode scoreMode(@Nullable HasChildQuery.ScoreMode scoreMode) {
+	static ChildScoreMode scoreMode(HasChildQuery.@Nullable ScoreMode scoreMode) {
 		if (scoreMode == null) {
 			return ChildScoreMode.None;
 		}

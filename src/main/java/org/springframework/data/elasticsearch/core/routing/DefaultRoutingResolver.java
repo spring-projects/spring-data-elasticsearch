@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch.core.routing;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.lang.Nullable;
 
 /**
  * Default implementation of the {@link RoutingResolver} interface. Returns {@literal null} for the non-bean method and

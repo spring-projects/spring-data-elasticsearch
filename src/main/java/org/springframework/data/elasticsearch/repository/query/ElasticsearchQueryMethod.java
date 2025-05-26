@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -51,11 +52,9 @@ import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.QueryMethod;
-import org.springframework.data.repository.query.QueryMethodEvaluationContextProvider;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 
@@ -400,8 +399,8 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 	}
 
 	void addSpecialMethodParameters(BaseQuery query, ElasticsearchParametersParameterAccessor parameterAccessor,
-									ElasticsearchConverter elasticsearchConverter,
-									ValueEvaluationContextProvider evaluationContextProvider) {
+			ElasticsearchConverter elasticsearchConverter,
+			ValueEvaluationContextProvider evaluationContextProvider) {
 
 		if (hasAnnotatedHighlight()) {
 			var highlightQuery = getAnnotatedHighlightQuery(new HighlightConverter(parameterAccessor,

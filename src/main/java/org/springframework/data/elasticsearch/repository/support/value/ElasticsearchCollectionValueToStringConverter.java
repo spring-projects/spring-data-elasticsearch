@@ -21,10 +21,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.TypeDescriptor;
 import org.springframework.core.convert.converter.GenericConverter;
-import org.springframework.lang.Nullable;
 
 /**
  * Convert a collection into string for value part of the elasticsearch query.

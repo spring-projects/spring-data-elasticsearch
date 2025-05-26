@@ -15,13 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.mapping;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
-import org.springframework.lang.Nullable;
 
 /**
  * SimpleElasticsearchMappingContext

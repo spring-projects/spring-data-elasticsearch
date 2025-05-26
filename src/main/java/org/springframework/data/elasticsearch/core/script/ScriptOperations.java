@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.script;
 
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * This interfaces defines the operations to access the

@@ -20,6 +20,7 @@ import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.query.highlight.Highlight;
@@ -27,7 +28,6 @@ import org.springframework.data.elasticsearch.core.query.highlight.HighlightFiel
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightFieldParameters;
 import org.springframework.data.elasticsearch.core.query.highlight.HighlightParameters;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.lang.Nullable;
 import org.springframework.util.StringUtils;
 
 /**
@@ -43,7 +43,8 @@ class HighlightQueryBuilder {
 	private final RequestConverter requestConverter;
 
 	HighlightQueryBuilder(
-			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext, RequestConverter requestConverter) {
+			MappingContext<? extends ElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> mappingContext,
+			RequestConverter requestConverter) {
 		this.mappingContext = mappingContext;
 		this.requestConverter = requestConverter;
 	}

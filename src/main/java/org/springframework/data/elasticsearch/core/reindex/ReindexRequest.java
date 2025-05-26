@@ -17,12 +17,12 @@ package org.springframework.data.elasticsearch.core.reindex;
 
 import java.time.Duration;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.SourceFilter;
-import org.springframework.lang.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -216,8 +216,8 @@ public class ReindexRequest {
 		private final IndexCoordinates index;
 		@Nullable private String pipeline;
 		@Nullable private String routing;
-		@Nullable private Document.VersionType versionType;
-		@Nullable private IndexQuery.OpType opType;
+		private Document.@Nullable VersionType versionType;
+		private IndexQuery.@Nullable OpType opType;
 
 		private Dest(IndexCoordinates index) {
 			Assert.notNull(index, "dest index must not be null");
@@ -229,13 +229,11 @@ public class ReindexRequest {
 			return index;
 		}
 
-		@Nullable
-		public Document.VersionType getVersionType() {
+		public Document.@Nullable VersionType getVersionType() {
 			return versionType;
 		}
 
-		@Nullable
-		public IndexQuery.OpType getOpType() {
+		public IndexQuery.@Nullable OpType getOpType() {
 			return opType;
 		}
 
