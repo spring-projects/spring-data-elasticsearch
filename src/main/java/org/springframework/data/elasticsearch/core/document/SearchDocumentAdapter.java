@@ -41,12 +41,12 @@ public class SearchDocumentAdapter implements SearchDocument {
 	private final Map<String, SearchDocumentResponse> innerHits = new HashMap<>();
 	@Nullable private final NestedMetaData nestedMetaData;
 	@Nullable private final Explanation explanation;
-	@Nullable private final List<String> matchedQueries;
+	@Nullable private final Map<String, Double> matchedQueries;
 	@Nullable private final String routing;
 
 	public SearchDocumentAdapter(Document delegate, float score, Object[] sortValues, Map<String, List<Object>> fields,
 			Map<String, List<String>> highlightFields, Map<String, SearchDocumentResponse> innerHits,
-			@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation, @Nullable List<String> matchedQueries,
+			@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation, @Nullable Map<String, Double> matchedQueries,
 			@Nullable String routing) {
 
 		this.delegate = delegate;
@@ -249,7 +249,7 @@ public class SearchDocumentAdapter implements SearchDocument {
 
 	@Override
 	@Nullable
-	public List<String> getMatchedQueries() {
+	public Map<String, Double> getMatchedQueries() {
 		return matchedQueries;
 	}
 

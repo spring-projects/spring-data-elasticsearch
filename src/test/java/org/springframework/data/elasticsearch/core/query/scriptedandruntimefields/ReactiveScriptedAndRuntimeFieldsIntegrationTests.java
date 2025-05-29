@@ -48,7 +48,6 @@ import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilde
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.RuntimeField;
 import org.springframework.data.elasticsearch.core.query.ScriptData;
-import org.springframework.data.elasticsearch.core.query.ScriptType;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -165,7 +164,6 @@ public abstract class ReactiveScriptedAndRuntimeFieldsIntegrationTests {
 		return org.springframework.data.elasticsearch.core.query.ScriptedField.of(
 				fieldName,
 				ScriptData.of(b -> b
-						.withType(ScriptType.INLINE)
 						.withScript("doc['value'].size() > 0 ? doc['value'].value * params['factor'] : 0")
 						.withParams(Map.of("factor", factor))));
 	}

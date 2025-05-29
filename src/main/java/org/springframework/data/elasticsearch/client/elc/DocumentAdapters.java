@@ -83,7 +83,7 @@ final class DocumentAdapters {
 
 		Explanation explanation = from(hit.explanation());
 
-		List<String> matchedQueries = hit.matchedQueries();
+		Map<String, Double> matchedQueries = hit.matchedQueries();
 
 		Function<Map<String, JsonData>, EntityAsMap> fromFields = fields -> {
 			StringBuilder sb = new StringBuilder("{");

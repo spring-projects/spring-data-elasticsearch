@@ -125,5 +125,5 @@ public interface SearchDocument extends Document {
 	 * @return the matched queries for the SearchHit.
 	 */
 	@Nullable
-	List<String> getMatchedQueries();
+	Map<String, Double> getMatchedQueries();
 }

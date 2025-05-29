@@ -28,8 +28,6 @@ public record Script(String id, String language, String source) {
 
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(language, "language must not be null");
-		Assert.notNull(source, "source must not be null");
-
 	}
 
 	public static ScriptBuilder builder() {
@@ -61,8 +59,6 @@ public record Script(String id, String language, String source) {
 		}
 
 		public ScriptBuilder withSource(String source) {
-
-			Assert.notNull(source, "source must not be null");
 
 			this.source = source;
 			return this;

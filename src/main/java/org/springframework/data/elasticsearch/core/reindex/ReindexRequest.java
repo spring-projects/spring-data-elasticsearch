@@ -249,16 +249,15 @@ public class ReindexRequest {
 	}
 
 	public static class Script {
-		private final String source;
+		@Nullable private final String source;
 		@Nullable private final String lang;
 
-		private Script(String source, @Nullable String lang) {
-			Assert.notNull(source, "source must not be null");
-
+		private Script(@Nullable String source, @Nullable String lang) {
 			this.source = source;
 			this.lang = lang;
 		}
 
+		@Nullable
 		public String getSource() {
 			return source;
 		}

@@ -539,14 +539,6 @@ public class ReactiveElasticsearchIndicesClient
 		return stats(builder -> builder);
 	}
 
-	public Mono<UnfreezeResponse> unfreeze(UnfreezeRequest request) {
-		return Mono.fromFuture(transport.performRequestAsync(request, UnfreezeRequest._ENDPOINT, transportOptions));
-	}
-
-	public Mono<UnfreezeResponse> unfreeze(Function<UnfreezeRequest.Builder, ObjectBuilder<UnfreezeRequest>> fn) {
-		return unfreeze(fn.apply(new UnfreezeRequest.Builder()).build());
-	}
-
 	public Mono<UpdateAliasesResponse> updateAliases(UpdateAliasesRequest request) {
 		return Mono.fromFuture(transport.performRequestAsync(request, UpdateAliasesRequest._ENDPOINT, transportOptions));
 	}

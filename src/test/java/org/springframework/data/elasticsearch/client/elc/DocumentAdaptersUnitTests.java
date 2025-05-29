@@ -23,6 +23,7 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.assertj.core.api.SoftAssertions;
 import org.assertj.core.data.Offset;
@@ -144,17 +145,17 @@ class DocumentAdaptersUnitTests {
 		Hit<EntityAsMap> searchHit = new Hit.Builder<EntityAsMap>() //
 				.index("index") //
 				.id("42") //
-				.matchedQueries("query1", "query2") //
+				.matchedQueries("query1", 1D) //
 				.build();
 
 		SearchDocument searchDocument = DocumentAdapters.from(searchHit, jsonpMapper);
 
 		SoftAssertions softly = new SoftAssertions();
 
-		List<String> matchedQueries = searchDocument.getMatchedQueries();
+		Map<String, Double> matchedQueries = searchDocument.getMatchedQueries();
 		softly.assertThat(matchedQueries).isNotNull();
-		softly.assertThat(matchedQueries).hasSize(2);
-		softly.assertThat(matchedQueries).isEqualTo(Arrays.asList("query1", "query2"));
+		softly.assertThat(matchedQueries).hasSize(1);
+		softly.assertThat(matchedQueries).isEqualTo(Map.of("query1",1D));
 		softly.assertAll();
 	}
 }

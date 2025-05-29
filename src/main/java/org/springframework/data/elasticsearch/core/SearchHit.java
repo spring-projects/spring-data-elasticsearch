@@ -48,12 +48,12 @@ public class SearchHit<T> {
 	@Nullable private final NestedMetaData nestedMetaData;
 	@Nullable private final String routing;
 	@Nullable private final Explanation explanation;
-	private final List<String> matchedQueries = new ArrayList<>();
+	private final Map<String, Double> matchedQueries = new LinkedHashMap<>();
 
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
 			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields,
 			@Nullable Map<String, SearchHits<?>> innerHits, @Nullable NestedMetaData nestedMetaData,
-			@Nullable Explanation explanation, @Nullable List<String> matchedQueries, T content) {
+			@Nullable Explanation explanation, @Nullable Map<String, Double> matchedQueries, T content) {
 		this.index = index;
 		this.id = id;
 		this.routing = routing;
@@ -73,7 +73,7 @@ public class SearchHit<T> {
 		this.content = content;
 
 		if (matchedQueries != null) {
-			this.matchedQueries.addAll(matchedQueries);
+			this.matchedQueries.putAll(matchedQueries);
 		}
 	}
 
@@ -194,7 +194,7 @@ public class SearchHit<T> {
 	 * @return the matched queries for this SearchHit.
 	 */
 	@Nullable
-	public List<String> getMatchedQueries() {
+	public Map<String, Double> getMatchedQueries() {
 		return matchedQueries;
 	}
 }

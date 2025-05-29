@@ -42,10 +42,10 @@ import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetOperation;
-import co.elastic.clients.elasticsearch.core.msearch.MultisearchBody;
 import co.elastic.clients.elasticsearch.core.msearch.MultisearchHeader;
 import co.elastic.clients.elasticsearch.core.search.Highlight;
 import co.elastic.clients.elasticsearch.core.search.Rescore;
+import co.elastic.clients.elasticsearch.core.search.SearchRequestBody;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
 import co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest;
@@ -751,11 +751,10 @@ class RequestConverter extends AbstractQueryProcessor {
 		}
 		return co.elastic.clients.elasticsearch._types.Script.of(sb -> {
 			sb.lang(scriptData.language())
-					.params(params);
-			if (scriptData.type() == ScriptType.INLINE) {
-				sb.source(scriptData.script());
-			} else if (scriptData.type() == ScriptType.STORED) {
-				sb.id(scriptData.script());
+			  	.params(params)
+				.id(scriptData.scriptName());
+			if (scriptData.script() != null){
+				sb.source(s -> s.scriptString(scriptData.script()));
 			}
 			return sb;
 		});
@@ -927,9 +926,13 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		ReindexRequest.Script script = reindexRequest.getScript();
 		if (script != null) {
-			builder.script(sb -> sb
-					.lang(script.getLang())
-					.source(script.getSource()));
+			builder.script(sb -> {
+				if (script.getSource() != null){
+					sb.source(s -> s.scriptString(script.getSource()));
+				}
+				sb.lang(script.getLang());
+				return sb;
+			});
 		}
 
 		builder.timeout(time(reindexRequest.getTimeout())) //
@@ -1086,12 +1089,11 @@ class RequestConverter extends AbstractQueryProcessor {
 
 				uqb.script(sb -> {
 					sb.lang(query.getLang()).params(params);
-
-					if (query.getScriptType() == ScriptType.INLINE) {
-						sb.source(query.getScript()); //
-					} else if (query.getScriptType() == ScriptType.STORED) {
-						sb.id(query.getScript());
+					if (query.getScript() != null){
+						sb.source(s -> s.scriptString(query.getScript()));
 					}
+					sb.id(query.getId());
+
 					return sb;
 				});
 			}
@@ -1254,11 +1256,11 @@ class RequestConverter extends AbstractQueryProcessor {
 				mtrb.searchTemplates(stb -> stb
 						.header(msearchHeaderBuilder(query, param.index(), routing))
 						.body(bb -> {
-							bb //
-									.explain(query.getExplain()) //
-									.id(query.getId()) //
-									.source(query.getSource()) //
-							;
+							bb.explain(query.getExplain()) //
+								.id(query.getId()); //
+							if (query.getSource() != null){
+								bb.source(s -> s.scriptString(query.getSource()));
+							}
 
 							if (!CollectionUtils.isEmpty(query.getParams())) {
 								Map<String, JsonData> params = getTemplateParams(query.getParams().entrySet());
@@ -1349,7 +1351,9 @@ class RequestConverter extends AbstractQueryProcessor {
 
 										if (script != null) {
 											rfb.script(s -> {
-												s.source(script);
+												if (script != null) {
+													s.source(so -> so.scriptString(script));
+												}
 
 												if (runtimeField.getParams() != null) {
 													s.params(TypeUtils.paramsMap(runtimeField.getParams()));
@@ -1551,7 +1555,9 @@ class RequestConverter extends AbstractQueryProcessor {
 						String script = runtimeField.getScript();
 						if (script != null) {
 							rfb.script(s -> {
-								s.source(script);
+								if (script != null) {
+									s.source(so -> so.scriptString(script));
+								}
 
 								if (runtimeField.getParams() != null) {
 									s.params(TypeUtils.paramsMap(runtimeField.getParams()));
@@ -1648,7 +1654,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		builder.highlight(highlight);
 	}
 
-	private void addHighlight(Query query, MultisearchBody.Builder builder) {
+	private void addHighlight(Query query, SearchRequestBody.Builder builder) {
 
 		Highlight highlight = query.getHighlightQuery()
 				.map(highlightQuery -> new HighlightQueryBuilder(elasticsearchConverter.getMappingContext(), this)
@@ -1772,7 +1778,7 @@ class RequestConverter extends AbstractQueryProcessor {
 	}
 
 	@SuppressWarnings("DuplicatedCode")
-	private void prepareNativeSearch(NativeQuery query, MultisearchBody.Builder builder) {
+	private void prepareNativeSearch(NativeQuery query, SearchRequestBody.Builder builder) {
 
 		builder //
 				.suggest(query.getSuggester()) //
@@ -1891,10 +1897,11 @@ class RequestConverter extends AbstractQueryProcessor {
 					.id(query.getId()) //
 					.index(Arrays.asList(index.getIndexNames())) //
 					.preference(query.getPreference()) //
-					.searchType(searchType(query.getSearchType())) //
-					.source(query.getSource()) //
-			;
+					.searchType(searchType(query.getSearchType())); //
 
+			if (query.getSource() != null) {
+				builder.source(so -> so.scriptString(query.getSource()));
+			}
 			if (query.getRoute() != null) {
 				builder.routing(query.getRoute());
 			} else if (StringUtils.hasText(routing)) {
@@ -1936,8 +1943,8 @@ class RequestConverter extends AbstractQueryProcessor {
 		return PutScriptRequest.of(b -> b //
 				.id(script.id()) //
 				.script(sb -> sb //
-						.lang(script.language()) //
-						.source(script.source())));
+					.lang(script.language()) //
+					.source(s -> s.scriptString(script.source()))));
 	}
 
 	public GetScriptRequest scriptGet(String name) {
