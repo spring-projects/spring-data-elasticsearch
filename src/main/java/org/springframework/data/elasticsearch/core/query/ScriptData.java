@@ -15,86 +15,110 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
-import java.util.Map;
-import java.util.function.Function;
-
 import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
+import java.util.Map;
+import java.util.function.Function;
+
 /**
  * value class combining script information.
+ * <p>
+ * A script is either an inline script, then the script parameters must be set
+ * or it refers to a stored script, then the name parameter is required.
  *
+ * @param language   the language when the script is passed in the script parameter
+ * @param script     the script to use as inline script
+ * @param scriptName the name when using a stored script
+ * @param params     the script parameters
  * @author Peter-Josef Meisch
  * @since 4.4
  */
 public record ScriptData(@Nullable String language, @Nullable String script,
-		@Nullable String scriptName, @Nullable Map<String, Object> params) {
+                         @Nullable String scriptName, @Nullable Map<String, Object> params) {
 
-	public ScriptData(@Nullable String language, @Nullable String script, @Nullable String scriptName,
-			@Nullable Map<String, Object> params) {
+    /*
+     * constructor overload to check the parameters
+     */
+    public ScriptData(@Nullable String language, @Nullable String script, @Nullable String scriptName,
+                      @Nullable Map<String, Object> params) {
 
-		this.language = language;
-		this.script = script;
-		this.scriptName = scriptName;
-		this.params = params;
-	}
+        Assert.isTrue(script != null || scriptName != null, "script or scriptName is required");
 
-	/**
-	 * @since 5.2
-	 */
-	public static ScriptData of(@Nullable String language, @Nullable String script,
-			@Nullable String scriptName, @Nullable Map<String, Object> params) {
-		return new ScriptData(language, script, scriptName, params);
-	}
+        this.language = language;
+        this.script = script;
+        this.scriptName = scriptName;
+        this.params = params;
+    }
 
-	public static ScriptData of(Function<Builder, Builder> builderFunction) {
+    /**
+     * factory method to create a ScriptData object.
+     *
+     * @since 5.2
+     */
+    public static ScriptData of(@Nullable String language, @Nullable String script,
+                                @Nullable String scriptName, @Nullable Map<String, Object> params) {
+        return new ScriptData(language, script, scriptName, params);
+    }
 
-		Assert.notNull(builderFunction, "f must not be null");
+    /**
+     * factory method to create a ScriptData  object using a ScriptBuilder callback.
+     *
+     * @param builderFunction function called to populate the builder
+     * @return
+     */
+    public static ScriptData of(Function<Builder, Builder> builderFunction) {
 
-		return builderFunction.apply(new Builder()).build();
-	}
+        Assert.notNull(builderFunction, "builderFunction must not be null");
 
-	/**
-	 * @since 5.2
-	 */
-	public static Builder builder() {
-		return new Builder();
-	}
+        return builderFunction.apply(new Builder()).build();
+    }
 
-	/**
-	 * @since 5.2
-	 */
-	public static final class Builder {
-		@Nullable private String language;
-		@Nullable private String script;
-		@Nullable private String scriptName;
-		@Nullable private Map<String, Object> params;
+    /**
+     * @since 5.2
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
 
-		private Builder() {}
+    /**
+     * @since 5.2
+     */
+    public static final class Builder {
+        @Nullable
+        private String language;
+        @Nullable
+        private String script;
+        @Nullable
+        private String scriptName;
+        @Nullable
+        private Map<String, Object> params;
 
-		public Builder withLanguage(@Nullable String language) {
-			this.language = language;
-			return this;
-		}
+        private Builder() {
+        }
 
-		public Builder withScript(@Nullable String script) {
-			this.script = script;
-			return this;
-		}
+        public Builder withLanguage(@Nullable String language) {
+            this.language = language;
+            return this;
+        }
 
-		public Builder withScriptName(@Nullable String scriptName) {
-			this.scriptName = scriptName;
-			return this;
-		}
+        public Builder withScript(@Nullable String script) {
+            this.script = script;
+            return this;
+        }
 
-		public Builder withParams(@Nullable Map<String, Object> params) {
-			this.params = params;
-			return this;
-		}
+        public Builder withScriptName(@Nullable String scriptName) {
+            this.scriptName = scriptName;
+            return this;
+        }
 
-		public ScriptData build() {
+        public Builder withParams(@Nullable Map<String, Object> params) {
+            this.params = params;
+            return this;
+        }
 
-			return new ScriptData(language, script, scriptName, params);
-		}
-	}
+        public ScriptData build() {
+            return new ScriptData(language, script, scriptName, params);
+        }
+    }
 }

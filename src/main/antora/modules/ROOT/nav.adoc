@@ -12,6 +12,7 @@
 *** xref:migration-guides/migration-guide-5.2-5.3.adoc[]
 *** xref:migration-guides/migration-guide-5.3-5.4.adoc[]
 *** xref:migration-guides/migration-guide-5.4-5.5.adoc[]
+*** xref:migration-guides/migration-guide-5.5-6.0.adoc[]
 
 
 * xref:elasticsearch.adoc[]

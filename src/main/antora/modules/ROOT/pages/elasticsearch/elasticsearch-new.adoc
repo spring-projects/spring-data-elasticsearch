@@ -1,6 +1,14 @@
 [[new-features]]
 = What's new
 
+[[new-features.6-0-0]]
+== New in Spring Data Elasticsearch 6.6
+
+* Upgarde to Spring 7
+* Switch to jspecify nullability annotations
+* Upgrade to Elasticsearch 9.0.1
+
+
 [[new-features.5-5-0]]
 == New in Spring Data Elasticsearch 5.5
 
