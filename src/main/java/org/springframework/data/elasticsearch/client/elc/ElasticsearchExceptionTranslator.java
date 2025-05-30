@@ -119,14 +119,19 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		String message = null;
 
 		if (exception instanceof ResponseException responseException) {
+			// this code is for the old RestClient
 			status = responseException.getResponse().getStatusLine().getStatusCode();
 			message = responseException.getMessage();
+		} else if (exception instanceof ElasticsearchException elasticsearchException) {
+			// using the RestClient throws this
+			status = elasticsearchException.status();
+			message = elasticsearchException.getMessage();
 		} else if (exception.getCause() != null) {
 			checkForConflictException(exception.getCause());
 		}
 
 		if (status != null && message != null) {
-			if (status == 409 && message.contains("type\":\"version_conflict_engine_exception"))
+			if (status == 409 && message.contains("version_conflict_engine_exception"))
 				if (message.contains("version conflict, required seqNo")) {
 					throw new OptimisticLockingFailureException("Cannot index a document due to seq_no+primary_term conflict",
 							exception);

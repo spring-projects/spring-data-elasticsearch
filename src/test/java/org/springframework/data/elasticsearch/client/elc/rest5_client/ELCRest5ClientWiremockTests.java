@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.data.elasticsearch.client.elc;
+package org.springframework.data.elasticsearch.client.elc.rest5_client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.*;
@@ -29,6 +29,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
@@ -41,7 +42,7 @@ import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
  */
 @SuppressWarnings("UastIncorrectHttpHeaderInspection")
 @ExtendWith(SpringExtension.class)
-public class ELCWiremockTests {
+public class ELCRest5ClientWiremockTests {
 
 	@RegisterExtension static WireMockExtension wireMock = WireMockExtension.newInstance()
 			.options(wireMockConfig()
@@ -69,7 +70,7 @@ public class ELCWiremockTests {
 		wireMock.stubFor(put(urlPathEqualTo("/null-fields/_doc/42"))
 				.withRequestBody(equalToJson("""
 						{
-							"_class": "org.springframework.data.elasticsearch.client.elc.ELCWiremockTests$EntityWithNullFields",
+							"_class": "org.springframework.data.elasticsearch.client.elc.rest5_client.ELCRest5ClientWiremockTests$EntityWithNullFields",
 							"id": "42",
 							"field1": null
 							}

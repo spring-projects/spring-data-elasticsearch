@@ -132,6 +132,7 @@
 			</exclusions>
 		</dependency>
 
+		<!-- the old RestCLient is an optional dependency for user that still want to use it-->
 		<dependency>
 			<groupId>org.elasticsearch.client</groupId>
 			<artifactId>elasticsearch-rest-client</artifactId>
@@ -142,6 +143,7 @@
 					<artifactId>commons-logging</artifactId>
 				</exclusion>
 			</exclusions>
+			<optional>true</optional>
 		</dependency>
 
 		<dependency>

@@ -7,6 +7,7 @@
 * Upgarde to Spring 7
 * Switch to jspecify nullability annotations
 * Upgrade to Elasticsearch 9.0.3
+* Use the new Elasticsearch Rest5Client as default
 
 
 [[new-features.5-5-0]]

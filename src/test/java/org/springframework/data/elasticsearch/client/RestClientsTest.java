@@ -1,21 +1,22 @@
 /*
- * Copyright 2019-2025 the original author or authors.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      https://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* Copyright 2019-2025 the original author or authors.
+*
+* Licensed under the Apache License, Version 2.0 (the "License");
+* you may not use this file except in compliance with the License.
+* You may obtain a copy of the License at
+*
+*      https://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS,
+* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+* See the License for the specific language governing permissions and
+* limitations under the License.
+*/
 package org.springframework.data.elasticsearch.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static io.specto.hoverfly.junit.dsl.HoverflyDsl.*;
 import static io.specto.hoverfly.junit.verification.HoverflyVerifications.*;
@@ -40,10 +41,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clients;
+import org.springframework.data.elasticsearch.client.elc.rest_client.RestClients;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
@@ -115,25 +119,38 @@ public class RestClientsTest {
 						return httpHeaders;
 					});
 
-			if (clientUnderTestFactory instanceof ELCUnderTestFactory) {
+			if (clientUnderTestFactory instanceof ELCRest5ClientUnderTestFactory) {
 				configurationBuilder.withClientConfigurer(
-						ElasticsearchClients.ElasticsearchHttpClientConfigurationCallback.from(httpClientBuilder -> {
+						Rest5Clients.ElasticsearchHttpClientConfigurationCallback.from(httpClientBuilder -> {
 							httpClientConfigurerCount.incrementAndGet();
 							return httpClientBuilder;
 						}));
 				configurationBuilder.withClientConfigurer(
-						ElasticsearchClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
+						Rest5Clients.ElasticsearchRest5ClientConfigurationCallback.from(rest5ClientBuilder -> {
+							restClientConfigurerCount.incrementAndGet();
+							return rest5ClientBuilder;
+						}));
+
+			} else if (clientUnderTestFactory instanceof ELCRestClientUnderTestFactory) {
+				configurationBuilder.withClientConfigurer(
+						RestClients.ElasticsearchHttpClientConfigurationCallback.from(httpClientBuilder -> {
+							httpClientConfigurerCount.incrementAndGet();
+							return httpClientBuilder;
+						}));
+				configurationBuilder.withClientConfigurer(
+						RestClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
 							restClientConfigurerCount.incrementAndGet();
 							return restClientBuilder;
 						}));
+
 			} else if (clientUnderTestFactory instanceof ReactiveELCUnderTestFactory) {
 				configurationBuilder
-						.withClientConfigurer(ElasticsearchClients.ElasticsearchHttpClientConfigurationCallback.from(webClient -> {
+						.withClientConfigurer(RestClients.ElasticsearchHttpClientConfigurationCallback.from(webClient -> {
 							httpClientConfigurerCount.incrementAndGet();
 							return webClient;
 						}));
 				configurationBuilder.withClientConfigurer(
-						ElasticsearchClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
+						RestClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
 							restClientConfigurerCount.incrementAndGet();
 							return restClientBuilder;
 						}));
@@ -155,8 +172,9 @@ public class RestClientsTest {
 						.withHeader("def2", new EqualToPattern("def2-1")) //
 						.withHeader("supplied", new EqualToPattern("val0")) //
 						// on the first call Elasticsearch does the version check and thus already increments the counter
-						.withHeader("supplied", new EqualToPattern("val" + (i))) //
-				);
+						.withHeader("supplied", new EqualToPattern("val" + i)) //
+						.withHeader("supplied", including("val0", "val" + i)));
+				;
 			}
 
 			assertThat(httpClientConfigurerCount).hasValue(1);
@@ -166,8 +184,8 @@ public class RestClientsTest {
 
 	@ParameterizedTest // #2088
 	@MethodSource("clientUnderTestFactorySource")
-	@DisplayName("should set compatibility headers")
-	void shouldSetCompatibilityHeaders(ClientUnderTestFactory clientUnderTestFactory) {
+	@DisplayName("should set explicit compatibility headers")
+	void shouldSetExplicitCompatibilityHeaders(ClientUnderTestFactory clientUnderTestFactory) {
 
 		wireMockServer(server -> {
 
@@ -190,7 +208,8 @@ public class RestClientsTest {
 							}
 							""" //
 							, 201) //
-							.withHeader("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7") //
+							.withHeader("Content-Type",
+									"application/vnd.elasticsearch+json;compatible-with=7") //
 							.withHeader("X-Elastic-Product", "Elasticsearch")));
 
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
@@ -198,8 +217,8 @@ public class RestClientsTest {
 					.connectedTo("localhost:" + server.port()) //
 					.withHeaders(() -> {
 						HttpHeaders defaultCompatibilityHeaders = new HttpHeaders();
-						defaultCompatibilityHeaders.add("Accept", "application/vnd.elasticsearch+json;compatible-with=7");
-						defaultCompatibilityHeaders.add("Content-Type", "application/vnd.elasticsearch+json;compatible-with=7");
+						defaultCompatibilityHeaders.add("Accept", "application/vnd.elasticsearch+json; compatible-with=7");
+						defaultCompatibilityHeaders.add("Content-Type", "application/vnd.elasticsearch+json; compatible-with=7");
 						return defaultCompatibilityHeaders;
 					});
 
@@ -214,11 +233,66 @@ public class RestClientsTest {
 				}
 			}
 
-            clientUnderTest.index(new Foo("42"));
+			clientUnderTest.index(new Foo("42"));
 
 			verify(putRequestedFor(urlMatching(urlPattern)) //
-					.withHeader("Accept", new EqualToPattern("application/vnd.elasticsearch+json;compatible-with=7")) //
-					.withHeader("Content-Type", new EqualToPattern("application/vnd.elasticsearch+json;compatible-with=7")) //
+					.withHeader("Accept", new EqualToPattern("application/vnd.elasticsearch+json; compatible-with=7"))
+					.withHeader("Content-Type", new EqualToPattern("application/vnd.elasticsearch+json; compatible-with=7")));
+		});
+	}
+
+	@ParameterizedTest
+	@MethodSource("clientUnderTestFactorySource")
+	@DisplayName("should set implicit compatibility headers")
+	void shouldSetImplicitCompatibilityHeaders(ClientUnderTestFactory clientUnderTestFactory) {
+
+		wireMockServer(server -> {
+
+			String urlPattern = "^/index/_doc/42(\\?.*)?$";
+			var elasticsearchMajorVersion = clientUnderTestFactory.getElasticsearchMajorVersion();
+			stubFor(put(urlMatching(urlPattern)) //
+					.willReturn(jsonResponse("""
+							{
+							  "_id": "42",
+							  "_index": "test",
+							  "_primary_term": 1,
+							  "_seq_no": 0,
+							  "_shards": {
+							    "failed": 0,
+							    "successful": 1,
+							    "total": 2
+							  },
+							  "_type": "_doc",
+							  "_version": 1,
+							  "result": "created"
+							}
+							""" //
+							, 201) //
+							.withHeader("Content-Type",
+									"application/vnd.elasticsearch+json; compatible-with=" + elasticsearchMajorVersion) //
+							.withHeader("X-Elastic-Product", "Elasticsearch")));
+
+			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
+			configurationBuilder.connectedTo("localhost:" + server.port());
+
+			ClientConfiguration clientConfiguration = configurationBuilder.build();
+			ClientUnderTest clientUnderTest = clientUnderTestFactory.create(clientConfiguration);
+
+			class Foo {
+				public final String id;
+
+				Foo(String id) {
+					this.id = id;
+				}
+			}
+
+			clientUnderTest.index(new Foo("42"));
+
+			verify(putRequestedFor(urlMatching(urlPattern)) //
+					.withHeader("Accept",
+							new EqualToPattern("application/vnd.elasticsearch+json; compatible-with=" + elasticsearchMajorVersion)) //
+					.withHeader("Content-Type",
+							new EqualToPattern("application/vnd.elasticsearch+json; compatible-with=" + elasticsearchMajorVersion)) //
 			);
 		});
 	}
@@ -280,6 +354,7 @@ public class RestClientsTest {
 	private void wireMockServer(WiremockConsumer consumer) {
 		WireMockServer wireMockServer = new WireMockServer(options() //
 				.dynamicPort() //
+				// .notifier(new ConsoleNotifier(true)) // for debugging output
 				.usingFilesUnderDirectory("src/test/resources/wiremock-mappings")); // needed, otherwise Wiremock goes to
 		// test/resources/mappings
 		try {
@@ -295,7 +370,7 @@ public class RestClientsTest {
 	}
 
 	/**
-	 * The client to be tested. Abstraction to be able to test reactive and non-reactive clients.
+	 * The client to be tested. Abstraction to be able to test reactive and non-reactive clients in different versions.
 	 */
 	interface ClientUnderTest {
 		/**
@@ -332,16 +407,19 @@ public class RestClientsTest {
 		protected Integer getExpectedRestClientConfigCalls() {
 			return 0;
 		}
+
+		protected abstract int getElasticsearchMajorVersion();
 	}
 
 	/**
-	 * {@link ClientUnderTestFactory} implementation for the {@link co.elastic.clients.elasticsearch.ElasticsearchClient}.
+	 * {@link ClientUnderTestFactory} implementation for the {@link co.elastic.clients.elasticsearch.ElasticsearchClient}
+	 * using the Rest5_Client.
 	 */
-	static class ELCUnderTestFactory extends ClientUnderTestFactory {
+	static class ELCRest5ClientUnderTestFactory extends ClientUnderTestFactory {
 
 		@Override
 		protected String getDisplayName() {
-			return "ElasticsearchClient";
+			return "ElasticsearchRest5Client";
 		}
 
 		@Override
@@ -350,9 +428,59 @@ public class RestClientsTest {
 		}
 
 		@Override
+		protected int getElasticsearchMajorVersion() {
+			return 9;
+		}
+
+		@Override
 		ClientUnderTest create(ClientConfiguration clientConfiguration) {
 
 			ElasticsearchClient client = ElasticsearchClients.createImperative(clientConfiguration);
+			return new ClientUnderTest() {
+				@Override
+				public boolean ping() throws Exception {
+					return client.ping().value();
+				}
+
+				@Override
+				public boolean usesInitialRequest() {
+					return false;
+				}
+
+				@Override
+				public <T> void index(T entity) throws IOException {
+					client.index(ir -> ir.index("index").id("42").document(entity));
+				}
+			};
+		}
+	}
+
+	/**
+	 * {@link ClientUnderTestFactory} implementation for the {@link co.elastic.clients.elasticsearch.ElasticsearchClient}
+	 * using the old Rest_Client.
+	 */
+	static class ELCRestClientUnderTestFactory extends ClientUnderTestFactory {
+
+		@Override
+		protected String getDisplayName() {
+			return "ElasticsearchRestClient";
+		}
+
+		@Override
+		protected Integer getExpectedRestClientConfigCalls() {
+			return 1;
+		}
+
+		@Override
+		protected int getElasticsearchMajorVersion() {
+			return 9;
+		}
+
+		@Override
+		ClientUnderTest create(ClientConfiguration clientConfiguration) {
+
+			var restClient = RestClients.getRestClient(clientConfiguration);
+			ElasticsearchClient client = ElasticsearchClients.createImperative(restClient);
 			return new ClientUnderTest() {
 				@Override
 				public boolean ping() throws Exception {
@@ -388,6 +516,11 @@ public class RestClientsTest {
 		}
 
 		@Override
+		protected int getElasticsearchMajorVersion() {
+			return 9;
+		}
+
+		@Override
 		ClientUnderTest create(ClientConfiguration clientConfiguration) {
 
 			ReactiveElasticsearchClient client = ElasticsearchClients.createReactive(clientConfiguration);
@@ -416,8 +549,9 @@ public class RestClientsTest {
 	 * @return stream of factories
 	 */
 	static Stream<ClientUnderTestFactory> clientUnderTestFactorySource() {
-		return Stream.of( //
-				new ELCUnderTestFactory(), //
+		return Stream.of(
+				new ELCRestClientUnderTestFactory(),
+				new ELCRest5ClientUnderTestFactory(),
 				new ReactiveELCUnderTestFactory());
 	}
 }

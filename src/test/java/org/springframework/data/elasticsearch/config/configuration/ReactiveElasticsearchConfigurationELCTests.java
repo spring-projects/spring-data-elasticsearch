@@ -66,7 +66,6 @@ public class ReactiveElasticsearchConfigurationELCTests {
 
 	@Test
 	public void providesRequiredBeans() {
-		// assertThat(webClient).isNotNull();
 		assertThat(reactiveElasticsearchClient).isNotNull();
 		assertThat(reactiveElasticsearchOperations).isNotNull();
 		assertThat(repository).isNotNull();
