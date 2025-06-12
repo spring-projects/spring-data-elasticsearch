@@ -24,4 +24,4 @@ import org.springframework.data.repository.kotlin.CoroutineSortingRepository
  * @since 5.2
  */
 @NoRepositoryBean
-interface CoroutineElasticsearchRepository<T, ID> : CoroutineCrudRepository<T, ID>, CoroutineSortingRepository<T, ID>
+interface CoroutineElasticsearchRepository<T : Any, ID : Any> : CoroutineCrudRepository<T, ID>, CoroutineSortingRepository<T, ID>
