@@ -93,6 +93,17 @@ public final class VersionInfo {
 	}
 
 	/**
+	 * @return a String to use in a header, containing the versions of Spring Data Elasticsearch and the Elasticsearch
+	 *         library
+	 * @since 6.0
+	 */
+	public static String clientVersions() {
+		return String.format("spring-data-elasticsearch %s / elasticsearch client %s",
+				versionProperties.getProperty(VERSION_SPRING_DATA_ELASTICSEARCH),
+				versionProperties.getProperty(VERSION_ELASTICSEARCH_CLIENT));
+	}
+
+	/**
 	 * gets the version properties from the classpath resource.
 	 *
 	 * @return version properties

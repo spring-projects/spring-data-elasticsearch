@@ -37,6 +37,9 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
+import org.elasticsearch.client.RestClient;
+import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clients;
+import org.springframework.data.elasticsearch.client.elc.rest_client.RestClients;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -85,7 +88,7 @@ public class DevTests {
 	private final ReactiveElasticsearchClient reactiveElasticsearchClient = ElasticsearchClients
 			.createReactive(clientConfiguration(), transportOptions);
 	private final ElasticsearchClient imperativeElasticsearchClient = ElasticsearchClients
-			.createImperative(ElasticsearchClients.getRestClient(clientConfiguration()), transportOptions, jsonpMapper);
+			.createImperative(Rest5Clients.getRest5Client(clientConfiguration()), transportOptions, jsonpMapper);
 
 	@Test
 	void someTest() throws IOException {

@@ -6,10 +6,10 @@ This chapter illustrates configuration and usage of supported Elasticsearch clie
 Spring Data Elasticsearch operates upon an Elasticsearch client (provided by Elasticsearch client libraries) that is connected to a single Elasticsearch node or a cluster.
 Although the Elasticsearch Client can be used directly to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of xref:elasticsearch/template.adoc[Elasticsearch Operations] and xref:elasticsearch/repositories/elasticsearch-repositories.adoc[Elasticsearch Repositories].
 
-[[elasticsearch.clients.restclient]]
-== Imperative Rest Client
+[[elasticsearch.clients.rest5client]]
+== Imperative Rest5Client
 
-To use the imperative (non-reactive) client, a configuration bean must be configured like this:
+To use the imperative (non-reactive) Rest5Client, a configuration bean must be configured like this:
 
 ====
 [source,java]
@@ -31,7 +31,7 @@ public class MyClientConfig extends ElasticsearchConfiguration {
 <.> for a detailed description of the builder methods see xref:elasticsearch/clients.adoc#elasticsearch.clients.configuration[Client Configuration]
 ====
 
-The javadoc:org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration[]] class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
+The javadoc:org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration[] class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
 
 
 The following beans can then be injected in other Spring components:
@@ -46,7 +46,81 @@ ElasticsearchOperations operations;      <.>
 ElasticsearchClient elasticsearchClient; <.>
 
 @Autowired
-RestClient restClient;                   <.>
+Rest5Client rest5Client;                 <.>
+
+@Autowired
+JsonpMapper jsonpMapper;                 <.>
+----
+
+<.> an implementation of javadoc:org.springframework.data.elasticsearch.core.ElasticsearchOperations[]
+<.> the `co.elastic.clients.elasticsearch.ElasticsearchClient` that is used.
+<.> the low level `Rest5Client` from the Elasticsearch libraries
+<.> the `JsonpMapper` user by the Elasticsearch `Transport`
+====
+
+Basically one should just use the javadoc:org.springframework.data.elasticsearch.core.ElasticsearchOperations[] to interact with the Elasticsearch cluster.
+When using repositories, this instance is used under the hood as well.
+
+[[elasticsearch.clients.restclient]]
+== Deprecated Imperative RestClient
+
+To use the imperative (non-reactive) RestClient - deprecated since version 6 - , the following dependency needs to be added, adapt the correct version. The exclusion is needed in a Spring Boot application:
+====
+[source,xml]
+----
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-client</artifactId>
+            <version>${elasticsearch-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-logging</groupId>
+                    <artifactId>commons-logging</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+----
+====
+
+The configuration bean must be configured like this:
+
+====
+[source,java]
+----
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchLegacyRestClientConfiguration;
+
+@Configuration
+public class MyClientConfig extends ElasticsearchLegacyRestClientConfiguration {
+
+	@Override
+	public ClientConfiguration clientConfiguration() {
+		return ClientConfiguration.builder()           <.>
+			.connectedTo("localhost:9200")
+			.build();
+	}
+}
+----
+
+<.> for a detailed description of the builder methods see xref:elasticsearch/clients.adoc#elasticsearch.clients.configuration[Client Configuration]
+====
+
+The javadoc:org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration[] class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
+
+
+The following beans can then be injected in other Spring components:
+
+====
+[source,java]
+----
+import org.springframework.beans.factory.annotation.Autowired;@Autowired
+ElasticsearchOperations operations;      <.>
+
+@Autowired
+ElasticsearchClient elasticsearchClient; <.>
+
+@Autowired
+RestClient restClient;                 <.>
 
 @Autowired
 JsonpMapper jsonpMapper;                 <.>
@@ -61,8 +135,8 @@ JsonpMapper jsonpMapper;                 <.>
 Basically one should just use the javadoc:org.springframework.data.elasticsearch.core.ElasticsearchOperations[] to interact with the Elasticsearch cluster.
 When using repositories, this instance is used under the hood as well.
 
-[[elasticsearch.clients.reactiverestclient]]
-== Reactive Rest Client
+[[elasticsearch.clients.reactiverest5client]]
+== Reactive Rest5Client
 
 When working with the reactive stack, the configuration must be derived from a different class:
 
@@ -73,6 +147,65 @@ import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchCo
 
 @Configuration
 public class MyClientConfig extends ReactiveElasticsearchConfiguration {
+
+	@Override
+	public ClientConfiguration clientConfiguration() {
+		return ClientConfiguration.builder()           <.>
+			.connectedTo("localhost:9200")
+			.build();
+	}
+}
+----
+
+<.> for a detailed description of the builder methods see xref:elasticsearch/clients.adoc#elasticsearch.clients.configuration[Client Configuration]
+====
+
+The javadoc:org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchConfiguration[] class allows further configuration by overriding for example the `jsonpMapper()` or `transportOptions()` methods.
+
+The following beans can then be injected in other Spring components:
+
+====
+[source,java]
+----
+@Autowired
+ReactiveElasticsearchOperations operations;      <.>
+
+@Autowired
+ReactiveElasticsearchClient elasticsearchClient; <.>
+
+@Autowired
+Rest5Client rest5Client;                           <.>
+
+@Autowired
+JsonpMapper jsonpMapper;                         <.>
+----
+
+the following can be injected:
+
+<.> an implementation of javadoc:org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations[]
+<.> the `org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient` that is used.
+This is a reactive implementation based on the Elasticsearch client implementation.
+<.> the low level `RestClient` from the Elasticsearch libraries
+<.> the `JsonpMapper` user by the Elasticsearch `Transport`
+====
+
+Basically one should just use the javadoc:org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations[] to interact with the Elasticsearch cluster.
+When using repositories, this instance is used under the hood as well.
+
+[[elasticsearch.clients.reactiverestclient]]
+== Deprecated Reactive RestClient
+
+See the section above for the imperative code to use the deprecated RestClient for the necessary dependencies to include.
+
+When working with the reactive stack, the configuration must be derived from a different class:
+
+====
+[source,java]
+----
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchLegacyRestClientConfiguration;
+
+@Configuration
+public class MyClientConfig extends ReactiveElasticsearchLegacyRestClientConfiguration {
 
 	@Override
 	public ClientConfiguration clientConfiguration() {
@@ -183,8 +316,8 @@ In the case this is not enough, the user can add callback functions by using the
 
 The following callbacks are provided:
 
-[[elasticsearch.clients.configuration.callbacks.rest]]
-==== Configuration of the low level Elasticsearch `RestClient`:
+[[elasticsearch.clients.configuration.callbacks.rest5]]
+==== Configuration of the low level Elasticsearch `Rest5Client`:
 
 This callback provides a `org.elasticsearch.client.RestClientBuilder` that can be used to configure the Elasticsearch
 `RestClient`:
@@ -193,7 +326,24 @@ This callback provides a `org.elasticsearch.client.RestClientBuilder` that can b
 ----
 ClientConfiguration.builder()
     .connectedTo("localhost:9200", "localhost:9291")
-    .withClientConfigurer(ElasticsearchClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
+    .withClientConfigurer(Rest5Clients.ElasticsearchRest5ClientConfigurationCallback.from(restClientBuilder -> {
+        // configure the Elasticsearch Rest5Client
+        return restClientBuilder;
+    }))
+    .build();
+----
+====
+[[elasticsearch.clients.configuration.callbacks.rest]]
+==== Configuration of the deprecated low level Elasticsearch `RestClient`:
+
+This callback provides a `org.elasticsearch.client.RestClientBuilder` that can be used to configure the Elasticsearch
+`RestClient`:
+====
+[source,java]
+----
+ClientConfiguration.builder()
+    .connectedTo("localhost:9200", "localhost:9291")
+    .withClientConfigurer(RestClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
         // configure the Elasticsearch RestClient
         return restClientBuilder;
     }))
@@ -201,10 +351,29 @@ ClientConfiguration.builder()
 ----
 ====
 
-[[elasticsearch.clients.configurationcallbacks.httpasync]]
-==== Configuration of the HttpAsyncClient used by the low level Elasticsearch `RestClient`:
+[[elasticsearch.clients.configurationcallbacks.httpasync5]]
+==== Configuration of the HttpAsyncClient used by the low level Elasticsearch `Rest5Client`:
 
-This callback provides a `org.apache.http.impl.nio.client.HttpAsyncClientBuilder` to configure the HttpCLient that is
+This callback provides a `org.apache.hc.client5.http.impl.async.HttpAsyncClientBuilder` to configure the HttpClient that is
+used by the `Rest5Client`.
+
+====
+[source,java]
+----
+ClientConfiguration.builder()
+    .connectedTo("localhost:9200", "localhost:9291")
+    .withClientConfigurer(Rest5Clients.ElasticsearchHttpClientConfigurationCallback.from(httpAsyncClientBuilder -> {
+        // configure the HttpAsyncClient
+        return httpAsyncClientBuilder;
+    }))
+    .build();
+----
+====
+
+[[elasticsearch.clients.configurationcallbacks.httpasync]]
+==== Configuration of the HttpAsyncClient used by the deprecated low level Elasticsearch `RestClient`:
+
+This callback provides a `org.apache.http.impl.nio.client.HttpAsyncClientBuilder` to configure the HttpClient that is
 used by the `RestClient`.
 
 ====
@@ -212,7 +381,7 @@ used by the `RestClient`.
 ----
 ClientConfiguration.builder()
     .connectedTo("localhost:9200", "localhost:9291")
-    .withClientConfigurer(ElasticsearchClients.ElasticsearchHttpClientConfigurationCallback.from(httpAsyncClientBuilder -> {
+    .withClientConfigurer(RestClients.ElasticsearchHttpClientConfigurationCallback.from(httpAsyncClientBuilder -> {
         // configure the HttpAsyncClient
         return httpAsyncClientBuilder;
     }))

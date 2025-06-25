@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 
-import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
+import org.elasticsearch.client.RestClient;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -30,6 +30,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchLegacyRestClientConfiguration;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
@@ -44,12 +45,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
  */
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration
-public class ElasticsearchConfigurationELCTests {
+public class ElasticsearchLegacyRestClientConfigurationELCTests {
 
 	@Configuration
 	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.config.configuration" },
 			considerNestedRepositories = true)
-	static class Config extends ElasticsearchConfiguration {
+	static class Config extends ElasticsearchLegacyRestClientConfiguration {
 		@Override
 		public @NonNull ClientConfiguration clientConfiguration() {
 			return ClientConfiguration.builder() //
@@ -62,7 +63,7 @@ public class ElasticsearchConfigurationELCTests {
 	 * using a repository with an entity that is set to createIndex = false as we have no elastic running for this test
 	 * and just check that all the necessary beans are created.
 	 */
-	@Autowired private Rest5Client rest5Client;
+	@Autowired private RestClient restClient;
 	@Autowired private ElasticsearchClient elasticsearchClient;
 	@Autowired private ElasticsearchOperations elasticsearchOperations;
 
@@ -70,7 +71,7 @@ public class ElasticsearchConfigurationELCTests {
 
 	@Test
 	public void providesRequiredBeans() {
-		assertThat(rest5Client).isNotNull();
+		assertThat(restClient).isNotNull();
 		assertThat(elasticsearchClient).isNotNull();
 		assertThat(elasticsearchOperations).isNotNull();
 		assertThat(repository).isNotNull();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the original author or authors.
+ * Copyright 2019-2025 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,6 @@ package org.springframework.data.elasticsearch.config.configuration;
 
 import static org.assertj.core.api.Assertions.*;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-
-import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
@@ -29,27 +26,30 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration;
-import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchConfiguration;
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchLegacyRestClientConfiguration;
+import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
+import org.springframework.data.elasticsearch.repository.config.EnableReactiveElasticsearchRepositories;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 /**
- * Tests for {@link ElasticsearchConfiguration}.
- *
  * @author Peter-Josef Meisch
  * @since 4.4
  */
+@SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration
-public class ElasticsearchConfigurationELCTests {
+public class ReactiveElasticsearchLegacyRestClientConfigurationELCTests {
 
 	@Configuration
-	@EnableElasticsearchRepositories(basePackages = { "org.springframework.data.elasticsearch.config.configuration" },
+	@EnableReactiveElasticsearchRepositories(
+			basePackages = { "org.springframework.data.elasticsearch.config.configuration" },
 			considerNestedRepositories = true)
-	static class Config extends ElasticsearchConfiguration {
+	static class Config extends ReactiveElasticsearchLegacyRestClientConfiguration {
+
 		@Override
 		public @NonNull ClientConfiguration clientConfiguration() {
 			return ClientConfiguration.builder() //
@@ -62,17 +62,15 @@ public class ElasticsearchConfigurationELCTests {
 	 * using a repository with an entity that is set to createIndex = false as we have no elastic running for this test
 	 * and just check that all the necessary beans are created.
 	 */
-	@Autowired private Rest5Client rest5Client;
-	@Autowired private ElasticsearchClient elasticsearchClient;
-	@Autowired private ElasticsearchOperations elasticsearchOperations;
-
+	@Autowired private ReactiveElasticsearchClient reactiveElasticsearchClient;
+	@Autowired private ReactiveElasticsearchOperations reactiveElasticsearchOperations;
 	@Autowired private CreateIndexFalseRepository repository;
 
 	@Test
 	public void providesRequiredBeans() {
-		assertThat(rest5Client).isNotNull();
-		assertThat(elasticsearchClient).isNotNull();
-		assertThat(elasticsearchOperations).isNotNull();
+		// assertThat(webClient).isNotNull();
+		assertThat(reactiveElasticsearchClient).isNotNull();
+		assertThat(reactiveElasticsearchOperations).isNotNull();
 		assertThat(repository).isNotNull();
 	}
 
@@ -83,5 +81,5 @@ public class ElasticsearchConfigurationELCTests {
 		@Id private String id;
 	}
 
-	interface CreateIndexFalseRepository extends ElasticsearchRepository<CreateIndexFalseEntity, String> {}
+	interface CreateIndexFalseRepository extends ReactiveElasticsearchRepository<CreateIndexFalseEntity, String> {}
 }

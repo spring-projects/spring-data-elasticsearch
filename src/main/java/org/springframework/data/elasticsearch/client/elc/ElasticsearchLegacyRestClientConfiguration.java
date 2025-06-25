@@ -15,36 +15,40 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
-import co.elastic.clients.transport.rest5_client.Rest5ClientOptions;
-import co.elastic.clients.transport.rest5_client.low_level.RequestOptions;
-import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 import co.elastic.clients.transport.rest_client.RestClientOptions;
+
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.elc.rest_client.RestClients;
+import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
+import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.util.Assert;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import org.elasticsearch.client.RestClient;
-import org.springframework.context.annotation.Bean;
-import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clients;
-import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
-import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
-import org.springframework.util.Assert;
 
 /**
  * Base class for a @{@link org.springframework.context.annotation.Configuration} class to set up the Elasticsearch
- * connection using the {@link ReactiveElasticsearchClient}. This class exposes different parts of the setup as Spring
- * beans. Deriving * classes must provide the {@link ClientConfiguration} to use.
+ * connection using the Elasticsearch Client. This class exposes different parts of the setup as Spring beans. Deriving
+ * classes must provide the {@link ClientConfiguration} to use. <br/>
+ * This class uses the Elasticsearch RestClient which was replaced by the Rest5Client in Elasticsearch 9. It is still
+ * available here but deprecated.
  *
  * @author Peter-Josef Meisch
  * @since 4.4
+ * @deprecated since 6.0, use {@link ElasticsearchConfiguration}
  */
-public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchConfigurationSupport {
+@Deprecated(since = "6.0", forRemoval=true)
+public abstract class ElasticsearchLegacyRestClientConfiguration extends ElasticsearchConfigurationSupport {
 
 	/**
 	 * Must be implemented by deriving classes to provide the {@link ClientConfiguration}.
@@ -55,17 +59,17 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	public abstract ClientConfiguration clientConfiguration();
 
 	/**
-	 * Provides the underlying low level RestClient.
+	 * Provides the underlying low level Elasticsearch RestClient.
 	 *
 	 * @param clientConfiguration configuration for the client, must not be {@literal null}
 	 * @return RestClient
 	 */
 	@Bean
-	public Rest5Client elasticsearchRestClient(ClientConfiguration clientConfiguration) {
+	public RestClient elasticsearchRestClient(ClientConfiguration clientConfiguration) {
 
 		Assert.notNull(clientConfiguration, "clientConfiguration must not be null");
 
-		return Rest5Clients.getRest5Client(clientConfiguration);
+		return RestClients.getRestClient(clientConfiguration);
 	}
 
 	/**
@@ -76,48 +80,46 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	 * @since 5.2
 	 */
 	@Bean
-	public ElasticsearchTransport elasticsearchTransport(Rest5Client rest5Client, JsonpMapper jsonpMapper) {
+	public ElasticsearchTransport elasticsearchTransport(RestClient restClient, JsonpMapper jsonpMapper) {
 
-		Assert.notNull(rest5Client, "restClient must not be null");
+		Assert.notNull(restClient, "restClient must not be null");
 		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
 
-		return ElasticsearchClients.getElasticsearchTransport(rest5Client, ElasticsearchClients.REACTIVE_CLIENT,
+		return ElasticsearchClients.getElasticsearchTransport(restClient, ElasticsearchClients.IMPERATIVE_CLIENT,
 				transportOptions(), jsonpMapper);
 	}
 
 	/**
-	 * Provides the {@link ReactiveElasticsearchClient} instance used.
+	 * Provides the {@link ElasticsearchClient} to be used.
 	 *
-	 * @param transport the ElasticsearchTransport to use
-	 * @return ReactiveElasticsearchClient instance.
+	 * @param transport the {@link ElasticsearchTransport} to use
+	 * @return ElasticsearchClient instance
 	 */
 	@Bean
-	public ReactiveElasticsearchClient reactiveElasticsearchClient(ElasticsearchTransport transport) {
+	public ElasticsearchClient elasticsearchClient(ElasticsearchTransport transport) {
 
 		Assert.notNull(transport, "transport must not be null");
 
-		return ElasticsearchClients.createReactive(transport);
+		return ElasticsearchClients.createImperative(transport);
 	}
 
 	/**
-	 * Creates {@link ReactiveElasticsearchOperations}.
+	 * Creates a {@link ElasticsearchOperations} implementation using an {@link ElasticsearchClient}.
 	 *
 	 * @return never {@literal null}.
 	 */
-	@Bean(name = { "reactiveElasticsearchOperations", "reactiveElasticsearchTemplate" })
-	public ReactiveElasticsearchOperations reactiveElasticsearchOperations(ElasticsearchConverter elasticsearchConverter,
-			ReactiveElasticsearchClient reactiveElasticsearchClient) {
+	@Bean(name = { "elasticsearchOperations", "elasticsearchTemplate" })
+	public ElasticsearchOperations elasticsearchOperations(ElasticsearchConverter elasticsearchConverter,
+			ElasticsearchClient elasticsearchClient) {
 
-		ReactiveElasticsearchTemplate template = new ReactiveElasticsearchTemplate(reactiveElasticsearchClient,
-				elasticsearchConverter);
+		ElasticsearchTemplate template = new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
 		template.setRefreshPolicy(refreshPolicy());
 
 		return template;
 	}
 
 	/**
-	 * Provides the JsonpMapper that is used in the {@link #elasticsearchTransport(Rest5Client, JsonpMapper)} method and
-	 * exposes it as a bean.
+	 * Provides the JsonpMapper bean that is used in the {@link #elasticsearchTransport(RestClient, JsonpMapper)} method.
 	 *
 	 * @return the {@link JsonpMapper} to use
 	 * @since 5.2
@@ -137,6 +139,6 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	 * @return the options that should be added to every request. Must not be {@literal null}
 	 */
 	public TransportOptions transportOptions() {
-		return new Rest5ClientOptions(RequestOptions.DEFAULT, false);
+		return new RestClientOptions(RequestOptions.DEFAULT, false);
 	}
 }
