@@ -485,6 +485,13 @@ public interface Query {
 	List<ScriptedField> getScriptedFields();
 
 	/**
+	 * @return the number of documents that should be requested from Elasticsearch in this query. Depends wether a
+	 *         Pageable and/or maxResult size is set on the query.
+	 * @since 5.4.8 5.5.2
+	 */
+	public Integer getRequestSize();
+
+	/**
 	 * @since 4.3
 	 */
 	enum SearchType {
