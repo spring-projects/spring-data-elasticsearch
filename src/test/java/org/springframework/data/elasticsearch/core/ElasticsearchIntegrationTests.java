@@ -104,8 +104,6 @@ import org.springframework.data.util.StreamUtils;
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests {
 
-	static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
-
 	private static final String MULTI_INDEX_PREFIX = "test-index";
 	private static final String MULTI_INDEX_ALL = MULTI_INDEX_PREFIX + "*";
 	private static final String MULTI_INDEX_1_NAME = MULTI_INDEX_PREFIX + "-1";
