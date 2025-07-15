@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.lang.Nullable;
@@ -47,10 +48,15 @@ import org.springframework.util.Assert;
  */
 public class BaseQuery implements Query {
 
+	public static final int INDEX_MAX_RESULT_WINDOW = 10_000;
+
 	private static final int DEFAULT_REACTIVE_BATCH_SIZE = 500;
+	// the instance to mark the query pageable initial status, needed to distinguish between the initial
+	// value and a user-set unpaged value; values don't matter, the RequestConverter compares to the isntance.
+	private static final Pageable UNSET_PAGE = PageRequest.of(0, 1);
 
 	@Nullable protected Sort sort;
-	protected Pageable pageable = DEFAULT_PAGE;
+	protected Pageable pageable = UNSET_PAGE;
 	protected List<String> fields = new ArrayList<>();
 	@Nullable protected List<String> storedFields;
 	@Nullable protected SourceFilter sourceFilter;
@@ -78,7 +84,7 @@ public class BaseQuery implements Query {
 	private boolean queryIsUpdatedByConverter = false;
 	@Nullable private Integer reactiveBatchSize = null;
 	@Nullable private Boolean allowNoIndices = null;
-	private EnumSet<IndicesOptions.WildcardStates> expandWildcards;
+	private EnumSet<IndicesOptions.WildcardStates> expandWildcards = EnumSet.noneOf(IndicesOptions.WildcardStates.class);
 	private List<DocValueField> docValueFields = new ArrayList<>();
 	private List<ScriptedField> scriptedFields = new ArrayList<>();
 
@@ -87,7 +93,7 @@ public class BaseQuery implements Query {
 	public <Q extends BaseQuery, B extends BaseQueryBuilder<Q, B>> BaseQuery(BaseQueryBuilder<Q, B> builder) {
 		this.sort = builder.getSort();
 		// do a setPageable after setting the sort, because the pageable may contain an additional sort
-		this.setPageable(builder.getPageable() != null ? builder.getPageable() : DEFAULT_PAGE);
+		this.setPageable(builder.getPageable() != null ? builder.getPageable() : UNSET_PAGE);
 		this.fields = builder.getFields();
 		this.storedFields = builder.getStoredFields();
 		this.sourceFilter = builder.getSourceFilter();
@@ -203,7 +209,7 @@ public class BaseQuery implements Query {
 	@Override
 	@SuppressWarnings("unchecked")
 	public final <T extends Query> T addSort(@Nullable Sort sort) {
-		if (sort == null) {
+		if (sort == null || sort.isUnsorted()) {
 			return (T) this;
 		}
 
@@ -560,5 +566,53 @@ public class BaseQuery implements Query {
 	@Override
 	public List<ScriptedField> getScriptedFields() {
 		return scriptedFields;
+	}
+
+	@Override
+	public Integer getRequestSize() {
+
+		var pageable = getPageable();
+		Integer requestSize = null;
+
+		if (pageable.isPaged() && pageable != UNSET_PAGE) {
+			// pagesize defined by the user
+			if (!isLimiting()) {
+				// no maxResults
+				requestSize = pageable.getPageSize();
+			} else {
+				// if we have both a page size and a max results, we take the min, this is necessary for
+				// searchForStream to work correctly (#3098) as there the page size defines what is
+				// returned in a single request, and the max result determines the total number of
+				// documents returned.
+				requestSize = Math.min(pageable.getPageSize(), getMaxResults());
+			}
+		} else if (pageable == UNSET_PAGE) {
+			// no user defined pageable
+			if (isLimiting()) {
+				// maxResults
+				requestSize = getMaxResults();
+			} else {
+				requestSize = DEFAULT_PAGE_SIZE;
+			}
+		} else {
+			// explicitly set unpaged
+			if (!isLimiting()) {
+				// no maxResults
+				requestSize = INDEX_MAX_RESULT_WINDOW;
+			} else {
+				// if we have both a implicit page size and a max results, we take the min, this is necessary for
+				// searchForStream to work correctly (#3098) as there the page size defines what is
+				// returned in a single request, and the max result determines the total number of
+				// documents returned.
+				requestSize = Math.min(INDEX_MAX_RESULT_WINDOW, getMaxResults());
+			}
+		}
+
+		if (requestSize == null) {
+			// this should not happen
+			requestSize = DEFAULT_PAGE_SIZE;
+		}
+
+		return requestSize;
 	}
 }

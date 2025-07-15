@@ -117,9 +117,6 @@ class RequestConverter extends AbstractQueryProcessor {
 
 	private static final Log LOGGER = LogFactory.getLog(RequestConverter.class);
 
-	// the default max result window size of Elasticsearch
-	public static final Integer INDEX_MAX_RESULT_WINDOW = 10_000;
-
 	protected final JsonpMapper jsonpMapper;
 	protected final ElasticsearchConverter elasticsearchConverter;
 
@@ -1287,15 +1284,8 @@ class RequestConverter extends AbstractQueryProcessor {
 									.timeout(timeStringMs(query.getTimeout())) //
 							;
 
-							var offset = query.getPageable().isPaged() ? query.getPageable().getOffset() : 0;
-							var pageSize = query.getPageable().isPaged() ? query.getPageable().getPageSize()
-									: INDEX_MAX_RESULT_WINDOW;
-							// if we have both a page size and a max results, we take the min, this is necessary for
-							// searchForStream to work correctly (#3098) as there the page size defines what is
-							// returned in a single request, and the max result determines the total number of
-							// documents returned
-							var size = query.isLimiting() ? Math.min(pageSize, query.getMaxResults()) : pageSize;
-							bb.from((int) offset).size(size);
+							bb.from((int) (query.getPageable().isPaged() ? query.getPageable().getOffset() : 0))
+									.size(query.getRequestSize());
 
 							if (!isEmpty(query.getFields())) {
 								bb.fields(fb -> {
@@ -1460,14 +1450,8 @@ class RequestConverter extends AbstractQueryProcessor {
 			builder.seqNoPrimaryTerm(true);
 		}
 
-		var offset = query.getPageable().isPaged() ? query.getPageable().getOffset() : 0;
-		var pageSize = query.getPageable().isPaged() ? query.getPageable().getPageSize() : INDEX_MAX_RESULT_WINDOW;
-		// if we have both a page size and a max results, we take the min, this is necessary for
-		// searchForStream to work correctly (#3098) as there the page size defines what is
-		// returned in a single request, and the max result determines the total number of
-		// documents returned
-		var size = query.isLimiting() ? Math.min(pageSize, query.getMaxResults()) : pageSize;
-		builder.from((int) offset).size(size);
+		builder.from((int) (query.getPageable().isPaged() ? query.getPageable().getOffset() : 0))
+				.size(query.getRequestSize());
 
 		if (!isEmpty(query.getFields())) {
 			var fieldAndFormats = query.getFields().stream().map(field -> FieldAndFormat.of(b -> b.field(field))).toList();
