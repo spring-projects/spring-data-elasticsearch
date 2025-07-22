@@ -8,6 +8,8 @@ This section describes breaking changes from version 5.5.x to 6.0.x and how remo
 
 From version 6.0 on, Spring Data Elasticsearch uses the Elasticsearch 9 libraries and as default the new `Rest5Client` provided by these libraries. It is still possible to use the old `RestClient`, check xref:elasticsearch/clients.adoc[Elasticsearch clients] for information. The configuration callbacks for this `RestClient` have been moved from `org.springframework.data.elasticsearch.client.elc.ElasticsearchClients` to the `org.springframework.data.elasticsearch.client.elc.rest_client.RestClients` class.
 
+In the `org.springframework.data.elasticsearch.core.query.UpdateQuery` class the type of the two fields `ifSeqNo` and `ifPrimaryTerm` has changed from `Integer` to `Long` to align with the normal query and the underlying Elasticsearch client.
+
 [[elasticsearch-migration-guide-5.5-6.0.deprecations]]
 == Deprecations
 

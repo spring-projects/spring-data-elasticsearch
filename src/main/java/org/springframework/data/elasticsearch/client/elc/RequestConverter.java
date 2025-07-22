@@ -723,12 +723,11 @@ class RequestConverter extends AbstractQueryProcessor {
 			return a;
 		});
 
-		uob //
-				.routing(query.getRouting()) //
-				.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
-				.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
-				.retryOnConflict(query.getRetryOnConflict()) //
-		;
+		uob
+				.routing(query.getRouting())
+				.ifSeqNo(query.getIfSeqNo())
+				.ifPrimaryTerm(query.getIfPrimaryTerm())
+				.retryOnConflict(query.getRetryOnConflict());
 
 		// no refresh, timeout, waitForActiveShards on UpdateOperation or UpdateAction
 
@@ -1095,17 +1094,16 @@ class RequestConverter extends AbstractQueryProcessor {
 				});
 			}
 
-			uqb //
-					.doc(query.getDocument()) //
-					.upsert(query.getUpsert()) //
-					.routing(query.getRouting() != null ? query.getRouting() : routing) //
-					.scriptedUpsert(query.getScriptedUpsert()) //
-					.docAsUpsert(query.getDocAsUpsert()) //
-					.ifSeqNo(query.getIfSeqNo() != null ? Long.valueOf(query.getIfSeqNo()) : null) //
-					.ifPrimaryTerm(query.getIfPrimaryTerm() != null ? Long.valueOf(query.getIfPrimaryTerm()) : null) //
-					.refresh(query.getRefreshPolicy() != null ? refresh(query.getRefreshPolicy()) : refresh(refreshPolicy)) //
-					.retryOnConflict(query.getRetryOnConflict()) //
-			;
+			uqb
+					.doc(query.getDocument())
+					.upsert(query.getUpsert())
+					.routing(query.getRouting() != null ? query.getRouting() : routing)
+					.scriptedUpsert(query.getScriptedUpsert())
+					.docAsUpsert(query.getDocAsUpsert())
+					.ifSeqNo(query.getIfSeqNo())
+					.ifPrimaryTerm(query.getIfPrimaryTerm())
+					.refresh(query.getRefreshPolicy() != null ? refresh(query.getRefreshPolicy()) : refresh(refreshPolicy))
+					.retryOnConflict(query.getRetryOnConflict());
 
 			if (query.getFetchSource() != null) {
 				uqb.source(sc -> sc.fetch(query.getFetchSource()));
@@ -1293,7 +1291,7 @@ class RequestConverter extends AbstractQueryProcessor {
 									.timeout(timeStringMs(query.getTimeout())) //
 							;
 
-                            bb.from((int) (query.getPageable().isPaged() ? query.getPageable().getOffset() : 0))
+							bb.from((int) (query.getPageable().isPaged() ? query.getPageable().getOffset() : 0))
 									.size(query.getRequestSize());
 
 							if (!isEmpty(query.getFields())) {
@@ -1466,7 +1464,7 @@ class RequestConverter extends AbstractQueryProcessor {
 			builder.seqNoPrimaryTerm(true);
 		}
 
-        builder.from((int) (query.getPageable().isPaged() ? query.getPageable().getOffset() : 0))
+		builder.from((int) (query.getPageable().isPaged() ? query.getPageable().getOffset() : 0))
 				.size(query.getRequestSize());
 
 		if (!isEmpty(query.getFields())) {
