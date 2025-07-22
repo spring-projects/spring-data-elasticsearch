@@ -42,8 +42,8 @@ public class UpdateQuery {
 	@Nullable private final Boolean fetchSource;
 	@Nullable private final List<String> fetchSourceIncludes;
 	@Nullable private final List<String> fetchSourceExcludes;
-	@Nullable private final Integer ifSeqNo;
-	@Nullable private final Integer ifPrimaryTerm;
+	@Nullable private final Long ifSeqNo;
+	@Nullable private final Long ifPrimaryTerm;
 	@Nullable private final RefreshPolicy refreshPolicy;
 	@Nullable private final Integer retryOnConflict;
 	@Nullable private final String timeout;
@@ -71,8 +71,8 @@ public class UpdateQuery {
 	private UpdateQuery(String id, @Nullable String script, @Nullable Map<String, Object> params,
 			@Nullable Document document, @Nullable Document upsert, @Nullable String lang, @Nullable String routing,
 			@Nullable Boolean scriptedUpsert, @Nullable Boolean docAsUpsert, @Nullable Boolean fetchSource,
-			@Nullable List<String> fetchSourceIncludes, @Nullable List<String> fetchSourceExcludes, @Nullable Integer ifSeqNo,
-			@Nullable Integer ifPrimaryTerm, @Nullable RefreshPolicy refreshPolicy, @Nullable Integer retryOnConflict,
+			@Nullable List<String> fetchSourceIncludes, @Nullable List<String> fetchSourceExcludes, @Nullable Long ifSeqNo,
+			@Nullable Long ifPrimaryTerm, @Nullable RefreshPolicy refreshPolicy, @Nullable Integer retryOnConflict,
 			@Nullable String timeout, @Nullable String waitForActiveShards, @Nullable Query query,
 			@Nullable Boolean abortOnVersionConflict, @Nullable Integer batchSize, @Nullable Integer maxDocs,
 			@Nullable Integer maxRetries, @Nullable String pipeline, @Nullable Float requestsPerSecond,
@@ -172,12 +172,12 @@ public class UpdateQuery {
 	}
 
 	@Nullable
-	public Integer getIfSeqNo() {
+	public Long getIfSeqNo() {
 		return ifSeqNo;
 	}
 
 	@Nullable
-	public Integer getIfPrimaryTerm() {
+	public Long getIfPrimaryTerm() {
 		return ifPrimaryTerm;
 	}
 
@@ -278,8 +278,8 @@ public class UpdateQuery {
 		@Nullable private Boolean scriptedUpsert;
 		@Nullable private Boolean docAsUpsert;
 		@Nullable private Boolean fetchSource;
-		@Nullable private Integer ifSeqNo;
-		@Nullable private Integer ifPrimaryTerm;
+		@Nullable private Long ifSeqNo;
+		@Nullable private Long ifPrimaryTerm;
 		@Nullable private RefreshPolicy refreshPolicy;
 		@Nullable private Integer retryOnConflict;
 		@Nullable private String timeout;
@@ -351,12 +351,12 @@ public class UpdateQuery {
 			return this;
 		}
 
-		public Builder withIfSeqNo(Integer ifSeqNo) {
+		public Builder withIfSeqNo(Long ifSeqNo) {
 			this.ifSeqNo = ifSeqNo;
 			return this;
 		}
 
-		public Builder withIfPrimaryTerm(Integer ifPrimaryTerm) {
+		public Builder withIfPrimaryTerm(Long ifPrimaryTerm) {
 			this.ifPrimaryTerm = ifPrimaryTerm;
 			return this;
 		}
