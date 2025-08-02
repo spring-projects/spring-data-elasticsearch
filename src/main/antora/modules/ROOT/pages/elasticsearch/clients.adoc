@@ -389,6 +389,63 @@ ClientConfiguration.builder()
 ----
 ====
 
+[[elasticsearch.clients.configurationcallbacks.connectionconfig]]
+==== Configuration of the ConnectionConfig used by the low level Elasticsearch `Rest5Client`:
+
+This callback provides a `org.apache.hc.client5.http.config.ConnectionConfig` to configure the connection that is
+used by the `Rest5Client`.
+
+====
+[source,java]
+----
+ClientConfiguration.builder()
+    .connectedTo("localhost:9200", "localhost:9291")
+    .withClientConfigurer(Rest5Clients.ElasticsearchConnectionConfigurationCallback.from(connectionConfigBuilder -> {
+        // configure the connection
+        return connectionConfigBuilder;
+    }))
+    .build();
+----
+====
+
+[[elasticsearch.clients.configurationcallbacks.connectioncmanager]]
+==== Configuration of the ConnectionManager used by the low level Elasticsearch `Rest5Client`:
+
+This callback provides a `org.apache.hc.client5.http.impl.nio.PoolingAsyncClientConnectionManagerBuilder` to configure the connection manager that is
+used by the `Rest5Client`.
+
+====
+[source,java]
+----
+ClientConfiguration.builder()
+    .connectedTo("localhost:9200", "localhost:9291")
+    .withClientConfigurer(Rest5Clients.ElasticsearchConnectionManagerCallback.from(connectionManagerBuilder -> {
+        // configure the connection manager
+        return connectionManagerBuilder;
+    }))
+    .build();
+----
+====
+
+[[elasticsearch.clients.configurationcallbacks.requestconfig]]
+==== Configuration of the RequestConfig used by the low level Elasticsearch `Rest5Client`:
+
+This callback provides a `org.apache.hc.client5.http.config.RequestConfig` to configure the RequestConfig that is
+used by the `Rest5Client`.
+
+====
+[source,java]
+----
+ClientConfiguration.builder()
+    .connectedTo("localhost:9200", "localhost:9291")
+    .withClientConfigurer(Rest5Clients.ElasticsearchRequestConfigCallback.from(requestConfigBuilder -> {
+        // configure the request config
+        return requestConfigBuilder;
+    }))
+    .build();
+----
+====
+
 [[elasticsearch.clients.logging]]
 == Client Logging
 
