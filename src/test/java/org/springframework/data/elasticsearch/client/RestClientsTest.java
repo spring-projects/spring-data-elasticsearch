@@ -47,7 +47,6 @@ import org.springframework.data.elasticsearch.support.HttpHeaders;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
-import com.github.tomakehurst.wiremock.common.ConsoleNotifier;
 import com.github.tomakehurst.wiremock.matching.AnythingPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToPattern;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
@@ -104,8 +103,11 @@ public class RestClientsTest {
 			defaultHeaders.add("def2", "def2-1");
 
 			AtomicInteger supplierCount = new AtomicInteger(1);
-			AtomicInteger httpClientConfigurerCount = new AtomicInteger(0);
 			AtomicInteger restClientConfigurerCount = new AtomicInteger(0);
+			AtomicInteger httpClientConfigurerCount = new AtomicInteger(0);
+			AtomicInteger connectionConfigurerCount = new AtomicInteger(0);
+			AtomicInteger connectionManagerConfigurerCount = new AtomicInteger(0);
+			AtomicInteger requestConfigurerCount = new AtomicInteger(0);
 
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
 			configurationBuilder //
@@ -121,16 +123,30 @@ public class RestClientsTest {
 
 			if (clientUnderTestFactory instanceof ELCRest5ClientUnderTestFactory) {
 				configurationBuilder.withClientConfigurer(
+						Rest5Clients.ElasticsearchRest5ClientConfigurationCallback.from(rest5ClientBuilder -> {
+							restClientConfigurerCount.incrementAndGet();
+							return rest5ClientBuilder;
+						}));
+				configurationBuilder.withClientConfigurer(
 						Rest5Clients.ElasticsearchHttpClientConfigurationCallback.from(httpClientBuilder -> {
 							httpClientConfigurerCount.incrementAndGet();
 							return httpClientBuilder;
 						}));
 				configurationBuilder.withClientConfigurer(
-						Rest5Clients.ElasticsearchRest5ClientConfigurationCallback.from(rest5ClientBuilder -> {
-							restClientConfigurerCount.incrementAndGet();
-							return rest5ClientBuilder;
+						Rest5Clients.ElasticsearchConnectionConfigurationCallback.from(connectionConfigBuilder -> {
+							connectionConfigurerCount.incrementAndGet();
+							return connectionConfigBuilder;
 						}));
-
+				configurationBuilder.withClientConfigurer(
+						Rest5Clients.ElasticsearchConnectionManagerCallback.from(connectionManagerBuilder -> {
+							connectionManagerConfigurerCount.incrementAndGet();
+							return connectionManagerBuilder;
+						}));
+				configurationBuilder.withClientConfigurer(
+						Rest5Clients.ElasticsearchRequestConfigCallback.from(requestConfigBuilder -> {
+							requestConfigurerCount.incrementAndGet();
+							return requestConfigBuilder;
+						}));
 			} else if (clientUnderTestFactory instanceof ELCRestClientUnderTestFactory) {
 				configurationBuilder.withClientConfigurer(
 						RestClients.ElasticsearchHttpClientConfigurationCallback.from(httpClientBuilder -> {
@@ -177,8 +193,12 @@ public class RestClientsTest {
 				;
 			}
 
+			assertThat(restClientConfigurerCount).hasValue(clientUnderTestFactory.getExpectedRestClientConfigurerCalls());
 			assertThat(httpClientConfigurerCount).hasValue(1);
-			assertThat(restClientConfigurerCount).hasValue(clientUnderTestFactory.getExpectedRestClientConfigCalls());
+			assertThat(connectionConfigurerCount).hasValue(clientUnderTestFactory.getExpectedConnectionConfigurerCalls());
+			assertThat(connectionManagerConfigurerCount)
+					.hasValue(clientUnderTestFactory.getExpectedConnectionManagerConfigurerCalls());
+			assertThat(requestConfigurerCount).hasValue(clientUnderTestFactory.getExpectedRequestConfigurerCalls());
 		});
 	}
 
@@ -404,11 +424,23 @@ public class RestClientsTest {
 
 		protected abstract String getDisplayName();
 
-		protected Integer getExpectedRestClientConfigCalls() {
+		protected Integer getExpectedRestClientConfigurerCalls() {
 			return 0;
 		}
 
 		protected abstract int getElasticsearchMajorVersion();
+
+		public Integer getExpectedConnectionConfigurerCalls() {
+			return 0;
+		}
+
+		public Integer getExpectedConnectionManagerConfigurerCalls() {
+			return 0;
+		}
+
+		public Integer getExpectedRequestConfigurerCalls() {
+			return 0;
+		}
 	}
 
 	/**
@@ -423,7 +455,22 @@ public class RestClientsTest {
 		}
 
 		@Override
-		protected Integer getExpectedRestClientConfigCalls() {
+		protected Integer getExpectedRestClientConfigurerCalls() {
+			return 1;
+		}
+
+		@Override
+		public Integer getExpectedConnectionConfigurerCalls() {
+			return 1;
+		}
+
+		@Override
+		public Integer getExpectedConnectionManagerConfigurerCalls() {
+			return 1;
+		}
+
+		@Override
+		public Integer getExpectedRequestConfigurerCalls() {
 			return 1;
 		}
 
@@ -467,7 +514,7 @@ public class RestClientsTest {
 		}
 
 		@Override
-		protected Integer getExpectedRestClientConfigCalls() {
+		protected Integer getExpectedRestClientConfigurerCalls() {
 			return 1;
 		}
 
@@ -511,7 +558,7 @@ public class RestClientsTest {
 		}
 
 		@Override
-		protected Integer getExpectedRestClientConfigCalls() {
+		protected Integer getExpectedRestClientConfigurerCalls() {
 			return 1;
 		}
 
