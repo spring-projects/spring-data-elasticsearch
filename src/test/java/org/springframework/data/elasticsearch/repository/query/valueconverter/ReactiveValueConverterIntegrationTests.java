@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.query.valueconverter;
 
+import org.jspecify.annotations.NonNull;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
@@ -125,12 +126,12 @@ public abstract class ReactiveValueConverterIntegrationTests {
 		public static final String PREFIX = "text-";
 
 		@Override
-		public Object write(Object value) {
+		public @NonNull Object write(@NonNull Object value) {
 			return PREFIX + value.toString();
 		}
 
 		@Override
-		public Object read(Object value) {
+		public @NonNull Object read(@NonNull Object value) {
 
 			String valueString = value.toString();
 

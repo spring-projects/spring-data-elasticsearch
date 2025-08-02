@@ -268,7 +268,7 @@ public class UpdateQuery {
 	}
 
 	public static final class Builder {
-		private String id;
+		private String id = "";
 		@Nullable private String script = null;
 		@Nullable private Map<String, Object> params;
 		@Nullable private Document document = null;

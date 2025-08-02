@@ -715,7 +715,7 @@ public abstract class CriteriaQueryIntegrationTests {
 		@Field(type = Text, store = true, fielddata = true) private String type;
 		@Nullable
 		@Field(type = Text, store = true, fielddata = true) private String message;
-		@Nullable private int rate;
+		private int rate;
 		@Nullable
 		@Version private Long version;
 

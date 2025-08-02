@@ -39,11 +39,11 @@ import org.springframework.util.MultiValueMapAdapter;
  * @author Peter-Josef Meisch
  * @since 5.0
  */
-public class HttpHeaders implements MultiValueMap<String, String> {
+public class HttpHeaders implements MultiValueMap<String, @Nullable String> {
 
 	public static final String AUTHORIZATION = "Authorization";
 
-	private final MultiValueMap<String, String> delegate;
+	private final MultiValueMap<String, @Nullable String> delegate;
 
 	public HttpHeaders() {
 		this.delegate = new MultiValueMapAdapter<>(new LinkedCaseInsensitiveMap<>(Locale.ENGLISH));
@@ -62,12 +62,12 @@ public class HttpHeaders implements MultiValueMap<String, String> {
 	}
 
 	@Override
-	public void addAll(String key, List<? extends String> values) {
+	public void addAll(String key, List<? extends @Nullable String> values) {
 		delegate.addAll(key, values);
 	}
 
 	@Override
-	public void addAll(MultiValueMap<String, String> values) {
+	public void addAll(MultiValueMap<String, @Nullable String> values) {
 		delegate.addAll(values);
 	}
 
@@ -77,12 +77,12 @@ public class HttpHeaders implements MultiValueMap<String, String> {
 	}
 
 	@Override
-	public void setAll(Map<String, String> values) {
+	public void setAll(Map<String, @Nullable String> values) {
 		delegate.setAll(values);
 	}
 
 	@Override
-	public Map<String, String> toSingleValueMap() {
+	public Map<String, @Nullable String> toSingleValueMap() {
 		return delegate.toSingleValueMap();
 	}
 	// endregion
@@ -110,18 +110,18 @@ public class HttpHeaders implements MultiValueMap<String, String> {
 
 	@Override
 	@Nullable
-	public List<String> get(Object key) {
+	public List<@Nullable String> get(Object key) {
 		return delegate.get(key);
 	}
 
 	@Nullable
 	@Override
-	public List<String> put(String key, List<String> value) {
+	public List<@Nullable String> put(String key, List<@Nullable String> value) {
 		return delegate.put(key, value);
 	}
 
 	@Override
-	public List<String> remove(Object key) {
+	public List<@Nullable String> remove(Object key) {
 		return delegate.remove(key);
 	}
 

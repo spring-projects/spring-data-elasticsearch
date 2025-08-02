@@ -33,7 +33,7 @@ import org.springframework.util.Assert;
 public class RepositorySearchTemplateQuery extends AbstractElasticsearchRepositoryQuery {
 
 	private String id;
-	private Map<String, Object> params;
+	private Map<String, Object> params = Map.of();
 
 	public RepositorySearchTemplateQuery(ElasticsearchQueryMethod queryMethod,
 			ElasticsearchOperations elasticsearchOperations, ValueExpressionDelegate valueExpressionDelegate,

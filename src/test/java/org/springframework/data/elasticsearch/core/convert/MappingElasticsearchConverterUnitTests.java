@@ -25,7 +25,15 @@ import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.intellij.lang.annotations.Language;
@@ -128,7 +136,7 @@ public class MappingElasticsearchConverterUnitTests {
 	public void init() {
 
 		SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
-		mappingContext.setInitialEntitySet(Collections.singleton(Rifle.class));
+		mappingContext.setInitialEntitySet(singleton(Rifle.class));
 		mappingContext.afterPropertiesSet();
 
 		mappingElasticsearchConverter = new MappingElasticsearchConverter(mappingContext, new GenericConversionService());
@@ -389,7 +397,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-530
 	public void readListOfConcreteTypesCorrectly() {
 
-		sarahAsMap.put("coWorkers", Collections.singletonList(kyleAsMap));
+		sarahAsMap.put("coWorkers", singletonList(kyleAsMap));
 
 		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
@@ -414,7 +422,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 		Map<String, Object> target = writeToMap(sarahConnor);
 		assertThat(target.get("shippingAddresses")).isInstanceOf(Map.class);
-		assertThat(target.get("shippingAddresses")).isEqualTo(Collections.singletonMap("home", gratiotAveAsMap));
+		assertThat(target.get("shippingAddresses")).isEqualTo(singletonMap("home", gratiotAveAsMap));
 	}
 
 	@Test // DATAES-530
@@ -433,7 +441,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-530
 	public void readConcreteMapCorrectly() {
 
-		sarahAsMap.put("shippingAddresses", Collections.singletonMap("home", gratiotAveAsMap));
+		sarahAsMap.put("shippingAddresses", singletonMap("home", gratiotAveAsMap));
 
 		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
@@ -443,7 +451,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-530
 	public void readInterfaceMapCorrectly() {
 
-		sarahAsMap.put("inventoryMap", Collections.singletonMap("glock19", gunAsMap));
+		sarahAsMap.put("inventoryMap", singletonMap("glock19", gunAsMap));
 
 		Person target = mappingElasticsearchConverter.read(Person.class, sarahAsMap);
 
@@ -490,7 +498,7 @@ public class MappingElasticsearchConverterUnitTests {
 	public void readGenericListList() {
 
 		Document source = Document.create();
-		source.put("objectList", Collections.singletonList(Arrays.asList(t800AsMap, gunAsMap)));
+		source.put("objectList", singletonList(Arrays.asList(t800AsMap, gunAsMap)));
 
 		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
@@ -515,7 +523,7 @@ public class MappingElasticsearchConverterUnitTests {
 	public void readGenericMap() {
 
 		Document source = Document.create();
-		source.put("objectMap", Collections.singletonMap("glock19", gunAsMap));
+		source.put("objectMap", singletonMap("glock19", gunAsMap));
 
 		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
@@ -527,23 +535,23 @@ public class MappingElasticsearchConverterUnitTests {
 
 		Skynet skynet = new Skynet();
 		skynet.objectMap = new LinkedHashMap<>();
-		skynet.objectMap.put("inventory", Collections.singletonMap("glock19", gun));
+		skynet.objectMap.put("inventory", singletonMap("glock19", gun));
 
 		Map<String, Object> target = writeToMap(skynet);
 
 		assertThat((Map<String, Object>) target.get("objectMap")).containsEntry("inventory",
-				Collections.singletonMap("glock19", gunAsMap));
+				singletonMap("glock19", gunAsMap));
 	}
 
 	@Test // DATAES-530
 	public void readGenericMapMap() {
 
 		Document source = Document.create();
-		source.put("objectMap", Collections.singletonMap("inventory", Collections.singletonMap("glock19", gunAsMap)));
+		source.put("objectMap", singletonMap("inventory", singletonMap("glock19", gunAsMap)));
 
 		Skynet target = mappingElasticsearchConverter.read(Skynet.class, source);
 
-		assertThat(target.getObjectMap()).containsEntry("inventory", Collections.singletonMap("glock19", gun));
+		assertThat(target.getObjectMap()).containsEntry("inventory", singletonMap("glock19", gun));
 	}
 
 	@Test // DATAES-530
@@ -575,7 +583,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-530
 	public void writesNestedAliased() {
 
-		t800.inventoryList = Collections.singletonList(rifle);
+		t800.inventoryList = singletonList(rifle);
 		Map<String, Object> target = writeToMap(t800);
 
 		assertThat((List<Document>) target.get("inventoryList")).contains(rifleAsMap);
@@ -589,7 +597,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-530
 	public void readsNestedAliased() {
 
-		t800AsMap.put("inventoryList", Collections.singletonList(rifleAsMap));
+		t800AsMap.put("inventoryList", singletonList(rifleAsMap));
 
 		assertThat(mappingElasticsearchConverter.read(Person.class, t800AsMap).getInventoryList()).containsExactly(rifle);
 	}
@@ -911,12 +919,12 @@ public class MappingElasticsearchConverterUnitTests {
 	void shouldWriteMapContainingCollectionContainingMap() throws JSONException {
 
 		class EntityWithMapCollectionMap {
-			Map<String, Object> map;
+			Map<String, Object> map = Map.of();
 		}
 		class InnerEntity {
-			String prop1;
+			@Nullable String prop1;
 
-			String prop2;
+			@Nullable String prop2;
 
 			public InnerEntity() {}
 
@@ -928,8 +936,8 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		var entity = new EntityWithMapCollectionMap();
-		entity.map = Collections.singletonMap("collection",
-				Collections.singletonList(Collections.singletonMap("destination", new InnerEntity("prop1", "prop2"))));
+		entity.map = singletonMap("collection",
+				singletonList(singletonMap("destination", new InnerEntity("prop1", "prop2"))));
 
 		var expected = """
 				{
@@ -1069,67 +1077,79 @@ public class MappingElasticsearchConverterUnitTests {
 		class RangeEntity {
 
 			@Id private String id;
-			@Field(type = FieldType.Integer_Range) private Range<Integer> integerRange;
-			@Field(type = FieldType.Float_Range) private Range<Float> floatRange;
-			@Field(type = FieldType.Long_Range) private Range<Long> longRange;
-			@Field(type = FieldType.Double_Range) private Range<Double> doubleRange;
-			@Field(type = FieldType.Date_Range) private Range<Date> dateRange;
-			@Field(type = FieldType.Date_Range, format = DateFormat.year_month_day) private Range<LocalDate> localDateRange;
+			@Field(type = FieldType.Integer_Range)
+			@Nullable private Range<Integer> integerRange;
+			@Field(type = FieldType.Float_Range)
+			@Nullable private Range<Float> floatRange;
+			@Field(type = FieldType.Long_Range)
+			@Nullable private Range<Long> longRange;
+			@Field(type = FieldType.Double_Range)
+			@Nullable private Range<Double> doubleRange;
+			@Field(type = FieldType.Date_Range)
+			@Nullable private Range<Date> dateRange;
+			@Field(type = FieldType.Date_Range, format = DateFormat.year_month_day)
+			@Nullable private Range<LocalDate> localDateRange;
 			@Field(type = FieldType.Date_Range,
-					format = DateFormat.hour_minute_second_millis) private Range<LocalTime> localTimeRange;
+					format = DateFormat.hour_minute_second_millis)
+			@Nullable private Range<LocalTime> localTimeRange;
 			@Field(type = FieldType.Date_Range,
-					format = DateFormat.date_hour_minute_second_millis) private Range<LocalDateTime> localDateTimeRange;
-			@Field(type = FieldType.Date_Range, format = DateFormat.time) private Range<OffsetTime> offsetTimeRange;
-			@Field(type = FieldType.Date_Range) private Range<ZonedDateTime> zonedDateTimeRange;
-			@Field(type = FieldType.Date_Range, storeNullValue = true) private Range<ZonedDateTime> nullRange;
+					format = DateFormat.date_hour_minute_second_millis)
+			@Nullable private Range<LocalDateTime> localDateTimeRange;
+			@Field(type = FieldType.Date_Range, format = DateFormat.time)
+			@Nullable private Range<OffsetTime> offsetTimeRange;
+			@Field(type = FieldType.Date_Range)
+			@Nullable private Range<ZonedDateTime> zonedDateTimeRange;
+			@Field(type = FieldType.Date_Range, storeNullValue = true)
+			@Nullable private Range<ZonedDateTime> nullRange;
 
-			@Field(type = FieldType.Integer_Range) private List<Range<Integer>> integerRangeList;
+			@Field(type = FieldType.Integer_Range)
+			@Nullable private List<Range<Integer>> integerRangeList;
 
 			public String getId() {
 				return id;
 			}
 
-			public Range<Integer> getIntegerRange() {
+			public @Nullable Range<Integer> getIntegerRange() {
 				return integerRange;
 			}
 
-			public Range<Float> getFloatRange() {
+			public @Nullable Range<Float> getFloatRange() {
 				return floatRange;
 			}
 
-			public Range<Long> getLongRange() {
+			public @Nullable Range<Long> getLongRange() {
 				return longRange;
 			}
 
-			public Range<Double> getDoubleRange() {
+			public @Nullable Range<Double> getDoubleRange() {
 				return doubleRange;
 			}
 
-			public Range<Date> getDateRange() {
+			public @Nullable Range<Date> getDateRange() {
 				return dateRange;
 			}
 
-			public Range<LocalDate> getLocalDateRange() {
+			public @Nullable Range<LocalDate> getLocalDateRange() {
 				return localDateRange;
 			}
 
-			public Range<LocalTime> getLocalTimeRange() {
+			public @Nullable Range<LocalTime> getLocalTimeRange() {
 				return localTimeRange;
 			}
 
-			public Range<LocalDateTime> getLocalDateTimeRange() {
+			public @Nullable Range<LocalDateTime> getLocalDateTimeRange() {
 				return localDateTimeRange;
 			}
 
-			public Range<OffsetTime> getOffsetTimeRange() {
+			public @Nullable Range<OffsetTime> getOffsetTimeRange() {
 				return offsetTimeRange;
 			}
 
-			public Range<ZonedDateTime> getZonedDateTimeRange() {
+			public @Nullable Range<ZonedDateTime> getZonedDateTimeRange() {
 				return zonedDateTimeRange;
 			}
 
-			public Range<ZonedDateTime> getNullRange() {
+			public @Nullable Range<ZonedDateTime> getNullRange() {
 				return nullRange;
 			}
 
@@ -1181,7 +1201,7 @@ public class MappingElasticsearchConverterUnitTests {
 				this.nullRange = nullRange;
 			}
 
-			public List<Range<Integer>> getIntegerRangeList() {
+			public @Nullable List<Range<Integer>> getIntegerRangeList() {
 				return integerRangeList;
 			}
 
@@ -2639,8 +2659,7 @@ public class MappingElasticsearchConverterUnitTests {
 		@Nullable private GeoPoint pointB;
 		@Nullable
 		@GeoPointField private String pointC;
-		@Nullable
-		@GeoPointField private double[] pointD;
+		@GeoPointField private double @Nullable [] pointD;
 
 		@Nullable
 		public String getId() {
@@ -2705,12 +2724,11 @@ public class MappingElasticsearchConverterUnitTests {
 			this.pointC = pointC;
 		}
 
-		@Nullable
-		public double[] getPointD() {
+		public double @Nullable [] getPointD() {
 			return pointD;
 		}
 
-		public void setPointD(@Nullable double[] pointD) {
+		public void setPointD(double @Nullable [] pointD) {
 			this.pointD = pointD;
 		}
 	}
@@ -3259,7 +3277,8 @@ public class MappingElasticsearchConverterUnitTests {
 		@Id
 		@Nullable private String id;
 
-		@Field(type = FieldType.Nested, name = "level-one") private List<Level1> level1Entries;
+		@Field(type = FieldType.Nested, name = "level-one")
+		@Nullable private List<Level1> level1Entries;
 
 		@Nullable
 		public String getId() {
@@ -3270,7 +3289,7 @@ public class MappingElasticsearchConverterUnitTests {
 			this.id = id;
 		}
 
-		public List<Level1> getLevel1Entries() {
+		public @Nullable List<Level1> getLevel1Entries() {
 			return level1Entries;
 		}
 
@@ -3279,9 +3298,10 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		static class Level1 {
-			@Field(type = FieldType.Nested, name = "level-two") private List<Level2> level2Entries;
+			@Field(type = FieldType.Nested, name = "level-two")
+			@Nullable private List<Level2> level2Entries;
 
-			public List<Level2> getLevel2Entries() {
+			public @Nullable List<Level2> getLevel2Entries() {
 				return level2Entries;
 			}
 
@@ -3291,9 +3311,10 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		static class Level2 {
-			@Field(type = FieldType.Keyword, name = "key-word") private String keyWord;
+			@Field(type = FieldType.Keyword, name = "key-word")
+			@Nullable private String keyWord;
 
-			public String getKeyWord() {
+			public @Nullable String getKeyWord() {
 				return keyWord;
 			}
 

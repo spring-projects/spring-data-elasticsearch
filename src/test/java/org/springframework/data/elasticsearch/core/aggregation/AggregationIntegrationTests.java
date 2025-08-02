@@ -164,7 +164,7 @@ public abstract class AggregationIntegrationTests {
 		@Nullable
 		@Field(type = Integer, store = true) private List<Integer> publishedYears = new ArrayList<>();
 
-		@Nullable private int score;
+		private int score;
 
 		public ArticleEntity(@Nullable String id) {
 			this.id = id;

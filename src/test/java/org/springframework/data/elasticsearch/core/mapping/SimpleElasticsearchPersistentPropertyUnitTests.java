@@ -325,7 +325,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	static class FieldNamingStrategyEntity {
 		@Nullable private String withoutCustomFieldName;
-		@Field(name = "CUStomFIEldnAME") private String withCustomFieldName;
+		@Field(name = "CUStomFIEldnAME")  @Nullable private String withCustomFieldName;
 
 		@Nullable
 		public String getWithoutCustomFieldName() {
@@ -336,7 +336,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 			this.withoutCustomFieldName = withoutCustomFieldName;
 		}
 
-		public String getWithCustomFieldName() {
+		public @Nullable String getWithCustomFieldName() {
 			return withCustomFieldName;
 		}
 

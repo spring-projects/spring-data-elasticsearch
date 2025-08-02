@@ -55,6 +55,7 @@ public class AliasActions {
 	public AliasActions add(@Nullable AliasAction... actions) {
 
 		if (actions != null) {
+			// noinspection NullableProblems
 			this.actions.addAll(Arrays.asList(actions));
 		}
 

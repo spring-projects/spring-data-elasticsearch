@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.Map;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -369,7 +370,7 @@ public class EntityOperations {
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptableEntity#initializeVersionProperty()
 		 */
 		@Override
-		public T initializeVersionProperty() {
+		public @NonNull T initializeVersionProperty() {
 			return map;
 		}
 
@@ -389,7 +390,7 @@ public class EntityOperations {
 		}
 
 		@Override
-		public SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
+		public @Nullable SeqNoPrimaryTerm getSeqNoPrimaryTerm() {
 			return null;
 		}
 
@@ -398,7 +399,7 @@ public class EntityOperations {
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptableEntity#incrementVersion()
 		 */
 		@Override
-		public T incrementVersion() {
+		public @NonNull T incrementVersion() {
 			return map;
 		}
 
@@ -407,7 +408,7 @@ public class EntityOperations {
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getBean()
 		 */
 		@Override
-		public T getBean() {
+		public @NonNull T getBean() {
 			return map;
 		}
 
@@ -425,12 +426,12 @@ public class EntityOperations {
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getPersistentEntity()
 		 */
 		@Override
-		public ElasticsearchPersistentEntity<?> getPersistentEntity() {
+		public @Nullable ElasticsearchPersistentEntity<?> getPersistentEntity() {
 			return null;
 		}
 
 		@Override
-		public String getRouting() {
+		public @Nullable String getRouting() {
 			return null;
 		}
 	}
@@ -650,7 +651,7 @@ public class EntityOperations {
 		}
 
 		@Override
-		public String getRouting() {
+		public @Nullable String getRouting() {
 
 			String routing = routingResolver.getRouting(propertyAccessor.getBean());
 

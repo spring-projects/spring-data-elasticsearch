@@ -714,7 +714,7 @@ public class MappingElasticsearchConverter
 			}
 
 			@Override
-			public <T> T getPropertyValue(ElasticsearchPersistentProperty property) {
+			public <T> @Nullable T getPropertyValue(ElasticsearchPersistentProperty property) {
 
 				String expression = property.getSpelExpression();
 				Object value = expression != null ? evaluator.evaluate(expression) : accessor.get(property);

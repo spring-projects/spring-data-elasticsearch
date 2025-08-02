@@ -92,7 +92,7 @@ public class HasParentQuery {
 
 	public static class Builder {
 		private final String parentType;
-		private Query query;
+		@Nullable private Query query;
 
 		@Nullable private Boolean score;
 		@Nullable private Boolean ignoreUnmapped;

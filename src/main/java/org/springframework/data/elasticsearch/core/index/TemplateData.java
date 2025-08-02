@@ -81,7 +81,7 @@ public class TemplateData {
 		@Nullable Document mapping;
 		int order;
 		@Nullable Integer version;
-		@Nullable private String[] indexPatterns;
+		@Nullable private String@Nullable [] indexPatterns;
 		@Nullable private Map<String, AliasData> aliases;
 
 		private TemplateDataBuilder() {}

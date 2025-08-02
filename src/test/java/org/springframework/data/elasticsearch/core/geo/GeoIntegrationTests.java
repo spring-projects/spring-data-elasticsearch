@@ -424,12 +424,11 @@ public abstract class GeoIntegrationTests {
 		@Nullable private String name;
 		@Nullable
 		@GeoPointField private String locationAsString;
-		@Nullable
-		@GeoPointField private double[] locationAsArray;
+		@GeoPointField private double @Nullable [] locationAsArray;
 		@Nullable
 		@GeoPointField private String locationAsGeoHash;
 
-		public String getId() {
+		public @Nullable String getId() {
 			return id;
 		}
 
@@ -437,7 +436,7 @@ public abstract class GeoIntegrationTests {
 			this.id = id;
 		}
 
-		public String getName() {
+		public @Nullable String getName() {
 			return name;
 		}
 
@@ -445,7 +444,7 @@ public abstract class GeoIntegrationTests {
 			this.name = name;
 		}
 
-		public String getLocationAsString() {
+		public @Nullable String getLocationAsString() {
 			return locationAsString;
 		}
 
@@ -461,7 +460,7 @@ public abstract class GeoIntegrationTests {
 			this.locationAsArray = locationAsArray;
 		}
 
-		public String getLocationAsGeoHash() {
+		public @Nullable String getLocationAsGeoHash() {
 			return locationAsGeoHash;
 		}
 

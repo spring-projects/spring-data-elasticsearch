@@ -35,7 +35,7 @@ public record PutIndexTemplateRequest(String name, String[] indexPatterns, @Null
 	public static class Builder {
 
 		@Nullable private String name;
-		@Nullable private String[] indexPatterns;
+		private String @Nullable [] indexPatterns;
 		@Nullable private Settings settings;
 		@Nullable private Document mapping;
 		@Nullable AliasActions aliasActions;

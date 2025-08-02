@@ -344,8 +344,8 @@ public class ByQueryResponse {
 		 *
 		 * @return a new {@link SearchFailureBuilder} to build {@link SearchFailure}
 		 */
-		public static SearchFailureBuilder builder() {
-			return new SearchFailureBuilder();
+		public static SearchFailureBuilder builder(Throwable reason) {
+			return new SearchFailureBuilder(reason);
 		}
 
 		/**
@@ -358,7 +358,9 @@ public class ByQueryResponse {
 			@Nullable private Integer shardId;
 			@Nullable private String nodeId;
 
-			private SearchFailureBuilder() {}
+			private SearchFailureBuilder(Throwable reason) {
+				this.reason = reason;
+			}
 
 			public SearchFailureBuilder withReason(Throwable reason) {
 				this.reason = reason;

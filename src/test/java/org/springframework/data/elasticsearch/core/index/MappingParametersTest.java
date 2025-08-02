@@ -110,10 +110,10 @@ public class MappingParametersTest extends MappingContextBaseTests {
 	}
 
 	static class DenseVectorInvalidDimsClass {
-		@Field(type = Dense_Vector, dims = 4097) private float[] dense_vector;
+		@Field(type = Dense_Vector, dims = 4097) private float @Nullable [] dense_vector;
 	}
 
 	static class DenseVectorMissingDimsClass {
-		@Field(type = Dense_Vector) private float[] dense_vector;
+		@Field(type = Dense_Vector) private float @Nullable [] dense_vector;
 	}
 }

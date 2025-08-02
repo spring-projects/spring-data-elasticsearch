@@ -63,12 +63,12 @@ public class FetchSourceFilter implements SourceFilter {
 	}
 
 	@Override
-	public String[] getIncludes() {
+	public @Nullable String[] getIncludes() {
 		return includes;
 	}
 
 	@Override
-	public String[] getExcludes() {
+	public @Nullable String[] getExcludes() {
 		return excludes;
 	}
 }

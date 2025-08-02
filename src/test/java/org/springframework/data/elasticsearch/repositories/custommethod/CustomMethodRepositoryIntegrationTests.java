@@ -2443,8 +2443,8 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@Field(type = Text, store = true, fielddata = true) private String message;
 		@Nullable
 		@Field(type = Keyword) private String keyword;
-		@Nullable private int rate;
-		@Nullable private boolean available;
+		private int rate;
+		private boolean available;
 		@Nullable private GeoPoint location;
 		@Nullable
 		@Version private Long version;

@@ -724,8 +724,7 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 	static class DenseVectorEntity {
 		@Nullable
 		@Id private String id;
-		@Nullable
-		@Field(type = Dense_Vector, dims = 3) private float[] dense_vector;
+		@Field(type = Dense_Vector, dims = 3) private float @Nullable [] dense_vector;
 
 		@Nullable
 		public String getId() {
@@ -736,12 +735,11 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 			this.id = id;
 		}
 
-		@Nullable
-		public float[] getDense_vector() {
+		public float @Nullable [] getDense_vector() {
 			return dense_vector;
 		}
 
-		public void setDense_vector(@Nullable float[] dense_vector) {
+		public void setDense_vector(float @Nullable [] dense_vector) {
 			this.dense_vector = dense_vector;
 		}
 	}
@@ -915,7 +913,8 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Nullable
 		@Id private String id;
 
-		@Field(type = FieldType.Dense_Vector, dims = 42, knnSimilarity = KnnSimilarity.COSINE) private double[] denseVector;
+		@Field(type = FieldType.Dense_Vector, dims = 42,
+				knnSimilarity = KnnSimilarity.COSINE) private double @Nullable [] denseVector;
 	}
 
 	@Mapping(aliases = {

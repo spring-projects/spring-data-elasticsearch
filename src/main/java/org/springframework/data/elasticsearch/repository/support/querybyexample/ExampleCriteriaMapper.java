@@ -82,7 +82,7 @@ class ExampleCriteriaMapper {
 
 			Object propertyValue = propertyAccessor.getProperty(property);
 			if (property.isMap() && propertyValue != null) {
-				for (Map.Entry<String, Object> entry : ((Map<String, Object>) propertyValue).entrySet()) {
+				for (Map.Entry<String, @Nullable Object> entry : ((Map<String, @Nullable Object>) propertyValue).entrySet()) {
 					String key = entry.getKey();
 					Object value = entry.getValue();
 					criteria = applyPropertySpec(propertyPath + "." + key, value, exampleSpecAccessor, property, matchMode,
@@ -96,7 +96,7 @@ class ExampleCriteriaMapper {
 		return criteria;
 	}
 
-	private Criteria applyPropertySpec(String path, Object propertyValue, ExampleMatcherAccessor exampleSpecAccessor,
+	private Criteria applyPropertySpec(String path, @Nullable Object propertyValue, ExampleMatcherAccessor exampleSpecAccessor,
 			ElasticsearchPersistentProperty property, ExampleMatcher.MatchMode matchMode, Criteria criteria) {
 
 		if (exampleSpecAccessor.isIgnoreCaseForPath(path)) {

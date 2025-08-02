@@ -65,7 +65,7 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	String getIndexStoreType();
 
 	@Override
-	ElasticsearchPersistentProperty getVersionProperty();
+	@Nullable ElasticsearchPersistentProperty getVersionProperty();
 
 	@Nullable
 	String settingPath();
