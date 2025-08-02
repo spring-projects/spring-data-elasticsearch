@@ -134,7 +134,7 @@ public abstract class LogEntityIntegrationTests {
 		@Nullable
 		@Id private String id;
 		@Nullable private String action;
-		@Nullable private long sequenceCode;
+		private long sequenceCode;
 		@Nullable
 		@Field(type = Ip) private String ip;
 		@Field(type = Date, format = DateFormat.date_time) private java.util.@Nullable Date date;
@@ -149,7 +149,7 @@ public abstract class LogEntityIntegrationTests {
 			return format;
 		}
 
-		public String getId() {
+		public @Nullable String getId() {
 			return id;
 		}
 
@@ -157,7 +157,7 @@ public abstract class LogEntityIntegrationTests {
 			this.id = id;
 		}
 
-		public String getAction() {
+		public @Nullable String getAction() {
 			return action;
 		}
 
@@ -173,7 +173,7 @@ public abstract class LogEntityIntegrationTests {
 			this.sequenceCode = sequenceCode;
 		}
 
-		public String getIp() {
+		public @Nullable String getIp() {
 			return ip;
 		}
 
@@ -181,7 +181,7 @@ public abstract class LogEntityIntegrationTests {
 			this.ip = ip;
 		}
 
-		public java.util.Date getDate() {
+		public java.util.@Nullable Date getDate() {
 			return date;
 		}
 

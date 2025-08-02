@@ -116,8 +116,7 @@ public abstract class GeoRepositoryIntegrationTests {
 		@Nullable private GeoPoint pointB;
 		@Nullable
 		@GeoPointField private String pointC;
-		@Nullable
-		@GeoPointField private double[] pointD;
+		@GeoPointField private double @Nullable [] pointD;
 
 		@Nullable
 		public String getId() {
@@ -182,12 +181,11 @@ public abstract class GeoRepositoryIntegrationTests {
 			this.pointC = pointC;
 		}
 
-		@Nullable
-		public double[] getPointD() {
+		public double @Nullable [] getPointD() {
 			return pointD;
 		}
 
-		public void setPointD(@Nullable double[] pointD) {
+		public void setPointD(double @Nullable [] pointD) {
 			this.pointD = pointD;
 		}
 	}

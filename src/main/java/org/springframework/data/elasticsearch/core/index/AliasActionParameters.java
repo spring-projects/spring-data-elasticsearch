@@ -66,8 +66,7 @@ public class AliasActionParameters {
 		return indices;
 	}
 
-	@Nullable
-	public String[] getAliases() {
+	public String@Nullable[] getAliases() {
 		return aliases;
 	}
 
@@ -107,8 +106,8 @@ public class AliasActionParameters {
 	}
 
 	public static final class Builder {
-		@Nullable private String[] indices;
-		@Nullable private String[] aliases;
+		private String @Nullable [] indices;
+		private String @Nullable [] aliases;
 		@Nullable private Query filterQuery;
 		@Nullable private Class<?> filterQueryClass;
 		@Nullable private Boolean isHidden;

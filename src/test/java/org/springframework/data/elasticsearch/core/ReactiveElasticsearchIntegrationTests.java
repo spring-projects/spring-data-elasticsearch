@@ -1298,7 +1298,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		@Id private String id;
 		@Nullable
 		@Field(type = Text, store = true, fielddata = true) private String message;
-		@Nullable private int rate;
+		private int rate;
 		@Nullable
 		@Version private Long version;
 
@@ -1568,9 +1568,9 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}-readonly-id")
 	static class ReadonlyIdEntity {
-		@Field(type = FieldType.Keyword) private String part1;
+		@Field(type = FieldType.Keyword) private @Nullable String part1;
 
-		@Field(type = FieldType.Keyword) private String part2;
+		@Field(type = FieldType.Keyword) private @Nullable String part2;
 
 		@Id
 		@WriteOnlyProperty
@@ -1579,7 +1579,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 			return part1 + '-' + part2;
 		}
 
-		public String getPart1() {
+		public @Nullable String getPart1() {
 			return part1;
 		}
 
@@ -1587,7 +1587,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 			this.part1 = part1;
 		}
 
-		public String getPart2() {
+		public @Nullable String getPart2() {
 			return part2;
 		}
 

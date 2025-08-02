@@ -444,7 +444,8 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 	})
 	private static class EntityWithAliases {
 		@Nullable private @Id String id;
-		@Field(type = Text) private String type;
+		@Field(type = Text)
+		@Nullable private String type;
 
 		@Nullable
 		public String getId() {
@@ -455,7 +456,7 @@ public abstract class ReactiveIndexOperationsIntegrationTests {
 			this.id = id;
 		}
 
-		public String getType() {
+		public @Nullable String getType() {
 			return type;
 		}
 

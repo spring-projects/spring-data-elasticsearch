@@ -664,8 +664,8 @@ abstract class ElasticsearchRepositoryIntegrationTests {
 		@Field(type = FieldType.Text, store = true, fielddata = true) private String type;
 		@Nullable
 		@Field(type = FieldType.Text, store = true, fielddata = true) private String message;
-		@Nullable private int rate;
-		@Nullable private boolean available;
+		private int rate;
+		private boolean available;
 		@Nullable
 		@Version private Long version;
 

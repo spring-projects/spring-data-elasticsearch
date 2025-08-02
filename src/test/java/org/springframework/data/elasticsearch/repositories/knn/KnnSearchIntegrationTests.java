@@ -165,12 +165,11 @@ public abstract class KnnSearchIntegrationTests {
 			this.message = message;
 		}
 
-		@Nullable
-		public float[] getVector() {
+		public float @Nullable [] getVector() {
 			return vector;
 		}
 
-		public void setVector(@Nullable float[] vector) {
+		public void setVector(float @Nullable [] vector) {
 			this.vector = vector;
 		}
 	}

@@ -1398,7 +1398,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 			@Field("mapping-property")
 			@Mapping(mappingPath = "/mappings/test-field-analyzed-mappings.json") //
-			@Nullable private byte[] mappingProperty;
+			private byte @Nullable [] mappingProperty;
 		}
 
 		@SuppressWarnings("unused")
@@ -1820,8 +1820,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable private GeoPoint pointB;
 		@Nullable
 		@GeoPointField private String pointC;
-		@Nullable
-		@GeoPointField private double[] pointD;
+		@GeoPointField private double @Nullable [] pointD;
 
 		@Nullable
 		@GeoShapeField private String shape1;
@@ -1892,12 +1891,11 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			this.pointC = pointC;
 		}
 
-		@Nullable
-		public double[] getPointD() {
+		public double @Nullable [] getPointD() {
 			return pointD;
 		}
 
-		public void setPointD(@Nullable double[] pointD) {
+		public void setPointD(double @Nullable [] pointD) {
 			this.pointD = pointD;
 		}
 
@@ -2171,8 +2169,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	static class DenseVectorEntity {
 		@Nullable
 		@Id private String id;
-		@Nullable
-		@Field(type = FieldType.Dense_Vector, dims = 16) private float[] my_vector;
+		@Field(type = FieldType.Dense_Vector, dims = 16) private float @Nullable [] my_vector;
 
 		@Nullable
 		public String getId() {
@@ -2183,12 +2180,11 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			this.id = id;
 		}
 
-		@Nullable
-		public float[] getMy_vector() {
+		public float @Nullable [] getMy_vector() {
 			return my_vector;
 		}
 
-		public void setMy_vector(@Nullable float[] my_vector) {
+		public void setMy_vector(float @Nullable [] my_vector) {
 			this.my_vector = my_vector;
 		}
 	}
@@ -2198,10 +2194,9 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Nullable
 		@Id private String id;
 
-		@Nullable
 		@Field(type = FieldType.Dense_Vector, dims = 16, elementType = FieldElementType.FLOAT,
 				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, efConstruction = 100),
-				knnSimilarity = KnnSimilarity.DOT_PRODUCT) private float[] my_vector;
+				knnSimilarity = KnnSimilarity.DOT_PRODUCT) private float @Nullable [] my_vector;
 
 		@Nullable
 		public String getId() {
@@ -2212,12 +2207,11 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 			this.id = id;
 		}
 
-		@Nullable
-		public float[] getMy_vector() {
+		public float @Nullable [] getMy_vector() {
 			return my_vector;
 		}
 
-		public void setMy_vector(@Nullable float[] my_vector) {
+		public void setMy_vector(float @Nullable [] my_vector) {
 			this.my_vector = my_vector;
 		}
 	}
@@ -2277,7 +2271,7 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	static class DenseVectorMisMatchConfidenceIntervalClass {
 		@Field(type = Dense_Vector, dims = 16, elementType = FieldElementType.FLOAT,
 				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, confidenceInterval = 0.95F),
-				knnSimilarity = KnnSimilarity.DOT_PRODUCT) private float[] dense_vector;
+				knnSimilarity = KnnSimilarity.DOT_PRODUCT) private float @Nullable [] dense_vector;
 	}
 
 	static class DisabledMappingProperty {

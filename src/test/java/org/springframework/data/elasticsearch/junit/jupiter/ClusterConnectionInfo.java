@@ -24,7 +24,7 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
  * The {@link #host}, {@link #httpPort} and {@link #useSsl} values specify the values needed to connect to the cluster
  * with a rest client for both a local started cluster and for one defined by the cluster URL when creating the
  * {@link ClusterConnection}.<br/>
- * The object must be created by using a {@link ClusterConnectionInfo.Builder}.
+ * The object must be created by using a {@link Builder}.
  *
  * @author Peter-Josef Meisch
  */
@@ -36,8 +36,8 @@ public final class ClusterConnectionInfo {
 	private final String clusterName;
 	@Nullable private final ElasticsearchContainer elasticsearchContainer;
 
-	public static Builder builder() {
-		return new Builder();
+	public static Builder builder(IntegrationtestEnvironment integrationtestEnvironment) {
+		return new Builder(integrationtestEnvironment);
 	}
 
 	private ClusterConnectionInfo(IntegrationtestEnvironment integrationtestEnvironment, String host, int httpPort,
@@ -84,13 +84,12 @@ public final class ClusterConnectionInfo {
 	public static class Builder {
 		private IntegrationtestEnvironment integrationtestEnvironment;
 		private boolean useSsl = false;
-		private String host;
+		private String host = "";
 		private int httpPort;
 		@Nullable private ElasticsearchContainer elasticsearchContainer;
 
-		public Builder withIntegrationtestEnvironment(IntegrationtestEnvironment integrationtestEnvironment) {
+		public Builder(IntegrationtestEnvironment integrationtestEnvironment) {
 			this.integrationtestEnvironment = integrationtestEnvironment;
-			return this;
 		}
 
 		public Builder withHostAndPort(String host, int httpPort) {

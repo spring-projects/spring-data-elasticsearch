@@ -27,7 +27,6 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
@@ -41,7 +40,7 @@ import org.testcontainers.utility.DockerImageName;
  *
  * @author Peter-Josef Meisch
  */
-public class ClusterConnection implements ExtensionContext.Store.CloseableResource {
+public class ClusterConnection implements AutoCloseable {
 
 	private static final Log LOGGER = LogFactory.getLog(ClusterConnection.class);
 
@@ -106,7 +105,7 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 				LOGGER.warn("DATAES_ELASTICSEARCH_PORT does not contain a number");
 			}
 
-			return ClusterConnectionInfo.builder().withIntegrationtestEnvironment(IntegrationtestEnvironment.get())
+			return ClusterConnectionInfo.builder(IntegrationtestEnvironment.get())
 					.withHostAndPort(host, port).build();
 		}
 
@@ -138,11 +137,10 @@ public class ClusterConnection implements ExtensionContext.Store.CloseableResour
 					.withEnv(testcontainersProperties).withStartupTimeout(Duration.ofMinutes(2)).withReuse(true);
 			elasticsearchContainer.start();
 
-			return ClusterConnectionInfo.builder() //
-					.withIntegrationtestEnvironment(integrationtestEnvironment)
+			return ClusterConnectionInfo.builder(integrationtestEnvironment)
 					.withHostAndPort(elasticsearchContainer.getHost(),
-							elasticsearchContainer.getMappedPort(ELASTICSEARCH_DEFAULT_PORT)) //
-					.withElasticsearchContainer(elasticsearchContainer) //
+							elasticsearchContainer.getMappedPort(ELASTICSEARCH_DEFAULT_PORT))
+					.withElasticsearchContainer(elasticsearchContainer)
 					.build();
 		} catch (Exception e) {
 			LOGGER.error("Could not start Elasticsearch container", e);

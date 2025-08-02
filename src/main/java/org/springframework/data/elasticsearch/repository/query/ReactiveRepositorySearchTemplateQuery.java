@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.query;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.query.BaseQuery;
 import org.springframework.data.elasticsearch.core.query.SearchTemplateQuery;
@@ -33,7 +34,7 @@ import org.springframework.util.Assert;
 public class ReactiveRepositorySearchTemplateQuery extends AbstractReactiveElasticsearchRepositoryQuery {
 
 	private String id;
-	private Map<String, Object> params;
+	private Map<String, Object> params = Map.of();
 
 	public ReactiveRepositorySearchTemplateQuery(ReactiveElasticsearchQueryMethod queryMethod,
 			ReactiveElasticsearchOperations elasticsearchOperations,

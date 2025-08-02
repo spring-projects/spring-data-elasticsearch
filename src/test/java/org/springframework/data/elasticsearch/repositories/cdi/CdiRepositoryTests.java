@@ -176,7 +176,7 @@ public class CdiRepositoryTests {
 		@Nullable
 		@Field(type = FieldType.Float) private Float price;
 		@Nullable private Integer popularity;
-		@Nullable private boolean available;
+		private boolean available;
 		@Nullable private String location;
 		@Nullable private Date lastModified;
 
@@ -293,11 +293,12 @@ public class CdiRepositoryTests {
 
 		@Id private String id;
 
-		private String name;
+		@Nullable private String name;
 
-		@Field(type = FieldType.Nested) private List<Car> car;
+		@Field(type = FieldType.Nested)
+		@Nullable private List<Car> car;
 
-		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
+		@Field(type = FieldType.Nested, includeInParent = true) private @Nullable List<Book> books;
 
 	}
 

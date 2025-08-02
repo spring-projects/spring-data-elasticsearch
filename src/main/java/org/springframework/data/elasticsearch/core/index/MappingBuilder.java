@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
@@ -273,7 +274,7 @@ public class MappingBuilder {
 			writeTypeHintMapping(propertiesNode);
 
 			if (entity != null) {
-				entity.doWithProperties((PropertyHandler<ElasticsearchPersistentProperty>) property -> {
+				entity.doWithProperties((PropertyHandler<@NonNull ElasticsearchPersistentProperty>) property -> {
 					try {
 						if (property.isAnnotationPresent(Transient.class) || isInIgnoreFields(property, parentFieldAnnotation)) {
 							return;

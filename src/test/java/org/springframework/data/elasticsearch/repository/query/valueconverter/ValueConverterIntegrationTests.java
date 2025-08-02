@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.query.valueconverter;
 
 import static org.assertj.core.api.Assertions.*;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -121,12 +122,12 @@ abstract class ValueConverterIntegrationTests {
 		public static final String PREFIX = "text-";
 
 		@Override
-		public Object write(Object value) {
+		public Object write(@NonNull Object value) {
 			return PREFIX + value.toString();
 		}
 
 		@Override
-		public Object read(Object value) {
+		public Object read(@NonNull Object value) {
 
 			String valueString = value.toString();
 

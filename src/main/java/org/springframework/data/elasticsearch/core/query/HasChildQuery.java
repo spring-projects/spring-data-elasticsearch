@@ -121,7 +121,7 @@ public class HasChildQuery {
 
 	public static final class Builder {
 		private final String type;
-		private Query query;
+		@Nullable private Query query;
 
 		@Nullable private Boolean ignoreUnmapped;
 

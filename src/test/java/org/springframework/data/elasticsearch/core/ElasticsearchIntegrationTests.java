@@ -3900,10 +3900,10 @@ public abstract class ElasticsearchIntegrationTests {
 		@Field(type = Text, store = true, fielddata = true) private String type;
 		@Nullable
 		@Field(type = Text, store = true, fielddata = true) private String message;
-		@Nullable private int rate;
+		private int rate;
 		@Nullable
 		@ScriptedField private Double scriptedRate;
-		@Nullable private boolean available;
+		private boolean available;
 		@Nullable private GeoPoint location;
 		@Nullable
 		@Version private Long version;
@@ -3918,7 +3918,7 @@ public abstract class ElasticsearchIntegrationTests {
 			@Nullable private String type;
 			@Nullable private String message;
 			@Nullable private Long version;
-			@Nullable private int rate;
+			private int rate;
 			@Nullable private GeoPoint location;
 
 			public Builder id(String id) {
@@ -4115,10 +4115,10 @@ public abstract class ElasticsearchIntegrationTests {
 		@Nullable private String type;
 		@Nullable
 		@Field(type = FieldType.Text, fielddata = true) private String message;
-		@Nullable private int rate;
+		private int rate;
 		@Nullable
 		@ScriptedField private Long scriptedRate;
-		@Nullable private boolean available;
+		private boolean available;
 		@Nullable private GeoPoint location;
 		@Nullable
 		@Version private Long version;
@@ -4806,8 +4806,7 @@ public abstract class ElasticsearchIntegrationTests {
 	@Document(indexName = "#{@indexNameProvider.indexName()}-immutable-scripted")
 	public static final class ImmutableWithScriptedEntity {
 		@Id private final String id;
-		@Field(type = Integer)
-		@Nullable private final int rate;
+		@Field(type = Integer) private final int rate;
 		@Nullable
 		@ScriptedField private final Double scriptedRate;
 
@@ -4863,9 +4862,11 @@ public abstract class ElasticsearchIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}-readonly-id")
 	static class ReadonlyIdEntity {
-		@Field(type = FieldType.Keyword) private String part1;
+		@Field(type = FieldType.Keyword)
+		@Nullable private String part1;
 
-		@Field(type = FieldType.Keyword) private String part2;
+		@Field(type = FieldType.Keyword)
+		@Nullable private String part2;
 
 		@Id
 		@WriteOnlyProperty
@@ -4874,7 +4875,7 @@ public abstract class ElasticsearchIntegrationTests {
 			return part1 + '-' + part2;
 		}
 
-		public String getPart1() {
+		public @Nullable String getPart1() {
 			return part1;
 		}
 
@@ -4882,7 +4883,7 @@ public abstract class ElasticsearchIntegrationTests {
 			this.part1 = part1;
 		}
 
-		public String getPart2() {
+		public @Nullable String getPart2() {
 			return part2;
 		}
 
@@ -5006,9 +5007,11 @@ public abstract class ElasticsearchIntegrationTests {
 	private static class RootEntity {
 		@Id private String id;
 
-		@Field(type = FieldType.Object) private Child child;
+		@Field(type = FieldType.Object)
+		@Nullable private Child child;
 
-		@Field(type = FieldType.Object) private Parent parent;
+		@Field(type = FieldType.Object)
+		@Nullable private Parent parent;
 
 		@JoinTypeRelations(relations = {
 				@JoinTypeRelation(parent = "parent", children = { "child" })
@@ -5030,7 +5033,7 @@ public abstract class ElasticsearchIntegrationTests {
 			this.id = id;
 		}
 
-		public Child getChild() {
+		public @Nullable Child getChild() {
 			return child;
 		}
 
@@ -5038,7 +5041,7 @@ public abstract class ElasticsearchIntegrationTests {
 			this.child = child;
 		}
 
-		public Parent getParent() {
+		public @Nullable Parent getParent() {
 			return parent;
 		}
 

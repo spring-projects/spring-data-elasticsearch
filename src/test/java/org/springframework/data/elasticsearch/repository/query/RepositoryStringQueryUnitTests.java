@@ -510,7 +510,7 @@ public class RepositoryStringQueryUnitTests extends RepositoryStringQueryUnitTes
 	@Document(indexName = "test-index-person-query-unittest")
 	static class Person {
 
-		@Nullable public int age;
+		public int age;
 		@Nullable
 		@Id private String id;
 		@Nullable private String name;
@@ -519,7 +519,6 @@ public class RepositoryStringQueryUnitTests extends RepositoryStringQueryUnitTes
 		@Nullable
 		@Field(type = FieldType.Nested, includeInParent = true) private List<Book> books;
 
-		@Nullable
 		public int getAge() {
 			return age;
 		}

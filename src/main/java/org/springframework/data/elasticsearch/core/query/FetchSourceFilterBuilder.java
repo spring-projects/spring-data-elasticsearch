@@ -26,8 +26,8 @@ import org.jspecify.annotations.Nullable;
 public class FetchSourceFilterBuilder {
 
 	@Nullable private Boolean fetchSource;
-	@Nullable private String[] includes;
-	@Nullable private String[] excludes;
+	private String @Nullable [] includes;
+	private String @Nullable [] excludes;
 
 	public FetchSourceFilterBuilder withIncludes(String... includes) {
 		this.includes = includes;

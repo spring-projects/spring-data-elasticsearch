@@ -47,13 +47,14 @@ public class QueryByExampleElasticsearchExecutor<T> implements QueryByExampleExe
 
 	@Override
 	public <S extends T> Optional<S> findOne(Example<S> example) {
-		CriteriaQuery criteriaQuery = CriteriaQuery.builder(exampleCriteriaMapper.criteria(example)).withMaxResults(2).build();
+		CriteriaQuery criteriaQuery = CriteriaQuery.builder(exampleCriteriaMapper.criteria(example)).withMaxResults(2)
+				.build();
 		SearchHits<S> searchHits = operations.search(criteriaQuery, example.getProbeType(),
 				operations.getIndexCoordinatesFor(example.getProbeType()));
 		if (searchHits.getTotalHits() > 1) {
 			throw new org.springframework.dao.IncorrectResultSizeDataAccessException(1);
 		}
-		return Optional.ofNullable(searchHits).filter(SearchHits::hasSearchHits)
+		return Optional.of(searchHits).filter(SearchHits::hasSearchHits)
 				.map(result -> (List<S>) SearchHitSupport.unwrapSearchHits(result)).map(s -> s.get(0));
 	}
 

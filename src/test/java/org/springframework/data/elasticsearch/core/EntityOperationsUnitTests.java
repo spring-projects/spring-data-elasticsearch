@@ -245,7 +245,7 @@ class EntityOperationsUnitTests {
 		@IndexedIndexName
 		@Nullable private String indexName;
 
-		public String getId() {
+		public @Nullable String getId() {
 			return id;
 		}
 

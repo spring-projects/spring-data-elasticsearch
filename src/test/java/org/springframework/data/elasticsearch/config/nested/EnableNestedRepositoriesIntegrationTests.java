@@ -71,10 +71,10 @@ public abstract class EnableNestedRepositoriesIntegrationTests {
 		@Field(type = Text, store = true, fielddata = true) private String type;
 		@Nullable
 		@Field(type = Text, store = true, fielddata = true) private String message;
-		@Nullable private int rate;
+		private int rate;
 		@Nullable
 		@ScriptedField private Double scriptedRate;
-		@Nullable private boolean available;
+		private boolean available;
 		@Nullable private String highlightedMessage;
 		@Nullable private GeoPoint location;
 		@Nullable

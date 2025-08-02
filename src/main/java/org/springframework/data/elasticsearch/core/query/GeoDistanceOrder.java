@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.core.query;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 
@@ -92,7 +93,7 @@ public class GeoDistanceOrder extends Order {
 				getIgnoreUnmapped());
 	}
 
-	public GeoDistanceOrder with(Mode mode) {
+	public GeoDistanceOrder with(@Nullable Mode mode) {
 		return new GeoDistanceOrder(getProperty(), getGeoPoint(), getDirection(), getDistanceType(), mode, getUnit(),
 				getIgnoreUnmapped());
 	}

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -298,7 +299,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		return fieldNamePropertyCache.computeIfAbsent(fieldName, key -> {
 			AtomicReference<ElasticsearchPersistentProperty> propertyRef = new AtomicReference<>();
-			doWithProperties((PropertyHandler<ElasticsearchPersistentProperty>) property -> {
+			doWithProperties((PropertyHandler<@NonNull ElasticsearchPersistentProperty>) property -> {
 				if (key.equals(property.getFieldName())) {
 					propertyRef.set(property);
 				}
@@ -552,10 +553,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		short replicas;
 		@Nullable String refreshIntervall;
 		@Nullable String indexStoreType;
-		@Nullable private String[] sortFields;
-		private Setting.@Nullable SortOrder[] sortOrders;
-		private Setting.@Nullable SortMode[] sortModes;
-		private Setting.@Nullable SortMissing[] sortMissingValues;
+		private String @Nullable [] sortFields;
+		private Setting.@Nullable SortOrder @Nullable [] sortOrders;
+		private Setting.@Nullable SortMode @Nullable [] sortModes;
+		private Setting.@Nullable SortMissing @Nullable [] sortMissingValues;
 
 		Settings toSettings() {
 

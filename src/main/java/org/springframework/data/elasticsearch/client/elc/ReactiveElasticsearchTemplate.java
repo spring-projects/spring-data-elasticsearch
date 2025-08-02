@@ -25,6 +25,7 @@ import co.elastic.clients.elasticsearch.core.search.ResponseBody;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
+import org.jspecify.annotations.NonNull;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -162,7 +163,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		ExistsRequest existsRequest = requestConverter.documentExistsRequest(id, routingResolver.getRouting(), index);
 
 		return Mono.from(execute(
-				((ClientCallback<Publisher<BooleanResponse>>) client -> client.exists(existsRequest))))
+				((ClientCallback<@NonNull Publisher<BooleanResponse>>) client -> client.exists(existsRequest))))
 				.map(BooleanResponse::value) //
 				.onErrorReturn(NoSuchIndexException.class, false);
 	}

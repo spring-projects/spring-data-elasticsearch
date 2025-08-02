@@ -200,7 +200,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	/**
 	 * @since 5.1
 	 */
-	public Integer getReactiveBatchSize() {
+	public @Nullable Integer getReactiveBatchSize() {
 		return reactiveBatchSize;
 	}
 

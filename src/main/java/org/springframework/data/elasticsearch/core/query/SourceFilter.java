@@ -32,14 +32,14 @@ public interface SourceFilter {
 	/**
 	 * @return the name of the fields to include in a response.
 	 */
-	@Nullable
-	String[] getIncludes();
+
+	String@Nullable[] getIncludes();
 
 	/**
 	 * @return the names of the fields to exclude from a response.
 	 */
-	@Nullable
-	String[] getExcludes();
+
+	String@Nullable[] getExcludes();
 
 	/**
 	 * Flag to set the _source parameter in a query to true or false. If this is not null, the values returned from
