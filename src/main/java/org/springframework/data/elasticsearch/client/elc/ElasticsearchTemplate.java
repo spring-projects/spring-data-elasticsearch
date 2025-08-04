@@ -658,7 +658,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 			QueryResponse response = sqlClient.query(requestConverter.sqlQueryRequest(query));
 
 			return responseConverter.sqlResponse(response);
-		} catch (IOException e) {
+		} catch (Exception e) {
 			throw exceptionTranslator.translateException(e);
 		}
 	}

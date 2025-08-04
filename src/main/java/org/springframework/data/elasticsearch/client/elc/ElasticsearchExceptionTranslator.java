@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.elasticsearch.client.ResponseException;
+import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -33,6 +34,7 @@ import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.VersionConflictException;
+import org.springframework.util.ClassUtils;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Elasticsearch. Convert the given runtime exception to an
@@ -44,6 +46,9 @@ import org.springframework.data.elasticsearch.VersionConflictException;
  * @since 4.4
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
+
+	public static final boolean LEGACY_RESTCLIENT_PRESENT = ClassUtils
+			.isPresent("org.elasticsearch.client.ResponseException", ElasticsearchExceptionTranslator.class.getClassLoader());
 
 	private final JsonpMapper jsonpMapper;
 
@@ -68,7 +73,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 	}
 
 	@Override
-	public DataAccessException translateExceptionIfPossible(RuntimeException ex) {
+	public @Nullable DataAccessException translateExceptionIfPossible(RuntimeException ex) {
 
 		checkForConflictException(ex);
 
@@ -118,7 +123,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		Integer status = null;
 		String message = null;
 
-		if (exception instanceof ResponseException responseException) {
+		if (LEGACY_RESTCLIENT_PRESENT && exception instanceof ResponseException responseException) {
 			// this code is for the old RestClient
 			status = responseException.getResponse().getStatusLine().getStatusCode();
 			message = responseException.getMessage();
