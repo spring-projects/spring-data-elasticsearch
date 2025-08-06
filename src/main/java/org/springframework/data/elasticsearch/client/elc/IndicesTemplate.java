@@ -30,6 +30,7 @@ import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.annotations.Mapping;
 import org.springframework.data.elasticsearch.core.IndexInformation;
@@ -315,15 +316,20 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 	}
 
 	@Override
-	public TemplateData getTemplate(GetTemplateRequest getTemplateRequest) {
+	public @Nullable TemplateData getTemplate(GetTemplateRequest getTemplateRequest) {
 
 		Assert.notNull(getTemplateRequest, "getTemplateRequest must not be null");
 
 		co.elastic.clients.elasticsearch.indices.GetTemplateRequest getTemplateRequestES = requestConverter
 				.indicesGetTemplateRequest(getTemplateRequest);
-		GetTemplateResponse getTemplateResponse = execute(client -> client.getTemplate(getTemplateRequestES));
 
-		return responseConverter.indicesGetTemplateData(getTemplateResponse, getTemplateRequest.getTemplateName());
+		try {
+			GetTemplateResponse getTemplateResponse = execute(client -> client.getTemplate(getTemplateRequestES));
+			return responseConverter.indicesGetTemplateData(getTemplateResponse, getTemplateRequest.getTemplateName());
+		} catch (ResourceNotFoundException e) {
+			// since Elasticsearch 9.1.0 we get an exception (404) instead of an empty result
+			return null;
+		}
 	}
 
 	@Override

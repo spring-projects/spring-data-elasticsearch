@@ -21,6 +21,7 @@ import co.elastic.clients.elasticsearch._types.AcknowledgedResponseBase;
 import co.elastic.clients.elasticsearch.indices.*;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
+import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -389,7 +390,8 @@ public class ReactiveIndicesTemplate
 		co.elastic.clients.elasticsearch.indices.GetTemplateRequest getTemplateRequestES = requestConverter
 				.indicesGetTemplateRequest(getTemplateRequest);
 		Mono<GetTemplateResponse> getTemplateResponse = Mono
-				.from(execute(client -> client.getTemplate(getTemplateRequestES)));
+				.from(execute(client -> client.getTemplate(getTemplateRequestES)))
+                .onErrorComplete(ResourceNotFoundException.class);
 
 		return getTemplateResponse.flatMap(response -> {
 			if (response != null) {

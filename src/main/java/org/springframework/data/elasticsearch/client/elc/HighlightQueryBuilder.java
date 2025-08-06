@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
+import co.elastic.clients.util.NamedValue;
+
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -60,10 +62,11 @@ class HighlightQueryBuilder {
 
 		for (HighlightField highlightField : highlight.getFields()) {
 			String mappedName = mapFieldName(highlightField.getName(), type);
-			highlightBuilder.fields(mappedName, hf -> {
-				addParameters(highlightField.getParameters(), hf, type);
-				return hf;
-			});
+			highlightBuilder.fields(
+					NamedValue.of(mappedName, co.elastic.clients.elasticsearch.core.search.HighlightField.of(hf -> {
+						addParameters(highlightField.getParameters(), hf, type);
+						return hf;
+					})));
 		}
 
 		return highlightBuilder.build();
