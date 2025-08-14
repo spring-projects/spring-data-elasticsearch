@@ -376,7 +376,7 @@ So calling the method with a `List` of `["id1", "id2", "id3"]` would produce the
 
 .Declare query on the method using the `@Query` annotation with SpEL expression.
 ====
-https://docs.spring.io/spring-framework/reference/core/expressions.html[SpEL expression] is also supported when defining query in `@Query`.
+{spring-framework-docs}/core/expressions.html[SpEL expression] is also supported when defining query in `@Query`.
 
 [source,java]
 ----
@@ -453,7 +453,7 @@ We can pass `new QueryParameter("John")` as the parameter now, and it will produ
 
 .accessing bean property.
 ====
-https://docs.spring.io/spring-framework/reference/core/expressions/language-ref/bean-references.html[Bean property] is also supported to access.
+{spring-framework-docs}/core/expressions/language-ref/bean-references.html[Bean property] is also supported to access.
 Given that there is a bean named `queryParameter` of type `QueryParameter`, we can access the bean with symbol `@` rather than `#`, and there is no need to declare a parameter of type `QueryParameter` in the query method:
 
 [source,java]
@@ -523,7 +523,7 @@ A collection of `names` like `List.of("name1", "name2")` will produce the follow
 
 .access property in the `Collection` param.
 ====
-https://docs.spring.io/spring-framework/reference/core/expressions/language-ref/collection-projection.html[SpEL Collection Projection] is convenient to use when values in the `Collection` parameter is not plain `String`:
+{spring-framework-docs}/core/expressions/language-ref/collection-projection.html[SpEL Collection Projection] is convenient to use when values in the `Collection` parameter is not plain `String`:
 
 [source,java]
 ----
