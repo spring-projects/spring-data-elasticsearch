@@ -450,11 +450,23 @@ ClientConfiguration.builder()
 == Client Logging
 
 To see what is actually sent to and received from the server `Request` / `Response` logging on the transport level needs to be turned on as outlined in the snippet below.
-This can be enabled in the Elasticsearch client by setting the level of the `tracer` package to "trace" (see
-https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/java-rest-low-usage-logging.html)
+This can be enabled in the Elasticsearch client by setting the level of the `co.elastic.clients.transport.rest5_client.low_level.Request` package to "trace" (see
+https://www.elastic.co/docs/reference/elasticsearch/clients/java/transport/rest5-client/usage/logging)
 
-.Enable transport layer logging
+.Enable transport layer logging 
+(XML)
 [source,xml]
 ----
-<logger name="tracer" level="trace"/>
+<logger name="co.elastic.clients.transport.rest5_client.low_level.Request" level="trace"/>
+----
+(yml)
+[source,yml]
+----
+logging.level:
+  co.elastic.clients.transport.rest5_client.low_level.Request: trace
+----
+(ini)
+[source,ini]
+----
+logging.level.co.elastic.clients.transport.rest5_client.low_level.Request=trace
 ----
