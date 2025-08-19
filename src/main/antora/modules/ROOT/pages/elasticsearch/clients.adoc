@@ -454,19 +454,27 @@ This can be enabled in the Elasticsearch client by setting the level of the `co.
 https://www.elastic.co/docs/reference/elasticsearch/clients/java/transport/rest5-client/usage/logging)
 
 .Enable transport layer logging 
-(XML)
+[tabs]
+======
+XML::
++
 [source,xml]
 ----
 <logger name="co.elastic.clients.transport.rest5_client.low_level.Request" level="trace"/>
 ----
-(yml)
+
+yml::
++
 [source,yml]
 ----
 logging.level:
   co.elastic.clients.transport.rest5_client.low_level.Request: trace
 ----
-(ini)
+
+ini::
++
 [source,ini]
 ----
 logging.level.co.elastic.clients.transport.rest5_client.low_level.Request=trace
 ----
+=====
