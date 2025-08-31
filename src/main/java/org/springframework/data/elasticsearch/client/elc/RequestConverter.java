@@ -1036,18 +1036,7 @@ class RequestConverter extends AbstractQueryProcessor {
 				List<SortOptions> sortOptions = getSortOptions(query.getSort(), persistentEntity);
 
 				if (!sortOptions.isEmpty()) {
-					dqb.sort(
-							sortOptions.stream()
-									.map(sortOption -> {
-										String order = "asc";
-										var sortField = sortOption.field();
-										if (sortField.order() != null) {
-											order = sortField.order().jsonValue();
-										}
-
-										return sortField.field() + ':' + order;
-									})
-									.collect(Collectors.toList()));
+					dqb.sort(sortOptions);
 				}
 			}
 			if (query.getRefresh() != null) {
