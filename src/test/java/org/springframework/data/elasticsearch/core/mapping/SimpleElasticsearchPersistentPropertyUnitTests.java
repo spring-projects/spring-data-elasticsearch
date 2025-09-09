@@ -190,7 +190,7 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 	void shouldRequirePatternForCustomDateFormat() {
 		assertThatExceptionOfType(MappingException.class) //
 				.isThrownBy(() -> context.getRequiredPersistentEntity(DateFieldWithCustomFormatAndNoPattern.class)) //
-				.withMessageContaining("pattern");
+				.havingRootCause().withMessageContaining("pattern");
 	}
 
 	@Test // #1565
