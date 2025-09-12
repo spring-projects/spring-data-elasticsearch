@@ -42,6 +42,15 @@
 
 	<developers>
 		<developer>
+			<id>sothawo</id>
+			<name>Peter-Josef Meisch</name>
+			<email>pj.meisch at sothawo.com</email>
+			<roles>
+				<role>Project Lead</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+		<developer>
 			<id>biomedcentral</id>
 			<name>BioMed Central Development Team</name>
 			<timezone>+0</timezone>
@@ -76,11 +85,6 @@
 		<developerConnection>scm:git:ssh://git@github.com/spring-projects/spring-data-elasticsearch.git
 		</developerConnection>
 	</scm>
-
-	<ciManagement>
-		<system>Bamboo</system>
-		<url>https://build.spring.io/browse/SPRINGDATAES</url>
-	</ciManagement>
 
 	<issueManagement>
 		<system>GitHub</system>
