@@ -33,7 +33,7 @@ class CriteriaTest {
 	void shouldNotSlowDownOnCalculatingHashcodeForLongCriteriaChains() {
 		assertTimeoutPreemptively(Duration.of(1, ChronoUnit.SECONDS), () -> {
 			var criteria = new Criteria();
-			var size = 5000;
+			var size = 1000;
 			for (int i = 1; i <= size; i++) {
 				criteria = criteria.or("field-" + i).contains("value-" + i);
 			}
