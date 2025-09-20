@@ -448,7 +448,7 @@ public class CriteriaQueryMappingUnitTests {
 	}
 
 	// the following test failed because of a wrong implementation in Criteria
-	// equals and hscode methods.
+	// equals and hashcode methods.
 	@Test // #3083
 	@DisplayName("should map correct subcriteria")
 	void shouldMapCorrectSubcriteria() throws JSONException {
