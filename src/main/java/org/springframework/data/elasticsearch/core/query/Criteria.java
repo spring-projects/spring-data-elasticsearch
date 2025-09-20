@@ -61,12 +61,16 @@ public class Criteria {
 	private float boost = Float.NaN;
 	private boolean negating = false;
 
-	private final CriteriaChain criteriaChain = new CriteriaChain();
-	private final Set<CriteriaEntry> queryCriteriaEntries = new LinkedHashSet<>();
-	private final Set<CriteriaEntry> filterCriteriaEntries = new LinkedHashSet<>();
-	private final Set<Criteria> subCriteria = new LinkedHashSet<>();
+    // we cash this and recalculate when properties used in equals change
+    // see https://github.com/spring-projects/spring-data-elasticsearch/issues/3083
+    private int hashCode;
 
-	// region criteria creation
+    private final CriteriaChain criteriaChain = new CriteriaChain();
+    private final Set<CriteriaEntry> queryCriteriaEntries = new LinkedHashSet<>();
+    private final Set<CriteriaEntry> filterCriteriaEntries = new LinkedHashSet<>();
+    private final Set<Criteria> subCriteria = new LinkedHashSet<>();
+
+    // region criteria creation
 
 	/**
 	 * @return factory method to create an and-Criteria that is not bound to a field
@@ -84,7 +88,9 @@ public class Criteria {
 		return new OrCriteria();
 	}
 
-	public Criteria() {}
+	public Criteria() {
+        recalculateHashCode();
+    }
 
 	/**
 	 * Creates a new Criteria with provided field name
@@ -107,6 +113,7 @@ public class Criteria {
 
 		this.field = field;
 		this.criteriaChain.add(this);
+        recalculateHashCode();
 	}
 
 	/**
@@ -136,6 +143,7 @@ public class Criteria {
 		this.field = field;
 		this.criteriaChain.addAll(criteriaChain);
 		this.criteriaChain.add(this);
+        recalculateHashCode();
 	}
 
 	/**
@@ -189,6 +197,7 @@ public class Criteria {
 	 */
 	public Criteria not() {
 		this.negating = true;
+        recalculateHashCode();
 		return this;
 	}
 
@@ -207,6 +216,7 @@ public class Criteria {
 		Assert.isTrue(boost >= 0, "boost must not be negative");
 
 		this.boost = boost;
+        recalculateHashCode();
 		return this;
 	}
 
@@ -223,7 +233,7 @@ public class Criteria {
 	}
 
 	/**
-	 * @return the set ob subCriteria
+	 * @return the set of subCriteria
 	 * @since 4.1
 	 */
 	public Set<Criteria> getSubCriteria() {
@@ -264,6 +274,7 @@ public class Criteria {
 		Assert.notNull(criteria, "Cannot chain 'null' criteria.");
 
 		this.criteriaChain.add(criteria);
+        recalculateHashCode();
 		return this;
 	}
 
@@ -278,6 +289,7 @@ public class Criteria {
 		Assert.notNull(criterias, "Cannot chain 'null' criterias.");
 
 		this.criteriaChain.addAll(Arrays.asList(criterias));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -320,6 +332,7 @@ public class Criteria {
 		orCriteria.subCriteria.addAll(criteria.subCriteria);
 		orCriteria.boost = criteria.boost;
 		orCriteria.negating = criteria.isNegating();
+        orCriteria.recalculateHashCode();
 		return orCriteria;
 	}
 
@@ -335,6 +348,7 @@ public class Criteria {
 		Assert.notNull(criteria, "criteria must not be null");
 
 		subCriteria.add(criteria);
+        recalculateHashCode();
 		return this;
 	}
 
@@ -349,6 +363,7 @@ public class Criteria {
 	 */
 	public Criteria is(Object o) {
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.EQUALS, o));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -360,6 +375,7 @@ public class Criteria {
 	 */
 	public Criteria exists() {
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.EXISTS));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -378,6 +394,7 @@ public class Criteria {
 		}
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.BETWEEN, new Object[] { lowerBound, upperBound }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -393,6 +410,7 @@ public class Criteria {
 
 		assertNoBlankInWildcardQuery(s, false, true);
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.STARTS_WITH, s));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -409,6 +427,7 @@ public class Criteria {
 
 		assertNoBlankInWildcardQuery(s, true, true);
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.CONTAINS, s));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -425,6 +444,7 @@ public class Criteria {
 
 		assertNoBlankInWildcardQuery(s, true, false);
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.ENDS_WITH, s));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -452,6 +472,7 @@ public class Criteria {
 		Assert.notNull(values, "Collection of 'in' values must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.IN, values));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -478,6 +499,7 @@ public class Criteria {
 		Assert.notNull(values, "Collection of 'NotIn' values must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.NOT_IN, values));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -490,6 +512,7 @@ public class Criteria {
 	 */
 	public Criteria expression(String s) {
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.EXPRESSION, s));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -501,6 +524,7 @@ public class Criteria {
 	 */
 	public Criteria fuzzy(String s) {
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.FUZZY, s));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -515,6 +539,7 @@ public class Criteria {
 		Assert.notNull(upperBound, "upperBound must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.LESS_EQUAL, upperBound));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -529,6 +554,7 @@ public class Criteria {
 		Assert.notNull(upperBound, "upperBound must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.LESS, upperBound));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -543,6 +569,7 @@ public class Criteria {
 		Assert.notNull(lowerBound, "lowerBound must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.GREATER_EQUAL, lowerBound));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -557,6 +584,7 @@ public class Criteria {
 		Assert.notNull(lowerBound, "lowerBound must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.GREATER, lowerBound));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -573,6 +601,7 @@ public class Criteria {
 		Assert.notNull(value, "value must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.MATCHES, value));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -589,6 +618,7 @@ public class Criteria {
 		Assert.notNull(value, "value must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.MATCHES_ALL, value));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -601,6 +631,7 @@ public class Criteria {
 	public Criteria empty() {
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.EMPTY));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -613,6 +644,7 @@ public class Criteria {
 	public Criteria notEmpty() {
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.NOT_EMPTY));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -628,6 +660,7 @@ public class Criteria {
 		Assert.notNull(value, "value must not be null");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.REGEXP, value));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -646,6 +679,7 @@ public class Criteria {
 		Assert.notNull(boundingBox, "boundingBox value for boundedBy criteria must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { boundingBox }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -662,6 +696,7 @@ public class Criteria {
 
 		filterCriteriaEntries
 				.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { boundingBox.getFirst(), boundingBox.getSecond() }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -679,6 +714,7 @@ public class Criteria {
 
 		filterCriteriaEntries
 				.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { topLeftGeohash, bottomRightGeohash }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -695,6 +731,7 @@ public class Criteria {
 		Assert.notNull(bottomRightPoint, "bottomRightPoint must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.BBOX, new Object[] { topLeftPoint, bottomRightPoint }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -712,6 +749,7 @@ public class Criteria {
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.BBOX,
 				new Object[] { GeoPoint.fromPoint(topLeftPoint), GeoPoint.fromPoint(bottomRightPoint) }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -729,6 +767,7 @@ public class Criteria {
 		Assert.notNull(location, "Distance value for near criteria must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.WITHIN, new Object[] { location, distance }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -745,6 +784,7 @@ public class Criteria {
 		Assert.notNull(location, "Distance value for near criteria must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.WITHIN, new Object[] { location, distance }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -761,6 +801,7 @@ public class Criteria {
 		Assert.isTrue(StringUtils.hasLength(geoLocation), "geoLocation value must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.WITHIN, new Object[] { geoLocation, distance }));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -775,6 +816,7 @@ public class Criteria {
 		Assert.notNull(geoShape, "geoShape must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_INTERSECTS, geoShape));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -789,6 +831,7 @@ public class Criteria {
 		Assert.notNull(geoShape, "geoShape must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_IS_DISJOINT, geoShape));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -802,6 +845,7 @@ public class Criteria {
 		Assert.notNull(geoShape, "geoShape must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_WITHIN, geoShape));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -815,6 +859,7 @@ public class Criteria {
 		Assert.notNull(geoShape, "geoShape must not be null");
 
 		filterCriteriaEntries.add(new CriteriaEntry(OperationKey.GEO_CONTAINS, geoShape));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -828,6 +873,7 @@ public class Criteria {
 		Assert.notNull(query, "has_child query must not be null.");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.HAS_CHILD, query));
+        recalculateHashCode();
 		return this;
 	}
 
@@ -841,6 +887,7 @@ public class Criteria {
 		Assert.notNull(query, "has_parent query must not be null.");
 
 		queryCriteriaEntries.add(new CriteriaEntry(OperationKey.HAS_PARENT, query));
+        recalculateHashCode();
 		return this;
 	}
 	// endregion
@@ -887,18 +934,22 @@ public class Criteria {
 
 	@Override
 	public int hashCode() {
-		int result = field != null ? field.hashCode() : 0;
-		result = 31 * result + (boost != +0.0f ? Float.floatToIntBits(boost) : 0);
-		result = 31 * result + (negating ? 1 : 0);
-		// the criteriaChain contains "this" object, so we need to filter it out
-		// to avoid a stackoverflow here, because the hashcode implementation
-		// uses the element's hashcodes
-		result = 31 * result + criteriaChain.filter(this).hashCode();
-		result = 31 * result + queryCriteriaEntries.hashCode();
-		result = 31 * result + filterCriteriaEntries.hashCode();
-		result = 31 * result + subCriteria.hashCode();
-		return result;
+		return hashCode;
 	}
+
+    private void recalculateHashCode() {
+        int result = field != null ? field.hashCode() : 0;
+        result = 31 * result + (boost != +0.0f ? Float.floatToIntBits(boost) : 0);
+        result = 31 * result + (negating ? 1 : 0);
+        // the criteriaChain contains "this" object, so we need to filter it out
+        // to avoid a stackoverflow here, because the hashcode implementation
+        // uses the element's hashcodes
+        result = 31 * result + criteriaChain.filter(this).hashCode();
+        result = 31 * result + queryCriteriaEntries.hashCode();
+        result = 31 * result + filterCriteriaEntries.hashCode();
+        result = 31 * result + subCriteria.hashCode();
+        this.hashCode = result;
+    }
 	// endregion
 
 	@Override
