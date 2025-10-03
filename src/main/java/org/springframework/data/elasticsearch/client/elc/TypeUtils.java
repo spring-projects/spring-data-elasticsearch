@@ -435,7 +435,7 @@ final class TypeUtils {
 		// values taken from the RHLC implementation
 		if (value == null) {
 			return -2;
-		} else if ("all".equals(value.toUpperCase())) {
+		} else if ("all".equals(value.toLowerCase())) {
 			return -1;
 		} else {
 			try {
