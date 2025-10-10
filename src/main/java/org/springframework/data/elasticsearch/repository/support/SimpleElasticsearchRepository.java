@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -345,7 +344,6 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		deleteAllById(getEntityIds(entities), refreshPolicy);
 	}
 
-	@NotNull
 	private List<ID> getEntityIds(Iterable<? extends T> entities) {
 		Assert.notNull(entities, "Cannot delete 'null' list.");
 

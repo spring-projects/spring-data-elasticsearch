@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -62,7 +62,16 @@ import org.springframework.data.mapping.Parameter;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.*;
+import org.springframework.data.mapping.model.CachingValueExpressionEvaluatorFactory;
+import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
+import org.springframework.data.mapping.model.EntityInstantiator;
+import org.springframework.data.mapping.model.EntityInstantiators;
+import org.springframework.data.mapping.model.ParameterValueProvider;
+import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
+import org.springframework.data.mapping.model.PropertyValueProvider;
+import org.springframework.data.mapping.model.SpELContext;
+import org.springframework.data.mapping.model.ValueExpressionEvaluator;
+import org.springframework.data.mapping.model.ValueExpressionParameterValueProvider;
 import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.format.datetime.DateFormatterRegistrar;
@@ -1339,7 +1348,6 @@ public class MappingElasticsearchConverter
 				.collect(Collectors.toList());
 	}
 
-	@NotNull
 	private String propertyToFieldName(ElasticsearchPersistentEntity<?> persistentEntity, String propertyName) {
 		ElasticsearchPersistentProperty persistentProperty = persistentEntity.getPersistentProperty(propertyName);
 		return persistentProperty != null ? persistentProperty.getFieldName() : propertyName;

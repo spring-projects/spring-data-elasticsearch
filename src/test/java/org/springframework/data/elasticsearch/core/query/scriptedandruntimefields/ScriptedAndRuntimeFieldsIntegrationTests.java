@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -307,7 +306,6 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 	 * build a {@link org.springframework.data.elasticsearch.core.query.ScriptedField} to return the product of the
 	 * document's value property and the given factor
 	 */
-	@NotNull
 	private static org.springframework.data.elasticsearch.core.query.ScriptedField buildScriptedField(String fieldName,
 			int factor) {
 		return org.springframework.data.elasticsearch.core.query.ScriptedField.of(
@@ -320,7 +318,6 @@ public abstract class ScriptedAndRuntimeFieldsIntegrationTests {
 	/**
 	 * build a {@link RuntimeField} to return the product of the document's value property and the given factor
 	 */
-	@NotNull
 	private static RuntimeField buildRuntimeField(String fieldName, int factor) {
 		return new RuntimeField(
 				fieldName,

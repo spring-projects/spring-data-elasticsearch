@@ -24,7 +24,6 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -158,7 +157,6 @@ public abstract class ReactiveScriptedAndRuntimeFieldsIntegrationTests {
 		assertThat(foundEntity.getScriptedValue2()).isEqualTo(9);
 	}
 
-	@NotNull
 	private static org.springframework.data.elasticsearch.core.query.ScriptedField getScriptedField(String fieldName,
 			int factor) {
 		return org.springframework.data.elasticsearch.core.query.ScriptedField.of(
@@ -214,7 +212,6 @@ public abstract class ReactiveScriptedAndRuntimeFieldsIntegrationTests {
 		assertThat(foundEntity.getScriptedValue2()).isEqualTo(12);
 	}
 
-	@NotNull
 	private static RuntimeField getRuntimeField(String fieldName, int factor) {
 		return new RuntimeField(
 				fieldName,

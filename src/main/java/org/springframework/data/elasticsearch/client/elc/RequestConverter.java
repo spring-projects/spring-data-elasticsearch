@@ -48,7 +48,6 @@ import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SearchRequestBody;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
-import co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.elasticsearch.sql.query.SqlFormat;
@@ -77,14 +76,16 @@ import java.util.stream.Stream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.*;
+import org.springframework.data.elasticsearch.core.index.AliasAction;
+import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
+import org.springframework.data.elasticsearch.core.index.AliasActions;
 import org.springframework.data.elasticsearch.core.index.DeleteIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
@@ -310,7 +311,6 @@ class RequestConverter extends AbstractQueryProcessor {
 		return updateAliasRequestBuilder.build();
 	}
 
-	@NotNull
 	private Action.Builder getBuilder(AliasAction aliasAction) {
 		Action.Builder actionBuilder = new Action.Builder();
 
@@ -1897,7 +1897,6 @@ class RequestConverter extends AbstractQueryProcessor {
 		});
 	}
 
-	@NotNull
 	private Map<String, JsonData> getTemplateParams(Set<Map.Entry<String, Object>> query) {
 		Function<Map.Entry<String, Object>, String> keyMapper = Map.Entry::getKey;
 		Function<Map.Entry<String, Object>, JsonData> valueMapper = entry -> JsonData.of(entry.getValue(), jsonpMapper);

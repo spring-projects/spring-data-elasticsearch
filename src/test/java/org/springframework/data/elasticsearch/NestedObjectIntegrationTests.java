@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -134,7 +133,7 @@ public abstract class NestedObjectIntegrationTests {
 		assertThat(persons).hasSize(1);
 	}
 
-	@NotNull
+
 	abstract protected Query getNestedQuery1();
 
 	@Test
@@ -189,7 +188,7 @@ public abstract class NestedObjectIntegrationTests {
 		assertThat(personIndexed.getSearchHit(0).getContent().getId()).isEqualTo("1");
 	}
 
-	@NotNull
+
 	abstract protected Query getNestedQuery2();
 
 	private List<IndexQuery> createPerson() {
@@ -329,7 +328,7 @@ public abstract class NestedObjectIntegrationTests {
 		return foo;
 	}
 
-	@NotNull
+
 	abstract protected Query getNestedQuery3();
 
 	@Test // DATAES-73
@@ -413,7 +412,7 @@ public abstract class NestedObjectIntegrationTests {
 		assertThat(nullResults.getSearchHits()).hasSize(1);
 	}
 
-	@NotNull
+
 	abstract protected Query getNestedQuery4();
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}-book")

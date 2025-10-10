@@ -27,7 +27,8 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.util.function.Function;
 
-import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.Nullable;
+
 
 /**
  * Reactive version of {@link co.elastic.clients.elasticsearch.sql.ElasticsearchSqlClient}.
