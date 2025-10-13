@@ -144,6 +144,84 @@ final class DocumentAdapters {
                 documentFields, highlightFields, innerHits, nestedMetaData, explanation, matchedQueries, hit.routing());
     }
 
+    /**
+     * Creates a {@link SearchDocument} from a {@link Hit} returned by the Elasticsearch client.
+     *
+     * @param hit         the hit object
+     * @param jsonpMapper to map JsonData objects
+     * @return the created {@link SearchDocument}
+     */
+    public static SearchDocument fromOptimized(Hit<?> hit, JsonpMapper jsonpMapper) {
+
+        Assert.notNull(hit, "hit must not be null");
+
+        Map<String, List<String>> highlightFields = hit.highlight();
+
+        Map<String, SearchDocumentResponse> innerHits = hit.innerHits().entrySet().parallelStream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> SearchDocumentResponseBuilder.from(
+                                entry.getValue().hits(), null, null, null, 0, null, null,
+                                searchDocument -> null, jsonpMapper
+                        ),
+                        (a, b) -> b,
+                        LinkedHashMap::new
+                ));
+
+        NestedMetaData nestedMetaData = from(hit.nested());
+        Explanation explanation = from(hit.explanation());
+
+        Map<String, Double> matchedQueries = hit.matchedQueries();
+
+        EntityAsMap hitFieldsAsMap = new EntityAsMap();
+        if (!hit.fields().isEmpty()) {
+            Map<String, Object> fieldMap = new LinkedHashMap<>();
+            hit.fields().forEach((key, jsonData) -> {
+                var value = jsonData.to(Object.class);
+                fieldMap.put(key, value);
+            });
+            hitFieldsAsMap.putAll(fieldMap);
+        }
+
+        Map<String, List<Object>> documentFields = hitFieldsAsMap.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue() instanceof List
+                                ? (List<Object>) entry.getValue()
+                                : Collections.singletonList(entry.getValue()),
+                        (a, b) -> b,
+                        LinkedHashMap::new
+                ));
+
+        Document document;
+        Object source = hit.source();
+        if (source == null) {
+            document = Document.from(hitFieldsAsMap);
+        } else if (source instanceof EntityAsMap entityAsMap) {
+            document = Document.from(entityAsMap);
+        } else if (source instanceof JsonData jsonData) {
+            document = Document.from(jsonData.to(EntityAsMap.class));
+        } else {
+            if (LOGGER.isWarnEnabled()) {
+                LOGGER.warn(String.format("Cannot map from type " + source.getClass().getName()));
+            }
+            document = Document.create();
+        }
+        document.setIndex(hit.index());
+        document.setId(hit.id());
+        if (hit.version() != null) {
+            document.setVersion(hit.version());
+        }
+        document.setSeqNo(hit.seqNo() != null && hit.seqNo() >= 0 ? hit.seqNo() : -2);
+        document.setPrimaryTerm(hit.primaryTerm() != null && hit.primaryTerm() > 0 ? hit.primaryTerm() : 0);
+
+        float score = hit.score() != null ? hit.score().floatValue() : Float.NaN;
+        return new SearchDocumentAdapter(
+                document, score, hit.sort().stream().map(TypeUtils::toObject).toArray(),
+                documentFields, highlightFields, innerHits, nestedMetaData, explanation, matchedQueries, hit.routing()
+        );
+    }
+
     public static SearchDocument from(CompletionSuggestOption<EntityAsMap> completionSuggestOption) {
 
         Document document = completionSuggestOption.source() != null ? Document.from(completionSuggestOption.source())
