@@ -66,7 +66,8 @@ final class DocumentAdapters {
      * @param jsonpMapper to map JsonData objects
      * @return the created {@link SearchDocument}
      */
-    public static SearchDocument from(Hit<?> hit, JsonpMapper jsonpMapper) {
+    @Deprecated
+    public static SearchDocument fromLegacy(Hit<?> hit, JsonpMapper jsonpMapper) {
 
         Assert.notNull(hit, "hit must not be null");
 
@@ -151,7 +152,7 @@ final class DocumentAdapters {
      * @param jsonpMapper to map JsonData objects
      * @return the created {@link SearchDocument}
      */
-    public static SearchDocument fromOptimized(Hit<?> hit, JsonpMapper jsonpMapper) {
+    public static SearchDocument from(Hit<?> hit, JsonpMapper jsonpMapper) {
 
         Assert.notNull(hit, "hit must not be null");
 

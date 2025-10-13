@@ -37,22 +37,22 @@ class DocumentAdaptersBenchmark {
         mockHits = generateMockHits(100);
     }
 
+    public Object fromLegacy() {
+        return mockHits.stream()
+                .map(hit -> DocumentAdapters.fromLegacy(hit, jsonpMapper))
+                .collect(Collectors.toList());
+    }
+
     public Object from() {
         return mockHits.stream()
                 .map(hit -> DocumentAdapters.from(hit, jsonpMapper))
                 .collect(Collectors.toList());
     }
 
-    public Object fromOptimized() {
-        return mockHits.stream()
-                .map(hit -> DocumentAdapters.fromOptimized(hit, jsonpMapper))
-                .collect(Collectors.toList());
-    }
-
     @Test
     public void runner() {
+        benchmark("fromLegacy", this::fromLegacy);
         benchmark("from", this::from);
-        benchmark("fromOptimized", this::fromOptimized);
     }
 
     private void benchmark(String name, Supplier<Object> func) {
