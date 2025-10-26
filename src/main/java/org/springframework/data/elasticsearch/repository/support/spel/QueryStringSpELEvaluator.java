@@ -84,7 +84,7 @@ public class QueryStringSpELEvaluator {
 
 		if (expr != null) {
 			EvaluationContext context = evaluationContextProvider.getEvaluationContext(parameterAccessor.getValues())
-					.getRequiredEvaluationContext();
+					.getEvaluationContext();
 
 			if (context instanceof StandardEvaluationContext standardEvaluationContext) {
 				standardEvaluationContext.setTypeConverter(elasticsearchSpELTypeConverter);

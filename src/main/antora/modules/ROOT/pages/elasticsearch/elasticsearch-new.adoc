@@ -4,10 +4,11 @@
 [[new-features.6-0-0]]
 == New in Spring Data Elasticsearch 6.0
 
-* Upgarde to Spring 7
+* Upgrade to Spring 7
 * Switch to jspecify nullability annotations
 * Upgrade to Elasticsearch 9.1.5
 * Use the new Elasticsearch Rest5Client as default
+* Add support for SpEL expressions in the `settingPath` parameter of the `@Setting` annotation
 
 
 [[new-features.5-5-0]]

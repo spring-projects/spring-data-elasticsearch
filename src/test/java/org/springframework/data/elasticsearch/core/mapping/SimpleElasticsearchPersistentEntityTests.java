@@ -19,10 +19,16 @@ import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import org.json.JSONException;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -38,6 +44,7 @@ import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.util.TypeInformation;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.ReflectionUtils;
 
 /**
@@ -60,9 +67,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		public void shouldThrowExceptionGivenVersionPropertyIsNotLong() {
 
-			TypeInformation<EntityWithWrongVersionType> typeInformation = TypeInformation
+			TypeInformation<@NonNull EntityWithWrongVersionType> typeInformation = TypeInformation
 					.of(EntityWithWrongVersionType.class);
-			SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<@NonNull EntityWithWrongVersionType> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
 			assertThatThrownBy(() -> createProperty(entity, "version")).isInstanceOf(MappingException.class);
@@ -71,9 +78,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		public void shouldThrowExceptionGivenMultipleVersionPropertiesArePresent() {
 
-			TypeInformation<EntityWithMultipleVersionField> typeInformation = TypeInformation
+			TypeInformation<@NonNull EntityWithMultipleVersionField> typeInformation = TypeInformation
 					.of(EntityWithMultipleVersionField.class);
-			SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<@NonNull EntityWithMultipleVersionField> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			SimpleElasticsearchPersistentProperty persistentProperty1 = createProperty(entity, "version1");
 			SimpleElasticsearchPersistentProperty persistentProperty2 = createProperty(entity, "version2");
@@ -100,9 +107,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldReportThatThereIsNoSeqNoPrimaryTermPropertyWhenThereIsNoSuchProperty() {
-			TypeInformation<EntityWithoutSeqNoPrimaryTerm> typeInformation = TypeInformation
+			TypeInformation<@NonNull EntityWithoutSeqNoPrimaryTerm> typeInformation = TypeInformation
 					.of(EntityWithoutSeqNoPrimaryTerm.class);
-			SimpleElasticsearchPersistentEntity<EntityWithoutSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<@NonNull EntityWithoutSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
 			assertThat(entity.hasSeqNoPrimaryTermProperty()).isFalse();
@@ -111,9 +118,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldReportThatThereIsSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
-			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+			TypeInformation<@NonNull EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
 					.of(EntityWithSeqNoPrimaryTerm.class);
-			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<@NonNull EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
@@ -125,9 +132,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		// DATAES-799
 		void shouldReturnSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
 
-			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+			TypeInformation<@NonNull EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
 					.of(EntityWithSeqNoPrimaryTerm.class);
-			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<@NonNull EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
 			EntityWithSeqNoPrimaryTerm instance = new EntityWithSeqNoPrimaryTerm();
@@ -144,9 +151,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldNotAllowMoreThanOneSeqNoPrimaryTermProperties() {
-			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+			TypeInformation<@NonNull EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
 					.of(EntityWithSeqNoPrimaryTerm.class);
-			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<@NonNull EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
 
@@ -164,7 +171,24 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 
 	@Nested
 	@DisplayName("index settings")
+	@SpringJUnitConfig({ SettingsTests.Config.class })
 	class SettingsTests {
+		@Autowired private ApplicationContext applicationContext;
+
+		@Configuration
+		static class Config {
+			@Bean
+			public SpelTestBean spelTestBean() {
+				return new SpelTestBean();
+			}
+		}
+
+		@BeforeEach
+		void setUp() {
+			((SimpleElasticsearchMappingContext) elasticsearchConverter
+					.get().getMappingContext()).setApplicationContext(applicationContext);
+
+		}
 
 		@Test // #1719
 		@DisplayName("should error if index sorting parameters do not have the same number of arguments")
@@ -204,6 +228,24 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 
 			String json = entity.getDefaultSettings().toJson();
 			assertEquals(expected, json, false);
+		}
+
+		@Test // #3187
+		@DisplayName("should evaluate SpEL expression in settingPath")
+		void shouldEvaluateSpElExpressionInSettingPath() {
+
+			var settingPath = elasticsearchConverter.get().getMappingContext()
+					.getRequiredPersistentEntity(SettingPathWithSpel.class).settingPath();
+
+			assertThat(settingPath).isEqualTo(SpelTestBean.SETTING_PATH);
+		}
+
+		private static class SpelTestBean {
+			public static String SETTING_PATH = "test-setting-path";
+
+			public String settingPath() {
+				return SETTING_PATH;
+			}
 		}
 	}
 
@@ -271,7 +313,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		}
 	}
 
-	// region helper functions
+	// region helper
 	private static SimpleElasticsearchPersistentProperty createProperty(SimpleElasticsearchPersistentEntity<?> entity,
 			String fieldName) {
 
@@ -282,6 +324,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		return new SimpleElasticsearchPersistentProperty(property, entity, SimpleTypeHolder.DEFAULT);
 
 	}
+
 	// endregion
 
 	// region entities
@@ -295,7 +338,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			return version;
 		}
 
-		public void setVersion(String version) {
+		public void setVersion(@Nullable String version) {
 			this.version = version;
 		}
 	}
@@ -313,7 +356,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			return version1;
 		}
 
-		public void setVersion1(Long version1) {
+		public void setVersion1(@Nullable Long version1) {
 			this.version1 = version1;
 		}
 
@@ -322,7 +365,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			return version2;
 		}
 
-		public void setVersion2(Long version2) {
+		public void setVersion2(@Nullable Long version2) {
 			this.version2 = version2;
 		}
 	}
@@ -394,6 +437,13 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 
 	@Document(indexName = "foo", writeTypeHint = WriteTypeHint.TRUE)
 	private static class EnableTypeHintExplicitSetting {
+		@Nullable
+		@Id String id;
+	}
+
+	@Document(indexName = "foo")
+	@Setting(settingPath = "#{@spelTestBean.settingPath}")
+	private static class SettingPathWithSpel {
 		@Nullable
 		@Id String id;
 	}

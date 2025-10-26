@@ -47,6 +47,7 @@ import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.EvaluationException;
 import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionException;
 import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -298,7 +299,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		Assert.notNull(fieldName, "fieldName must not be null");
 
 		return fieldNamePropertyCache.computeIfAbsent(fieldName, key -> {
-			AtomicReference<ElasticsearchPersistentProperty> propertyRef = new AtomicReference<>();
+			AtomicReference<@Nullable ElasticsearchPersistentProperty> propertyRef = new AtomicReference<>();
 			doWithProperties((PropertyHandler<@NonNull ElasticsearchPersistentProperty>) property -> {
 				if (key.equals(property.getFieldName())) {
 					propertyRef.set(property);
@@ -423,9 +424,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		try {
 			Expression expression = routingExpressions.computeIfAbsent(routing, PARSER::parseExpression);
-			ExpressionDependencies expressionDependencies = ExpressionDependencies.discover(expression);
+			ExpressionDependencies expressionDependencies = expression != null ? ExpressionDependencies.discover(expression)
+					: ExpressionDependencies.none();
 
-			// noinspection ConstantConditions
 			EvaluationContext context = getEvaluationContext(null, expressionDependencies);
 			context.setVariable("entity", bean);
 
@@ -440,8 +441,20 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 	// region index settings
 	@Override
-	public String settingPath() {
-		return settingsParameter.get().settingPath;
+	public @Nullable String settingPath() {
+		String settingPathFromParameter = settingsParameter.get().settingPath;
+		if (settingPathFromParameter == null) {
+			return null;
+		}
+
+		try {
+			Expression expression = PARSER.parseExpression(settingPathFromParameter, ParserContext.TEMPLATE_EXPRESSION);
+			return (expression instanceof LiteralExpression) ? settingPathFromParameter
+					: expression.getValue(getEvaluationContext(null, ExpressionDependencies.discover(expression)), String.class);
+		} catch (ExpressionException e) {
+			throw new InvalidDataAccessApiUsageException(
+					"Could not resolve expression: " + settingPathFromParameter + " for @Setting.settingPath ", e);
+		}
 	}
 
 	@Override
