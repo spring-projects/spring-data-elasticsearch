@@ -107,17 +107,15 @@ public @interface Document {
 	 */
 	Alias[] aliases() default {};
 
-	/**
+    /**
+     * Note: the enum value FORCE, which was introduced in 4.4 has been removed
+     * again by Elasticsearch.
 	 * @since 4.3
 	 */
 	enum VersionType {
 		INTERNAL("internal"), //
 		EXTERNAL("external"), //
-		EXTERNAL_GTE("external_gte"), //
-		/**
-		 * @since 4.4
-		 */
-		FORCE("force");
+		EXTERNAL_GTE("external_gte"); //
 
 		private final String esName;
 

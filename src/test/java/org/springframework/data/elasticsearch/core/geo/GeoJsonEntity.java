@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.geo;
 
 import java.util.Objects;
 
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
@@ -30,31 +31,31 @@ public class GeoJsonEntity {
 	@Nullable
 	@Id private String id;
 	@Nullable private GeoJsonPoint point1;
-	@Nullable private GeoJson<? extends Iterable<?>> point2;
+	@Nullable private GeoJson<? extends @NonNull Iterable<?>> point2;
 	@Nullable private GeoJsonMultiPoint multiPoint1;
-	@Nullable private GeoJson<Iterable<Point>> multiPoint2;
+	@Nullable private GeoJson<@NonNull Iterable<Point>> multiPoint2;
 	@Nullable private GeoJsonLineString lineString1;
-	@Nullable private GeoJson<Iterable<Point>> lineString2;
+	@Nullable private GeoJson<@NonNull Iterable<Point>> lineString2;
 	@Nullable private GeoJsonMultiLineString multiLineString1;
-	@Nullable private GeoJson<Iterable<GeoJsonLineString>> multiLineString2;
+	@Nullable private GeoJson<@NonNull Iterable<GeoJsonLineString>> multiLineString2;
 	@Nullable private GeoJsonPolygon polygon1;
-	@Nullable private GeoJson<Iterable<GeoJsonLineString>> polygon2;
+	@Nullable private GeoJson<@NonNull Iterable<GeoJsonLineString>> polygon2;
 	@Nullable private GeoJsonMultiPolygon multiPolygon1;
-	@Nullable private GeoJson<Iterable<GeoJsonPolygon>> multiPolygon2;
+	@Nullable private GeoJson<@NonNull Iterable<GeoJsonPolygon>> multiPolygon2;
 	@Nullable private GeoJsonGeometryCollection geometryCollection1;
-	@Nullable private GeoJson<Iterable<GeoJson<?>>> geometryCollection2;
+	@Nullable private GeoJson<@NonNull Iterable<GeoJson<?>>> geometryCollection2;
 
 	public GeoJsonEntity() {}
 
 	public GeoJsonEntity(@Nullable String id, @Nullable GeoJsonPoint point1,
-			@Nullable GeoJson<? extends Iterable<?>> point2, @Nullable GeoJsonMultiPoint multiPoint1,
-			@Nullable GeoJson<Iterable<Point>> multiPoint2, @Nullable GeoJsonLineString lineString1,
-			@Nullable GeoJson<Iterable<Point>> lineString2, @Nullable GeoJsonMultiLineString multiLineString1,
-			@Nullable GeoJson<Iterable<GeoJsonLineString>> multiLineString2, @Nullable GeoJsonPolygon polygon1,
-			@Nullable GeoJson<Iterable<GeoJsonLineString>> polygon2, @Nullable GeoJsonMultiPolygon multiPolygon1,
-			@Nullable GeoJson<Iterable<GeoJsonPolygon>> multiPolygon2,
-			@Nullable GeoJsonGeometryCollection geometryCollection1,
-			@Nullable GeoJson<Iterable<GeoJson<?>>> geometryCollection2) {
+                         @Nullable GeoJson<? extends @NonNull Iterable<?>> point2, @Nullable GeoJsonMultiPoint multiPoint1,
+                         @Nullable GeoJson<@NonNull Iterable<Point>> multiPoint2, @Nullable GeoJsonLineString lineString1,
+                         @Nullable GeoJson<@NonNull Iterable<Point>> lineString2, @Nullable GeoJsonMultiLineString multiLineString1,
+                         @Nullable GeoJson<@NonNull Iterable<GeoJsonLineString>> multiLineString2, @Nullable GeoJsonPolygon polygon1,
+                         @Nullable GeoJson<@NonNull Iterable<GeoJsonLineString>> polygon2, @Nullable GeoJsonMultiPolygon multiPolygon1,
+                         @Nullable GeoJson<@NonNull Iterable<GeoJsonPolygon>> multiPolygon2,
+                         @Nullable GeoJsonGeometryCollection geometryCollection1,
+                         @Nullable GeoJson<@NonNull Iterable<GeoJson<?>>> geometryCollection2) {
 		this.id = id;
 		this.point1 = point1;
 		this.point2 = point2;
@@ -91,11 +92,11 @@ public class GeoJsonEntity {
 	}
 
 	@Nullable
-	public GeoJson<? extends Iterable<?>> getPoint2() {
+	public GeoJson<? extends @NonNull Iterable<?>> getPoint2() {
 		return point2;
 	}
 
-	public void setPoint2(@Nullable GeoJson<? extends Iterable<?>> point2) {
+	public void setPoint2(@Nullable GeoJson<? extends @NonNull Iterable<?>> point2) {
 		this.point2 = point2;
 	}
 
@@ -109,11 +110,11 @@ public class GeoJsonEntity {
 	}
 
 	@Nullable
-	public GeoJson<Iterable<Point>> getMultiPoint2() {
+	public GeoJson<@NonNull Iterable<Point>> getMultiPoint2() {
 		return multiPoint2;
 	}
 
-	public void setMultiPoint2(@Nullable GeoJson<Iterable<Point>> multiPoint2) {
+	public void setMultiPoint2(@Nullable GeoJson<@NonNull Iterable<Point>> multiPoint2) {
 		this.multiPoint2 = multiPoint2;
 	}
 
@@ -127,11 +128,11 @@ public class GeoJsonEntity {
 	}
 
 	@Nullable
-	public GeoJson<Iterable<Point>> getLineString2() {
+	public GeoJson<@NonNull Iterable<Point>> getLineString2() {
 		return lineString2;
 	}
 
-	public void setLineString2(@Nullable GeoJson<Iterable<Point>> lineString2) {
+	public void setLineString2(@Nullable GeoJson<@NonNull Iterable<Point>> lineString2) {
 		this.lineString2 = lineString2;
 	}
 
@@ -145,11 +146,11 @@ public class GeoJsonEntity {
 	}
 
 	@Nullable
-	public GeoJson<Iterable<GeoJsonLineString>> getMultiLineString2() {
+	public GeoJson<@NonNull Iterable<GeoJsonLineString>> getMultiLineString2() {
 		return multiLineString2;
 	}
 
-	public void setMultiLineString2(@Nullable GeoJson<Iterable<GeoJsonLineString>> multiLineString2) {
+	public void setMultiLineString2(@Nullable GeoJson<@NonNull Iterable<GeoJsonLineString>> multiLineString2) {
 		this.multiLineString2 = multiLineString2;
 	}
 
@@ -163,11 +164,11 @@ public class GeoJsonEntity {
 	}
 
 	@Nullable
-	public GeoJson<Iterable<GeoJsonLineString>> getPolygon2() {
+	public GeoJson<@NonNull Iterable<GeoJsonLineString>> getPolygon2() {
 		return polygon2;
 	}
 
-	public void setPolygon2(@Nullable GeoJson<Iterable<GeoJsonLineString>> polygon2) {
+	public void setPolygon2(@Nullable GeoJson<@NonNull Iterable<GeoJsonLineString>> polygon2) {
 		this.polygon2 = polygon2;
 	}
 
@@ -181,11 +182,11 @@ public class GeoJsonEntity {
 	}
 
 	@Nullable
-	public GeoJson<Iterable<GeoJsonPolygon>> getMultiPolygon2() {
+	public GeoJson<@NonNull Iterable<GeoJsonPolygon>> getMultiPolygon2() {
 		return multiPolygon2;
 	}
 
-	public void setMultiPolygon2(@Nullable GeoJson<Iterable<GeoJsonPolygon>> multiPolygon2) {
+	public void setMultiPolygon2(@Nullable GeoJson<@NonNull Iterable<GeoJsonPolygon>> multiPolygon2) {
 		this.multiPolygon2 = multiPolygon2;
 	}
 
@@ -199,11 +200,11 @@ public class GeoJsonEntity {
 	}
 
 	@Nullable
-	public GeoJson<Iterable<GeoJson<?>>> getGeometryCollection2() {
+	public GeoJson<@NonNull Iterable<GeoJson<?>>> getGeometryCollection2() {
 		return geometryCollection2;
 	}
 
-	public void setGeometryCollection2(@Nullable GeoJson<Iterable<GeoJson<?>>> geometryCollection2) {
+	public void setGeometryCollection2(@Nullable GeoJson<@NonNull Iterable<GeoJson<?>>> geometryCollection2) {
 		this.geometryCollection2 = geometryCollection2;
 	}
 
