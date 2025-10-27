@@ -115,7 +115,7 @@ abstract class GeoJsonIntegrationTests {
 		));
 		GeoJsonPolygon geoJsonPolygon = GeoJsonPolygon
 				.of(new Point(12, 34), new Point(56, 78), new Point(90, 12), new Point(12, 34))
-				.withInnerRing(new Point(21, 43), new Point(65, 87), new Point(9, 21), new Point(21, 43));
+				.withInnerRing(new Point(35, 35), new Point(65, 30), new Point(55, 50), new Point(35, 35));
 		GeoJsonMultiPolygon geoJsonMultiPolygon = GeoJsonMultiPolygon
 				.of(Arrays.asList(GeoJsonPolygon.of(new Point(12, 34), new Point(56, 78), new Point(90, 12), new Point(12, 34)),
 						GeoJsonPolygon.of(new Point(21, 43), new Point(65, 87), new Point(9, 21), new Point(21, 43))));
