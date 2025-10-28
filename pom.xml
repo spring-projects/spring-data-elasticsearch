@@ -27,7 +27,6 @@
 		<hoverfly>0.20.2</hoverfly>
 		<log4j>2.25.1</log4j>
 		<jsonassert>1.5.3</jsonassert>
-		<testcontainers>1.21.3</testcontainers>
 		<wiremock>3.9.2</wiremock>
 
 		<java-module-name>spring.data.elasticsearch</java-module-name>
@@ -325,9 +324,15 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.19.0</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>org.testcontainers</groupId>
-			<artifactId>elasticsearch</artifactId>
-			<version>${testcontainers}</version>
+			<artifactId>testcontainers-elasticsearch</artifactId>
 			<scope>test</scope>
 		</dependency>
 
