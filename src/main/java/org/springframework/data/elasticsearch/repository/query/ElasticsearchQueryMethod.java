@@ -24,9 +24,11 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.elasticsearch.annotations.Highlight;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.SearchTemplateQuery;
@@ -54,7 +56,6 @@ import org.springframework.data.repository.query.ParametersSource;
 import org.springframework.data.repository.query.QueryMethod;
 import org.springframework.data.repository.util.QueryExecutionConverters;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 

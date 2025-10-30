@@ -25,8 +25,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -43,7 +45,6 @@ import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.EvaluationException;
 import org.springframework.expression.Expression;

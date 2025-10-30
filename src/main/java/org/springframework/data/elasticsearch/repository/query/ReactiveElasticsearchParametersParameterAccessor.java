@@ -21,8 +21,8 @@ import reactor.core.publisher.Mono;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.data.core.ReactiveWrappers;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
-import org.springframework.data.util.ReactiveWrappers;
 
 /**
  * @author Christoph Strobl

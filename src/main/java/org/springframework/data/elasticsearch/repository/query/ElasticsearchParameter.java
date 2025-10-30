@@ -16,10 +16,10 @@
 package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.elasticsearch.core.query.RuntimeField;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.repository.query.Parameter;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * Custom {@link Parameter} implementation adding specific types to the special ones. Refactored from being defined in

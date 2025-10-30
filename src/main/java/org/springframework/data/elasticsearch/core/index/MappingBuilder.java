@@ -31,8 +31,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ResourceUtil;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -43,7 +45,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
 

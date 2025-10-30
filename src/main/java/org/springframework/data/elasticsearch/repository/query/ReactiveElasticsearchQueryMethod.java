@@ -22,6 +22,8 @@ import java.lang.reflect.ParameterizedType;
 import java.util.List;
 
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.core.ReactiveWrappers;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
@@ -33,9 +35,7 @@ import org.springframework.data.projection.ProjectionFactory;
 import org.springframework.data.repository.core.RepositoryMetadata;
 import org.springframework.data.repository.util.ReactiveWrapperConverters;
 import org.springframework.data.util.Lazy;
-import org.springframework.data.util.ReactiveWrappers;
 import org.springframework.data.util.ReflectionUtils;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ClassUtils;
 
 /**

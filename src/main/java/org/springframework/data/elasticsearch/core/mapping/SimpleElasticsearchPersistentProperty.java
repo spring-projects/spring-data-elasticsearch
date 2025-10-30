@@ -25,8 +25,10 @@ import java.util.function.Supplier;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.annotation.ReadOnlyProperty;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.domain.Range;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
@@ -58,7 +60,6 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.StringUtils;
 
 /**

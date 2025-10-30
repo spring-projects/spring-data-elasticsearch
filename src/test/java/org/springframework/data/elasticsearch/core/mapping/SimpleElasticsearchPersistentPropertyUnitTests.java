@@ -28,7 +28,9 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.data.annotation.Id;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -44,7 +46,6 @@ import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
 import org.springframework.data.mapping.model.SnakeCaseFieldNamingStrategy;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.util.ReflectionUtils;
 
 /**

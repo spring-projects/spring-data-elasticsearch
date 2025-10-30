@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.repository.support;
 
 import java.lang.reflect.ParameterizedType;
 
-import org.springframework.data.util.ReactiveWrappers;
+import org.springframework.data.core.ReactiveWrappers;
 
 /**
  * @author Peter-Josef Meisch

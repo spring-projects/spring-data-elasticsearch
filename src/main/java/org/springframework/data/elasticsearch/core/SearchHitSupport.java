@@ -22,10 +22,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
+
+import org.springframework.data.core.ReactiveWrappers;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.CloseableIterator;
-import org.springframework.data.util.ReactiveWrappers;
 
 /**
  * Utility class with helper methods for working with {@link SearchHit}.

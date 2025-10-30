@@ -19,9 +19,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.core.MethodParameter;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.repository.query.Parameters;
 import org.springframework.data.repository.query.ParametersSource;
-import org.springframework.data.util.TypeInformation;
 
 /**
  * @author Christoph Strobl

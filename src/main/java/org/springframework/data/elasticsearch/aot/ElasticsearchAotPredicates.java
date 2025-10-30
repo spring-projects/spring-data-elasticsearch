@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.aot;
 
 import java.util.function.Predicate;
 
-import org.springframework.data.util.ReactiveWrappers;
+import org.springframework.data.core.ReactiveWrappers;
 
 /**
  * @author Peter-Josef Meisch

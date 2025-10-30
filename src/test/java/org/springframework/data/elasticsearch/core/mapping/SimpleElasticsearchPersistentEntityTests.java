@@ -25,12 +25,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.core.TypeInformation;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
@@ -43,7 +45,6 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.data.mapping.model.SimpleTypeHolder;
-import org.springframework.data.util.TypeInformation;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.ReflectionUtils;
 
