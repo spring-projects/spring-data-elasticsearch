@@ -9,7 +9,7 @@ Although the Elasticsearch Client can be used directly to work with the cluster,
 [[elasticsearch.clients.rest5client]]
 == Imperative Rest5Client
 
-To use the imperative (non-reactive) Rest5Client, a configuration bean must be configured like this:
+To use the imperative (non-reactive) Rest5Client - the default client provided by the Elasticsearch Java client library from version 9 on -, a configuration bean must be configured like this:
 
 ====
 [source,java]
@@ -39,7 +39,9 @@ The following beans can then be injected in other Spring components:
 ====
 [source,java]
 ----
-import org.springframework.beans.factory.annotation.Autowired;@Autowired
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Autowired
 ElasticsearchOperations operations;      <.>
 
 @Autowired
@@ -83,7 +85,7 @@ To use the imperative (non-reactive) RestClient - deprecated since version 6 - ,
 ----
 ====
 
-The configuration bean must be configured like this:
+The configuration bean must then be configured like this:
 
 ====
 [source,java]
@@ -113,14 +115,16 @@ The following beans can then be injected in other Spring components:
 ====
 [source,java]
 ----
-import org.springframework.beans.factory.annotation.Autowired;@Autowired
+import org.springframework.beans.factory.annotation.Autowired;
+
+@Autowired
 ElasticsearchOperations operations;      <.>
 
 @Autowired
 ElasticsearchClient elasticsearchClient; <.>
 
 @Autowired
-RestClient restClient;                 <.>
+RestClient restClient;                   <.>
 
 @Autowired
 JsonpMapper jsonpMapper;                 <.>
@@ -167,6 +171,8 @@ The following beans can then be injected in other Spring components:
 ====
 [source,java]
 ----
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Autowired
 ReactiveElasticsearchOperations operations;      <.>
 
@@ -226,6 +232,8 @@ The following beans can then be injected in other Spring components:
 ====
 [source,java]
 ----
+import org.springframework.beans.factory.annotation.Autowired;
+
 @Autowired
 ReactiveElasticsearchOperations operations;      <.>
 
@@ -294,7 +302,7 @@ ClientConfiguration clientConfiguration = ClientConfiguration.builder()
 
 <.> Define default headers, if they need to be customized
 <.> Use the builder to provide cluster addresses, set default `HttpHeaders` or enable SSL.
-<.> Optionally enable SSL.There exist overloads of this function that can take a `SSLContext` or as an alternative the fingerprint of the certificate as it is output by Elasticsearch 8 on startup.
+<.> Optionally enable SSL.There exist overloads of this function that can take a `SSLContext` or as an alternative the fingerprint of the certificate as it is output by Elasticsearch on startup (since version 8).
 <.> Optionally set a proxy.
 <.> Optionally set a path prefix, mostly used when different clusters a behind some reverse proxy.
 <.> Set the connection timeout.
@@ -320,7 +328,7 @@ The following callbacks are provided:
 ==== Configuration of the low level Elasticsearch `Rest5Client`:
 
 This callback provides a `org.elasticsearch.client.RestClientBuilder` that can be used to configure the Elasticsearch
-`RestClient`:
+`Rest5Client`:
 ====
 [source,java]
 ----

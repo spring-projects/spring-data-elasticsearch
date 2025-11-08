@@ -5,7 +5,7 @@
 Spring Data support for Elasticsearch contains a wide range of features:
 
 * Spring configuration support for various xref:elasticsearch/clients.adoc[Elasticsearch clients].
-* The xref:elasticsearch/template.adoc[`ElasticsearchTemplate` and `ReactiveElasticsearchTemplate`] helper classes that provide object mapping between ES index operations and POJOs.
+* The xref:elasticsearch/template.adoc[`ElasticsearchTemplate` and `ReactiveElasticsearchTemplate`] helper classes that provide object mapping between Elasticsearch index operations and POJOs.
 * xref:elasticsearch/template.adoc#exception-translation[Exception translation] into Spring's portable {springDocsUrl}data-access.html#dao-exceptions[Data Access Exception Hierarchy].
 * Feature rich xref:elasticsearch/object-mapping.adoc[object mapping] integrated with _Spring's_ {springDocsUrl}core.html#core-convert[Conversion Service].
 * xref:elasticsearch/object-mapping.adoc#elasticsearch.mapping.meta-model.annotations[Annotation-based mapping] metadata that is extensible to support other metadata formats.
