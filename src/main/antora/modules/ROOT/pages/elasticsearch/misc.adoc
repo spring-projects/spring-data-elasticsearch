@@ -11,7 +11,7 @@ When creating Elasticsearch indices with Spring Data Elasticsearch different ind
 The following arguments are available:
 
 * `useServerConfiguration` does not send any settings parameters, so the Elasticsearch server configuration determines them.
-* `settingPath` refers to a JSON file defining the settings that must be resolvable in the classpath
+* `settingPath` refers to a JSON file defining the settings that must be resolvable in the classpath, it is possible to use a SpEL expression here
 * `shards` the number of shards to use, defaults to _1_
 * `replicas` the number of replicas, defaults to _1_
 * `refreshIntervall`, defaults to _"1s"_
