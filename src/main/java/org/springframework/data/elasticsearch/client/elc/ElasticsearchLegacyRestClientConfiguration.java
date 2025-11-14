@@ -47,7 +47,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  * @since 4.4
  * @deprecated since 6.0, use {@link ElasticsearchConfiguration}
  */
-@Deprecated(since = "6.0", forRemoval=true)
+@Deprecated(since = "6.0", forRemoval = true)
 public abstract class ElasticsearchLegacyRestClientConfiguration extends ElasticsearchConfigurationSupport {
 
 	/**

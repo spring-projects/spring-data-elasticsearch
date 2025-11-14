@@ -15,13 +15,13 @@
  */
 package org.springframework.data.elasticsearch.core.index;
 
+import tools.jackson.databind.node.ObjectNode;
+
 import java.io.IOException;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.GeoShapeField;
 import org.springframework.util.Assert;
-
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * @author Peter-Josef Meisch

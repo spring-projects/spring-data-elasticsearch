@@ -15,7 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.document;
 
-import java.io.IOException;
+import tools.jackson.core.JacksonException;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
@@ -87,7 +88,7 @@ public interface Document extends StringObjectMap<Document> {
 		clear();
 		try {
 			putAll(MapDocument.OBJECT_MAPPER.readerFor(Map.class).readValue(json));
-		} catch (IOException e) {
+		} catch (JacksonException e) {
 			throw new ConversionException("Cannot parse JSON", e);
 		}
 		return this;
