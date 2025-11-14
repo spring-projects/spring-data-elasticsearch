@@ -159,16 +159,31 @@
 
 		<!-- Jackson JSON Mapper -->
 		<dependency>
+			<groupId>tools.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+		<dependency>
+			<groupId>tools.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>3.0.2</version>
+		</dependency>
+
+        <!-- Version 2 to use with the legacy RestClient -->
+		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-core</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
 		</dependency>
 
 		<!-- CDI -->
-
 		<dependency>
 			<groupId>javax.interceptor</groupId>
 			<artifactId>javax.interceptor-api</artifactId>

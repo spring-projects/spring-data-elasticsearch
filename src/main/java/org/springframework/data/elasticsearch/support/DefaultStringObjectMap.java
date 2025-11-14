@@ -15,7 +15,9 @@
  */
 package org.springframework.data.elasticsearch.support;
 
-import java.io.IOException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -24,9 +26,6 @@ import java.util.function.BiConsumer;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * @author Peter-Josef Meisch
@@ -48,7 +47,7 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 	public String toJson() {
 		try {
 			return OBJECT_MAPPER.writeValueAsString(this);
-		} catch (JsonProcessingException e) {
+		} catch (JacksonException e) {
 			throw new IllegalArgumentException("Cannot render document to JSON", e);
 		}
 	}
@@ -61,7 +60,7 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 		delegate.clear();
 		try {
 			delegate.putAll(OBJECT_MAPPER.readerFor(Map.class).readValue(json));
-		} catch (IOException e) {
+		} catch (JacksonException e) {
 			throw new IllegalArgumentException("Cannot parse JSON", e);
 		}
 		return (T) this;

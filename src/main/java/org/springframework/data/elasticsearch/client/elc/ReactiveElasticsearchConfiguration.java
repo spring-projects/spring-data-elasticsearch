@@ -16,12 +16,14 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.json.JsonpMapper;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.json.jackson.Jackson3JsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
 import co.elastic.clients.transport.rest5_client.Rest5ClientOptions;
 import co.elastic.clients.transport.rest5_client.low_level.RequestOptions;
 import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
+import tools.jackson.databind.cfg.JsonNodeFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 import org.elasticsearch.client.RestClient;
 import org.springframework.context.annotation.Bean;
@@ -31,10 +33,6 @@ import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationS
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.util.Assert;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 /**
  * Base class for a @{@link org.springframework.context.annotation.Configuration} class to set up the Elasticsearch
@@ -127,10 +125,11 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 		// we need to create our own objectMapper that keeps null values in order to provide the storeNullValue
 		// functionality. The one Elasticsearch would provide removes the nulls. We remove unwanted nulls before they get
 		// into this mapper, so we can safely keep them here.
-		var objectMapper = (new ObjectMapper())
-				.configure(SerializationFeature.INDENT_OUTPUT, false)
-				.setSerializationInclusion(JsonInclude.Include.ALWAYS);
-		return new JacksonJsonpMapper(objectMapper);
+		JsonMapper jsonMapper = JsonMapper.builder()
+				.enable(JsonNodeFeature.WRITE_NULL_PROPERTIES)
+				.enable(JsonNodeFeature.READ_NULL_PROPERTIES)
+				.build();
+		return new Jackson3JsonpMapper(jsonMapper);
 	}
 
 	/**

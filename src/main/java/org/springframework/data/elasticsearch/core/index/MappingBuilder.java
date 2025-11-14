@@ -18,6 +18,13 @@ package org.springframework.data.elasticsearch.core.index;
 import static org.springframework.data.elasticsearch.core.index.MappingParameters.*;
 import static org.springframework.util.StringUtils.*;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.StringNode;
+import tools.jackson.databind.util.RawValue;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.nio.charset.Charset;
@@ -47,13 +54,6 @@ import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.util.StreamUtils;
 import org.springframework.util.StringUtils;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
-import com.fasterxml.jackson.databind.util.RawValue;
 
 /**
  * @author Rizwan Idrees
@@ -184,7 +184,7 @@ public class MappingBuilder {
 				if (!excludeFromSource.isEmpty()) {
 					ObjectNode sourceNode = objectNode.putObject(SOURCE);
 					ArrayNode excludes = sourceNode.putArray(SOURCE_EXCLUDES);
-					excludeFromSource.stream().map(TextNode::new).forEach(excludes::add);
+					excludeFromSource.stream().map(StringNode::new).forEach(excludes::add);
 				}
 
 				return objectMapper.writer().writeValueAsString(objectNode);
@@ -238,7 +238,7 @@ public class MappingBuilder {
 
 				if (mappingAnnotation.dynamicDateFormats().length > 0) {
 					objectNode.putArray(DYNAMIC_DATE_FORMATS).addAll(Arrays.stream(mappingAnnotation.dynamicDateFormats())
-							.map(TextNode::valueOf).collect(Collectors.toList()));
+							.map(StringNode::valueOf).collect(Collectors.toList()));
 				}
 
 				if (runtimeFields != null) {
@@ -546,7 +546,7 @@ public class MappingBuilder {
 
 				if (children.length > 1) {
 					relationsNode.putArray(parent)
-							.addAll(Arrays.stream(children).map(TextNode::valueOf).collect(Collectors.toList()));
+							.addAll(Arrays.stream(children).map(StringNode::valueOf).collect(Collectors.toList()));
 				} else if (children.length == 1) {
 					relationsNode.put(parent, children[0]);
 				}
