@@ -24,6 +24,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.aot.hint.TypeReference;
+import org.springframework.util.ClassUtils;
 
 /**
  * runtime hints for the Elasticsearch client libraries, as these do not provide any of their own.
@@ -37,20 +38,20 @@ public class ElasticsearchClientRuntimeHints implements RuntimeHintsRegistrar {
 	public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
 
 		hints.reflection()
-				.registerType(TypeReference.of(IndexSettings.class), builder -> builder.withField("_DESERIALIZER")) //
-				.registerType(TypeReference.of(PutMappingRequest.class), builder -> builder.withField("_DESERIALIZER")) //
-				.registerType(TypeReference.of(RuntimeFieldType.class), builder -> builder.withField("_DESERIALIZER"))//
-				.registerType(TypeReference.of(TypeMapping.class), builder -> builder.withField("_DESERIALIZER")) //
-		;
+				.registerType(TypeReference.of(IndexSettings.class), builder -> builder.withField("_DESERIALIZER"))
+				.registerType(TypeReference.of(PutMappingRequest.class), builder -> builder.withField("_DESERIALIZER"))
+				.registerType(TypeReference.of(RuntimeFieldType.class), builder -> builder.withField("_DESERIALIZER"))
+				.registerType(TypeReference.of(TypeMapping.class), builder -> builder.withField("_DESERIALIZER"));
 
-		hints.serialization() //
-				.registerType(org.apache.http.impl.auth.BasicScheme.class) //
-				.registerType(org.apache.http.impl.auth.RFC2617Scheme.class) //
-				.registerType(java.util.HashMap.class) //
-		;
+		if (ClassUtils.isPresent("org.apache.http.impl.auth.BasicScheme",
+				ElasticsearchClientRuntimeHints.class.getClassLoader())) {
+			hints.serialization()
+					.registerType(org.apache.http.impl.auth.BasicScheme.class)
+					.registerType(org.apache.http.impl.auth.RFC2617Scheme.class)
+					.registerType(java.util.HashMap.class);
+		}
 
 		hints.resources() //
-				.registerPattern("co/elastic/clients/version.properties") //
-		;
+				.registerPattern("co/elastic/clients/version.properties");
 	}
 }
