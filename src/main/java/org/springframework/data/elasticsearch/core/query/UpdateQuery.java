@@ -438,8 +438,8 @@ public class UpdateQuery {
 
 		public UpdateQuery build() {
 
-			if (script == null && document == null && query == null) {
-				throw new IllegalArgumentException("either script, document or query must be set");
+			if (script == null && scriptName == null && document == null && query == null) {
+				throw new IllegalArgumentException("either script, scriptName, document or query must be set");
 			}
 
 			return new UpdateQuery(id, script, params, document, upsert, lang, routing, scriptedUpsert, docAsUpsert,
