@@ -6,7 +6,7 @@
 
 * Upgrade to Spring 7
 * Switch to jspecify nullability annotations
-* Upgrade to Elasticsearch 9.2.1
+* Upgrade to Elasticsearch 9.2.2
 * Use the new Elasticsearch Rest5Client as default
 * Add support for SpEL expressions in the `settingPath` parameter of the `@Setting` annotation
 
