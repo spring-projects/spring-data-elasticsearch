@@ -21,11 +21,13 @@ import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.repository.config.EnableElasticsearchRepositories;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  * @since 4.4
  */
+@ContextConfiguration(classes = EnableRepositoriesELCIntegrationTests.Config.class)
 public class EnableRepositoriesELCIntegrationTests extends EnableRepositoriesIntegrationTests {
 
 	@Configuration
