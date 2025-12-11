@@ -21,14 +21,16 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.RepositoryPartQueryIntegrationTests;
 import org.springframework.data.elasticsearch.core.query.Query;
+import org.springframework.data.elasticsearch.core.query.RepositoryPartQueryIntegrationTests;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
+import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
  * @since 4.4
  */
+@ContextConfiguration(classes = ElasticsearchPartQueryELCIntegrationTests.Config.class)
 public class ElasticsearchPartQueryELCIntegrationTests extends RepositoryPartQueryIntegrationTests {
 
 	@Configuration
