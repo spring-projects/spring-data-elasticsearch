@@ -2,12 +2,12 @@
 = What's new
 
 [[new-features.6-1-0]]
-== New in Spring Data Elasticsearch 6.0
+== New in Spring Data Elasticsearch 6.1
 
-* Upgrade to Elasticsearch 9.2.2
+* Upgrade to Elasticsearch 9.2.3
 
 [[new-features.6-0-0]]
-== New in Spring Data Elasticsearch 6.1
+== New in Spring Data Elasticsearch 6.0
 
 * Upgrade to Spring 7
 * Switch to jspecify nullability annotations
