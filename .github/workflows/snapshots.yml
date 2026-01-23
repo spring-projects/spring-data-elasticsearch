@@ -1,0 +1,27 @@
+name: Snapshots
+
+on:
+  push:
+    branches: [ main, 6.0.x, 5.5.x, 'issue/**' ]
+
+permissions: read-all
+
+jobs:
+  build-snapshots:
+    name: Build and deploy snapshots
+    if: ${{ github.repository_owner == 'spring-projects' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Java and Maven
+        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        with:
+          develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
+      - name: Deploy to Artifactory
+        uses: spring-projects/spring-data-release/actions/maven-artifactory-deploy@main
+        env:
+          TESTCONTAINERS_REUSE_ENABLE: true
+        with:
+          build-name: 'spring-data-elasticsearch'
+          username: '${{ secrets.ARTIFACTORY_USERNAME }}'
+          password: '${{ secrets.ARTIFACTORY_PASSWORD }}'
