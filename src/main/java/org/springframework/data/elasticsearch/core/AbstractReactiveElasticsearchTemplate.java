@@ -60,7 +60,8 @@ import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.util.Assert;
 
 /**
- * Base class keeping common code for implementations of the {@link ReactiveElasticsearchOperations} interface
+ * Base class keeping common code for implementations of the
+ * {@link ReactiveElasticsearchOperations} interface
  * independent of the used client.
  *
  * @author Peter-Josef Meisch
@@ -148,8 +149,10 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	}
 
 	/**
-	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking {@link ReactiveEntityCallbacks callbacks}
-	 * like the {@link ReactiveBeforeConvertCallback}. Overrides potentially existing {@link ReactiveEntityCallbacks}.
+	 * Set the {@link ReactiveEntityCallbacks} instance to use when invoking
+	 * {@link ReactiveEntityCallbacks callbacks}
+	 * like the {@link ReactiveBeforeConvertCallback}. Overrides potentially
+	 * existing {@link ReactiveEntityCallbacks}.
 	 *
 	 * @param entityCallbacks must not be {@literal null}.
 	 * @throws IllegalArgumentException if the given instance is {@literal null}.
@@ -174,7 +177,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		return getVendor()
 				.zipWith(getRuntimeLibraryVersion())
 				.zipWith(getClusterVersion())
-				.doOnNext(objects -> VersionInfo.logVersions(objects.getT1().getT1(), objects.getT1().getT2(), objects.getT2()))
+				.doOnNext(objects -> VersionInfo.logVersions(objects.getT1().getT1(), objects.getT1().getT2(),
+						objects.getT2()))
 				.then();
 	}
 
@@ -231,7 +235,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 			entities
 					.bufferTimeout(bulkSize, Duration.ofMillis(200), true)
 					.subscribe(new Subscriber<>() {
-						@Nullable private Subscription subscription = null;
+						@Nullable
+						private Subscription subscription = null;
 						private final AtomicBoolean upstreamComplete = new AtomicBoolean(false);
 						private final AtomicBoolean onNextHasBeenCalled = new AtomicBoolean(false);
 
@@ -245,7 +250,10 @@ abstract public class AbstractReactiveElasticsearchTemplate
 						public void onNext(List<T> entityList) {
 							onNextHasBeenCalled.set(true);
 							saveAll(entityList, index)
-									.map(sink::tryEmitNext)
+									.map(entity -> {
+										sink.tryEmitNext(entity);
+										return entity;
+									})
 									.doOnComplete(() -> {
 										if (!upstreamComplete.get()) {
 											if (subscription == null) {
@@ -255,7 +263,14 @@ abstract public class AbstractReactiveElasticsearchTemplate
 										} else {
 											sink.tryEmitComplete();
 										}
-									}).subscribe();
+									})
+									.subscribe(v -> {
+									}, error -> {
+										if (subscription != null) {
+											subscription.cancel();
+										}
+										sink.tryEmitError(error);
+									});
 						}
 
 						@Override
@@ -422,7 +437,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	// region SearchDocument
 	@Override
-	public <T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index) {
+	public <T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> resultType,
+			IndexCoordinates index) {
 		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>(resultType, index);
 		return doFind(query, entityType, index).concatMap(callback::toSearchHit);
 	}
@@ -666,7 +682,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 		@Override
 		public Mono<SearchHit<T>> toSearchHit(SearchDocument response) {
-			return toEntity(response).map(entity -> SearchHitMapping.mappingFor(type, converter).mapHit(response, entity));
+			return toEntity(response)
+					.map(entity -> SearchHitMapping.mappingFor(type, converter).mapHit(response, entity));
 		}
 	}
 
@@ -730,7 +747,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	}
 
 	/**
-	 * Value class to capture client independent information from a response to an index request.
+	 * Value class to capture client independent information from a response to an
+	 * index request.
 	 */
 	public record IndexResponseMetaData(String id, String index, long seqNo, long primaryTerm, long version) {
 	}
@@ -756,7 +774,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		}
 
 		public T entityAt(long index) {
-			// it's safe to cast to int because the original indexed collection was fitting in memory
+			// it's safe to cast to int because the original indexed collection was fitting
+			// in memory
 			int intIndex = (int) index;
 			return entities.get(intIndex);
 		}
