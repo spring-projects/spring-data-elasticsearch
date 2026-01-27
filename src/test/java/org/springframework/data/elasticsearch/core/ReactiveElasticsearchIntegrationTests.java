@@ -1220,6 +1220,29 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.allMatch(failureStatus -> failureStatus.status().equals(409));
 	}
 
+	@Test // Error propagation in reactive Flux save
+	@DisplayName("should propagate errors during Flux save operations")
+	void shouldPropagateErrorsDuringFluxSaveOperations() {
+		// Create a Flux that will produce an error after emitting some valid entities
+		Flux<SampleEntity> entitiesWithError = Flux.concat(
+				Flux.just(
+						randomEntity("valid entity 1"),
+						randomEntity("valid entity 2")
+				),
+				Flux.error(new RuntimeException("Simulated error during entity creation"))
+		);
+
+		// The save operation should propagate the error to the subscriber
+		operations.save(entitiesWithError, SampleEntity.class, 10)
+				.as(StepVerifier::create)
+				.expectNextCount(2) // Should successfully process the 2 valid entities before the error
+				.expectErrorMatches(throwable ->
+						throwable instanceof RuntimeException &&
+								throwable.getMessage().equals("Simulated error during entity creation")
+				)
+				.verify();
+	}
+
 	// endregion
 
 	// region Helper functions
