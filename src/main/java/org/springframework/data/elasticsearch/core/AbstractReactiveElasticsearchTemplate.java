@@ -245,7 +245,10 @@ abstract public class AbstractReactiveElasticsearchTemplate
 						public void onNext(List<T> entityList) {
 							onNextHasBeenCalled.set(true);
 							saveAll(entityList, index)
-									.map(sink::tryEmitNext)
+									.map(entity -> {
+										sink.tryEmitNext(entity);
+										return entity;
+									})
 									.doOnComplete(() -> {
 										if (!upstreamComplete.get()) {
 											if (subscription == null) {
@@ -255,7 +258,14 @@ abstract public class AbstractReactiveElasticsearchTemplate
 										} else {
 											sink.tryEmitComplete();
 										}
-									}).subscribe();
+									})
+									.subscribe(v -> {
+									}, error -> {
+										if (subscription != null) {
+											subscription.cancel();
+										}
+										sink.tryEmitError(error);
+									});
 						}
 
 						@Override
