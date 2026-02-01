@@ -48,6 +48,7 @@ import co.elastic.clients.elasticsearch.core.search.Rescore;
 import co.elastic.clients.elasticsearch.core.search.SearchRequestBody;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch.indices.*;
+import co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import co.elastic.clients.elasticsearch.indices.update_aliases.Action;
 import co.elastic.clients.elasticsearch.sql.query.SqlFormat;
@@ -77,15 +78,12 @@ import java.util.stream.Stream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
-import org.springframework.data.elasticsearch.core.index.AliasAction;
-import org.springframework.data.elasticsearch.core.index.AliasActionParameters;
-import org.springframework.data.elasticsearch.core.index.AliasActions;
+import org.springframework.data.elasticsearch.core.index.*;
 import org.springframework.data.elasticsearch.core.index.DeleteIndexTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.DeleteTemplateRequest;
 import org.springframework.data.elasticsearch.core.index.ExistsTemplateRequest;
@@ -1065,7 +1063,10 @@ class RequestConverter extends AbstractQueryProcessor {
 		return UpdateRequest.of(uqb -> {
 			uqb.index(indexName).id(query.getId());
 
-			if (query.getScript() != null) {
+			var scriptData = query.getScriptData();
+			var script = scriptData != null ? scriptData.script() : null;
+
+			if (script != null) {
 				Map<String, JsonData> params = new HashMap<>();
 
 				if (query.getParams() != null) {
@@ -1073,11 +1074,14 @@ class RequestConverter extends AbstractQueryProcessor {
 				}
 
 				uqb.script(sb -> {
-					sb.lang(query.getLang()).params(params);
-					if (query.getScript() != null) {
-						sb.source(s -> s.scriptString(query.getScript()));
+					sb
+							.lang(scriptData.language())
+							.params(params);
+
+					if (script != null) {
+						sb.source(s -> s.scriptString(script));
 					}
-					sb.id(query.getId());
+					sb.id(scriptData.scriptName());
 
 					return sb;
 				});
@@ -1126,8 +1130,7 @@ class RequestConverter extends AbstractQueryProcessor {
 			}
 
 			return uqb;
-		} //
-		);
+		});
 	}
 
 	public UpdateByQueryRequest documentUpdateByQueryRequest(UpdateQuery updateQuery, IndexCoordinates index,
