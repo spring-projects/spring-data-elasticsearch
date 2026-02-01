@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
 
+import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 
 import java.util.List;
@@ -36,6 +37,7 @@ import org.springframework.data.elasticsearch.core.query.CriteriaQuery;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.DocValueField;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 
 /**
  * @author Peter-Josef Meisch
@@ -95,5 +97,38 @@ class RequestConverterTest {
 		@Id private String id;
 		@Nullable
 		@Field(type = FieldType.Text) private String text;
+	}
+
+	@Test // #3231
+	@DisplayName("should not use updatequery id for script id")
+	void shouldNotUseUpdatequeryIdForScriptId() {
+		var updateQuery = UpdateQuery
+				.builder("queryId")
+				.withScript("script")
+				.build();
+
+		UpdateRequest<org.springframework.data.elasticsearch.core.document.Document, ?> updateRequest = requestConverter
+				.documentUpdateRequest(updateQuery, IndexCoordinates.of("foo"), null, null);
+
+		assertThat(updateRequest.id()).isEqualTo("queryId");
+		assertThat(updateRequest.script().source().scriptString()).isEqualTo("script");
+		assertThat(updateRequest.script().id()).isNull();
+	}
+
+	@Test // #3231
+	@DisplayName("should use script name as update query id")
+	void shouldUseScriptNameAsUpdateQueryId() {
+		var updateQuery = UpdateQuery
+				.builder("queryId")
+				.withScript("script")
+				.withScriptName("scriptName")
+				.build();
+
+		UpdateRequest<org.springframework.data.elasticsearch.core.document.Document, ?> updateRequest = requestConverter
+				.documentUpdateRequest(updateQuery, IndexCoordinates.of("foo"), null, null);
+
+		assertThat(updateRequest.id()).isEqualTo("queryId");
+		assertThat(updateRequest.script().source().scriptString()).isEqualTo("script");
+		assertThat(updateRequest.script().id()).isEqualTo("scriptName");
 	}
 }
