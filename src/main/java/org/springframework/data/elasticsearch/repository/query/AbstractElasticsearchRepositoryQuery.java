@@ -90,7 +90,8 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 
 		Query query = createQuery(parameters);
 
-		IndexCoordinates index = elasticsearchOperations.getIndexCoordinatesFor(clazz);
+		IndexCoordinates index = parameterAccessor
+				.getIndexCoordinates(elasticsearchOperations.getIndexCoordinatesFor(clazz));
 
 		Object result = null;
 

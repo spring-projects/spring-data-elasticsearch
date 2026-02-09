@@ -373,6 +373,11 @@ public class ElasticsearchQueryMethod extends QueryMethod {
 		return fieldNames.toArray(new String[0]);
 	}
 
+	@Override
+	public ElasticsearchParameters getParameters() {
+		return (ElasticsearchParameters) super.getParameters();
+	}
+
 	// region Copied from QueryMethod base class
 	/*
 	 * Copied from the QueryMethod class adding support for collections of SearchHit instances. No static method here.
