@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.query;
 
 import org.springframework.core.MethodParameter;
 import org.springframework.data.core.TypeInformation;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.RuntimeField;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
 import org.springframework.data.repository.query.Parameter;
@@ -42,7 +43,8 @@ public class ElasticsearchParameter extends Parameter {
 
 	@Override
 	public boolean isSpecialParameter() {
-		return super.isSpecialParameter() || isScriptedFieldParameter() || isRuntimeFieldParameter();
+		return super.isSpecialParameter() || isScriptedFieldParameter() || isRuntimeFieldParameter()
+				|| isIndexCoordinatesParameter();
 	}
 
 	public Boolean isScriptedFieldParameter() {
@@ -51,5 +53,9 @@ public class ElasticsearchParameter extends Parameter {
 
 	public Boolean isRuntimeFieldParameter() {
 		return RuntimeField.class.isAssignableFrom(getType());
+	}
+
+	public Boolean isIndexCoordinatesParameter() {
+		return IndexCoordinates.class.isAssignableFrom(getType());
 	}
 }
