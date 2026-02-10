@@ -5,6 +5,7 @@
 == New in Spring Data Elasticsearch 6.1
 
 * Upgrade to Elasticsearch 9.2.5
+* Add support to use `IndexCoordinates` as repository query parameter
 
 [[new-features.6-0-0]]
 == New in Spring Data Elasticsearch 6.0
