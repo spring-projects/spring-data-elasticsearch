@@ -71,6 +71,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	@Nullable Integer reactiveBatchSize;
 	private final List<DocValueField> docValueFields = new ArrayList<>();
 	private final List<ScriptedField> scriptedFields = new ArrayList<>();
+	@Nullable private Boolean includeNamedQueryScore;
 
 	@Nullable
 	public Sort getSort() {
@@ -175,6 +176,11 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	@Nullable
 	public Boolean getRequestCache() {
 		return requestCache;
+	}
+
+	@Nullable
+	public Boolean getIncludeNamedQueriesScore(){
+		return includeNamedQueryScore;
 	}
 
 	public List<Query.IdWithRouting> getIdsWithRouting() {
@@ -378,6 +384,11 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 
 	public SELF withRequestCache(@Nullable Boolean requestCache) {
 		this.requestCache = requestCache;
+		return self();
+	}
+
+	public SELF withIncludeNamedQueryScore (@Nullable Boolean namedQueryScore) {
+		this.includeNamedQueryScore = namedQueryScore;
 		return self();
 	}
 

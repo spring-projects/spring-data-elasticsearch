@@ -74,7 +74,7 @@ public interface Query {
 	Pageable getPageable();
 
 	/**
-	 * Add {@link org.springframework.data.domain.Sort} to query
+	 * Add {@link Sort} to query
 	 *
 	 * @param sort
 	 * @return
@@ -490,6 +490,20 @@ public interface Query {
 	 * @since 5.4.8 5.5.2
 	 */
 	public Integer getRequestSize();
+
+	/**
+	 * Sets the include_named_queries_score value for the query.
+	 * If true, the response includes the score contribution from any named queries.
+	 *
+	 * @param value new value
+	 */
+	void setIncludeNamedQueriesScore(@Nullable Boolean value);
+
+	/**
+	 * @return the include_named_queries_score value for this query.
+	 */
+	@Nullable
+	Boolean getIncludeNamedQueriesScore();
 
 	/**
 	 * @since 4.3

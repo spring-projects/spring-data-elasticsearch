@@ -131,11 +131,11 @@ class RequestConverter extends AbstractQueryProcessor {
 	}
 
 	// region Cluster client
-	public co.elastic.clients.elasticsearch.cluster.HealthRequest clusterHealthRequest() {
+	public HealthRequest clusterHealthRequest() {
 		return new HealthRequest.Builder().build();
 	}
 
-	public co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest clusterPutComponentTemplateRequest(
+	public PutComponentTemplateRequest clusterPutComponentTemplateRequest(
 			org.springframework.data.elasticsearch.core.index.PutComponentTemplateRequest putComponentTemplateRequest) {
 
 		Assert.notNull(putComponentTemplateRequest, "putComponentTemplateRequest must not be null");
@@ -479,7 +479,7 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		Assert.notNull(existsIndexTemplateRequest, "existsIndexTemplateRequest must not be null");
 
-		return co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest
+		return ExistsIndexTemplateRequest
 				.of(b -> b.name(existsIndexTemplateRequest.templateName()));
 	}
 
@@ -1426,6 +1426,7 @@ class RequestConverter extends AbstractQueryProcessor {
 				.searchType(searchType) //
 				.timeout(timeStringMs(query.getTimeout())) //
 				.requestCache(query.getRequestCache()) //
+				.includeNamedQueriesScore(query.getIncludeNamedQueriesScore()) //
 		;
 
 		var pointInTime = query.getPointInTime();

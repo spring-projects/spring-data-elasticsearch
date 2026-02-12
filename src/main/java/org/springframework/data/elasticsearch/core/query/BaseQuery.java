@@ -81,6 +81,7 @@ public class BaseQuery implements Query {
 	protected List<IdWithRouting> idsWithRouting = Collections.emptyList();
 	protected List<RuntimeField> runtimeFields = new ArrayList<>();
 	@Nullable protected PointInTime pointInTime;
+	@Nullable protected Boolean includeNamedQueriesScore;
 	private boolean queryIsUpdatedByConverter = false;
 	@Nullable private Integer reactiveBatchSize = null;
 	@Nullable private Boolean allowNoIndices = null;
@@ -123,6 +124,7 @@ public class BaseQuery implements Query {
 		this.docValueFields = builder.getDocValueFields();
 		this.scriptedFields = builder.getScriptedFields();
 		this.runtimeFields = builder.getRuntimeFields();
+		this.includeNamedQueriesScore = builder.getIncludeNamedQueriesScore();
 	}
 
 	/**
@@ -456,6 +458,11 @@ public class BaseQuery implements Query {
 	}
 
 	@Override
+	public void setIncludeNamedQueriesScore(@Nullable Boolean value) {
+		this.includeNamedQueriesScore = value;
+	}
+
+	@Override
 	@Nullable
 	public Boolean getRequestCache() {
 		return this.requestCache;
@@ -478,6 +485,11 @@ public class BaseQuery implements Query {
 	@Nullable
 	public List<IndexBoost> getIndicesBoost() {
 		return indicesBoost;
+	}
+
+	@Override
+	public @Nullable Boolean getIncludeNamedQueriesScore() {
+		return this.includeNamedQueriesScore;
 	}
 
 	/**
