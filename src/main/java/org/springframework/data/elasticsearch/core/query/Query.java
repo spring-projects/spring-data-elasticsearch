@@ -74,7 +74,7 @@ public interface Query {
 	Pageable getPageable();
 
 	/**
-	 * Add {@link Sort} to query
+	 * Add {@link org.springframework.data.domain.Sort} to query
 	 *
 	 * @param sort
 	 * @return

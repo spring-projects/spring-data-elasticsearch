@@ -131,11 +131,11 @@ class RequestConverter extends AbstractQueryProcessor {
 	}
 
 	// region Cluster client
-	public HealthRequest clusterHealthRequest() {
+	public co.elastic.clients.elasticsearch.cluster.HealthRequest clusterHealthRequest() {
 		return new HealthRequest.Builder().build();
 	}
 
-	public PutComponentTemplateRequest clusterPutComponentTemplateRequest(
+	public co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest clusterPutComponentTemplateRequest(
 			org.springframework.data.elasticsearch.core.index.PutComponentTemplateRequest putComponentTemplateRequest) {
 
 		Assert.notNull(putComponentTemplateRequest, "putComponentTemplateRequest must not be null");
@@ -479,7 +479,7 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		Assert.notNull(existsIndexTemplateRequest, "existsIndexTemplateRequest must not be null");
 
-		return ExistsIndexTemplateRequest
+		return co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest
 				.of(b -> b.name(existsIndexTemplateRequest.templateName()));
 	}
 
