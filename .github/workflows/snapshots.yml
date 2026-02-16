@@ -1,6 +1,7 @@
 name: Snapshots
 
 on:
+  workflow_dispatch:
   push:
     branches: [ main, 6.0.x, 5.5.x, 'issue/**' ]
 
@@ -14,11 +15,11 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup Java and Maven
-        uses: spring-projects/spring-data-release/actions/setup-maven@main
+        uses: spring-projects/spring-data-build/actions/setup-maven@main
         with:
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
       - name: Deploy to Artifactory
-        uses: spring-projects/spring-data-release/actions/maven-artifactory-deploy@main
+        uses: spring-projects/spring-data-build/actions/maven-artifactory-deploy@main
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
         with:
