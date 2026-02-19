@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.core.convert;
 
+import static org.springframework.util.PatternMatchUtils.simpleMatch;
+
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.Map.Entry;
@@ -45,6 +47,7 @@ import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.ScriptedField;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.document.SearchDocument;
+import org.springframework.data.elasticsearch.core.mapping.DynamicTemplate;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
 import org.springframework.data.elasticsearch.core.mapping.PropertyValueConverter;
@@ -400,6 +403,10 @@ public class MappingElasticsearchConverter
 							targetEntity.getPropertyAccessor(result).setProperty(property, seqNoPrimaryTerm);
 						}
 					}
+
+					if (targetEntity.hasDynamicTemplates()) {
+						populateFieldsUsingDynamicTemplates(targetEntity, result, document);
+					}
 				}
 
 				if (source instanceof SearchDocument searchDocument) {
@@ -689,6 +696,28 @@ public class MappingElasticsearchConverter
 					}
 				}
 			});
+		}
+
+		private <R> void populateFieldsUsingDynamicTemplates(ElasticsearchPersistentEntity<?> targetEntity, R result,
+				Document document) {
+			for (Entry<String, DynamicTemplate> templateEntry : targetEntity.getDynamicTemplates().entrySet()) {
+				ElasticsearchPersistentProperty property = targetEntity
+						.getPersistentPropertyWithFieldName(templateEntry.getKey());
+				if (property != null && property.isDynamicFieldMapping()) {
+					// prepare value
+					Map<String, Object> values = new HashMap<>();
+					// TODO: Path match and unmatched
+					document.entrySet().stream()
+							.filter(fieldKey -> templateEntry.getValue().getMatch().stream()
+									.anyMatch(regex -> simpleMatch(regex, fieldKey.getKey()))
+									&& templateEntry.getValue().getUnmatch().stream()
+											.noneMatch(regex -> simpleMatch(regex, fieldKey.getKey())))
+							.forEach(entry -> values.put(entry.getKey(), entry.getValue()));
+
+					// set property
+					targetEntity.getPropertyAccessor(result).setProperty(property, read(property.getType(), Document.from(values)));
+				}
+			}
 		}
 
 		/**
@@ -1062,7 +1091,14 @@ public class MappingElasticsearchConverter
 
 			if (valueType.isMap()) {
 				Map<String, Object> mapDbObj = createMap((Map<?, ?>) value, property);
-				sink.set(property, mapDbObj);
+				if (property.isDynamicFieldMapping()) {
+					for (Entry<String, Object> entry : mapDbObj.entrySet()) {
+						sink.set(entry.getKey(), entry.getValue());
+					}
+				} else {
+					sink.set(property, mapDbObj);
+				}
+				
 				return;
 			}
 
@@ -1085,7 +1121,14 @@ public class MappingElasticsearchConverter
 
 			addCustomTypeKeyIfNecessary(value, document, TypeInformation.of(property.getRawType()));
 			writeInternal(value, document, entity);
-			sink.set(property, document);
+			if (property.isDynamicFieldMapping()) {
+				// flatten
+				for (Entry<String, Object> entry : document.entrySet()) {
+					sink.set(entry.getKey(), entry.getValue());
+				}
+			} else {
+				sink.set(property, document);
+			}
 		}
 
 		/**
@@ -1556,7 +1599,11 @@ public class MappingElasticsearchConverter
 				}
 			}
 
-			target.put(property.getFieldName(), value);
+			set(property.getFieldName(), value);
+		}
+
+		public void set(String key, @Nullable Object value) {
+			target.put(key, value);
 		}
 
 		private Map<String, Object> getAsMap(Object result) {
