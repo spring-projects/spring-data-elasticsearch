@@ -22,6 +22,8 @@ import co.elastic.clients.elasticsearch._types.aggregations.Aggregation;
 
 import java.util.List;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import org.assertj.core.data.Offset;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -170,6 +172,68 @@ public abstract class NativeQueryIntegrationTests {
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(1);
 		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo(entity.getId());
+	}
+
+    @Test // #3248
+    @DisplayName("should be able to use includeNamedQueriesScore in a NativeQuery")
+    void shouldBeAbleToUseIncludeQueriesScoreInANativeQuery() {
+
+		var entity = new SampleEntity();
+		entity.setId("7");
+		entity.setText("seven");
+		operations.save(entity);
+		entity = new SampleEntity();
+		entity.setId("42");
+		entity.setText("matched");
+		operations.save(entity);
+
+		var matchQuery = MatchQuery.of(m -> m.field("text")
+				.query("matched")
+				.queryName("namedQuery"));
+
+		var nativeQuery = NativeQuery.builder()
+				.withQuery(matchQuery._toQuery())
+				.withIncludeNamedQueryScore(true)
+				.build();
+
+		var searchHits = operations.search(nativeQuery, SampleEntity.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo(entity.getId());
+		assertThat(searchHits.getSearchHit(0).getMatchedQueries()).containsKey("namedQuery");
+		assertThat(searchHits.getSearchHit(0).getMatchedQueries().get("namedQuery")).isGreaterThan(0.0);
+		assertThat(searchHits.getSearchHit(0).getMatchedQueries().get("namedQuery"))
+				.isCloseTo(searchHits.getMaxScore(), Offset.offset(0.01));
+	}
+
+	@Test // #3248
+	@DisplayName("should not be able to use named queries score in a NativeQuery when disabled")
+	void shouldNotBeAbleToUseNamedQueriesScoreInANativeQueryWhenDisabled() {
+
+		var entity = new SampleEntity();
+		entity.setId("7");
+		entity.setText("seven");
+		operations.save(entity);
+		entity = new SampleEntity();
+		entity.setId("42");
+		entity.setText("matched");
+		operations.save(entity);
+
+		var matchQuery = MatchQuery.of(m -> m.field("text")
+				.query("matched")
+				.queryName("namedQuery"));
+
+		var nativeQuery = NativeQuery.builder()
+				.withQuery(matchQuery._toQuery())
+				.withIncludeNamedQueryScore(false)
+				.build();
+
+		var searchHits = operations.search(nativeQuery, SampleEntity.class);
+
+		assertThat(searchHits.getTotalHits()).isEqualTo(1);
+		assertThat(searchHits.getSearchHit(0).getId()).isEqualTo(entity.getId());
+		assertThat(searchHits.getSearchHit(0).getMatchedQueries()).containsKey("namedQuery");
+		assertThat(searchHits.getSearchHit(0).getMatchedQueries().get("namedQuery")).isNull();
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
