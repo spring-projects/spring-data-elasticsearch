@@ -1,9 +1,9 @@
-name: CI Build
+name: CI main
 
 on:
   workflow_dispatch:
   push:
-    branches: [ main, 6.0.x, 5.5.x, 'issue/**' ]
+    branches: [ main, 'issue/**' ]
 
 permissions: read-all
 
