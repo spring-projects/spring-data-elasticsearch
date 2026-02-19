@@ -3,7 +3,7 @@ name: Snapshots
 on:
   workflow_dispatch:
   push:
-    branches: [ main, 6.0.x, 5.5.x, 'issue/**' ]
+    branches: [ 6.0.x, 'issue/6.0.x/**' ]
 
 permissions: read-all
 
