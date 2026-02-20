@@ -1426,6 +1426,7 @@ class RequestConverter extends AbstractQueryProcessor {
 				.searchType(searchType) //
 				.timeout(timeStringMs(query.getTimeout())) //
 				.requestCache(query.getRequestCache()) //
+				.includeNamedQueriesScore(query.getIncludeNamedQueriesScore()) //
 		;
 
 		var pointInTime = query.getPointInTime();
