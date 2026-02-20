@@ -6,12 +6,8 @@ nav:
 ext:
   collector:
     - run:
-        command: ./mvnw validate process-resources -am -Pantora-process-resources
+        command: ./mvnw -B validate process-resources dependency:unpack -am -Pantora-process-resources
         local: true
       scan:
-        dir: target/classes/
-    - run:
-        command: ./mvnw package -Pdistribute
-        local: true
-      scan:
-        dir: target/antora
+        - dir: target/classes/
+        - dir: target/antora/
