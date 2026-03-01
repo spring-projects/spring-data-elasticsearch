@@ -900,8 +900,17 @@ class RequestConverter extends AbstractQueryProcessor {
 					}
 
 					SourceFilter sourceFilter = source.getSourceFilter();
-					if (sourceFilter != null && sourceFilter.getIncludes() != null) {
-						s.sourceFields(Arrays.asList(sourceFilter.getIncludes()));
+					if (sourceFilter != null && (sourceFilter.getIncludes() != null || sourceFilter.getExcludes() != null)) {
+						s.sourceFields(cfg -> cfg
+								.filter(f -> {
+									if (sourceFilter.getIncludes() != null) {
+										f.includes(Arrays.asList(sourceFilter.getIncludes()));
+									}
+									if (sourceFilter.getExcludes() != null) {
+										f.excludes(Arrays.asList(sourceFilter.getExcludes()));
+									}
+									return f;
+								}));
 					}
 					return s;
 				}) //
