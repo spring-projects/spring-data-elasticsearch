@@ -15,17 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
-import reactor.util.function.Tuple2;
-
-import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -59,6 +48,18 @@ import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.util.Assert;
 
+import java.time.Duration;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
+import io.micrometer.observation.ObservationRegistry;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+import reactor.util.function.Tuple2;
+
 /**
  * Base class keeping common code for implementations of the {@link ReactiveElasticsearchOperations} interface
  * independent of the used client.
@@ -77,6 +78,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	protected RoutingResolver routingResolver;
 
 	protected @Nullable ReactiveEntityCallbacks entityCallbacks;
+	protected ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
 
 	// region Initialization
 	protected AbstractReactiveElasticsearchTemplate(@Nullable ElasticsearchConverter converter) {
@@ -109,6 +111,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		}
 
 		copy.setRoutingResolver(routingResolver);
+		copy.setObservationRegistry(observationRegistry);
+		customizeCopy(copy);
 		return copy;
 	}
 
@@ -160,6 +164,28 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		Assert.notNull(entityCallbacks, "EntityCallbacks must not be null!");
 
 		this.entityCallbacks = entityCallbacks;
+	}
+
+	/**
+	 * Set the {@link ObservationRegistry} to use for recording observations.
+	 *
+	 * @param observationRegistry must not be {@literal null}.
+	 * @since 6.1
+	 */
+	public void setObservationRegistry(ObservationRegistry observationRegistry) {
+
+		Assert.notNull(observationRegistry, "observationRegistry must not be null");
+
+		this.observationRegistry = observationRegistry;
+	}
+
+	/**
+	 * Hook for subclasses to copy additional state during {@link #copy()}. Called after all common fields have been
+	 * copied. The default implementation does nothing.
+	 *
+	 * @param copy the new template instance to customize
+	 */
+	protected void customizeCopy(AbstractReactiveElasticsearchTemplate copy) {
 	}
 
 	/**

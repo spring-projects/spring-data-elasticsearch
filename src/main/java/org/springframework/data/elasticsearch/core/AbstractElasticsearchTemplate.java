@@ -15,15 +15,6 @@
  */
 package org.springframework.data.elasticsearch.core;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -43,7 +34,6 @@ import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersiste
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
-import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.MoreLikeThisQuery;
@@ -60,6 +50,17 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
+import io.micrometer.observation.ObservationRegistry;
 
 /**
  * This class contains methods that are common to different implementations of the {@link ElasticsearchOperations}
@@ -85,6 +86,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Nullable protected EntityCallbacks entityCallbacks;
 	@Nullable protected RefreshPolicy refreshPolicy;
 	protected RoutingResolver routingResolver;
+	protected ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
 
 	public AbstractElasticsearchTemplate() {
 		this(null);
@@ -117,6 +119,8 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		copy.setRoutingResolver(routingResolver);
 		copy.setRefreshPolicy(refreshPolicy);
+		copy.setObservationRegistry(observationRegistry);
+		customizeCopy(copy);
 
 		return copy;
 	}
@@ -169,6 +173,28 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Nullable
 	public RefreshPolicy getRefreshPolicy() {
 		return refreshPolicy;
+	}
+
+	/**
+	 * Set the {@link ObservationRegistry} to use for recording observations.
+	 *
+	 * @param observationRegistry must not be {@literal null}.
+	 * @since 6.1
+	 */
+	public void setObservationRegistry(ObservationRegistry observationRegistry) {
+
+		Assert.notNull(observationRegistry, "observationRegistry must not be null");
+
+		this.observationRegistry = observationRegistry;
+	}
+
+	/**
+	 * Hook for subclasses to copy additional state during {@link #copy()}. Called after all common fields have been
+	 * copied. The default implementation does nothing.
+	 *
+	 * @param copy the new template instance to customize
+	 */
+	protected void customizeCopy(AbstractElasticsearchTemplate copy) {
 	}
 
 	/**
