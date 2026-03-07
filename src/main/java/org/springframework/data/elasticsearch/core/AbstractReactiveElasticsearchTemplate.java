@@ -15,6 +15,18 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import io.micrometer.observation.ObservationRegistry;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+import reactor.util.function.Tuple2;
+
+import java.time.Duration;
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
@@ -47,18 +59,6 @@ import org.springframework.data.elasticsearch.core.suggest.response.Suggest;
 import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.ReactiveEntityCallbacks;
 import org.springframework.util.Assert;
-
-import java.time.Duration;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
-
-import io.micrometer.observation.ObservationRegistry;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.core.publisher.Sinks;
-import reactor.util.function.Tuple2;
 
 /**
  * Base class keeping common code for implementations of the {@link ReactiveElasticsearchOperations} interface
@@ -185,8 +185,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	 *
 	 * @param copy the new template instance to customize
 	 */
-	protected void customizeCopy(AbstractReactiveElasticsearchTemplate copy) {
-	}
+	protected void customizeCopy(AbstractReactiveElasticsearchTemplate copy) {}
 
 	/**
 	 * logs the versions of the different Elasticsearch components.
@@ -285,8 +284,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 											sink.tryEmitComplete();
 										}
 									})
-									.subscribe(v -> {
-									}, error -> {
+									.subscribe(v -> {}, error -> {
 										if (subscription != null) {
 											subscription.cancel();
 										}

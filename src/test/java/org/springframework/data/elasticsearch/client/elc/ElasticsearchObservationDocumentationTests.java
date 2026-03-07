@@ -17,19 +17,19 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
 import io.micrometer.observation.tck.TestObservationRegistry;
 import io.micrometer.observation.tck.TestObservationRegistryAssert;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
 /**
  * Tests for {@link ElasticsearchObservation} and the end-to-end observation lifecycle.

@@ -17,13 +17,13 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-
 import io.micrometer.common.KeyValue;
 import io.micrometer.common.KeyValues;
 import io.micrometer.observation.Observation;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
 /**
  * Unit tests for {@link DefaultElasticsearchObservationConvention}.

@@ -140,8 +140,10 @@ class ObservabilityIntegrationTests {
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SampleEntity {
-		@Nullable @Id private String id;
-		@Nullable @Field(type = FieldType.Text) private String message;
+		@Nullable
+		@Id private String id;
+		@Nullable
+		@Field(type = FieldType.Text) private String message;
 
 		@Nullable
 		public String getId() {

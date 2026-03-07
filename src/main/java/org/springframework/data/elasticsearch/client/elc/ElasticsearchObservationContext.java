@@ -15,10 +15,10 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
+import io.micrometer.observation.Observation;
+
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-
-import io.micrometer.observation.Observation;
 
 /**
  * {@link Observation.Context} for Spring Data Elasticsearch operations. One instance is created per observed operation.
@@ -30,10 +30,8 @@ import io.micrometer.observation.Observation;
 public class ElasticsearchObservationContext extends Observation.Context {
 
 	private final ElasticsearchOperationName operationName;
-	@Nullable
-	private final IndexCoordinates indexCoordinates;
-	@Nullable
-	private Integer batchSize;
+	@Nullable private final IndexCoordinates indexCoordinates;
+	@Nullable private Integer batchSize;
 
 	public ElasticsearchObservationContext(ElasticsearchOperationName operationName,
 			@Nullable IndexCoordinates indexCoordinates) {

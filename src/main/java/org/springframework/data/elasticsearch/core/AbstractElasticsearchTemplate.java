@@ -15,6 +15,17 @@
  */
 package org.springframework.data.elasticsearch.core;
 
+import io.micrometer.observation.ObservationRegistry;
+
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -50,17 +61,6 @@ import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.Streamable;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
-
-import io.micrometer.observation.ObservationRegistry;
 
 /**
  * This class contains methods that are common to different implementations of the {@link ElasticsearchOperations}
@@ -194,8 +194,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	 *
 	 * @param copy the new template instance to customize
 	 */
-	protected void customizeCopy(AbstractElasticsearchTemplate copy) {
-	}
+	protected void customizeCopy(AbstractElasticsearchTemplate copy) {}
 
 	/**
 	 * logs the versions of the different Elasticsearch components.
