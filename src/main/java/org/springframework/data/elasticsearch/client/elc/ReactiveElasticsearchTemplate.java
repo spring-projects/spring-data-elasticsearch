@@ -18,31 +18,13 @@ package org.springframework.data.elasticsearch.client.elc;
 import static co.elastic.clients.util.ApiTypeHelper.*;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
-import co.elastic.clients.elasticsearch._types.Result;
-import co.elastic.clients.elasticsearch.core.*;
-import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
-import co.elastic.clients.elasticsearch.core.search.ResponseBody;
-import co.elastic.clients.json.JsonpMapper;
-import co.elastic.clients.transport.Version;
-import co.elastic.clients.transport.endpoints.BooleanResponse;
-import org.jspecify.annotations.NonNull;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-
-import java.time.Duration;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -53,6 +35,7 @@ import org.springframework.data.elasticsearch.core.AggregationContainer;
 import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.ReactiveIndexOperations;
+import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.cluster.ReactiveClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -69,6 +52,28 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import co.elastic.clients.elasticsearch._types.Result;
+import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.transport.Version;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+
 /**
  * Implementation of {@link org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations} using the new
  * Elasticsearch client.
@@ -76,11 +81,14 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @author Illia Ulianov
  * @author Junghoon Ban
+ * @author maryantocinn
  * @since 4.4
  */
 public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearchTemplate {
 
 	private static final Log LOGGER = LogFactory.getLog(ReactiveElasticsearchTemplate.class);
+
+	@Nullable private ElasticsearchObservationConvention observationConvention;
 
 	private final ReactiveElasticsearchClient client;
 	private final ReactiveElasticsearchSqlClient sqlClient;
@@ -102,7 +110,105 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		exceptionTranslator = new ElasticsearchExceptionTranslator(jsonpMapper);
 	}
 
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+		super.setApplicationContext(applicationContext);
+
+		if (observationRegistry == ObservationRegistry.NOOP) {
+			applicationContext.getBeanProvider(ObservationRegistry.class).ifAvailable(this::setObservationRegistry);
+		}
+
+		if (observationConvention == null) {
+			applicationContext.getBeanProvider(ElasticsearchObservationConvention.class)
+					.ifAvailable(this::setObservationConvention);
+		}
+	}
+
+	/**
+	 * Set a custom {@link ElasticsearchObservationConvention} to override the default convention.
+	 *
+	 * @param observationConvention can be {@literal null}.
+	 * @since 6.1
+	 */
+	public void setObservationConvention(@Nullable ElasticsearchObservationConvention observationConvention) {
+		this.observationConvention = observationConvention;
+	}
+
+	private <T> Mono<T> observeMono(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
+			Mono<T> mono) {
+		return Mono.defer(() -> {
+			Observation observation = createObservation(operationName, index, null);
+			return mono.doOnError(observation::error) //
+					.doFinally(signalType -> observation.stop())
+					.contextWrite(context -> context.put(Observation.class, observation))
+					.doOnSubscribe(subscription -> observation.start());
+		});
+	}
+
+	private <T> Flux<T> observeFlux(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
+			Flux<T> flux) {
+		return Flux.defer(() -> {
+			Observation observation = createObservation(operationName, index, null);
+			return flux.doOnError(observation::error) //
+					.doFinally(signalType -> observation.stop())
+					.contextWrite(context -> context.put(Observation.class, observation))
+					.doOnSubscribe(subscription -> observation.start());
+		});
+	}
+
+	private <T> Mono<T> observeMono(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
+			int batchSize, Mono<T> mono) {
+		return Mono.defer(() -> {
+			Observation observation = createObservation(operationName, index, batchSize);
+			return mono.doOnError(observation::error) //
+					.doFinally(signalType -> observation.stop())
+					.contextWrite(context -> context.put(Observation.class, observation))
+					.doOnSubscribe(subscription -> observation.start());
+		});
+	}
+
+	private Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
+			@Nullable Integer batchSize) {
+
+		ElasticsearchObservationContext context = new ElasticsearchObservationContext(operationName, index);
+		context.setBatchSize(batchSize);
+
+		return ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(observationConvention,
+				DefaultElasticsearchObservationConvention.INSTANCE, () -> context, observationRegistry);
+	}
+
 	// region Document operations
+	@Override
+	public <T> Mono<T> save(T entity, IndexCoordinates index) {
+		return observeMono(ElasticsearchOperationName.SAVE, index, super.save(entity, index));
+	}
+
+	@Override
+	public Mono<Boolean> exists(String id, IndexCoordinates index) {
+		return observeMono(ElasticsearchOperationName.EXISTS, index, super.exists(id, index));
+	}
+
+	@Override
+	public Mono<String> delete(Object entity, IndexCoordinates index) {
+		return observeMono(ElasticsearchOperationName.DELETE, index, super.delete(entity, index));
+	}
+
+	@Override
+	public Mono<String> delete(String id, IndexCoordinates index) {
+		return observeMono(ElasticsearchOperationName.DELETE, index, super.delete(id, index));
+	}
+
+	@Override
+	public <T> Flux<SearchHit<T>> search(Query query, Class<?> entityType, Class<T> resultType, IndexCoordinates index) {
+		return observeFlux(ElasticsearchOperationName.SEARCH, index, super.search(query, entityType, resultType, index));
+	}
+
+	@Override
+	public Mono<Long> count(Query query, Class<?> entityType, IndexCoordinates index) {
+		return observeMono(ElasticsearchOperationName.COUNT, index, super.count(query, entityType, index));
+	}
+
 	@Override
 	protected <T> Mono<Tuple2<T, IndexResponseMetaData>> doIndex(T entity, IndexCoordinates index) {
 
@@ -124,7 +230,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(entitiesPublisher, "entitiesPublisher must not be null!");
 
-		return entitiesPublisher //
+		return observeFlux(ElasticsearchOperationName.BULK, index, entitiesPublisher //
 				.flatMapMany(entities -> Flux.fromIterable(entities) //
 						.concatMap(entity -> maybeCallbackBeforeConvert(entity, index)) //
 				).collectList() //
@@ -146,12 +252,12 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 												response.index(), //
 												response.seqNo(), //
 												response.primaryTerm(), //
-												response.version()),
-										converter,
+												response.version()), //
+										converter, //
 										routingResolver);
 								return maybeCallbackAfterSave(updatedEntity, index);
 							});
-				});
+				}));
 	}
 
 	@Override
@@ -172,9 +278,11 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	public Mono<ByQueryResponse> delete(DeleteQuery query, Class<?> entityType, IndexCoordinates index) {
 		Assert.notNull(query, "query must not be null");
 
-		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
-				entityType, index, getRefreshPolicy());
-		return Mono.from(execute(client -> client.deleteByQuery(request))).map(responseConverter::byQueryResponse);
+		return observeMono(ElasticsearchOperationName.DELETE_BY_QUERY, index, Mono.defer(() -> {
+			DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
+					entityType, index, getRefreshPolicy());
+			return Mono.from(execute(client -> client.deleteByQuery(request))).map(responseConverter::byQueryResponse);
+		}));
 	}
 
 	@Override
@@ -184,13 +292,15 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(entityType, "entityType must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index);
+		return observeMono(ElasticsearchOperationName.GET, index, Mono.defer(() -> {
+			GetRequest getRequest = requestConverter.documentGetRequest(id, routingResolver.getRouting(), index);
 
-		Mono<GetResponse<EntityAsMap>> getResponse = Mono
-				.from(execute(client -> client.get(getRequest, EntityAsMap.class)));
+			Mono<GetResponse<EntityAsMap>> getResponse = Mono //
+					.from(execute(client -> client.get(getRequest, EntityAsMap.class)));
 
-		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(converter, entityType, index);
-		return getResponse.flatMap(response -> callback.toEntity(DocumentAdapters.from(response)));
+			ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(converter, entityType, index);
+			return getResponse.flatMap(response -> callback.toEntity(DocumentAdapters.from(response)));
+		}));
 	}
 
 	@Override
@@ -227,13 +337,15 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(updateQuery, "UpdateQuery must not be null");
 		Assert.notNull(index, "Index must not be null");
 
-		UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index, getRefreshPolicy(),
-				routingResolver.getRouting());
+		return observeMono(ElasticsearchOperationName.UPDATE, index, Mono.defer(() -> {
+			UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index,
+					getRefreshPolicy(), routingResolver.getRouting());
 
-		return Mono.from(execute(client -> client.update(request, Document.class))).flatMap(response -> {
-			UpdateResponse.Result result = result(response.result());
-			return result == null ? Mono.empty() : Mono.just(UpdateResponse.of(result));
-		});
+			return Mono.from(execute(client -> client.update(request, Document.class))).flatMap(response -> {
+				UpdateResponse.Result result = result(response.result());
+				return result == null ? Mono.empty() : Mono.just(UpdateResponse.of(result));
+			});
+		}));
 	}
 
 	@Override
@@ -248,7 +360,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(bulkOptions, "BulkOptions must not be null");
 		Assert.notNull(index, "Index must not be null");
 
-		return doBulkOperation(queries, bulkOptions, index).then();
+		return observeMono(ElasticsearchOperationName.BULK, index, queries.size(),
+				doBulkOperation(queries, bulkOptions, index).then());
 	}
 
 	private Flux<BulkResponseItem> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
@@ -311,22 +424,24 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(clazz, "clazz must not be null");
 
-		MgetRequest request = requestConverter.documentMgetRequest(query, clazz, index);
+		return observeFlux(ElasticsearchOperationName.MULTI_GET, index, Flux.defer(() -> {
+			MgetRequest request = requestConverter.documentMgetRequest(query, clazz, index);
 
-		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(converter, clazz, index);
+			ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(converter, clazz, index);
 
-		Publisher<MgetResponse<EntityAsMap>> response = execute(client -> client.mget(request, EntityAsMap.class));
+			Publisher<MgetResponse<EntityAsMap>> response = execute(client -> client.mget(request, EntityAsMap.class));
 
-		return Mono.from(response)//
-				.flatMapMany(it -> Flux.fromIterable(DocumentAdapters.from(it))) //
-				.flatMap(multiGetItem -> {
-					if (multiGetItem.isFailed()) {
-						return Mono.just(MultiGetItem.of(null, multiGetItem.getFailure()));
-					} else {
-						return callback.toEntity(multiGetItem.getItem()) //
-								.map(t -> MultiGetItem.of(t, multiGetItem.getFailure()));
-					}
-				});
+			return Mono.from(response)//
+					.flatMapMany(it -> Flux.fromIterable(DocumentAdapters.from(it))) //
+					.flatMap(multiGetItem -> {
+						if (multiGetItem.isFailed()) {
+							return Mono.just(MultiGetItem.of(null, multiGetItem.getFailure()));
+						} else {
+							return callback.toEntity(multiGetItem.getItem()) //
+									.map(t -> MultiGetItem.of(t, multiGetItem.getFailure()));
+						}
+					});
+		}));
 	}
 
 	// endregion
@@ -334,6 +449,14 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	@Override
 	protected ReactiveElasticsearchTemplate doCopy() {
 		return new ReactiveElasticsearchTemplate(client, converter);
+	}
+
+	@Override
+	protected void customizeCopy(AbstractReactiveElasticsearchTemplate copy) {
+
+		if (copy instanceof ReactiveElasticsearchTemplate reactiveTemplate) {
+			reactiveTemplate.observationConvention = this.observationConvention;
+		}
 	}
 
 	// region search operations

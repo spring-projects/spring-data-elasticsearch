@@ -17,30 +17,11 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch.core.*;
-import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
-import co.elastic.clients.elasticsearch.core.msearch.MultiSearchResponseItem;
-import co.elastic.clients.elasticsearch.core.search.ResponseBody;
-import co.elastic.clients.elasticsearch.sql.ElasticsearchSqlClient;
-import co.elastic.clients.elasticsearch.sql.QueryResponse;
-import co.elastic.clients.json.JsonpMapper;
-import co.elastic.clients.transport.Version;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.elasticsearch.BulkFailureException;
 import org.springframework.data.elasticsearch.client.UnsupportedBackendOperation;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
@@ -62,6 +43,30 @@ import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.core.sql.SqlResponse;
 import org.springframework.util.Assert;
 
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Time;
+import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.msearch.MultiSearchResponseItem;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
+import co.elastic.clients.elasticsearch.sql.ElasticsearchSqlClient;
+import co.elastic.clients.elasticsearch.sql.QueryResponse;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.transport.Version;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+
 /**
  * Implementation of {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations} using the new
  * Elasticsearch client.
@@ -70,11 +75,14 @@ import org.springframework.util.Assert;
  * @author Hamid Rahimi
  * @author Illia Ulianov
  * @author Haibo Liu
+ * @author maryantocinn
  * @since 4.4
  */
 public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	private static final Log LOGGER = LogFactory.getLog(ElasticsearchTemplate.class);
+
+	@Nullable private ElasticsearchObservationConvention observationConvention;
 
 	private final ElasticsearchClient client;
 	private final ElasticsearchSqlClient sqlClient;
@@ -113,6 +121,61 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	protected AbstractElasticsearchTemplate doCopy() {
 		return new ElasticsearchTemplate(client, elasticsearchConverter);
 	}
+
+	@Override
+	protected void customizeCopy(AbstractElasticsearchTemplate copy) {
+
+		if (copy instanceof ElasticsearchTemplate elasticsearchTemplate) {
+			elasticsearchTemplate.observationConvention = this.observationConvention;
+		}
+	}
+
+	@Override
+	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+
+		super.setApplicationContext(applicationContext);
+
+		if (observationRegistry == ObservationRegistry.NOOP) {
+			applicationContext.getBeanProvider(ObservationRegistry.class).ifAvailable(this::setObservationRegistry);
+		}
+
+		if (observationConvention == null) {
+			applicationContext.getBeanProvider(ElasticsearchObservationConvention.class)
+					.ifAvailable(this::setObservationConvention);
+		}
+	}
+
+	/**
+	 * Set a custom {@link ElasticsearchObservationConvention} to override the default convention.
+	 *
+	 * @param observationConvention can be {@literal null}.
+	 * @since 6.1
+	 */
+	public void setObservationConvention(@Nullable ElasticsearchObservationConvention observationConvention) {
+		this.observationConvention = observationConvention;
+	}
+
+	private <T> T observe(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
+			Supplier<T> action) {
+		Observation observation = createObservation(operationName, index, null);
+		return observation.observe(action);
+	}
+
+	private <T> T observe(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index, int batchSize,
+			Supplier<T> action) {
+		Observation observation = createObservation(operationName, index, batchSize);
+		return observation.observe(action);
+	}
+
+	private Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
+			@Nullable Integer batchSize) {
+
+		ElasticsearchObservationContext context = new ElasticsearchObservationContext(operationName, index);
+		context.setBatchSize(batchSize);
+
+		return ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(observationConvention,
+				DefaultElasticsearchObservationConvention.INSTANCE, () -> context, observationRegistry);
+	}
 	// endregion
 
 	// region child templates
@@ -138,15 +201,44 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	// region document operations
 	@Override
+	public <T> T save(T entity, IndexCoordinates index) {
+		return observe(ElasticsearchOperationName.SAVE, index, () -> super.save(entity, index));
+	}
+
+	@Override
+	public String index(IndexQuery query, IndexCoordinates index) {
+		return observe(ElasticsearchOperationName.INDEX, index, () -> super.index(query, index));
+	}
+
+	@Override
+	public boolean exists(String id, IndexCoordinates index) {
+		return observe(ElasticsearchOperationName.EXISTS, index, () -> super.exists(id, index));
+	}
+
+	@Override
+	public String delete(String id, IndexCoordinates index) {
+		return observe(ElasticsearchOperationName.DELETE, index, () -> super.delete(id, index));
+	}
+
+	@Override
+	public List<IndexedObjectInformation> bulkOperation(List<?> queries, BulkOptions bulkOptions,
+			IndexCoordinates index) {
+		return observe(ElasticsearchOperationName.BULK, index, queries.size(),
+				() -> super.bulkOperation(queries, bulkOptions, index));
+	}
+
+	@Override
 	@Nullable
 	public <T> T get(String id, Class<T> clazz, IndexCoordinates index) {
 
-		GetRequest getRequest = requestConverter.documentGetRequest(elasticsearchConverter.convertId(id),
-				routingResolver.getRouting(), index);
-		GetResponse<EntityAsMap> getResponse = execute(client -> client.get(getRequest, EntityAsMap.class));
+		return observe(ElasticsearchOperationName.GET, index, () -> {
+			GetRequest getRequest = requestConverter.documentGetRequest(elasticsearchConverter.convertId(id),
+					routingResolver.getRouting(), index);
+			GetResponse<EntityAsMap> getResponse = execute(client -> client.get(getRequest, EntityAsMap.class));
 
-		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
-		return callback.doWith(DocumentAdapters.from(getResponse));
+			ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
+			return callback.doWith(DocumentAdapters.from(getResponse));
+		});
 	}
 
 	@Override
@@ -155,15 +247,17 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(clazz, "clazz must not be null");
 
-		MgetRequest request = requestConverter.documentMgetRequest(query, clazz, index);
-		MgetResponse<EntityAsMap> result = execute(client -> client.mget(request, EntityAsMap.class));
+		return observe(ElasticsearchOperationName.MULTI_GET, index, () -> {
+			MgetRequest request = requestConverter.documentMgetRequest(query, clazz, index);
+			MgetResponse<EntityAsMap> result = execute(client -> client.mget(request, EntityAsMap.class));
 
-		ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
+			ReadDocumentCallback<T> callback = new ReadDocumentCallback<>(elasticsearchConverter, clazz, index);
 
-		return DocumentAdapters.from(result).stream() //
-				.map(multiGetItem -> MultiGetItem.of( //
-						multiGetItem.isFailed() ? null : callback.doWith(multiGetItem.getItem()), multiGetItem.getFailure())) //
-				.collect(Collectors.toList());
+			return DocumentAdapters.from(result).stream() //
+					.map(multiGetItem -> MultiGetItem.of( //
+							multiGetItem.isFailed() ? null : callback.doWith(multiGetItem.getItem()), multiGetItem.getFailure())) //
+					.collect(Collectors.toList());
+		});
 	}
 
 	@Override
@@ -185,22 +279,26 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public ByQueryResponse delete(DeleteQuery query, Class<?> clazz, IndexCoordinates index) {
 		Assert.notNull(query, "query must not be null");
 
-		DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
-				clazz, index, getRefreshPolicy());
+		return observe(ElasticsearchOperationName.DELETE_BY_QUERY, index, () -> {
+			DeleteByQueryRequest request = requestConverter.documentDeleteByQueryRequest(query, routingResolver.getRouting(),
+					clazz, index, getRefreshPolicy());
 
-		DeleteByQueryResponse response = execute(client -> client.deleteByQuery(request));
+			DeleteByQueryResponse response = execute(client -> client.deleteByQuery(request));
 
-		return responseConverter.byQueryResponse(response);
+			return responseConverter.byQueryResponse(response);
+		});
 	}
 
 	@Override
 	public UpdateResponse update(UpdateQuery updateQuery, IndexCoordinates index) {
 
-		UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index, getRefreshPolicy(),
-				routingResolver.getRouting());
-		co.elastic.clients.elasticsearch.core.UpdateResponse<Document> response = execute(
-				client -> client.update(request, Document.class));
-		return UpdateResponse.of(result(response.result()));
+		return observe(ElasticsearchOperationName.UPDATE, index, () -> {
+			UpdateRequest<Document, ?> request = requestConverter.documentUpdateRequest(updateQuery, index,
+					getRefreshPolicy(), routingResolver.getRouting());
+			co.elastic.clients.elasticsearch.core.UpdateResponse<Document> response = execute(
+					client -> client.update(request, Document.class));
+			return UpdateResponse.of(result(response.result()));
+		});
 	}
 
 	@Override
@@ -209,11 +307,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(updateQuery, "updateQuery must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		UpdateByQueryRequest request = requestConverter.documentUpdateByQueryRequest(updateQuery, index,
-				getRefreshPolicy());
+		return observe(ElasticsearchOperationName.UPDATE_BY_QUERY, index, () -> {
+			UpdateByQueryRequest request = requestConverter.documentUpdateByQueryRequest(updateQuery, index,
+					getRefreshPolicy());
 
-		UpdateByQueryResponse byQueryResponse = execute(client -> client.updateByQuery(request));
-		return responseConverter.byQueryResponse(byQueryResponse);
+			UpdateByQueryResponse byQueryResponse = execute(client -> client.updateByQuery(request));
+			return responseConverter.byQueryResponse(byQueryResponse);
+		});
 	}
 
 	@Override
@@ -328,12 +428,14 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
-				true);
+		return observe(ElasticsearchOperationName.COUNT, index, () -> {
+			SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
+					true);
 
-		SearchResponse<EntityAsMap> searchResponse = execute(client -> client.search(searchRequest, EntityAsMap.class));
+			SearchResponse<EntityAsMap> searchResponse = execute(client -> client.search(searchRequest, EntityAsMap.class));
 
-		return searchResponse.hits().total().value();
+			return searchResponse.hits().total().value();
+		});
 	}
 
 	@Override
@@ -343,11 +445,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(clazz, "clazz must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		if (query instanceof SearchTemplateQuery searchTemplateQuery) {
-			return doSearch(searchTemplateQuery, clazz, index);
-		} else {
-			return doSearch(query, clazz, index);
-		}
+		return observe(ElasticsearchOperationName.SEARCH, index, () -> {
+			if (query instanceof SearchTemplateQuery searchTemplateQuery) {
+				return doSearch(searchTemplateQuery, clazz, index);
+			} else {
+				return doSearch(query, clazz, index);
+			}
+		});
 	}
 
 	protected <T> SearchHits<T> doSearch(Query query, Class<T> clazz, IndexCoordinates index) {
