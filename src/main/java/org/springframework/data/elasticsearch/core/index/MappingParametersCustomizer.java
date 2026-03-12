@@ -24,7 +24,7 @@ import org.jspecify.annotations.NonNull;
  * that are being emitted for each supported annotation.
  *
  * @author Andriy Redko
- * @since 6.0.4
+ * @since 6.1.0
  */
 public interface MappingParametersCustomizer {
 	/**
