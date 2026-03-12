@@ -112,9 +112,15 @@ public class MappingBuilder {
 
 	protected final ElasticsearchConverter elasticsearchConverter;
 	private final ObjectMapper objectMapper = new ObjectMapper();
+	private final MappingParametersCustomizer customizer;
 
 	public MappingBuilder(ElasticsearchConverter elasticsearchConverter) {
+		this(elasticsearchConverter, MappingParameters::from);
+	}
+	
+	public MappingBuilder(ElasticsearchConverter elasticsearchConverter, MappingParametersCustomizer customizer) {
 		this.elasticsearchConverter = elasticsearchConverter;
+		this.customizer = customizer;
 	}
 
 	/**
@@ -589,7 +595,7 @@ public class MappingBuilder {
 		private void addFieldMappingParameters(ObjectNode fieldNode, Annotation annotation, boolean nestedOrObjectField)
 				throws IOException {
 
-			MappingParameters mappingParameters = MappingParameters.from(annotation);
+			MappingParameters mappingParameters = customizer.from(annotation);
 
 			if (!nestedOrObjectField && mappingParameters.isStore()) {
 				fieldNode.put(FIELD_PARAM_STORE, true);
