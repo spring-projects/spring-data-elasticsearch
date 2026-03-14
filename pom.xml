@@ -21,7 +21,7 @@
 		<springdata.commons>4.1.0-SNAPSHOT</springdata.commons>
 
 		<!-- version of the ElasticsearchClient	-->
-		<elasticsearch-java>9.3.1</elasticsearch-java>
+		<elasticsearch-java>9.3.2</elasticsearch-java>
 		<elasticsearch-rest-client>9.3.1</elasticsearch-rest-client>
 
 		<hoverfly>0.20.2</hoverfly>
