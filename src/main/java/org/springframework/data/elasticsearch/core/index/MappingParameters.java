@@ -34,9 +34,9 @@ import org.springframework.util.StringUtils;
 /**
  * A class to hold the mapping parameters that might be set on
  * {@link org.springframework.data.elasticsearch.annotations.Field } or
- * {@link org.springframework.data.elasticsearch.annotations.InnerField} annotation.
- * The class allows extensibility (non-final) to simplify mapping parameters customization,
- * provided by {@link org.springframework.data.elasticsearch.core.index.MappingParametersCustomizer}.
+ * {@link org.springframework.data.elasticsearch.annotations.InnerField} annotation. The class allows extensibility
+ * (non-final) to simplify mapping parameters customization, provided by
+ * {@link org.springframework.data.elasticsearch.core.index.MappingParametersCustomizer}.
  *
  * @author Peter-Josef Meisch
  * @author Aleksei Arsenev

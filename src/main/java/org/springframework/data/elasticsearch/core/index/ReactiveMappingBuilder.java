@@ -39,7 +39,7 @@ public class ReactiveMappingBuilder extends MappingBuilder {
 	public ReactiveMappingBuilder(ElasticsearchConverter elasticsearchConverter) {
 		super(elasticsearchConverter);
 	}
-	
+
 	public ReactiveMappingBuilder(ElasticsearchConverter elasticsearchConverter, MappingParametersCustomizer customizer) {
 		super(elasticsearchConverter, customizer);
 	}

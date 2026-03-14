@@ -1346,15 +1346,15 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 	@DisplayName("should allow mapping parameters 	tion")
 	void shouldAllowMappingParametersCustomization() throws JSONException {
 		String expected = """
-			{
-			      "properties": {
-			        "my_vector": {
-			          "type": "dense_vector",
-			          "dimensions": 16
-			        }
-			      }
-			}
-			""";
+				{
+				      "properties": {
+				        "my_vector": {
+				          "type": "dense_vector",
+				          "dimensions": 16
+				        }
+				      }
+				}
+				""";
 
 		final MappingParametersCustomizer customizer = annotation -> new MappingParameters((Field) annotation) {
 			@Override

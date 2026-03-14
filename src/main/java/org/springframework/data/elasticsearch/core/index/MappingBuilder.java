@@ -38,7 +38,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.core.TypeInformation;
@@ -117,7 +116,7 @@ public class MappingBuilder {
 	public MappingBuilder(ElasticsearchConverter elasticsearchConverter) {
 		this(elasticsearchConverter, MappingParameters::from);
 	}
-	
+
 	public MappingBuilder(ElasticsearchConverter elasticsearchConverter, MappingParametersCustomizer customizer) {
 		this.elasticsearchConverter = elasticsearchConverter;
 		this.customizer = customizer;
