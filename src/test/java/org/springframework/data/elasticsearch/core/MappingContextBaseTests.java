@@ -19,11 +19,13 @@ import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationS
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.index.MappingBuilder;
+import org.springframework.data.elasticsearch.core.index.MappingParametersCustomizer;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.util.Lazy;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  */
 public abstract class MappingContextBaseTests {
 
@@ -40,6 +42,10 @@ public abstract class MappingContextBaseTests {
 				.elasticsearchMappingContext(configurationSupport.elasticsearchCustomConversions());
 		mappingContext.initialize();
 		return mappingContext;
+	}
+
+	final protected MappingBuilder getMappingBuilder(MappingParametersCustomizer customizer) {
+		return new MappingBuilder(elasticsearchConverter.get(), customizer);
 	}
 
 	final protected MappingBuilder getMappingBuilder() {

@@ -35,6 +35,8 @@ import org.springframework.util.StringUtils;
  * A class to hold the mapping parameters that might be set on
  * {@link org.springframework.data.elasticsearch.annotations.Field } or
  * {@link org.springframework.data.elasticsearch.annotations.InnerField} annotation.
+ * The class allows extensibility (non-final) to simplify mapping parameters customization,
+ * provided by {@link org.springframework.data.elasticsearch.core.index.MappingParametersCustomizer}.
  *
  * @author Peter-Josef Meisch
  * @author Aleksei Arsenev
@@ -42,9 +44,10 @@ import org.springframework.util.StringUtils;
  * @author Morgan Lutz
  * @author Sascha Woo
  * @author Haibo Liu
+ * @author Andriy Redko
  * @since 4.0
  */
-public final class MappingParameters {
+public class MappingParameters {
 
 	static final String FIELD_PARAM_COERCE = "coerce";
 	static final String FIELD_PARAM_COPY_TO = "copy_to";
@@ -137,7 +140,7 @@ public final class MappingParameters {
 		}
 	}
 
-	private MappingParameters(Field field) {
+	protected MappingParameters(Field field) {
 		index = field.index();
 		store = field.store();
 		fielddata = field.fielddata();
@@ -184,7 +187,7 @@ public final class MappingParameters {
 		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
 	}
 
-	private MappingParameters(InnerField field) {
+	protected MappingParameters(InnerField field) {
 		index = field.index();
 		store = field.store();
 		fielddata = field.fielddata();
@@ -416,5 +419,133 @@ public final class MappingParameters {
 		if (eagerGlobalOrdinals) {
 			objectNode.put(FIELD_PARAM_EAGER_GLOBAL_ORDINALS, eagerGlobalOrdinals);
 		}
+	}
+
+	protected String analyzer() {
+		return analyzer;
+	}
+
+	protected boolean coerce() {
+		return coerce;
+	}
+
+	protected String[] copyTo() {
+		return copyTo;
+	}
+
+	protected DateFormat[] dateFormats() {
+		return dateFormats;
+	}
+
+	protected String[] dateFormatPatterns() {
+		return dateFormatPatterns;
+	}
+
+	protected boolean hasDocValues() {
+		return docValues;
+	}
+
+	protected boolean hasEagerGlobalOrdinals() {
+		return eagerGlobalOrdinals;
+	}
+
+	protected boolean isEnabled() {
+		return enabled;
+	}
+
+	protected boolean hasFielddata() {
+		return fielddata;
+	}
+
+	protected Integer ignoreAbove() {
+		return ignoreAbove;
+	}
+
+	protected boolean isIgnoreMalformed() {
+		return ignoreMalformed;
+	}
+
+	protected boolean isIndex() {
+		return index;
+	}
+
+	protected IndexOptions indexOptions() {
+		return indexOptions;
+	}
+
+	protected boolean isIndexPhrases() {
+		return indexPhrases;
+	}
+
+	protected IndexPrefixes indexPrefixes() {
+		return indexPrefixes;
+	}
+
+	protected String normalizer() {
+		return normalizer;
+	}
+
+	protected boolean hasNorms() {
+		return norms;
+	}
+
+	protected Integer maxShingleSize() {
+		return maxShingleSize;
+	}
+
+	protected String nullValue() {
+		return nullValue;
+	}
+
+	protected NullValueType nullValueType() {
+		return nullValueType;
+	}
+
+	protected Integer positionIncrementGap() {
+		return positionIncrementGap;
+	}
+
+	protected boolean positiveScoreImpact() {
+		return positiveScoreImpact;
+	}
+
+	protected Integer dims() {
+		return dims;
+	}
+
+	protected String elementType() {
+		return elementType;
+	}
+
+	protected KnnSimilarity knnSimilarity() {
+		return knnSimilarity;
+	}
+
+	protected KnnIndexOptions knnIndexOptions() {
+		return knnIndexOptions;
+	}
+
+	protected String searchAnalyzer() {
+		return searchAnalyzer;
+	}
+
+	protected double scalingFactor() {
+		return scalingFactor;
+	}
+
+	protected String similarity() {
+		return similarity;
+	}
+
+	protected TermVector termVector() {
+		return termVector;
+	}
+
+	protected FieldType type() {
+		return type;
+	}
+
+	protected String mappedTypeName() {
+		return mappedTypeName;
 	}
 }

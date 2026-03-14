@@ -31,12 +31,17 @@ import org.springframework.data.mapping.MappingException;
  * Subclass of {@link MappingBuilder} with specialized methods To inhibit blocking calls
  *
  * @author Peter-Josef Meisch
+ * @author Andriy Redko
  * @since 4.3
  */
 public class ReactiveMappingBuilder extends MappingBuilder {
 
 	public ReactiveMappingBuilder(ElasticsearchConverter elasticsearchConverter) {
 		super(elasticsearchConverter);
+	}
+	
+	public ReactiveMappingBuilder(ElasticsearchConverter elasticsearchConverter, MappingParametersCustomizer customizer) {
+		super(elasticsearchConverter, customizer);
 	}
 
 	@Override

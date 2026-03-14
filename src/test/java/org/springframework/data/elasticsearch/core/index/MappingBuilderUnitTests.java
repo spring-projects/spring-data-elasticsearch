@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 import static org.springframework.data.elasticsearch.annotations.FieldType.*;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -48,6 +49,8 @@ import org.springframework.data.geo.Circle;
 import org.springframework.data.geo.Point;
 import org.springframework.data.geo.Polygon;
 import org.springframework.data.mapping.MappingException;
+
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * @author Stuart Stevenson
@@ -1339,6 +1342,35 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		assertEquals(expected, result, true);
 	}
 
+	@Test // #1700
+	@DisplayName("should allow mapping parameters 	tion")
+	void shouldAllowMappingParametersCustomization() throws JSONException {
+		String expected = """
+			{
+			      "properties": {
+			        "my_vector": {
+			          "type": "dense_vector",
+			          "dimensions": 16
+			        }
+			      }
+			}
+			""";
+
+		final MappingParametersCustomizer customizer = annotation -> new MappingParameters((Field) annotation) {
+			@Override
+			public void writeTypeAndParametersTo(ObjectNode objectNode) throws IOException {
+				if (type() == FieldType.Dense_Vector) {
+					objectNode.put(FIELD_PARAM_TYPE, mappedTypeName());
+					objectNode.put("dimensions", dims());
+				}
+			}
+		};
+
+		String mapping = getMappingBuilder(customizer)
+				.buildPropertyMapping(DenseVectorEntity.class);
+
+		assertEquals(expected, mapping, false);
+	}
 	// region entities
 
 	@Document(indexName = "ignore-above-index")
