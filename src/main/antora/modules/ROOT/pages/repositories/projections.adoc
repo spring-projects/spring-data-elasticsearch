@@ -2,3 +2,10 @@
 = Projections
 
 include::{commons}@data-commons::page$repositories/projections.adoc[leveloffset=+1]
+
+[[elasticsearch.projections.limitations]]
+== Elasticsearch Projection Limitations
+
+IMPORTANT: Interface-based projections are not supported in Spring Data Elasticsearch repository query methods.
+
+To limit the fields returned from Elasticsearch, use the xref:elasticsearch/repositories/elasticsearch-repositories.adoc#elasticsearch.repositories.annotations.sourcefilters[`@SourceFilters`] annotation on your repository methods instead.
