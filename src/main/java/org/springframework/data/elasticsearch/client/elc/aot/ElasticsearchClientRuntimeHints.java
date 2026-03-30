@@ -15,15 +15,9 @@
  */
 package org.springframework.data.elasticsearch.client.elc.aot;
 
-import co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType;
-import co.elastic.clients.elasticsearch._types.mapping.TypeMapping;
-import co.elastic.clients.elasticsearch.indices.IndexSettings;
-import co.elastic.clients.elasticsearch.indices.PutMappingRequest;
-
 import org.jspecify.annotations.Nullable;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
-import org.springframework.aot.hint.TypeReference;
 import org.springframework.util.ClassUtils;
 
 /**
@@ -38,10 +32,14 @@ public class ElasticsearchClientRuntimeHints implements RuntimeHintsRegistrar {
 	public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
 
 		hints.reflection()
-				.registerType(TypeReference.of(IndexSettings.class), builder -> builder.withField("_DESERIALIZER"))
-				.registerType(TypeReference.of(PutMappingRequest.class), builder -> builder.withField("_DESERIALIZER"))
-				.registerType(TypeReference.of(RuntimeFieldType.class), builder -> builder.withField("_DESERIALIZER"))
-				.registerType(TypeReference.of(TypeMapping.class), builder -> builder.withField("_DESERIALIZER"));
+				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch.indices.IndexSettings",
+						builder -> builder.withField("_DESERIALIZER"))
+				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch.indices.PutMappingRequest",
+						builder -> builder.withField("_DESERIALIZER"))
+				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType",
+						builder -> builder.withField("_DESERIALIZER"))
+				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch._types.mapping.TypeMapping",
+						builder -> builder.withField("_DESERIALIZER"));
 
 		if (ClassUtils.isPresent("org.apache.http.impl.auth.BasicScheme",
 				ElasticsearchClientRuntimeHints.class.getClassLoader())) {
