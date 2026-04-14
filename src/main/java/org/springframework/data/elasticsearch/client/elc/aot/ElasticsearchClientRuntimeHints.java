@@ -20,6 +20,7 @@ import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.lang.Nullable;
+import org.springframework.util.ClassUtils;
 
 /**
  * runtime hints for the Elasticsearch client libraries, as these do not provide any of their own.
@@ -34,20 +35,21 @@ public class ElasticsearchClientRuntimeHints implements RuntimeHintsRegistrar {
 
 		hints.reflection()
 				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch.indices.IndexSettings",
-						builder -> builder.withField("_DESERIALIZER")) //
+						builder -> builder.withField("_DESERIALIZER"))
 				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch.indices.PutMappingRequest",
-						builder -> builder.withField("_DESERIALIZER")) //
+						builder -> builder.withField("_DESERIALIZER"))
 				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch._types.mapping.RuntimeFieldType",
-						builder -> builder.withField("_DESERIALIZER"))//
+						builder -> builder.withField("_DESERIALIZER"))
 				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch._types.mapping.TypeMapping",
-						builder -> builder.withField("_DESERIALIZER")) //
-		;
+						builder -> builder.withField("_DESERIALIZER"));
 
-		hints.serialization() //
-				.registerType(org.apache.http.impl.auth.BasicScheme.class) //
-				.registerType(org.apache.http.impl.auth.RFC2617Scheme.class) //
-				.registerType(java.util.HashMap.class) //
-		;
+		if (ClassUtils.isPresent("org.apache.http.impl.auth.BasicScheme", classLoader)) {
+			hints.serialization() //
+					.registerType(org.apache.http.impl.auth.BasicScheme.class) //
+					.registerType(org.apache.http.impl.auth.RFC2617Scheme.class) //
+					.registerType(java.util.HashMap.class) //
+			;
+		}
 
 		hints.resources() //
 				.registerPattern("co/elastic/clients/version.properties") //
