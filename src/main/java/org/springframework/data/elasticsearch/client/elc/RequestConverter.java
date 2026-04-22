@@ -589,10 +589,13 @@ class RequestConverter extends AbstractQueryProcessor {
 			builder.version(query.getVersion()).versionType(versionType);
 		}
 
-		builder //
-				.ifSeqNo(query.getSeqNo()) //
-				.ifPrimaryTerm(query.getPrimaryTerm()) //
-				.routing(query.getRouting()); //
+		builder
+				.ifSeqNo(query.getSeqNo())
+				.ifPrimaryTerm(query.getPrimaryTerm());
+
+		if (query.getRouting() != null) {
+			builder.routing(query.getRouting()); //
+		}
 
 		if (query.getOpType() != null) {
 			switch (query.getOpType()) {
