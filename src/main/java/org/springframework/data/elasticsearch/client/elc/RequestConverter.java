@@ -74,6 +74,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.Optional;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -113,6 +114,7 @@ import org.springframework.util.StringUtils;
  * @author cdalxndr
  * @author scoobyzhang
  * @author Haibo Liu
+ * @author Steven Pearce
  * @since 4.4
  */
 class RequestConverter extends AbstractQueryProcessor {
@@ -173,17 +175,9 @@ class RequestConverter extends AbstractQueryProcessor {
 	private co.elastic.clients.elasticsearch.indices.Alias.Builder buildAlias(AliasActionParameters parameters,
 			co.elastic.clients.elasticsearch.indices.Alias.Builder aliasBuilder) {
 
-		if (parameters.getRouting() != null) {
-			aliasBuilder.routing(parameters.getRouting());
-		}
-
-		if (parameters.getIndexRouting() != null) {
-			aliasBuilder.indexRouting(parameters.getIndexRouting());
-		}
-
-		if (parameters.getSearchRouting() != null) {
-			aliasBuilder.searchRouting(parameters.getSearchRouting());
-		}
+		getRouting(parameters.getRouting()).ifPresent(aliasBuilder::routing);
+		getRouting(parameters.getIndexRouting()).ifPresent(aliasBuilder::indexRouting);
+		getRouting(parameters.getSearchRouting()).ifPresent(aliasBuilder::searchRouting);
 
 		if (parameters.getHidden() != null) {
 			aliasBuilder.isHidden(parameters.getHidden());
@@ -239,12 +233,16 @@ class RequestConverter extends AbstractQueryProcessor {
 		Map<String, co.elastic.clients.elasticsearch.indices.Alias> aliases = new HashMap<>();
 		for (Alias alias : indexSettings.getAliases()) {
 			co.elastic.clients.elasticsearch.indices.Alias esAlias = co.elastic.clients.elasticsearch.indices.Alias
-					.of(ab -> ab.filter(getQuery(alias.getFilter(), null))
-							.routing(alias.getRouting())
-							.indexRouting(alias.getIndexRouting())
-							.searchRouting(alias.getSearchRouting())
-							.isHidden(alias.getHidden())
-							.isWriteIndex(alias.getWriteIndex()));
+					.of(ab -> {
+						co.elastic.clients.elasticsearch.indices.Alias.Builder aliasBuilder = ab.filter(getQuery(alias.getFilter(), null))
+								.isHidden(alias.getHidden())
+								.isWriteIndex(alias.getWriteIndex());
+						getRouting(alias.getRouting()).ifPresent(aliasBuilder::routing);
+						getRouting(alias.getIndexRouting()).ifPresent(aliasBuilder::indexRouting);
+						getRouting(alias.getSearchRouting()).ifPresent(aliasBuilder::searchRouting);
+
+						return aliasBuilder;
+					});
 			aliases.put(alias.getAlias(), esAlias);
 		}
 
@@ -318,10 +316,11 @@ class RequestConverter extends AbstractQueryProcessor {
 				addActionBuilder //
 						.indices(Arrays.asList(parameters.getIndices())) //
 						.isHidden(parameters.getHidden()) //
-						.isWriteIndex(parameters.getWriteIndex()) //
-						.routing(parameters.getRouting()) //
-						.indexRouting(parameters.getIndexRouting()) //
-						.searchRouting(parameters.getSearchRouting()); //
+						.isWriteIndex(parameters.getWriteIndex()); //
+
+				getRouting(parameters.getRouting()).ifPresent(addActionBuilder::routing);
+				getRouting(parameters.getIndexRouting()).ifPresent(addActionBuilder::indexRouting);
+				getRouting(parameters.getSearchRouting()).ifPresent(addActionBuilder::searchRouting);
 
 				if (parameters.getAliases() != null) {
 					addActionBuilder.aliases(Arrays.asList(parameters.getAliases()));
@@ -593,9 +592,7 @@ class RequestConverter extends AbstractQueryProcessor {
 				.ifSeqNo(query.getSeqNo())
 				.ifPrimaryTerm(query.getPrimaryTerm());
 
-		if (query.getRouting() != null) {
-			builder.routing(query.getRouting()); //
-		}
+		getRouting(query.getRouting()).ifPresent(builder::routing);
 
 		if (query.getOpType() != null) {
 			switch (query.getOpType()) {
@@ -645,8 +642,9 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		builder //
 				.ifSeqNo(query.getSeqNo()) //
-				.ifPrimaryTerm(query.getPrimaryTerm()) //
-				.routing(query.getRouting()); //
+				.ifPrimaryTerm(query.getPrimaryTerm()); //
+
+		getRouting(query.getRouting()).ifPresent(builder::routing);
 
 		return builder.build();
 	}
@@ -687,8 +685,9 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		builder //
 				.ifSeqNo(query.getSeqNo()) //
-				.ifPrimaryTerm(query.getPrimaryTerm()) //
-				.routing(query.getRouting()); //
+				.ifPrimaryTerm(query.getPrimaryTerm()); //
+
+		getRouting(query.getRouting()).ifPresent(builder::routing);
 
 		return builder.build();
 	}
@@ -725,10 +724,11 @@ class RequestConverter extends AbstractQueryProcessor {
 		});
 
 		uob
-				.routing(query.getRouting())
 				.ifSeqNo(query.getIfSeqNo())
 				.ifPrimaryTerm(query.getIfPrimaryTerm())
 				.retryOnConflict(query.getRetryOnConflict());
+
+		getRouting(query.getRouting()).ifPresent(uob::routing);
 
 		// no refresh, timeout, waitForActiveShards on UpdateOperation or UpdateAction
 
@@ -779,9 +779,7 @@ class RequestConverter extends AbstractQueryProcessor {
 			builder.pipeline(bulkOptions.getPipeline());
 		}
 
-		if (bulkOptions.getRoutingId() != null) {
-			builder.routing(bulkOptions.getRoutingId());
-		}
+		getRouting(bulkOptions.getRoutingId()).ifPresent(builder::routing);
 
 		List<BulkOperation> operations = queries.stream().map(query -> {
 			BulkOperation.Builder ob = new BulkOperation.Builder();
@@ -808,10 +806,13 @@ class RequestConverter extends AbstractQueryProcessor {
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
-		return GetRequest.of(grb -> grb //
-				.index(indexCoordinates.getIndexName()) //
-				.id(id) //
-				.routing(routing));
+		return GetRequest.of(grb -> {
+			GetRequest.Builder builder =  grb //
+					.index(indexCoordinates.getIndexName()) //
+					.id(id); //
+			getRouting(routing).ifPresent(builder::routing);
+			return builder;
+		});
 	}
 
 	public co.elastic.clients.elasticsearch.core.ExistsRequest documentExistsRequest(String id, @Nullable String routing,
@@ -820,10 +821,13 @@ class RequestConverter extends AbstractQueryProcessor {
 		Assert.notNull(id, "id must not be null");
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
-		return co.elastic.clients.elasticsearch.core.ExistsRequest.of(erb -> erb
-				.index(indexCoordinates.getIndexName())
-				.id(id)
-				.routing(routing));
+		return co.elastic.clients.elasticsearch.core.ExistsRequest.of(erb -> {
+			co.elastic.clients.elasticsearch.core.ExistsRequest.Builder builder = erb
+					.index(indexCoordinates.getIndexName())
+					.id(id);
+			getRouting(routing).ifPresent(builder::routing);
+			return builder;
+		});
 	}
 
 	public <T> MgetRequest documentMgetRequest(Query query, Class<T> clazz, IndexCoordinates index) {
@@ -841,11 +845,14 @@ class RequestConverter extends AbstractQueryProcessor {
 		SourceConfig sourceConfig = getSourceConfig(query);
 
 		List<MultiGetOperation> multiGetOperations = query.getIdsWithRouting().stream()
-				.map(idWithRouting -> MultiGetOperation.of(mgo -> mgo //
-						.index(index.getIndexName()) //
-						.id(idWithRouting.id()) //
-						.routing(idWithRouting.routing()) //
-						.source(sourceConfig)))
+				.map(idWithRouting -> MultiGetOperation.of(mgo -> {
+					MultiGetOperation.Builder builder =  mgo //
+							.index(index.getIndexName()) //
+							.id(idWithRouting.id()) //
+							.source(sourceConfig);
+					getRouting(idWithRouting.routing()).ifPresent(builder::routing);
+					return builder;
+				}))
 				.collect(Collectors.toList());
 
 		return MgetRequest.of(mg -> mg//
@@ -967,10 +974,7 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		return DeleteRequest.of(r -> {
 			r.id(id).index(index.getIndexName());
-
-			if (routing != null) {
-				r.routing(routing);
-			}
+			getRouting(routing).ifPresent(r::routing);
 			r.refresh(refresh(refreshPolicy));
 			return r;
 		});
@@ -994,11 +998,7 @@ class RequestConverter extends AbstractQueryProcessor {
 
 			b.scroll(time(query.getScrollTime()));
 
-			if (query.getRoute() != null) {
-				b.routing(query.getRoute());
-			} else if (StringUtils.hasText(routing)) {
-				b.routing(routing);
-			}
+			getRouting(query.getRoute(), routing).ifPresent(b::routing);
 
 			return b;
 		});
@@ -1018,11 +1018,7 @@ class RequestConverter extends AbstractQueryProcessor {
 					.scroll(time(query.getScroll()))
 					.scrollSize(query.getScrollSize());
 
-			if (query.getRouting() != null) {
-				dqb.routing(query.getRouting());
-			} else if (StringUtils.hasText(routing)) {
-				dqb.routing(routing);
-			}
+			getRouting(query.getRouting(), routing).ifPresent(dqb::routing);
 
 			if (query.getQ() != null) {
 				dqb.q(query.getQ())
@@ -1102,13 +1098,14 @@ class RequestConverter extends AbstractQueryProcessor {
 			uqb
 					.doc(query.getDocument())
 					.upsert(query.getUpsert())
-					.routing(query.getRouting() != null ? query.getRouting() : routing)
 					.scriptedUpsert(query.getScriptedUpsert())
 					.docAsUpsert(query.getDocAsUpsert())
 					.ifSeqNo(query.getIfSeqNo())
 					.ifPrimaryTerm(query.getIfPrimaryTerm())
 					.refresh(query.getRefreshPolicy() != null ? refresh(query.getRefreshPolicy()) : refresh(refreshPolicy))
 					.retryOnConflict(query.getRetryOnConflict());
+
+			getRouting(query.getRouting(), routing).ifPresent(uqb::routing);
 
 			if (query.getFetchSource() != null) {
 				uqb.source(sc -> sc.fetch(query.getFetchSource()));
@@ -1152,12 +1149,13 @@ class RequestConverter extends AbstractQueryProcessor {
 			ub //
 					.index(Arrays.asList(index.getIndexNames())) //
 					.refresh(refreshPolicy == RefreshPolicy.IMMEDIATE) //
-					.routing(updateQuery.getRouting()) //
 					.script(getScript(updateQuery.getScriptData())) //
 					.maxDocs(updateQuery.getMaxDocs() != null ? Long.valueOf(updateQuery.getMaxDocs()) : null) //
 					.pipeline(updateQuery.getPipeline()) //
 					.requestsPerSecond(updateQuery.getRequestsPerSecond()) //
 					.slices(slices(updateQuery.getSlices() != null ? Long.valueOf(updateQuery.getSlices()) : null));
+
+			getRouting(updateQuery.getRouting()).ifPresent(ub::routing);
 
 			if (updateQuery.getAbortOnVersionConflict() != null) {
 				ub.conflicts(updateQuery.getAbortOnVersionConflict() ? Conflicts.Abort : Conflicts.Proceed);
@@ -1232,12 +1230,7 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		builder.query(getQuery(query, clazz));
 
-		if (StringUtils.hasText(query.getRoute())) {
-			builder.routing(query.getRoute());
-		}
-		if (StringUtils.hasText(routing)) {
-			builder.routing(routing);
-		}
+		getRouting(query.getRoute(), routing).ifPresent(builder::routing);
 
 		addPostFilter(query, builder);
 
@@ -1404,11 +1397,7 @@ class RequestConverter extends AbstractQueryProcessor {
 					.requestCache(query.getRequestCache()) //
 			;
 
-			if (StringUtils.hasText(query.getRoute())) {
-				h.routing(query.getRoute());
-			} else if (StringUtils.hasText(routing)) {
-				h.routing(routing);
-			}
+			getRouting(query.getRoute(), routing).ifPresent(h::routing);
 
 			if (query.getPreference() != null) {
 				h.preference(query.getPreference());
@@ -1454,11 +1443,7 @@ class RequestConverter extends AbstractQueryProcessor {
 				builder.expandWildcards(expandWildcards(expandWildcards));
 			}
 
-			if (query.getRoute() != null) {
-				builder.routing(query.getRoute());
-			} else if (StringUtils.hasText(routing)) {
-				builder.routing(routing);
-			}
+			getRouting(query.getRoute(), routing).ifPresent(builder::routing);
 
 			if (query.getPreference() != null) {
 				builder.preference(query.getPreference());
@@ -1889,11 +1874,7 @@ class RequestConverter extends AbstractQueryProcessor {
 			if (query.getSource() != null) {
 				builder.source(so -> so.scriptString(query.getSource()));
 			}
-			if (query.getRoute() != null) {
-				builder.routing(query.getRoute());
-			} else if (StringUtils.hasText(routing)) {
-				builder.routing(routing);
-			}
+			getRouting(query.getRoute(), routing).ifPresent(builder::routing);
 
 			var expandWildcards = query.getExpandWildcards();
 			if (expandWildcards != null && !expandWildcards.isEmpty()) {
@@ -1991,6 +1972,16 @@ class RequestConverter extends AbstractQueryProcessor {
 		}
 
 		return null;
+	}
+
+	Optional<String> getRouting(@Nullable String routing) {
+		if (StringUtils.hasText(routing)) {
+			return Optional.of(routing);
+		}
+		return Optional.empty();
+	}
+	Optional<String> getRouting(@Nullable String routing1, @Nullable String routing2) {
+		return getRouting(routing1).or(() -> getRouting(routing2));
 	}
 
 	private VersionType retrieveVersionTypeFromPersistentEntity(@Nullable Class<?> clazz) {

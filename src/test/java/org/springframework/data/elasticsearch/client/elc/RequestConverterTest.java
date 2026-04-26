@@ -16,6 +16,8 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
@@ -42,6 +44,7 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 /**
  * @author Peter-Josef Meisch
  * @author Han Seungwoo
+ * @author Steven Pearce
  */
 class RequestConverterTest {
 
@@ -131,4 +134,19 @@ class RequestConverterTest {
 		assertThat(updateRequest.script().source().scriptString()).isEqualTo("script");
 		assertThat(updateRequest.script().id()).isEqualTo("scriptName");
 	}
+
+	@Test
+	void getRouting() {
+
+		assertTrue(requestConverter.getRouting(null).isEmpty());
+
+		assertTrue(requestConverter.getRouting(null, null).isEmpty());
+		assertTrue(requestConverter.getRouting("", null).isEmpty());
+
+		assertEquals("1", requestConverter.getRouting("1", null).get());
+
+		assertEquals("5", requestConverter.getRouting(null, "5").get());
+
+	}
+
 }
