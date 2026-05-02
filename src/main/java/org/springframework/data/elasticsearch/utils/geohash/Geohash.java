@@ -18,7 +18,9 @@ package org.springframework.data.elasticsearch.utils.geohash;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.Objects;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -165,18 +167,18 @@ public class Geohash {
 		String south = getNeighbor(geohash, level, 0, -1);
 		String north = getNeighbor(geohash, level, 0, +1);
 		if (north != null) {
-			neighbors.add(getNeighbor(north, level, -1, 0));
+			neighbors.add(Objects.requireNonNull(getNeighbor(north, level, -1, 0)));
 			neighbors.add(north);
-			neighbors.add(getNeighbor(north, level, +1, 0));
+			neighbors.add(Objects.requireNonNull(getNeighbor(north, level, +1, 0)));
 		}
 
-		neighbors.add(getNeighbor(geohash, level, -1, 0));
-		neighbors.add(getNeighbor(geohash, level, +1, 0));
+		neighbors.add(Objects.requireNonNull(getNeighbor(geohash, level, -1, 0)));
+		neighbors.add(Objects.requireNonNull(getNeighbor(geohash, level, +1, 0)));
 
 		if (south != null) {
-			neighbors.add(getNeighbor(south, level, -1, 0));
+			neighbors.add(Objects.requireNonNull(getNeighbor(south, level, -1, 0)));
 			neighbors.add(south);
-			neighbors.add(getNeighbor(south, level, +1, 0));
+			neighbors.add(Objects.requireNonNull(getNeighbor(south, level, +1, 0)));
 		}
 
 		return neighbors;
@@ -191,7 +193,7 @@ public class Geohash {
 	 * @param dy delta of the second grid coordinate (must be -1, 0 or +1)
 	 * @return geohash of the defined cell
 	 */
-	public static String getNeighbor(String geohash, int level, int dx, int dy) {
+	public static @Nullable String getNeighbor(String geohash, int level, int dx, int dy) {
 		int cell = BASE_32_STRING.indexOf(geohash.charAt(level - 1));
 
 		// Decoding the Geohash bit pattern to determine grid coordinates
@@ -231,7 +233,7 @@ public class Geohash {
 				return geohash.substring(0, level - 1) + encodeBase32(nx, ny);
 			} else {
 				String neighbor = getNeighbor(geohash, level - 1, dx, dy);
-				return (neighbor != null) ? neighbor + encodeBase32(nx, ny) : neighbor;
+				return (neighbor != null) ? neighbor + encodeBase32(nx, ny) : null;
 			}
 		}
 	}

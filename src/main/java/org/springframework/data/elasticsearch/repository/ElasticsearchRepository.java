@@ -44,7 +44,7 @@ public interface ElasticsearchRepository<T, ID> extends PagingAndSortingReposito
 	 * @param pageable , must not be {@literal null}
 	 * @return
 	 */
-	Page<T> searchSimilar(T entity, @Nullable String[] fields, Pageable pageable);
+	Page<T> searchSimilar(T entity, String @Nullable [] fields, Pageable pageable);
 
 	/**
 	 * @since 5.2

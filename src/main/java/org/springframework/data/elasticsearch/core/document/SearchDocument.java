@@ -41,7 +41,7 @@ public interface SearchDocument extends Document {
 	/**
 	 * @return the fields for the search result, not {@literal null}
 	 */
-	Map<String, List<Object>> getFields();
+	Map<String, List<@Nullable Object>> getFields();
 
 	/**
 	 * The first value of the given field.
@@ -50,7 +50,7 @@ public interface SearchDocument extends Document {
 	 */
 	@Nullable
 	default <V> V getFieldValue(final String name) {
-		List<Object> values = getFields().get(name);
+		List<@Nullable Object> values = getFields().get(name);
 		if (values == null || values.isEmpty()) {
 			return null;
 		}
@@ -64,7 +64,7 @@ public interface SearchDocument extends Document {
 	 */
 	@Nullable
 	default <V> List<V> getFieldValues(final String name) {
-		List<Object> values = getFields().get(name);
+		List<@Nullable Object> values = getFields().get(name);
 		if (values == null) {
 			return null;
 		}
@@ -74,8 +74,7 @@ public interface SearchDocument extends Document {
 	/**
 	 * @return the sort values for the search hit
 	 */
-	@Nullable
-	default Object[] getSortValues() {
+	default Object @Nullable [] getSortValues() {
 		return null;
 	}
 

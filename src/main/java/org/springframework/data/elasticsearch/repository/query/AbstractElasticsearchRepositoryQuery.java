@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
+import java.util.Objects;
+
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
@@ -82,13 +84,17 @@ public abstract class AbstractElasticsearchRepositoryQuery implements Repository
 	protected abstract boolean isExistsQuery();
 
 	@Override
-	public Object execute(Object[] parameters) {
+	public Object execute(@Nullable Object[] parameters) {
 
-		ElasticsearchParametersParameterAccessor parameterAccessor = getParameterAccessor(parameters);
+		// need this additional var, otherwise the code analysis does not recognize
+		// that parameters is not null after the check
+		var parametersNN = Objects.requireNonNull(parameters, "parameters must not be null");
+
+		ElasticsearchParametersParameterAccessor parameterAccessor = getParameterAccessor(parametersNN);
 		ResultProcessor resultProcessor = queryMethod.getResultProcessor().withDynamicProjection(parameterAccessor);
 		Class<?> clazz = resultProcessor.getReturnedType().getDomainType();
 
-		Query query = createQuery(parameters);
+		Query query = createQuery(parametersNN);
 
 		IndexCoordinates index = parameterAccessor
 				.getIndexCoordinates(elasticsearchOperations.getIndexCoordinatesFor(clazz));

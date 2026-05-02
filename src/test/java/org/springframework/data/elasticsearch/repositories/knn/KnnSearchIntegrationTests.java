@@ -145,7 +145,7 @@ public abstract class KnnSearchIntegrationTests {
 
 		@Field(type = FieldType.Dense_Vector, dims = 2, elementType = FieldElementType.FLOAT,
 				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, efConstruction = 100),
-				knnSimilarity = KnnSimilarity.COSINE) private float[] vector;
+				knnSimilarity = KnnSimilarity.COSINE) private float @Nullable [] vector;
 
 		@Nullable
 		public String getId() {

@@ -36,7 +36,7 @@ public class MultiGetItem<T> {
 	}
 
 	public static <T> MultiGetItem<T> of(@Nullable T item, @Nullable Failure failure) {
-		return new MultiGetItem<>(item, failure);
+		return new MultiGetItem(item, failure);
 	}
 
 	public boolean hasItem() {

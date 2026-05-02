@@ -19,13 +19,11 @@ import static org.assertj.core.api.Assertions.*;
 import static org.skyscreamer.jsonassert.JSONAssert.*;
 
 import org.json.JSONException;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -68,9 +66,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		public void shouldThrowExceptionGivenVersionPropertyIsNotLong() {
 
-			TypeInformation<@NonNull EntityWithWrongVersionType> typeInformation = TypeInformation
+			TypeInformation<EntityWithWrongVersionType> typeInformation = TypeInformation
 					.of(EntityWithWrongVersionType.class);
-			SimpleElasticsearchPersistentEntity<@NonNull EntityWithWrongVersionType> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<EntityWithWrongVersionType> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
 			assertThatThrownBy(() -> createProperty(entity, "version")).isInstanceOf(MappingException.class);
@@ -79,9 +77,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		public void shouldThrowExceptionGivenMultipleVersionPropertiesArePresent() {
 
-			TypeInformation<@NonNull EntityWithMultipleVersionField> typeInformation = TypeInformation
+			TypeInformation<EntityWithMultipleVersionField> typeInformation = TypeInformation
 					.of(EntityWithMultipleVersionField.class);
-			SimpleElasticsearchPersistentEntity<@NonNull EntityWithMultipleVersionField> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<EntityWithMultipleVersionField> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			SimpleElasticsearchPersistentProperty persistentProperty1 = createProperty(entity, "version1");
 			SimpleElasticsearchPersistentProperty persistentProperty2 = createProperty(entity, "version2");
@@ -108,9 +106,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldReportThatThereIsNoSeqNoPrimaryTermPropertyWhenThereIsNoSuchProperty() {
-			TypeInformation<@NonNull EntityWithoutSeqNoPrimaryTerm> typeInformation = TypeInformation
+			TypeInformation<EntityWithoutSeqNoPrimaryTerm> typeInformation = TypeInformation
 					.of(EntityWithoutSeqNoPrimaryTerm.class);
-			SimpleElasticsearchPersistentEntity<@NonNull EntityWithoutSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<EntityWithoutSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
 			assertThat(entity.hasSeqNoPrimaryTermProperty()).isFalse();
@@ -119,9 +117,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldReportThatThereIsSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
-			TypeInformation<@NonNull EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
 					.of(EntityWithSeqNoPrimaryTerm.class);
-			SimpleElasticsearchPersistentEntity<@NonNull EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
@@ -133,9 +131,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		// DATAES-799
 		void shouldReturnSeqNoPrimaryTermPropertyWhenThereIsSuchProperty() {
 
-			TypeInformation<@NonNull EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
 					.of(EntityWithSeqNoPrimaryTerm.class);
-			SimpleElasticsearchPersistentEntity<@NonNull EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
 			EntityWithSeqNoPrimaryTerm instance = new EntityWithSeqNoPrimaryTerm();
@@ -152,9 +150,9 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 		@Test
 		// DATAES-799
 		void shouldNotAllowMoreThanOneSeqNoPrimaryTermProperties() {
-			TypeInformation<@NonNull EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
+			TypeInformation<EntityWithSeqNoPrimaryTerm> typeInformation = TypeInformation
 					.of(EntityWithSeqNoPrimaryTerm.class);
-			SimpleElasticsearchPersistentEntity<@NonNull EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
+			SimpleElasticsearchPersistentEntity<EntityWithSeqNoPrimaryTerm> entity = new SimpleElasticsearchPersistentEntity<>(
 					typeInformation, contextConfiguration);
 			entity.addPersistentProperty(createProperty(entity, "seqNoPrimaryTerm"));
 

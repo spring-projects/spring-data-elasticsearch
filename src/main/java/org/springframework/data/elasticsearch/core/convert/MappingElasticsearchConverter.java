@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
@@ -63,16 +62,7 @@ import org.springframework.data.mapping.Parameter;
 import org.springframework.data.mapping.PersistentPropertyAccessor;
 import org.springframework.data.mapping.SimplePropertyHandler;
 import org.springframework.data.mapping.context.MappingContext;
-import org.springframework.data.mapping.model.CachingValueExpressionEvaluatorFactory;
-import org.springframework.data.mapping.model.ConvertingPropertyAccessor;
-import org.springframework.data.mapping.model.EntityInstantiator;
-import org.springframework.data.mapping.model.EntityInstantiators;
-import org.springframework.data.mapping.model.ParameterValueProvider;
-import org.springframework.data.mapping.model.PersistentEntityParameterValueProvider;
-import org.springframework.data.mapping.model.PropertyValueProvider;
-import org.springframework.data.mapping.model.SpELContext;
-import org.springframework.data.mapping.model.ValueExpressionEvaluator;
-import org.springframework.data.mapping.model.ValueExpressionParameterValueProvider;
+import org.springframework.data.mapping.model.*;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.format.datetime.DateFormatterRegistrar;
 import org.springframework.util.Assert;
@@ -267,7 +257,7 @@ public class MappingElasticsearchConverter
 
 		@Nullable
 		@SuppressWarnings("unchecked")
-		private <R> R read(TypeInformation<R> typeInformation, Map<String, Object> source) {
+		private <R> R read(TypeInformation<R> typeInformation, Map<String, @Nullable Object> source) {
 
 			Assert.notNull(source, "Source must not be null!");
 
@@ -301,7 +291,7 @@ public class MappingElasticsearchConverter
 		}
 
 		@SuppressWarnings("unchecked")
-		private <R> R readMap(TypeInformation<?> type, Map<String, Object> source) {
+		private <R> R readMap(TypeInformation<?> type, Map<String, @Nullable Object> source) {
 
 			Assert.notNull(source, "Document must not be null!");
 
@@ -313,9 +303,10 @@ public class MappingElasticsearchConverter
 			Class<?> rawKeyType = keyType != null ? keyType.getType() : null;
 			Class<?> rawValueType = valueType != null ? valueType.getType() : null;
 
-			Map<Object, Object> map = CollectionFactory.createMap(mapType, rawKeyType, source.keySet().size());
+			Map<Object, @Nullable Object> map = (Map<Object, @Nullable Object>) CollectionFactory.createMap(mapType,
+					rawKeyType, source.keySet().size());
 
-			for (Entry<String, Object> entry : source.entrySet()) {
+			for (Entry<String, @Nullable Object> entry : source.entrySet()) {
 
 				if (typeMapper.isTypeKey(entry.getKey())) {
 					continue;
@@ -325,6 +316,7 @@ public class MappingElasticsearchConverter
 
 				if (rawKeyType != null && !rawKeyType.isAssignableFrom(key.getClass())) {
 					key = conversionService.convert(key, rawKeyType);
+					Assert.notNull(key, "converted key must not be null");
 				}
 
 				Object value = entry.getValue();
@@ -343,7 +335,7 @@ public class MappingElasticsearchConverter
 			return (R) map;
 		}
 
-		private <R> R readEntity(ElasticsearchPersistentEntity<?> entity, Map<String, Object> source) {
+		private <R> R readEntity(ElasticsearchPersistentEntity<?> entity, Map<String, @Nullable Object> source) {
 
 			ElasticsearchPersistentEntity<?> targetEntity = computeClosestEntity(entity, source);
 			ValueExpressionEvaluator evaluator = expressionEvaluatorFactory.create(source);
@@ -582,7 +574,7 @@ public class MappingElasticsearchConverter
 					: TypeInformation.OBJECT;
 			Class<?> rawComponentType = componentType.getType();
 
-			Collection<Object> items = targetType.getType().isArray() //
+			Collection<@Nullable Object> items = targetType.getType().isArray() //
 					? new ArrayList<>(source.size()) //
 					: CollectionFactory.createCollection(collectionType, rawComponentType, source.size());
 
@@ -672,7 +664,7 @@ public class MappingElasticsearchConverter
 		 */
 		private <T> void populateScriptedFields(ElasticsearchPersistentEntity<?> entity, T result,
 				SearchDocument searchDocument) {
-			Map<String, List<Object>> fields = searchDocument.getFields();
+			Map<String, List<@Nullable Object>> fields = searchDocument.getFields();
 			entity.doWithProperties((SimplePropertyHandler) property -> {
 				if (property.isAnnotationPresent(ScriptedField.class)) {
 					ScriptedField scriptedField = property.findAnnotation(ScriptedField.class);
@@ -695,7 +687,7 @@ public class MappingElasticsearchConverter
 		 * Compute the type to use by checking the given entity against the store type;
 		 */
 		private ElasticsearchPersistentEntity<?> computeClosestEntity(ElasticsearchPersistentEntity<?> entity,
-				Map<String, Object> source) {
+				Map<String, @Nullable Object> source) {
 
 			TypeInformation<?> typeToUse = typeMapper.readType(source);
 
@@ -770,7 +762,7 @@ public class MappingElasticsearchConverter
 			INSTANCE;
 
 			@Override
-			public <T> T getParameterValue(Parameter<T, ElasticsearchPersistentProperty> parameter) {
+			public <T> @Nullable T getParameterValue(Parameter<T, ElasticsearchPersistentProperty> parameter) {
 				return null;
 			}
 		}
@@ -822,7 +814,7 @@ public class MappingElasticsearchConverter
 		 * @param typeInformation type information for the source
 		 */
 		@SuppressWarnings("unchecked")
-		private void writeInternal(@Nullable Object source, Map<String, Object> sink,
+		private void writeInternal(@Nullable Object source, Map<String, @Nullable Object> sink,
 				@Nullable TypeInformation<?> typeInformation) {
 
 			if (null == source) {
@@ -833,7 +825,7 @@ public class MappingElasticsearchConverter
 			Optional<Class<?>> customTarget = conversions.getCustomWriteTarget(entityType, Map.class);
 
 			if (customTarget.isPresent()) {
-				Map<String, Object> result = conversionService.convert(source, Map.class);
+				Map<String, @Nullable Object> result = conversionService.convert(source, Map.class);
 
 				if (result != null) {
 					sink.putAll(result);
@@ -863,7 +855,7 @@ public class MappingElasticsearchConverter
 		 * @param sink the destination
 		 * @param entity entity for the source
 		 */
-		private void writeInternal(@Nullable Object source, Map<String, Object> sink,
+		private void writeInternal(@Nullable Object source, Map<String, @Nullable Object> sink,
 				@Nullable ElasticsearchPersistentEntity<?> entity) {
 
 			if (source == null) {
@@ -905,7 +897,7 @@ public class MappingElasticsearchConverter
 		 * @param sink must not be {@literal null}.
 		 * @param propertyType must not be {@literal null}.
 		 */
-		private Map<String, Object> writeMapInternal(Map<?, ?> source, Map<String, Object> sink,
+		private Map<String, @Nullable Object> writeMapInternal(Map<?, ?> source, Map<String, @Nullable Object> sink,
 				TypeInformation<?> propertyType) {
 
 			for (Map.Entry<?, ?> entry : source.entrySet()) {
@@ -922,7 +914,7 @@ public class MappingElasticsearchConverter
 						sink.put(simpleKey,
 								writeCollectionInternal(asCollection(value), propertyType.getMapValueType(), new ArrayList<>()));
 					} else {
-						Map<String, Object> document = Document.create();
+						Map<String, @Nullable Object> document = Document.create();
 						TypeInformation<?> valueTypeInfo = propertyType.isMap() ? propertyType.getMapValueType()
 								: TypeInformation.OBJECT;
 						writeInternal(value, document, valueTypeInfo);
@@ -966,7 +958,7 @@ public class MappingElasticsearchConverter
 				} else if (element instanceof Collection || elementType.isArray()) {
 					collection.add(writeCollectionInternal(asCollection(element), componentType, new ArrayList<>()));
 				} else {
-					Map<String, Object> document = Document.create();
+					Map<String, @Nullable Object> document = Document.create();
 					writeInternal(element, document, componentType);
 					collection.add(document);
 				}
@@ -1080,7 +1072,7 @@ public class MappingElasticsearchConverter
 					: mappingContext.getRequiredPersistentEntity(type);
 
 			Object existingValue = sink.get(property);
-			Map<String, Object> document = existingValue instanceof Map ? (Map<String, Object>) existingValue
+			Map<String, @Nullable Object> document = existingValue instanceof Map ? (Map<String, Object>) existingValue
 					: Document.create();
 
 			addCustomTypeKeyIfNecessary(value, document, TypeInformation.of(property.getRawType()));
@@ -1097,7 +1089,7 @@ public class MappingElasticsearchConverter
 		 * @param sink must not be {@literal null}.
 		 * @param type type to compare to
 		 */
-		private void addCustomTypeKeyIfNecessary(Object source, Map<String, Object> sink,
+		private void addCustomTypeKeyIfNecessary(Object source, Map<String, @Nullable Object> sink,
 				@Nullable TypeInformation<?> type) {
 
 			if (!writeTypeHints) {
@@ -1218,7 +1210,7 @@ public class MappingElasticsearchConverter
 			Assert.notNull(map, "Given map must not be null!");
 			Assert.notNull(property, "PersistentProperty must not be null!");
 
-			return writeMapInternal(map, new LinkedHashMap<>(map.size()), property.getTypeInformation());
+			return writeMapInternal(map, new LinkedHashMap(map.size()), property.getTypeInformation());
 		}
 
 		/**
@@ -1492,9 +1484,9 @@ public class MappingElasticsearchConverter
 	@SuppressWarnings("ClassCanBeRecord")
 	static class MapValueAccessor {
 
-		final Map<String, Object> target;
+		final Map<String, @Nullable Object> target;
 
-		MapValueAccessor(Map<String, Object> target) {
+		MapValueAccessor(Map<String, @Nullable Object> target) {
 			this.target = target;
 		}
 
@@ -1528,7 +1520,7 @@ public class MappingElasticsearchConverter
 			}
 
 			Iterator<String> parts = Arrays.asList(fieldName.split("\\.")).iterator();
-			Map<String, Object> source = target;
+			Map<String, @Nullable Object> source = target;
 			Object result = null;
 
 			while (parts.hasNext()) {
@@ -1559,11 +1551,11 @@ public class MappingElasticsearchConverter
 			target.put(property.getFieldName(), value);
 		}
 
-		private Map<String, Object> getAsMap(Object result) {
+		private Map<String, @Nullable Object> getAsMap(Object result) {
 
 			if (result instanceof Map) {
 				// noinspection unchecked
-				return (Map<String, Object>) result;
+				return (Map<String, @Nullable Object>) result;
 			}
 
 			throw new IllegalArgumentException(String.format("%s is not a Map.", result));

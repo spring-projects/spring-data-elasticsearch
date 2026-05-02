@@ -38,7 +38,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @since 4.2
  */
-public interface StringObjectMap<M extends StringObjectMap<M>> extends Map<String, Object> {
+public interface StringObjectMap<M extends StringObjectMap<M>> extends Map<String, @Nullable Object> {
 	/**
 	 * {@link #put(Object, Object)} the {@code key}/{@code value} tuple and return {@code this} object.
 	 *

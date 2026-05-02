@@ -129,7 +129,7 @@ abstract class QueryKeywordsIntegrationTests {
 
 	@Test // DATAES-615
 	public void shouldSupportSortOnStandardFieldWithCriteria() {
-		List<String> sortedIds = repository.findAllByNameOrderByText("Salt").stream() //
+		List<@Nullable String> sortedIds = repository.findAllByNameOrderByText("Salt").stream() //
 				.map(it -> it.id).collect(Collectors.toList());
 
 		assertThat(sortedIds).containsExactly("4", "5");
@@ -138,7 +138,7 @@ abstract class QueryKeywordsIntegrationTests {
 	@Test // DATAES-615
 	public void shouldSupportSortOnFieldWithCustomFieldNameWithCriteria() {
 
-		List<String> sortedIds = repository.findAllByNameOrderBySortName("Sugar").stream() //
+		List<@Nullable String> sortedIds = repository.findAllByNameOrderBySortName("Sugar").stream() //
 				.map(it -> it.id).collect(Collectors.toList());
 
 		assertThat(sortedIds).containsExactly("3", "2", "1");
@@ -146,7 +146,7 @@ abstract class QueryKeywordsIntegrationTests {
 
 	@Test // DATAES-615
 	public void shouldSupportSortOnStandardFieldWithoutCriteria() {
-		List<String> sortedIds = repository.findAllByOrderByText().stream() //
+		List<@Nullable String> sortedIds = repository.findAllByOrderByText().stream() //
 				.map(it -> it.text).collect(Collectors.toList());
 
 		assertThat(sortedIds).containsExactly("Beet sugar", "Cane sugar", "Cane sugar", "Rock salt", "Sea salt",
@@ -156,7 +156,7 @@ abstract class QueryKeywordsIntegrationTests {
 	@Test // DATAES-615
 	public void shouldSupportSortOnFieldWithCustomFieldNameWithoutCriteria() {
 
-		List<String> sortedIds = repository.findAllByOrderBySortName().stream() //
+		List<@Nullable String> sortedIds = repository.findAllByOrderBySortName().stream() //
 				.map(it -> it.id).collect(Collectors.toList());
 
 		assertThat(sortedIds).containsExactly("5", "4", "3", "2", "1", "6", "7");

@@ -62,7 +62,7 @@ public class Explanation {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o)
 			return true;
 		if (o == null || getClass() != o.getClass())
@@ -81,7 +81,7 @@ public class Explanation {
 
 	@Override
 	public int hashCode() {
-		int result = (match ? 1 : 0);
+		int result = (Boolean.TRUE.equals(match) ? 1 : 0);
 		result = 31 * result + value.hashCode();
 		result = 31 * result + (description != null ? description.hashCode() : 0);
 		result = 31 * result + details.hashCode();

@@ -160,7 +160,7 @@ public abstract class NestedObjectIntegrationTests {
 		operations.bulkIndex(indexQueries, PersonMultipleLevelNested.class);
 
 		// then
-		Map<String, Object> mapping = operations.indexOps(PersonMultipleLevelNested.class).getMapping();
+		Map<String, @Nullable Object> mapping = operations.indexOps(PersonMultipleLevelNested.class).getMapping();
 
 		assertThat(mapping).isNotNull();
 		Map<String, Object> propertyMap = (Map<String, Object>) mapping.get("properties");

@@ -153,10 +153,10 @@ public abstract class InnerObjectIntegrationTests {
 	 */
 	static class Author {
 
-		private String id;
-		private String name;
+		private @Nullable String id;
+		private @Nullable String name;
 
-		public String getId() {
+		public @Nullable String getId() {
 			return id;
 		}
 
@@ -164,7 +164,7 @@ public abstract class InnerObjectIntegrationTests {
 			this.id = id;
 		}
 
-		public String getName() {
+		public @Nullable String getName() {
 			return name;
 		}
 

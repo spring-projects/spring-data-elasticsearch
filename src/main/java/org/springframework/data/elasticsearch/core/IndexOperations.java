@@ -52,7 +52,7 @@ public interface IndexOperations {
 	 * @param settings the index settings
 	 * @return {@literal true} if the index was created
 	 */
-	boolean create(Map<String, Object> settings);
+	boolean create(Map<String, @Nullable Object> settings);
 
 	/**
 	 * Create an index for given settings and mapping.
@@ -62,7 +62,7 @@ public interface IndexOperations {
 	 * @return {@literal true} if the index was created
 	 * @since 4.2
 	 */
-	boolean create(Map<String, Object> settings, Document mapping);
+	boolean create(Map<String, @Nullable Object> settings, Document mapping);
 
 	/**
 	 * Create an index with the settings and mapping defined for the entity this IndexOperations is bound to.
@@ -142,7 +142,7 @@ public interface IndexOperations {
 	 *
 	 * @return the mapping
 	 */
-	Map<String, Object> getMapping();
+	Map<String, @Nullable Object> getMapping();
 
 	// endregion
 

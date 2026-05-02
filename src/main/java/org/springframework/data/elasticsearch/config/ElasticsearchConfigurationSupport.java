@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.config;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.jspecify.annotations.Nullable;
@@ -98,7 +99,7 @@ public class ElasticsearchConfigurationSupport {
 	protected Collection<String> getMappingBasePackages() {
 
 		Package mappingBasePackage = getClass().getPackage();
-		return Collections.singleton(mappingBasePackage == null ? null : mappingBasePackage.getName());
+		return mappingBasePackage == null ? Collections.emptyList() : List.of(mappingBasePackage.getName());
 	}
 
 	/**

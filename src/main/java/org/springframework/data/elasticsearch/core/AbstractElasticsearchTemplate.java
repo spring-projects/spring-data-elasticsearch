@@ -59,6 +59,7 @@ import org.springframework.data.elasticsearch.support.VersionInfo;
 import org.springframework.data.mapping.callback.EntityCallbacks;
 import org.springframework.data.mapping.context.MappingContext;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -260,7 +261,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 		List<IndexedObjectInformation> indexedObjectInformationList = bulkIndex(indexQueries, index);
 		Iterator<IndexedObjectInformation> iterator = indexedObjectInformationList.iterator();
 
-		// noinspection unchecked
+		// noinspection unchecked,DataFlowIssue
 		return indexQueries.stream() //
 				.map(IndexQuery::getObject) //
 				.map(entity -> (T) entityOperations.updateIndexedObject(
@@ -593,7 +594,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	}
 
 	protected <T> SearchDocumentResponse.EntityCreator<T> getEntityCreator(ReadDocumentCallback<T> documentCallback) {
-		return searchDocument -> CompletableFuture.completedFuture(documentCallback.doWith(searchDocument));
+		return searchDocument -> CompletableFuture.<T> completedFuture(documentCallback.doWith(searchDocument));
 	}
 
 	/**
@@ -752,6 +753,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 	// region Document callbacks
 	protected interface DocumentCallback<T> {
+		@Contract("null -> null")
 		@Nullable
 		T doWith(@Nullable Document document);
 	}
@@ -815,6 +817,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		@Override
 		public SearchHits<T> doWith(SearchDocumentResponse response) {
+			// noinspection NullableProblems,DataFlowIssue
 			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
 			return SearchHitMapping.mappingFor(type, elasticsearchConverter).mapHits(response, entities);
 		}
@@ -835,6 +838,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		@Override
 		public SearchScrollHits<T> doWith(SearchDocumentResponse response) {
+			// noinspection DataFlowIssue,NullableProblems
 			List<T> entities = response.getSearchDocuments().stream().map(delegate::doWith).collect(Collectors.toList());
 			return SearchHitMapping.mappingFor(type, elasticsearchConverter).mapScrollHits(response, entities);
 		}

@@ -23,9 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.data.core.TypeInformation;
@@ -263,6 +261,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 				throw new MappingException("@IndexedIndexName annotation must be put on String property");
 			}
 
+			// noinspection VariableNotUsedInsideIf
 			if (indexedIndexNameProperty != null) {
 				throw new MappingException(
 						"@IndexedIndexName annotation can only be put on one property in an entity");
@@ -301,7 +300,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		return fieldNamePropertyCache.computeIfAbsent(fieldName, key -> {
 			AtomicReference<@Nullable ElasticsearchPersistentProperty> propertyRef = new AtomicReference<>();
-			doWithProperties((PropertyHandler<@NonNull ElasticsearchPersistentProperty>) property -> {
+			doWithProperties((PropertyHandler<ElasticsearchPersistentProperty>) property -> {
 				if (key.equals(property.getFieldName())) {
 					propertyRef.set(property);
 				}
@@ -425,8 +424,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		try {
 			Expression expression = routingExpressions.computeIfAbsent(routing, PARSER::parseExpression);
-			ExpressionDependencies expressionDependencies = expression != null ? ExpressionDependencies.discover(expression)
-					: ExpressionDependencies.none();
+			ExpressionDependencies expressionDependencies = ExpressionDependencies.discover(expression);
 
 			EvaluationContext context = getEvaluationContext(null, expressionDependencies);
 			context.setVariable("entity", bean);

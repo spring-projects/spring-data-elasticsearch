@@ -102,7 +102,7 @@ public class PutTemplateRequest {
 			this.indexPatterns = indexPatterns;
 		}
 
-		public TemplateRequestBuilder withSettings(Map<String, Object> settings) {
+		public TemplateRequestBuilder withSettings(Map<String, @Nullable Object> settings) {
 			this.settings = new Settings(settings);
 			return this;
 		}

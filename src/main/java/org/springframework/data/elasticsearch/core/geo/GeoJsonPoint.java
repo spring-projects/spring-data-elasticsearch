@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.geo;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
 
 /**
@@ -89,7 +90,7 @@ public class GeoJsonPoint implements GeoJson<List<Double>> {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o)
 			return true;
 		if (o == null || getClass() != o.getClass())

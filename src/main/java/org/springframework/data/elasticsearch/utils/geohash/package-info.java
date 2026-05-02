@@ -21,4 +21,5 @@
  * @author Peter-Josef Meisch
  * @since 4.4
  */
+@org.jspecify.annotations.NullMarked
 package org.springframework.data.elasticsearch.utils.geohash;

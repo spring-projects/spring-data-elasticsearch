@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.config.configuration;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +49,7 @@ public class ReactiveElasticsearchConfigurationELCTests {
 	static class Config extends ReactiveElasticsearchConfiguration {
 
 		@Override
-		public @NonNull ClientConfiguration clientConfiguration() {
+		public ClientConfiguration clientConfiguration() {
 			return ClientConfiguration.builder() //
 					.connectedTo("localhost:9200") //
 					.build();

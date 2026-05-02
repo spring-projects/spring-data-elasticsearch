@@ -37,7 +37,7 @@ public class DefaultRoutingResolver implements RoutingResolver {
 	}
 
 	@Override
-	public String getRouting() {
+	public @Nullable String getRouting() {
 		return null;
 	}
 

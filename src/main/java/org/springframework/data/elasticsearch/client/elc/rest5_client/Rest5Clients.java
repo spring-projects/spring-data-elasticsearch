@@ -28,7 +28,6 @@ import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.message.BasicHeader;
 import org.apache.hc.core5.http.nio.ssl.BasicClientTlsStrategy;
 import org.apache.hc.core5.util.Timeout;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
@@ -181,7 +180,7 @@ public final class Rest5Clients {
 		return builder;
 	}
 
-	private static HttpHost @NonNull [] getHttpHosts(ClientConfiguration clientConfiguration) {
+	private static HttpHost[] getHttpHosts(ClientConfiguration clientConfiguration) {
 		List<InetSocketAddress> hosts = clientConfiguration.getEndpoints();
 		boolean useSsl = clientConfiguration.useSsl();
 		return hosts.stream()

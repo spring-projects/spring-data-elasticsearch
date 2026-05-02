@@ -21,10 +21,8 @@ import org.apache.http.protocol.HttpContext;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
-import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 import org.springframework.util.Assert;
 
@@ -107,7 +105,7 @@ public final class RestClients {
 		return builder;
 	}
 
-	private static HttpHost @NonNull [] getHttpHosts(ClientConfiguration clientConfiguration) {
+	private static HttpHost[] getHttpHosts(ClientConfiguration clientConfiguration) {
 		List<InetSocketAddress> hosts = clientConfiguration.getEndpoints();
 		boolean useSsl = clientConfiguration.useSsl();
 		return hosts.stream()
@@ -130,10 +128,10 @@ public final class RestClients {
 	record CustomHeaderInjector(Supplier<HttpHeaders> headersSupplier) implements HttpRequestInterceptor {
 
 		@Override
-		public void process(HttpRequest request, HttpContext context) {
+		public void process(@Nullable HttpRequest request, @Nullable HttpContext context) {
 			HttpHeaders httpHeaders = headersSupplier.get();
 
-			if (httpHeaders != null && !httpHeaders.isEmpty()) {
+			if (!httpHeaders.isEmpty() && request != null) {
 				Arrays.stream(toHeaderArray(httpHeaders)).forEach(request::addHeader);
 			}
 		}

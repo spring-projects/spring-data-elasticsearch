@@ -89,7 +89,7 @@ public class MappingParameters {
 
 	private final String analyzer;
 	private final boolean coerce;
-	@Nullable private final String[] copyTo;
+	private final String @Nullable [] copyTo;
 	private final DateFormat[] dateFormats;
 	private final String[] dateFormatPatterns;
 	private final boolean docValues;
@@ -429,7 +429,7 @@ public class MappingParameters {
 		return coerce;
 	}
 
-	protected String[] copyTo() {
+	protected String @Nullable [] copyTo() {
 		return copyTo;
 	}
 

@@ -43,7 +43,7 @@ public class GeoDistanceOrder extends Order {
 	}
 
 	private GeoDistanceOrder(String property, GeoPoint geoPoint, Sort.Direction direction, DistanceType distanceType,
-			Mode mode, String unit, Boolean ignoreUnmapped) {
+			@Nullable Mode mode, String unit, Boolean ignoreUnmapped) {
 		super(direction, property, mode);
 		this.geoPoint = geoPoint;
 		this.distanceType = distanceType;
@@ -59,7 +59,7 @@ public class GeoDistanceOrder extends Order {
 		return distanceType;
 	}
 
-	public Mode getMode() {
+	public @Nullable Mode getMode() {
 		return mode;
 	}
 

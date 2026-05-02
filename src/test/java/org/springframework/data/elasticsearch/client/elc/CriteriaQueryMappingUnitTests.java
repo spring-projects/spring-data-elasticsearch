@@ -28,7 +28,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import org.assertj.core.api.SoftAssertions;
 import org.json.JSONException;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -422,13 +421,11 @@ public class CriteriaQueryMappingUnitTests {
 
 		mappingElasticsearchConverter.updateQuery(query, Person.class);
 
-		SoftAssertions softly = new SoftAssertions();
-		softly.assertThat(query.getFields()).containsExactly("first-name", "last-name");
+		assertThat(query.getFields()).containsExactly("first-name", "last-name");
 		SourceFilter sourceFilter = query.getSourceFilter();
-		softly.assertThat(sourceFilter).isNotNull();
-		softly.assertThat(sourceFilter.getIncludes()).containsExactly("first-name");
-		softly.assertThat(sourceFilter.getExcludes()).containsExactly("last-name");
-		softly.assertAll();
+		assertThat(sourceFilter).isNotNull();
+		assertThat(sourceFilter.getIncludes()).containsExactly("first-name");
+		assertThat(sourceFilter.getExcludes()).containsExactly("last-name");
 	}
 
 	@Test
@@ -440,11 +437,9 @@ public class CriteriaQueryMappingUnitTests {
 
 		mappingElasticsearchConverter.updateQuery(query, Person.class);
 
-		SoftAssertions softly = new SoftAssertions();
 		List<String> storedFields = query.getStoredFields();
-		softly.assertThat(storedFields).isNotNull();
-		softly.assertThat(storedFields).containsExactly("first-name", "last-name");
-		softly.assertAll();
+		assertThat(storedFields).isNotNull();
+		assertThat(storedFields).containsExactly("first-name", "last-name");
 	}
 
 	// the following test failed because of a wrong implementation in Criteria
@@ -476,73 +471,73 @@ public class CriteriaQueryMappingUnitTests {
 		CriteriaQuery criteriaQuery = new CriteriaQuery(criteria);
 
 		String expected = """
-                {
-                  "bool": {
-                    "must": [
-                      {
-                        "query_string": {
-                          "default_operator": "and",
-                          "fields": [
-                            "first"
-                          ],
-                          "query": "hello"
-                        }
-                      },
-                      {
-                        "bool": {
-                          "should": [
-                            {
-                              "exists": {
-                                "field": "second"
-                              }
-                            },
-                            {
-                              "bool": {
-                                "must": [
-                                  {
-                                    "exists": {
-                                      "field": "third"
-                                    }
-                                  },
-                                  {
-                                    "query_string": {
-                                      "default_operator": "and",
-                                      "fields": [
-                                        "fourth"
-                                      ],
-                                      "query": "ciao"
-                                    }
-                                  }
-                                ]
-                              }
-                            },
-                            {
-                              "bool": {
-                                "must": [
-                                  {
-                                    "exists": {
-                                      "field": "third"
-                                    }
-                                  },
-                                  {
-                                    "query_string": {
-                                      "default_operator": "and",
-                                      "fields": [
-                                        "fourth"
-                                      ],
-                                      "query": "hi"
-                                    }
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                }
-                """;
+				{
+				  "bool": {
+				    "must": [
+				      {
+				        "query_string": {
+				          "default_operator": "and",
+				          "fields": [
+				            "first"
+				          ],
+				          "query": "hello"
+				        }
+				      },
+				      {
+				        "bool": {
+				          "should": [
+				            {
+				              "exists": {
+				                "field": "second"
+				              }
+				            },
+				            {
+				              "bool": {
+				                "must": [
+				                  {
+				                    "exists": {
+				                      "field": "third"
+				                    }
+				                  },
+				                  {
+				                    "query_string": {
+				                      "default_operator": "and",
+				                      "fields": [
+				                        "fourth"
+				                      ],
+				                      "query": "ciao"
+				                    }
+				                  }
+				                ]
+				              }
+				            },
+				            {
+				              "bool": {
+				                "must": [
+				                  {
+				                    "exists": {
+				                      "field": "third"
+				                    }
+				                  },
+				                  {
+				                    "query_string": {
+				                      "default_operator": "and",
+				                      "fields": [
+				                        "fourth"
+				                      ],
+				                      "query": "hi"
+				                    }
+				                  }
+				                ]
+				              }
+				            }
+				          ]
+				        }
+				      }
+				    ]
+				  }
+				}
+				""";
 
 		mappingElasticsearchConverter.updateQuery(criteriaQuery, Person.class);
 		var queryString = queryToJson(CriteriaQueryProcessor.createQuery(criteriaQuery.getCriteria()), mapper);

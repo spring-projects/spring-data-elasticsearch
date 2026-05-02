@@ -100,7 +100,7 @@ public abstract class DynamicIndexEntityIntegrationTests {
 
 	static class IndexNameProvider {
 
-		private String indexName;
+		private String indexName = "index-dynamic-test";
 
 		private int callsCount;
 

@@ -66,6 +66,7 @@ import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.core.sql.SqlResponse;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -339,7 +340,7 @@ class ResponseConverter {
 			List<String> composedOf) {
 		var mapping = typeMapping(indexTemplateSummary.mappings());
 
-		Function<IndexSettings, Settings> indexSettingsToSettings = indexSettings -> {
+		Function<@Nullable IndexSettings, @Nullable Settings> indexSettingsToSettings = indexSettings -> {
 
 			if (indexSettings == null) {
 				return null;
@@ -497,7 +498,7 @@ class ResponseConverter {
 			builder.withDeleted(response.deleted());
 		}
 
-		if(response.updated() != null) {
+		if (response.updated() != null) {
 			builder.withUpdated(response.updated());
 		}
 
@@ -574,17 +575,20 @@ class ResponseConverter {
 		}
 	}
 
+	@Contract("null -> null; !null -> !null")
 	@Nullable
 	static ElasticsearchErrorCause toErrorCause(@Nullable ErrorCause errorCause) {
 
 		if (errorCause != null) {
-			return new ElasticsearchErrorCause( //
-					errorCause.type(), //
-					errorCause.reason(), //
-					errorCause.stackTrace(), //
-					toErrorCause(errorCause.causedBy()), //
-					errorCause.rootCause().stream().map(ResponseConverter::toErrorCause).collect(Collectors.toList()), //
-					errorCause.suppressed().stream().map(ResponseConverter::toErrorCause).collect(Collectors.toList()));
+			return new ElasticsearchErrorCause(
+					errorCause.type(),
+					errorCause.reason(),
+					errorCause.stackTrace(),
+					toErrorCause(errorCause.causedBy()),
+					(List<ElasticsearchErrorCause>) (errorCause.rootCause().stream()
+							.map(ResponseConverter::toErrorCause).collect(Collectors.toList())),
+					(List<ElasticsearchErrorCause>) (errorCause.suppressed().stream().map(ResponseConverter::toErrorCause)
+							.collect(Collectors.toList())));
 		} else {
 			return null;
 		}

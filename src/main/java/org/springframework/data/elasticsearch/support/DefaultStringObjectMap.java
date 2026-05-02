@@ -77,33 +77,33 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 	}
 
 	@Override
-	public boolean containsKey(Object key) {
+	public boolean containsKey(@Nullable Object key) {
 		return delegate.containsKey(key);
 	}
 
 	@Override
-	public boolean containsValue(Object value) {
+	public boolean containsValue(@Nullable Object value) {
 		return delegate.containsValue(value);
 	}
 
 	@Override
 	@Nullable
-	public Object get(Object key) {
+	public Object get(@Nullable Object key) {
 		return delegate.get(key);
 	}
 
 	@Override
-	public Object getOrDefault(Object key, Object defaultValue) {
+	public Object getOrDefault(@Nullable Object key, @Nullable Object defaultValue) {
 		return delegate.getOrDefault(key, defaultValue);
 	}
 
 	@Override
-	public Object put(String key, Object value) {
+	public @Nullable Object put(String key, @Nullable Object value) {
 		return delegate.put(key, value);
 	}
 
 	@Override
-	public Object remove(Object key) {
+	public Object remove(@Nullable Object key) {
 		return delegate.remove(key);
 	}
 
@@ -133,7 +133,7 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		return delegate.equals(o);
 	}
 
@@ -143,7 +143,8 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 	}
 
 	@Override
-	public void forEach(BiConsumer<? super String, ? super Object> action) {
+	public void forEach(
+			@SuppressWarnings("NullableProblems") BiConsumer<? super String, ? super @Nullable Object> action) {
 		delegate.forEach(action);
 	}
 
@@ -163,7 +164,7 @@ public class DefaultStringObjectMap<T extends StringObjectMap<T>> implements Str
 
 		Assert.notNull(path, "path must not be null");
 
-		Map<String, Object> current = this;
+		Map<String, @Nullable Object> current = this;
 
 		String[] segments = path.split("\\.");
 		for (int i = 0; i < segments.length; i++) {

@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.core;
 
 import java.util.Map;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
@@ -370,7 +369,7 @@ public class EntityOperations {
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptableEntity#initializeVersionProperty()
 		 */
 		@Override
-		public @NonNull T initializeVersionProperty() {
+		public T initializeVersionProperty() {
 			return map;
 		}
 
@@ -399,7 +398,7 @@ public class EntityOperations {
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.AdaptableEntity#incrementVersion()
 		 */
 		@Override
-		public @NonNull T incrementVersion() {
+		public T incrementVersion() {
 			return map;
 		}
 
@@ -408,7 +407,7 @@ public class EntityOperations {
 		 * @see org.springframework.data.elasticsearch.core.EntityOperations.Entity#getBean()
 		 */
 		@Override
-		public @NonNull T getBean() {
+		public T getBean() {
 			return map;
 		}
 

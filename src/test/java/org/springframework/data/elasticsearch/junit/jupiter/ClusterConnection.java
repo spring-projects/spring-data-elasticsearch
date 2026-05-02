@@ -51,7 +51,7 @@ public class ClusterConnection implements AutoCloseable {
 	private static final String SDE_TESTCONTAINER_IMAGE_VERSION = "sde.testcontainers.image-version";
 	private static final int ELASTICSEARCH_DEFAULT_PORT = 9200;
 
-	private static final ThreadLocal<ClusterConnectionInfo> clusterConnectionInfoThreadLocal = new ThreadLocal<>();
+	private static final ThreadLocal<ClusterConnectionInfo> clusterConnectionInfoThreadLocal = new ThreadLocal();
 
 	@Nullable private final ClusterConnectionInfo clusterConnectionInfo;
 
@@ -76,6 +76,7 @@ public class ClusterConnection implements AutoCloseable {
 	/**
 	 * @return the {@link ClusterConnectionInfo} from the ThreadLocal storage.
 	 */
+	@SuppressWarnings("DataFlowIssue") // can return null when no value was set
 	@Nullable
 	public static ClusterConnectionInfo clusterConnectionInfo() {
 		return clusterConnectionInfoThreadLocal.get();

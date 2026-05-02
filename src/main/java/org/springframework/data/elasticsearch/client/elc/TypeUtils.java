@@ -36,6 +36,7 @@ import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
@@ -142,6 +143,12 @@ final class TypeUtils {
 
 			default -> throw new IllegalStateException("Unexpected value: " + fieldValue._kind());
 		}
+	}
+
+	static Object toObjectNotNull(FieldValue fieldValue) {
+
+		Objects.requireNonNull(fieldValue);
+		return toObject(fieldValue);
 	}
 
 	@Nullable
@@ -485,7 +492,7 @@ final class TypeUtils {
 	}
 
 	@Nullable
-	static IndexSettings indexSettings(@Nullable Map<String, Object> settings) {
+	static IndexSettings indexSettings(@Nullable Map<String, @Nullable Object> settings) {
 		return settings != null ? IndexSettings.of(b -> b.withJson(new StringReader(Document.from(settings).toJson())))
 				: null;
 	}

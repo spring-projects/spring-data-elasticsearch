@@ -17,8 +17,6 @@ package org.springframework.data.elasticsearch.core.index;
 
 import java.lang.annotation.Annotation;
 
-import org.jspecify.annotations.NonNull;
-
 /**
  * Allows to customize {@link org.springframework.data.elasticsearch.core.index.MappingParameters} that are being
  * emitted for each supported annotation. Needed by dependent projects like Spring-Data-Opensearch.
@@ -33,6 +31,6 @@ public interface MappingParametersCustomizer {
 	 * @param annotation supported annotation
 	 * @return customized @link org.springframework.data.elasticsearch.core.index.MappingParameters}
 	 */
-	@NonNull
-	MappingParameters from(@NonNull Annotation annotation);
+
+	MappingParameters from(Annotation annotation);
 }

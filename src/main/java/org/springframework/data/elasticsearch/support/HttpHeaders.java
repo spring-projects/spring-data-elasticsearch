@@ -99,18 +99,18 @@ public class HttpHeaders implements MultiValueMap<String, @Nullable String> {
 	}
 
 	@Override
-	public boolean containsKey(Object key) {
+	public boolean containsKey(@Nullable Object key) {
 		return delegate.containsKey(key);
 	}
 
 	@Override
-	public boolean containsValue(Object value) {
+	public boolean containsValue(@Nullable Object value) {
 		return delegate.containsValue(value);
 	}
 
 	@Override
 	@Nullable
-	public List<@Nullable String> get(Object key) {
+	public List<@Nullable String> get(@Nullable Object key) {
 		return delegate.get(key);
 	}
 
@@ -121,7 +121,7 @@ public class HttpHeaders implements MultiValueMap<String, @Nullable String> {
 	}
 
 	@Override
-	public List<@Nullable String> remove(Object key) {
+	public List<@Nullable String> remove(@Nullable Object key) {
 		return delegate.remove(key);
 	}
 
@@ -130,6 +130,7 @@ public class HttpHeaders implements MultiValueMap<String, @Nullable String> {
 
 		Assert.notNull(m, "m must not be null");
 
+		// noinspection NullableProblems
 		delegate.putAll(m);
 	}
 
@@ -144,18 +145,18 @@ public class HttpHeaders implements MultiValueMap<String, @Nullable String> {
 	}
 
 	@Override
-	public Collection<List<String>> values() {
+	public Collection<List<@Nullable String>> values() {
 		return delegate.values();
 	}
 
 	@Override
-	public Set<Entry<String, List<String>>> entrySet() {
+	public Set<Entry<String, List<@Nullable String>>> entrySet() {
 		return delegate.entrySet();
 	}
 
 	@SuppressWarnings("EqualsWhichDoesntCheckParameterClass")
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		return delegate.equals(o);
 	}
 

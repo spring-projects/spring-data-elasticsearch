@@ -21,7 +21,6 @@ import reactor.test.StepVerifier;
 
 import java.util.List;
 
-import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -93,7 +92,6 @@ public class ReactiveSqlOperationsIntegrationTests {
 			this.views = builder.views;
 		}
 
-		@Nullable
 		public String getId() {
 			return id;
 		}

@@ -83,7 +83,7 @@ public class SimpleField implements Field {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o)
 			return true;
 		if (!(o instanceof SimpleField that))

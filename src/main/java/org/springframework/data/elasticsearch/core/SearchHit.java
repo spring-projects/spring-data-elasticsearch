@@ -51,7 +51,7 @@ public class SearchHit<T> {
 	private final Map<String, Double> matchedQueries = new LinkedHashMap<>();
 
 	public SearchHit(@Nullable String index, @Nullable String id, @Nullable String routing, float score,
-			@Nullable Object[] sortValues, @Nullable Map<String, List<String>> highlightFields,
+			Object @Nullable [] sortValues, @Nullable Map<String, List<String>> highlightFields,
 			@Nullable Map<String, SearchHits<?>> innerHits, @Nullable NestedMetaData nestedMetaData,
 			@Nullable Explanation explanation, @Nullable Map<String, Double> matchedQueries, T content) {
 		this.index = index;
@@ -193,7 +193,6 @@ public class SearchHit<T> {
 	/**
 	 * @return the matched queries for this SearchHit.
 	 */
-	@Nullable
 	public Map<String, Double> getMatchedQueries() {
 		return matchedQueries;
 	}

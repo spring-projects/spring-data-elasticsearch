@@ -109,7 +109,6 @@ class SqlOperationsIntegrationTests {
 			this.views = builder.views;
 		}
 
-		@Nullable
 		public String getId() {
 			return id;
 		}

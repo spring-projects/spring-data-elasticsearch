@@ -31,10 +31,11 @@ import org.springframework.data.mapping.callback.EntityCallback;
 public interface AfterLoadCallback<T> extends EntityCallback<Document> {
 
 	/**
-	 * Entity callback method invoked after a domain object is materialized from a {@link Document}. Can return either the
-	 * same or a modified instance of the {@link Document} object.
+	 * Entity callback method invoked after a {@link Document} is read from Elasticsearch. Can return either the same or a
+	 * modified instance of the {@link Document} object.
 	 *
 	 * @param document the document.
+	 * @param type the type into which the document will be converted
 	 * @param indexCoordinates of the index the document was read from.
 	 * @return a possible modified or new {@link Document}.
 	 */

@@ -82,6 +82,7 @@ public abstract class AuditingReactiveIntegrationTest {
 		entity.setId("1");
 		entity = callbacks.callback(ReactiveBeforeConvertCallback.class, entity, IndexCoordinates.of("index")).block();
 
+		assertThat(entity).isNotNull();
 		assertThat(entity.getCreated()).isNotNull();
 		assertThat(entity.getModified()).isEqualTo(entity.created);
 		assertThat(entity.getCreatedBy()).isEqualTo("Auditor 1");
@@ -91,6 +92,7 @@ public abstract class AuditingReactiveIntegrationTest {
 
 		entity = callbacks.callback(ReactiveBeforeConvertCallback.class, entity, IndexCoordinates.of("index")).block();
 
+		assertThat(entity).isNotNull();
 		assertThat(entity.getCreated()).isNotNull();
 		assertThat(entity.getModified()).isNotEqualTo(entity.created);
 		assertThat(entity.getCreatedBy()).isEqualTo("Auditor 1");

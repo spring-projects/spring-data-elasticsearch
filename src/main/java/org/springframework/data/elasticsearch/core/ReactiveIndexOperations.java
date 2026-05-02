@@ -21,6 +21,7 @@ import reactor.core.publisher.Mono;
 import java.util.Map;
 import java.util.Set;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.index.*;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -50,7 +51,7 @@ public interface ReactiveIndexOperations {
 	 * @return a {@link Mono} signalling successful operation completion or an {@link Mono#error(Throwable) error} if eg.
 	 *         the index already exist.
 	 */
-	Mono<Boolean> create(Map<String, Object> settings);
+	Mono<Boolean> create(Map<String, @Nullable Object> settings);
 
 	/**
 	 * Create an index for given settings and mapping.
@@ -61,7 +62,7 @@ public interface ReactiveIndexOperations {
 	 *         the index already exist.
 	 * @since 4.2
 	 */
-	Mono<Boolean> create(Map<String, Object> settings, Document mapping);
+	Mono<Boolean> create(Map<String, @Nullable Object> settings, Document mapping);
 
 	/**
 	 * Create an index with the settings and mapping defined for the entity this IndexOperations is bound to.

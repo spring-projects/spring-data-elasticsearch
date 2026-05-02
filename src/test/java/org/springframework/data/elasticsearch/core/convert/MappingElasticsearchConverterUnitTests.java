@@ -231,7 +231,7 @@ public class MappingElasticsearchConverterUnitTests {
 		notificationAsMap.put("id", 1L);
 		notificationAsMap.put("fromEmail", "from@email.com");
 		notificationAsMap.put("toEmail", "to@email.com");
-		Map<String, Object> data = new HashMap<>();
+		Map<String, @Nullable Object> data = new HashMap<>();
 		data.put("documentType", "abc");
 		data.put("content", null);
 		notificationAsMap.put("params", data);
@@ -239,7 +239,7 @@ public class MappingElasticsearchConverterUnitTests {
 				"org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverterUnitTests$Notification");
 	}
 
-	private Map<String, Object> writeToMap(Object source) {
+	private Map<String, @Nullable Object> writeToMap(Object source) {
 
 		Document sink = Document.create();
 		mappingElasticsearchConverter.write(source, sink);
@@ -249,6 +249,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test
 	public void shouldFailToInitializeGivenMappingContextIsNull() {
 
+		// noinspection DataFlowIssue
 		assertThatThrownBy(() -> new MappingElasticsearchConverter(null)).isInstanceOf(IllegalArgumentException.class);
 	}
 
@@ -356,7 +357,7 @@ public class MappingElasticsearchConverterUnitTests {
 		person.gender = Gender.MAN;
 		person.address = observatoryRoad;
 
-		Map<String, Object> sink = writeToMap(person);
+		Map<String, @Nullable Object> sink = writeToMap(person);
 
 		assertThat(sink.get("address")).isEqualTo(gratiotAveAsMap);
 	}
@@ -370,7 +371,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 		sarahConnor.coWorkers = Arrays.asList(kyleReese, ginger);
 
-		Map<String, Object> target = writeToMap(sarahConnor);
+		Map<String, @Nullable Object> target = writeToMap(sarahConnor);
 		assertThat((List<Document>) target.get("coWorkers")).hasSize(2).contains(kyleAsMap);
 	}
 
@@ -382,7 +383,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 		sarahConnor.inventoryList = Arrays.asList(gun, grenade);
 
-		Map<String, Object> target = writeToMap(sarahConnor);
+		Map<String, @Nullable Object> target = writeToMap(sarahConnor);
 		assertThat((List<Document>) target.get("inventoryList")).containsExactly(gunAsMap, grenadeAsMap);
 	}
 
@@ -420,7 +421,7 @@ public class MappingElasticsearchConverterUnitTests {
 		sarahConnor.shippingAddresses = new LinkedHashMap<>();
 		sarahConnor.shippingAddresses.put("home", observatoryRoad);
 
-		Map<String, Object> target = writeToMap(sarahConnor);
+		Map<String, @Nullable Object> target = writeToMap(sarahConnor);
 		assertThat(target.get("shippingAddresses")).isInstanceOf(Map.class);
 		assertThat(target.get("shippingAddresses")).isEqualTo(singletonMap("home", gratiotAveAsMap));
 	}
@@ -432,7 +433,7 @@ public class MappingElasticsearchConverterUnitTests {
 		sarahConnor.inventoryMap.put("glock19", gun);
 		sarahConnor.inventoryMap.put("40 mm grenade", grenade);
 
-		Map<String, Object> target = writeToMap(sarahConnor);
+		Map<String, @Nullable Object> target = writeToMap(sarahConnor);
 		assertThat(target.get("inventoryMap")).isInstanceOf(Map.class);
 		assertThat((Map<String, Document>) target.get("inventoryMap")).containsEntry("glock19", gunAsMap)
 				.containsEntry("40 mm grenade", grenadeAsMap);
@@ -466,7 +467,7 @@ public class MappingElasticsearchConverterUnitTests {
 		skynet.objectList.add(t800);
 		skynet.objectList.add(gun);
 
-		Map<String, Object> target = writeToMap(skynet);
+		Map<String, @Nullable Object> target = writeToMap(skynet);
 
 		assertThat((List<Object>) target.get("objectList")).containsExactly(t800AsMap, gunAsMap);
 	}
@@ -489,7 +490,7 @@ public class MappingElasticsearchConverterUnitTests {
 		skynet.objectList = new ArrayList<>();
 		skynet.objectList.add(Arrays.asList(t800, gun));
 
-		Map<String, Object> target = writeToMap(skynet);
+		Map<String, @Nullable Object> target = writeToMap(skynet);
 
 		assertThat((List<Object>) target.get("objectList")).containsExactly(Arrays.asList(t800AsMap, gunAsMap));
 	}
@@ -513,9 +514,10 @@ public class MappingElasticsearchConverterUnitTests {
 		skynet.objectMap.put("gun", gun);
 		skynet.objectMap.put("grenade", grenade);
 
-		Map<String, Object> target = writeToMap(skynet);
+		Map<String, @Nullable Object> target = writeToMap(skynet);
 
-		assertThat((Map<String, Object>) target.get("objectMap")).containsEntry("gun", gunAsMap).containsEntry("grenade",
+		assertThat((Map<String, @Nullable Object>) target.get("objectMap")).containsEntry("gun", gunAsMap).containsEntry(
+				"grenade",
 				grenadeAsMap);
 	}
 
@@ -537,9 +539,9 @@ public class MappingElasticsearchConverterUnitTests {
 		skynet.objectMap = new LinkedHashMap<>();
 		skynet.objectMap.put("inventory", singletonMap("glock19", gun));
 
-		Map<String, Object> target = writeToMap(skynet);
+		Map<String, @Nullable Object> target = writeToMap(skynet);
 
-		assertThat((Map<String, Object>) target.get("objectMap")).containsEntry("inventory",
+		assertThat((Map<String, @Nullable Object>) target.get("objectMap")).containsEntry("inventory",
 				singletonMap("glock19", gunAsMap));
 	}
 
@@ -584,7 +586,7 @@ public class MappingElasticsearchConverterUnitTests {
 	public void writesNestedAliased() {
 
 		t800.inventoryList = singletonList(rifle);
-		Map<String, Object> target = writeToMap(t800);
+		Map<String, @Nullable Object> target = writeToMap(t800);
 
 		assertThat((List<Document>) target.get("inventoryList")).contains(rifleAsMap);
 	}
@@ -617,7 +619,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 		sarahConnor.address = bigBunsCafe;
 
-		Map<String, Object> target = writeToMap(sarahConnor);
+		Map<String, @Nullable Object> target = writeToMap(sarahConnor);
 
 		assertThat(target.get("address")).isEqualTo(bigBunsCafeAsMap);
 	}
@@ -714,7 +716,7 @@ public class MappingElasticsearchConverterUnitTests {
 		Notification notification = new Notification();
 		notification.setFromEmail("from@email.com");
 		notification.setToEmail("to@email.com");
-		Map<String, Object> data = new HashMap<>();
+		Map<String, @Nullable Object> data = new HashMap<>();
 		data.put("documentType", "abc");
 		data.put("content", null);
 		notification.params = data;
@@ -732,7 +734,7 @@ public class MappingElasticsearchConverterUnitTests {
 		document.put("id", 1L);
 		document.put("fromEmail", "from@email.com");
 		document.put("toEmail", "to@email.com");
-		Map<String, Object> data = new HashMap<>();
+		Map<String, @Nullable Object> data = new HashMap<>();
 		data.put("documentType", "abc");
 		data.put("content", null);
 		document.put("params", data);
@@ -744,7 +746,7 @@ public class MappingElasticsearchConverterUnitTests {
 
 	@Test // DATAES-795
 	void readGenericMapWithSimpleTypes() {
-		Map<String, Object> mapWithSimpleValues = new HashMap<>();
+		Map<String, @Nullable Object> mapWithSimpleValues = new HashMap<>();
 		mapWithSimpleValues.put("int", 1);
 		mapWithSimpleValues.put("string", "string");
 		mapWithSimpleValues.put("boolean", true);
@@ -758,13 +760,13 @@ public class MappingElasticsearchConverterUnitTests {
 
 	@Test // DATAES-797
 	void readGenericListWithMaps() {
-		Map<String, Object> simpleMap = new HashMap<>();
+		Map<String, @Nullable Object> simpleMap = new HashMap<>();
 		simpleMap.put("int", 1);
 
-		List<Map<String, Object>> listWithSimpleMap = new ArrayList<>();
+		List<Map<String, @Nullable Object>> listWithSimpleMap = new ArrayList<>();
 		listWithSimpleMap.add(simpleMap);
 
-		Map<String, List<Map<String, Object>>> mapWithSimpleList = new HashMap<>();
+		Map<String, List<Map<String, @Nullable Object>>> mapWithSimpleList = new HashMap<>();
 		mapWithSimpleList.put("someKey", listWithSimpleMap);
 
 		Document document = Document.create();
@@ -870,7 +872,7 @@ public class MappingElasticsearchConverterUnitTests {
 	@Test // DATAES-865
 	void shouldWriteEntityWithMapAsObject() throws JSONException {
 
-		Map<String, Object> map = new LinkedHashMap<>();
+		Map<String, @Nullable Object> map = new LinkedHashMap<>();
 		map.put("foo", "bar");
 
 		EntityWithObject entity = new EntityWithObject();
@@ -919,7 +921,7 @@ public class MappingElasticsearchConverterUnitTests {
 	void shouldWriteMapContainingCollectionContainingMap() throws JSONException {
 
 		class EntityWithMapCollectionMap {
-			Map<String, Object> map = Map.of();
+			Map<String, @Nullable Object> map = new LinkedHashMap();
 		}
 		class InnerEntity {
 			@Nullable String prop1;
@@ -1801,7 +1803,7 @@ public class MappingElasticsearchConverterUnitTests {
 		var entity = mappingElasticsearchConverter.read(EntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenSet()).hasSize(2);
-		List<String> names = entity.getChildrenSet().stream().map(EntityWithCollections.Child::getName)
+		List<@Nullable String> names = entity.getChildrenSet().stream().map(EntityWithCollections.Child::getName)
 				.collect(Collectors.toList());
 		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
 	}
@@ -1825,12 +1827,17 @@ public class MappingElasticsearchConverterUnitTests {
 
 	@Test
 	void shouldPopulateScriptedFields() {
+		Map<String, List<@Nullable Object>> fields = new LinkedHashMap<>();
+		var scriptedFieldList = new ArrayList<@Nullable Object>();
+		scriptedFieldList.add("scriptedField");
+		fields.put("scriptedField", scriptedFieldList);
+		var customScriptedFieldList = new ArrayList<@Nullable Object>();
+		customScriptedFieldList.add("custom-name-scripted-field");
+		fields.put("custom-name-scripted-field", customScriptedFieldList);
 		SearchDocumentAdapter document = new SearchDocumentAdapter(Document.create(),
 				0.0f,
 				new Object[] {},
-				Map.of(
-						"scriptedField", List.of("scriptedField"),
-						"custom-name-scripted-field", List.of("custom-name-scripted-field")),
+				fields,
 				emptyMap(),
 				emptyMap(),
 				null,
@@ -1869,7 +1876,7 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (o == null || getClass() != o.getClass())
 				return false;
 			ScriptedEntity that = (ScriptedEntity) o;
@@ -2022,7 +2029,7 @@ public class MappingElasticsearchConverterUnitTests {
 		var entity = mappingElasticsearchConverter.read(ImmutableEntityWithCollections.class, source);
 
 		assertThat(entity.getChildrenSet()).hasSize(2);
-		List<String> names = entity.getChildrenSet().stream().map(ImmutableEntityWithCollections.Child::getName)
+		List<@Nullable String> names = entity.getChildrenSet().stream().map(ImmutableEntityWithCollections.Child::getName)
 				.collect(Collectors.toList());
 		assertThat(names).containsExactlyInAnyOrder("child1", "child2");
 	}
@@ -2336,7 +2343,7 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o)
 				return true;
 			if (o == null || getClass() != o.getClass())
@@ -2474,7 +2481,7 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o)
 				return true;
 			if (!(o instanceof Address address))
@@ -2509,7 +2516,7 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o)
 				return true;
 			if (!(o instanceof Place place))
@@ -2527,7 +2534,7 @@ public class MappingElasticsearchConverterUnitTests {
 	static class Skynet {
 		@Nullable private Object object;
 		@Nullable private List<Object> objectList;
-		@Nullable private Map<String, Object> objectMap;
+		@Nullable private Map<String, @Nullable Object> objectMap;
 
 		@Nullable
 		public Object getObject() {
@@ -2548,11 +2555,11 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		@Nullable
-		public Map<String, Object> getObjectMap() {
+		public Map<String, @Nullable Object> getObjectMap() {
 			return objectMap;
 		}
 
-		public void setObjectMap(@Nullable Map<String, Object> objectMap) {
+		public void setObjectMap(@Nullable Map<String, @Nullable Object> objectMap) {
 			this.objectMap = objectMap;
 		}
 	}
@@ -2561,7 +2568,7 @@ public class MappingElasticsearchConverterUnitTests {
 		@Nullable private Long id;
 		@Nullable private String fromEmail;
 		@Nullable private String toEmail;
-		@Nullable private Map<String, Object> params;
+		@Nullable private Map<String, @Nullable Object> params;
 
 		@Nullable
 		public Long getId() {
@@ -2591,22 +2598,22 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		@Nullable
-		public Map<String, Object> getParams() {
+		public Map<String, @Nullable Object> getParams() {
 			return params;
 		}
 
-		public void setParams(@Nullable Map<String, Object> params) {
+		public void setParams(@Nullable Map<String, @Nullable Object> params) {
 			this.params = params;
 		}
 	}
 
 	@WritingConverter
-	static class ShotGunToMapConverter implements Converter<ShotGun, Map<String, Object>> {
+	static class ShotGunToMapConverter implements Converter<ShotGun, Map<String, @Nullable Object>> {
 
 		@Override
-		public Map<String, Object> convert(ShotGun source) {
+		public Map<String, @Nullable Object> convert(ShotGun source) {
 
-			LinkedHashMap<String, Object> target = new LinkedHashMap<>();
+			LinkedHashMap<String, @Nullable Object> target = new LinkedHashMap<>();
 			target.put("model", source.label());
 			target.put("_class", ShotGun.class.getName());
 			return target;
@@ -2614,10 +2621,10 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	@ReadingConverter
-	static class MapToShotGunConverter implements Converter<Map<String, Object>, ShotGun> {
+	static class MapToShotGunConverter implements Converter<Map<String, @Nullable Object>, ShotGun> {
 
 		@Override
-		public ShotGun convert(Map<String, Object> source) {
+		public ShotGun convert(Map<String, @Nullable Object> source) {
 			return new ShotGun(source.get("model").toString());
 		}
 	}
@@ -2734,14 +2741,14 @@ public class MappingElasticsearchConverterUnitTests {
 	}
 
 	static class SchemaLessObjectWrapper {
-		@Nullable private Map<String, Object> schemaLessObject;
+		@Nullable private Map<String, @Nullable Object> schemaLessObject;
 
 		@Nullable
-		public Map<String, Object> getSchemaLessObject() {
+		public Map<String, @Nullable Object> getSchemaLessObject() {
 			return schemaLessObject;
 		}
 
-		public void setSchemaLessObject(@Nullable Map<String, Object> schemaLessObject) {
+		public void setSchemaLessObject(@Nullable Map<String, @Nullable Object> schemaLessObject) {
 			this.schemaLessObject = schemaLessObject;
 		}
 	}
@@ -2764,7 +2771,7 @@ public class MappingElasticsearchConverterUnitTests {
 	static class EntityWithListProperty {
 		@Nullable
 		@Id private String id;
-		@Nullable private List<String> values;
+		private @Nullable List<@Nullable String> values;
 
 		@Nullable
 		public String getId() {
@@ -2776,11 +2783,11 @@ public class MappingElasticsearchConverterUnitTests {
 		}
 
 		@Nullable
-		public List<String> getValues() {
+		public List<@Nullable String> getValues() {
 			return values;
 		}
 
-		public void setValues(@Nullable List<String> values) {
+		public void setValues(@Nullable List<@Nullable String> values) {
 			this.values = values;
 		}
 	}
@@ -3322,6 +3329,7 @@ public class MappingElasticsearchConverterUnitTests {
 				this.keyWord = keyWord;
 			}
 		}
+
 	}
 
 	// endregion

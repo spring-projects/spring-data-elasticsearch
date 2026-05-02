@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.support.DefaultStringObjectMap;
 import org.springframework.util.Assert;
 
@@ -34,7 +35,7 @@ public class Settings extends DefaultStringObjectMap<Settings> {
 
 	public Settings() {}
 
-	public Settings(Map<String, Object> map) {
+	public Settings(Map<String, @Nullable Object> map) {
 		super(map);
 	}
 
@@ -54,7 +55,7 @@ public class Settings extends DefaultStringObjectMap<Settings> {
 	}
 
 	@Override
-	public Object get(Object key) {
+	public Object get(@Nullable Object key) {
 		return containsKey(key) ? super.get(key) : path(key.toString());
 	}
 
@@ -75,11 +76,11 @@ public class Settings extends DefaultStringObjectMap<Settings> {
 	 * taken from https://stackoverflow.com/a/29698326/4393565
 	 */
 	@SuppressWarnings("unchecked")
-	private static Map<?, ?> deepMerge(Map<String, Object> original, Map<String, Object> newMap) {
+	private static Map<?, ?> deepMerge(Map<String, @Nullable Object> original, Map<String, @Nullable Object> newMap) {
 		for (Object key : newMap.keySet()) {
 			if (newMap.get(key) instanceof Map && original.get(key) instanceof Map) {
-				Map<String, Object> originalChild = (Map<String, Object>) original.get(key);
-				Map<String, Object> newChild = (Map<String, Object>) newMap.get(key);
+				Map<String, @Nullable Object> originalChild = (Map<String, Object>) original.get(key);
+				Map<String, @Nullable Object> newChild = (Map<String, Object>) newMap.get(key);
 				original.put(key.toString(), deepMerge(originalChild, newChild));
 			} else if (newMap.get(key) instanceof List && original.get(key) instanceof List) {
 				List<Object> originalChild = (List<Object>) original.get(key);
@@ -112,9 +113,9 @@ public class Settings extends DefaultStringObjectMap<Settings> {
 	 * flattens a Map<String, Object> to a stream of Map.Entry objects where the keys are the dot separated concatenated
 	 * keys of sub map entries
 	 */
-	static private Stream<Map.Entry<String, Object>> doFlatten(Map.Entry<String, Object> entry) {
+	static private Stream<Map.Entry<String, @Nullable Object>> doFlatten(Map.Entry<String, @Nullable Object> entry) {
 
-		if (entry.getValue()instanceof Map<?, ?> nested) {
+		if (entry.getValue() instanceof Map<?, ?> nested) {
 
 			// noinspection unchecked
 			return nested.entrySet().stream() //

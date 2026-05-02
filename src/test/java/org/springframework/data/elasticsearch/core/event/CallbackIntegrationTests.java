@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -131,11 +132,13 @@ abstract class CallbackIntegrationTests {
 		final IndexQuery capturedIndexQuery = indexQueryCaptor.getValue();
 		SampleEntity convertedEntity = (SampleEntity) capturedIndexQuery.getObject();
 
+		assertThat(convertedEntity).isNotNull();
 		final JoinField<String> joinField = convertedEntity.getJoinField();
+		assertThat(joinField).isNotNull();
 		assertThat(joinField.getName()).isEqualTo("answer");
 		assertThat(joinField.getParent()).isEqualTo("42");
 		assertThat(capturedIndexQuery.getRouting()).isEqualTo("42");
-		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTerm.sequenceNumber());
+		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(Objects.requireNonNull(seqNoPrimaryTerm).sequenceNumber());
 		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.primaryTerm());
 	}
 
@@ -152,12 +155,13 @@ abstract class CallbackIntegrationTests {
 
 		final IndexQuery capturedIndexQuery = indexQueryCaptor.getValue();
 		SampleEntity convertedEntity = (SampleEntity) capturedIndexQuery.getObject();
-
+		assertThat(convertedEntity).isNotNull();
 		final JoinField<String> joinField = convertedEntity.getJoinField();
+		assertThat(joinField).isNotNull();
 		assertThat(joinField.getName()).isEqualTo("answer");
 		assertThat(joinField.getParent()).isEqualTo("42");
 		assertThat(capturedIndexQuery.getRouting()).isEqualTo("42");
-		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(seqNoPrimaryTerm.sequenceNumber());
+		assertThat(capturedIndexQuery.getSeqNo()).isEqualTo(Objects.requireNonNull(seqNoPrimaryTerm).sequenceNumber());
 		assertThat(capturedIndexQuery.getPrimaryTerm()).isEqualTo(seqNoPrimaryTerm.primaryTerm());
 	}
 

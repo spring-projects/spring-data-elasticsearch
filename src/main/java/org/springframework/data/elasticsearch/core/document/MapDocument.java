@@ -215,7 +215,7 @@ class MapDocument implements Document {
 	 * @see java.util.Map#containsKey(java.lang.Object)
 	 */
 	@Override
-	public boolean containsKey(Object key) {
+	public boolean containsKey(@Nullable Object key) {
 		return documentAsMap.containsKey(key);
 	}
 
@@ -224,7 +224,7 @@ class MapDocument implements Document {
 	 * @see java.util.Map#containsValue(java.lang.Object)
 	 */
 	@Override
-	public boolean containsValue(Object value) {
+	public boolean containsValue(@Nullable Object value) {
 		return documentAsMap.containsValue(value);
 	}
 
@@ -233,7 +233,7 @@ class MapDocument implements Document {
 	 * @see java.util.Map#get(java.lang.Object)
 	 */
 	@Override
-	public Object get(Object key) {
+	public Object get(@Nullable Object key) {
 		return documentAsMap.get(key);
 	}
 
@@ -242,7 +242,7 @@ class MapDocument implements Document {
 	 * @see java.lang.Object#getOrDefault(java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public Object getOrDefault(Object key, Object defaultValue) {
+	public Object getOrDefault(@Nullable Object key, @Nullable Object defaultValue) {
 		return documentAsMap.getOrDefault(key, defaultValue);
 	}
 
@@ -251,7 +251,7 @@ class MapDocument implements Document {
 	 * @see java.util.Map#put(java.lang.Object, java.lang.Object)
 	 */
 	@Override
-	public Object put(String key, Object value) {
+	public Object put(String key, @Nullable Object value) {
 		return documentAsMap.put(key, value);
 	}
 
@@ -260,7 +260,7 @@ class MapDocument implements Document {
 	 * @see java.util.Map#remove(java.lang.Object)
 	 */
 	@Override
-	public Object remove(Object key) {
+	public Object remove(@Nullable Object key) {
 		return documentAsMap.remove(key);
 	}
 
@@ -314,7 +314,7 @@ class MapDocument implements Document {
 	 * @see java.lang.Object#equals(java.lang.Object)
 	 */
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		return documentAsMap.equals(o);
 	}
 
@@ -332,7 +332,8 @@ class MapDocument implements Document {
 	 * @see java.util.Map#forEach(java.util.function.BiConsumer)
 	 */
 	@Override
-	public void forEach(BiConsumer<? super String, ? super Object> action) {
+	public void forEach(
+			@SuppressWarnings("NullableProblems") BiConsumer<? super String, ? super @Nullable Object> action) {
 		documentAsMap.forEach(action);
 	}
 

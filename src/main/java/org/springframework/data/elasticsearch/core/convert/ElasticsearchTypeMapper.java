@@ -29,7 +29,7 @@ import org.springframework.data.mapping.context.MappingContext;
  * @author Christoph Strobl
  * @since 3.2
  */
-public interface ElasticsearchTypeMapper extends TypeMapper<Map<String, Object>> {
+public interface ElasticsearchTypeMapper extends TypeMapper<Map<String, @Nullable Object>> {
 
 	String DEFAULT_TYPE_KEY = "_class";
 
@@ -47,7 +47,7 @@ public interface ElasticsearchTypeMapper extends TypeMapper<Map<String, Object>>
 	@Nullable
 	String getTypeKey();
 
-	default boolean containsTypeInformation(Map<String, Object> source) {
+	default boolean containsTypeInformation(Map<String, @Nullable Object> source) {
 		return readType(source) != null;
 	}
 

@@ -35,7 +35,7 @@ public class SearchDocumentAdapter implements SearchDocument {
 
 	private final float score;
 	private final Object[] sortValues;
-	private final Map<String, List<Object>> fields = new HashMap<>();
+	private final Map<String, List<@Nullable Object>> fields = new HashMap<>();
 	private final Document delegate;
 	private final Map<String, List<String>> highlightFields = new HashMap<>();
 	private final Map<String, SearchDocumentResponse> innerHits = new HashMap<>();
@@ -44,9 +44,11 @@ public class SearchDocumentAdapter implements SearchDocument {
 	@Nullable private final Map<String, Double> matchedQueries;
 	@Nullable private final String routing;
 
-	public SearchDocumentAdapter(Document delegate, float score, Object[] sortValues, Map<String, List<Object>> fields,
+	public SearchDocumentAdapter(Document delegate, float score, Object[] sortValues,
+			Map<String, List<@Nullable Object>> fields,
 			Map<String, List<String>> highlightFields, Map<String, SearchDocumentResponse> innerHits,
-			@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation, @Nullable Map<String, Double> matchedQueries,
+			@Nullable NestedMetaData nestedMetaData, @Nullable Explanation explanation,
+			@Nullable Map<String, Double> matchedQueries,
 			@Nullable String routing) {
 
 		this.delegate = delegate;
@@ -74,7 +76,7 @@ public class SearchDocumentAdapter implements SearchDocument {
 	}
 
 	@Override
-	public Map<String, List<Object>> getFields() {
+	public Map<String, List<@Nullable Object>> getFields() {
 		return fields;
 	}
 
@@ -186,17 +188,17 @@ public class SearchDocumentAdapter implements SearchDocument {
 	}
 
 	@Override
-	public boolean containsKey(Object key) {
+	public boolean containsKey(@Nullable Object key) {
 		return delegate.containsKey(key);
 	}
 
 	@Override
-	public boolean containsValue(Object value) {
+	public boolean containsValue(@Nullable Object value) {
 		return delegate.containsValue(value);
 	}
 
 	@Override
-	public Object get(Object key) {
+	public Object get(@Nullable Object key) {
 
 		if (delegate.containsKey(key)) {
 			return delegate.get(key);
@@ -207,12 +209,12 @@ public class SearchDocumentAdapter implements SearchDocument {
 	}
 
 	@Override
-	public Object put(String key, Object value) {
+	public @Nullable Object put(String key, @Nullable Object value) {
 		return delegate.put(key, value);
 	}
 
 	@Override
-	public Object remove(Object key) {
+	public Object remove(@Nullable Object key) {
 		return delegate.remove(key);
 	}
 
@@ -232,12 +234,12 @@ public class SearchDocumentAdapter implements SearchDocument {
 	}
 
 	@Override
-	public Collection<Object> values() {
+	public Collection<@Nullable Object> values() {
 		return delegate.values();
 	}
 
 	@Override
-	public Set<Entry<String, Object>> entrySet() {
+	public Set<Entry<String, @Nullable Object>> entrySet() {
 		return delegate.entrySet();
 	}
 
@@ -254,7 +256,7 @@ public class SearchDocumentAdapter implements SearchDocument {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o) {
 			return true;
 		}
@@ -270,17 +272,17 @@ public class SearchDocumentAdapter implements SearchDocument {
 	}
 
 	@Override
-	public void forEach(BiConsumer<? super String, ? super Object> action) {
+	public void forEach(@Nullable BiConsumer<? super String, ? super @Nullable Object> action) {
 		delegate.forEach(action);
 	}
 
 	@Override
-	public boolean remove(Object key, Object value) {
+	public boolean remove(@Nullable Object key, @Nullable Object value) {
 		return delegate.remove(key, value);
 	}
 
 	@Override
-	public String getRouting() {
+	public @Nullable String getRouting() {
 		return routing;
 	}
 

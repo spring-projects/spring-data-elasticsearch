@@ -15,6 +15,8 @@
  */
 package org.springframework.data.elasticsearch.utils.geohash;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * /** Code copied from Elasticsearch 7.10, Apache License V2
  * https://github.com/elastic/elasticsearch/blob/7.10/libs/geo/src/main/java/org/elasticsearch/geometry/Point.java <br/>
@@ -77,7 +79,7 @@ public class Point implements Geometry {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o)
 			return true;
 		if (o == null || getClass() != o.getClass())

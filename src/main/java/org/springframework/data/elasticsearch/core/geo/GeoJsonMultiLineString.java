@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
 
@@ -81,7 +82,7 @@ public class GeoJsonMultiLineString implements GeoJson<Iterable<GeoJsonLineStrin
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o)
 			return true;
 		if (o == null || getClass() != o.getClass())
