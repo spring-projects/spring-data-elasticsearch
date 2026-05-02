@@ -20,8 +20,6 @@ import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
 
-import org.jspecify.annotations.NonNull;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -47,7 +45,7 @@ public class NestedObjectELCIntegrationTests extends NestedObjectIntegrationTest
 	}
 
 	@Override
-	protected @NonNull Query getNestedQuery1() {
+	protected Query getNestedQuery1() {
 		return NativeQuery.builder().withQuery( //
 				nested(n -> n //
 						.path("car") //

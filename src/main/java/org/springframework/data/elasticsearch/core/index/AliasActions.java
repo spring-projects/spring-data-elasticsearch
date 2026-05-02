@@ -38,7 +38,7 @@ public class AliasActions {
 	 *
 	 * @param actions {@link AliasAction} elements
 	 */
-	public AliasActions(@Nullable AliasAction... actions) {
+	public AliasActions(AliasAction @Nullable... actions) {
 		add(actions);
 	}
 
@@ -52,10 +52,9 @@ public class AliasActions {
 	 * @param actions elements to add
 	 * @return this object
 	 */
-	public AliasActions add(@Nullable AliasAction... actions) {
+	public AliasActions add(AliasAction @Nullable... actions) {
 
 		if (actions != null) {
-			// noinspection NullableProblems
 			this.actions.addAll(Arrays.asList(actions));
 		}
 

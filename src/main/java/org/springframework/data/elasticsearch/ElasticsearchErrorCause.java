@@ -28,7 +28,7 @@ import org.jspecify.annotations.Nullable;
 public class ElasticsearchErrorCause {
 	@Nullable private final String type;
 
-	private final String reason;
+	@Nullable private final String reason;
 
 	@Nullable private final String stackTrace;
 
@@ -38,7 +38,7 @@ public class ElasticsearchErrorCause {
 
 	private final List<ElasticsearchErrorCause> suppressed;
 
-	public ElasticsearchErrorCause(@Nullable String type, String reason, @Nullable String stackTrace,
+	public ElasticsearchErrorCause(@Nullable String type, @Nullable String reason, @Nullable String stackTrace,
 			@Nullable ElasticsearchErrorCause causedBy, List<ElasticsearchErrorCause> rootCause,
 			List<ElasticsearchErrorCause> suppressed) {
 		this.type = type;
@@ -54,7 +54,7 @@ public class ElasticsearchErrorCause {
 		return type;
 	}
 
-	public String getReason() {
+	public @Nullable String getReason() {
 		return reason;
 	}
 

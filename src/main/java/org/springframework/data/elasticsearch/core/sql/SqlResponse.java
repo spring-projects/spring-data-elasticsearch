@@ -25,7 +25,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -110,7 +109,6 @@ public class SqlResponse {
 			return new Builder();
 		}
 
-		@NonNull
 		@Override
 		public Iterator<Map.Entry<Column, JsonValue>> iterator() {
 			return row.entrySet().iterator();

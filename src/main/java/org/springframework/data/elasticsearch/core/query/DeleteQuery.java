@@ -354,7 +354,6 @@ public class DeleteQuery {
 		return version;
 	}
 
-	@Nullable
 	public Query getQuery() {
 		return query;
 	}
@@ -648,6 +647,7 @@ public class DeleteQuery {
 			return this;
 		}
 
+		@SuppressWarnings("VariableNotUsedInsideIf")
 		public DeleteQuery build() {
 			if (luceneQuery == null) {
 				if (defaultField != null) {

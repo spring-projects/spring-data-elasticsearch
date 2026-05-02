@@ -1121,7 +1121,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 	void shouldWorkWithImmutableClasses() {
 
 		ImmutableEntity entity = new ImmutableEntity(null, "some text", null);
-		AtomicReference<ImmutableEntity> savedEntity = new AtomicReference<>();
+		AtomicReference<@Nullable ImmutableEntity> savedEntity = new AtomicReference<>();
 
 		operations.save(entity).as(StepVerifier::create).consumeNextWith(saved -> {
 			assertThat(saved).isNotNull();
@@ -1295,7 +1295,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o) {
 				return true;
 			}
@@ -1366,7 +1366,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o) {
 				return true;
 			}
@@ -1554,7 +1554,7 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o) {
 				return true;
 			}

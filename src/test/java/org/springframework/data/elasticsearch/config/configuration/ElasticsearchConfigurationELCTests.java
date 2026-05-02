@@ -18,9 +18,8 @@ package org.springframework.data.elasticsearch.config.configuration;
 import static org.assertj.core.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-
 import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
-import org.jspecify.annotations.NonNull;
+
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +50,7 @@ public class ElasticsearchConfigurationELCTests {
 			considerNestedRepositories = true)
 	static class Config extends ElasticsearchConfiguration {
 		@Override
-		public @NonNull ClientConfiguration clientConfiguration() {
+		public ClientConfiguration clientConfiguration() {
 			return ClientConfiguration.builder() //
 					.connectedTo("localhost:9200") //
 					.build();

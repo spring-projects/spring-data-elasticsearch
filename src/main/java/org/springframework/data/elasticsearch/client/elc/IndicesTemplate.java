@@ -114,7 +114,7 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 	}
 
 	@Override
-	public boolean create(Map<String, Object> settings) {
+	public boolean create(Map<String, @Nullable Object> settings) {
 
 		Assert.notNull(settings, "settings must not be null");
 
@@ -122,7 +122,7 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 	}
 
 	@Override
-	public boolean create(Map<String, Object> settings, Document mapping) {
+	public boolean create(Map<String, @Nullable Object> settings, Document mapping) {
 
 		Assert.notNull(settings, "settings must not be null");
 		Assert.notNull(mapping, "mapping must not be null");
@@ -135,7 +135,7 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		return doCreate(getIndexCoordinates(), createSettings(), createMapping());
 	}
 
-	protected boolean doCreate(IndexCoordinates indexCoordinates, Map<String, Object> settings,
+	protected boolean doCreate(IndexCoordinates indexCoordinates, Map<String, @Nullable Object> settings,
 			@Nullable Document mapping) {
 		Set<Alias> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
 		CreateIndexSettings indexSettings = CreateIndexSettings.builder(indexCoordinates)
@@ -233,7 +233,7 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 	}
 
 	@Override
-	public Map<String, Object> getMapping() {
+	public Map<String, @Nullable Object> getMapping() {
 
 		IndexCoordinates indexCoordinates = getIndexCoordinates();
 		GetMappingRequest getMappingRequest = requestConverter.indicesGetMappingRequest(indexCoordinates);

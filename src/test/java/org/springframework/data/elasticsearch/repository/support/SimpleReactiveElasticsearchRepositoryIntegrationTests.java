@@ -325,7 +325,10 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				new SampleEntity("id-three", "message")) //
 				.block();
 
-		repository.queryByCollectionSpEL(List.of("message"))
+		List<@Nullable String> params = new ArrayList<>();
+		params.add("message");
+
+		repository.queryByCollectionSpEL(params)
 				.as(StepVerifier::create) //
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
 				.expectNextCount(2) //
@@ -353,7 +356,9 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				new SampleEntity("id-three", "message")) //
 				.block();
 
-		repository.queryByCollectionSpEL(List.of())
+		List<@Nullable String> params = new ArrayList<>();
+
+		repository.queryByCollectionSpEL(params)
 				.as(StepVerifier::create) //
 				.expectNextCount(0) //
 				.verifyComplete();
@@ -366,7 +371,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				new SampleEntity("id-three", "message")) //
 				.block();
 
-		List<String> params = new ArrayList<>();
+		List<@Nullable String> params = new ArrayList<>();
 		params.add(null);
 
 		repository.queryByCollectionSpEL(params)
@@ -382,7 +387,10 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				new SampleEntity("id-three", "message")) //
 				.block();
 
-		repository.queryByCollectionSpEL(Arrays.asList("message", null))
+		Collection<@Nullable String> messages = new ArrayList<>();
+		messages.add("message");
+		messages.add(null);
+		repository.queryByCollectionSpEL(messages)
 				.as(StepVerifier::create) //
 				.expectNextMatches(searchHit -> SearchHit.class.isAssignableFrom(searchHit.getClass()))//
 				.expectNextCount(2) //
@@ -650,9 +658,14 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		bulkIndex(new SampleEntity("id-one"), toBeDeleted) //
 				.block();
 
-		repository.deleteAllById(Collections.singletonList(toBeDeleted.getId())).as(StepVerifier::create).verifyComplete();
+		var toBeDeletedId = toBeDeleted.getId();
+		assertThat(toBeDeletedId).isNotNull();
 
-		assertThat(documentWithIdExistsInIndex(toBeDeleted.getId()).block()).isFalse();
+		repository.deleteAllById(Collections.singletonList(toBeDeletedId))
+				.as(StepVerifier::create)
+				.verifyComplete();
+
+		assertThat(documentWithIdExistsInIndex(toBeDeletedId).block()).isFalse();
 	}
 
 	@Test // DATAES-519
@@ -664,7 +677,9 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 
 		repository.delete(toBeDeleted).as(StepVerifier::create).verifyComplete();
 
-		assertThat(documentWithIdExistsInIndex(toBeDeleted.getId()).block()).isFalse();
+		var id = toBeDeleted.getId();
+		assertThat(id).isNotNull();
+		assertThat(documentWithIdExistsInIndex(id).block()).isFalse();
 	}
 
 	@Test // DATAES-519
@@ -1202,7 +1217,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 				  }
 				}
 				""")
-		Flux<SearchHit<SampleEntity>> queryByCollectionSpEL(@Nullable Collection<String> messages);
+		Flux<SearchHit<SampleEntity>> queryByCollectionSpEL(@Nullable Collection<@Nullable String> messages);
 
 		@Query("""
 				{
@@ -1294,9 +1309,8 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		@Field(type = FieldType.Text, store = true, fielddata = true) private String message;
 		@Nullable
 		@Field(type = FieldType.Keyword) private String keyword;
-
-		@Nullable private int rate;
-		@Nullable private boolean available;
+		private int rate;
+		private boolean available;
 		@Nullable
 		@Version private Long version;
 		@Field(name = "custom_field_name", type = FieldType.Text)

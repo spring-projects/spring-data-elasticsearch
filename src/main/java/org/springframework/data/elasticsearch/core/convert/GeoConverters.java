@@ -20,9 +20,9 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.convert.ReadingConverter;
 import org.springframework.data.convert.WritingConverter;
@@ -167,7 +167,7 @@ public class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJson<? extends Iterable<?>> convert(Map<String, Object> source) {
+		public GeoJson<? extends Iterable<?>> convert(Map<String, @Nullable Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
 
@@ -206,7 +206,7 @@ public class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonPoint convert(Map<String, Object> source) {
+		public GeoJsonPoint convert(Map<String, @Nullable Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
 			Assert.isTrue(type.equalsIgnoreCase(GeoJsonPoint.TYPE), "does not contain a type 'Point'");
@@ -244,7 +244,7 @@ public class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonMultiPoint convert(Map<String, Object> source) {
+		public GeoJsonMultiPoint convert(Map<String, @Nullable Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
 			Assert.isTrue(type.equalsIgnoreCase(GeoJsonMultiPoint.TYPE), "does not contain a type 'MultiPoint'");
@@ -279,7 +279,7 @@ public class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonLineString convert(Map<String, Object> source) {
+		public GeoJsonLineString convert(Map<String, @Nullable Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
 			Assert.isTrue(type.equalsIgnoreCase(GeoJsonLineString.TYPE), "does not contain a type 'LineString'");
@@ -311,7 +311,7 @@ public class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonMultiLineString convert(Map<String, Object> source) {
+		public GeoJsonMultiLineString convert(Map<String, @Nullable Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
 			Assert.isTrue(type.equalsIgnoreCase(GeoJsonMultiLineString.TYPE), "does not contain a type 'MultiLineString'");
@@ -339,7 +339,7 @@ public class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonPolygon convert(Map<String, Object> source) {
+		public GeoJsonPolygon convert(Map<String, @Nullable Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
 			Assert.isTrue(type.equalsIgnoreCase(GeoJsonPolygon.TYPE), "does not contain a type 'Polygon'");
@@ -368,7 +368,6 @@ public class GeoConverters {
 
 			List<Object> coordinates = source.getCoordinates().stream() //
 					.map(GeoJsonPolygonToMapConverter.INSTANCE::convert) //
-					.filter(Objects::nonNull) //
 					.map(it -> it.get("coordinates")) //
 					.collect(Collectors.toList()); //
 			map.put("coordinates", coordinates);
@@ -383,7 +382,7 @@ public class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonMultiPolygon convert(Map<String, Object> source) {
+		public GeoJsonMultiPolygon convert(Map<String, @Nullable Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
 			Assert.isTrue(type.equalsIgnoreCase(GeoJsonMultiPolygon.TYPE), "does not contain a type 'MultiPolygon'");
@@ -430,7 +429,7 @@ public class GeoConverters {
 		INSTANCE;
 
 		@Override
-		public GeoJsonGeometryCollection convert(Map<String, Object> source) {
+		public GeoJsonGeometryCollection convert(Map<String, @Nullable Object> source) {
 
 			String type = GeoConverters.getGeoJsonType(source);
 			Assert.isTrue(type.equalsIgnoreCase(GeoJsonGeometryCollection.TYPE),
@@ -448,7 +447,7 @@ public class GeoConverters {
 	// endregion
 
 	// region helper functions
-	private static String getGeoJsonType(Map<String, Object> source) {
+	private static String getGeoJsonType(Map<String, @Nullable Object> source) {
 
 		Object type = source.get("type");
 		Assert.notNull(type, "Document to convert does not contain a type");
@@ -485,7 +484,7 @@ public class GeoConverters {
 		return map;
 	}
 
-	private static List<GeoJsonLineString> geoJsonLineStringsFromMap(Map<String, Object> source) {
+	private static List<GeoJsonLineString> geoJsonLineStringsFromMap(Map<String, @Nullable Object> source) {
 		Object coordinates = source.get("coordinates");
 		Assert.notNull(coordinates, "Document to convert does not contain coordinates");
 		Assert.isTrue(coordinates instanceof List, "coordinates must be a List");

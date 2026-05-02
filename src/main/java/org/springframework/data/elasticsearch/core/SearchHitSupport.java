@@ -22,11 +22,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
-
 import org.springframework.data.core.ReactiveWrappers;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.util.CloseableIterator;
+import org.springframework.lang.Contract;
 
 /**
  * Utility class with helper methods for working with {@link SearchHit}.
@@ -47,6 +47,7 @@ public final class SearchHitSupport {
 	 * @return a corresponding object where the SearchHits are replaced by their content if possible, otherwise the
 	 *         original object
 	 */
+	@Contract("null -> null; !null -> !null")
 	@Nullable
 	public static Object unwrapSearchHits(@Nullable Object result) {
 

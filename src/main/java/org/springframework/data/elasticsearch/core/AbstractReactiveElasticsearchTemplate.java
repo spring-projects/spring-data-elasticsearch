@@ -766,7 +766,8 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	/**
 	 * Value class to capture client independent information from a response to an index request.
 	 */
-	public record IndexResponseMetaData(String id, String index, long seqNo, long primaryTerm, long version) {
+	public record IndexResponseMetaData(String id, String index, @Nullable Long seqNo, @Nullable Long primaryTerm,
+			long version) {
 	}
 	// endregion
 

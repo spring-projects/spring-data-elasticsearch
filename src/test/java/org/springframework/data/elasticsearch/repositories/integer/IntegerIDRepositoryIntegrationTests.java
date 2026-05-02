@@ -21,6 +21,7 @@ import static org.springframework.data.elasticsearch.utils.IdGenerator.*;
 import java.util.Arrays;
 import java.util.Optional;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
@@ -110,8 +111,8 @@ public abstract class IntegerIDRepositoryIntegrationTests {
 	static class IntegerIDEntity {
 
 		@Id private Integer id;
-		private String type;
-		private String message;
+		private @Nullable String type;
+		private @Nullable String message;
 		@Version private Long version;
 
 		public Integer getId() {
@@ -122,7 +123,7 @@ public abstract class IntegerIDRepositoryIntegrationTests {
 			this.id = id;
 		}
 
-		public String getType() {
+		public @Nullable String getType() {
 			return type;
 		}
 
@@ -130,7 +131,7 @@ public abstract class IntegerIDRepositoryIntegrationTests {
 			this.type = type;
 		}
 
-		public String getMessage() {
+		public @Nullable String getMessage() {
 			return message;
 		}
 

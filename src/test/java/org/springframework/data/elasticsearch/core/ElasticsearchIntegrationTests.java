@@ -1145,7 +1145,7 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThat(searchHits.getTotalHits()).isEqualTo(10);
 		assertThat(searchHits.getSearchHits()).hasSize(5);
 
-		Collection<String> returnedIds = searchHits.getSearchHits().stream().map(SearchHit::getId)
+		Collection<@Nullable String> returnedIds = searchHits.getSearchHits().stream().map(SearchHit::getId)
 				.collect(Collectors.toList());
 
 		moreLikeThisQuery.setPageable(PageRequest.of(1, 5));
@@ -1159,6 +1159,7 @@ public abstract class ElasticsearchIntegrationTests {
 		searchHits.getSearchHits().stream().map(SearchHit::getId).forEach(returnedIds::add);
 
 		assertThat(returnedIds).hasSize(10);
+		// noinspection NullableProblems
 		assertThat(ids).containsAll(returnedIds);
 	}
 
@@ -1180,10 +1181,11 @@ public abstract class ElasticsearchIntegrationTests {
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(
+					Objects.requireNonNull(scroll.getScrollId()), 1000,
 					SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
 		}
-		((AbstractElasticsearchTemplate) operations).searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(Objects.requireNonNull(scroll.getScrollId()));
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1206,10 +1208,11 @@ public abstract class ElasticsearchIntegrationTests {
 		List<SearchHit<SampleEntity>> sampleEntities = new ArrayList<>();
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(), 1000,
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(
+					Objects.requireNonNull(scroll.getScrollId()), 1000,
 					SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
 		}
-		((AbstractElasticsearchTemplate) operations).searchScrollClear(scroll.getScrollId());
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(Objects.requireNonNull(scroll.getScrollId()));
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1234,10 +1237,11 @@ public abstract class ElasticsearchIntegrationTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(Objects.requireNonNull(scrollId), 1000,
+					SampleEntity.class,
 					IndexCoordinates.of(indexNameProvider.indexName()));
 		}
-		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(Objects.requireNonNull(scrollId));
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1260,10 +1264,11 @@ public abstract class ElasticsearchIntegrationTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(Objects.requireNonNull(scrollId), 1000,
+					SampleEntity.class,
 					IndexCoordinates.of(indexNameProvider.indexName()));
 		}
-		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(Objects.requireNonNull(scrollId));
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1287,10 +1292,11 @@ public abstract class ElasticsearchIntegrationTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(Objects.requireNonNull(scrollId), 1000,
+					SampleEntity.class,
 					IndexCoordinates.of(indexNameProvider.indexName()));
 		}
-		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(Objects.requireNonNull(scrollId));
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1313,10 +1319,11 @@ public abstract class ElasticsearchIntegrationTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(Objects.requireNonNull(scrollId), 1000,
+					SampleEntity.class,
 					IndexCoordinates.of(indexNameProvider.indexName()));
 		}
-		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(Objects.requireNonNull(scrollId));
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1340,10 +1347,11 @@ public abstract class ElasticsearchIntegrationTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(Objects.requireNonNull(scrollId), 1000,
+					SampleEntity.class,
 					IndexCoordinates.of(indexNameProvider.indexName()));
 		}
-		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
+		((AbstractElasticsearchTemplate) operations).searchScrollClear(Objects.requireNonNull(scrollId));
 		assertThat(sampleEntities).hasSize(30);
 	}
 
@@ -1366,7 +1374,8 @@ public abstract class ElasticsearchIntegrationTests {
 		while (scroll.hasSearchHits()) {
 			sampleEntities.addAll(scroll.getSearchHits());
 			scrollId = scroll.getScrollId();
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scrollId, 1000, SampleEntity.class,
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(Objects.requireNonNull(scrollId), 1000,
+					SampleEntity.class,
 					IndexCoordinates.of(indexNameProvider.indexName()));
 		}
 		((AbstractElasticsearchTemplate) operations).searchScrollClear(scrollId);
@@ -1516,7 +1525,7 @@ public abstract class ElasticsearchIntegrationTests {
 		indexOperations1.putMapping(entity);
 
 		// then
-		Map<String, Object> mapping = indexOperations.getMapping();
+		Map<String, @Nullable Object> mapping = indexOperations.getMapping();
 		assertThat(mapping.get("properties")).isNotNull();
 	}
 
@@ -1538,7 +1547,7 @@ public abstract class ElasticsearchIntegrationTests {
 		);
 
 		IndexOperations aliasIndexOps = operations.indexOps(IndexCoordinates.of(aliasName));
-		Map<String, Object> mappingFromAlias = aliasIndexOps.getMapping();
+		Map<String, @Nullable Object> mappingFromAlias = aliasIndexOps.getMapping();
 
 		assertThat(mappingFromAlias).isNotNull();
 		assertThat(
@@ -1576,6 +1585,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		// then
 		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class);
+		assertThat(indexedEntity).isNotNull();
 		assertThat(indexedEntity.getType()).isEqualTo(originalTypeInfo);
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
@@ -1608,6 +1618,7 @@ public abstract class ElasticsearchIntegrationTests {
 		// then
 		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
+		assertThat(indexedEntity).isNotNull();
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
@@ -1638,6 +1649,7 @@ public abstract class ElasticsearchIntegrationTests {
 
 		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
+		assertThat(indexedEntity).isNotNull();
 		assertThat(indexedEntity.getMessage()).isEqualTo(messageAfterUpdate);
 	}
 
@@ -1660,6 +1672,7 @@ public abstract class ElasticsearchIntegrationTests {
 		// then
 		SampleEntity indexedEntity = operations.get(documentId, SampleEntity.class,
 				IndexCoordinates.of(indexNameProvider.indexName()));
+		assertThat(indexedEntity).isNotNull();
 		assertThat(indexedEntity.getMessage()).isEqualTo("test message");
 	}
 
@@ -1672,7 +1685,8 @@ public abstract class ElasticsearchIntegrationTests {
 		SampleEntity sampleEntity = SampleEntity.builder().id(documentId).message("some message")
 				.version(System.currentTimeMillis()).build();
 
-		IndexQuery idxQuery = new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity).build();
+		IndexQuery idxQuery = new IndexQueryBuilder().withId(Objects.requireNonNull(sampleEntity.getId()))
+				.withObject(sampleEntity).build();
 
 		IndexCoordinates index = IndexCoordinates.of(MULTI_INDEX_1_NAME);
 		operations.index(idxQuery, index);
@@ -1686,7 +1700,8 @@ public abstract class ElasticsearchIntegrationTests {
 		List<SearchHit<SampleEntity>> entities = new ArrayList<>(scroll.getSearchHits());
 
 		while (scroll.hasSearchHits()) {
-			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(scroll.getScrollId(),
+			scroll = ((AbstractElasticsearchTemplate) operations).searchScrollContinue(
+					Objects.requireNonNull(scroll.getScrollId()),
 					scrollTimeInMillis, SampleEntity.class, index);
 
 			entities.addAll(scroll.getSearchHits());
@@ -1795,7 +1810,7 @@ public abstract class ElasticsearchIntegrationTests {
 		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.indexName());
 		operations.index(indexQuery, index);
 
-		Query searchQuery = getTermQuery("id", indexQuery.getId());
+		Query searchQuery = getTermQuery("id", Objects.requireNonNull(indexQuery.getId()));
 
 		// then
 		SearchHits<SampleEntity> searchHits = operations.search(searchQuery, SampleEntity.class, index);
@@ -2471,7 +2486,7 @@ public abstract class ElasticsearchIntegrationTests {
 		// given
 
 		// when
-		Map<String, Object> mapping = indexOperations.getMapping();
+		Map<String, @Nullable Object> mapping = indexOperations.getMapping();
 
 		// then
 		assertThat(mapping).isNotNull();
@@ -3436,7 +3451,10 @@ public abstract class ElasticsearchIntegrationTests {
 		Query query = getQueryForParentId("answer", qId1, null);
 		SearchHits<SampleJoinEntity> hits = operations.search(query, SampleJoinEntity.class);
 
-		List<String> hitIds = hits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
+		List<String> hitIds = hits.getSearchHits()
+				.stream()
+				.map(hit -> (String) (Objects.requireNonNull(hit.getId())))
+				.collect(Collectors.toList());
 
 		assertThat(hitIds.size()).isEqualTo(2);
 		assertThat(hitIds.containsAll(Arrays.asList(aId1, aId2))).isTrue();
@@ -3461,13 +3479,17 @@ public abstract class ElasticsearchIntegrationTests {
 		SearchHits<SampleJoinEntity> updatedHits = operations.search(getQueryForParentId("answer", qId2, null),
 				SampleJoinEntity.class);
 
-		List<String> hitIds = updatedHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
+		List<String> hitIds = updatedHits.getSearchHits().stream()
+				.map(hit -> (String) (Objects.requireNonNull(hit.getId())))
+				.collect(Collectors.toList());
 		assertThat(hitIds.size()).isEqualTo(1);
 		assertThat(hitIds.get(0)).isEqualTo(aId2);
 
 		updatedHits = operations.search(getQueryForParentId("answer", qId1, null), SampleJoinEntity.class);
 
-		hitIds = updatedHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
+		hitIds = updatedHits.getSearchHits().stream()
+				.map(hit -> (String) (Objects.requireNonNull(hit.getId())))
+				.collect(Collectors.toList());
 		assertThat(hitIds.size()).isEqualTo(1);
 		assertThat(hitIds.get(0)).isEqualTo(aId1);
 	}
@@ -3480,7 +3502,9 @@ public abstract class ElasticsearchIntegrationTests {
 		SearchHits<SampleJoinEntity> deletedHits = operations.search(getQueryForParentId("answer", qId2, null),
 				SampleJoinEntity.class);
 
-		List<String> hitIds = deletedHits.getSearchHits().stream().map(SearchHit::getId).collect(Collectors.toList());
+		List<String> hitIds = deletedHits.getSearchHits().stream()
+				.map(hit -> (String) (Objects.requireNonNull(hit.getId())))
+				.collect(Collectors.toList());
 		assertThat(hitIds.size()).isEqualTo(0);
 	}
 
@@ -4034,7 +4058,7 @@ public abstract class ElasticsearchIntegrationTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o)
 				return true;
 			if (o == null || getClass() != o.getClass())
@@ -4773,7 +4797,7 @@ public abstract class ElasticsearchIntegrationTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o)
 				return true;
 			if (o == null || getClass() != o.getClass())
@@ -4830,7 +4854,7 @@ public abstract class ElasticsearchIntegrationTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o)
 				return true;
 			if (o == null || getClass() != o.getClass())
@@ -4942,7 +4966,7 @@ public abstract class ElasticsearchIntegrationTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o)
 				return true;
 			if (o == null || getClass() != o.getClass())

@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.repository.support;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -240,13 +241,13 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Page<T> searchSimilar(T entity, @Nullable String[] fields, Pageable pageable) {
+	public Page<T> searchSimilar(T entity, String @Nullable [] fields, Pageable pageable) {
 
 		Assert.notNull(entity, "Cannot search similar records for 'null'.");
 		Assert.notNull(pageable, "'pageable' cannot be 'null'");
 
 		MoreLikeThisQuery query = new MoreLikeThisQuery();
-		query.setId(stringIdRepresentation(extractIdFromBean(entity)));
+		query.setId(Objects.requireNonNull(stringIdRepresentation(extractIdFromBean(entity))));
 		query.setPageable(pageable);
 
 		if (fields != null) {
@@ -254,7 +255,7 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 		}
 
 		SearchHits<T> searchHits = execute(operations -> operations.search(query, entityClass, getIndexCoordinates()));
-		SearchPage<T> searchPage = SearchHitSupport.searchPageFor(searchHits, pageable);
+		SearchPage<T> searchPage = SearchHitSupport.searchPageFor(Objects.requireNonNull(searchHits), pageable);
 		return (Page<T>) SearchHitSupport.unwrapSearchHits(searchPage);
 	}
 

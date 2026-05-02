@@ -133,7 +133,7 @@ public class SearchHitsImpl<T> implements SearchScrollHits<T> {
 	}
 
 	@Override
-	public SearchShardStatistics getSearchShardStatistics() {
+	public @Nullable SearchShardStatistics getSearchShardStatistics() {
 		return searchShardStatistics;
 	}
 

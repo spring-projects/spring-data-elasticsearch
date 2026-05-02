@@ -18,9 +18,30 @@ package org.springframework.data.elasticsearch.client.elc;
 import static co.elastic.clients.util.ApiTypeHelper.*;
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
+import co.elastic.clients.elasticsearch._types.Result;
+import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.transport.Version;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+
+import java.time.Duration;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.BeansException;
@@ -51,28 +72,6 @@ import org.springframework.data.elasticsearch.core.sql.SqlResponse;
 import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import java.time.Duration;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import co.elastic.clients.elasticsearch._types.Result;
-import co.elastic.clients.elasticsearch.core.*;
-import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
-import co.elastic.clients.elasticsearch.core.search.ResponseBody;
-import co.elastic.clients.json.JsonpMapper;
-import co.elastic.clients.transport.Version;
-import co.elastic.clients.transport.endpoints.BooleanResponse;
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
 
 /**
  * Implementation of {@link org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations} using the new
@@ -269,7 +268,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		ExistsRequest existsRequest = requestConverter.documentExistsRequest(id, routingResolver.getRouting(), index);
 
 		return Mono.from(execute(
-				((ClientCallback<@NonNull Publisher<BooleanResponse>>) client -> client.exists(existsRequest))))
+				((ClientCallback<Publisher<BooleanResponse>>) client -> client.exists(existsRequest))))
 				.map(BooleanResponse::value) //
 				.onErrorReturn(NoSuchIndexException.class, false);
 	}
@@ -381,7 +380,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 			for (BulkResponseItem item : bulkResponse.items()) {
 
-				if (item.error() != null) {
+				if (item.error() != null && item.id() != null) {
 					failedDocuments.put(item.id(), new BulkFailureException.FailureDetails(item.status(), item.error().reason()));
 				}
 			}
@@ -538,7 +537,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 								return Mono.empty();
 							}
 
-							List<Object> sortOptions = hits.get(hits.size() - 1).sort().stream().map(TypeUtils::toObject)
+							List<Object> sortOptions = hits.get(hits.size() - 1).sort().stream().map(TypeUtils::toObjectNotNull)
 									.collect(Collectors.toList());
 							baseQuery.setSearchAfter(sortOptions);
 							SearchRequest followSearchRequest = requestConverter.searchRequest(baseQuery,
@@ -632,8 +631,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
 				false);
 
-		// noinspection unchecked
 		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>((Class<T>) clazz, index);
+
 		SearchDocumentResponse.EntityCreator<T> entityCreator = searchDocument -> callback.toEntity(searchDocument)
 				.toFuture();
 

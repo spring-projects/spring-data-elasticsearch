@@ -40,7 +40,7 @@ public record ComponentTemplateRequestData(@Nullable Settings settings, @Nullabl
 		@Nullable private AliasActions aliasActions;
 		@Nullable private Boolean allowAutoCreate;
 
-		public Builder withSettings(Map<String, Object> settings) {
+		public Builder withSettings(Map<String, @Nullable Object> settings) {
 			this.settings = new Settings(settings);
 			return this;
 		}

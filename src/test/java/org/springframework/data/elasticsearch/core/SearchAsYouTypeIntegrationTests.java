@@ -90,7 +90,7 @@ public abstract class SearchAsYouTypeIntegrationTests {
 				.collect(Collectors.toList());
 
 		// then
-		List<String> ids = result.stream().map(SearchAsYouTypeEntity::getId).collect(Collectors.toList());
+		List<@Nullable String> ids = result.stream().map(SearchAsYouTypeEntity::getId).collect(Collectors.toList());
 		assertThat(ids).containsExactlyInAnyOrder("1", "2");
 	}
 
@@ -112,7 +112,7 @@ public abstract class SearchAsYouTypeIntegrationTests {
 				.collect(Collectors.toList());
 
 		// then
-		List<String> ids = result.stream().map(SearchAsYouTypeEntity::getId).collect(Collectors.toList());
+		List<@Nullable String> ids = result.stream().map(SearchAsYouTypeEntity::getId).collect(Collectors.toList());
 		assertThat(ids).containsExactlyInAnyOrder("2", "3");
 	}
 
@@ -191,7 +191,7 @@ public abstract class SearchAsYouTypeIntegrationTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o) {
 				return true;
 			}

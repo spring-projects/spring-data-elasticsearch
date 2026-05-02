@@ -27,7 +27,7 @@ import org.springframework.util.Assert;
  */
 public class AliasActionParameters {
 	private final String[] indices;
-	@Nullable private final String[] aliases;
+	private final String @Nullable [] aliases;
 	@Nullable private final Query filterQuery;
 	@Nullable private final Class<?> filterQueryClass;
 	@Nullable private final Boolean isHidden;
@@ -36,7 +36,7 @@ public class AliasActionParameters {
 	@Nullable private final String indexRouting;
 	@Nullable private final String searchRouting;
 
-	private AliasActionParameters(String[] indices, @Nullable String[] aliases, @Nullable Boolean isHidden,
+	private AliasActionParameters(String[] indices, String @Nullable [] aliases, @Nullable Boolean isHidden,
 			@Nullable Boolean isWriteIndex, @Nullable String routing, @Nullable String indexRouting,
 			@Nullable String searchRouting, @Nullable Query filterQuery, @Nullable Class<?> filterQueryClass) {
 		this.indices = indices;
@@ -66,7 +66,7 @@ public class AliasActionParameters {
 		return indices;
 	}
 
-	public String@Nullable[] getAliases() {
+	public String @Nullable [] getAliases() {
 		return aliases;
 	}
 

@@ -602,6 +602,7 @@ public class BaseQuery implements Query {
 				// searchForStream to work correctly (#3098) as there the page size defines what is
 				// returned in a single request, and the max result determines the total number of
 				// documents returned.
+				// noinspection DataFlowIssue maxResults is not null here, this is checked with isLimiting()
 				requestSize = Math.min(pageable.getPageSize(), getMaxResults());
 			}
 		} else if (pageable == UNSET_PAGE) {
@@ -622,6 +623,7 @@ public class BaseQuery implements Query {
 				// searchForStream to work correctly (#3098) as there the page size defines what is
 				// returned in a single request, and the max result determines the total number of
 				// documents returned.
+				// noinspection DataFlowIssue maxResults is not null here, this is checked with isLimiting()
 				requestSize = Math.min(INDEX_MAX_RESULT_WINDOW, getMaxResults());
 			}
 		}

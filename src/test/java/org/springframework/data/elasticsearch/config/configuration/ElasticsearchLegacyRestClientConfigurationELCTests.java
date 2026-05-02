@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.*;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 
 import org.elasticsearch.client.RestClient;
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -52,7 +51,7 @@ public class ElasticsearchLegacyRestClientConfigurationELCTests {
 			considerNestedRepositories = true)
 	static class Config extends ElasticsearchLegacyRestClientConfiguration {
 		@Override
-		public @NonNull ClientConfiguration clientConfiguration() {
+		public ClientConfiguration clientConfiguration() {
 			return ClientConfiguration.builder() //
 					.connectedTo("localhost:9200") //
 					.build();

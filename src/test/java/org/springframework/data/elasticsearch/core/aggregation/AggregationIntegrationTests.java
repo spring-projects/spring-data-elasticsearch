@@ -148,34 +148,30 @@ public abstract class AggregationIntegrationTests {
 	@Document(indexName = "#{@indexNameProvider.indexName()}-article")
 	static class ArticleEntity {
 
-		@Nullable
 		@Id private String id;
 		@Nullable private String title;
 		@Nullable
 		@Field(type = Text, fielddata = true) private String subject;
 
-		@Nullable
 		@MultiField(mainField = @Field(type = Text),
 				otherFields = {
 						@InnerField(suffix = "untouched", type = Text, store = true, fielddata = true, analyzer = "keyword"),
 						@InnerField(suffix = "sort", type = Text, store = true,
 								analyzer = "keyword") }) private List<String> authors = new ArrayList<>();
 
-		@Nullable
 		@Field(type = Integer, store = true) private List<Integer> publishedYears = new ArrayList<>();
 
 		private int score;
 
-		public ArticleEntity(@Nullable String id) {
+		public ArticleEntity(String id) {
 			this.id = id;
 		}
 
-		@Nullable
 		public String getId() {
 			return id;
 		}
 
-		public void setId(@Nullable String id) {
+		public void setId(String id) {
 			this.id = id;
 		}
 
@@ -197,21 +193,19 @@ public abstract class AggregationIntegrationTests {
 			this.subject = subject;
 		}
 
-		@Nullable
 		public List<String> getAuthors() {
 			return authors;
 		}
 
-		public void setAuthors(@Nullable List<String> authors) {
+		public void setAuthors(List<String> authors) {
 			this.authors = authors;
 		}
 
-		@Nullable
 		public List<java.lang.Integer> getPublishedYears() {
 			return publishedYears;
 		}
 
-		public void setPublishedYears(@Nullable List<java.lang.Integer> publishedYears) {
+		public void setPublishedYears(List<java.lang.Integer> publishedYears) {
 			this.publishedYears = publishedYears;
 		}
 
@@ -278,7 +272,7 @@ public abstract class AggregationIntegrationTests {
 	@Document(indexName = "#{@indexNameProvider.indexName()}-pipeline")
 	static class PipelineAggsEntity {
 		@Id private String id;
-		@Field(type = Keyword) private String keyword;
+		@Field(type = Keyword) private @Nullable String keyword;
 
 		public PipelineAggsEntity() {}
 
@@ -295,7 +289,7 @@ public abstract class AggregationIntegrationTests {
 			this.id = id;
 		}
 
-		public String getKeyword() {
+		public @Nullable String getKeyword() {
 			return keyword;
 		}
 

@@ -97,7 +97,6 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 		return maxResults;
 	}
 
-	@Nullable
 	public Collection<String> getIds() {
 		return ids;
 	}
@@ -182,7 +181,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	 * @since 6.1
 	 */
 	@Nullable
-	public Boolean getIncludeNamedQueriesScore(){
+	public Boolean getIncludeNamedQueriesScore() {
 		return includeNamedQueryScore;
 	}
 
@@ -393,7 +392,7 @@ public abstract class BaseQueryBuilder<Q extends BaseQuery, SELF extends BaseQue
 	/**
 	 * @since 6.1
 	 */
-	public SELF withIncludeNamedQueryScore (@Nullable Boolean namedQueryScore) {
+	public SELF withIncludeNamedQueryScore(@Nullable Boolean namedQueryScore) {
 		this.includeNamedQueryScore = namedQueryScore;
 		return self();
 	}

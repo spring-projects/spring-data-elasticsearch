@@ -18,6 +18,9 @@ package org.springframework.data.elasticsearch.repository.query;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
@@ -72,10 +75,12 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 	 * @see org.springframework.data.repository.query.RepositoryQuery#execute(java.lang.Object[])
 	 */
 	@Override
-	public Object execute(Object[] parameters) {
+	public Object execute(@Nullable Object[] parameters) {
 
-		Object result = queryMethod.hasReactiveWrapperParameter() ? executeDeferred(parameters)
-				: execute(new ReactiveElasticsearchParametersParameterAccessor(queryMethod, parameters));
+		var parametersNN = Objects.requireNonNull(parameters, "parameters must not be null");
+
+		Object result = queryMethod.hasReactiveWrapperParameter() ? executeDeferred(parametersNN)
+				: execute(new ReactiveElasticsearchParametersParameterAccessor(queryMethod, parametersNN));
 		return queryMethod.isNotSearchHitMethod() ? SearchHitSupport.unwrapSearchHits(result) : result;
 	}
 
@@ -98,7 +103,7 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 		Class<?> domainType = returnedType.getDomainType();
 		Class<?> typeToRead = returnedType.getTypeToRead();
 
-		if (SearchHit.class.isAssignableFrom(typeToRead)) {
+		if (typeToRead != null && SearchHit.class.isAssignableFrom(typeToRead)) {
 			typeToRead = queryMethod.unwrappedReturnType;
 		}
 
@@ -145,9 +150,10 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 					.map(count -> count > 0);
 		} else if (queryMethod.isCollectionQuery()) {
 			return (query, type, targetType, indexCoordinates) -> operations.search(query.setPageable(accessor.getPageable()),
-					type, targetType, indexCoordinates);
+					type, Objects.requireNonNull(targetType), indexCoordinates);
 		} else {
-			return operations::search;
+			return (query, type, targetType, index) -> operations.search(query, type, Objects.requireNonNull(targetType),
+					index);
 		}
 	}
 

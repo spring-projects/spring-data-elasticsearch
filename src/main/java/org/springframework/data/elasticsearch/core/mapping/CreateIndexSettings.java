@@ -33,7 +33,7 @@ public class CreateIndexSettings {
 	private final IndexCoordinates indexCoordinates;
 	private final Set<Alias> aliases;
 
-	@Nullable private final Map<String, Object> settings;
+	@Nullable private final Map<String, @Nullable Object> settings;
 
 	@Nullable private final Document mapping;
 
@@ -58,7 +58,7 @@ public class CreateIndexSettings {
 	}
 
 	@Nullable
-	public Map<String, Object> getSettings() {
+	public Map<String, @Nullable Object> getSettings() {
 		return settings;
 	}
 
@@ -71,7 +71,7 @@ public class CreateIndexSettings {
 		private final IndexCoordinates indexCoordinates;
 		private final Set<Alias> aliases = new HashSet<>();
 
-		@Nullable private Map<String, Object> settings;
+		@Nullable private Map<String, @Nullable Object> settings;
 
 		@Nullable private Document mapping;
 
@@ -94,7 +94,7 @@ public class CreateIndexSettings {
 			return this;
 		}
 
-		public Builder withSettings(Map<String, Object> settings) {
+		public Builder withSettings(Map<String, @Nullable Object> settings) {
 			Assert.notNull(settings, "settings must not be null");
 			this.settings = settings;
 

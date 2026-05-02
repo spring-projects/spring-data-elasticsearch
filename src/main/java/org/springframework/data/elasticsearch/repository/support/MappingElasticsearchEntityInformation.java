@@ -15,6 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentProperty;
@@ -58,7 +59,7 @@ public class MappingElasticsearchEntityInformation<T, ID> extends PersistentEnti
 	}
 
 	@Override
-	public Long getVersion(T entity) {
+	public @Nullable Long getVersion(T entity) {
 
 		ElasticsearchPersistentProperty versionProperty = persistentEntity.getVersionProperty();
 		try {

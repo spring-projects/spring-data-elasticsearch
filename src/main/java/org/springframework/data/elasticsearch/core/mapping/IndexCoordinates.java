@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 
 import java.util.Arrays;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.util.Assert;
 
 /**
@@ -55,7 +56,7 @@ public class IndexCoordinates {
 	 * @since 4.2
 	 */
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o)
 			return true;
 		if (o == null || getClass() != o.getClass())

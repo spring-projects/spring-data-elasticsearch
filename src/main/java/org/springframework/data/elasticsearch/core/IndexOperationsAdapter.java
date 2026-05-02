@@ -46,12 +46,12 @@ public interface IndexOperationsAdapter extends IndexOperations {
 			}
 
 			@Override
-			public boolean create(Map<String, Object> settings) {
+			public boolean create(Map<String, @Nullable Object> settings) {
 				return Boolean.TRUE.equals(reactiveIndexOperations.create(settings).block());
 			}
 
 			@Override
-			public boolean create(Map<String, Object> settings, Document mapping) {
+			public boolean create(Map<String, @Nullable Object> settings, Document mapping) {
 				return Boolean.TRUE.equals(reactiveIndexOperations.create(settings, mapping).block());
 			}
 
@@ -92,7 +92,7 @@ public interface IndexOperationsAdapter extends IndexOperations {
 			}
 
 			@Override
-			public Map<String, Object> getMapping() {
+			public Map<String, @Nullable Object> getMapping() {
 				return Objects.requireNonNull(reactiveIndexOperations.getMapping().block());
 			}
 

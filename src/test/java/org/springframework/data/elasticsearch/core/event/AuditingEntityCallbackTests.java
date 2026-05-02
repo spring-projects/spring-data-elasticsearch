@@ -56,6 +56,7 @@ class AuditingEntityCallbackTests {
 
 	@Test // DATAES-68
 	void shouldThrowExceptionOnNullFactory() {
+		// noinspection DataFlowIssue
 		assertThatIllegalArgumentException().isThrownBy(() -> new AuditingEntityCallback(null));
 	}
 
@@ -135,7 +136,7 @@ class AuditingEntityCallbackTests {
 		}
 
 		@Override
-		public boolean equals(Object o) {
+		public boolean equals(@Nullable Object o) {
 			if (this == o)
 				return true;
 			if (o == null || getClass() != o.getClass())

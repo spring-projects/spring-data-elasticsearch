@@ -108,7 +108,7 @@ public class ReactiveIndicesTemplate
 	}
 
 	@Override
-	public Mono<Boolean> create(Map<String, Object> settings) {
+	public Mono<Boolean> create(Map<String, @Nullable Object> settings) {
 
 		Assert.notNull(settings, "settings must not be null");
 
@@ -116,7 +116,7 @@ public class ReactiveIndicesTemplate
 	}
 
 	@Override
-	public Mono<Boolean> create(Map<String, Object> settings, Document mapping) {
+	public Mono<Boolean> create(Map<String, @Nullable Object> settings, Document mapping) {
 
 		Assert.notNull(settings, "settings must not be null");
 		Assert.notNull(mapping, "mapping must not be null");
@@ -132,7 +132,7 @@ public class ReactiveIndicesTemplate
 				doCreate(getIndexCoordinates(), settings, mapping))); //
 	}
 
-	private Mono<Boolean> doCreate(IndexCoordinates indexCoordinates, Map<String, Object> settings,
+	private Mono<Boolean> doCreate(IndexCoordinates indexCoordinates, Map<String, @Nullable Object> settings,
 			@Nullable Document mapping) {
 		Set<Alias> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
 		CreateIndexSettings indexSettings = CreateIndexSettings.builder(indexCoordinates)
@@ -270,7 +270,7 @@ public class ReactiveIndicesTemplate
 		return getAliases(null, indexNames);
 	}
 
-	private Mono<Map<String, Set<AliasData>>> getAliases(@Nullable String[] aliasNames, @Nullable String[] indexNames) {
+	private Mono<Map<String, Set<AliasData>>> getAliases(String@Nullable [] aliasNames, String@Nullable [] indexNames) {
 
 		GetAliasRequest getAliasRequest = requestConverter.indicesGetAliasRequest(aliasNames, indexNames);
 		Mono<GetAliasResponse> getAliasResponse = Mono.from(execute(client -> client.getAlias(getAliasRequest)));

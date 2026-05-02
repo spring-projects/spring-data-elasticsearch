@@ -29,7 +29,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.GeoPointField;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
-import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
@@ -49,7 +48,6 @@ import org.springframework.data.geo.Polygon;
 public abstract class GeoRepositoryIntegrationTests {
 
 	@Autowired ElasticsearchOperations operations;
-	private IndexOperations indexOperations;
 	@Autowired IndexNameProvider indexNameProvider;
 
 	@Autowired SpringDataGeoRepository repository;

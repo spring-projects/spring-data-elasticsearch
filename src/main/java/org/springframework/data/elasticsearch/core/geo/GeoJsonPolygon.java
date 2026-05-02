@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.geo.Point;
 import org.springframework.util.Assert;
 
@@ -207,7 +208,7 @@ public class GeoJsonPolygon implements GeoJson<Iterable<GeoJsonLineString>> {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if (this == o)
 			return true;
 		if (o == null || getClass() != o.getClass())

@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.config.configuration;
 
 import static org.assertj.core.api.Assertions.*;
 
-import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +26,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient;
-import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchConfiguration;
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchLegacyRestClientConfiguration;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
 import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
@@ -51,7 +49,7 @@ public class ReactiveElasticsearchLegacyRestClientConfigurationELCTests {
 	static class Config extends ReactiveElasticsearchLegacyRestClientConfiguration {
 
 		@Override
-		public @NonNull ClientConfiguration clientConfiguration() {
+		public ClientConfiguration clientConfiguration() {
 			return ClientConfiguration.builder() //
 					.connectedTo("localhost:9200") //
 					.build();

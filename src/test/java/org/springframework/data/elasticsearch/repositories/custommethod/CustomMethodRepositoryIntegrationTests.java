@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -1591,7 +1592,9 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		repository.saveAll(entities);
 
 		// when
-		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(List.of("abc"));
+		Collection<@Nullable String> types = new ArrayList<>();
+		types.add("abc");
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(types);
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
@@ -1614,7 +1617,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		repository.saveAll(entities);
 
 		// when
-		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(List.of());
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(new ArrayList());
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(0);
 	}
@@ -1624,7 +1627,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
 
-		List<String> params = new ArrayList<>();
+		List<@Nullable String> params = new ArrayList<>();
 		params.add(null);
 		// when
 		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(params);
@@ -1637,8 +1640,10 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
 
-		// when
-		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(Arrays.asList("abc", null));
+		Collection<@Nullable String> types = new ArrayList();
+		types.add("abc");
+		types.add(null);
+		SearchHits<SampleEntity> searchHits = repository.queryByCollectionSpEL(types);
 
 		assertThat(searchHits.getTotalHits()).isEqualTo(20);
 	}
@@ -1903,14 +1908,14 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 	void shouldBeAbleToUseCollectionInQueryAnnotatedMethod() {
 		List<SampleEntity> entities = createSampleEntities("abc", 20);
 		repository.saveAll(entities);
-		List<String> ids = entities.stream().map(SampleEntity::getId).limit(7) // Just get subset
-				.collect(Collectors.toList());
+
+		List<String> ids = entities.stream().map(SampleEntity::getIdNotNull).limit(7).collect(Collectors.toList());
 
 		List<SampleEntity> sampleEntities = repository.getByIds(ids);
 
 		assertThat(sampleEntities).hasSize(7);
 
-		List<String> returnedIds = sampleEntities.stream().map(SampleEntity::getId).collect(Collectors.toList());
+		List<String> returnedIds = sampleEntities.stream().map(SampleEntity::getIdNotNull).collect(Collectors.toList());
 		assertThat(returnedIds).containsAll(ids);
 	}
 
@@ -2246,7 +2251,7 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 				  }
 				}
 				""")
-		SearchHits<SampleEntity> queryByCollectionSpEL(@Nullable Collection<String> types);
+		SearchHits<SampleEntity> queryByCollectionSpEL(@Nullable Collection<@Nullable String> types);
 
 		@Query("""
 				{
@@ -2458,6 +2463,10 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		@Nullable
 		public String getId() {
 			return id;
+		}
+
+		public String getIdNotNull() {
+			return Objects.requireNonNull(id, "id is required");
 		}
 
 		public void setId(@Nullable String id) {

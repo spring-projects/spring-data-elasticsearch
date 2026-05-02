@@ -91,7 +91,7 @@ public class TemplateData {
 			return this;
 		}
 
-		public TemplateDataBuilder withSettings(Map<String, Object> settings) {
+		public TemplateDataBuilder withSettings(Map<String, @Nullable Object> settings) {
 			this.settings = new Settings(settings);
 			return this;
 		}

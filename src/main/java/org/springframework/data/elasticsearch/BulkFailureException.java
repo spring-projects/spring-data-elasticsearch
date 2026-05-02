@@ -15,9 +15,10 @@
  */
 package org.springframework.data.elasticsearch;
 
-import org.springframework.dao.DataRetrievalFailureException;
-
 import java.util.Map;
+
+import org.jspecify.annotations.Nullable;
+import org.springframework.dao.DataRetrievalFailureException;
 
 /**
  * @author Peter-Josef Meisch
@@ -42,6 +43,6 @@ public class BulkFailureException extends DataRetrievalFailureException {
 	 * @author Illia Ulianov
 	 * @since 5.2
 	 */
-	public record FailureDetails(Integer status, String errorMessage) {
+	public record FailureDetails(Integer status, @Nullable String errorMessage) {
 	}
 }
