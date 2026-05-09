@@ -22,7 +22,7 @@ import co.elastic.clients.elasticsearch._types.BulkIndexByScrollFailure;
 import co.elastic.clients.elasticsearch._types.ErrorCause;
 import co.elastic.clients.elasticsearch._types.Time;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch.cluster.ComponentTemplateSummary;
+import co.elastic.clients.elasticsearch.cluster.ComponentTemplateSummaryRes;
 import co.elastic.clients.elasticsearch.cluster.GetComponentTemplateResponse;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.elasticsearch.core.DeleteByQueryResponse;
@@ -133,7 +133,7 @@ class ResponseConverter {
 				.build();
 	}
 
-	private TemplateResponseData clusterGetComponentTemplateData(ComponentTemplateSummary componentTemplateSummary) {
+	private TemplateResponseData clusterGetComponentTemplateData(ComponentTemplateSummaryRes componentTemplateSummary) {
 
 		var mapping = typeMapping(componentTemplateSummary.mappings());
 		var settings = new Settings();
@@ -336,7 +336,7 @@ class ResponseConverter {
 				.build();
 	}
 
-	private TemplateResponseData indexGetComponentTemplateData(IndexTemplateSummary indexTemplateSummary,
+	private TemplateResponseData indexGetComponentTemplateData(IndexTemplateSummaryWithRollover indexTemplateSummary,
 			List<String> composedOf) {
 		var mapping = typeMapping(indexTemplateSummary.mappings());
 
