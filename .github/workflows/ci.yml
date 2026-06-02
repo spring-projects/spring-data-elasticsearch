@@ -25,3 +25,5 @@ jobs:
         uses: spring-projects/spring-data-build/actions/maven-build@main
         env:
           TESTCONTAINERS_REUSE_ENABLE: true
+        with:
+          settings-xml: '${{ vars.SETTINGS_XML }}'
