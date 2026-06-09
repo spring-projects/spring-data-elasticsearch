@@ -5,12 +5,12 @@
 
 	<groupId>org.springframework.data</groupId>
 	<artifactId>spring-data-elasticsearch</artifactId>
-	<version>5.5.12-SNAPSHOT</version>
+	<version>5.5.12</version>
 
 	<parent>
 		<groupId>org.springframework.data.build</groupId>
 		<artifactId>spring-data-parent</artifactId>
-		<version>3.5.12-SNAPSHOT</version>
+		<version>3.5.12</version>
 	</parent>
 
 	<name>Spring Data Elasticsearch</name>
@@ -18,7 +18,7 @@
 	<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 
 	<properties>
-		<springdata.commons>3.5.12-SNAPSHOT</springdata.commons>
+		<springdata.commons>3.5.12</springdata.commons>
 
 		<!-- version of the ElasticsearchClient	-->
 		<elasticsearch-java>8.18.8</elasticsearch-java>
@@ -82,8 +82,7 @@
 	<scm>
 		<url>https://github.com/spring-projects/spring-data-elasticsearch</url>
 		<connection>scm:git:git://github.com/spring-projects/spring-data-elasticsearch.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/spring-projects/spring-data-elasticsearch.git
-		</developerConnection>
+		<developerConnection>scm:git:ssh://git@github.com/spring-projects/spring-data-elasticsearch.git</developerConnection>
 	</scm>
 
 	<issueManagement>
@@ -466,20 +465,8 @@
 	</profiles>
 
 	<repositories>
-		<repository>
-			<id>spring-snapshot</id>
-			<url>https://repo.spring.io/snapshot</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>false</enabled>
-			</releases>
-		</repository>
-		<repository>
-			<id>spring-milestone</id>
-			<url>https://repo.spring.io/milestone</url>
-		</repository>
+		
+		
 	</repositories>
 
 </project>
