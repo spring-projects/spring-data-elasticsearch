@@ -1,4 +1,4 @@
-Spring Data Elasticsearch 6.1 RC1 (2026.0.0)
+Spring Data Elasticsearch 6.1 GA (2026.0.0)
 Copyright (c) [2013-2022] Pivotal Software, Inc.
 
 This product is licensed to you under the Apache License, Version 2.0 (the "License").
