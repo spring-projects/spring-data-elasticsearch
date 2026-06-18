@@ -1,0 +1,21 @@
+{
+  "dynamic_templates": [
+    {
+      "_str": {
+        "match": "*_str",
+        "mapping": {
+          "type": "keyword"
+        }
+      }
+    },
+    {
+      "obj": {
+        "match": "value_*",
+        "mapping": {
+          "type": "text",
+          "index": false
+        }
+      }
+    }
+  ]
+}
