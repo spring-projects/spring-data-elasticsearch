@@ -280,6 +280,12 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		operations.indexOps(FieldAliasEntity.class).createWithMapping();
 	}
 
+	@Test // #3298
+	@DisplayName("should write index prefixes with default value")
+	void shouldWriteIndexPrefixesWithDefaultValue() {
+		operations.indexOps(TextIndexPrefixesEntity.class).createWithMapping();
+	}
+
 	// region Entities
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class Book {
@@ -929,6 +935,15 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Field(type = Text) private String someText;
 		@Nullable
 		@Field(type = Text) private String otherText;
+	}
+
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	private static class TextIndexPrefixesEntity {
+		@Id
+		@Nullable private String id;
+		@Nullable
+		// the min value is set to the default
+		@Field(type = Text, indexPrefixes = @IndexPrefixes(maxChars = 10)) private String someText;
 	}
 
 	// endregion
