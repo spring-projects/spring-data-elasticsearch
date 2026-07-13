@@ -93,16 +93,18 @@ public final class Rest5Clients {
 					throw new RuntimeException(e);
 				}
 			}
-			httpAsyncClientBuilder.addRequestInterceptorFirst((request, entity, context) -> {
-				clientConfiguration.getHeadersSupplier().get().forEach((header, values) -> {
-					// The accept and content-type headers are already put on the request, despite this being the first
-					// interceptor.
-					if ("Accept".equalsIgnoreCase(header) || " Content-Type".equalsIgnoreCase(header)) {
-						request.removeHeaders(header);
-					}
-					values.forEach(value -> request.addHeader(header, value));
-				});
-			});
+			httpAsyncClientBuilder.addExecInterceptorFirst("es-rest5-client",
+					(request, entityProducer, scope, chain, asyncExecCallback) -> {
+						clientConfiguration.getHeadersSupplier().get().forEach((header, values) -> {
+							// The accept and content-type headers may already be put on the request, despite this being the
+							// first interceptor.
+							if ("Accept".equalsIgnoreCase(header) || "Content-Type".equalsIgnoreCase(header)) {
+								request.removeHeaders(header);
+							}
+							values.forEach(value -> request.addHeader(header, value));
+						});
+						chain.proceed(request, entityProducer, scope, asyncExecCallback);
+					});
 
 			// add httpclient configurator callbacks provided by the configuration
 			for (ClientConfiguration.ClientConfigurationCallback<?> clientConfigurer : clientConfiguration

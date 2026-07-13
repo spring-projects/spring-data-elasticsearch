@@ -32,6 +32,7 @@ import io.specto.hoverfly.junit5.api.HoverflyConfig;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -108,6 +109,8 @@ public class RestClientsTest {
 			AtomicInteger connectionConfigurerCount = new AtomicInteger(0);
 			AtomicInteger connectionManagerConfigurerCount = new AtomicInteger(0);
 			AtomicInteger requestConfigurerCount = new AtomicInteger(0);
+			ThreadLocal<String> threadLocal = ThreadLocal.withInitial(() -> null);
+			AtomicReference<String> supplierThreadName = new AtomicReference<>();
 
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
 			configurationBuilder //
@@ -115,7 +118,9 @@ public class RestClientsTest {
 					.withBasicAuth("user", "password") //
 					.withDefaultHeaders(defaultHeaders) //
 					.withHeaders(() -> {
+						supplierThreadName.set(Thread.currentThread().getName());
 						HttpHeaders httpHeaders = new HttpHeaders();
+						httpHeaders.add("thread", threadLocal.get());
 						httpHeaders.add("supplied", "val0");
 						httpHeaders.add("supplied", "val" + supplierCount.getAndIncrement());
 						return httpHeaders;
@@ -179,6 +184,7 @@ public class RestClientsTest {
 			// do several calls to check that the headerSupplier provided values are set
 			int startValue = clientUnderTest.usesInitialRequest() ? 2 : 1;
 			for (int i = startValue; i <= startValue + 2; i++) {
+				threadLocal.set("local");
 				clientUnderTest.ping();
 
 				verify(headRequestedFor(urlEqualTo("/")) //
@@ -189,9 +195,14 @@ public class RestClientsTest {
 						.withHeader("supplied", new EqualToPattern("val0")) //
 						// on the first call Elasticsearch does the version check and thus already increments the counter
 						.withHeader("supplied", new EqualToPattern("val" + i)) //
-						.withHeader("supplied", including("val0", "val" + i)));
+						.withHeader("supplied", including("val0", "val" + i)) //
+						.withHeader("thread", new EqualToPattern("local")));
 				;
 			}
+
+			// the headers supplier must run on the calling thread, so a ThreadLocal set above is visible (#3300).
+			// this guards against future regressions that move the supplier back onto the async I/O thread.
+			assertThat(supplierThreadName.get()).isEqualTo(Thread.currentThread().getName());
 
 			assertThat(restClientConfigurerCount).hasValue(clientUnderTestFactory.getExpectedRestClientConfigurerCalls());
 			assertThat(httpClientConfigurerCount).hasValue(1);
