@@ -16,7 +16,6 @@
 package org.springframework.data.elasticsearch.client;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
 import static io.specto.hoverfly.junit.dsl.HoverflyDsl.*;
 import static io.specto.hoverfly.junit.verification.HoverflyVerifications.*;
