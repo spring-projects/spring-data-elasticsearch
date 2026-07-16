@@ -18,6 +18,7 @@ package org.springframework.data.elasticsearch.core.mapping;
 import org.jspecify.annotations.Nullable;
 
 import org.springframework.data.core.TypeInformation;
+import org.springframework.data.elasticsearch.config.ElasticsearchServerType;
 import org.springframework.data.mapping.context.AbstractMappingContext;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.Property;
@@ -27,6 +28,7 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 /**
  * SimpleElasticsearchMappingContext
  *
+ * @author Steven Pearce
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
@@ -39,6 +41,7 @@ public class SimpleElasticsearchMappingContext
 
 	private FieldNamingStrategy fieldNamingStrategy = DEFAULT_NAMING_STRATEGY;
 	private boolean writeTypeHints = true;
+	private ElasticsearchServerType serverType = ElasticsearchServerType.DEFAULT;
 
 	/**
 	 * Configures the {@link FieldNamingStrategy} to be used to determine the field name if no manual mapping is applied.
@@ -61,6 +64,18 @@ public class SimpleElasticsearchMappingContext
 		this.writeTypeHints = writeTypeHints;
 	}
 
+	/**
+	 * Sets the ElasticSearch Server Type
+	 *
+	 * @param serverType the {@link ElasticsearchServerType} to be used to set the server Type. The Default value will
+	 *                   support the standard configurations, and SERVERLESS will support ElasticSearch Serverless
+	 *
+	 * @since 6.2
+	 */
+	public void setServerType(@Nullable ElasticsearchServerType serverType) {
+		this.serverType = serverType == null ? ElasticsearchServerType.DEFAULT : serverType;
+	}
+
 	@Override
 	protected boolean shouldCreatePersistentEntityFor(TypeInformation<?> type) {
 		return !ElasticsearchSimpleTypes.HOLDER.isSimpleType(type.getType());
@@ -69,7 +84,7 @@ public class SimpleElasticsearchMappingContext
 	@Override
 	protected <T> SimpleElasticsearchPersistentEntity<?> createPersistentEntity(TypeInformation<T> typeInformation) {
 		return new SimpleElasticsearchPersistentEntity<>(typeInformation,
-				new SimpleElasticsearchPersistentEntity.ContextConfiguration(fieldNamingStrategy, writeTypeHints));
+				new SimpleElasticsearchPersistentEntity.ContextConfiguration(fieldNamingStrategy, writeTypeHints, serverType));
 	}
 
 	@Override
