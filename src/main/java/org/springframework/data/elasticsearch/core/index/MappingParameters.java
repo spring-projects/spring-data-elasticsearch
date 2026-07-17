@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
@@ -120,6 +121,7 @@ public class MappingParameters {
 	private final TermVector termVector;
 	private final FieldType type;
 	private final String mappedTypeName;
+	private final CustomIndexOption[] customIndexOptions;
 
 	/**
 	 * extracts the mapping parameters from the relevant annotations.
@@ -185,6 +187,7 @@ public class MappingParameters {
 		Assert.isTrue(field.enabled() || type == FieldType.Object, "enabled false is only allowed for field type object");
 		enabled = field.enabled();
 		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
+		customIndexOptions = field.customIndexOptions();
 	}
 
 	protected MappingParameters(InnerField field) {
@@ -231,6 +234,7 @@ public class MappingParameters {
 		knnIndexOptions = field.knnIndexOptions().length > 0 ? field.knnIndexOptions()[0] : null;
 		enabled = true;
 		eagerGlobalOrdinals = field.eagerGlobalOrdinals();
+		customIndexOptions = field.customIndexOptions();
 	}
 
 	public boolean isStore() {
@@ -419,6 +423,12 @@ public class MappingParameters {
 		if (eagerGlobalOrdinals) {
 			objectNode.put(FIELD_PARAM_EAGER_GLOBAL_ORDINALS, eagerGlobalOrdinals);
 		}
+		
+		// At last, check the custom index options
+		for (CustomIndexOption customIndexOption: customIndexOptions) {
+			final IndexOptionMapper mapper = BeanUtils.instantiateClass(customIndexOption.mapper());
+		    mapper.writeIndexOptionTo(customIndexOption, objectNode);
+		}
 	}
 
 	protected String analyzer() {
@@ -547,5 +557,9 @@ public class MappingParameters {
 
 	protected String mappedTypeName() {
 		return mappedTypeName;
+	}
+	
+	protected CustomIndexOption[] customIndexOptions() {
+		return customIndexOptions;
 	}
 }

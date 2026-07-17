@@ -179,4 +179,11 @@ public @interface InnerField {
 	 * @since 5.4
 	 */
 	String mappedTypeName() default "";
+	
+    /**
+     * adds the custom index options for a particular field
+     *
+     * @since 6.1.1
+     */
+    CustomIndexOption[] customIndexOptions() default {};
 }
