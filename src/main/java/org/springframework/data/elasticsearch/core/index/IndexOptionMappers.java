@@ -20,6 +20,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.CustomIndexOption;
 
 import tools.jackson.databind.JsonNode;
@@ -35,7 +36,7 @@ import tools.jackson.databind.node.DecimalNode;
  * 
  * @author Andriy Redko
  * 
- * @since 6.1.1
+ * @since 6.2
  */
 public final class IndexOptionMappers {
 	private IndexOptionMappers() {
@@ -64,7 +65,7 @@ public final class IndexOptionMappers {
 	public static final class NumberMapper implements IndexOptionMapper {
 		@Override
 		public void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode) {
-			final Number[] values = toNumbers(indexOption.values());
+			final @Nullable Number[] values = toNumbers(indexOption.values());
 			if (values.length == 1) {
 				writePropertyAsNumber(indexOption.name(), indexOption.overrideIfPresent(), values[0], objectNode);
 			} else if (values.length > 1) {
@@ -98,7 +99,7 @@ public final class IndexOptionMappers {
 	 * @param values array of strings
 	 * @return array of booleans
 	 */
-	private static Boolean[] toBoolean(String[] values) {
+	private static @Nullable Boolean[] toBoolean(@Nullable String[] values) {
 		return Arrays.stream(values).map(Boolean::valueOf).toArray(Boolean[]::new);
 	}
 
@@ -111,7 +112,7 @@ public final class IndexOptionMappers {
 	 * 
 	 * @throws NumberFormatException
 	 */
-	private static Number[] toNumbers(String[] values) {
+	private static @Nullable Number[] toNumbers(@Nullable String[] values) {
 		final Number[] numbers = new Number[values.length];
 		for (int j = 0; j < values.length; ++j) {
 			if (values[j] == null) {
@@ -121,7 +122,7 @@ public final class IndexOptionMappers {
 			} else {
 				final String s = values[j].trim();
 
-				boolean isInteger = false;
+				boolean isInteger = true;
 				for (int i = 0; i < s.length(); i++) {
 					if (i == 0 && (s.charAt(i) == '-' || s.charAt(i) == '+')) {
 						if (s.length() == 1) {

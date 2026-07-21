@@ -24,7 +24,7 @@ import org.springframework.data.elasticsearch.core.index.IndexOptionMapper;
  * 
  * @author Andriy Redko
  * 
- * @since 6.1.1
+ * @since 6.2
  */
 public @interface CustomIndexOption {
     /**

@@ -27,7 +27,7 @@ import tools.jackson.databind.node.ObjectNode;
  * 
  * @author Andriy Redko
  * 
- * @since 6.1.1
+ * @since 6.2
  */
 public interface IndexOptionMapper {
     void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode);

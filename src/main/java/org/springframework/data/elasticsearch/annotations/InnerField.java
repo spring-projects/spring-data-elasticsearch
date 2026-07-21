@@ -183,7 +183,7 @@ public @interface InnerField {
     /**
      * adds the custom index options for a particular field
      *
-     * @since 6.1.1
+     * @since 6.2
      */
     CustomIndexOption[] customIndexOptions() default {};
 }
