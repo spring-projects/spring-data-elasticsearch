@@ -20,7 +20,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.CustomIndexOption;
 
 import tools.jackson.databind.JsonNode;
@@ -65,7 +64,7 @@ public final class IndexOptionMappers {
 	public static final class NumberMapper implements IndexOptionMapper {
 		@Override
 		public void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode) {
-			final @Nullable Number[] values = toNumbers(indexOption.values());
+			final Number[] values = toNumbers(indexOption.values());
 			if (values.length == 1) {
 				writePropertyAsNumber(indexOption.name(), indexOption.overrideIfPresent(), values[0], objectNode);
 			} else if (values.length > 1) {
@@ -99,7 +98,7 @@ public final class IndexOptionMappers {
 	 * @param values array of strings
 	 * @return array of booleans
 	 */
-	private static @Nullable Boolean[] toBoolean(@Nullable String[] values) {
+	private static Boolean[] toBoolean(String[] values) {
 		return Arrays.stream(values).map(Boolean::valueOf).toArray(Boolean[]::new);
 	}
 
@@ -112,38 +111,21 @@ public final class IndexOptionMappers {
 	 * 
 	 * @throws NumberFormatException
 	 */
-	private static @Nullable Number[] toNumbers(@Nullable String[] values) {
+	private static Number[] toNumbers(String[] values) {
 		final Number[] numbers = new Number[values.length];
 		for (int j = 0; j < values.length; ++j) {
-			if (values[j] == null) {
-				numbers[j] = null;
-			} else if(values[j].isBlank()) {
-				throw new NumberFormatException("Unable to convert empty/blank string to number");
-			} else {
-				final String s = values[j].trim();
+			Number number = null;
+			var value = values[j];
 
-				boolean isInteger = true;
-				for (int i = 0; i < s.length(); i++) {
-					if (i == 0 && (s.charAt(i) == '-' || s.charAt(i) == '+')) {
-						if (s.length() == 1) {
-							throw new NumberFormatException("Unable to convert string  '" + s + "' to number");
-						} else {
-							continue;
-						}
-					}
-
-					if (Character.digit(s.charAt(i), 10) < 0) {
-						isInteger = false;
-						break;
-					}
-				}
-
-				if (isInteger) {
-					numbers[j] = new BigInteger(s);
-				} else {
-					numbers[j] = new BigDecimal(s);
+			if (value != null) {
+				try {
+					number = new BigInteger(value);
+				} catch (NumberFormatException e) {
+					number = new BigDecimal(value);
 				}
 			}
+
+			numbers[j] = number;
 		}
 
 		return numbers;
