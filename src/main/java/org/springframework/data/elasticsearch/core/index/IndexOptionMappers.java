@@ -19,6 +19,7 @@ package org.springframework.data.elasticsearch.core.index;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.CustomIndexOption;
@@ -48,7 +49,7 @@ public final class IndexOptionMappers {
 	public static final class StringMapper implements IndexOptionMapper {
 	@Override
 		public void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode) {
-			final String[] values = indexOption.values();
+			final String[] values = Objects.requireNonNull(indexOption.values(), "Values are required");
 			if (values.length == 1) {
 				writePropertyAsString(indexOption.name(), indexOption.overrideIfPresent(), values[0], objectNode);
 			} else if (values.length > 1) {
@@ -65,7 +66,7 @@ public final class IndexOptionMappers {
 	public static final class NumberMapper implements IndexOptionMapper {
 		@Override
 		public void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode) {
-			final @Nullable Number[] values = toNumbers(indexOption.values());
+			final @Nullable Number[] values = toNumbers(Objects.requireNonNull(indexOption.values(), "Values are required"));
 			if (values.length == 1) {
 				writePropertyAsNumber(indexOption.name(), indexOption.overrideIfPresent(), values[0], objectNode);
 			} else if (values.length > 1) {
@@ -82,7 +83,7 @@ public final class IndexOptionMappers {
 	public static final class BooleanMapper implements IndexOptionMapper {
 		@Override
 		public void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode) {
-			final Boolean[] values = toBoolean(indexOption.values());
+			final Boolean[] values = toBoolean(Objects.requireNonNull(indexOption.values(), "Values are required"));
 			if (values.length == 1) {
 				writePropertyAsBoolean(indexOption.name(), indexOption.overrideIfPresent(), values[0], objectNode);
 			} else if (values.length > 1) {
