@@ -19,6 +19,7 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import jakarta.json.JsonValue;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,6 +74,49 @@ class DocumentAdaptersUnitTests {
 		softly.assertThat(document.getSeqNo()).isEqualTo(1);
 		softly.assertThat(document.hasPrimaryTerm()).isTrue();
 		softly.assertThat(document.getPrimaryTerm()).isEqualTo(2);
+
+		softly.assertAll();
+	}
+
+	@Test // #3178
+	@DisplayName("should adapt parser backed search Hit fields to Java types")
+	void shouldAdaptParserBackedSearchHitFieldsToJavaTypes() {
+
+		Hit<EntityAsMap> searchHit = new Hit.Builder<EntityAsMap>() //
+				.index("index") //
+				.id("my-id") //
+				.fields("objectField", JsonData.fromJson(
+						"{\"string\":\"value\",\"integer\":2,\"decimal\":1.5,\"nested\":{\"flag\":true}}")) //
+				.fields("listField", JsonData.fromJson("[\"listValue\",{\"nested\":3},true,null]")) //
+				.fields("stringField", JsonData.fromJson("\"stringValue\"")) //
+				.build(); //
+
+		SearchDocument document = DocumentAdapters.from(searchHit, jsonpMapper);
+
+		SoftAssertions softly = new SoftAssertions();
+
+		Object objectFieldValue = document.get("objectField");
+		Object listFieldValue = document.get("listField");
+		Object objectFieldFirstValue = document.getFieldValue("objectField");
+		Object listFieldFirstValue = document.getFieldValue("listField");
+
+		softly.assertThat(objectFieldValue).isInstanceOf(Map.class).isNotInstanceOf(JsonValue.class);
+		softly.assertThat(listFieldValue).isInstanceOf(List.class).isNotInstanceOf(JsonValue.class);
+		softly.assertThat(document.get("stringField")).isEqualTo("stringValue");
+		softly.assertThat(objectFieldFirstValue).isInstanceOf(Map.class).isNotInstanceOf(JsonValue.class);
+		softly.assertThat(listFieldFirstValue).isEqualTo("listValue");
+
+		// noinspection unchecked
+		Map<String, Object> objectField = (Map<String, Object>) objectFieldValue;
+		softly.assertThat(objectField.get("string")).isEqualTo("value");
+		softly.assertThat(objectField.get("integer")).isEqualTo(2);
+		softly.assertThat(objectField.get("decimal")).isEqualTo(1.5d);
+		softly.assertThat(objectField.get("nested")).isInstanceOf(Map.class).isNotInstanceOf(JsonValue.class);
+
+		// noinspection unchecked
+		List<Object> listField = (List<Object>) listFieldValue;
+		softly.assertThat(listField).containsExactly("listValue", Collections.singletonMap("nested", 3), true, null);
+		softly.assertThat(listField.get(1)).isNotInstanceOf(JsonValue.class);
 
 		softly.assertAll();
 	}
