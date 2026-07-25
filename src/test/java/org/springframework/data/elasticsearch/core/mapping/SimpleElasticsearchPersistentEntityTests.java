@@ -52,13 +52,13 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * @author Steven Pearce
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Oliver Gierke
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Steven Pearce
  */
 public class SimpleElasticsearchPersistentEntityTests extends MappingContextBaseTests {
 
@@ -244,8 +244,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 
 			Settings settings = entity.getDefaultSettings().flatten();
 			assertThat(settings).containsEntry("index.number_of_shards", "1");
-			assertThat(settings).containsEntry("index.number_of_replicas","1");
-			assertThat(settings).containsEntry("index.refresh_interval","1s");
+			assertThat(settings).containsEntry("index.number_of_replicas", "1");
+			assertThat(settings).containsEntry("index.refresh_interval", "1s");
 
 		}
 
@@ -258,8 +258,8 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 
 			Settings settings = entity.getDefaultSettings().flatten();
 			assertThat(settings).containsEntry("index.number_of_shards", "4");
-			assertThat(settings).containsEntry("index.number_of_replicas","5");
-			assertThat(settings).containsEntry("index.refresh_interval","1s");
+			assertThat(settings).containsEntry("index.number_of_replicas", "5");
+			assertThat(settings).containsEntry("index.refresh_interval", "1s");
 
 		}
 
@@ -317,7 +317,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			Settings settings = entity.getDefaultSettings().flatten();
 			assertThat(settings).doesNotContainKey("index.number_of_shards");
 			assertThat(settings).doesNotContainKey("index.number_of_replicas");
-			assertThat(settings).containsEntry("index.refresh_interval","5s");
+			assertThat(settings).containsEntry("index.refresh_interval", "5s");
 
 		}
 
@@ -332,7 +332,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 
 			assertThat(settings).doesNotContainKey("index.number_of_shards");
 			assertThat(settings).doesNotContainKey("index.number_of_replicas");
-			assertThat(settings).containsEntry("index.refresh_interval","5s");
+			assertThat(settings).containsEntry("index.refresh_interval", "5s");
 
 		}
 	}
@@ -437,6 +437,7 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			assertThat(persistentEntity.getServerType()).isEqualTo(ElasticsearchServerType.SERVERLESS);
 			assertThat(persistentEntity.getRefreshInterval()).isEqualTo("9s");
 		}
+
 		@Test
 		@DisplayName("should return OverriddenRefreshInterval from SERVERLESS context configuration")
 		void shouldReturnOverriddenRefreshIntervalFromSERVERLESSContextConfiguration() {

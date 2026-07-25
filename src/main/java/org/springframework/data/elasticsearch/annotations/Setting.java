@@ -27,9 +27,9 @@ import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchPe
 /**
  * Elasticsearch Setting
  *
- * @author Steven Pearce
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
+ * @author Steven Pearce
  */
 
 @Persistent
@@ -61,8 +61,8 @@ public @interface Setting {
 	short replicas() default 1;
 
 	/**
-	 * Refresh interval for the index. Used for index creation. If no value, defaults are server type dependant and
-	 * set in {@link SimpleElasticsearchPersistentEntity}
+	 * Refresh interval for the index. Used for index creation. If no value, defaults are server type dependant and set in
+	 * {@link SimpleElasticsearchPersistentEntity}
 	 */
 	String refreshInterval() default "";
 

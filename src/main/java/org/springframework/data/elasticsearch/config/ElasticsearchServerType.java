@@ -23,6 +23,7 @@ package org.springframework.data.elasticsearch.config;
  *  @see #SERVERLESS
  *
  * @author Steven Pearce
+ * @since 6.2
  */
 public enum ElasticsearchServerType {
   /**

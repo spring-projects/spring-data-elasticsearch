@@ -58,8 +58,6 @@ import org.springframework.util.StringUtils;
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentEntity} implementation holding
  *
  * @param <T>
- *
- * @author Steven Pearce
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
@@ -68,6 +66,7 @@ import org.springframework.util.StringUtils;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
+ * @author Steven Pearce
  */
 public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntity<T, ElasticsearchPersistentProperty>
 		implements ElasticsearchPersistentEntity<T> {
@@ -480,11 +479,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		settingsParameter.serverType = contextConfiguration.serverType;
 		settingsParameter.shards = 1;
 		settingsParameter.replicas = 1;
-		settingsParameter.refreshInterval =
-			switch (contextConfiguration.serverType) {
-				case DEFAULT -> "1s";
-				case SERVERLESS -> "5s";
-			};
+		settingsParameter.refreshInterval = switch (contextConfiguration.serverType) {
+			case DEFAULT -> "1s";
+			case SERVERLESS -> "5s";
+		};
 
 		if (settingAnnotation != null) {
 			processSettingAnnotation(settingAnnotation, settingsParameter);
@@ -646,7 +644,8 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this(fieldNamingStrategy, writeTypeHints, ElasticsearchServerType.DEFAULT);
 		}
 
-		ContextConfiguration(FieldNamingStrategy fieldNamingStrategy, boolean writeTypeHints, ElasticsearchServerType serverType) {
+		ContextConfiguration(FieldNamingStrategy fieldNamingStrategy, boolean writeTypeHints,
+				ElasticsearchServerType serverType) {
 			this.fieldNamingStrategy = fieldNamingStrategy;
 			this.writeTypeHints = writeTypeHints;
 			this.serverType = serverType;

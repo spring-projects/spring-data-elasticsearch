@@ -40,9 +40,9 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
- * @author Steven Pearce
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author Steven Pearce
  * @since 3.2
  */
 @Configuration(proxyBeanMethods = false)
@@ -189,11 +189,13 @@ public class ElasticsearchConfigurationSupport {
 	}
 
 	/**
-	 * Configures the {@link ElasticsearchServerType} to use when creating indexes. The Default value will
-	 * support the standard configurations, and SERVERLESS will support ElasticSearch Serverless
+	 * Configures the {@link ElasticsearchServerType} to use when creating indexes. The Default value will support the
+	 * standard configurations, and SERVERLESS will support ElasticSearch Serverless
 	 *
 	 * @return the {@link ElasticsearchServerType} to use
 	 * @since 6.2
 	 */
-	protected ElasticsearchServerType serverType() { return ElasticsearchServerType.DEFAULT; }
+	protected ElasticsearchServerType serverType() {
+		return ElasticsearchServerType.DEFAULT;
+	}
 }

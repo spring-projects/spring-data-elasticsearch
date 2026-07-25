@@ -40,6 +40,7 @@ import org.springframework.data.mapping.model.FieldNamingStrategy;
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
  * @author Subhobrata Dey
+ * @author Steven Pearce
  */
 public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, ElasticsearchPersistentProperty> {
 

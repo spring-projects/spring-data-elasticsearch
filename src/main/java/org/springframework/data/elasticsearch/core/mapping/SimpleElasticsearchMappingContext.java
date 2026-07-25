@@ -28,11 +28,11 @@ import org.springframework.data.mapping.model.SimpleTypeHolder;
 /**
  * SimpleElasticsearchMappingContext
  *
- * @author Steven Pearce
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
  * @author Peter-Josef Meisch
+ * @author Steven Pearce
  */
 public class SimpleElasticsearchMappingContext
 		extends AbstractMappingContext<SimpleElasticsearchPersistentEntity<?>, ElasticsearchPersistentProperty> {
