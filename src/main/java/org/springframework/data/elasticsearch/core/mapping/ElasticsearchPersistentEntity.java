@@ -21,6 +21,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Dynamic;
 import org.springframework.data.elasticsearch.annotations.Field;
+import org.springframework.data.elasticsearch.config.ElasticsearchServerType;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
@@ -178,6 +179,12 @@ public interface ElasticsearchPersistentEntity<T> extends PersistentEntity<T, El
 	 * @since 4.3
 	 */
 	boolean writeTypeHints();
+
+	/**
+	 * @return the {@link ElasticsearchServerType} for the server that stores this entity
+	 * @since 6.2
+	 */
+	ElasticsearchServerType getServerType();
 
 	/**
 	 * @return the {@code dynamic} mapping parameter value.

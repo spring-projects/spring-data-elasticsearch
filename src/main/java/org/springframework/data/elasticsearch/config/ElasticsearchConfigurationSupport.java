@@ -40,6 +40,7 @@ import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
 /**
+ * @author Steven Pearce
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @since 3.2
@@ -73,6 +74,7 @@ public class ElasticsearchConfigurationSupport {
 		mappingContext.setSimpleTypeHolder(elasticsearchCustomConversions.getSimpleTypeHolder());
 		mappingContext.setFieldNamingStrategy(fieldNamingStrategy());
 		mappingContext.setWriteTypeHints(writeTypeHints());
+		mappingContext.setServerType(serverType());
 
 		return mappingContext;
 	}
@@ -174,7 +176,7 @@ public class ElasticsearchConfigurationSupport {
 	}
 
 	/**
-	 * Flag specifiying if type hints (_class fields) should be written in the index. It is strongly advised to keep the
+	 * Flag specifying if type hints (_class fields) should be written in the index. It is strongly advised to keep the
 	 * default value of {@literal true}. If you need to write to an existing index that does not have a mapping defined
 	 * for these fields and that has a strict mapping set, then it might be necessary to disable type hints. But notice
 	 * that in this case reading polymorphic types may fail.
@@ -185,4 +187,13 @@ public class ElasticsearchConfigurationSupport {
 	protected boolean writeTypeHints() {
 		return true;
 	}
+
+	/**
+	 * Configures the {@link ElasticsearchServerType} to use when creating indexes. The Default value will
+	 * support the standard configurations, and SERVERLESS will support ElasticSearch Serverless
+	 *
+	 * @return the {@link ElasticsearchServerType} to use
+	 * @since 6.2
+	 */
+	protected ElasticsearchServerType serverType() { return ElasticsearchServerType.DEFAULT; }
 }

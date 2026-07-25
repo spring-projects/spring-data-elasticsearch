@@ -22,10 +22,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import org.springframework.data.annotation.Persistent;
+import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchPersistentEntity;
 
 /**
  * Elasticsearch Setting
  *
+ * @author Steven Pearce
  * @author Mohsin Husen
  * @author Peter-Josef Meisch
  */
@@ -59,9 +61,10 @@ public @interface Setting {
 	short replicas() default 1;
 
 	/**
-	 * Refresh interval for the index. Used for index creation.
+	 * Refresh interval for the index. Used for index creation. If no value, defaults are server type dependant and
+	 * set in {@link SimpleElasticsearchPersistentEntity}
 	 */
-	String refreshInterval() default "1s";
+	String refreshInterval() default "";
 
 	/**
 	 * Index storage type for the index. Used for index creation.

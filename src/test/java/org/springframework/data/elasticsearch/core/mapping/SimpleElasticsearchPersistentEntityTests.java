@@ -36,7 +36,12 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Setting;
 import org.springframework.data.elasticsearch.annotations.WriteTypeHint;
+import org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport;
+import org.springframework.data.elasticsearch.config.ElasticsearchServerType;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
+import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
@@ -47,6 +52,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.util.ReflectionUtils;
 
 /**
+ * @author Steven Pearce
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
@@ -229,6 +235,34 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			assertEquals(expected, json, false);
 		}
 
+		@Test
+		@DisplayName("should write Default parameters to Settings object")
+		void shouldWriteDefaultParametersToSettingsObject() {
+
+			ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.get().getMappingContext()
+					.getRequiredPersistentEntity(SettingDefaults.class);
+
+			Settings settings = entity.getDefaultSettings().flatten();
+			assertThat(settings).containsEntry("index.number_of_shards", "1");
+			assertThat(settings).containsEntry("index.number_of_replicas","1");
+			assertThat(settings).containsEntry("index.refresh_interval","1s");
+
+		}
+
+		@Test
+		@DisplayName("should write Shard and Replica parameters to Settings object")
+		void shouldWriteShardReplicaToSettingsObject() {
+
+			ElasticsearchPersistentEntity<?> entity = elasticsearchConverter.get().getMappingContext()
+					.getRequiredPersistentEntity(SettingWithShardReplicas.class);
+
+			Settings settings = entity.getDefaultSettings().flatten();
+			assertThat(settings).containsEntry("index.number_of_shards", "4");
+			assertThat(settings).containsEntry("index.number_of_replicas","5");
+			assertThat(settings).containsEntry("index.refresh_interval","1s");
+
+		}
+
 		@Test // #3187
 		@DisplayName("should evaluate SpEL expression in settingPath")
 		void shouldEvaluateSpElExpressionInSettingPath() {
@@ -245,6 +279,61 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 			public String settingPath() {
 				return SETTING_PATH;
 			}
+		}
+	}
+
+	@Nested
+	@DisplayName("serverless index settings")
+	@SpringJUnitConfig({ ServerlessSettingsTests.Config.class })
+	class ServerlessSettingsTests {
+
+		@Autowired private ElasticsearchConverter elasticsearchServerlessConverter;
+
+		@Configuration
+		static class Config {
+
+			@Bean
+			ElasticsearchConverter setupElasticsearchServerlessConverter() {
+				return new MappingElasticsearchConverter(setupMappingContext());
+			}
+
+			private SimpleElasticsearchMappingContext setupMappingContext() {
+				ElasticsearchConfigurationSupport configurationSupport = new ElasticsearchConfigurationSupport();
+				SimpleElasticsearchMappingContext mappingContext = configurationSupport
+						.elasticsearchMappingContext(configurationSupport.elasticsearchCustomConversions());
+				mappingContext.setServerType(ElasticsearchServerType.SERVERLESS);
+				mappingContext.initialize();
+				return mappingContext;
+			}
+		}
+
+		@Test
+		@DisplayName("should write Default parameters to Settings object")
+		void shouldWriteDefaultParametersToSettingsObject() {
+
+			ElasticsearchPersistentEntity<?> entity = elasticsearchServerlessConverter.getMappingContext()
+					.getRequiredPersistentEntity(SettingDefaults.class);
+
+			Settings settings = entity.getDefaultSettings().flatten();
+			assertThat(settings).doesNotContainKey("index.number_of_shards");
+			assertThat(settings).doesNotContainKey("index.number_of_replicas");
+			assertThat(settings).containsEntry("index.refresh_interval","5s");
+
+		}
+
+		@Test
+		@DisplayName("should not write Shard and Replica parameters to Settings object")
+		void shouldNotWriteShardReplicaToSettingsObject() {
+
+			ElasticsearchPersistentEntity<?> entity = elasticsearchServerlessConverter.getMappingContext()
+					.getRequiredPersistentEntity(SettingWithShardReplicas.class);
+
+			Settings settings = entity.getDefaultSettings().flatten();
+
+			assertThat(settings).doesNotContainKey("index.number_of_shards");
+			assertThat(settings).doesNotContainKey("index.number_of_replicas");
+			assertThat(settings).containsEntry("index.refresh_interval","5s");
+
 		}
 	}
 
@@ -309,6 +398,56 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 					.getRequiredPersistentEntity(EnableTypeHintExplicitSetting.class);
 
 			assertThat(entity.writeTypeHints()).isTrue();
+		}
+
+		@Test
+		@DisplayName("should return Default ElasticsearchServerType from context configuration")
+		void shouldReturnDefaultElasticsearchServerTypeFromContextConfiguration() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+					.getRequiredPersistentEntity(FieldNameEntity.class);
+
+			assertThat(persistentEntity.getServerType()).isEqualTo(ElasticsearchServerType.DEFAULT);
+			assertThat(persistentEntity.getRefreshInterval()).isEqualTo("1s");
+		}
+
+		@Test
+		@DisplayName("should return ElasticsearchServerType from context configuration")
+		void shouldReturnElasticsearchServerTypeFromContextConfiguration() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			context.setServerType(ElasticsearchServerType.SERVERLESS);
+			SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+					.getRequiredPersistentEntity(FieldNameEntity.class);
+
+			assertThat(persistentEntity.getServerType()).isEqualTo(ElasticsearchServerType.SERVERLESS);
+			assertThat(persistentEntity.getRefreshInterval()).isEqualTo("5s");
+		}
+
+		@Test
+		@DisplayName("should return OverriddenRefreshInterval from DEFAULT context configuration")
+		void shouldReturnOverriddenRefreshIntervalFromDEFAULTContextConfiguration() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			context.setServerType(ElasticsearchServerType.SERVERLESS);
+			SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+					.getRequiredPersistentEntity(SettingWithRefreshInterval.class);
+
+			assertThat(persistentEntity.getServerType()).isEqualTo(ElasticsearchServerType.SERVERLESS);
+			assertThat(persistentEntity.getRefreshInterval()).isEqualTo("9s");
+		}
+		@Test
+		@DisplayName("should return OverriddenRefreshInterval from SERVERLESS context configuration")
+		void shouldReturnOverriddenRefreshIntervalFromSERVERLESSContextConfiguration() {
+
+			SimpleElasticsearchMappingContext context = new SimpleElasticsearchMappingContext();
+			context.setServerType(ElasticsearchServerType.SERVERLESS);
+			SimpleElasticsearchPersistentEntity<?> persistentEntity = context
+					.getRequiredPersistentEntity(SettingWithRefreshInterval.class);
+
+			assertThat(persistentEntity.getServerType()).isEqualTo(ElasticsearchServerType.SERVERLESS);
+			assertThat(persistentEntity.getRefreshInterval()).isEqualTo("9s");
 		}
 	}
 
@@ -443,6 +582,26 @@ public class SimpleElasticsearchPersistentEntityTests extends MappingContextBase
 	@Document(indexName = "foo")
 	@Setting(settingPath = "#{@spelTestBean.settingPath}")
 	private static class SettingPathWithSpel {
+		@Nullable
+		@Id String id;
+	}
+
+	@Document(indexName = "foo")
+	private static class SettingDefaults {
+		@Nullable
+		@Id String id;
+	}
+
+	@Document(indexName = "foo")
+	@Setting(refreshInterval = "9s")
+	private static class SettingWithRefreshInterval {
+		@Nullable
+		@Id String id;
+	}
+
+	@Document(indexName = "foo")
+	@Setting(shards = 4, replicas = 5)
+	private static class SettingWithShardReplicas {
 		@Nullable
 		@Id String id;
 	}

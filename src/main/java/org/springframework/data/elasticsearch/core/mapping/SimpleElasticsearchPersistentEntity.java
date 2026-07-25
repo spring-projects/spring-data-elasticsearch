@@ -33,6 +33,7 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.annotations.Routing;
 import org.springframework.data.elasticsearch.annotations.Setting;
+import org.springframework.data.elasticsearch.config.ElasticsearchServerType;
 import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -51,11 +52,14 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Elasticsearch specific {@link org.springframework.data.mapping.PersistentEntity} implementation holding
  *
  * @param <T>
+ *
+ * @author Steven Pearce
  * @author Rizwan Idrees
  * @author Mohsin Husen
  * @author Mark Paluch
@@ -174,7 +178,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Nullable
 	@Override
 	public String getRefreshInterval() {
-		return settingsParameter.get().refreshIntervall;
+		return settingsParameter.get().refreshInterval;
 	}
 
 	@Override
@@ -194,6 +198,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	@Override
 	public FieldNamingStrategy getFieldNamingStrategy() {
 		return contextConfiguration.getFieldNamingStrategy();
+	}
+
+	@Override
+	public ElasticsearchServerType getServerType() {
+		return contextConfiguration.getServerType();
 	}
 
 	@Override
@@ -468,9 +477,14 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		// default values
 		settingsParameter.useServerConfiguration = false;
+		settingsParameter.serverType = contextConfiguration.serverType;
 		settingsParameter.shards = 1;
 		settingsParameter.replicas = 1;
-		settingsParameter.refreshIntervall = "1s";
+		settingsParameter.refreshInterval =
+			switch (contextConfiguration.serverType) {
+				case DEFAULT -> "1s";
+				case SERVERLESS -> "5s";
+			};
 
 		if (settingAnnotation != null) {
 			processSettingAnnotation(settingAnnotation, settingsParameter);
@@ -484,7 +498,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		settingsParameter.settingPath = settingAnnotation.settingPath();
 		settingsParameter.shards = settingAnnotation.shards();
 		settingsParameter.replicas = settingAnnotation.replicas();
-		settingsParameter.refreshIntervall = settingAnnotation.refreshInterval();
+		if (StringUtils.hasText(settingAnnotation.refreshInterval())) {
+			settingsParameter.refreshInterval = settingAnnotation.refreshInterval();
+		}
 		settingsParameter.indexStoreType = settingAnnotation.indexStoreType();
 
 		String[] sortFields = settingAnnotation.sortFields();
@@ -560,10 +576,11 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	 */
 	private static class SettingsParameter {
 		boolean useServerConfiguration = false;
+		ElasticsearchServerType serverType = ElasticsearchServerType.DEFAULT;
 		@Nullable String settingPath;
 		short shards;
 		short replicas;
-		@Nullable String refreshIntervall;
+		@Nullable String refreshInterval;
 		@Nullable String indexStoreType;
 		private String @Nullable [] sortFields;
 		private Setting.@Nullable SortOrder @Nullable [] sortOrders;
@@ -576,12 +593,16 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 				return new Settings();
 			}
 
-			var index = new Settings() //
-					.append("number_of_shards", String.valueOf(shards)) //
-					.append("number_of_replicas", String.valueOf(replicas));
+			var index = new Settings();
 
-			if (refreshIntervall != null) {
-				index.append("refresh_interval", refreshIntervall);
+			if (ElasticsearchServerType.DEFAULT.equals(serverType)) {
+				index
+						.append("number_of_shards", String.valueOf(shards))
+						.append("number_of_replicas", String.valueOf(replicas));
+			}
+
+			if (refreshInterval != null) {
+				index.append("refresh_interval", refreshInterval);
 			}
 
 			if (indexStoreType != null && !"fs".equals(indexStoreType)) {
@@ -619,10 +640,16 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		private final FieldNamingStrategy fieldNamingStrategy;
 		private final boolean writeTypeHints;
+		private final ElasticsearchServerType serverType;
 
 		ContextConfiguration(FieldNamingStrategy fieldNamingStrategy, boolean writeTypeHints) {
+			this(fieldNamingStrategy, writeTypeHints, ElasticsearchServerType.DEFAULT);
+		}
+
+		ContextConfiguration(FieldNamingStrategy fieldNamingStrategy, boolean writeTypeHints, ElasticsearchServerType serverType) {
 			this.fieldNamingStrategy = fieldNamingStrategy;
 			this.writeTypeHints = writeTypeHints;
+			this.serverType = serverType;
 		}
 
 		public FieldNamingStrategy getFieldNamingStrategy() {
@@ -631,6 +658,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		public boolean getWriteTypeHints() {
 			return writeTypeHints;
+		}
+
+		public ElasticsearchServerType getServerType() {
+			return serverType;
 		}
 	}
 
