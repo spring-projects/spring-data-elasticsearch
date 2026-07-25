@@ -24,7 +24,7 @@ import org.springframework.data.repository.query.ValueExpressionDelegate;
 import org.springframework.data.repository.query.parser.PartTree;
 
 /**
- * A repository query that is built from the the method name in the repository definition. Was originally named
+ * A repository query that is built from the method name in the repository definition. Was originally named
  * ElasticsearchPartQuery.
  *
  * @author Rizwan Idrees
