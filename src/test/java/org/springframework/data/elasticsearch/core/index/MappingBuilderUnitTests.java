@@ -41,6 +41,9 @@ import org.springframework.data.domain.Range;
 import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
 import org.springframework.data.elasticsearch.core.geo.GeoPoint;
+import org.springframework.data.elasticsearch.core.index.IndexOptionMappers.BooleanMapper;
+import org.springframework.data.elasticsearch.core.index.IndexOptionMappers.NumberMapper;
+import org.springframework.data.elasticsearch.core.index.IndexOptionMappers.StringMapper;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.core.query.SeqNoPrimaryTerm;
 import org.springframework.data.elasticsearch.core.suggest.Completion;
@@ -1371,6 +1374,37 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 
 		assertEquals(expected, mapping, false);
 	}
+
+	
+	@Test // #3299
+	@DisplayName("should write dense_vector properties for knn search with custom index options")
+	void shouldWriteDenseVectorPropertiesWithKnnSearchCustomIndexOptions() throws JSONException {
+		String expected = """
+				{
+				  "properties":{
+					"my_vector":{
+					  "dims":32,
+					  "element_type":"bit",
+					  "similarity":"dot_product",
+					  "index": true,
+					  "floats": [0.5644, 0.4445, 0.95442],
+					  "ints": [-1, 0, 1],
+					  "strings": ["s1", "", "s2"],
+					  "bools": [true, false],
+					  "index_options":{
+						"type":"hnsw",
+						"m":16,
+						"ef_construction":100
+					  }
+					}
+				  }
+				}
+				""";
+
+		String mapping = getMappingBuilder().buildPropertyMapping(DenseVectorEntityWithKnnSearchCustomIndexOptions.class);
+
+		assertEquals(expected, mapping, false);
+	}
 	// region entities
 
 	@Document(indexName = "ignore-above-index")
@@ -2229,6 +2263,45 @@ public class MappingBuilderUnitTests extends MappingContextBaseTests {
 		@Field(type = FieldType.Dense_Vector, dims = 16, elementType = FieldElementType.FLOAT,
 				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, efConstruction = 100),
 				knnSimilarity = KnnSimilarity.DOT_PRODUCT) private float @Nullable [] my_vector;
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		public float @Nullable [] getMy_vector() {
+			return my_vector;
+		}
+
+		public void setMy_vector(float @Nullable [] my_vector) {
+			this.my_vector = my_vector;
+		}
+	}
+
+	@SuppressWarnings("unused")
+	static class DenseVectorEntityWithKnnSearchCustomIndexOptions {
+		@Nullable
+		@Id private String id;
+
+		@Field(type = FieldType.Dense_Vector, dims = 16, 
+				knnIndexOptions = @KnnIndexOptions(type = KnnAlgorithmType.HNSW, m = 16, efConstruction = 100),
+				knnSimilarity = KnnSimilarity.DOT_PRODUCT,
+				customIndexOptions = {
+					@CustomIndexOption(name = "similarity", values = "l2_norm", mapper = StringMapper.class),
+					@CustomIndexOption(name = "element_type", values = "bit", mapper = StringMapper.class),
+					@CustomIndexOption(name = "dims", values = "32", overrideIfPresent = true, mapper = NumberMapper.class),
+					@CustomIndexOption(name = "index", values = "true", mapper = BooleanMapper.class),
+					@CustomIndexOption(name = "floats", values = { "0.5644", "0.4445", "0.95442" }, mapper = NumberMapper.class),
+					@CustomIndexOption(name = "ints", values = { "-1", "0", "1" }, mapper = NumberMapper.class),
+					@CustomIndexOption(name = "strings", values = { "s1", "", "s2" }, mapper = StringMapper.class),
+					@CustomIndexOption(name = "bools", values = { "false", "true" }, mapper = BooleanMapper.class),
+					@CustomIndexOption(name = "type", mapper = StringMapper.class)
+				}
+				) private float @Nullable [] my_vector;
 
 		@Nullable
 		public String getId() {

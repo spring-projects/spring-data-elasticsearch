@@ -41,6 +41,9 @@ import org.springframework.data.elasticsearch.annotations.*;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.MappingContextBaseTests;
+import org.springframework.data.elasticsearch.core.index.IndexOptionMappers.BooleanMapper;
+import org.springframework.data.elasticsearch.core.index.IndexOptionMappers.NumberMapper;
+import org.springframework.data.elasticsearch.core.index.IndexOptionMappers.StringMapper;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -272,6 +275,12 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 	@DisplayName("should write correct mapping for dense vector property")
 	void shouldWriteCorrectMappingForDenseVectorProperty() {
 		operations.indexOps(SimilarityEntity.class).createWithMapping();
+	}
+	
+	@Test // #3299
+	@DisplayName("should write correct mapping for dense vector property with custom index options")
+	void shouldWriteCorrectMappingForDenseVectorPropertyWithCustomIndexOptions() {
+		operations.indexOps(SimilarityCustomIndexOptionEntity.class).createWithMapping();
 	}
 
 	@Test // #2845
@@ -914,6 +923,22 @@ public abstract class MappingBuilderIntegrationTests extends MappingContextBaseT
 		@Field(name = "dotted.field", type = Text) private String dottedField;
 	}
 
+	@Document(indexName = "#{@indexNameProvider.indexName()}")
+	static class SimilarityCustomIndexOptionEntity {
+		@Nullable
+		@Id private String id;
+
+		@Field(type = FieldType.Dense_Vector, dims = 42,
+				knnSimilarity = KnnSimilarity.COSINE, 
+				customIndexOptions = {
+					@CustomIndexOption(name = "similarity", values = "l2_norm", overrideIfPresent = true, mapper = StringMapper.class),
+					@CustomIndexOption(name = "element_type", values = "bit", overrideIfPresent = false, mapper = StringMapper.class),
+					@CustomIndexOption(name = "dims", values = "64", overrideIfPresent = true, mapper = NumberMapper.class),
+					@CustomIndexOption(name = "index", values = "true", overrideIfPresent = true, mapper = BooleanMapper.class)
+				}) private double @Nullable [] denseVector;
+	}
+
+	
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
 	static class SimilarityEntity {
 		@Nullable
