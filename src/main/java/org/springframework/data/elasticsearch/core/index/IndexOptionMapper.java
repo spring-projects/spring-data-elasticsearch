@@ -16,19 +16,16 @@
 
 package org.springframework.data.elasticsearch.core.index;
 
-import org.springframework.data.elasticsearch.annotations.CustomIndexOption;
-
 import tools.jackson.databind.node.ObjectNode;
 
+import org.springframework.data.elasticsearch.annotations.CustomIndexOption;
 
 /**
- * Writes the particular instance of the {@code CustomIndexOption} into the mapping, 
- * represented by objectNode.
- * 
+ * Writes the particular instance of the {@code CustomIndexOption} into the mapping, represented by objectNode.
+ *
  * @author Andriy Redko
- * 
  * @since 6.2
  */
 public interface IndexOptionMapper {
-    void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode);
+	void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode);
 }

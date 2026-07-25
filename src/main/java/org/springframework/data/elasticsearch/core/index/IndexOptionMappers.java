@@ -16,6 +16,15 @@
 
 package org.springframework.data.elasticsearch.core.index;
 
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.BigIntegerNode;
+import tools.jackson.databind.node.BooleanNode;
+import tools.jackson.databind.node.DecimalNode;
+import tools.jackson.databind.node.NullNode;
+import tools.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.node.StringNode;
+
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -24,32 +33,23 @@ import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.annotations.CustomIndexOption;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.node.ArrayNode;
-import tools.jackson.databind.node.BigIntegerNode;
-import tools.jackson.databind.node.BooleanNode;
-import tools.jackson.databind.node.ObjectNode;
-import tools.jackson.databind.node.StringNode;
-import tools.jackson.databind.node.DecimalNode;
-
 /**
  * The collection of predefined {@link IndexOptionMapper}s
- * 
+ *
  * @author Andriy Redko
- * 
  * @since 6.2
  */
 public final class IndexOptionMappers {
-	private IndexOptionMappers() {
-	}
+	private IndexOptionMappers() {}
 
 	/**
 	 * Writes the {@link CustomIndexOption} instance into mapping as JSON string (or array of strings) property
 	 */
 	public static final class StringMapper implements IndexOptionMapper {
-	@Override
+		@Override
 		public void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode) {
 			final String[] values = Objects.requireNonNull(indexOption.values(), "Values are required");
+
 			if (values.length == 1) {
 				writePropertyAsString(indexOption.name(), indexOption.overrideIfPresent(), values[0], objectNode);
 			} else if (values.length > 1) {
@@ -67,6 +67,7 @@ public final class IndexOptionMappers {
 		@Override
 		public void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode) {
 			final @Nullable Number[] values = toNumbers(Objects.requireNonNull(indexOption.values(), "Values are required"));
+
 			if (values.length == 1) {
 				writePropertyAsNumber(indexOption.name(), indexOption.overrideIfPresent(), values[0], objectNode);
 			} else if (values.length > 1) {
@@ -83,7 +84,8 @@ public final class IndexOptionMappers {
 	public static final class BooleanMapper implements IndexOptionMapper {
 		@Override
 		public void writeIndexOptionTo(CustomIndexOption indexOption, ObjectNode objectNode) {
-			final Boolean[] values = toBoolean(Objects.requireNonNull(indexOption.values(), "Values are required"));
+			final @Nullable Boolean[] values = toBoolean(Objects.requireNonNull(indexOption.values(), "Values are required"));
+
 			if (values.length == 1) {
 				writePropertyAsBoolean(indexOption.name(), indexOption.overrideIfPresent(), values[0], objectNode);
 			} else if (values.length > 1) {
@@ -96,7 +98,7 @@ public final class IndexOptionMappers {
 
 	/**
 	 * Convert the array of strings to array of booleans.
-	 * 
+	 *
 	 * @param values array of strings
 	 * @return array of booleans
 	 */
@@ -105,16 +107,16 @@ public final class IndexOptionMappers {
 	}
 
 	/**
-	 * Convert the array of strings to array of numbers, throwing {@link NumberFormatException} if the conversion 
-	 * is not possible.
-	 * 
+	 * Convert the array of strings to array of numbers, throwing {@link NumberFormatException} if the conversion is not
+	 * possible.
+	 *
 	 * @param values array of strings
 	 * @return array of numbers
-	 * 
 	 * @throws NumberFormatException
 	 */
 	private static @Nullable Number[] toNumbers(@Nullable String[] values) {
-		final Number[] numbers = new Number[values.length];
+		final @Nullable Number[] numbers = new Number[values.length];
+
 		for (int j = 0; j < values.length; ++j) {
 			Number number = null;
 			var value = values[j];
@@ -135,16 +137,17 @@ public final class IndexOptionMappers {
 
 	/**
 	 * Writes a property as a JSON boolean value.
-	 * 
+	 *
 	 * @param name property name
 	 * @param override override if present
 	 * @param value property value
 	 * @param objectNode JSON object node
 	 */
-	private static void writePropertyAsBoolean(String name, boolean override, Boolean value, ObjectNode objectNode) {
-		final boolean exists = objectNode.has(name);
+	private static void writePropertyAsBoolean(String name, boolean override, @Nullable Boolean value,
+			ObjectNode objectNode) {
 		final JsonNode node = BooleanNode.valueOf(value);
-		if (exists && override) {
+
+		if (objectNode.has(name) && override) {
 			objectNode.replace(name, node);
 		} else {
 			objectNode.putIfAbsent(name, node);
@@ -153,16 +156,17 @@ public final class IndexOptionMappers {
 
 	/**
 	 * Writes a property as a JSON number value.
-	 * 
+	 *
 	 * @param name property name
 	 * @param override override if present
 	 * @param value property value
 	 * @param objectNode JSON object node
 	 */
-	private static void writePropertyAsNumber(String name, boolean override, Number value, ObjectNode objectNode) {
-		final boolean exists = objectNode.has(name);
+	private static void writePropertyAsNumber(String name, boolean override, @Nullable Number value,
+			ObjectNode objectNode) {
 		final JsonNode node = toJsonNode(value);
-		if (exists && override) {
+
+		if (objectNode.has(name) && override) {
 			objectNode.replace(name, node);
 		} else {
 			objectNode.putIfAbsent(name, node);
@@ -171,16 +175,16 @@ public final class IndexOptionMappers {
 
 	/**
 	 * Writes a property as a JSON string value.
-	 * 
+	 *
 	 * @param name property name
 	 * @param override override if present
 	 * @param value property value
 	 * @param objectNode JSON object node
 	 */
 	private static void writePropertyAsString(String name, boolean override, String value, ObjectNode objectNode) {
-		final boolean exists = objectNode.has(name);
 		final StringNode node = StringNode.valueOf(value);
-		if (exists && override) {
+
+		if (objectNode.has(name) && override) {
 			objectNode.replace(name, node);
 		} else {
 			objectNode.putIfAbsent(name, node);
@@ -189,7 +193,7 @@ public final class IndexOptionMappers {
 
 	/**
 	 * Removes the property if present.
-	 * 
+	 *
 	 * @param name property name
 	 * @param objectNode JSON object node
 	 */
@@ -201,43 +205,46 @@ public final class IndexOptionMappers {
 
 	/**
 	 * Writes a property as a JSON array of boolean values.
-	 * 
+	 *
 	 * @param name property name
 	 * @param override override if present
 	 * @param values property values
 	 * @param objectNode JSON object node
 	 */
-	private static void writePropertyAsArray(String name, boolean override, Boolean[] values, ObjectNode objectNode) {
+	private static void writePropertyAsArray(String name, boolean override, @Nullable Boolean[] values,
+			ObjectNode objectNode) {
 		writePropertyAsArray(
-			name, 
-			override, 
-			objectNode
-				.arrayNode()
-				.addAll(Arrays.stream(values).map(BooleanNode::valueOf).toList()), 
-			objectNode);
+				name,
+				override,
+				objectNode
+						.arrayNode()
+						.addAll(
+								Arrays.stream(values).map(b -> b != null ? BooleanNode.valueOf(b) : NullNode.getInstance()).toList()),
+				objectNode);
 	}
 
 	/**
 	 * Writes a property as a JSON array of number values.
-	 * 
+	 *
 	 * @param name property name
 	 * @param override override if present
 	 * @param values property values
 	 * @param objectNode JSON object node
 	 */
-	private static void writePropertyAsArray(String name, boolean override, Number[] values, ObjectNode objectNode) {
+	private static void writePropertyAsArray(String name, boolean override, @Nullable Number[] values,
+			ObjectNode objectNode) {
 		writePropertyAsArray(
-			name, 
-			override, 
-			objectNode
-				.arrayNode()
-				.addAll(Arrays.stream(values).map(IndexOptionMappers::toJsonNode).toList()), 
-			objectNode);
+				name,
+				override,
+				objectNode
+						.arrayNode()
+						.addAll(Arrays.stream(values).map(IndexOptionMappers::toJsonNode).toList()),
+				objectNode);
 	}
 
 	/**
 	 * Writes a property as a JSON array of string values.
-	 * 
+	 *
 	 * @param name property name
 	 * @param override override if present
 	 * @param values property values
@@ -245,25 +252,24 @@ public final class IndexOptionMappers {
 	 */
 	private static void writePropertyAsArray(String name, boolean override, String[] values, ObjectNode objectNode) {
 		writePropertyAsArray(
-			name, 
-			override, 
-			objectNode
-				.arrayNode()
-				.addAll(Arrays.stream(values).map(StringNode::valueOf).toList()), 
-			objectNode);
+				name,
+				override,
+				objectNode
+						.arrayNode()
+						.addAll(Arrays.stream(values).map(StringNode::valueOf).toList()),
+				objectNode);
 	}
 
 	/**
 	 * Writes a property as a JSON array.
-	 * 
+	 *
 	 * @param name property name
 	 * @param override override if present
 	 * @param arrayNode JSON array
 	 * @param objectNode JSON object node
 	 */
 	private static void writePropertyAsArray(String name, boolean override, ArrayNode arrayNode, ObjectNode objectNode) {
-		final boolean exists = objectNode.has(name);
-		if (exists && override) {
+		if (objectNode.has(name) && override) {
 			objectNode.replace(name, arrayNode);
 		} else {
 			objectNode.putIfAbsent(name, arrayNode);
@@ -271,13 +277,17 @@ public final class IndexOptionMappers {
 	}
 
 	/**
-	 * Converts a number into appropriate JSON node.
-	 * Only {@link DecimalNode} and {@link BigInteger} types are supported.
-	 * 
+	 * Converts a number into appropriate JSON node. Only {@link DecimalNode} and {@link BigInteger} types are supported.
+	 *
 	 * @param value {@link Number} instance to convert
 	 * @throws IllegalArgumentException
 	 */
-	private static JsonNode toJsonNode(Number value) {
+	private static JsonNode toJsonNode(@Nullable Number value) {
+
+		if (value == null) {
+			return NullNode.getInstance();
+		}
+
 		if (value instanceof BigDecimal d) {
 			return DecimalNode.valueOf(d);
 		} else if (value instanceof BigInteger i) {

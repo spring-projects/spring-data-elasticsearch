@@ -19,31 +19,30 @@ package org.springframework.data.elasticsearch.annotations;
 import org.springframework.data.elasticsearch.core.index.IndexOptionMapper;
 
 /**
- * Represents the custom index option, either not provided by the core (fe, custom plugin)
- * or deviates across different engines.
- * 
+ * Represents the custom index option, either not provided by the core (fe, custom plugin) or deviates across different
+ * engines.
+ *
  * @author Andriy Redko
- * 
  * @since 6.2
  */
 public @interface CustomIndexOption {
-    /**
-     * The name of the custom index option 
-     */
-    String name();
+	/**
+	 * The name of the custom index option
+	 */
+	String name();
 
-    /**
-     * The value(s) of the custom index option 
-     */
-    String[] values() default {};
+	/**
+	 * The value(s) of the custom index option
+	 */
+	String[] values() default {};
 
-    /**
-     * Should the index property be overridden if already present or not 
-     */
-    boolean overrideIfPresent() default false;
-    
-    /**
-     * The index option mapper that will be used to populate this custom index option
-     */
-    Class<? extends IndexOptionMapper> mapper();
+	/**
+	 * Should the index property be overridden if already present or not
+	 */
+	boolean overrideIfPresent() default false;
+
+	/**
+	 * The index option mapper that will be used to populate this custom index option
+	 */
+	Class<? extends IndexOptionMapper> mapper();
 }
