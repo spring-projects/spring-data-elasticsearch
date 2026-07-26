@@ -24,12 +24,18 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.NestedIdentity;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.JsonpMapper;
+import jakarta.json.JsonArray;
+import jakarta.json.JsonNumber;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
+import jakarta.json.JsonValue;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.apache.commons.logging.Log;
@@ -85,22 +91,8 @@ final class DocumentAdapters {
 
 		Map<String, Double> matchedQueries = hit.matchedQueries();
 
-		Function<Map<String, JsonData>, EntityAsMap> fromFields = fields -> {
-			StringBuilder sb = new StringBuilder("{");
-			final boolean[] firstField = { true };
-			hit.fields().forEach((key, jsonData) -> {
-				if (!firstField[0]) {
-					sb.append(',');
-				}
-				sb.append('"').append(key).append("\":") //
-						.append(jsonData.toJson(jsonpMapper).toString());
-				firstField[0] = false;
-			});
-			sb.append('}');
-			return new EntityAsMap().fromJson(sb.toString());
-		};
-
-		EntityAsMap hitFieldsAsMap = fromFields.apply(hit.fields());
+		EntityAsMap hitFieldsAsMap = new EntityAsMap();
+		hit.fields().forEach((key, jsonData) -> hitFieldsAsMap.put(key, toJavaObject(jsonData, jsonpMapper)));
 
 		Map<String, List<@Nullable Object>> documentFields = new LinkedHashMap<>();
 		hitFieldsAsMap.forEach((key, value) -> {
@@ -142,6 +134,61 @@ final class DocumentAdapters {
 		float score = hit.score() != null ? hit.score().floatValue() : Float.NaN;
 		return new SearchDocumentAdapter(document, score, hit.sort().stream().map(TypeUtils::toObject).toArray(),
 				documentFields, highlightFields, innerHits, nestedMetaData, explanation, matchedQueries, hit.routing());
+	}
+
+	@Nullable
+	private static Object toJavaObject(JsonData jsonData, JsonpMapper jsonpMapper) {
+		return toJavaObject(jsonData.toJson(jsonpMapper));
+	}
+
+	@Nullable
+	private static Object toJavaObject(JsonValue jsonValue) {
+
+		return switch (jsonValue.getValueType()) {
+			case OBJECT -> toMap(jsonValue.asJsonObject());
+			case ARRAY -> toList(jsonValue.asJsonArray());
+			case STRING -> ((JsonString) jsonValue).getString();
+			case NUMBER -> toNumber((JsonNumber) jsonValue);
+			case TRUE -> Boolean.TRUE;
+			case FALSE -> Boolean.FALSE;
+			case NULL -> null;
+		};
+	}
+
+	private static Map<String, @Nullable Object> toMap(JsonObject jsonObject) {
+
+		Map<String, @Nullable Object> result = new LinkedHashMap<>();
+		jsonObject.forEach((key, value) -> result.put(key, toJavaObject(value)));
+		return result;
+	}
+
+	private static List<@Nullable Object> toList(JsonArray jsonArray) {
+
+		List<@Nullable Object> result = new ArrayList<>(jsonArray.size());
+		jsonArray.forEach(value -> result.add(toJavaObject(value)));
+		return result;
+	}
+
+	private static Number toNumber(JsonNumber jsonNumber) {
+
+		if (!jsonNumber.isIntegral()) {
+			return jsonNumber.doubleValue();
+		}
+
+		try {
+			return jsonNumber.intValueExact();
+		} catch (ArithmeticException ignored) {
+			// continue with a wider numeric type
+		}
+
+		try {
+			return jsonNumber.longValueExact();
+		} catch (ArithmeticException ignored) {
+			// continue with a wider numeric type
+		}
+
+		BigInteger value = jsonNumber.bigIntegerValue();
+		return value;
 	}
 
 	public static SearchDocument from(CompletionSuggestOption<EntityAsMap> completionSuggestOption) {
