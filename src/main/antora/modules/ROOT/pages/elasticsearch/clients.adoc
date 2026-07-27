@@ -3,7 +3,7 @@
 
 This chapter illustrates configuration and usage of supported Elasticsearch client implementations.
 
-Spring Data Elasticsearch operates upon an Elasticsearch client (provided by Elasticsearch client libraries) that is connected to a single Elasticsearch node or a cluster.
+Spring Data Elasticsearch operates upon an Elasticsearch client (provided by Elasticsearch client libraries) that is connected to a single Elasticsearch node, a cluster or Elasticsearch serverless.
 Although the Elasticsearch Client can be used directly to work with the cluster, applications using Spring Data Elasticsearch normally use the higher level abstractions of xref:elasticsearch/template.adoc[Elasticsearch Operations] and xref:elasticsearch/repositories/elasticsearch-repositories.adoc[Elasticsearch Repositories].
 
 [[elasticsearch.clients.rest5client]]
@@ -451,6 +451,22 @@ ClientConfiguration.builder()
         return requestConfigBuilder;
     }))
     .build();
+----
+====
+
+[[elasticsearch.clients.servertype]]
+== Server Type
+There are now 2 types of server that a client could connect to. They are `DEFAULT` which represent all single nodes and clusters; and `SERVERLESS` which represents Elasticsearch new flavour of providing cloud hosted elasticsearch.
+If you are going to use Elasticsearch Serverless then you need to specific this so that certain settings are changed and indexes are created correctly.
+The javadoc:org.springframework.data.elasticsearch.config.ElasticsearchConfigurationSupport[] class (extended by javadoc:org.springframework.data.elasticsearch.client.elc.ElasticsearchConfiguration[]) allows the overriding of `serverType()`.
+
+====
+[source,java]
+----
+@Override
+ElasticsearchServerType serverType() {
+  return ElasticsearchServerType.SERVERLESS;
+}
 ----
 ====
 
