@@ -38,6 +38,9 @@ import org.springframework.data.elasticsearch.core.index.Settings;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
+import org.springframework.data.elasticsearch.utils.spel.ExpressionUtils;
+import org.springframework.data.expression.ValueEvaluationContext;
+import org.springframework.data.expression.ValueExpression;
 import org.springframework.data.mapping.MappingException;
 import org.springframework.data.mapping.PropertyHandler;
 import org.springframework.data.mapping.model.BasicPersistentEntity;
@@ -52,6 +55,7 @@ import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
+import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
 
 /**
@@ -75,7 +79,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private @Nullable final Document document;
-	private @Nullable String indexName;
+	private final String unresolvedIndexName;
 	private final Lazy<SettingsParameter> settingsParameter;
 	private @Nullable ElasticsearchPersistentProperty seqNoPrimaryTermProperty;
 	private @Nullable ElasticsearchPersistentProperty joinFieldProperty;
@@ -90,8 +94,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final ContextConfiguration contextConfiguration;
 	private final Set<Alias> aliases = new HashSet<>();
 
-	private final ConcurrentHashMap<String, Expression> indexNameExpressions = new ConcurrentHashMap<>();
-	private final Lazy<EvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
+	private final Lazy<ValueEvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
 
 	private final boolean storeIdInSource;
 	private final boolean storeVersionInSource;
@@ -111,10 +114,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		this.settingsParameter = Lazy.of(() -> buildSettingsParameter(clazz));
 
 		if (document != null) {
-
 			Assert.hasText(document.indexName(),
 					" Unknown indexName. Make sure the indexName is defined. e.g @Document(indexName=\"foo\")");
-			this.indexName = document.indexName();
+
+			this.unresolvedIndexName = document.indexName();
 			this.versionType = document.versionType();
 			this.createIndexAndMapping = document.createIndex();
 			this.alwaysWriteMapping = document.alwaysWriteMapping();
@@ -123,6 +126,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			this.storeVersionInSource = document.storeVersionInSource();
 			buildAliases();
 		} else {
+			this.unresolvedIndexName = getTypeInformation().getType().getSimpleName();
 			this.dynamic = Dynamic.INHERIT;
 			this.storeIdInSource = true;
 			this.storeVersionInSource = true;
@@ -139,13 +143,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		}
 	}
 
-	private String getIndexName() {
-		return indexName != null ? indexName : getTypeInformation().getType().getSimpleName();
-	}
-
 	@Override
 	public IndexCoordinates getIndexCoordinates() {
-		return resolve(IndexCoordinates.of(getIndexName()));
+		return resolve(IndexCoordinates.of(unresolvedIndexName));
 	}
 
 	@Override
@@ -376,42 +376,36 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		Assert.notNull(name, "name must not be null");
 
-		Expression expression = getExpressionForIndexName(name);
+		ValueExpression expression = getExpressionForIndexName(name);
 
-		String resolvedName = expression != null ? expression.getValue(indexNameEvaluationContext.get(), String.class)
-				: null;
-		return resolvedName != null ? resolvedName : name;
+		Object resolvedName = expression != null ? expression.evaluate(indexNameEvaluationContext.get()) : null;
+		return resolvedName != null ? ObjectUtils.nullSafeToString(resolvedName) : name;
 	}
 
 	/**
-	 * returns an {@link Expression} for #name if name contains a {@link ParserContext#TEMPLATE_EXPRESSION} otherwise
-	 * returns {@literal null}.
+	 * returns an {@link ValueExpression} for #name if name is notempty, see
+	 * {@link ExpressionUtils#detectExpression(String)}. The returned values are only evaluated once and then are cached.
 	 *
 	 * @param name the name to get the expression for
-	 * @return Expression may be null
+	 * @return ValueExpression, will be null when name is empty
 	 */
 	@Nullable
-	private Expression getExpressionForIndexName(String name) {
-		return indexNameExpressions.computeIfAbsent(name, s -> {
-			Expression expr = PARSER.parseExpression(s, ParserContext.TEMPLATE_EXPRESSION);
-			return expr instanceof LiteralExpression ? null : expr;
-		});
+	private ValueExpression getExpressionForIndexName(String name) {
+		return ExpressionUtils.detectExpression(name);
 	}
 
 	/**
-	 * build the {@link EvaluationContext} considering {@link ExpressionDependencies} from the name returned by
-	 * {@link #getIndexName()}.
+	 * build the {@link EvaluationContext} considering {@link ExpressionDependencies} from the unresolvedIndexName.
 	 *
 	 * @return EvaluationContext
 	 */
-	private EvaluationContext getIndexNameEvaluationContext() {
+	private ValueEvaluationContext getIndexNameEvaluationContext() {
 
-		Expression expression = getExpressionForIndexName(getIndexName());
-		ExpressionDependencies expressionDependencies = expression != null ? ExpressionDependencies.discover(expression)
-				: ExpressionDependencies.none();
+		ValueExpression expression = getExpressionForIndexName(unresolvedIndexName);
+		var expressionDependencies = expression != null ? expression.getExpressionDependencies() : null;
 
-		// noinspection ConstantConditions
-		return getEvaluationContext(null, expressionDependencies);
+		return expressionDependencies != null ? getValueEvaluationContext(null, expressionDependencies)
+				: getValueEvaluationContext(null);
 	}
 
 	@Override
