@@ -22,7 +22,7 @@ The following annotations are available:
 * `@Document`: Applied at the class level to indicate this class is a candidate for mapping to the database.
 The most important attributes are (check the API documentation for the complete list of attributes):
 ** `indexName`: the name of the index to store this entity in.
-This can contain a SpEL template expression like `"log-#{T(java.time.LocalDate).now().toString()}"`
+This can contain a SpEL template expression like `"log-#{T(java.time.LocalDate).now().toString()}"` or a property expression like `{index.name}`
 ** `createIndex`: flag whether to create an index on repository bootstrapping.
 Default value is _true_.
 See xref:elasticsearch/repositories/elasticsearch-repositories.adoc#elasticsearch.repositories.autocreation[Automatic creation of indices with the corresponding mapping]

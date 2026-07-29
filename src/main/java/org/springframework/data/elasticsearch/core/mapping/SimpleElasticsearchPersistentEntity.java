@@ -376,22 +376,10 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		Assert.notNull(name, "name must not be null");
 
-		ValueExpression expression = getExpressionForIndexName(name);
+		ValueExpression expression = ExpressionUtils.detectExpression(name);
 
 		Object resolvedName = expression != null ? expression.evaluate(indexNameEvaluationContext.get()) : null;
 		return resolvedName != null ? ObjectUtils.nullSafeToString(resolvedName) : name;
-	}
-
-	/**
-	 * returns an {@link ValueExpression} for #name if name is notempty, see
-	 * {@link ExpressionUtils#detectExpression(String)}. The returned values are only evaluated once and then are cached.
-	 *
-	 * @param name the name to get the expression for
-	 * @return ValueExpression, will be null when name is empty
-	 */
-	@Nullable
-	private ValueExpression getExpressionForIndexName(String name) {
-		return ExpressionUtils.detectExpression(name);
 	}
 
 	/**
@@ -401,7 +389,7 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	 */
 	private ValueEvaluationContext getIndexNameEvaluationContext() {
 
-		ValueExpression expression = getExpressionForIndexName(unresolvedIndexName);
+		ValueExpression expression = ExpressionUtils.detectExpression(unresolvedIndexName);
 		var expressionDependencies = expression != null ? expression.getExpressionDependencies() : null;
 
 		return expressionDependencies != null ? getValueEvaluationContext(null, expressionDependencies)
