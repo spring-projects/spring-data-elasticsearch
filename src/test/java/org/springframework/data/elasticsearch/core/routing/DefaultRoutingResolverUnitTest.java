@@ -89,6 +89,17 @@ class DefaultRoutingResolverUnitTest {
 		assertThat(routing).isEqualTo("route 42");
 	}
 
+	@Test // #3321
+	@DisplayName("should return routing from Value expression")
+	void shouldReturnRoutingFromValueExpression() {
+
+		ValidValueRoutingEntity entity = new ValidValueRoutingEntity("42", "route 42");
+
+		String routing = routingResolver.getRouting(entity);
+
+		assertThat(routing).isEqualTo("route 42");
+	}
+
 	@Document(indexName = "routing-resolver-test")
 	@Routing("theRouting")
 	static class ValidRoutingEntity {
@@ -152,6 +163,37 @@ class DefaultRoutingResolverUnitTest {
 	}
 
 	@Document(indexName = "routing-resolver-test")
+	@Routing(value = "#{@spelRouting.getRouting(#entity)}")
+	static class ValidValueRoutingEntity {
+		@Nullable
+		@Id private String id;
+		@Nullable private String theRouting;
+
+		public ValidValueRoutingEntity(@Nullable String id, @Nullable String theRouting) {
+			this.id = id;
+			this.theRouting = theRouting;
+		}
+
+		@Nullable
+		public String getId() {
+			return id;
+		}
+
+		public void setId(@Nullable String id) {
+			this.id = id;
+		}
+
+		@Nullable
+		public String getTheRouting() {
+			return theRouting;
+		}
+
+		public void setTheRouting(@Nullable String theRouting) {
+			this.theRouting = theRouting;
+		}
+	}
+
+	@Document(indexName = "routing-resolver-test")
 	@Routing("unknownProperty")
 	static class InvalidRoutingEntity {
 		@Nullable
@@ -187,8 +229,12 @@ class DefaultRoutingResolverUnitTest {
 		@Nullable
 		public String getRouting(Object o) {
 
-			if (o instanceof ValidSpelRoutingEntity) {
-				return ((ValidSpelRoutingEntity) o).getTheRouting();
+			if (o instanceof ValidSpelRoutingEntity e) {
+				return e.getTheRouting();
+			}
+
+			if (o instanceof ValidValueRoutingEntity e) {
+				return e.getTheRouting();
 			}
 
 			return null;

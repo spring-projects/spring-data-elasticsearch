@@ -15,7 +15,6 @@
  */
 package org.springframework.data.elasticsearch.utils.spel;
 
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 import org.jspecify.annotations.Nullable;
@@ -24,6 +23,7 @@ import org.springframework.data.expression.ValueExpression;
 import org.springframework.data.expression.ValueExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.lang.Contract;
+import org.springframework.util.ConcurrentLruCache;
 import org.springframework.util.StringUtils;
 
 /**
@@ -31,13 +31,16 @@ import org.springframework.util.StringUtils;
  * Data MongoDB. Adapted afterwards to our needs.
  *
  * @author Christoph Strobl
+ * @author Peter-Josef Meisch
  * @since 6.2
  */
 public final class ExpressionUtils {
 
 	private static final ValueExpressionParser PARSER = ValueExpressionParser.create(SpelExpressionParser::new);
 
-	private static final ConcurrentHashMap<String, ValueExpression> expressionCache = new ConcurrentHashMap<>();
+	public static final int CAPACITY = 256;
+	private static final ConcurrentLruCache<String, ValueExpression> expressionCache = new ConcurrentLruCache<>(
+			CAPACITY, PARSER::parse);
 
 	/**
 	 * Returns a SpEL {@link ValueExpression} if the given {@link String} is not empty. ValueExpressions are stored in a
@@ -53,8 +56,7 @@ public final class ExpressionUtils {
 			return null;
 		}
 
-		return expressionCache.computeIfAbsent(potentialExpression,
-				key -> PARSER.parse(potentialExpression));
+		return expressionCache.get(potentialExpression);
 	}
 
 	/**
