@@ -47,13 +47,9 @@ import org.springframework.data.mapping.model.BasicPersistentEntity;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.spel.ExpressionDependencies;
 import org.springframework.data.util.Lazy;
-import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.EvaluationException;
-import org.springframework.expression.Expression;
 import org.springframework.expression.ExpressionException;
-import org.springframework.expression.ParserContext;
 import org.springframework.expression.common.LiteralExpression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.Assert;
 import org.springframework.util.ObjectUtils;
 import org.springframework.util.StringUtils;
@@ -76,7 +72,6 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		implements ElasticsearchPersistentEntity<T> {
 
 	private static final Log LOGGER = LogFactory.getLog(SimpleElasticsearchPersistentEntity.class);
-	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
 
 	private @Nullable final Document document;
 	private final String unresolvedIndexName;
@@ -89,13 +84,9 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 	private final boolean alwaysWriteMapping;
 	private final Dynamic dynamic;
 	private final Map<String, ElasticsearchPersistentProperty> fieldNamePropertyCache = new ConcurrentHashMap<>();
-	private final ConcurrentHashMap<String, Expression> routingExpressions = new ConcurrentHashMap<>();
 	private @Nullable String routing;
 	private final ContextConfiguration contextConfiguration;
 	private final Set<Alias> aliases = new HashSet<>();
-
-	private final Lazy<ValueEvaluationContext> indexNameEvaluationContext = Lazy.of(this::getIndexNameEvaluationContext);
-
 	private final boolean storeIdInSource;
 	private final boolean storeVersionInSource;
 
@@ -378,32 +369,53 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 
 		ValueExpression expression = ExpressionUtils.detectExpression(name);
 
-		Object resolvedName = expression != null ? expression.evaluate(indexNameEvaluationContext.get()) : null;
+		Object resolvedName;
+		if (expression != null && !expression.isLiteral()) {
+			var valueEvaluationContext = getValueEvaluationContext(name);
+			resolvedName = expression.evaluate(valueEvaluationContext);
+		} else {
+			resolvedName = null;
+		}
 		return resolvedName != null ? ObjectUtils.nullSafeToString(resolvedName) : name;
 	}
 
 	/**
-	 * build the {@link EvaluationContext} considering {@link ExpressionDependencies} from the unresolvedIndexName.
+	 * build the {@link ValueEvaluationContext} from the expression.
 	 *
-	 * @return EvaluationContext
+	 * @return ValueEvaluationContext
+	 * @param expression
 	 */
-	private ValueEvaluationContext getIndexNameEvaluationContext() {
+	private ValueEvaluationContext getValueEvaluationContext(@Nullable String expression) {
 
-		ValueExpression expression = ExpressionUtils.detectExpression(unresolvedIndexName);
+		ValueExpression valueExpression = ExpressionUtils.detectExpression(expression);
+
+		return getValueEvaluationContext(valueExpression);
+	}
+
+	/**
+	 * build the {@link ValueEvaluationContext} considering {@link ExpressionDependencies} from the expression.
+	 *
+	 * @return ValueEvaluationContext
+	 * @param expression
+	 */
+	private ValueEvaluationContext getValueEvaluationContext(@Nullable ValueExpression expression) {
+
 		var expressionDependencies = expression != null ? expression.getExpressionDependencies() : null;
 
 		return expressionDependencies != null ? getValueEvaluationContext(null, expressionDependencies)
-				: getValueEvaluationContext(null);
+				: getValueEvaluationContext((Object) null);
 	}
 
 	@Override
 	@Nullable
 	public String resolveRouting(T bean) {
 
+		// we need a @Routing annotation on the entity
 		if (routing == null) {
 			return null;
 		}
 
+		// if there is a property with name of of the @Routing annotation value, return the property's value
 		ElasticsearchPersistentProperty persistentProperty = getPersistentProperty(routing);
 
 		if (persistentProperty != null) {
@@ -412,14 +424,29 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 			return propertyValue != null ? propertyValue.toString() : null;
 		}
 
+		// try to resolve the annotations value
 		try {
-			Expression expression = routingExpressions.computeIfAbsent(routing, PARSER::parseExpression);
-			ExpressionDependencies expressionDependencies = ExpressionDependencies.discover(expression);
+			var routingValue = routing;
+			ValueExpression expression = ExpressionUtils.detectExpression(routingValue);
 
-			EvaluationContext context = getEvaluationContext(null, expressionDependencies);
-			context.setVariable("entity", bean);
+			if (expression == null) {
+				return null;
+			}
 
-			return expression.getValue(context, String.class);
+			if (expression.isLiteral()) {
+				// before using ValueExpressions, we had SpEL expressions without the "#{...},
+				// so try if we get a valid expression after wrapping that
+				routingValue = "#{" + routing + "}";
+				expression = ExpressionUtils.detectExpression(routingValue);
+
+				if (expression == null) {
+					return null;
+				}
+			}
+
+			ValueEvaluationContext context = getValueEvaluationContext(routingValue);
+			context.getEvaluationContext().setVariable("entity", bean);
+			return ObjectUtils.nullSafeToString(expression.evaluate(context));
 		} catch (EvaluationException e) {
 			throw new InvalidDataAccessApiUsageException(
 					"Could not resolve expression: " + routing + " for object of class " + bean.getClass().getCanonicalName(), e);
@@ -437,9 +464,13 @@ public class SimpleElasticsearchPersistentEntity<T> extends BasicPersistentEntit
 		}
 
 		try {
-			Expression expression = PARSER.parseExpression(settingPathFromParameter, ParserContext.TEMPLATE_EXPRESSION);
-			return (expression instanceof LiteralExpression) ? settingPathFromParameter
-					: expression.getValue(getEvaluationContext(null, ExpressionDependencies.discover(expression)), String.class);
+			ValueExpression expression = ExpressionUtils.detectExpression(settingPathFromParameter);
+
+			if (expression == null || expression instanceof LiteralExpression) {
+				return settingPathFromParameter;
+			}
+
+			return ObjectUtils.nullSafeToString(expression.evaluate(getValueEvaluationContext(settingPathFromParameter)));
 		} catch (ExpressionException e) {
 			throw new InvalidDataAccessApiUsageException(
 					"Could not resolve expression: " + settingPathFromParameter + " for @Setting.settingPath ", e);

@@ -104,9 +104,8 @@ public class MappingElasticsearchConverter
 	protected @Nullable Environment environment;
 
 	private final SpELContext spELContext = new SpELContext(new MapAccessor());
-	private final SpelExpressionParser expressionParser = new SpelExpressionParser();
 	private final CachingValueExpressionEvaluatorFactory expressionEvaluatorFactory = new CachingValueExpressionEvaluatorFactory(
-			expressionParser, this, spELContext);
+			new SpelExpressionParser(), this, spELContext);
 
 	private final EntityInstantiators instantiators = new EntityInstantiators();
 	private final ElasticsearchTypeMapper typeMapper;
