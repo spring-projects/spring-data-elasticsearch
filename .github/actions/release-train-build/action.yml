@@ -1,0 +1,19 @@
+name: Build Release
+runs:
+  using: composite
+  steps:
+    - name: Write settings.xml
+      if: ${{ env.RELEASE_TRAIN_SETTINGS_XML != '' }}
+      shell: bash
+      run: |
+        echo "::notice::Writing provided settings-xml input to release-train-settings.xml"
+        echo "${RELEASE_TRAIN_SETTINGS_XML}" > release-train-settings.xml
+    - name: Build Release
+      shell: bash
+      run: ./mvnw --batch-mode --settings release-train-settings.xml clean deploy --activate-profiles releaseTrain,release,ci -DaltDeploymentRepository="release-train::file://$(pwd)/deployment-repository" -DskipTests -Dgpg.skip
+    - name: Distribution build
+      shell: bash
+      run: ./mvnw --batch-mode --settings release-train-settings.xml clean deploy --activate-profiles releaseTrain,distribute -DaltDeploymentRepository="release-train::file://$(pwd)/deployment-repository" -DskipTests -Dgpg.skip
+    - name: Schema build
+      shell: bash
+      run: ./mvnw --batch-mode --settings release-train-settings.xml clean deploy --activate-profiles releaseTrain,distribute-schema -DaltDeploymentRepository="release-train::file://$(pwd)/deployment-repository" -DskipTests -Dgpg.skip
