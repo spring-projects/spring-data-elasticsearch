@@ -25,6 +25,7 @@ jobs:
           OSS_ARTIFACTORY_PSW: '${{ secrets.ARTIFACTORY_PASSWORD }}'
           COMMERCIAL_ARTIFACTORY_USR: '${{ secrets.COMMERCIAL_ARTIFACTORY_USERNAME }}'
           COMMERCIAL_ARTIFACTORY_PSW: '${{ secrets.COMMERCIAL_ARTIFACTORY_PASSWORD }}'
+          TESTCONTAINERS_REUSE_ENABLE: true
         with:
           build-name: 'spring-data-elasticsearch'
           settings-xml: '${{ vars.SETTINGS_XML }}'
