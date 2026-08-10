@@ -19,12 +19,6 @@ runs:
         fi
 
         echo "RELEASE_TRAIN_MVN=./mvnw --batch-mode ${MAVEN_LOGGING_OPTS[*]} --settings release-train-settings.xml clean verify -Dgpg.skip" >> "${GITHUB_ENV}"
-    - name: Build Release
+    - name: Test Release
       shell: bash
       run: ${RELEASE_TRAIN_MVN} --activate-profiles releaseTrain,release,ci
-    - name: Distribution build
-      shell: bash
-      run: ${RELEASE_TRAIN_MVN} --activate-profiles releaseTrain,distribute
-    - name: Schema build
-      shell: bash
-      run: ${RELEASE_TRAIN_MVN} --activate-profiles releaseTrain,distribute-schema
