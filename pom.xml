@@ -357,7 +357,17 @@
 				<filtering>false</filtering>
 				<excludes>
 					<exclude>**/versions.properties</exclude>
+					<exclude>notice.txt</exclude>
+					<exclude>license.txt</exclude>
 				</excludes>
+			</resource>
+			<resource>
+				<directory>${project.root}/src/main/resources</directory>
+				<targetPath>META-INF</targetPath>
+				<includes>
+					<include>notice.txt</include>
+					<include>license.txt</include>
+				</includes>
 			</resource>
 		</resources>
 
