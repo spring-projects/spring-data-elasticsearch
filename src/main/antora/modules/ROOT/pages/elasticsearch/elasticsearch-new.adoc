@@ -4,7 +4,7 @@
 [[new-features.6-1-1]]
 == New in Spring Data Elasticsearch 6.1.1
 
-* Upgrade to Elasticsearch 9.4.4
+* Upgrade to Elasticsearch 9.4.5
 
 [[new-features.6-1-0]]
 == New in Spring Data Elasticsearch 6.1
