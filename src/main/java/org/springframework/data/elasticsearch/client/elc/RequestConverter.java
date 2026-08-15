@@ -70,11 +70,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.Optional;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -234,7 +234,8 @@ class RequestConverter extends AbstractQueryProcessor {
 		for (Alias alias : indexSettings.getAliases()) {
 			co.elastic.clients.elasticsearch.indices.Alias esAlias = co.elastic.clients.elasticsearch.indices.Alias
 					.of(ab -> {
-						co.elastic.clients.elasticsearch.indices.Alias.Builder aliasBuilder = ab.filter(getQuery(alias.getFilter(), null))
+						co.elastic.clients.elasticsearch.indices.Alias.Builder aliasBuilder = ab
+								.filter(getQuery(alias.getFilter(), null))
 								.isHidden(alias.getHidden())
 								.isWriteIndex(alias.getWriteIndex());
 						getRouting(alias.getRouting()).ifPresent(aliasBuilder::routing);
@@ -807,7 +808,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
 		return GetRequest.of(grb -> {
-			GetRequest.Builder builder =  grb //
+			GetRequest.Builder builder = grb //
 					.index(indexCoordinates.getIndexName()) //
 					.id(id); //
 			getRouting(routing).ifPresent(builder::routing);
@@ -846,7 +847,7 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		List<MultiGetOperation> multiGetOperations = query.getIdsWithRouting().stream()
 				.map(idWithRouting -> MultiGetOperation.of(mgo -> {
-					MultiGetOperation.Builder builder =  mgo //
+					MultiGetOperation.Builder builder = mgo //
 							.index(index.getIndexName()) //
 							.id(idWithRouting.id()) //
 							.source(sourceConfig);
@@ -1071,29 +1072,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		return UpdateRequest.of(uqb -> {
 			uqb.index(indexName).id(query.getId());
 
-			var scriptData = query.getScriptData();
-			var script = scriptData != null ? scriptData.script() : null;
-
-			if (script != null) {
-				Map<String, JsonData> params = new HashMap<>();
-
-				if (query.getParams() != null) {
-					query.getParams().forEach((key, value) -> params.put(key, JsonData.of(value, jsonpMapper)));
-				}
-
-				uqb.script(sb -> {
-					sb
-							.lang(scriptData.language())
-							.params(params);
-
-					if (script != null) {
-						sb.source(s -> s.scriptString(script));
-					}
-					sb.id(scriptData.scriptName());
-
-					return sb;
-				});
-			}
+			uqb.script(getScript(query.getScriptData()));
 
 			uqb
 					.doc(query.getDocument())
@@ -1980,6 +1959,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		}
 		return Optional.empty();
 	}
+
 	Optional<String> getRouting(@Nullable String routing1, @Nullable String routing2) {
 		return getRouting(routing1).or(() -> getRouting(routing2));
 	}
