@@ -70,6 +70,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -239,7 +240,8 @@ class RequestConverter extends AbstractQueryProcessor {
 		Map<String, co.elastic.clients.elasticsearch.indices.Alias> aliases = new HashMap<>();
 		for (Alias alias : indexSettings.getAliases()) {
 			co.elastic.clients.elasticsearch.indices.Alias esAlias = co.elastic.clients.elasticsearch.indices.Alias
-					.of(ab -> ab.filter(getQuery(alias.getFilter(), null))
+					.of(ab -> ab
+								.filter(getQuery(alias.getFilter(), null))
 							.routing(alias.getRouting())
 							.indexRouting(alias.getIndexRouting())
 							.searchRouting(alias.getSearchRouting())
@@ -1063,29 +1065,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		return UpdateRequest.of(uqb -> {
 			uqb.index(indexName).id(query.getId());
 
-			var scriptData = query.getScriptData();
-			var script = scriptData != null ? scriptData.script() : null;
-
-			if (script != null) {
-				Map<String, JsonData> params = new HashMap<>();
-
-				if (query.getParams() != null) {
-					query.getParams().forEach((key, value) -> params.put(key, JsonData.of(value, jsonpMapper)));
-				}
-
-				uqb.script(sb -> {
-					sb
-							.lang(scriptData.language())
-							.params(params);
-
-					if (script != null) {
-						sb.source(s -> s.scriptString(script));
-					}
-					sb.id(scriptData.scriptName());
-
-					return sb;
-				});
-			}
+			uqb.script(getScript(query.getScriptData()));
 
 			uqb
 					.doc(query.getDocument())

@@ -128,7 +128,39 @@ class RequestConverterTest {
 				.documentUpdateRequest(updateQuery, IndexCoordinates.of("foo"), null, null);
 
 		assertThat(updateRequest.id()).isEqualTo("queryId");
+		assertThat(updateRequest.script()).isNotNull();
 		assertThat(updateRequest.script().source().scriptString()).isEqualTo("script");
 		assertThat(updateRequest.script().id()).isEqualTo("scriptName");
+	}
+
+	@Test // #3324
+	@DisplayName("should allow update script with only an id and no script code")
+	void shouldAllowUpdateScriptWithOnlyAnIdAndNoScriptCode() {
+		var updateQuery = UpdateQuery
+				.builder("queryId")
+				.withScriptName("scriptName")
+				.build();
+
+		UpdateRequest<org.springframework.data.elasticsearch.core.document.Document, ?> updateRequest = requestConverter
+				.documentUpdateRequest(updateQuery, IndexCoordinates.of("foo"), null, null);
+
+		assertThat(updateRequest.id()).isEqualTo("queryId");
+		assertThat(updateRequest.script()).isNotNull();
+		assertThat(updateRequest.script().source()).isNull();
+		assertThat(updateRequest.script().id()).isEqualTo("scriptName");
+	}
+
+	@Test
+	void getRouting() {
+
+		assertTrue(requestConverter.getRouting(null).isEmpty());
+
+		assertTrue(requestConverter.getRouting(null, null).isEmpty());
+		assertTrue(requestConverter.getRouting("", null).isEmpty());
+
+		assertEquals("1", requestConverter.getRouting("1", null).get());
+
+		assertEquals("5", requestConverter.getRouting(null, "5").get());
+
 	}
 }
