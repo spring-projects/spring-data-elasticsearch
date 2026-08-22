@@ -8,6 +8,7 @@
 * Allow to provide non-standard (custom) index options for `@Field` / `@InnerField`
 * Support Elasticsearch Serverless
 * Support propert resolution in index name expressions (https://github.com/spring-projects/spring-data-elasticsearch/issues/3310[GH #3310])
+*  Fix script handling when building an UpdateQuery  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3324[GH #3324])
 
 [[new-features.6-1-0]]
 == New in Spring Data Elasticsearch 6.1
