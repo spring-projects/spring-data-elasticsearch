@@ -16,6 +16,10 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -131,7 +135,25 @@ class RequestConverterTest {
 				.documentUpdateRequest(updateQuery, IndexCoordinates.of("foo"), null, null);
 
 		assertThat(updateRequest.id()).isEqualTo("queryId");
+		assertThat(updateRequest.script()).isNotNull();
 		assertThat(updateRequest.script().source().scriptString()).isEqualTo("script");
+		assertThat(updateRequest.script().id()).isEqualTo("scriptName");
+	}
+
+	@Test // #3324
+	@DisplayName("should allow update script with only an id and no script code")
+	void shouldAllowUpdateScriptWithOnlyAnIdAndNoScriptCode() {
+		var updateQuery = UpdateQuery
+				.builder("queryId")
+				.withScriptName("scriptName")
+				.build();
+
+		UpdateRequest<org.springframework.data.elasticsearch.core.document.Document, ?> updateRequest = requestConverter
+				.documentUpdateRequest(updateQuery, IndexCoordinates.of("foo"), null, null);
+
+		assertThat(updateRequest.id()).isEqualTo("queryId");
+		assertThat(updateRequest.script()).isNotNull();
+		assertThat(updateRequest.script().source()).isNull();
 		assertThat(updateRequest.script().id()).isEqualTo("scriptName");
 	}
 
@@ -148,5 +170,4 @@ class RequestConverterTest {
 		assertEquals("5", requestConverter.getRouting(null, "5").get());
 
 	}
-
 }
