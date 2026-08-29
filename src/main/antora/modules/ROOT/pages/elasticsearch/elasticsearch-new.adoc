@@ -1,6 +1,11 @@
 [[new-features]]
 = What's new
 
+[[new-features.6-1-2]]
+== New in Spring Data Elasticsearch 6.1.2
+
+* Upgrade to Elasticsearch client 9.4.6
+
 [[new-features.6-1-1]]
 == New in Spring Data Elasticsearch 6.1.1
 
