@@ -5,6 +5,7 @@
 == New in Spring Data Elasticsearch 6.1.2
 
 * Upgrade to Elasticsearch client 9.4.6
+* Fix formatting of DateFormat.strict_date_optional_time_nanos  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3334[GH #3334])
 
 [[new-features.6-1-1]]
 == New in Spring Data Elasticsearch 6.1.1

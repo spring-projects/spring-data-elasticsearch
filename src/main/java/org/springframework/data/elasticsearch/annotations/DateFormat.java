@@ -88,7 +88,7 @@ public enum DateFormat {
 	 * @since 5.3
 	 */
 	strict_date_optional_time("uuuu-MM-dd['T'HH:mm:ss.SSSXXX]"), //
-	strict_date_optional_time_nanos("uuuu-MM-dd['T'HH:mm:ss.SSSSSSXXX]"), //
+	strict_date_optional_time_nanos("uuuu-MM-dd['T'HH:mm:ss.SSSSSSSSSXXX]"), //
 	date_time("uuuu-MM-dd'T'HH:mm:ss.SSSXXX"), //
 	/**
 	 * @since 5.3

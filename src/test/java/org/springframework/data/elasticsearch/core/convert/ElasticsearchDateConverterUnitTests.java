@@ -27,7 +27,8 @@ import org.springframework.data.elasticsearch.annotations.DateFormat;
  */
 class ElasticsearchDateConverterUnitTests {
 
-	private final ZonedDateTime zdt = ZonedDateTime.now(ZoneId.of("Europe/Berlin"));
+	public static final ZoneId zoneEuropeBerlin = ZoneId.of("Europe/Berlin");
+	private final ZonedDateTime zdt = ZonedDateTime.now(zoneEuropeBerlin);
 
 	@ParameterizedTest // DATAES-716
 	@EnumSource(DateFormat.class)
@@ -274,10 +275,14 @@ class ElasticsearchDateConverterUnitTests {
 		check(ElasticsearchDateConverter.of(DateFormat.date_optional_time), LocalDateTime.class);
 	}
 
-	@Test // #2676
+	@Test // #2676, #3334
 	@DisplayName("should convert strict_date_optional_time_nanos")
 	void shouldConvertStrictDateOptionalTime() {
-		check(ElasticsearchDateConverter.of(DateFormat.strict_date_optional_time_nanos), LocalDateTime.class);
+		LocalDateTime parsed = check(ElasticsearchDateConverter.of(DateFormat.strict_date_optional_time_nanos),
+				LocalDateTime.class);
+		// additional check that all nanoseconds are re-read
+		var zoned = ZonedDateTime.of(parsed, zoneEuropeBerlin);
+		assertThat(zoned).isEqualTo(zdt);
 	}
 
 	@Test // #1647
@@ -418,11 +423,12 @@ class ElasticsearchDateConverterUnitTests {
 		check(ElasticsearchDateConverter.of("basic_date_time ||invalid-pattern"), LocalDateTime.class);
 	}
 
-	private <T extends TemporalAccessor> void check(ElasticsearchDateConverter converter, Class<T> type) {
+	private <T extends TemporalAccessor> T check(ElasticsearchDateConverter converter, Class<T> type) {
 
 		String formatted = converter.format(zdt);
 		T parsed = converter.parse(formatted, type);
 
 		assertThat(parsed).isNotNull();
+		return parsed;
 	}
 }
