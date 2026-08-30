@@ -9,6 +9,7 @@
 * Support Elasticsearch Serverless
 * Support propert resolution in index name expressions (https://github.com/spring-projects/spring-data-elasticsearch/issues/3310[GH #3310])
 *  Fix script handling when building an UpdateQuery  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3324[GH #3324])
+*  Fix formatting of DateFormat.strict_date_optional_time_nanos  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3334[GH #3334])
 
 [[new-features.6-1-0]]
 == New in Spring Data Elasticsearch 6.1
