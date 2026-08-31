@@ -1,6 +1,11 @@
 [[new-features]]
 = What's new
 
+[[new-features.6-0-8]]
+== New in Spring Data Elasticsearch 6.0.8
+
+* Fix formatting of DateFormat.strict_date_optional_time_nanos  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3334[GH #3334])
+
 [[new-features.6-0-0]]
 == New in Spring Data Elasticsearch 6.0
 

@@ -16,6 +16,7 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;

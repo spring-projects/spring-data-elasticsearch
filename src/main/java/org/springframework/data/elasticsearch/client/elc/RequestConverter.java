@@ -1960,6 +1960,19 @@ class RequestConverter extends AbstractQueryProcessor {
 		return null;
 	}
 
+	Optional<String> getRouting(@Nullable String routing) {
+		if (StringUtils.hasText(routing)) {
+			return Optional.of(routing);
+		}
+		return Optional.empty();
+	}
+
+	Optional<String> getRouting(@Nullable String routing1, @Nullable String routing2) {
+		return getRouting(routing1).or(() -> getRouting(routing2));
+	}
+
+
+
 	private VersionType retrieveVersionTypeFromPersistentEntity(@Nullable Class<?> clazz) {
 
 		ElasticsearchPersistentEntity<?> persistentEntity = getPersistentEntity(clazz);
