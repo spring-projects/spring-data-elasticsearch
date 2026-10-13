@@ -613,8 +613,7 @@ class RequestConverter extends AbstractQueryProcessor {
 	 */
 
 	@SuppressWarnings("DuplicatedCode")
-	private IndexOperation<?> bulkIndexOperation(IndexQuery query, IndexCoordinates indexCoordinates,
-			@Nullable RefreshPolicy refreshPolicy) {
+	private IndexOperation<?> bulkIndexOperation(IndexQuery query, IndexCoordinates indexCoordinates) {
 
 		IndexOperation.Builder<Object> builder = new IndexOperation.Builder<>();
 
@@ -656,8 +655,7 @@ class RequestConverter extends AbstractQueryProcessor {
 	 */
 
 	@SuppressWarnings("DuplicatedCode")
-	private CreateOperation<?> bulkCreateOperation(IndexQuery query, IndexCoordinates indexCoordinates,
-			@Nullable RefreshPolicy refreshPolicy) {
+	private CreateOperation<?> bulkCreateOperation(IndexQuery query, IndexCoordinates indexCoordinates) {
 
 		CreateOperation.Builder<Object> builder = new CreateOperation.Builder<>();
 
@@ -693,8 +691,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		return builder.build();
 	}
 
-	private UpdateOperation<?, ?> bulkUpdateOperation(UpdateQuery query, IndexCoordinates index,
-			@Nullable RefreshPolicy refreshPolicy) {
+	private UpdateOperation<?, ?> bulkUpdateOperation(UpdateQuery query, IndexCoordinates index) {
 
 		UpdateOperation.Builder<Object, Object> uob = new UpdateOperation.Builder<>();
 		String indexName = query.getIndexName() != null ? query.getIndexName() : index.getIndexName();
@@ -787,12 +784,12 @@ class RequestConverter extends AbstractQueryProcessor {
 			if (query instanceof IndexQuery indexQuery) {
 
 				if (indexQuery.getOpType() == IndexQuery.OpType.CREATE) {
-					ob.create(bulkCreateOperation(indexQuery, indexCoordinates, refreshPolicy));
+					ob.create(bulkCreateOperation(indexQuery, indexCoordinates));
 				} else {
-					ob.index(bulkIndexOperation(indexQuery, indexCoordinates, refreshPolicy));
+					ob.index(bulkIndexOperation(indexQuery, indexCoordinates));
 				}
 			} else if (query instanceof UpdateQuery updateQuery) {
-				ob.update(bulkUpdateOperation(updateQuery, indexCoordinates, refreshPolicy));
+				ob.update(bulkUpdateOperation(updateQuery, indexCoordinates));
 			}
 			return ob.build();
 		}).collect(Collectors.toList());
