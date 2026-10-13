@@ -115,6 +115,7 @@ import org.springframework.util.StringUtils;
  * @author scoobyzhang
  * @author Haibo Liu
  * @author Steven Pearce
+ * @author Ralph Ursprung
  * @since 4.4
  */
 class RequestConverter extends AbstractQueryProcessor {
@@ -758,7 +759,26 @@ class RequestConverter extends AbstractQueryProcessor {
 	public BulkRequest documentBulkRequest(List<?> queries, BulkOptions bulkOptions, IndexCoordinates indexCoordinates,
 			@Nullable RefreshPolicy refreshPolicy) {
 
-		BulkRequest.Builder builder = new BulkRequest.Builder();
+		final var operations = queries.stream() //
+				.map(query -> bulkOperation(query, indexCoordinates)) //
+				.toList();
+
+		return bulkRequestSettings(bulkOptions, refreshPolicy) //
+				.operations(operations) //
+				.build();
+	}
+
+	/**
+	 * Creates a {@link BulkRequest.Builder} with the request-level settings of a bulk request but without any
+	 * operations.
+	 *
+	 * @param bulkOptions the options to apply, a refresh policy set here takes precedence over {@code refreshPolicy}
+	 * @param refreshPolicy the default refresh policy
+	 * @return the builder, operations must still be added before building the request
+	 */
+	BulkRequest.Builder bulkRequestSettings(BulkOptions bulkOptions, @Nullable RefreshPolicy refreshPolicy) {
+
+		final var builder = new BulkRequest.Builder();
 
 		if (bulkOptions.getTimeout() != null) {
 			builder.timeout(tb -> tb.time(Long.valueOf(bulkOptions.getTimeout().toMillis()).toString() + "ms"));
@@ -779,22 +799,32 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		getRouting(bulkOptions.getRoutingId()).ifPresent(builder::routing);
 
-		List<BulkOperation> operations = queries.stream().map(query -> {
-			BulkOperation.Builder ob = new BulkOperation.Builder();
-			if (query instanceof IndexQuery indexQuery) {
+		return builder;
+	}
 
-				if (indexQuery.getOpType() == IndexQuery.OpType.CREATE) {
-					ob.create(bulkCreateOperation(indexQuery, indexCoordinates));
-				} else {
-					ob.index(bulkIndexOperation(indexQuery, indexCoordinates));
-				}
-			} else if (query instanceof UpdateQuery updateQuery) {
-				ob.update(bulkUpdateOperation(updateQuery, indexCoordinates));
+	/**
+	 * Converts a single query into a {@link BulkOperation}.
+	 *
+	 * @param query an {@link IndexQuery} or an {@link UpdateQuery}
+	 * @param indexCoordinates the index to use if the query does not define one
+	 * @return the bulk operation
+	 * @throws IllegalArgumentException if the query type is not supported
+	 */
+	BulkOperation bulkOperation(Object query, IndexCoordinates indexCoordinates) {
+
+		final var builder = new BulkOperation.Builder();
+
+		if (query instanceof IndexQuery indexQuery) {
+			if (indexQuery.getOpType() == IndexQuery.OpType.CREATE) {
+				builder.create(bulkCreateOperation(indexQuery, indexCoordinates));
+			} else {
+				builder.index(bulkIndexOperation(indexQuery, indexCoordinates));
 			}
-			return ob.build();
-		}).collect(Collectors.toList());
-
-		builder.operations(operations);
+		} else if (query instanceof UpdateQuery updateQuery) {
+			builder.update(bulkUpdateOperation(updateQuery, indexCoordinates));
+		} else {
+			throw new IllegalArgumentException("Unsupported query type for bulk operation: " + query.getClass().getName());
+		}
 
 		return builder.build();
 	}
