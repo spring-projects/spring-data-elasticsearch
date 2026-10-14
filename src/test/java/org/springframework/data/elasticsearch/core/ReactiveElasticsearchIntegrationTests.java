@@ -89,6 +89,7 @@ import org.springframework.util.StringUtils;
  * @author George Popides
  * @author Sijia Liu
  * @author Illia Ulianov
+ * @author Ralph Ursprung
  */
 @SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @SpringIntegrationTest
@@ -806,6 +807,67 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.expectNextMatches(entity -> entity.getMessage().equals("updated 1")) //
 				.expectNextMatches(entity -> entity.getMessage().equals("updated 2")) //
 				.verifyComplete();
+	}
+
+	@Test // #3345
+	@DisplayName("should split bulk update by max operations and max size")
+	void shouldSplitBulkUpdateByMaxOperationsAndMaxSize() {
+
+		final var entities = IntStream.range(0, 5) //
+				.mapToObj(i -> randomEntity("before " + i)) //
+				.toList();
+		entities.forEach(this::index);
+		final var bulkOptions = BulkOptions.builder().withMaxOperations(2).withMaxSize(200L).build();
+
+		operations.bulkUpdate(updateMessageQueries(entities.stream().map(SampleEntity::getId).toList()), bulkOptions,
+				IndexCoordinates.of(indexNameProvider.indexName())).block();
+
+		final var query = operations.queryBuilderWithIds(entities.stream().map(SampleEntity::getId).toList()).build();
+		operations.multiGet(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
+				.map(MultiGetItem::getItem) //
+				.map(SampleEntity::getMessage) //
+				.as(StepVerifier::create) //
+				.expectNext("updated", "updated", "updated", "updated", "updated") //
+				.verifyComplete();
+	}
+
+	@Test // #3345
+	@DisplayName("should collect item failures of all split bulk requests")
+	void shouldCollectItemFailuresOfAllSplitBulkRequests() {
+
+		final var existing1 = randomEntity("before");
+		final var existing2 = randomEntity("before");
+		index(existing1, existing2);
+		final var missing1 = UUID.randomUUID().toString();
+		final var missing2 = UUID.randomUUID().toString();
+		final var bulkOptions = BulkOptions.builder().withMaxOperations(1).build();
+
+		final var updateQueries = updateMessageQueries(List.of(existing1.getId(), missing1, existing2.getId(), missing2));
+
+		assertThatThrownBy(() -> operations
+				.bulkUpdate(updateQueries, bulkOptions, IndexCoordinates.of(indexNameProvider.indexName())).block())
+				.asInstanceOf(InstanceOfAssertFactories.type(BulkFailureException.class))
+				.extracting(BulkFailureException::getFailedDocuments)
+				.asInstanceOf(InstanceOfAssertFactories.map(String.class, BulkFailureException.FailureDetails.class))
+				.containsOnlyKeys(missing1, missing2);
+
+		// requests are not rolled back and the requests after a failed one are still sent
+		final var query = operations.queryBuilderWithIds(List.of(existing1.getId(), existing2.getId())).build();
+		operations.multiGet(query, SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName())) //
+				.map(MultiGetItem::getItem) //
+				.map(SampleEntity::getMessage) //
+				.as(StepVerifier::create) //
+				.expectNext("updated", "updated") //
+				.verifyComplete();
+	}
+
+	private static List<UpdateQuery> updateMessageQueries(List<String> ids) {
+		return ids.stream() //
+				.map(id -> UpdateQuery.builder(id) //
+						.withDocument(
+								org.springframework.data.elasticsearch.core.document.Document.create().append("message", "updated")) //
+						.build()) //
+				.toList();
 	}
 
 	@Test // DATAES-623
