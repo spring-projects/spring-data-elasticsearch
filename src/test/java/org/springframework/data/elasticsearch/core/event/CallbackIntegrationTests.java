@@ -21,6 +21,7 @@ import static org.mockito.Mockito.*;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,8 @@ import org.springframework.data.elasticsearch.annotations.JoinTypeRelations;
 import org.springframework.data.elasticsearch.core.AbstractElasticsearchTemplate;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.IndexOperations;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterListener;
+import org.springframework.data.elasticsearch.core.bulk.BulkOperationResult;
 import org.springframework.data.elasticsearch.core.join.JoinField;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -48,6 +51,7 @@ import org.springframework.stereotype.Component;
 /**
  * @author Peter-Josef Meisch
  * @author Roman Puchkovskiy
+ * @author Ralph Ursprung
  */
 @SpringIntegrationTest
 abstract class CallbackIntegrationTests {
@@ -58,6 +62,7 @@ abstract class CallbackIntegrationTests {
 	@Autowired private IndexNameProvider indexNameProvider;
 
 	@Nullable private static SeqNoPrimaryTerm seqNoPrimaryTerm = null;
+	private static final List<@Nullable SeqNoPrimaryTerm> afterSaveSeqNoPrimaryTerms = new CopyOnWriteArrayList<>();
 
 	@Configuration
 	static class Config {
@@ -88,6 +93,16 @@ abstract class CallbackIntegrationTests {
 				return document;
 			}
 		}
+
+		@Component
+		static class SampleEntityAfterSaveCallback implements AfterSaveCallback<SampleEntity> {
+
+			@Override
+			public SampleEntity onAfterSave(final SampleEntity entity, final IndexCoordinates index) {
+				afterSaveSeqNoPrimaryTerms.add(entity.getSeqNoPrimaryTerm());
+				return entity;
+			}
+		}
 	}
 
 	@BeforeEach
@@ -101,6 +116,7 @@ abstract class CallbackIntegrationTests {
 
 		// store one entity to have a seq_no and primary_term
 		seqNoPrimaryTerm = operations.save(new SampleEntity("1", "initial")).getSeqNoPrimaryTerm();
+		afterSaveSeqNoPrimaryTerms.clear();
 	}
 
 	@Test
@@ -236,6 +252,46 @@ abstract class CallbackIntegrationTests {
 
 		assertThat(loaded).isNotNull();
 		assertThat(loaded.className).isEqualTo(SampleEntity.class.getName());
+	}
+
+	@Test // #2071
+	@DisplayName("should invoke callbacks and update the entity in the bulk ingester")
+	void shouldInvokeCallbacksAndUpdateTheEntityInTheBulkIngester() {
+
+		final var originalSeqNoPrimaryTerm = Objects.requireNonNull(seqNoPrimaryTerm);
+		final var entity = new SampleEntity("1", "test");
+		final var indexQuery = new IndexQuery();
+		indexQuery.setId(entity.getId());
+		indexQuery.setObject(entity);
+		final var results = new CopyOnWriteArrayList<BulkOperationResult<String>>();
+
+		try (final var ingester = operations.bulkIngester(SampleEntity.class, new BulkIngesterListener<String>() {
+			@Override
+			public void afterBulk(final long executionId, final List<BulkOperationResult<String>> bulkResults) {
+				results.addAll(bulkResults);
+			}
+
+			@Override
+			public void afterBulk(final long executionId, final List<@Nullable String> contexts,
+					final RuntimeException failure) {}
+		})) {
+			ingester.add(indexQuery, "context");
+
+			// the before convert callback is invoked synchronously when the operation is added
+			final var convertedEntity = (SampleEntity) Objects.requireNonNull(indexQuery.getObject());
+			assertThat(convertedEntity.getText()).isEqualTo("converted");
+			assertThat(indexQuery.getRouting()).isEqualTo("42");
+			assertThat(indexQuery.getSeqNo()).isEqualTo(originalSeqNoPrimaryTerm.sequenceNumber());
+			assertThat(indexQuery.getPrimaryTerm()).isEqualTo(originalSeqNoPrimaryTerm.primaryTerm());
+		}
+
+		assertThat(results).hasSize(1);
+		assertThat(results.get(0).isSuccessful()).isTrue();
+		assertThat(results.get(0).context()).isEqualTo("context");
+		final var savedEntity = (SampleEntity) Objects.requireNonNull(indexQuery.getObject());
+		final var newSeqNoPrimaryTerm = Objects.requireNonNull(savedEntity.getSeqNoPrimaryTerm());
+		assertThat(newSeqNoPrimaryTerm.sequenceNumber()).isGreaterThan(originalSeqNoPrimaryTerm.sequenceNumber());
+		assertThat(afterSaveSeqNoPrimaryTerms).containsExactly(newSeqNoPrimaryTerm);
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
