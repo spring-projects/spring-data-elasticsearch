@@ -39,6 +39,7 @@ import co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
+import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetOperation;
@@ -827,6 +828,28 @@ class RequestConverter extends AbstractQueryProcessor {
 		}
 
 		return builder.build();
+	}
+
+	/**
+	 * Creates a delete {@link BulkOperation}.
+	 *
+	 * @param id the id of the document to delete
+	 * @param routing the routing, may be {@literal null}
+	 * @param indexCoordinates the index of the document
+	 * @return the bulk operation
+	 * @since 6.2
+	 */
+	BulkOperation bulkDeleteOperation(String id, @Nullable String routing, IndexCoordinates indexCoordinates) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
+
+		final var builder = new DeleteOperation.Builder() //
+				.id(id) //
+				.index(indexCoordinates.getIndexName());
+		getRouting(routing).ifPresent(builder::routing);
+
+		return new BulkOperation.Builder().delete(builder.build()).build();
 	}
 
 	public GetRequest documentGetRequest(String id, @Nullable String routing, IndexCoordinates indexCoordinates) {
