@@ -365,7 +365,8 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	private Flux<BulkResponseItem> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 
-		final var bulkRequests = requestConverter.documentBulkRequests(queries, bulkOptions, index, getRefreshPolicy());
+		final var bulkRequests = requestConverter.documentBulkRequests(queries, bulkOptions, getBulkOptions(), index,
+				getRefreshPolicy());
 
 		// the requests are sent one after the other; a failing request stops the processing, item failures are
 		// collected and reported together after all requests have been sent. Successful requests are not rolled back.

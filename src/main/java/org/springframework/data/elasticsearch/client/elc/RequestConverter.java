@@ -776,22 +776,26 @@ class RequestConverter extends AbstractQueryProcessor {
 	 *
 	 * @param queries the queries, {@link IndexQuery} or {@link UpdateQuery} instances
 	 * @param bulkOptions the options to apply
+	 * @param defaultBulkOptions the template default, its limits are used if {@code bulkOptions} does not set them
 	 * @param indexCoordinates the index to use if a query does not define one
 	 * @param refreshPolicy the default refresh policy
 	 * @return the bulk requests, never empty
 	 * @since 6.2
 	 */
-	List<BulkRequest> documentBulkRequests(List<?> queries, BulkOptions bulkOptions, IndexCoordinates indexCoordinates,
-			@Nullable RefreshPolicy refreshPolicy) {
+	List<BulkRequest> documentBulkRequests(List<?> queries, BulkOptions bulkOptions, BulkOptions defaultBulkOptions,
+			IndexCoordinates indexCoordinates, @Nullable RefreshPolicy refreshPolicy) {
 
 		final var operations = queries.stream() //
 				.map(query -> bulkOperation(query, indexCoordinates)) //
 				.toList();
 
-		// null means "not set": no limit
-		final var maxOperations = Objects.requireNonNullElse(bulkOptions.getMaxOperations(),
+		// null means "not set": fall back to the template default, then to no limit
+		final var maxOperations = Objects.requireNonNullElse(
+				bulkOptions.getMaxOperations() != null ? bulkOptions.getMaxOperations() : defaultBulkOptions.getMaxOperations(),
 				BulkRequestSplitter.NO_MAX_OPERATIONS);
-		final var maxSize = Objects.requireNonNullElse(bulkOptions.getMaxSize(), BulkRequestSplitter.NO_MAX_SIZE);
+		final var maxSize = Objects.requireNonNullElse(
+				bulkOptions.getMaxSize() != null ? bulkOptions.getMaxSize() : defaultBulkOptions.getMaxSize(),
+				BulkRequestSplitter.NO_MAX_SIZE);
 		final var batches = new BulkRequestSplitter(jsonpMapper).split(operations, maxOperations, maxSize);
 
 		final var bulkRequests = new ArrayList<BulkRequest>(batches.size());
