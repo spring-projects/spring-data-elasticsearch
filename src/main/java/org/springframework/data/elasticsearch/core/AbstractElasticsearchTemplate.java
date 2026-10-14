@@ -79,6 +79,7 @@ import org.springframework.util.StringUtils;
  * @author Steven Pearce
  * @author Anton Naydenov
  * @author Haibo Liu
+ * @author Ralph Ursprung
  */
 public abstract class AbstractElasticsearchTemplate implements ElasticsearchOperations, ApplicationContextAware {
 
@@ -88,6 +89,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Nullable protected RefreshPolicy refreshPolicy;
 	protected RoutingResolver routingResolver;
 	protected ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
+	private BulkOptions bulkOptions = BulkOptions.defaultOptions();
 
 	public AbstractElasticsearchTemplate() {
 		this(null);
@@ -120,6 +122,7 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 
 		copy.setRoutingResolver(routingResolver);
 		copy.setRefreshPolicy(refreshPolicy);
+		copy.setBulkOptions(bulkOptions);
 		copy.setObservationRegistry(observationRegistry);
 		customizeCopy(copy);
 
@@ -174,6 +177,29 @@ public abstract class AbstractElasticsearchTemplate implements ElasticsearchOper
 	@Nullable
 	public RefreshPolicy getRefreshPolicy() {
 		return refreshPolicy;
+	}
+
+	/**
+	 * Set the default {@link BulkOptions} of this template. Currently only the limits
+	 * ({@link BulkOptions#getMaxOperations()} and {@link BulkOptions#getMaxSize()}) are used: they apply to every bulk
+	 * operation, including {@code save(Iterable)}, unless the {@link BulkOptions} passed to the call set their own value.
+	 *
+	 * @param bulkOptions must not be {@literal null}.
+	 * @since 6.2
+	 */
+	public void setBulkOptions(BulkOptions bulkOptions) {
+
+		Assert.notNull(bulkOptions, "bulkOptions must not be null");
+
+		this.bulkOptions = bulkOptions;
+	}
+
+	/**
+	 * @return the default {@link BulkOptions} of this template, never {@literal null}.
+	 * @since 6.2
+	 */
+	public BulkOptions getBulkOptions() {
+		return bulkOptions;
 	}
 
 	/**
