@@ -39,6 +39,7 @@ import co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.bulk.CreateOperation;
+import co.elastic.clients.elasticsearch.core.bulk.DeleteOperation;
 import co.elastic.clients.elasticsearch.core.bulk.IndexOperation;
 import co.elastic.clients.elasticsearch.core.bulk.UpdateOperation;
 import co.elastic.clients.elasticsearch.core.mget.MultiGetOperation;
@@ -115,6 +116,7 @@ import org.springframework.util.StringUtils;
  * @author scoobyzhang
  * @author Haibo Liu
  * @author Steven Pearce
+ * @author Ralph Ursprung
  * @since 4.4
  */
 class RequestConverter extends AbstractQueryProcessor {
@@ -613,8 +615,7 @@ class RequestConverter extends AbstractQueryProcessor {
 	 */
 
 	@SuppressWarnings("DuplicatedCode")
-	private IndexOperation<?> bulkIndexOperation(IndexQuery query, IndexCoordinates indexCoordinates,
-			@Nullable RefreshPolicy refreshPolicy) {
+	private IndexOperation<?> bulkIndexOperation(IndexQuery query, IndexCoordinates indexCoordinates) {
 
 		IndexOperation.Builder<Object> builder = new IndexOperation.Builder<>();
 
@@ -656,8 +657,7 @@ class RequestConverter extends AbstractQueryProcessor {
 	 */
 
 	@SuppressWarnings("DuplicatedCode")
-	private CreateOperation<?> bulkCreateOperation(IndexQuery query, IndexCoordinates indexCoordinates,
-			@Nullable RefreshPolicy refreshPolicy) {
+	private CreateOperation<?> bulkCreateOperation(IndexQuery query, IndexCoordinates indexCoordinates) {
 
 		CreateOperation.Builder<Object> builder = new CreateOperation.Builder<>();
 
@@ -693,8 +693,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		return builder.build();
 	}
 
-	private UpdateOperation<?, ?> bulkUpdateOperation(UpdateQuery query, IndexCoordinates index,
-			@Nullable RefreshPolicy refreshPolicy) {
+	private UpdateOperation<?, ?> bulkUpdateOperation(UpdateQuery query, IndexCoordinates index) {
 
 		UpdateOperation.Builder<Object, Object> uob = new UpdateOperation.Builder<>();
 		String indexName = query.getIndexName() != null ? query.getIndexName() : index.getIndexName();
@@ -761,7 +760,26 @@ class RequestConverter extends AbstractQueryProcessor {
 	public BulkRequest documentBulkRequest(List<?> queries, BulkOptions bulkOptions, IndexCoordinates indexCoordinates,
 			@Nullable RefreshPolicy refreshPolicy) {
 
-		BulkRequest.Builder builder = new BulkRequest.Builder();
+		final var operations = queries.stream() //
+				.map(query -> bulkOperation(query, indexCoordinates)) //
+				.toList();
+
+		return bulkRequestSettings(bulkOptions, refreshPolicy) //
+				.operations(operations) //
+				.build();
+	}
+
+	/**
+	 * Creates a {@link BulkRequest.Builder} with the request-level settings of a bulk request but without any
+	 * operations.
+	 *
+	 * @param bulkOptions the options to apply, a refresh policy set here takes precedence over {@code refreshPolicy}
+	 * @param refreshPolicy the default refresh policy
+	 * @return the builder, operations must still be added before building the request
+	 */
+	BulkRequest.Builder bulkRequestSettings(BulkOptions bulkOptions, @Nullable RefreshPolicy refreshPolicy) {
+
+		final var builder = new BulkRequest.Builder();
 
 		if (bulkOptions.getTimeout() != null) {
 			builder.timeout(tb -> tb.time(Long.valueOf(bulkOptions.getTimeout().toMillis()).toString() + "ms"));
@@ -782,24 +800,56 @@ class RequestConverter extends AbstractQueryProcessor {
 
 		getRouting(bulkOptions.getRoutingId()).ifPresent(builder::routing);
 
-		List<BulkOperation> operations = queries.stream().map(query -> {
-			BulkOperation.Builder ob = new BulkOperation.Builder();
-			if (query instanceof IndexQuery indexQuery) {
+		return builder;
+	}
 
-				if (indexQuery.getOpType() == IndexQuery.OpType.CREATE) {
-					ob.create(bulkCreateOperation(indexQuery, indexCoordinates, refreshPolicy));
-				} else {
-					ob.index(bulkIndexOperation(indexQuery, indexCoordinates, refreshPolicy));
-				}
-			} else if (query instanceof UpdateQuery updateQuery) {
-				ob.update(bulkUpdateOperation(updateQuery, indexCoordinates, refreshPolicy));
+	/**
+	 * Converts a single query into a {@link BulkOperation}.
+	 *
+	 * @param query an {@link IndexQuery} or an {@link UpdateQuery}
+	 * @param indexCoordinates the index to use if the query does not define one
+	 * @return the bulk operation
+	 * @throws IllegalArgumentException if the query type is not supported
+	 */
+	BulkOperation bulkOperation(Object query, IndexCoordinates indexCoordinates) {
+
+		final var builder = new BulkOperation.Builder();
+
+		if (query instanceof IndexQuery indexQuery) {
+			if (indexQuery.getOpType() == IndexQuery.OpType.CREATE) {
+				builder.create(bulkCreateOperation(indexQuery, indexCoordinates));
+			} else {
+				builder.index(bulkIndexOperation(indexQuery, indexCoordinates));
 			}
-			return ob.build();
-		}).collect(Collectors.toList());
-
-		builder.operations(operations);
+		} else if (query instanceof UpdateQuery updateQuery) {
+			builder.update(bulkUpdateOperation(updateQuery, indexCoordinates));
+		} else {
+			throw new IllegalArgumentException("Unsupported query type for bulk operation: " + query.getClass().getName());
+		}
 
 		return builder.build();
+	}
+
+	/**
+	 * Creates a delete {@link BulkOperation}.
+	 *
+	 * @param id the id of the document to delete
+	 * @param routing the routing, may be {@literal null}
+	 * @param indexCoordinates the index of the document
+	 * @return the bulk operation
+	 * @since 6.2
+	 */
+	BulkOperation bulkDeleteOperation(String id, @Nullable String routing, IndexCoordinates indexCoordinates) {
+
+		Assert.notNull(id, "id must not be null");
+		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
+
+		final var builder = new DeleteOperation.Builder() //
+				.id(id) //
+				.index(indexCoordinates.getIndexName());
+		getRouting(routing).ifPresent(builder::routing);
+
+		return new BulkOperation.Builder().delete(builder.build()).build();
 	}
 
 	public GetRequest documentGetRequest(String id, @Nullable String routing, IndexCoordinates indexCoordinates) {

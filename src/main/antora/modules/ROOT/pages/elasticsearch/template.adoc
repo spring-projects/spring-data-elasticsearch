@@ -73,6 +73,87 @@ The id is read from the returned entity, as it might have been null in the `pers
 
 To see the full possibilities of `ElasticsearchOperations` please refer to the API documentation.
 
+[[elasticsearch.operations.bulkingester]]
+== Bulk Ingester
+
+`bulkIndex` and `bulkUpdate` send a list of operations that is known in advance in one request and wait for the result.
+When operations are produced one by one, for example while reading a file or consuming messages, a `BulkIngester` can be used instead.
+It collects index, update and delete operations and sends them in bulk requests when
+
+* the maximum number of operations is reached (default 1000),
+* the maximum size of the operations is reached (default 5 MiB),
+* the optional flush interval has passed,
+* `flush()` is called or
+* the ingester is closed.
+
+An ingester is created with one of the `ElasticsearchOperations.bulkIngester(...)` methods and configured with `BulkIngesterOptions`.
+The outcome of every request is reported to a mandatory `BulkIngesterListener`.
+Each operation can have a context object that is passed back to the listener together with the result of the operation.
+
+.BulkIngester usage
+====
+[source,java]
+----
+BulkIngesterListener<String> listener = new BulkIngesterListener<>() {
+
+  @Override
+  public void afterBulk(long executionId, List<BulkOperationResult<String>> results) {    <.>
+    results.stream()
+      .filter(result -> !result.isSuccessful())
+      .forEach(result -> LOG.warn("{} failed: {}", result.context(), result.failure()));
+  }
+
+  @Override
+  public void afterBulk(long executionId, List<String> contexts, RuntimeException failure) { <.>
+    LOG.error("request with {} operations failed", contexts.size(), failure);
+  }
+};
+
+BulkIngesterOptions options = BulkIngesterOptions.builder()
+  .withMaxOperations(500)
+  .withMaxConcurrentRequests(2)
+  .withFlushInterval(Duration.ofSeconds(5))
+  .withBulkOptions(BulkOptions.builder().withPipeline("my-pipeline").build())       <.>
+  .build();
+
+try (BulkIngester<String> ingester = operations.bulkIngester(options, Person.class, listener)) { <.>
+  for (Person person : persons) {
+    ingester.add(new IndexQueryBuilder().withObject(person).build(), person.getName());
+  }
+  ingester.add(UpdateQuery.builder("42").withDocument(document).build(), "update 42");
+  ingester.addDelete("43", null, "delete 43");
+}                                                                                    <.>
+----
+
+<.> Called with the results of a request, in the order in which the operations were added. A result can be successful or failed.
+<.> Called when a request failed as a whole, for example because the cluster could not be reached. The failure is translated to a Spring `DataAccessException` where possible.
+<.> Request-wide settings like timeout, refresh policy, pipeline or routing are applied to every request.
+<.> The index is taken from the entity class; operations that define their own index use that one.
+<.> Closing the ingester sends the remaining operations and waits until all requests have completed and the listener has been called. It does not close the client.
+====
+
+The ingester integrates with Spring Data Elasticsearch in the same way as `bulkIndex`:
+
+* Auditing and the `BeforeConvertCallback` are run on the calling thread when an index operation is added.
+* For successful index and create operations, the id, version, sequence number and primary term are written back to the entity and the `AfterSaveCallback` is run.
+This happens on a thread of the ingester after the response was received.
+* Each request is recorded as one `bulk` observation with the number of operations as batch size.
+* The refresh policy of the `ElasticsearchOperations` instance is applied to every request unless the `BulkOptions` define one.
+Using `RefreshPolicy.IMMEDIATE` therefore refreshes the index after every request.
+
+Things to keep in mind:
+
+* The listener and the `AfterSaveCallback` are called on threads of the ingester.
+When more than one concurrent request is allowed, they may be called concurrently and must be thread-safe.
+They must not call `add`, `flush` or `close` on the ingester; doing so throws an `IllegalStateException`.
+Exceptions thrown by the listener are logged and otherwise ignored.
+* Adding an operation or calling `flush()` blocks when the maximum number of concurrent requests is in flight.
+An ingester must therefore not be used on threads that must not block, like reactive event loops.
+* A request is sent after the operation that reaches the maximum size was added, so a request can be larger than the maximum size by up to one operation.
+* Failed operations and failed requests are not retried.
+* Always close the ingester, for example with try-with-resources, otherwise pending operations are lost and the threads of the ingester are not released.
+* `bulkIngester` is only available for client implementations that support it, the Elasticsearch client implementation does.
+Other implementations throw an `UnsupportedClientOperationException`.
 
 [[elasticsearch.operations.searchresulttypes]]
 == Search Result Types
