@@ -76,6 +76,7 @@ import io.micrometer.observation.ObservationRegistry;
  * @author Illia Ulianov
  * @author Haibo Liu
  * @author maryantocinn
+ * @author Ralph Ursprung
  * @since 4.4
  */
 public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
@@ -397,9 +398,28 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public List<IndexedObjectInformation> doBulkOperation(List<?> queries, BulkOptions bulkOptions,
 			IndexCoordinates index) {
 
-		BulkRequest bulkRequest = requestConverter.documentBulkRequest(queries, bulkOptions, index, refreshPolicy);
-		BulkResponse bulkResponse = execute(client -> client.bulk(bulkRequest));
-		List<IndexedObjectInformation> indexedObjectInformationList = checkForBulkOperationFailure(bulkResponse);
+		final var bulkRequests = requestConverter.documentBulkRequests(queries, bulkOptions, index, refreshPolicy);
+
+		// the requests are sent one after the other; a failing request stops the processing, item failures are
+		// collected and reported together after all requests have been sent. Successful requests are not rolled back.
+		final var indexedObjectInformationList = new ArrayList<IndexedObjectInformation>(queries.size());
+		final var failedDocuments = new HashMap<String, BulkFailureException.FailureDetails>();
+		for (final var bulkRequest : bulkRequests) {
+			final var bulkResponse = execute(client -> client.bulk(bulkRequest));
+			try {
+				indexedObjectInformationList.addAll(checkForBulkOperationFailure(bulkResponse));
+			} catch (BulkFailureException e) {
+				failedDocuments.putAll(e.getFailedDocuments());
+			}
+		}
+
+		if (!failedDocuments.isEmpty()) {
+			throw new BulkFailureException(
+					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
+							+ failedDocuments + ']',
+					failedDocuments);
+		}
+
 		updateIndexedObjectsWithQueries(queries, indexedObjectInformationList);
 		return indexedObjectInformationList;
 	}
