@@ -38,6 +38,8 @@ import org.springframework.data.elasticsearch.core.query.UpdateQuery;
  * @param <C> the type of the context that can be passed when adding an operation
  * @author Ralph Ursprung
  * @since 6.2
+ * @see org.springframework.data.elasticsearch.core.ElasticsearchOperations#bulkIngester(BulkIngesterOptions,
+ *      org.springframework.data.elasticsearch.core.mapping.IndexCoordinates, BulkIngesterListener)
  */
 public interface BulkIngester<C> extends AutoCloseable {
 
