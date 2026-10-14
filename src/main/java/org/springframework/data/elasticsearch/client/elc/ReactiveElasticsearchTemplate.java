@@ -35,7 +35,6 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -81,6 +80,7 @@ import org.springframework.util.StringUtils;
  * @author Illia Ulianov
  * @author Junghoon Ban
  * @author maryantocinn
+ * @author Ralph Ursprung
  * @since 4.4
  */
 public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearchTemplate {
@@ -365,32 +365,43 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	private Flux<BulkResponseItem> doBulkOperation(List<?> queries, BulkOptions bulkOptions, IndexCoordinates index) {
 
-		BulkRequest bulkRequest = requestConverter.documentBulkRequest(queries, bulkOptions, index, getRefreshPolicy());
-		return client.bulk(bulkRequest)
-				.onErrorMap(e -> new UncategorizedElasticsearchException("Error executing bulk request", e))
-				.flatMap(this::checkForBulkOperationFailure) //
-				.flatMapMany(response -> Flux.fromIterable(response.items()));
+		final var bulkRequests = requestConverter.documentBulkRequests(queries, bulkOptions, index, getRefreshPolicy());
 
+		// the requests are sent one after the other; a failing request stops the processing, item failures are
+		// collected and reported together after all requests have been sent. Successful requests are not rolled back.
+		return Flux.fromIterable(bulkRequests) //
+				.concatMap(bulkRequest -> client.bulk(bulkRequest) //
+						.onErrorMap(e -> new UncategorizedElasticsearchException("Error executing bulk request", e))) //
+				.collectList() //
+				.flatMap(this::checkForBulkOperationFailure) //
+				.flatMapMany(responses -> Flux.fromIterable(responses) //
+						.concatMap(response -> Flux.fromIterable(response.items())));
 	}
 
-	private Mono<BulkResponse> checkForBulkOperationFailure(BulkResponse bulkResponse) {
+	private Mono<List<BulkResponse>> checkForBulkOperationFailure(List<BulkResponse> bulkResponses) {
 
-		if (bulkResponse.errors()) {
-			Map<String, BulkFailureException.FailureDetails> failedDocuments = new HashMap<>();
+		final var failedDocuments = new HashMap<String, BulkFailureException.FailureDetails>();
 
-			for (BulkResponseItem item : bulkResponse.items()) {
+		for (final var bulkResponse : bulkResponses) {
+			if (bulkResponse.errors()) {
+				for (BulkResponseItem item : bulkResponse.items()) {
 
-				if (item.error() != null && item.id() != null) {
-					failedDocuments.put(item.id(), new BulkFailureException.FailureDetails(item.status(), item.error().reason()));
+					if (item.error() != null && item.id() != null) {
+						failedDocuments.put(item.id(),
+								new BulkFailureException.FailureDetails(item.status(), item.error().reason()));
+					}
 				}
 			}
+		}
+
+		if (!failedDocuments.isEmpty()) {
 			BulkFailureException exception = new BulkFailureException(
 					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
 							+ failedDocuments + ']',
 					failedDocuments);
 			return Mono.error(exception);
 		} else {
-			return Mono.just(bulkResponse);
+			return Mono.just(bulkResponses);
 		}
 	}
 
