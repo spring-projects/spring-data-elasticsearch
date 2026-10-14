@@ -44,6 +44,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  * available here but deprecated.
  *
  * @author Peter-Josef Meisch
+ * @author Ralph Ursprung
  * @since 4.4
  * @deprecated since 6.0, use {@link ElasticsearchConfiguration}
  */
@@ -114,6 +115,7 @@ public abstract class ElasticsearchLegacyRestClientConfiguration extends Elastic
 
 		ElasticsearchTemplate template = new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
 		template.setRefreshPolicy(refreshPolicy());
+		template.setBulkOptions(bulkOptions());
 
 		return template;
 	}

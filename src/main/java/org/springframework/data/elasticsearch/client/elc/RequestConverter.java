@@ -776,20 +776,23 @@ class RequestConverter extends AbstractQueryProcessor {
 	 *
 	 * @param queries the queries, {@link IndexQuery} or {@link UpdateQuery} instances
 	 * @param bulkOptions the options to apply
+	 * @param defaultBulkOptions the template default, its limits are used if {@code bulkOptions} does not set them
 	 * @param indexCoordinates the index to use if a query does not define one
 	 * @param refreshPolicy the default refresh policy
 	 * @return the bulk requests, never empty
 	 * @since 6.2
 	 */
-	List<BulkRequest> documentBulkRequests(List<?> queries, BulkOptions bulkOptions, IndexCoordinates indexCoordinates,
-			@Nullable RefreshPolicy refreshPolicy) {
+	List<BulkRequest> documentBulkRequests(List<?> queries, BulkOptions bulkOptions, BulkOptions defaultBulkOptions,
+			IndexCoordinates indexCoordinates, @Nullable RefreshPolicy refreshPolicy) {
 
 		final var operations = queries.stream() //
 				.map(query -> bulkOperation(query, indexCoordinates)) //
 				.toList();
 
-		final var batches = new BulkRequestSplitter(jsonpMapper).split(operations, bulkOptions.getMaxOperations(),
-				bulkOptions.getMaxSize());
+		final var maxOperations = bulkOptions.getMaxOperations() != null ? bulkOptions.getMaxOperations()
+				: defaultBulkOptions.getMaxOperations();
+		final var maxSize = bulkOptions.getMaxSize() != null ? bulkOptions.getMaxSize() : defaultBulkOptions.getMaxSize();
+		final var batches = new BulkRequestSplitter(jsonpMapper).split(operations, maxOperations, maxSize);
 
 		final var bulkRequests = new ArrayList<BulkRequest>(batches.size());
 		for (var i = 0; i < batches.size(); i++) {

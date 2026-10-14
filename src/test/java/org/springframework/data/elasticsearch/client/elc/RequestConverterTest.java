@@ -240,7 +240,8 @@ class RequestConverterTest {
 	void shouldCreateOneBulkRequestIfNoLimitsAreSet() {
 
 		final var bulkRequests = requestConverter.documentBulkRequests(sourceIndexQueries(5),
-				BulkOptions.defaultOptions(), IndexCoordinates.of("foo"), RefreshPolicy.IMMEDIATE);
+				BulkOptions.defaultOptions(), BulkOptions.defaultOptions(), IndexCoordinates.of("foo"),
+				RefreshPolicy.IMMEDIATE);
 
 		assertThat(bulkRequests).hasSize(1);
 		assertThat(bulkRequests.get(0).operations()).hasSize(5);
@@ -258,7 +259,7 @@ class RequestConverterTest {
 				.build();
 
 		final var bulkRequests = requestConverter.documentBulkRequests(sourceIndexQueries(5), bulkOptions,
-				IndexCoordinates.of("foo"), RefreshPolicy.IMMEDIATE);
+				BulkOptions.defaultOptions(), IndexCoordinates.of("foo"), RefreshPolicy.IMMEDIATE);
 
 		assertThat(bulkRequests).hasSize(3);
 		assertThat(bulkRequests) //
@@ -268,6 +269,21 @@ class RequestConverterTest {
 		assertThat(bulkRequests).extracting(BulkRequest::refresh) //
 				.containsExactly(Refresh.False, Refresh.False, Refresh.WaitFor);
 		assertThat(bulkRequests).extracting(BulkRequest::pipeline).containsOnly("pipeline");
+	}
+
+	@Test // #3345
+	@DisplayName("should use the limits of the default bulk options if not set in the options")
+	void shouldUseTheLimitsOfTheDefaultBulkOptionsIfNotSetInTheOptions() {
+
+		final var defaultBulkOptions = BulkOptions.builder().withMaxOperations(2).build();
+
+		final var withDefaultLimit = requestConverter.documentBulkRequests(sourceIndexQueries(5),
+				BulkOptions.defaultOptions(), defaultBulkOptions, IndexCoordinates.of("foo"), null);
+		final var withOwnLimit = requestConverter.documentBulkRequests(sourceIndexQueries(5),
+				BulkOptions.builder().withMaxOperations(4).build(), defaultBulkOptions, IndexCoordinates.of("foo"), null);
+
+		assertThat(withDefaultLimit).extracting(bulkRequest -> bulkRequest.operations().size()).containsExactly(2, 2, 1);
+		assertThat(withOwnLimit).extracting(bulkRequest -> bulkRequest.operations().size()).containsExactly(4, 1);
 	}
 
 	private static List<IndexQuery> sourceIndexQueries(int count) {

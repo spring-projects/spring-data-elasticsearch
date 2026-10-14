@@ -18,29 +18,42 @@ package org.springframework.data.elasticsearch.core;
 import static org.assertj.core.api.Assertions.*;
 import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.FunctionBoostMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.FunctionScoreMode;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 import co.elastic.clients.json.JsonData;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.Query;
@@ -54,6 +67,7 @@ import org.springframework.test.context.ContextConfiguration;
 /**
  * @author Farid Faoudi
  * @author Sascha Woo
+ * @author Ralph Ursprung
  * @since 4.4
  */
 @ContextConfiguration(classes = { ElasticsearchELCIntegrationTests.Config.class })
@@ -68,6 +82,8 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 			return new IndexNameProvider("integration");
 		}
 	}
+
+	@Autowired private ElasticsearchClient elasticsearchClient;
 
 	@Test // #2263
 	public void shouldSortResultsBySortOptions() {
@@ -89,6 +105,47 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 		assertThat(searchHits.getSearchHits()) //
 				.satisfiesExactly(e -> assertThat(e.getId()).isEqualTo("1"), e -> assertThat(e.getId()).isEqualTo("3"),
 						e -> assertThat(e.getId()).isEqualTo("2"));
+	}
+
+	@Test // #3345
+	@DisplayName("should apply template default bulk options to save and refresh only with the last request")
+	void shouldApplyTemplateDefaultBulkOptionsToSaveAndRefreshOnlyWithTheLastRequest() {
+
+		final var client = Mockito.spy(elasticsearchClient);
+		final var template = new ElasticsearchTemplate(client, operations.getElasticsearchConverter());
+		template.setRefreshPolicy(RefreshPolicy.IMMEDIATE);
+		template.setBulkOptions(BulkOptions.builder().withMaxOperations(2).build());
+		final var entities = IntStream.range(0, 5) //
+				.mapToObj(i -> SampleEntity.builder().message("message " + i).build()) //
+				.toList();
+
+		final var saved = template.save(entities);
+
+		assertThat(saved).extracting(SampleEntity::getId).doesNotContainNull().doesNotHaveDuplicates();
+		final var captor = ArgumentCaptor.forClass(BulkRequest.class);
+		try {
+			verify(client, times(3)).bulk(captor.capture());
+		} catch (IOException e) {
+			throw new UncheckedIOException(e);
+		}
+		assertThat(captor.getAllValues()).extracting(bulkRequest -> bulkRequest.operations().size()) //
+				.containsExactly(2, 2, 1);
+		assertThat(captor.getAllValues()).extracting(BulkRequest::refresh) //
+				.containsExactly(Refresh.False, Refresh.False, Refresh.True);
+		assertThat(operations.count(operations.matchAllQuery(), SampleEntity.class)).isEqualTo(5);
+	}
+
+	@Test // #3345
+	@DisplayName("should keep template default bulk options in copies")
+	void shouldKeepTemplateDefaultBulkOptionsInCopies() {
+
+		final var bulkOptions = BulkOptions.builder().withMaxSize(1024L).build();
+		final var template = new ElasticsearchTemplate(elasticsearchClient, operations.getElasticsearchConverter());
+		template.setBulkOptions(bulkOptions);
+
+		final var copy = (ElasticsearchTemplate) template.withRefreshPolicy(RefreshPolicy.NONE);
+
+		assertThat(copy.getBulkOptions()).isSameAs(bulkOptions);
 	}
 
 	@Override
