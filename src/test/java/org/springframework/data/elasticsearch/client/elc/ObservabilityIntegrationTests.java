@@ -20,6 +20,8 @@ import static org.assertj.core.api.Assertions.*;
 import io.micrometer.observation.tck.TestObservationRegistry;
 import io.micrometer.observation.tck.TestObservationRegistryAssert;
 
+import java.util.List;
+
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -35,7 +37,11 @@ import org.springframework.data.elasticsearch.annotations.Field;
 import org.springframework.data.elasticsearch.annotations.FieldType;
 import org.springframework.data.elasticsearch.core.ElasticsearchOperations;
 import org.springframework.data.elasticsearch.core.SearchHits;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterListener;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterOptions;
+import org.springframework.data.elasticsearch.core.bulk.BulkOperationResult;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -46,6 +52,7 @@ import org.springframework.test.context.ContextConfiguration;
  * operations when a {@link TestObservationRegistry} is wired into the application context.
  *
  * @author maryantocinn
+ * @author Ralph Ursprung
  * @since 6.1
  */
 @SpringIntegrationTest
@@ -136,6 +143,42 @@ class ObservabilityIntegrationTests {
 				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command")
 				.that()
 				.hasLowCardinalityKeyValue("spring.data.collection", indexNameProvider.indexName());
+	}
+
+	@Test // #2071
+	@DisplayName("should record one bulk observation per bulk ingester request")
+	void shouldRecordOneBulkObservationPerBulkIngesterRequest() {
+
+		final var options = BulkIngesterOptions.builder().withMaxOperations(2).build();
+		try (final var ingester = operations.bulkIngester(options, SampleEntity.class, new NoOpListener())) {
+			for (var i = 1; i <= 3; i++) {
+				final var entity = new SampleEntity();
+				entity.setId(String.valueOf(i));
+				entity.setMessage("hello");
+				ingester.add(new IndexQueryBuilder().withId(entity.getId()).withObject(entity).build());
+			}
+		}
+
+		TestObservationRegistryAssert.assertThat(observationRegistry)
+				.hasNumberOfObservationsWithNameEqualTo("spring.data.elasticsearch.command", 2)
+				.forAllObservationsWithNameEqualTo("spring.data.elasticsearch.command", observation -> observation
+						.hasLowCardinalityKeyValue("spring.data.operation", "bulk")
+						.hasLowCardinalityKeyValue("spring.data.collection", indexNameProvider.indexName()))
+				.hasAnObservationWithAKeyValue("spring.data.batch.size", "2")
+				.hasAnObservationWithAKeyValue("spring.data.batch.size", "1")
+				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command")
+				.that()
+				.hasBeenStopped();
+	}
+
+	static class NoOpListener implements BulkIngesterListener<Object> {
+
+		@Override
+		public void afterBulk(final long executionId, final List<BulkOperationResult<Object>> results) {}
+
+		@Override
+		public void afterBulk(final long executionId, final List<@Nullable Object> contexts,
+				final RuntimeException failure) {}
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
