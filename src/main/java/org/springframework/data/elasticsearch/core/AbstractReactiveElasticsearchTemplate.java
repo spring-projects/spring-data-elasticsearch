@@ -65,6 +65,7 @@ import org.springframework.util.Assert;
  * independent of the used client.
  *
  * @author Peter-Josef Meisch
+ * @author chuuminggg
  * @since 4.4
  */
 abstract public class AbstractReactiveElasticsearchTemplate
@@ -327,7 +328,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		IndexQuery query = new IndexQuery();
 
 		if (id != null) {
-			query.setId(id.toString());
+			query.setId(converter.convertId(id));
 		}
 		query.setObject(value);
 
