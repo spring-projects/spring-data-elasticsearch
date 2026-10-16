@@ -1,4 +1,4 @@
-Spring Data Elasticsearch 6.0.7 (2025.1.7)
+Spring Data Elasticsearch 6.0.8 (2025.1.8)
 Copyright (c) [2013-2026] Pivotal Software, Inc.
 
 This product is licensed to you under the Apache License, Version 2.0 (the "License").
