@@ -24,7 +24,7 @@ import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
 
 /**
- * @author chuuminggg
+ * @author Minju Kim
  */
 @ContextConfiguration(classes = { ReactiveCustomIdConversionRepositoryELCIntegrationTests.Config.class })
 public class ReactiveCustomIdConversionRepositoryELCIntegrationTests

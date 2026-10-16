@@ -31,7 +31,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomCo
  * Entity with an id of a custom type whose registered {@link Converter} to String produces a different value than its
  * {@code toString()} method.
  *
- * @author chuuminggg
+ * @author Minju Kim
  */
 @Document(indexName = "#{@indexNameProvider.indexName()}")
 public class Product {

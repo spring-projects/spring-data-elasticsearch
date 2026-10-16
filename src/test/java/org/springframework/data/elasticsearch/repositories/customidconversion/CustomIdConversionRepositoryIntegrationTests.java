@@ -33,7 +33,7 @@ import org.springframework.data.elasticsearch.utils.IndexNameProvider;
  * Imperative counterpart of {@link ReactiveCustomIdConversionRepositoryIntegrationTests}: entities with an id that is
  * converted by a custom converter can be found after saving them.
  *
- * @author chuuminggg
+ * @author Minju Kim
  */
 @SpringIntegrationTest
 abstract class CustomIdConversionRepositoryIntegrationTests {

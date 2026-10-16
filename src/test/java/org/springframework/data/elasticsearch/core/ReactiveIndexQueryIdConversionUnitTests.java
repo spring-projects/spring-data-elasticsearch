@@ -40,7 +40,7 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
  * Reproduces that the reactive template does not use the registered id conversion when building the
  * {@link IndexQuery} for a save operation, whereas reads and deletes do.
  *
- * @author chuuminggg
+ * @author Minju Kim
  */
 class ReactiveIndexQueryIdConversionUnitTests {
 

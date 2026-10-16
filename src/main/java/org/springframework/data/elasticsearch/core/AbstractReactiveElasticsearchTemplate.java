@@ -65,7 +65,7 @@ import org.springframework.util.Assert;
  * independent of the used client.
  *
  * @author Peter-Josef Meisch
- * @author chuuminggg
+ * @author Minju Kim
  * @since 4.4
  */
 abstract public class AbstractReactiveElasticsearchTemplate

@@ -35,7 +35,7 @@ import org.springframework.data.elasticsearch.utils.IndexNameProvider;
  * Reactive version of {@link CustomIdConversionRepositoryIntegrationTests}. The reactive save operation must use the
  * same id conversion as the reactive read and delete operations.
  *
- * @author chuuminggg
+ * @author Minju Kim
  */
 @SpringIntegrationTest
 abstract class ReactiveCustomIdConversionRepositoryIntegrationTests {
