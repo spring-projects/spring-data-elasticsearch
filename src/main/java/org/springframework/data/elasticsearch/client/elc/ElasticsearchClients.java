@@ -20,6 +20,7 @@ import static org.springframework.data.elasticsearch.client.elc.rest_client.Rest
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.json.jackson.Jackson3JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
@@ -41,6 +42,7 @@ import org.elasticsearch.client.RestClient;
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.support.VersionInfo;
+import org.springframework.data.util.Lazy;
 import org.springframework.util.Assert;
 
 /**
@@ -49,6 +51,7 @@ import org.springframework.util.Assert;
  * used from Elasticsearch 9 on.
  *
  * @author Peter-Josef Meisch
+ * @author Minju Kim
  * @since 4.4
  */
 @SuppressWarnings("unused")
@@ -60,7 +63,13 @@ public final class ElasticsearchClients {
 	public static final String IMPERATIVE_CLIENT = "imperative";
 	public static final String REACTIVE_CLIENT = "reactive";
 
-	private static final JsonpMapper DEFAULT_JSONP_MAPPER = new JacksonJsonpMapper();
+	/**
+	 * @deprecated since 6.2, only used by the deprecated methods that take a {@link RestClient}.
+	 */
+	// a lambda and not a method reference, so that Jackson 2 is not loaded before it is needed
+	@Deprecated(since = "6.2", forRemoval = true)
+	private static final Lazy<JsonpMapper> DEFAULT_JSONP_MAPPER = Lazy.of(() -> new JacksonJsonpMapper());
+	private static final Lazy<JsonpMapper> DEFAULT_JACKSON3_JSONP_MAPPER = Lazy.of(() -> new Jackson3JsonpMapper());
 
 	// region reactive client
 	/**
@@ -73,7 +82,7 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "clientConfiguration must not be null");
 
-		return createReactive(getRestClient(clientConfiguration), null, DEFAULT_JSONP_MAPPER);
+		return createReactive(getRestClient(clientConfiguration), null, DEFAULT_JACKSON3_JSONP_MAPPER.get());
 	}
 
 	/**
@@ -88,7 +97,8 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 
-		return createReactive(getRestClient(clientConfiguration), transportOptions, DEFAULT_JSONP_MAPPER);
+		return createReactive(getRestClient(clientConfiguration), transportOptions,
+				DEFAULT_JACKSON3_JSONP_MAPPER.get());
 	}
 
 	/**
@@ -117,7 +127,7 @@ public final class ElasticsearchClients {
 	 */
 	@Deprecated(since = "6.0", forRemoval = true)
 	public static ReactiveElasticsearchClient createReactive(RestClient restClient) {
-		return createReactive(restClient, null, DEFAULT_JSONP_MAPPER);
+		return createReactive(restClient, null, DEFAULT_JSONP_MAPPER.get());
 	}
 
 	/**
@@ -127,7 +137,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ReactiveElasticsearchClient}
 	 */
 	public static ReactiveElasticsearchClient createReactive(Rest5Client rest5Client) {
-		return createReactive(rest5Client, null, DEFAULT_JSONP_MAPPER);
+		return createReactive(rest5Client, null, DEFAULT_JACKSON3_JSONP_MAPPER.get());
 	}
 
 	/**
@@ -187,7 +197,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ElasticsearchClient}
 	 */
 	public static ElasticsearchClient createImperative(ClientConfiguration clientConfiguration) {
-		return createImperative(getRest5Client(clientConfiguration), null, DEFAULT_JSONP_MAPPER);
+		return createImperative(getRest5Client(clientConfiguration), null, DEFAULT_JACKSON3_JSONP_MAPPER.get());
 	}
 
 	/**
@@ -201,7 +211,8 @@ public final class ElasticsearchClients {
 	 */
 	public static ElasticsearchClient createImperative(ClientConfiguration clientConfiguration,
 			TransportOptions transportOptions) {
-		return createImperative(getRest5Client(clientConfiguration), transportOptions, DEFAULT_JSONP_MAPPER);
+		return createImperative(getRest5Client(clientConfiguration), transportOptions,
+				DEFAULT_JACKSON3_JSONP_MAPPER.get());
 	}
 
 	/**
@@ -213,7 +224,7 @@ public final class ElasticsearchClients {
 	 */
 	@Deprecated(since = "6.0", forRemoval = true)
 	public static ElasticsearchClient createImperative(RestClient restClient) {
-		return createImperative(restClient, null, DEFAULT_JSONP_MAPPER);
+		return createImperative(restClient, null, DEFAULT_JSONP_MAPPER.get());
 	}
 
 	/**
@@ -223,7 +234,7 @@ public final class ElasticsearchClients {
 	 * @return the {@link ElasticsearchClient}
 	 */
 	public static ElasticsearchClient createImperative(Rest5Client rest5Client) {
-		return createImperative(rest5Client, null, DEFAULT_JSONP_MAPPER);
+		return createImperative(rest5Client, null, DEFAULT_JACKSON3_JSONP_MAPPER.get());
 	}
 
 	/**
