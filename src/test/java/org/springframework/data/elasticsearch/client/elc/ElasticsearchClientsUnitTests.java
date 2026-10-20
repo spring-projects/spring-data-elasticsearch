@@ -41,9 +41,9 @@ import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clien
 class ElasticsearchClientsUnitTests {
 
 	@Test // #3351
-	@DisplayName("should create clients with a Jackson 3 mapper when Jackson 2 is not on the classpath")
+	@DisplayName("should create clients without an exception when Jackson 2 is not on the classpath")
 	@SuppressWarnings("unchecked")
-	void shouldCreateClientsWithJackson3MapperWhenJackson2IsNotOnTheClasspath() throws Exception {
+	void shouldCreateClientsWithoutExceptionWhenJackson2IsNotOnTheClasspath() throws Exception {
 
 		try (var classLoader = new Jackson2HidingClassLoader()) {
 
