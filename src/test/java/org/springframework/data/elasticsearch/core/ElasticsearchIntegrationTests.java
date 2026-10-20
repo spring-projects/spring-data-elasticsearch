@@ -37,6 +37,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.data.annotation.AccessType;
@@ -100,6 +101,7 @@ import org.springframework.data.util.StreamUtils;
  * @author Hamid Rahimi
  * @author Illia Ulianov
  * @author Mohamed El Harrougui
+ * @author Minju Kim
  */
 @SpringIntegrationTest
 public abstract class ElasticsearchIntegrationTests {
@@ -3812,6 +3814,19 @@ public abstract class ElasticsearchIntegrationTests {
 		assertThatThrownBy(() -> {
 			operations.save(entity);
 		}).isInstanceOf(VersionConflictException.class);
+	}
+
+	@Test
+	@DisplayName("should throw DuplicateKeyException when creating an existing document")
+	void shouldThrowDuplicateKeyExceptionWhenCreatingAnExistingDocument() {
+
+		SampleEntity sampleEntity = SampleEntity.builder().id(nextIdAsString()).message("some message").build();
+		IndexQuery indexQuery = new IndexQueryBuilder().withId(sampleEntity.getId()).withObject(sampleEntity)
+				.withOpType(IndexQuery.OpType.CREATE).build();
+		IndexCoordinates index = IndexCoordinates.of(indexNameProvider.indexName());
+		operations.index(indexQuery, index);
+
+		assertThatThrownBy(() -> operations.index(indexQuery, index)).isInstanceOf(DuplicateKeyException.class);
 	}
 
 	@Test // GH-2865

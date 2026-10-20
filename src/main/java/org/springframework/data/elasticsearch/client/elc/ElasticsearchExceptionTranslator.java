@@ -28,6 +28,7 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.support.PersistenceExceptionTranslator;
 import org.springframework.data.elasticsearch.NoSuchIndexException;
@@ -43,6 +44,7 @@ import org.springframework.util.ClassUtils;
  *
  * @author Peter-Josef Meisch
  * @author Junghoon Ban
+ * @author Minju Kim
  * @since 4.4
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
@@ -142,6 +144,8 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 							exception);
 				} else if (message.contains("version conflict, current version [")) {
 					throw new VersionConflictException("Version conflict", exception);
+				} else if (message.contains("version conflict, document already exists")) {
+					throw new DuplicateKeyException("Document already exists", exception);
 				}
 		}
 	}
