@@ -3816,7 +3816,7 @@ public abstract class ElasticsearchIntegrationTests {
 		}).isInstanceOf(VersionConflictException.class);
 	}
 
-	@Test
+	@Test // #3364
 	@DisplayName("should throw DuplicateKeyException when creating an existing document")
 	void shouldThrowDuplicateKeyExceptionWhenCreatingAnExistingDocument() {
 

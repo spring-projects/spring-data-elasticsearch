@@ -33,7 +33,7 @@ class ElasticsearchExceptionTranslatorUnitTests {
 	private final ElasticsearchExceptionTranslator translator = new ElasticsearchExceptionTranslator(
 			new Jackson3JsonpMapper());
 
-	@Test
+	@Test // #3364
 	@DisplayName("should translate conflict on create of existing document to DuplicateKeyException")
 	void shouldTranslateConflictOnCreateOfExistingDocumentToDuplicateKeyException() {
 
