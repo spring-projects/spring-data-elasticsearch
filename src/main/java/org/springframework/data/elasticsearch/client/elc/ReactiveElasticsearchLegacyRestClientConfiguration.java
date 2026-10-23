@@ -42,6 +42,7 @@ import org.springframework.util.Assert;
  * available here but deprecated. *
  *
  * @author Peter-Josef Meisch
+ * @author Ralph Ursprung
  * @since 4.4
  * @deprecated since 6.0 use {@link ReactiveElasticsearchConfiguration}
  */
@@ -113,6 +114,7 @@ public abstract class ReactiveElasticsearchLegacyRestClientConfiguration extends
 		ReactiveElasticsearchTemplate template = new ReactiveElasticsearchTemplate(reactiveElasticsearchClient,
 				elasticsearchConverter);
 		template.setRefreshPolicy(refreshPolicy());
+		template.setBulkOptions(bulkOptions());
 
 		return template;
 	}

@@ -42,6 +42,7 @@ import org.springframework.util.Assert;
  * {@link ElasticsearchLegacyRestClientConfiguration}.
  *
  * @author Peter-Josef Meisch
+ * @author Ralph Ursprung
  * @since 4.4
  */
 public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurationSupport {
@@ -111,6 +112,7 @@ public abstract class ElasticsearchConfiguration extends ElasticsearchConfigurat
 
 		ElasticsearchTemplate template = new ElasticsearchTemplate(elasticsearchClient, elasticsearchConverter);
 		template.setRefreshPolicy(refreshPolicy());
+		template.setBulkOptions(bulkOptions());
 
 		return template;
 	}
