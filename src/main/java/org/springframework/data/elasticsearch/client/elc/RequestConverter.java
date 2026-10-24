@@ -769,8 +769,7 @@ class RequestConverter extends AbstractQueryProcessor {
 	}
 
 	/**
-	 * Creates a {@link BulkRequest.Builder} with the request-level settings of a bulk request but without any
-	 * operations.
+	 * Creates a {@link BulkRequest.Builder} with the request-level settings of a bulk request but without any operations.
 	 *
 	 * @param bulkOptions the options to apply, a refresh policy set here takes precedence over {@code refreshPolicy}
 	 * @param refreshPolicy the default refresh policy

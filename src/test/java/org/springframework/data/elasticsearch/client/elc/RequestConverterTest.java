@@ -16,9 +16,7 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.api.Assertions.fail;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
