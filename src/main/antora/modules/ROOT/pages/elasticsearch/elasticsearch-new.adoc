@@ -11,6 +11,8 @@
 *  Fix script handling when building an UpdateQuery  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3324[GH #3324])
 *  Fix formatting of DateFormat.strict_date_optional_time_nanos  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3334[GH #3334])
 *  Do not require Jackson2 in ElasticsearchClients. (https://github.com/spring-projects/spring-data-elasticsearch/issues/3351[GH #3351])
+*  Translate the conflict on creating an existing document
+. (https://github.com/spring-projects/spring-data-elasticsearch/issues/3364[GH #3364])
 
 [[new-features.6-1-0]]
 == New in Spring Data Elasticsearch 6.1
