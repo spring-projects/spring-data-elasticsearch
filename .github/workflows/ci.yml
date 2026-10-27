@@ -17,12 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: Setup Java and Maven
-        uses: spring-projects/spring-data-build/actions/setup-maven@main
+        uses: spring-projects/spring-data-build/actions/setup-maven@7b11fbb74c0705333b18b8ebac02a49c008f9c3d
         with:
           java-version: ${{ matrix.java-version }}
           develocity-access-key: '${{ secrets.DEVELOCITY_ACCESS_KEY }}'
       - name: Build
-        uses: spring-projects/spring-data-build/actions/maven-build@main
+        uses: spring-projects/spring-data-build/actions/maven-build@d7240cb42beb443e84389be5d9928b33c32304e6
         env:
           OSS_ARTIFACTORY_USR: '${{ secrets.ARTIFACTORY_USERNAME }}'
           OSS_ARTIFACTORY_PSW: '${{ secrets.ARTIFACTORY_PASSWORD }}'
