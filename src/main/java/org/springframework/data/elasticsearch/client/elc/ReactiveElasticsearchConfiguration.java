@@ -40,6 +40,7 @@ import org.springframework.util.Assert;
  * beans. Deriving * classes must provide the {@link ClientConfiguration} to use.
  *
  * @author Peter-Josef Meisch
+ * @author Ralph Ursprung
  * @since 4.4
  */
 public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchConfigurationSupport {
@@ -109,6 +110,7 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 		ReactiveElasticsearchTemplate template = new ReactiveElasticsearchTemplate(reactiveElasticsearchClient,
 				elasticsearchConverter);
 		template.setRefreshPolicy(refreshPolicy());
+		template.setBulkOptions(bulkOptions());
 
 		return template;
 	}

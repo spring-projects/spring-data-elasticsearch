@@ -16,21 +16,29 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.data.elasticsearch.client.elc.Queries.*;
 
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.aggregations.Aggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.Buckets;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsAggregate;
 import co.elastic.clients.elasticsearch._types.aggregations.StringTermsBucket;
+import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.search.FieldCollapse;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
@@ -38,8 +46,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.elasticsearch.client.elc.Aggregation;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchAggregation;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient;
+import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.Queries;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.junit.jupiter.ReactiveElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -47,10 +58,13 @@ import org.springframework.test.context.ContextConfiguration;
 
 /**
  * @author Peter-Josef Meisch
+ * @author Ralph Ursprung
  * @since 4.4
  */
 @ContextConfiguration(classes = ReactiveElasticsearchELCIntegrationTests.Config.class)
 public class ReactiveElasticsearchELCIntegrationTests extends ReactiveElasticsearchIntegrationTests {
+
+	@Autowired private ReactiveElasticsearchClient reactiveElasticsearchClient;
 
 	@Test // #2745
 	@DisplayName("should use sort defined in native unbounded query")
@@ -95,6 +109,31 @@ public class ReactiveElasticsearchELCIntegrationTests extends ReactiveElasticsea
 				.map(SampleEntity::getRate)
 				.collectList().block();
 		assertThat(rates).containsExactly(11, 7, 5);
+	}
+
+	@Test // #3345
+	@DisplayName("should apply template default bulk options to saveAll and refresh only with the last request")
+	void shouldApplyTemplateDefaultBulkOptionsToSaveAllAndRefreshOnlyWithTheLastRequest() {
+
+		final var client = Mockito.spy(reactiveElasticsearchClient);
+		final var template = new ReactiveElasticsearchTemplate(client, operations.getElasticsearchConverter());
+		template.setRefreshPolicy(RefreshPolicy.IMMEDIATE);
+		template.setBulkOptions(BulkOptions.builder().withMaxOperations(2).build());
+		final var entities = IntStream.range(0, 5) //
+				.mapToObj(i -> randomEntity("message " + i)) //
+				.toList();
+
+		final var saved = template.saveAll(entities, SampleEntity.class).collectList().block();
+
+		assertThat(saved).extracting(SampleEntity::getId)
+				.containsExactlyElementsOf(entities.stream().map(SampleEntity::getId).toList());
+		final var captor = ArgumentCaptor.forClass(BulkRequest.class);
+		verify(client, times(3)).bulk(captor.capture());
+		assertThat(captor.getAllValues()).extracting(bulkRequest -> bulkRequest.operations().size()) //
+				.containsExactly(2, 2, 1);
+		assertThat(captor.getAllValues()).extracting(BulkRequest::refresh) //
+				.containsExactly(Refresh.False, Refresh.False, Refresh.True);
+		assertThat(operations.count(operations.matchAllQuery(), SampleEntity.class).block()).isEqualTo(5);
 	}
 
 	@Configuration

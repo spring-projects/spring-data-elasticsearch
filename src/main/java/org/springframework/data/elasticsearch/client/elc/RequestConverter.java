@@ -22,6 +22,7 @@ import co.elastic.clients.elasticsearch._types.Conflicts;
 import co.elastic.clients.elasticsearch._types.ExpandWildcard;
 import co.elastic.clients.elasticsearch._types.NestedSortValue;
 import co.elastic.clients.elasticsearch._types.OpType;
+import co.elastic.clients.elasticsearch._types.Refresh;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.VersionType;
@@ -766,6 +767,50 @@ class RequestConverter extends AbstractQueryProcessor {
 		return bulkRequestBuilder(bulkOptions, refreshPolicy) //
 				.operations(operations) //
 				.build();
+	}
+
+	/**
+	 * Creates the bulk requests for the given queries. If {@link BulkOptions#getMaxOperations()} or
+	 * {@link BulkOptions#getMaxSize()} are set, the queries are split into several requests, otherwise exactly one
+	 * request is returned. The order of the queries is preserved. The refresh policy is only applied to the last request.
+	 *
+	 * @param queries the queries, {@link IndexQuery} or {@link UpdateQuery} instances
+	 * @param bulkOptions the options to apply
+	 * @param defaultBulkOptions the template default, its limits are used if {@code bulkOptions} does not set them
+	 * @param indexCoordinates the index to use if a query does not define one
+	 * @param refreshPolicy the default refresh policy
+	 * @return the bulk requests, never empty
+	 * @since 6.2
+	 */
+	List<BulkRequest> documentBulkRequests(List<?> queries, BulkOptions bulkOptions, BulkOptions defaultBulkOptions,
+			IndexCoordinates indexCoordinates, @Nullable RefreshPolicy refreshPolicy) {
+
+		final var operations = queries.stream() //
+				.map(query -> bulkOperation(query, indexCoordinates)) //
+				.toList();
+
+		// null means "not set": fall back to the template default, then to no limit
+		final var maxOperations = Objects.requireNonNullElse(
+				bulkOptions.getMaxOperations() != null ? bulkOptions.getMaxOperations() : defaultBulkOptions.getMaxOperations(),
+				BulkRequestSplitter.NO_MAX_OPERATIONS);
+		final var maxSize = Objects.requireNonNullElse(
+				bulkOptions.getMaxSize() != null ? bulkOptions.getMaxSize() : defaultBulkOptions.getMaxSize(),
+				BulkRequestSplitter.NO_MAX_SIZE);
+		final var batches = new BulkRequestSplitter(jsonpMapper).split(operations, maxOperations, maxSize);
+
+		final var bulkRequests = new ArrayList<BulkRequest>(batches.size());
+		for (var i = 0; i < batches.size(); i++) {
+			final var builder = bulkRequestBuilder(bulkOptions, refreshPolicy);
+
+			// refreshing after intermediate requests has no benefit, only the last one applies the refresh policy
+			if (i < batches.size() - 1) {
+				builder.refresh(Refresh.False);
+			}
+
+			bulkRequests.add(builder.operations(batches.get(i)).build());
+		}
+
+		return bulkRequests;
 	}
 
 	/**

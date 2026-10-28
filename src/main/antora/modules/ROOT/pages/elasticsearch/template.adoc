@@ -73,6 +73,75 @@ The id is read from the returned entity, as it might have been null in the `pers
 
 To see the full possibilities of `ElasticsearchOperations` please refer to the API documentation.
 
+[[elasticsearch.operations.bulk]]
+== Bulk operations
+
+Methods like `bulkIndex(...)`, `bulkUpdate(...)`, `save(Iterable)` and the reactive `saveAll(...)` send their operations in a bulk request.
+By default, all operations of one call are sent in one bulk request.
+With many or large documents, such a request can become too large for the cluster.
+
+The javadoc:org.springframework.data.elasticsearch.core.query.BulkOptions[] can limit the size of one bulk request:
+
+* `withMaxOperations(int)`: the maximum number of operations in one request.
+* `withMaxSize(long)`: the maximum size in bytes of the operations in one request.
+
+If one of these limits is set, the operations of a call are split into several bulk requests.
+A new request is started before an operation would go over a limit.
+An operation that is larger than the size limit on its own is sent in a request of its own.
+
+.Bulk index with limits
+====
+[source,java]
+----
+BulkOptions bulkOptions = BulkOptions.builder()
+  .withMaxOperations(1000)
+  .withMaxSize(5 * 1024 * 1024)                                             <.>
+  .build();
+
+operations.bulkIndex(indexQueries, bulkOptions, Person.class);
+----
+<.> 5 MB
+====
+
+When the operations are split, keep these points in mind:
+
+* The requests are sent one after the other, also by the reactive template.
+* If a request fails as a whole, for example because of a network problem, no more requests are sent and the error is thrown.
+* Failures of single documents are collected from all requests.
+They are thrown together in one `BulkFailureException` after the last request.
+* **Requests that were sent successfully are not rolled back.**
+If an exception is thrown, some documents can already be stored.
+* The refresh policy is only applied to the last request.
+
+The limits can also be set as a default on the template with `setBulkOptions(BulkOptions)`, or by overriding the `bulkOptions()` method in the configuration class (see xref:elasticsearch/clients.adoc[]).
+The default is then also used by methods that don't take `BulkOptions`, like `save(Iterable)` or the repository `saveAll(...)` methods.
+If the `BulkOptions` passed to a call set a limit, this value is used instead of the default.
+Currently only the limits are taken from the template default.
+
+.Default bulk options in the configuration
+====
+[source,java]
+----
+@Configuration
+public class MyClientConfig extends ElasticsearchConfiguration {
+
+  @Override
+  public ClientConfiguration clientConfiguration() {
+    return ClientConfiguration.builder()
+      .connectedTo("localhost:9200")
+      .build();
+  }
+
+  @Override
+  protected BulkOptions bulkOptions() {
+    return BulkOptions.builder()
+      .withMaxSize(5 * 1024 * 1024)
+      .build();
+  }
+}
+----
+====
+
 
 [[elasticsearch.operations.searchresulttypes]]
 == Search Result Types

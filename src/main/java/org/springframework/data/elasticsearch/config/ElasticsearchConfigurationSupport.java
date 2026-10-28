@@ -34,6 +34,7 @@ import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverte
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchCustomConversions;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.mapping.model.FieldNamingStrategy;
 import org.springframework.data.mapping.model.PropertyNameFieldNamingStrategy;
 import org.springframework.util.ClassUtils;
@@ -43,6 +44,7 @@ import org.springframework.util.StringUtils;
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Steven Pearce
+ * @author Ralph Ursprung
  * @since 3.2
  */
 @Configuration(proxyBeanMethods = false)
@@ -163,6 +165,18 @@ public class ElasticsearchConfigurationSupport {
 	@Nullable
 	protected RefreshPolicy refreshPolicy() {
 		return null;
+	}
+
+	/**
+	 * Set up the default {@link BulkOptions} of the template. Currently only the limits
+	 * ({@link BulkOptions#getMaxOperations()} and {@link BulkOptions#getMaxSize()}) are used: they apply to every bulk
+	 * operation unless the {@link BulkOptions} passed to the call set their own value.
+	 *
+	 * @return {@link BulkOptions#defaultOptions()} by default, which means bulk requests are not split.
+	 * @since 6.2
+	 */
+	protected BulkOptions bulkOptions() {
+		return BulkOptions.defaultOptions();
 	}
 
 	/**

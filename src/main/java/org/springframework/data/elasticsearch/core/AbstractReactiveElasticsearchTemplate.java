@@ -47,6 +47,7 @@ import org.springframework.data.elasticsearch.core.event.ReactiveBeforeConvertCa
 import org.springframework.data.elasticsearch.core.mapping.ElasticsearchPersistentEntity;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
+import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.ByQueryResponse;
 import org.springframework.data.elasticsearch.core.query.DeleteQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
@@ -66,6 +67,7 @@ import org.springframework.util.Assert;
  *
  * @author Peter-Josef Meisch
  * @author Minju Kim
+ * @author Ralph Ursprung
  * @since 4.4
  */
 abstract public class AbstractReactiveElasticsearchTemplate
@@ -80,6 +82,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	protected @Nullable ReactiveEntityCallbacks entityCallbacks;
 	protected ObservationRegistry observationRegistry = ObservationRegistry.NOOP;
+	private BulkOptions bulkOptions = BulkOptions.defaultOptions();
 
 	// region Initialization
 	protected AbstractReactiveElasticsearchTemplate(@Nullable ElasticsearchConverter converter) {
@@ -112,6 +115,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 		}
 
 		copy.setRoutingResolver(routingResolver);
+		copy.setBulkOptions(bulkOptions);
 		copy.setObservationRegistry(observationRegistry);
 		customizeCopy(copy);
 		return copy;
@@ -150,6 +154,30 @@ abstract public class AbstractReactiveElasticsearchTemplate
 	@Nullable
 	public RefreshPolicy getRefreshPolicy() {
 		return refreshPolicy;
+	}
+
+	/**
+	 * Set the default {@link BulkOptions} of this template. Currently only the limits
+	 * ({@link BulkOptions#getMaxOperations()} and {@link BulkOptions#getMaxSize()}) are used: they apply to every bulk
+	 * operation, including {@code saveAll(...)} and {@code save(Flux, ...)}, unless the {@link BulkOptions} passed to the
+	 * call set their own value.
+	 *
+	 * @param bulkOptions must not be {@literal null}.
+	 * @since 6.2
+	 */
+	public void setBulkOptions(BulkOptions bulkOptions) {
+
+		Assert.notNull(bulkOptions, "bulkOptions must not be null");
+
+		this.bulkOptions = bulkOptions;
+	}
+
+	/**
+	 * @return the default {@link BulkOptions} of this template, never {@literal null}.
+	 * @since 6.2
+	 */
+	public BulkOptions getBulkOptions() {
+		return bulkOptions;
 	}
 
 	/**
