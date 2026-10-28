@@ -17,6 +17,30 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static org.springframework.data.elasticsearch.client.elc.TypeUtils.*;
 
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.Time;
+import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.msearch.MultiSearchResponseItem;
+import co.elastic.clients.elasticsearch.core.search.ResponseBody;
+import co.elastic.clients.elasticsearch.sql.ElasticsearchSqlClient;
+import co.elastic.clients.elasticsearch.sql.QueryResponse;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.transport.Version;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+
+import java.io.IOException;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.jspecify.annotations.Nullable;
@@ -42,30 +66,6 @@ import org.springframework.data.elasticsearch.core.reindex.ReindexResponse;
 import org.springframework.data.elasticsearch.core.script.Script;
 import org.springframework.data.elasticsearch.core.sql.SqlResponse;
 import org.springframework.util.Assert;
-
-import java.io.IOException;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
-
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.Time;
-import co.elastic.clients.elasticsearch.core.*;
-import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
-import co.elastic.clients.elasticsearch.core.msearch.MultiSearchResponseItem;
-import co.elastic.clients.elasticsearch.core.search.ResponseBody;
-import co.elastic.clients.elasticsearch.sql.ElasticsearchSqlClient;
-import co.elastic.clients.elasticsearch.sql.QueryResponse;
-import co.elastic.clients.json.JsonpMapper;
-import co.elastic.clients.transport.Version;
-import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationRegistry;
 
 /**
  * Implementation of {@link org.springframework.data.elasticsearch.core.ElasticsearchOperations} using the new
@@ -466,13 +466,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(clazz, "clazz must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		return observe(ElasticsearchOperationName.SEARCH, index, () -> {
-			if (query instanceof SearchTemplateQuery searchTemplateQuery) {
-				return doSearch(searchTemplateQuery, clazz, index);
-			} else {
-				return doSearch(query, clazz, index);
-			}
-		});
+		return this.<SearchHits<T>>observe(ElasticsearchOperationName.SEARCH, index, () -> {
+            if (query instanceof SearchTemplateQuery searchTemplateQuery) {
+                return doSearch(searchTemplateQuery, clazz, index);
+            } else {
+                return doSearch(query, clazz, index);
+            }
+        });
 	}
 
 	protected <T> SearchHits<T> doSearch(Query query, Class<T> clazz, IndexCoordinates index) {

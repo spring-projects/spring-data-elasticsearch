@@ -17,7 +17,7 @@ package org.springframework.data.elasticsearch.core;
 
 import static java.util.Collections.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.elasticsearch.annotations.FieldType.*;
+import static org.springframework.data.elasticsearch.annotations.FieldType.Text;
 import static org.springframework.data.elasticsearch.core.IndexOperationsAdapter.*;
 import static org.springframework.data.elasticsearch.core.query.StringQuery.*;
 

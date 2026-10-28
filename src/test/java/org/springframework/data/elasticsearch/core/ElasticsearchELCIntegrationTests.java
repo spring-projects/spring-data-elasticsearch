@@ -16,10 +16,10 @@
 package org.springframework.data.elasticsearch.core;
 
 import static org.assertj.core.api.Assertions.*;
-import static org.springframework.data.elasticsearch.client.elc.Queries.*;
-import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.springframework.data.elasticsearch.client.elc.Queries.*;
+import static org.springframework.data.elasticsearch.utils.IndexBuilder.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.Refresh;
@@ -239,7 +239,7 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 
 		return nativeQueryBuilder.withScriptedField(new ScriptedField( //
 				fieldName, //
-				new ScriptData( "expression", script, null, params))) //
+				new ScriptData("expression", script, null, params))) //
 				.build();
 	}
 
