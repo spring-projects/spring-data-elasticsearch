@@ -54,6 +54,9 @@ import org.springframework.data.elasticsearch.core.IndexedObjectInformation;
 import org.springframework.data.elasticsearch.core.MultiGetItem;
 import org.springframework.data.elasticsearch.core.SearchHits;
 import org.springframework.data.elasticsearch.core.SearchScrollHits;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngester;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterListener;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterOptions;
 import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.document.Document;
@@ -168,7 +171,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		return observation.observe(action);
 	}
 
-	private Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
+	Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			@Nullable Integer batchSize) {
 
 		ElasticsearchObservationContext context = new ElasticsearchObservationContext(operationName, index);
@@ -423,6 +426,18 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		updateIndexedObjectsWithQueries(queries, indexedObjectInformationList);
 		return indexedObjectInformationList;
+	}
+
+	@Override
+	public <C> BulkIngester<C> bulkIngester(final BulkIngesterOptions options, final IndexCoordinates index,
+			final BulkIngesterListener<C> listener) {
+
+		Assert.notNull(options, "options must not be null");
+		Assert.notNull(index, "index must not be null");
+		Assert.notNull(listener, "listener must not be null");
+
+		return new ElasticsearchBulkIngester<>(this, client, requestConverter, exceptionTranslator, options, index,
+				listener);
 	}
 
 	// endregion

@@ -14,6 +14,7 @@
 *  Translate the conflict on creating an existing document. (https://github.com/spring-projects/spring-data-elasticsearch/issues/3364[GH #3364])
 *  Apply the id conversion when the reactive template saves an entity. (https://github.com/spring-projects/spring-data-elasticsearch/issues/3359[GH #3359])
 *  Split bulk operations into several requests by number of operations or size. (https://github.com/spring-projects/spring-data-elasticsearch/issues/3345[GH #3345])
+*  Add a `BulkIngester` to send operations in bulk requests as they are produced. (https://github.com/spring-projects/spring-data-elasticsearch/issues/2071[GH #2071])
 
 [[new-features.6-1-0]]
 == New in Spring Data Elasticsearch 6.1

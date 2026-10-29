@@ -33,9 +33,11 @@ import co.elastic.clients.json.JsonData;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.IntStream;
 
 import org.jspecify.annotations.Nullable;
@@ -51,15 +53,21 @@ import org.springframework.data.elasticsearch.client.elc.ElasticsearchTemplate;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;
 import org.springframework.data.elasticsearch.client.elc.NativeQueryBuilder;
 import org.springframework.data.elasticsearch.client.elc.Queries;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterListener;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterOptions;
+import org.springframework.data.elasticsearch.core.bulk.BulkOperationResult;
+import org.springframework.data.elasticsearch.core.bulk.BulkOperationType;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.BaseQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.BulkOptions;
 import org.springframework.data.elasticsearch.core.query.FetchSourceFilterBuilder;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
+import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.Query;
 import org.springframework.data.elasticsearch.core.query.RescorerQuery;
 import org.springframework.data.elasticsearch.core.query.ScriptData;
 import org.springframework.data.elasticsearch.core.query.ScriptedField;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.test.context.ContextConfiguration;
@@ -151,6 +159,134 @@ public class ElasticsearchELCIntegrationTests extends ElasticsearchIntegrationTe
 	@Override
 	protected Query queryWithIds(String... ids) {
 		return Queries.queryWithIds(ids);
+	}
+
+	@Test // #2071
+	@DisplayName("should send mixed operations with the bulk ingester")
+	void shouldSendMixedOperationsWithTheBulkIngester() {
+
+		operations.save(SampleEntity.builder().id("1").message("one").build(),
+				SampleEntity.builder().id("3").message("three").build());
+		final var indexed = SampleEntity.builder().id("2").message("two").build();
+		final var generated = SampleEntity.builder().message("generated").build();
+		final var listener = new RecordingListener();
+
+		try (final var ingester = operations.withRefreshPolicy(RefreshPolicy.IMMEDIATE).bulkIngester(SampleEntity.class,
+				listener)) {
+			ingester.add(buildIndex(indexed), "index");
+			ingester.add(new IndexQueryBuilder().withObject(generated).withOpType(IndexQuery.OpType.CREATE).build(),
+					"create");
+			ingester.add(UpdateQuery.builder("1")
+					.withDocument(org.springframework.data.elasticsearch.core.document.Document.create().append("message",
+							"updated"))
+					.build(), "update");
+			ingester.addDelete("3", null, "delete");
+		}
+
+		assertThat(listener.failures).isEmpty();
+		assertThat(listener.results).extracting(BulkOperationResult::context).containsExactly("index", "create", "update",
+				"delete");
+		assertThat(listener.results).extracting(BulkOperationResult::operationType).containsExactly(
+				BulkOperationType.INDEX, BulkOperationType.CREATE, BulkOperationType.UPDATE, BulkOperationType.DELETE);
+		assertThat(listener.results).allMatch(BulkOperationResult::isSuccessful);
+		assertThat(indexed.getVersion()).isEqualTo(1L);
+		assertThat(generated.getId()).isNotNull();
+		assertThat(generated.getVersion()).isEqualTo(1L);
+		assertThat(listener.results.get(1).id()).isEqualTo(generated.getId());
+
+		assertThat(operations.get("1", SampleEntity.class).getMessage()).isEqualTo("updated");
+		assertThat(operations.get("3", SampleEntity.class)).isNull();
+		assertThat(operations.count(operations.matchAllQuery(), SampleEntity.class)).isEqualTo(3);
+	}
+
+	@Test // #2071
+	@DisplayName("should report item failures of the bulk ingester")
+	void shouldReportItemFailuresOfTheBulkIngester() {
+
+		operations.save(SampleEntity.builder().id("1").message("one").build());
+		final var conflicting = SampleEntity.builder().id("1").message("conflict").build();
+		final var other = SampleEntity.builder().id("2").message("two").build();
+		final var listener = new RecordingListener();
+
+		try (final var ingester = operations.bulkIngester(SampleEntity.class, listener)) {
+			ingester.add(new IndexQueryBuilder().withId("1").withObject(conflicting).withOpType(IndexQuery.OpType.CREATE)
+					.build(), "conflict");
+			ingester.add(buildIndex(other), "other");
+		}
+
+		assertThat(listener.failures).isEmpty();
+		assertThat(listener.results).hasSize(2);
+		final var failed = listener.results.get(0);
+		assertThat(failed.isSuccessful()).isFalse();
+		assertThat(failed.context()).isEqualTo("conflict");
+		assertThat(failed.status()).isEqualTo(409);
+		assertThat(failed.failure().errorMessage()).contains("version conflict");
+		assertThat(failed.indexedObjectInformation()).isNull();
+		assertThat(conflicting.getVersion()).isNull();
+		assertThat(listener.results.get(1).isSuccessful()).isTrue();
+		assertThat(other.getVersion()).isEqualTo(1L);
+	}
+
+	@Test // #2071
+	@DisplayName("should split operations into requests and close the bulk ingester only once")
+	void shouldSplitOperationsIntoRequestsAndCloseTheBulkIngesterOnlyOnce() {
+
+		final var options = BulkIngesterOptions.builder().withMaxOperations(2).build();
+		final var listener = new RecordingListener();
+		final var ingester = operations.bulkIngester(options, SampleEntity.class, listener);
+
+		for (var i = 1; i <= 5; i++) {
+			ingester.add(buildIndex(SampleEntity.builder().id(String.valueOf(i)).message("message").build()));
+		}
+		ingester.close();
+		ingester.close();
+
+		assertThat(ingester.getOperationsCount()).isEqualTo(5);
+		assertThat(ingester.getRequestCount()).isEqualTo(3);
+		assertThat(ingester.getPendingOperations()).isZero();
+		assertThat(ingester.getPendingRequests()).isZero();
+		assertThat(listener.executionIds).hasSize(3).doesNotHaveDuplicates();
+		assertThat(listener.results).hasSize(5).allMatch(BulkOperationResult::isSuccessful);
+		assertThatIllegalStateException().isThrownBy(() -> ingester.addDelete("1"));
+	}
+
+	@Test // #2071
+	@DisplayName("should send pending operations of the bulk ingester after the flush interval")
+	void shouldSendPendingOperationsOfTheBulkIngesterAfterTheFlushInterval() throws InterruptedException {
+
+		final var options = BulkIngesterOptions.builder().withFlushInterval(Duration.ofMillis(100)).build();
+		final var listener = new RecordingListener();
+
+		try (final var ingester = operations.bulkIngester(options, SampleEntity.class, listener)) {
+			ingester.add(buildIndex(SampleEntity.builder().id("1").message("message").build()));
+
+			final var deadline = System.nanoTime() + Duration.ofSeconds(10).toNanos();
+			while (listener.results.isEmpty() && System.nanoTime() < deadline) {
+				Thread.sleep(50);
+			}
+
+			assertThat(listener.results).hasSize(1);
+		}
+	}
+
+	static class RecordingListener implements BulkIngesterListener<String> {
+
+		final List<Long> executionIds = new CopyOnWriteArrayList<>();
+		final List<BulkOperationResult<String>> results = new CopyOnWriteArrayList<>();
+		final List<RuntimeException> failures = new CopyOnWriteArrayList<>();
+
+		@Override
+		public void afterBulk(final long executionId, final List<BulkOperationResult<String>> results) {
+			this.executionIds.add(executionId);
+			this.results.addAll(results);
+		}
+
+		@Override
+		public void afterBulk(final long executionId, final List<@Nullable String> contexts,
+				final RuntimeException failure) {
+			this.executionIds.add(executionId);
+			this.failures.add(failure);
+		}
 	}
 
 	@Override
