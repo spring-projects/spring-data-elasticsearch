@@ -81,6 +81,7 @@ import org.springframework.util.Assert;
  * @author Rasmus Faber-Espensen
  * @author James Mudd
  * @author Haibo Liu
+ * @author WooSeung Kim
  */
 @SpringIntegrationTest
 public abstract class CustomMethodRepositoryIntegrationTests {
@@ -811,6 +812,25 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		// then
 		assertThat(page).isNotNull();
 		assertThat(page.getTotalElements()).isEqualTo(1L);
+	}
+
+	@Test // #3371
+	void shouldExecuteCustomMethodWithMessageOrWithinGeoPoint() {
+
+		SampleEntity near = new SampleEntity();
+		near.setId(nextIdAsString());
+		near.setMessage("foo");
+		near.setLocation(new GeoPoint(45.7806d, 3.0875d));
+		SampleEntity far = new SampleEntity();
+		far.setId(nextIdAsString());
+		far.setMessage("bar");
+		far.setLocation(new GeoPoint(0d, 0d));
+		repository.saveAll(List.of(near, far));
+
+		List<SampleEntity> entities = repository.findByMessageOrLocationWithin("bar", new GeoPoint(45.7806d, 3.0875d),
+				"2km");
+
+		assertThat(entities).extracting(SampleEntity::getId).containsExactlyInAnyOrder(near.getId(), far.getId());
 	}
 
 	@Test
@@ -2123,6 +2143,8 @@ public abstract class CustomMethodRepositoryIntegrationTests {
 		Page<SampleEntity> findByLocationAndMessage(GeoPoint point, String msg, Pageable pageable);
 
 		Page<SampleEntity> findByLocationWithin(GeoPoint point, String distance, Pageable pageable);
+
+		List<SampleEntity> findByMessageOrLocationWithin(String message, GeoPoint point, String distance);
 
 		Page<SampleEntity> findByLocationWithin(Point point, Distance distance, Pageable pageable);
 
