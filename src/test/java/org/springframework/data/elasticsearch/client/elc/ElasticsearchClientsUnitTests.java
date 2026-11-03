@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.Jackson3JsonpMapper;
+import co.elastic.clients.transport.rest5_client.Rest5ClientTransport;
 import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 
 import java.io.File;
@@ -37,8 +38,29 @@ import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clien
 
 /**
  * @author Minju Kim
+ * @author Alpha
  */
 class ElasticsearchClientsUnitTests {
+
+	@Test // #3361
+	@DisplayName("should use Rest5Client for reactive clients created from ClientConfiguration")
+	void shouldUseRest5ClientForReactiveClientsCreatedFromClientConfiguration() throws IOException {
+
+		var clientConfiguration = ClientConfiguration.localhost();
+
+		try (var transport = ElasticsearchClients.createReactive(clientConfiguration)._transport()) {
+			assertThat(transport).isInstanceOf(Rest5ClientTransport.class);
+		}
+
+		try (var transport = ElasticsearchClients.createReactive(clientConfiguration, null)._transport()) {
+			assertThat(transport).isInstanceOf(Rest5ClientTransport.class);
+		}
+
+		try (var transport = ElasticsearchClients
+				.createReactive(clientConfiguration, null, new Jackson3JsonpMapper())._transport()) {
+			assertThat(transport).isInstanceOf(Rest5ClientTransport.class);
+		}
+	}
 
 	@Test // #3351
 	@DisplayName("should create clients without an exception when Jackson 2 is not on the classpath")
