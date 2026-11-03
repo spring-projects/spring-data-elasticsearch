@@ -229,10 +229,15 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(entitiesPublisher, "entitiesPublisher must not be null!");
 
-		return observeFlux(ElasticsearchOperationName.BULK, index, entitiesPublisher //
-				.flatMapMany(entities -> Flux.fromIterable(entities) //
-						.concatMap(entity -> maybeCallbackBeforeConvert(entity, index)) //
-				).collectList() //
+		return entitiesPublisher.flatMapMany(entities -> observeMono(ElasticsearchOperationName.BULK, index, entities.size(),
+				saveAllEntities(entities, index).collectList()).flatMapMany(Flux::fromIterable));
+	}
+
+	private <T> Flux<T> saveAllEntities(Collection<? extends T> entityCollection, IndexCoordinates index) {
+
+		return Flux.fromIterable(entityCollection) //
+				.concatMap(entity -> maybeCallbackBeforeConvert(entity, index)) //
+				.collectList() //
 				.map(Entities::new) //
 				.flatMapMany(entities -> {
 
@@ -256,7 +261,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 										routingResolver);
 								return maybeCallbackAfterSave(updatedEntity, index);
 							});
-				}));
+				});
 	}
 
 	@Override
@@ -640,16 +645,18 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
-				false);
+		return observeMono(ElasticsearchOperationName.SEARCH, index, Mono.defer(() -> {
+			SearchRequest searchRequest = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index,
+					false);
 
-		SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>((Class<T>) clazz, index);
+			SearchDocumentCallback<T> callback = new ReadSearchDocumentCallback<>((Class<T>) clazz, index);
 
-		SearchDocumentResponse.EntityCreator<T> entityCreator = searchDocument -> callback.toEntity(searchDocument)
-				.toFuture();
+			SearchDocumentResponse.EntityCreator<T> entityCreator = searchDocument -> callback.toEntity(searchDocument)
+					.toFuture();
 
-		return Mono.from(execute(client -> client.search(searchRequest, EntityAsMap.class)))
-				.map(searchResponse -> SearchDocumentResponseBuilder.from(searchResponse, entityCreator, jsonpMapper));
+			return Mono.from(execute(client -> client.search(searchRequest, EntityAsMap.class))).map(
+					searchResponse -> SearchDocumentResponseBuilder.from(searchResponse, entityCreator, jsonpMapper));
+		}));
 	}
 
 	@Override
@@ -772,7 +779,9 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(query, "Query must not be null.");
 
 		co.elastic.clients.elasticsearch.sql.QueryRequest request = requestConverter.sqlQueryRequest(query);
-		return sqlClient.query(request).onErrorMap(this::translateException).map(responseConverter::sqlResponse);
+		return observeMono(ElasticsearchOperationName.SQL, null,
+				Mono.defer(() -> sqlClient.query(request).onErrorMap(this::translateException))
+						.map(responseConverter::sqlResponse));
 	}
 
 	/**
