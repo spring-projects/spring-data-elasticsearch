@@ -90,6 +90,7 @@ import org.springframework.util.StringUtils;
  * @author Sijia Liu
  * @author Illia Ulianov
  * @author Ralph Ursprung
+ * @author Ridwan
  */
 @SuppressWarnings("SpringJavaAutowiredMembersInspection")
 @SpringIntegrationTest
@@ -1280,6 +1281,20 @@ public abstract class ReactiveElasticsearchIntegrationTests {
 				.containsOnlyKeys("id2").extracting(Map::values)
 				.asInstanceOf(InstanceOfAssertFactories.collection(BulkFailureException.FailureDetails.class))
 				.allMatch(failureStatus -> failureStatus.status().equals(409));
+	}
+
+	@Test // #3369
+	@DisplayName("should report a bulk failure of a document without an id")
+	void shouldReportBulkFailureOfDocumentWithoutId() {
+
+		var entity = new SampleEntity();
+		entity.setMessage("no id");
+
+		// Elasticsearch rejects the invalid index name before generating an id, the bulk item has no _id
+		operations.saveAll(List.of(entity), IndexCoordinates.of("Invalid-Index-Name")) //
+				.as(StepVerifier::create) //
+				.expectError(BulkFailureException.class) //
+				.verify();
 	}
 
 	@Test // Error propagation in reactive Flux save
