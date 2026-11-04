@@ -34,7 +34,12 @@ public enum ElasticsearchOperationName {
 	UPDATE("update"), //
 	UPDATE_BY_QUERY("updateByQuery"), //
 	COUNT("count"), //
-	SEARCH("search");
+	SEARCH("search"), //
+	MULTI_SEARCH("multiSearch"), //
+	SCROLL_START("scrollStart"), //
+	SCROLL_CONTINUE("scrollContinue"), //
+	SCROLL_CLEAR("scrollClear"), //
+	SQL("sql");
 
 	private final String value;
 
