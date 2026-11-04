@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.Jackson3JsonpMapper;
+import co.elastic.clients.transport.rest5_client.Rest5ClientTransport;
 import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 
 import java.io.File;
@@ -37,6 +38,7 @@ import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clien
 
 /**
  * @author Minju Kim
+ * @author Shubham Singh
  */
 class ElasticsearchClientsUnitTests {
 
@@ -51,6 +53,23 @@ class ElasticsearchClientsUnitTests {
 					.getDeclaredConstructor().newInstance();
 
 			assertThat(createClients.get()).hasSize(4).containsOnly(Jackson3JsonpMapper.class.getName());
+		}
+	}
+
+	@Test // #3361
+	@DisplayName("should use the Rest5Client transport for reactive clients created from a ClientConfiguration")
+	void shouldUseRest5ClientTransportForReactiveClientsCreatedFromClientConfiguration() throws Exception {
+
+		var clientConfiguration = ClientConfiguration.localhost();
+
+		List<ReactiveElasticsearchClient> clients = List.of( //
+				ElasticsearchClients.createReactive(clientConfiguration), //
+				ElasticsearchClients.createReactive(clientConfiguration, null), //
+				ElasticsearchClients.createReactive(clientConfiguration, null, new Jackson3JsonpMapper()));
+
+		for (ReactiveElasticsearchClient client : clients) {
+			assertThat(client._transport()).isInstanceOf(Rest5ClientTransport.class);
+			client._transport().close();
 		}
 	}
 

@@ -52,6 +52,7 @@ import org.springframework.util.Assert;
  *
  * @author Peter-Josef Meisch
  * @author Minju Kim
+ * @author Shubham Singh
  * @since 4.4
  */
 @SuppressWarnings("unused")
@@ -82,7 +83,7 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "clientConfiguration must not be null");
 
-		return createReactive(getRestClient(clientConfiguration), null, DEFAULT_JACKSON3_JSONP_MAPPER.get());
+		return createReactive(getRest5Client(clientConfiguration), null, DEFAULT_JACKSON3_JSONP_MAPPER.get());
 	}
 
 	/**
@@ -97,7 +98,7 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 
-		return createReactive(getRestClient(clientConfiguration), transportOptions,
+		return createReactive(getRest5Client(clientConfiguration), transportOptions,
 				DEFAULT_JACKSON3_JSONP_MAPPER.get());
 	}
 
@@ -115,7 +116,7 @@ public final class ElasticsearchClients {
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
 
-		return createReactive(getRestClient(clientConfiguration), transportOptions, jsonpMapper);
+		return createReactive(getRest5Client(clientConfiguration), transportOptions, jsonpMapper);
 	}
 
 	/**
