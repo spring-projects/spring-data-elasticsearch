@@ -81,6 +81,7 @@ import org.springframework.util.StringUtils;
  * @author Junghoon Ban
  * @author maryantocinn
  * @author Ralph Ursprung
+ * @author Ridwan
  * @since 4.4
  */
 public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearchTemplate {
@@ -395,7 +396,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 			}
 		}
 
-		if (!failedDocuments.isEmpty()) {
+		if (bulkResponses.stream().anyMatch(BulkResponse::errors)) {
 			BulkFailureException exception = new BulkFailureException(
 					"Bulk operation has failures. Use ElasticsearchException.getFailedDocuments() for detailed messages ["
 							+ failedDocuments + ']',
