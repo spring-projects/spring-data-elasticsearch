@@ -58,6 +58,7 @@ import com.github.tomakehurst.wiremock.stubbing.StubMapping;
  * wiremocks, but there is no real need to change this test setup.
  *
  * @author Peter-Josef Meisch
+ * @author Shubham Singh
  */
 @SuppressWarnings("UastIncorrectHttpHeaderInspection")
 @HoverflyCapture(path = "target/hoverfly", config = @HoverflyConfig(proxyLocalHost = true, plainHttpTunneling = true))
@@ -125,7 +126,8 @@ public class RestClientsTest {
 						return httpHeaders;
 					});
 
-			if (clientUnderTestFactory instanceof ELCRest5ClientUnderTestFactory) {
+			if (clientUnderTestFactory instanceof ELCRest5ClientUnderTestFactory
+					|| clientUnderTestFactory instanceof ReactiveELCUnderTestFactory) {
 				configurationBuilder.withClientConfigurer(
 						Rest5Clients.ElasticsearchRest5ClientConfigurationCallback.from(rest5ClientBuilder -> {
 							restClientConfigurerCount.incrementAndGet();
@@ -156,18 +158,6 @@ public class RestClientsTest {
 						RestClients.ElasticsearchHttpClientConfigurationCallback.from(httpClientBuilder -> {
 							httpClientConfigurerCount.incrementAndGet();
 							return httpClientBuilder;
-						}));
-				configurationBuilder.withClientConfigurer(
-						RestClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
-							restClientConfigurerCount.incrementAndGet();
-							return restClientBuilder;
-						}));
-
-			} else if (clientUnderTestFactory instanceof ReactiveELCUnderTestFactory) {
-				configurationBuilder
-						.withClientConfigurer(RestClients.ElasticsearchHttpClientConfigurationCallback.from(webClient -> {
-							httpClientConfigurerCount.incrementAndGet();
-							return webClient;
 						}));
 				configurationBuilder.withClientConfigurer(
 						RestClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
@@ -569,6 +559,21 @@ public class RestClientsTest {
 
 		@Override
 		protected Integer getExpectedRestClientConfigurerCalls() {
+			return 1;
+		}
+
+		@Override
+		public Integer getExpectedConnectionConfigurerCalls() {
+			return 1;
+		}
+
+		@Override
+		public Integer getExpectedConnectionManagerConfigurerCalls() {
+			return 1;
+		}
+
+		@Override
+		public Integer getExpectedRequestConfigurerCalls() {
 			return 1;
 		}
 
