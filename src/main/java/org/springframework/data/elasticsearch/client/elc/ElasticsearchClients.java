@@ -64,7 +64,9 @@ public final class ElasticsearchClients {
 
 	// region reactive client
 	/**
-	 * Creates a new {@link ReactiveElasticsearchClient}
+	 * Creates a new {@link ReactiveElasticsearchClient}. This uses a Rest5Client, if the old RestClient is needed, this
+	 * must be created with the {@link org.springframework.data.elasticsearch.client.elc.rest_client.RestClients} class
+	 * and passed in as parameter.
 	 *
 	 * @param clientConfiguration configuration options, must not be {@literal null}.
 	 * @return the {@link ReactiveElasticsearchClient}
@@ -73,11 +75,13 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "clientConfiguration must not be null");
 
-		return createReactive(getRestClient(clientConfiguration), null, DEFAULT_JSONP_MAPPER);
+		return createReactive(getRest5Client(clientConfiguration), null, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
-	 * Creates a new {@link ReactiveElasticsearchClient}
+	 * Creates a new {@link ReactiveElasticsearchClient}. This uses a Rest5Client, if the old RestClient is needed, this
+	 * must be created with the {@link org.springframework.data.elasticsearch.client.elc.rest_client.RestClients} class
+	 * and passed in as parameter.
 	 *
 	 * @param clientConfiguration configuration options, must not be {@literal null}.
 	 * @param transportOptions options to be added to each request.
@@ -88,11 +92,13 @@ public final class ElasticsearchClients {
 
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 
-		return createReactive(getRestClient(clientConfiguration), transportOptions, DEFAULT_JSONP_MAPPER);
+		return createReactive(getRest5Client(clientConfiguration), transportOptions, DEFAULT_JSONP_MAPPER);
 	}
 
 	/**
-	 * Creates a new {@link ReactiveElasticsearchClient}
+	 * Creates a new {@link ReactiveElasticsearchClient}. This uses a Rest5Client, if the old RestClient is needed, this
+	 * must be created with the {@link org.springframework.data.elasticsearch.client.elc.rest_client.RestClients} class
+	 * and passed in as parameter.
 	 *
 	 * @param clientConfiguration configuration options, must not be {@literal null}.
 	 * @param transportOptions options to be added to each request.
@@ -105,7 +111,7 @@ public final class ElasticsearchClients {
 		Assert.notNull(clientConfiguration, "ClientConfiguration must not be null!");
 		Assert.notNull(jsonpMapper, "jsonpMapper must not be null");
 
-		return createReactive(getRestClient(clientConfiguration), transportOptions, jsonpMapper);
+		return createReactive(getRest5Client(clientConfiguration), transportOptions, jsonpMapper);
 	}
 
 	/**
