@@ -30,6 +30,23 @@ There is support for automatic creation of indices and writing the mappings when
 
 ====
 
+[[elasticsearch.operations.observation]]
+== Observation key values
+
+The default javadoc:org.springframework.data.elasticsearch.client.elc.DefaultElasticsearchObservationConvention[] records `spring.data.operation` as a low-cardinality key.
+Low-cardinality keys appear as metric tags and in traces.
+It records the index name as `spring.data.collection` and the batch size as `spring.data.batch.size` in high-cardinality keys.
+High-cardinality keys appear in traces, but not as metric tags.
+The convention omits these keys when their values are absent.
+
+Index names can have many distinct values, for example with rolling or per-tenant indices.
+Keeping the index name out of metric tags prevents each index from creating separate metric time series.
+The contextual observation name still includes the index name when it is present.
+
+To customize these defaults, register a javadoc:org.springframework.data.elasticsearch.client.elc.ElasticsearchObservationConvention[] bean or call `setObservationConvention(...)` on the template.
+A custom convention can include `spring.data.collection` as a low-cardinality key if index names have a bounded set of values.
+Both `ElasticsearchTemplate` and `ReactiveElasticsearchTemplate` support custom conventions.
+
 [[elasticsearch.operations.usage]]
 == Usage examples
 

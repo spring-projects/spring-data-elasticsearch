@@ -43,28 +43,28 @@ public class DefaultElasticsearchObservationConvention implements ElasticsearchO
 	}
 
 	@Override
-	public KeyValues getLowCardinalityKeyValues(ElasticsearchObservationContext context) {
+	public KeyValues getLowCardinalityKeyValues(final ElasticsearchObservationContext context) {
 
-		KeyValues keyValues = KeyValues.of(
+		return KeyValues.of(
 				ElasticsearchObservation.LowCardinalityKeyNames.OPERATION.withValue(context.getOperationName().getValue()));
-
-		String indexName = context.getIndexName();
-		if (indexName != null) {
-			keyValues = keyValues.and(ElasticsearchObservation.LowCardinalityKeyNames.COLLECTION.withValue(indexName));
-		}
-
-		return keyValues;
 	}
 
 	@Override
-	public KeyValues getHighCardinalityKeyValues(ElasticsearchObservationContext context) {
+	public KeyValues getHighCardinalityKeyValues(final ElasticsearchObservationContext context) {
 
-		Integer batchSize = context.getBatchSize();
+		var keyValues = KeyValues.empty();
+
+		final var indexName = context.getIndexName();
+		if (indexName != null) {
+			keyValues = keyValues.and(ElasticsearchObservation.HighCardinalityKeyNames.COLLECTION.withValue(indexName));
+		}
+
+		final var batchSize = context.getBatchSize();
 		if (batchSize != null) {
-			return KeyValues.of(
+			keyValues = keyValues.and(
 					ElasticsearchObservation.HighCardinalityKeyNames.BATCH_SIZE.withValue(String.valueOf(batchSize)));
 		}
 
-		return KeyValues.empty();
+		return keyValues;
 	}
 }
