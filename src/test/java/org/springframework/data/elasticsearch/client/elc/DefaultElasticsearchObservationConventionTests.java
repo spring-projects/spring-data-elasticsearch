@@ -107,27 +107,61 @@ class DefaultElasticsearchObservationConventionTests {
 	}
 
 	@Test
-	@DisplayName("should include spring.data.collection when index is present")
-	void shouldIncludeCollectionWhenIndexPresent() {
+	@DisplayName("should not include spring.data.collection in low cardinality key values")
+	void shouldNotIncludeCollectionInLowCardinality() {
 
-		ElasticsearchObservationContext context = new ElasticsearchObservationContext(ElasticsearchOperationName.SEARCH,
+		final var context = new ElasticsearchObservationContext(ElasticsearchOperationName.SEARCH,
 				IndexCoordinates.of("products"));
 
-		KeyValues keyValues = convention.getLowCardinalityKeyValues(context);
+		final var keyValues = convention.getLowCardinalityKeyValues(context);
 
-		assertThat(keyValues).contains(KeyValue.of("spring.data.collection", "products"));
+		assertThat(keyValues).containsExactly(KeyValue.of("spring.data.operation", "search"));
 	}
 
 	@Test
-	@DisplayName("should not include spring.data.collection when index is null")
-	void shouldNotIncludeCollectionWhenNull() {
+	@DisplayName("should include spring.data.collection as high cardinality when index is present")
+	void shouldIncludeCollectionAsHighCardinality() {
 
-		ElasticsearchObservationContext context = new ElasticsearchObservationContext(ElasticsearchOperationName.SEARCH,
-				null);
+		final var context = new ElasticsearchObservationContext(ElasticsearchOperationName.SEARCH,
+				IndexCoordinates.of("products"));
 
-		KeyValues keyValues = convention.getLowCardinalityKeyValues(context);
+		final var keyValues = convention.getHighCardinalityKeyValues(context);
 
-		assertThat(keyValues.stream().map(KeyValue::getKey)).doesNotContain("spring.data.collection");
+		assertThat(keyValues).containsExactly(KeyValue.of("spring.data.collection", "products"));
+	}
+
+	@Test
+	@DisplayName("should include comma-joined indices as high cardinality")
+	void shouldIncludeMultipleIndicesAsHighCardinality() {
+
+		final var context = new ElasticsearchObservationContext(ElasticsearchOperationName.SEARCH,
+				IndexCoordinates.of("index-a", "index-b"));
+
+		final var keyValues = convention.getHighCardinalityKeyValues(context);
+
+		assertThat(keyValues).containsExactly(KeyValue.of("spring.data.collection", "index-a,index-b"));
+	}
+
+	@Test
+	@DisplayName("should return empty high cardinality key values when index and batch size are absent")
+	void shouldReturnEmptyHighCardinalityWhenIndexAndBatchSizeAbsent() {
+
+		final var context = new ElasticsearchObservationContext(ElasticsearchOperationName.SEARCH, null);
+
+		assertThat(convention.getLowCardinalityKeyValues(context))
+				.containsExactly(KeyValue.of("spring.data.operation", "search"));
+		assertThat(convention.getHighCardinalityKeyValues(context)).isEmpty();
+	}
+
+	@Test
+	@DisplayName("should include batch size without an index")
+	void shouldIncludeBatchSizeWithoutIndex() {
+
+		final var context = new ElasticsearchObservationContext(ElasticsearchOperationName.BULK, null);
+		context.setBatchSize(5);
+
+		assertThat(convention.getHighCardinalityKeyValues(context))
+				.containsExactly(KeyValue.of("spring.data.batch.size", "5"));
 	}
 
 	@Test
@@ -157,8 +191,8 @@ class DefaultElasticsearchObservationConventionTests {
 	}
 
 	@Test
-	@DisplayName("should return empty high cardinality key values when batch size is null")
-	void shouldReturnEmptyHighCardinalityWhenNoBatchSize() {
+	@DisplayName("should not include spring.data.batch.size when batch size is null")
+	void shouldNotIncludeBatchSizeWhenNull() {
 
 		ElasticsearchObservationContext context = new ElasticsearchObservationContext(ElasticsearchOperationName.SEARCH,
 				IndexCoordinates.of("products"));
@@ -179,9 +213,9 @@ class DefaultElasticsearchObservationConventionTests {
 		KeyValues lowCardValues = convention.getLowCardinalityKeyValues(context);
 		KeyValues highCardValues = convention.getHighCardinalityKeyValues(context);
 
-		assertThat(lowCardValues).contains(KeyValue.of("spring.data.operation", "bulk"),
-				KeyValue.of("spring.data.collection", "orders"));
-		assertThat(highCardValues).contains(KeyValue.of("spring.data.batch.size", "100"));
+		assertThat(lowCardValues).containsExactly(KeyValue.of("spring.data.operation", "bulk"));
+		assertThat(highCardValues).containsExactlyInAnyOrder(KeyValue.of("spring.data.collection", "orders"),
+				KeyValue.of("spring.data.batch.size", "100"));
 	}
 
 	@Test

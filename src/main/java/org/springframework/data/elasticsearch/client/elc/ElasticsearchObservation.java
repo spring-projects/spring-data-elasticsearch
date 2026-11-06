@@ -67,7 +67,14 @@ public enum ElasticsearchObservation implements ObservationDocumentation {
 			public String asString() {
 				return "spring.data.operation";
 			}
-		},
+		}
+	}
+
+	/**
+	 * High cardinality key names for Spring Data Elasticsearch observations. These appear only on traces/spans, not on
+	 * metrics, because their values are unbounded or optional per operation.
+	 */
+	enum HighCardinalityKeyNames implements KeyName {
 
 		/**
 		 * The target collection (index) name. Only present when the operation targets a specific index.
@@ -77,14 +84,7 @@ public enum ElasticsearchObservation implements ObservationDocumentation {
 			public String asString() {
 				return "spring.data.collection";
 			}
-		}
-	}
-
-	/**
-	 * High cardinality key names for Spring Data Elasticsearch observations. These appear only on traces/spans, not on
-	 * metrics, because their values are unbounded or optional per operation.
-	 */
-	enum HighCardinalityKeyNames implements KeyName {
+		},
 
 		/**
 		 * The number of operations included in a batch (bulk) request. Only present for bulk operations.
