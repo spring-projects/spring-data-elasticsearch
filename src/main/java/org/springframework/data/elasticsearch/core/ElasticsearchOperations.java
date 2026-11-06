@@ -16,6 +16,10 @@
 package org.springframework.data.elasticsearch.core;
 
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.elasticsearch.client.UnsupportedClientOperationException;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngester;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterListener;
+import org.springframework.data.elasticsearch.core.bulk.BulkIngesterOptions;
 import org.springframework.data.elasticsearch.core.cluster.ClusterOperations;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -35,6 +39,7 @@ import org.springframework.data.elasticsearch.core.sql.SqlOperations;
  * @author Zetang Zeng
  * @author Dmitriy Yakovlev
  * @author Peter-Josef Meisch
+ * @author Ralph Ursprung
  */
 public interface ElasticsearchOperations extends DocumentOperations, SearchOperations, ScriptOperations, SqlOperations {
 
@@ -74,6 +79,78 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 */
 	@Nullable
 	String getEntityRouting(Object entity);
+
+	// region bulk ingester
+	/**
+	 * Creates a {@link BulkIngester} that sends the added operations to Elasticsearch in bulk requests. The ingester
+	 * uses the converter, entity callbacks, routing resolver and refresh policy of this instance. The refresh policy is
+	 * applied to every bulk request unless {@link BulkIngesterOptions#getBulkOptions()} defines one.
+	 * <p>
+	 * The returned ingester must be closed after use.
+	 *
+	 * @param options the options for the ingester, must not be {@literal null}
+	 * @param index the index for operations that don't define one, must not be {@literal null}
+	 * @param listener the listener that is informed about the outcome of each request, must not be {@literal null}
+	 * @param <C> the type of the context that can be passed when adding an operation
+	 * @return the bulk ingester
+	 * @throws UnsupportedClientOperationException if the client implementation does not support a bulk ingester
+	 * @since 6.2
+	 */
+	default <C> BulkIngester<C> bulkIngester(BulkIngesterOptions options, IndexCoordinates index,
+			BulkIngesterListener<C> listener) {
+		throw new UnsupportedClientOperationException(getClass(), "bulkIngester");
+	}
+
+	/**
+	 * Creates a {@link BulkIngester} for the index of an entity class.
+	 *
+	 * @param options the options for the ingester, must not be {@literal null}
+	 * @param clazz the entity class that defines the index for operations that don't define one, must not be
+	 *          {@literal null}
+	 * @param listener the listener that is informed about the outcome of each request, must not be {@literal null}
+	 * @param <C> the type of the context that can be passed when adding an operation
+	 * @return the bulk ingester
+	 * @throws UnsupportedClientOperationException if the client implementation does not support a bulk ingester
+	 * @since 6.2
+	 * @see #bulkIngester(BulkIngesterOptions, IndexCoordinates, BulkIngesterListener)
+	 */
+	default <C> BulkIngester<C> bulkIngester(BulkIngesterOptions options, Class<?> clazz,
+			BulkIngesterListener<C> listener) {
+		return bulkIngester(options, getIndexCoordinatesFor(clazz), listener);
+	}
+
+	/**
+	 * Creates a {@link BulkIngester} with {@link BulkIngesterOptions#defaultOptions() default options}.
+	 *
+	 * @param index the index for operations that don't define one, must not be {@literal null}
+	 * @param listener the listener that is informed about the outcome of each request, must not be {@literal null}
+	 * @param <C> the type of the context that can be passed when adding an operation
+	 * @return the bulk ingester
+	 * @throws UnsupportedClientOperationException if the client implementation does not support a bulk ingester
+	 * @since 6.2
+	 * @see #bulkIngester(BulkIngesterOptions, IndexCoordinates, BulkIngesterListener)
+	 */
+	default <C> BulkIngester<C> bulkIngester(IndexCoordinates index, BulkIngesterListener<C> listener) {
+		return bulkIngester(BulkIngesterOptions.defaultOptions(), index, listener);
+	}
+
+	/**
+	 * Creates a {@link BulkIngester} with {@link BulkIngesterOptions#defaultOptions() default options} for the index of
+	 * an entity class.
+	 *
+	 * @param clazz the entity class that defines the index for operations that don't define one, must not be
+	 *          {@literal null}
+	 * @param listener the listener that is informed about the outcome of each request, must not be {@literal null}
+	 * @param <C> the type of the context that can be passed when adding an operation
+	 * @return the bulk ingester
+	 * @throws UnsupportedClientOperationException if the client implementation does not support a bulk ingester
+	 * @since 6.2
+	 * @see #bulkIngester(BulkIngesterOptions, IndexCoordinates, BulkIngesterListener)
+	 */
+	default <C> BulkIngester<C> bulkIngester(Class<?> clazz, BulkIngesterListener<C> listener) {
+		return bulkIngester(BulkIngesterOptions.defaultOptions(), getIndexCoordinatesFor(clazz), listener);
+	}
+	// endregion
 
 	// region helper
 	/**
