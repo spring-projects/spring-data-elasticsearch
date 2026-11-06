@@ -56,20 +56,22 @@ import org.springframework.data.elasticsearch.annotations.HighlightParameters;
 import org.springframework.data.elasticsearch.annotations.Query;
 import org.springframework.data.elasticsearch.annotations.SourceFilters;
 import org.springframework.data.elasticsearch.core.ReactiveElasticsearchOperations;
+import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
+import org.springframework.data.elasticsearch.repository.ReactiveElasticsearchRepository;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
 import org.springframework.data.repository.query.Param;
-import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
 /**
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
  * @author Jens Schauder
  * @author Haibo Liu
+ * @author Minju Kim
  */
 @SpringIntegrationTest
 abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
@@ -651,6 +653,21 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		assertThat(documentWithIdExistsInIndex(toBeDeleted.getId()).block()).isFalse();
 	}
 
+	@Test // #3384
+	@DisplayName("should delete entry when id publisher and refresh policy are given")
+	void shouldDeleteEntryWhenIdPublisherAndRefreshPolicyAreGiven() {
+
+		SampleEntity toBeDeleted = new SampleEntity("id-two");
+		bulkIndex(new SampleEntity("id-one"), toBeDeleted) //
+				.block();
+
+		repository.deleteById(Mono.just(toBeDeleted.getId()), RefreshPolicy.IMMEDIATE) //
+				.as(StepVerifier::create) //
+				.verifyComplete();
+
+		assertThat(documentWithIdExistsInIndex(toBeDeleted.getId()).block()).isFalse();
+	}
+
 	@Test // DATAES-976
 	void deleteAllByIdShouldDeleteEntry() {
 
@@ -1064,7 +1081,7 @@ abstract class SimpleReactiveElasticsearchRepositoryIntegrationTests {
 		return operations.saveAll(Arrays.asList(entities), IndexCoordinates.of(indexNameProvider.indexName())).then();
 	}
 
-	interface ReactiveSampleEntityRepository extends ReactiveCrudRepository<SampleEntity, String> {
+	interface ReactiveSampleEntityRepository extends ReactiveElasticsearchRepository<SampleEntity, String> {
 
 		Flux<SampleEntity> findAllByMessageLike(String message);
 

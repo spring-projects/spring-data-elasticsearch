@@ -44,6 +44,7 @@ import org.springframework.util.Assert;
  * @author Peter-Josef Meisch
  * @author Aleksei Arsenev
  * @author Jens Schauder
+ * @author Minju Kim
  * @since 3.2
  */
 public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveElasticsearchRepository<T, ID> {
@@ -252,7 +253,7 @@ public class SimpleReactiveElasticsearchRepository<T, ID> implements ReactiveEla
 
 		Assert.notNull(id, "Id must not be null!");
 
-		return Mono.from(id).flatMap(id2 -> deleteById(id, refreshPolicy));
+		return Mono.from(id).flatMap(id2 -> deleteById(id2, refreshPolicy));
 	}
 
 	@Override
