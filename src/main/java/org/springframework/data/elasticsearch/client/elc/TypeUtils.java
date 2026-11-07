@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.elasticsearch.core.ActiveShardCount;
 import org.springframework.data.elasticsearch.core.RefreshPolicy;
 import org.springframework.data.elasticsearch.core.document.Document;
 import org.springframework.data.elasticsearch.core.query.GeoDistanceOrder;
@@ -60,6 +61,7 @@ import org.springframework.util.Assert;
  * Utility to handle new Elasticsearch client type values.
  *
  * @author Peter-Josef Meisch
+ * @author Minju Kim
  * @since 4.4
  */
 final class TypeUtils {
@@ -437,18 +439,32 @@ final class TypeUtils {
 		return null;
 	}
 
-	static Integer waitForActiveShardsCount(@Nullable String value) {
-		// values taken from the RHLC implementation
+	@Nullable
+	static WaitForActiveShards waitForActiveShards(@Nullable String value) {
+
 		if (value == null) {
-			return -2;
-		} else if ("all".equals(value.toLowerCase())) {
-			return -1;
+			return null;
+		} else if ("all".equalsIgnoreCase(value)) {
+			return WaitForActiveShards.of(b -> b.option(WaitForActiveShardOptions.All));
 		} else {
 			try {
-				return Integer.parseInt(value);
+				int count = Integer.parseInt(value);
+				return WaitForActiveShards.of(b -> b.count(count));
 			} catch (NumberFormatException e) {
 				throw new IllegalArgumentException("Illegale value for waitForActiveShards" + value);
 			}
+		}
+	}
+
+	@Nullable
+	static WaitForActiveShards waitForActiveShards(@Nullable ActiveShardCount activeShardCount) {
+
+		if (activeShardCount == null || ActiveShardCount.DEFAULT.equals(activeShardCount)) {
+			return null;
+		} else if (ActiveShardCount.ALL.equals(activeShardCount)) {
+			return WaitForActiveShards.of(b -> b.option(WaitForActiveShardOptions.All));
+		} else {
+			return WaitForActiveShards.of(b -> b.count(activeShardCount.value()));
 		}
 	}
 

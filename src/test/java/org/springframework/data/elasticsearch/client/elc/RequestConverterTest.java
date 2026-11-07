@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import co.elastic.clients.elasticsearch._types.Refresh;
+import co.elastic.clients.elasticsearch._types.WaitForActiveShardOptions;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.UpdateRequest;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
@@ -48,12 +49,14 @@ import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.core.query.UpdateQuery;
+import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
 
 /**
  * @author Peter-Josef Meisch
  * @author Han Seungwoo
  * @author Steven Pearce
  * @author Ralph Ursprung
+ * @author Minju Kim
  */
 class RequestConverterTest {
 
@@ -228,6 +231,58 @@ class RequestConverterTest {
 		assertThat(bulkRequest.pipeline()).isEqualTo("pipeline");
 		assertThat(bulkRequest.routing()).containsExactly("routing");
 		assertThat(bulkRequest.operations()).isEmpty();
+	}
+
+	@Test // #3386
+	@DisplayName("should not send a negative count for wait for all active shards in bulk request")
+	void shouldNotSendANegativeCountForWaitForAllActiveShardsInBulkRequest() {
+
+		final var bulkOptions = BulkOptions.builder() //
+				.withWaitForActiveShards(ActiveShardCount.ALL) //
+				.build();
+
+		final var bulkRequest = requestConverter.bulkRequestBuilder(bulkOptions, null).operations(List.of()).build();
+
+		assertThat(bulkRequest.waitForActiveShards().option()).isEqualTo(WaitForActiveShardOptions.All);
+	}
+
+	@Test // #3386
+	@DisplayName("should not send wait for active shards in bulk request for default active shard count")
+	void shouldNotSendWaitForActiveShardsInBulkRequestForDefaultActiveShardCount() {
+
+		final var bulkOptions = BulkOptions.builder() //
+				.withWaitForActiveShards(ActiveShardCount.DEFAULT) //
+				.build();
+
+		final var bulkRequest = requestConverter.bulkRequestBuilder(bulkOptions, null).operations(List.of()).build();
+
+		assertThat(bulkRequest.waitForActiveShards()).isNull();
+	}
+
+	@Test // #3386
+	@DisplayName("should not send a negative count for wait for all active shards in reindex request")
+	void shouldNotSendANegativeCountForWaitForAllActiveShardsInReindexRequest() {
+
+		final var reindexRequest = ReindexRequest.builder(IndexCoordinates.of("source"), IndexCoordinates.of("dest")) //
+				.withWaitForActiveShards("all") //
+				.build();
+
+		final var request = requestConverter.reindex(reindexRequest, true);
+
+		assertThat(request.waitForActiveShards().option()).isEqualTo(WaitForActiveShardOptions.All);
+	}
+
+	@Test // #3386
+	@DisplayName("should not send a negative count for wait for all active shards in update by query request")
+	void shouldNotSendANegativeCountForWaitForAllActiveShardsInUpdateByQueryRequest() {
+
+		final var updateQuery = UpdateQuery.builder(new CriteriaQuery(Criteria.where("message").is("foo"))) //
+				.withWaitForActiveShards("all") //
+				.build();
+
+		final var request = requestConverter.documentUpdateByQueryRequest(updateQuery, IndexCoordinates.of("foo"), null);
+
+		assertThat(request.waitForActiveShards().option()).isEqualTo(WaitForActiveShardOptions.All);
 	}
 
 	@Test // #3345
