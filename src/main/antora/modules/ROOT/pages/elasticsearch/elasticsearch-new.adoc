@@ -17,6 +17,7 @@
 * Reactive saveAll does not report bulk failures of documents without an id. (https://github.com/spring-projects/spring-data-elasticsearch/issues/3369[GH #3369])
 * Add a `BulkIngester` to send operations in bulk requests as they are produced. (https://github.com/spring-projects/spring-data-elasticsearch/issues/2071[GH #2071])
 * Fix: ElasticsearchClients.createReactive(ClientConfiguration) uses the legacy RestClient.  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3361[GH #3361])
+* Fix: ReactiveElasticsearchRepository.deleteById(Publisher, RefreshPolicy) calls itself instead of deleting.  (https://github.com/spring-projects/spring-data-elasticsearch/issues/3384[GH #3384])
 
 [[new-features.6-1-0]]
 == New in Spring Data Elasticsearch 6.1
