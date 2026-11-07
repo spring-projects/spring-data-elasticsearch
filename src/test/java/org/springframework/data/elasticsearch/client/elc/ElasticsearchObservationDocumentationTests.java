@@ -17,6 +17,8 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
 
+import io.micrometer.common.KeyValue;
+import io.micrometer.common.KeyValues;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
@@ -59,17 +61,17 @@ class ElasticsearchObservationDocumentationTests {
 		KeyName[] keyNames = ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.getLowCardinalityKeyNames();
 		List<String> keyStrings = Arrays.stream(keyNames).map(KeyName::asString).collect(Collectors.toList());
 
-		assertThat(keyStrings).containsExactlyInAnyOrder("spring.data.operation", "spring.data.collection");
+		assertThat(keyStrings).containsExactly("spring.data.operation");
 	}
 
 	@Test
-	@DisplayName("should declare spring.data.batch.size as high cardinality key name")
+	@DisplayName("should declare collection and batch size as high cardinality key names")
 	void shouldDeclareHighCardinalityKeyNames() {
 
 		KeyName[] keyNames = ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.getHighCardinalityKeyNames();
 		List<String> keyStrings = Arrays.stream(keyNames).map(KeyName::asString).collect(Collectors.toList());
 
-		assertThat(keyStrings).containsExactly("spring.data.batch.size");
+		assertThat(keyStrings).containsExactlyInAnyOrder("spring.data.collection", "spring.data.batch.size");
 	}
 
 	@Test
@@ -90,7 +92,8 @@ class ElasticsearchObservationDocumentationTests {
 		TestObservationRegistryAssert.assertThat(registry).doesNotHaveAnyRemainingCurrentObservation()
 				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command").that()
 				.hasLowCardinalityKeyValue("spring.data.operation", "search")
-				.hasLowCardinalityKeyValue("spring.data.collection", "products").hasContextualNameEqualTo("search products");
+				.doesNotHaveLowCardinalityKeyValue("spring.data.collection", "products")
+				.hasHighCardinalityKeyValue("spring.data.collection", "products").hasContextualNameEqualTo("search products");
 	}
 
 	@Test
@@ -112,6 +115,7 @@ class ElasticsearchObservationDocumentationTests {
 				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command").that()
 				.hasLowCardinalityKeyValue("spring.data.operation", "delete")
 				.doesNotHaveLowCardinalityKeyValue("spring.data.collection", "products").hasContextualNameEqualTo("delete");
+		assertThat(context.getHighCardinalityKeyValues()).isEmpty();
 	}
 
 	@Test
@@ -133,6 +137,7 @@ class ElasticsearchObservationDocumentationTests {
 		TestObservationRegistryAssert.assertThat(registry)
 				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command").that()
 				.hasLowCardinalityKeyValue("spring.data.operation", "bulk")
+				.hasHighCardinalityKeyValue("spring.data.collection", "logs")
 				.hasHighCardinalityKeyValue("spring.data.batch.size", "25").hasContextualNameEqualTo("bulk logs");
 	}
 
@@ -203,5 +208,32 @@ class ElasticsearchObservationDocumentationTests {
 
 		TestObservationRegistryAssert.assertThat(registry).hasObservationWithNameEqualTo("custom.elasticsearch.command")
 				.that().hasContextualNameEqualTo("custom search");
+	}
+
+	@Test
+	@DisplayName("custom convention can opt in to collection as a metric tag")
+	void customConventionCanIncludeCollectionAsLowCardinality() {
+
+		final var registry = TestObservationRegistry.create();
+		final var customConvention = new DefaultElasticsearchObservationConvention() {
+			@Override
+			public KeyValues getLowCardinalityKeyValues(final ElasticsearchObservationContext context) {
+				final var keyValues = super.getLowCardinalityKeyValues(context);
+				final var indexName = context.getIndexName();
+				return indexName != null ? keyValues.and(KeyValue.of("spring.data.collection", indexName)) : keyValues;
+			}
+		};
+		final var context = new ElasticsearchObservationContext(ElasticsearchOperationName.SEARCH,
+				IndexCoordinates.of("products"));
+		final var observation = ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(customConvention,
+				DefaultElasticsearchObservationConvention.INSTANCE, () -> context, registry);
+
+		observation.start();
+		observation.stop();
+
+		TestObservationRegistryAssert.assertThat(registry)
+				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command").that()
+				.hasLowCardinalityKeyValue("spring.data.operation", "search")
+				.hasLowCardinalityKeyValue("spring.data.collection", "products");
 	}
 }
