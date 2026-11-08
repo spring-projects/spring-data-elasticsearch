@@ -27,8 +27,10 @@ import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
+import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.ContextView;
 import reactor.util.function.Tuple2;
 
 import java.time.Duration;
@@ -137,45 +139,46 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	private <T> Mono<T> observeMono(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			Mono<T> mono) {
-		return Mono.defer(() -> {
-			Observation observation = createObservation(operationName, index, null);
-			return mono.doOnError(observation::error) //
-					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(Observation.class, observation))
-					.doOnSubscribe(subscription -> observation.start());
-		});
+		return observeMono(operationName, index, null, mono);
 	}
 
 	private <T> Flux<T> observeFlux(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			Flux<T> flux) {
-		return Flux.defer(() -> {
-			Observation observation = createObservation(operationName, index, null);
+		return Flux.deferContextual(contextView -> {
+			Observation observation = createObservation(operationName, index, null, contextView);
 			return flux.doOnError(observation::error) //
 					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(Observation.class, observation))
+					.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation))
 					.doOnSubscribe(subscription -> observation.start());
 		});
 	}
 
 	private <T> Mono<T> observeMono(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
-			int batchSize, Mono<T> mono) {
-		return Mono.defer(() -> {
-			Observation observation = createObservation(operationName, index, batchSize);
+			@Nullable Integer batchSize, Mono<T> mono) {
+		return Mono.deferContextual(contextView -> {
+			Observation observation = createObservation(operationName, index, batchSize, contextView);
 			return mono.doOnError(observation::error) //
 					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(Observation.class, observation))
+					.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation))
 					.doOnSubscribe(subscription -> observation.start());
 		});
 	}
 
 	private Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
-			@Nullable Integer batchSize) {
+			@Nullable Integer batchSize, ContextView contextView) {
 
 		ElasticsearchObservationContext context = new ElasticsearchObservationContext(operationName, index);
 		context.setBatchSize(batchSize);
 
-		return ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(observationConvention,
-				DefaultElasticsearchObservationConvention.INSTANCE, () -> context, observationRegistry);
+		Observation observation = ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(
+				observationConvention, DefaultElasticsearchObservationConvention.INSTANCE, () -> context,
+				observationRegistry);
+
+		Observation parent = contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
+		if (parent != null) {
+			observation.parentObservation(parent);
+		}
+		return observation;
 	}
 
 	// region Document operations
