@@ -165,7 +165,8 @@ class ObservabilityIntegrationTests {
 		TestObservationRegistryAssert.assertThat(observationRegistry)
 				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command")
 				.that()
-				.hasLowCardinalityKeyValue("spring.data.collection", indexNameProvider.indexName());
+				.doesNotHaveLowCardinalityKeyValue("spring.data.collection", indexNameProvider.indexName())
+				.hasHighCardinalityKeyValue("spring.data.collection", indexNameProvider.indexName());
 	}
 
 	@Test
@@ -261,7 +262,7 @@ class ObservabilityIntegrationTests {
 				.hasNumberOfObservationsWithNameEqualTo("spring.data.elasticsearch.command", 2)
 				.forAllObservationsWithNameEqualTo("spring.data.elasticsearch.command", observation -> observation
 						.hasLowCardinalityKeyValue("spring.data.operation", "bulk")
-						.hasLowCardinalityKeyValue("spring.data.collection", indexNameProvider.indexName()))
+						.hasHighCardinalityKeyValue("spring.data.collection", indexNameProvider.indexName()))
 				.hasAnObservationWithAKeyValue("spring.data.batch.size", "2")
 				.hasAnObservationWithAKeyValue("spring.data.batch.size", "1")
 				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command")
