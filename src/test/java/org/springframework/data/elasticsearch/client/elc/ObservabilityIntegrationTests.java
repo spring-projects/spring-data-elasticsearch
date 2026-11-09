@@ -186,7 +186,7 @@ class ObservabilityIntegrationTests {
 
 		assertOperation("bulk");
 		assertThat(operations("bulk")).singleElement().satisfies(ctx -> {
-			assertThat(ctx.getLowCardinalityKeyValue("spring.data.collection").getValue())
+			assertThat(ctx.getHighCardinalityKeyValue("spring.data.collection").getValue())
 					.isEqualTo(indexNameProvider.indexName());
 			assertThat(ctx.getHighCardinalityKeyValue("spring.data.batch.size").getValue()).isEqualTo("2");
 		});
@@ -206,7 +206,7 @@ class ObservabilityIntegrationTests {
 		assertThat(result).hasSize(2);
 		assertOperation("multiSearch");
 		assertThat(operations("multiSearch")).singleElement().satisfies(ctx -> assertThat(
-				ctx.getLowCardinalityKeyValue("spring.data.collection").getValue())
+				ctx.getHighCardinalityKeyValue("spring.data.collection").getValue())
 				.isEqualTo(indexNameProvider.indexName()));
 	}
 
