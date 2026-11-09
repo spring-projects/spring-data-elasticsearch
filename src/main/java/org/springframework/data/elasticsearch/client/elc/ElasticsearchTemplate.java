@@ -35,6 +35,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -271,7 +272,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(bulkOptions, "bulkOptions must not be null");
 		Assert.notNull(index, "index must not be null");
 
-		doBulkOperation(queries, bulkOptions, index);
+		observe(ElasticsearchOperationName.BULK, index, queries.size(), () -> doBulkOperation(queries, bulkOptions, index));
 	}
 
 	@Override
@@ -535,11 +536,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(query, "query must not be null");
 		Assert.notNull(query.getPageable(), "pageable of query must not be null.");
 
-		SearchRequest request = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index, false,
-				scrollTimeInMillis);
-		SearchResponse<EntityAsMap> response = execute(client -> client.search(request, EntityAsMap.class));
+		return observe(ElasticsearchOperationName.SCROLL_START, index, () -> {
+			SearchRequest request = requestConverter.searchRequest(query, routingResolver.getRouting(), clazz, index, false,
+					scrollTimeInMillis);
+			SearchResponse<EntityAsMap> response = execute(client -> client.search(request, EntityAsMap.class));
 
-		return getSearchScrollHits(clazz, index, response);
+			return getSearchScrollHits(clazz, index, response);
+		});
 	}
 
 	@Override
@@ -548,11 +551,13 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(scrollId, "scrollId must not be null");
 
-		ScrollRequest request = ScrollRequest
-				.of(sr -> sr.scrollId(scrollId).scroll(Time.of(t -> t.time(scrollTimeInMillis + "ms"))));
-		ScrollResponse<EntityAsMap> response = execute(client -> client.scroll(request, EntityAsMap.class));
+		return observe(ElasticsearchOperationName.SCROLL_CONTINUE, index, () -> {
+			ScrollRequest request = ScrollRequest
+					.of(sr -> sr.scrollId(scrollId).scroll(Time.of(t -> t.time(scrollTimeInMillis + "ms"))));
+			ScrollResponse<EntityAsMap> response = execute(client -> client.scroll(request, EntityAsMap.class));
 
-		return getSearchScrollHits(clazz, index, response);
+			return getSearchScrollHits(clazz, index, response);
+		});
 	}
 
 	private <T> SearchScrollHits<T> getSearchScrollHits(Class<T> clazz, IndexCoordinates index,
@@ -571,8 +576,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(scrollIds, "scrollIds must not be null");
 
 		if (!scrollIds.isEmpty()) {
-			ClearScrollRequest request = ClearScrollRequest.of(csr -> csr.scrollId(scrollIds));
-			execute(client -> client.clearScroll(request));
+			observe(ElasticsearchOperationName.SCROLL_CLEAR, null, () -> {
+				ClearScrollRequest request = ClearScrollRequest.of(csr -> csr.scrollId(scrollIds));
+				return execute(client -> client.clearScroll(request));
+			});
 		}
 	}
 
@@ -637,7 +644,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 			multiSearchQueryParameters.add(new MultiSearchQueryParameter(query, clazz, index));
 		}
 
-		return multiSearch(multiSearchQueryParameters, isSearchTemplateQuery);
+		var distinctIndexes = new HashSet<>(indexes);
+		var observedIndex = distinctIndexes.size() == 1 ? distinctIndexes.iterator().next() : null;
+
+		return observe(ElasticsearchOperationName.MULTI_SEARCH, observedIndex,
+				() -> multiSearch(multiSearchQueryParameters, isSearchTemplateQuery));
 	}
 
 	private List<SearchHits<?>> multiSearch(List<MultiSearchQueryParameter> multiSearchQueryParameters,
@@ -794,13 +805,15 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	public SqlResponse search(SqlQuery query) {
 		Assert.notNull(query, "Query must not be null.");
 
-		try {
-			QueryResponse response = sqlClient.query(requestConverter.sqlQueryRequest(query));
+		return observe(ElasticsearchOperationName.SQL, null, () -> {
+			try {
+				QueryResponse response = sqlClient.query(requestConverter.sqlQueryRequest(query));
 
-			return responseConverter.sqlResponse(response);
-		} catch (Exception e) {
-			throw exceptionTranslator.translateException(e);
-		}
+				return responseConverter.sqlResponse(response);
+			} catch (Exception e) {
+				throw exceptionTranslator.translateException(e);
+			}
+		});
 	}
 	// endregion
 

@@ -17,10 +17,14 @@ package org.springframework.data.elasticsearch.client.elc;
 
 import static org.assertj.core.api.Assertions.*;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.tck.TestObservationRegistry;
 import io.micrometer.observation.tck.TestObservationRegistryAssert;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +46,8 @@ import org.springframework.data.elasticsearch.core.bulk.BulkIngesterOptions;
 import org.springframework.data.elasticsearch.core.bulk.BulkOperationResult;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
+import org.springframework.data.elasticsearch.core.query.SqlQuery;
+import org.springframework.data.elasticsearch.core.query.UpdateQuery;
 import org.springframework.data.elasticsearch.junit.jupiter.ElasticsearchTemplateConfiguration;
 import org.springframework.data.elasticsearch.junit.jupiter.SpringIntegrationTest;
 import org.springframework.data.elasticsearch.utils.IndexNameProvider;
@@ -60,6 +66,8 @@ import org.springframework.test.context.ContextConfiguration;
 @DisplayName("Observability Integration Tests")
 class ObservabilityIntegrationTests {
 
+	private static final List<Observation.Context> STOPPED = new CopyOnWriteArrayList<>();
+
 	@Configuration
 	@Import({ ElasticsearchTemplateConfiguration.class })
 	static class Config {
@@ -71,11 +79,24 @@ class ObservabilityIntegrationTests {
 
 		@Bean
 		TestObservationRegistry observationRegistry() {
-			return TestObservationRegistry.create();
+			var registry = TestObservationRegistry.create();
+			registry.observationConfig().observationHandler(new ObservationHandler<Observation.Context>() {
+				@Override
+				public boolean supportsContext(Observation.Context context) {
+					return true;
+				}
+
+				@Override
+				public void onStop(Observation.Context context) {
+					STOPPED.add(context);
+				}
+			});
+			return registry;
 		}
 	}
 
 	@Autowired private ElasticsearchOperations operations;
+
 	@Autowired private IndexNameProvider indexNameProvider;
 	@Autowired private TestObservationRegistry observationRegistry;
 
@@ -84,6 +105,7 @@ class ObservabilityIntegrationTests {
 		indexNameProvider.increment();
 		operations.indexOps(SampleEntity.class).createWithMapping();
 		observationRegistry.clear();
+		STOPPED.clear();
 	}
 
 	@Test
@@ -118,6 +140,7 @@ class ObservabilityIntegrationTests {
 		entity.setMessage("hello");
 		operations.save(entity);
 		observationRegistry.clear();
+		STOPPED.clear();
 
 		SearchHits<SampleEntity> hits = operations.search(operations.matchAllQuery(), SampleEntity.class);
 
@@ -143,6 +166,81 @@ class ObservabilityIntegrationTests {
 				.hasObservationWithNameEqualTo("spring.data.elasticsearch.command")
 				.that()
 				.hasLowCardinalityKeyValue("spring.data.collection", indexNameProvider.indexName());
+	}
+
+	@Test
+	@DisplayName("should record bulk observation with batch size for bulkUpdate")
+	void shouldRecordObservationForBulkUpdate() {
+
+		operations.save(sample("1"), sample("2"));
+		observationRegistry.clear();
+		STOPPED.clear();
+
+		var queries = List.of(
+				UpdateQuery.builder("1").withDocument(org.springframework.data.elasticsearch.core.document.Document
+						.from(Map.of("message", "u1"))).build(),
+				UpdateQuery.builder("2").withDocument(org.springframework.data.elasticsearch.core.document.Document
+						.from(Map.of("message", "u2"))).build());
+		operations.bulkUpdate(queries, IndexCoordinates.of(indexNameProvider.indexName()));
+
+		assertOperation("bulk");
+		assertThat(operations("bulk")).singleElement().satisfies(ctx -> {
+			assertThat(ctx.getLowCardinalityKeyValue("spring.data.collection").getValue())
+					.isEqualTo(indexNameProvider.indexName());
+			assertThat(ctx.getHighCardinalityKeyValue("spring.data.batch.size").getValue()).isEqualTo("2");
+		});
+	}
+
+	@Test
+	@DisplayName("should record observation for multiSearch")
+	void shouldRecordObservationForMultiSearch() {
+
+		operations.save(sample("1"));
+		observationRegistry.clear();
+		STOPPED.clear();
+
+		var result = operations.multiSearch(List.of(operations.matchAllQuery(), operations.matchAllQuery()),
+				SampleEntity.class, IndexCoordinates.of(indexNameProvider.indexName()));
+
+		assertThat(result).hasSize(2);
+		assertOperation("multiSearch");
+		assertThat(operations("multiSearch")).singleElement().satisfies(ctx -> assertThat(
+				ctx.getLowCardinalityKeyValue("spring.data.collection").getValue())
+				.isEqualTo(indexNameProvider.indexName()));
+	}
+
+	@Test
+	@DisplayName("should record observations for scroll operations of searchForStream")
+	void shouldRecordObservationsForSearchForStream() {
+
+		operations.save(sample("1"), sample("2"));
+		operations.indexOps(SampleEntity.class).refresh();
+		observationRegistry.clear();
+		STOPPED.clear();
+
+		try (var stream = operations.searchForStream(operations.matchAllQuery(), SampleEntity.class)) {
+			assertThat(stream.stream().count()).isEqualTo(2);
+		}
+
+		assertOperation("scrollStart");
+		assertOperation("scrollContinue");
+		assertOperation("scrollClear");
+	}
+
+	@Test
+	@DisplayName("should record observation for SQL search")
+	void shouldRecordObservationForSqlSearch() {
+
+		operations.save(sample("1"));
+		operations.indexOps(SampleEntity.class).refresh();
+		observationRegistry.clear();
+		STOPPED.clear();
+
+		var response = operations.search(
+				SqlQuery.builder("SELECT * FROM \"" + indexNameProvider.indexName() + "\"").build());
+
+		assertThat(response.getRows()).hasSize(1);
+		assertOperation("sql");
 	}
 
 	@Test // #2071
@@ -179,6 +277,26 @@ class ObservabilityIntegrationTests {
 		@Override
 		public void afterBulk(final long executionId, final List<@Nullable Object> contexts,
 				final RuntimeException failure) {}
+
+	}
+
+	private void assertOperation(String operation) {
+		assertThat(operations(operation)).isNotEmpty();
+	}
+
+	private List<Observation.Context> operations(String operation) {
+		return STOPPED.stream().filter(context -> {
+			var keyValue = context.getLowCardinalityKeyValue("spring.data.operation");
+			return keyValue != null && operation.equals(keyValue.getValue());
+		}).toList();
+	}
+
+	private SampleEntity sample(String id) {
+
+		var entity = new SampleEntity();
+		entity.setId(id);
+		entity.setMessage("hello");
+		return entity;
 	}
 
 	@Document(indexName = "#{@indexNameProvider.indexName()}")
