@@ -15,8 +15,9 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import static org.assertj.core.api.Assertions.*;
-
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +46,8 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
+
+import static org.assertj.core.api.Assertions.*;
 
 /**
  * @author Christoph Strobl
@@ -403,6 +406,28 @@ public class RepositoryStringQueryUnitTests extends RepositoryStringQueryUnitTes
 		assertThat(query).isInstanceOf(StringQuery.class);
 		assertThat(((StringQuery) query).getSource())
 				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota-Prius' } } } }");
+	}
+
+	@Test // #CVE-SpEL-RCE
+	@DisplayName("should not execute SpEL passed as parameter value")
+	void shouldNotExecuteSpElPassedAsParameterValue() throws NoSuchMethodException, IOException {
+
+		Path path = Path.of(System.getProperty("java.io.tmpdir"), "sde_cve_spel_rce.txt");
+		Files.deleteIfExists(path);
+		// make sure test file does not exist
+		assertThat(Files.exists(path))
+				.as("file " + path + " should not exist before test")
+				.isFalse();
+
+		//create query injecting RCE code that writes the test file
+		String payload = "#{T(java.lang.String).valueOf(T(java.lang.Runtime).getRuntime().exec(new String[]{'/bin/sh','-c','id > " +
+				path.toString() + "'}).waitFor())}";
+        org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByName", payload);
+
+		// make sure file does not exists
+		assertThat(Files.exists(path))
+				.as("file " + path + " should not exist after test")
+				.isFalse();
 	}
 
 	private RepositoryStringQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {

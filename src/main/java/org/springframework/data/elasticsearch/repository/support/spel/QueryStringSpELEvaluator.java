@@ -15,10 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.support.spel;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
-import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
 import org.springframework.data.elasticsearch.repository.query.ElasticsearchParametersParameterAccessor;
@@ -38,6 +36,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.expression.spel.support.StandardTypeConverter;
 import org.springframework.util.Assert;
+import org.springframework.util.ConcurrentLruCache;
 
 /**
  * To evaluate the SpEL expressions of the query string.
@@ -48,7 +47,12 @@ import org.springframework.util.Assert;
 public class QueryStringSpELEvaluator {
 
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
-	private static final Map<String, Expression> QUERY_EXPRESSIONS = new ConcurrentHashMap<>();
+	// ConcurrentLruCache does not support nullable V, so we use Optional here :-(
+	private static final ConcurrentLruCache<String, Optional<Expression>> QUERY_EXPRESSIONS_CACHE = new ConcurrentLruCache<>(
+			256, queryString -> {
+				Expression expr = PARSER.parseExpression(queryString, ParserContext.TEMPLATE_EXPRESSION);
+				return Optional.ofNullable(expr instanceof LiteralExpression ? null : expr);
+			});
 
 	private final String queryString;
 	private final ElasticsearchParametersParameterAccessor parameterAccessor;
@@ -80,21 +84,20 @@ public class QueryStringSpELEvaluator {
 	 * @return a plain string with values evaluated
 	 */
 	public String evaluate() {
-		Expression expr = getQueryExpression(queryString);
+		return QUERY_EXPRESSIONS_CACHE.get(queryString)
+				.map(expression -> {
+					EvaluationContext context = evaluationContextProvider.getEvaluationContext(parameterAccessor.getValues())
+							.getEvaluationContext();
 
-		if (expr != null) {
-			EvaluationContext context = evaluationContextProvider.getEvaluationContext(parameterAccessor.getValues())
-					.getEvaluationContext();
+					if (context instanceof StandardEvaluationContext standardEvaluationContext) {
+						standardEvaluationContext.setTypeConverter(elasticsearchSpELTypeConverter);
+					}
 
-			if (context instanceof StandardEvaluationContext standardEvaluationContext) {
-				standardEvaluationContext.setTypeConverter(elasticsearchSpELTypeConverter);
-			}
-
-			String parsed = parseExpressions(expr, context);
-			Assert.notNull(parsed, "Query parsed by SpEL should not be null");
-			return parsed;
-		}
-		return queryString;
+					String parsed = parseExpressions(expression, context);
+					Assert.notNull(parsed, "Query parsed by SpEL should not be null");
+					return parsed;
+				})
+				.orElse(queryString);
 	}
 
 	/**
@@ -134,11 +137,4 @@ public class QueryStringSpELEvaluator {
 		return parsed.toString();
 	}
 
-	@Nullable
-	private Expression getQueryExpression(String queryString) {
-		return QUERY_EXPRESSIONS.computeIfAbsent(queryString, f -> {
-			Expression expr = PARSER.parseExpression(queryString, ParserContext.TEMPLATE_EXPRESSION);
-			return expr instanceof LiteralExpression ? null : expr;
-		});
-	}
 }
