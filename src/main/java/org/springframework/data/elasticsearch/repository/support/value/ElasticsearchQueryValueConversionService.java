@@ -91,8 +91,12 @@ public class ElasticsearchQueryValueConversionService implements ConversionServi
 
 		if (valueConversionService.canConvert(sourceType, targetType)) {
 			return valueConversionService.convert(source, sourceType, targetType);
-		} else {
-			return delegate.convert(source, sourceType, targetType);
 		}
+
+		Object converted = delegate.convert(source, sourceType, targetType);
+		if (converted instanceof String && targetType.getType() == String.class) {
+			return valueConversionService.convert(converted, String.class);
+		}
+		return converted;
 	}
 }
