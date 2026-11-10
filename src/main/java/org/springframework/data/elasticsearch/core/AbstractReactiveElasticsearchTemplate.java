@@ -394,7 +394,7 @@ abstract public class AbstractReactiveElasticsearchTemplate
 
 	@Override
 	public Mono<Boolean> exists(String id, Class<?> entityType) {
-		return doExists(id, getIndexCoordinatesFor(entityType));
+		return exists(id, getIndexCoordinatesFor(entityType));
 	}
 
 	@Override
