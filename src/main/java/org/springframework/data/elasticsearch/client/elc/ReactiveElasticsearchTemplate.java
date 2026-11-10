@@ -27,10 +27,8 @@ import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.context.ContextView;
 import reactor.util.function.Tuple2;
 
 import java.time.Duration;
@@ -91,6 +89,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	private static final Log LOGGER = LogFactory.getLog(ReactiveElasticsearchTemplate.class);
 
 	@Nullable private ElasticsearchObservationConvention observationConvention;
+	private final ElasticsearchObservationSupport observationSupport = this::createObservation;
 
 	private final ReactiveElasticsearchClient client;
 	private final ReactiveElasticsearchSqlClient sqlClient;
@@ -144,41 +143,23 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	private <T> Flux<T> observeFlux(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			Flux<T> flux) {
-		return Flux.deferContextual(contextView -> {
-			Observation observation = createObservation(operationName, index, null, contextView);
-			return flux.doOnError(observation::error) //
-					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation))
-					.doOnSubscribe(subscription -> observation.start());
-		});
+		return observationSupport.observeFlux(operationName, index, flux);
 	}
 
 	private <T> Mono<T> observeMono(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			@Nullable Integer batchSize, Mono<T> mono) {
-		return Mono.deferContextual(contextView -> {
-			Observation observation = createObservation(operationName, index, batchSize, contextView);
-			return mono.doOnError(observation::error) //
-					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation))
-					.doOnSubscribe(subscription -> observation.start());
-		});
+		return observationSupport.observeMono(operationName, index, batchSize, mono);
 	}
 
 	private Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
-			@Nullable Integer batchSize, ContextView contextView) {
+			@Nullable Integer batchSize) {
 
-		ElasticsearchObservationContext context = new ElasticsearchObservationContext(operationName, index);
+		final var context = new ElasticsearchObservationContext(operationName, index);
 		context.setBatchSize(batchSize);
 
-		Observation observation = ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(
+		return ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(
 				observationConvention, DefaultElasticsearchObservationConvention.INSTANCE, () -> context,
 				observationRegistry);
-
-		Observation parent = contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
-		if (parent != null) {
-			observation.parentObservation(parent);
-		}
-		return observation;
 	}
 
 	// region Document operations
@@ -749,21 +730,27 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	public Mono<String> getClusterVersion() {
-		return Mono.from(execute((ReactiveElasticsearchClient reactiveElasticsearchClient) -> {
-			try (var ignored = DANGEROUS_disableRequiredPropertiesCheck(true)) {
-				return reactiveElasticsearchClient.info();
-			}
-		})).map(infoResponse -> infoResponse.version().number());
+
+		return observeMono(ElasticsearchOperationName.CLUSTER_INFO, null,
+				Mono.defer(() -> Mono.from(execute(reactiveElasticsearchClient -> {
+					try (final var ignored = DANGEROUS_disableRequiredPropertiesCheck(true)) {
+						return reactiveElasticsearchClient.info();
+					}
+				})).map(infoResponse -> infoResponse.version().number())));
 	}
 
 	@Override
 	public ReactiveIndexOperations indexOps(IndexCoordinates index) {
-		return new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, index);
+		final var template = new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, index);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override
 	public ReactiveIndexOperations indexOps(Class<?> clazz) {
-		return new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, clazz);
+		final var template = new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, clazz);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override
@@ -775,7 +762,9 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	 * @since 5.1
 	 */
 	private ReactiveClusterTemplate getReactiveClusterTemplate() {
-		return new ReactiveClusterTemplate(client.cluster(), converter);
+		final var template = new ReactiveClusterTemplate(client.cluster(), converter);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override

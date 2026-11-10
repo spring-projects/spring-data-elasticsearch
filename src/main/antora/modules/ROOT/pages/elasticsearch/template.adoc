@@ -54,6 +54,21 @@ Reindex observations record the source index names.
 `submitReindex` measures task submission, not the background task.
 Point-in-time operations inside a reactive search produce child observations under the search observation.
 
+Index and cluster operations use the same observation name and convention.
+Templates pass their observation registry and custom convention to the instances that `indexOps(...)` and `cluster()` return.
+Template copies retain this configuration.
+Index creation, deletion, existence checks, and refresh use `indexCreate`, `indexDelete`, `indexExists`, and `indexRefresh`.
+Index deletion produces one observation that includes its existence check.
+Mapping, settings, alias, and template operations use their method names as operation values.
+Both alias retrieval methods use `getAliases`, and index information uses `getIndexInformation`.
+Cluster health uses `clusterHealth`, and `getClusterVersion()` uses `clusterInfo`.
+
+Template operations and cluster operations do not record an index name.
+Alias actions and alias-name lookups also omit the index name because they can target indices other than the bound index.
+Alias lookups by index name and index information requests record their explicit index names.
+Local methods, such as `createMapping()` and `createSettings()`, do not send requests and do not produce observations.
+Reactive observations start on subscription and stop on completion, error, or cancellation.
+
 [[elasticsearch.operations.usage]]
 == Usage examples
 

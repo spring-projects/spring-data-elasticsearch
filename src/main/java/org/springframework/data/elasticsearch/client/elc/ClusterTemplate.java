@@ -16,8 +16,6 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import co.elastic.clients.elasticsearch.cluster.ElasticsearchClusterClient;
-import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.transport.ElasticsearchTransport;
 
 import org.springframework.data.elasticsearch.core.cluster.ClusterHealth;
@@ -40,9 +38,11 @@ public class ClusterTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 	@Override
 	public ClusterHealth health() {
 
-		HealthRequest healthRequest = requestConverter.clusterHealthRequest();
-		HealthResponse healthResponse = execute(client -> client.health(healthRequest));
-		return responseConverter.clusterHealth(healthResponse);
+		return observe(ElasticsearchOperationName.CLUSTER_HEALTH, null, () -> {
+			final var healthRequest = requestConverter.clusterHealthRequest();
+			final var healthResponse = execute(client -> client.health(healthRequest));
+			return responseConverter.clusterHealth(healthResponse);
+		});
 	}
 
 }

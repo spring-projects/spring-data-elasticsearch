@@ -88,6 +88,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	private static final Log LOGGER = LogFactory.getLog(ElasticsearchTemplate.class);
 
 	@Nullable private ElasticsearchObservationConvention observationConvention;
+	private final ElasticsearchObservationSupport observationSupport = this::createObservation;
 
 	private final ElasticsearchClient client;
 	private final ElasticsearchSqlClient sqlClient;
@@ -162,14 +163,12 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	private <T> T observe(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			Supplier<T> action) {
-		Observation observation = createObservation(operationName, index, null);
-		return observation.observe(action);
+		return observationSupport.observe(operationName, index, null, action);
 	}
 
 	private <T> T observe(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index, int batchSize,
 			Supplier<T> action) {
-		Observation observation = createObservation(operationName, index, batchSize);
-		return observation.observe(action);
+		return observationSupport.observe(operationName, index, batchSize, action);
 	}
 
 	Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
@@ -186,12 +185,16 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	// region child templates
 	@Override
 	public IndexOperations indexOps(Class<?> clazz) {
-		return new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, clazz);
+		final var template = new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, clazz);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override
 	public IndexOperations indexOps(IndexCoordinates index) {
-		return new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, index);
+		final var template = new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, index);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override
@@ -200,7 +203,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private ClusterTemplate getClusterTemplate() {
-		return new ClusterTemplate(client.cluster(), elasticsearchConverter);
+		final var template = new ClusterTemplate(client.cluster(), elasticsearchConverter);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 	// endregion
 
@@ -451,7 +456,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String getClusterVersion() {
-		return execute(client -> client.info().version().number());
+
+		return observe(ElasticsearchOperationName.CLUSTER_INFO, null,
+				() -> execute(client -> client.info().version().number()));
 	}
 
 	@Override

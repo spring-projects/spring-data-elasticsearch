@@ -19,10 +19,14 @@ import co.elastic.clients.ApiClient;
 import co.elastic.clients.elasticsearch.cluster.ElasticsearchClusterClient;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Transport;
+import io.micrometer.observation.Observation;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
+import org.jspecify.annotations.Nullable;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.util.Assert;
 
 /**
@@ -39,6 +43,12 @@ public abstract class ChildTemplate<T extends Transport, CLIENT extends ApiClien
 	protected final RequestConverter requestConverter;
 	protected final ResponseConverter responseConverter;
 	protected final ElasticsearchExceptionTranslator exceptionTranslator;
+	ElasticsearchObservationSupport observationSupport = (operation, index, batchSize) -> Observation.NOOP;
+
+	protected <RESULT> RESULT observe(final ElasticsearchOperationName operation,
+			@Nullable final IndexCoordinates index, final Supplier<RESULT> action) {
+		return observationSupport.observe(operation, index, null, action);
+	}
 
 	public ChildTemplate(CLIENT client, ElasticsearchConverter elasticsearchConverter) {
 		this.client = client;
