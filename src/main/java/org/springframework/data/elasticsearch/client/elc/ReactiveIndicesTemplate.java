@@ -134,36 +134,45 @@ public class ReactiveIndicesTemplate
 
 	private Mono<Boolean> doCreate(IndexCoordinates indexCoordinates, Map<String, @Nullable Object> settings,
 			@Nullable Document mapping) {
-		Set<Alias> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
-		CreateIndexSettings indexSettings = CreateIndexSettings.builder(indexCoordinates)
-				.withAliases(aliases)
-				.withSettings(settings)
-				.withMapping(mapping)
-				.build();
 
-		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
-		Mono<CreateIndexResponse> createIndexResponse = Mono.from(execute(client -> client.create(createIndexRequest)));
-		return createIndexResponse.map(CreateIndexResponse::acknowledged);
+		return observeMono(ElasticsearchOperationName.INDEX_CREATE, indexCoordinates, Mono.defer(() -> {
+			final var aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<Alias>();
+			final var indexSettings = CreateIndexSettings.builder(indexCoordinates)
+					.withAliases(aliases)
+					.withSettings(settings)
+					.withMapping(mapping)
+					.build();
+
+			final var createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
+			final var createIndexResponse = Mono.from(execute(client -> client.create(createIndexRequest)));
+			return createIndexResponse.map(CreateIndexResponse::acknowledged);
+		}));
 	}
 
 	@Override
 	public Mono<Boolean> delete() {
-		return exists().flatMap(exists -> {
 
-			if (exists) {
-				DeleteIndexRequest deleteIndexRequest = requestConverter.indicesDeleteRequest(getIndexCoordinates());
-				return Mono.from(execute(client -> client.delete(deleteIndexRequest))) //
-						.map(DeleteIndexResponse::acknowledged) //
-						.onErrorResume(NoSuchIndexException.class, e -> Mono.just(false));
-			} else {
-				return Mono.just(false);
-			}
-		});
+		return observeMono(ElasticsearchOperationName.INDEX_DELETE, getIndexCoordinates(), Mono.defer(() ->
+			doExists().flatMap(exists -> {
 
+				if (exists) {
+					final var deleteIndexRequest = requestConverter.indicesDeleteRequest(getIndexCoordinates());
+					return Mono.from(execute(client -> client.delete(deleteIndexRequest))) //
+							.map(DeleteIndexResponse::acknowledged) //
+							.onErrorResume(NoSuchIndexException.class, e -> Mono.just(false));
+				} else {
+					return Mono.just(false);
+				}
+			})));
 	}
 
 	@Override
 	public Mono<Boolean> exists() {
+
+		return observeMono(ElasticsearchOperationName.INDEX_EXISTS, getIndexCoordinates(), Mono.defer(this::doExists));
+	}
+
+	private Mono<Boolean> doExists() {
 
 		ExistsRequest existsRequest = requestConverter.indicesExistsRequest(getIndexCoordinates());
 		Mono<BooleanResponse> existsResponse = Mono.from(execute(client -> client.exists(existsRequest)));
@@ -172,8 +181,11 @@ public class ReactiveIndicesTemplate
 
 	@Override
 	public Mono<Void> refresh() {
-		RefreshRequest refreshRequest = requestConverter.indicesRefreshRequest(getIndexCoordinates());
-		return Mono.from(execute(client -> client.refresh(refreshRequest))).then();
+
+		return observeMono(ElasticsearchOperationName.INDEX_REFRESH, getIndexCoordinates(), Mono.defer(() -> {
+			final var refreshRequest = requestConverter.indicesRefreshRequest(getIndexCoordinates());
+			return Mono.from(execute(client -> client.refresh(refreshRequest))).then();
+		}));
 	}
 
 	@Override
@@ -204,19 +216,23 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(mapping, "mapping must not be null");
 
-		Mono<PutMappingResponse> putMappingResponse = mapping
-				.map(document -> requestConverter.indicesPutMappingRequest(getIndexCoordinates(), document)) //
-				.flatMap(putMappingRequest -> Mono.from(client.putMapping(putMappingRequest)));
-		return putMappingResponse.map(PutMappingResponse::acknowledged);
+		return observeMono(ElasticsearchOperationName.PUT_MAPPING, getIndexCoordinates(), Mono.defer(() -> {
+			final var putMappingResponse = mapping
+					.map(document -> requestConverter.indicesPutMappingRequest(getIndexCoordinates(), document)) //
+					.flatMap(putMappingRequest -> Mono.from(execute(client -> client.putMapping(putMappingRequest))));
+			return putMappingResponse.map(PutMappingResponse::acknowledged);
+		}));
 	}
 
 	@Override
 	public Mono<Document> getMapping() {
 
-		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		GetMappingRequest getMappingRequest = requestConverter.indicesGetMappingRequest(indexCoordinates);
-		Mono<GetMappingResponse> getMappingResponse = Mono.from(execute(client -> client.getMapping(getMappingRequest)));
-		return getMappingResponse.map(response -> responseConverter.indicesGetMapping(response, indexCoordinates));
+		return observeMono(ElasticsearchOperationName.GET_MAPPING, getIndexCoordinates(), Mono.defer(() -> {
+			final var indexCoordinates = getIndexCoordinates();
+			final var getMappingRequest = requestConverter.indicesGetMappingRequest(indexCoordinates);
+			final var getMappingResponse = Mono.from(execute(client -> client.getMapping(getMappingRequest)));
+			return getMappingResponse.map(response -> responseConverter.indicesGetMapping(response, indexCoordinates));
+		}));
 	}
 
 	@Override
@@ -241,12 +257,14 @@ public class ReactiveIndicesTemplate
 	@Override
 	public Mono<Settings> getSettings(boolean includeDefaults) {
 
-		GetIndicesSettingsRequest getSettingsRequest = requestConverter.indicesGetSettingsRequest(getIndexCoordinates(),
-				includeDefaults);
-		Mono<GetIndicesSettingsResponse> getSettingsResponse = Mono
-				.from(execute(client -> client.getSettings(getSettingsRequest)));
-		return getSettingsResponse
-				.map(response -> responseConverter.indicesGetSettings(response, getIndexCoordinates().getIndexName()));
+		return observeMono(ElasticsearchOperationName.GET_SETTINGS, getIndexCoordinates(), Mono.defer(() -> {
+			final var getSettingsRequest = requestConverter.indicesGetSettingsRequest(getIndexCoordinates(),
+					includeDefaults);
+			final var getSettingsResponse = Mono
+					.from(execute(client -> client.getSettings(getSettingsRequest)));
+			return getSettingsResponse
+					.map(response -> responseConverter.indicesGetSettings(response, getIndexCoordinates().getIndexName()));
+		}));
 	}
 
 	@Override
@@ -254,27 +272,33 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(aliasActions, "aliasActions must not be null");
 
-		UpdateAliasesRequest updateAliasesRequest = requestConverter.indicesUpdateAliasesRequest(aliasActions);
-		Mono<UpdateAliasesResponse> updateAliasesResponse = Mono
-				.from(execute(client -> client.updateAliases(updateAliasesRequest)));
-		return updateAliasesResponse.map(AcknowledgedResponseBase::acknowledged);
+		return observeMono(ElasticsearchOperationName.ALIAS, null, Mono.defer(() -> {
+			final var updateAliasesRequest = requestConverter.indicesUpdateAliasesRequest(aliasActions);
+			final var updateAliasesResponse = Mono
+					.from(execute(client -> client.updateAliases(updateAliasesRequest)));
+			return updateAliasesResponse.map(AcknowledgedResponseBase::acknowledged);
+		}));
 	}
 
 	@Override
 	public Mono<Map<String, Set<AliasData>>> getAliases(String... aliasNames) {
-		return getAliases(aliasNames, null);
+
+		return doGetAliases(aliasNames, null);
 	}
 
 	@Override
 	public Mono<Map<String, Set<AliasData>>> getAliasesForIndex(String... indexNames) {
-		return getAliases(null, indexNames);
+
+		return doGetAliases(null, indexNames);
 	}
 
-	private Mono<Map<String, Set<AliasData>>> getAliases(String@Nullable [] aliasNames, String@Nullable [] indexNames) {
+	private Mono<Map<String, Set<AliasData>>> doGetAliases(String@Nullable [] aliasNames, String@Nullable [] indexNames) {
 
-		GetAliasRequest getAliasRequest = requestConverter.indicesGetAliasRequest(aliasNames, indexNames);
-		Mono<GetAliasResponse> getAliasResponse = Mono.from(execute(client -> client.getAlias(getAliasRequest)));
-		return getAliasResponse.map(responseConverter::indicesGetAliasData);
+		return observeMono(ElasticsearchOperationName.GET_ALIASES, indexNames != null && indexNames.length > 0 ? IndexCoordinates.of(indexNames) : null, Mono.defer(() -> {
+			final var getAliasRequest = requestConverter.indicesGetAliasRequest(aliasNames, indexNames);
+			final var getAliasResponse = Mono.from(execute(client -> client.getAlias(getAliasRequest)));
+			return getAliasResponse.map(responseConverter::indicesGetAliasData);
+		}));
 	}
 
 	@Override
@@ -282,11 +306,13 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(putTemplateRequest, "putTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.PutTemplateRequest putTemplateRequestES = requestConverter
-				.indicesPutTemplateRequest(putTemplateRequest);
-		Mono<PutTemplateResponse> putTemplateResponse = Mono
-				.from(execute(client -> client.putTemplate(putTemplateRequestES)));
-		return putTemplateResponse.map(PutTemplateResponse::acknowledged);
+		return observeMono(ElasticsearchOperationName.PUT_TEMPLATE, null, Mono.defer(() -> {
+			final var putTemplateRequestES = requestConverter
+					.indicesPutTemplateRequest(putTemplateRequest);
+			final var putTemplateResponse = Mono
+					.from(execute(client -> client.putTemplate(putTemplateRequestES)));
+			return putTemplateResponse.map(PutTemplateResponse::acknowledged);
+		}));
 	}
 
 	@Override
@@ -294,11 +320,13 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(putComponentTemplateRequest, "putComponentTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest putComponentTemplateRequestES = requestConverter
-				.clusterPutComponentTemplateRequest(putComponentTemplateRequest);
-		// the new Elasticsearch client has this call in the cluster index
-		return Mono.from(clusterTemplate.execute(client -> client.putComponentTemplate(putComponentTemplateRequestES)))
-				.map(AcknowledgedResponseBase::acknowledged);
+		return observeMono(ElasticsearchOperationName.PUT_COMPONENT_TEMPLATE, null, Mono.defer(() -> {
+			final var putComponentTemplateRequestES = requestConverter
+					.clusterPutComponentTemplateRequest(putComponentTemplateRequest);
+			// the new Elasticsearch client has this call in the cluster index
+			return Mono.from(clusterTemplate.execute(client -> client.putComponentTemplate(putComponentTemplateRequestES)))
+					.map(AcknowledgedResponseBase::acknowledged);
+		}));
 	}
 
 	@Override
@@ -306,10 +334,12 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(getComponentTemplateRequest, "getComponentTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.cluster.GetComponentTemplateRequest getComponentTemplateRequestES = requestConverter
-				.clusterGetComponentTemplateRequest(getComponentTemplateRequest);
-		return Flux.from(clusterTemplate.execute(client -> client.getComponentTemplate(getComponentTemplateRequestES)))
-				.flatMapIterable(responseConverter::clusterGetComponentTemplates);
+		return observeFlux(ElasticsearchOperationName.GET_COMPONENT_TEMPLATE, null, Flux.defer(() -> {
+			final var getComponentTemplateRequestES = requestConverter
+					.clusterGetComponentTemplateRequest(getComponentTemplateRequest);
+			return Flux.from(clusterTemplate.execute(client -> client.getComponentTemplate(getComponentTemplateRequestES)))
+					.flatMapIterable(responseConverter::clusterGetComponentTemplates);
+		}));
 	}
 
 	@Override
@@ -317,12 +347,14 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(existsComponentTemplateRequest, "existsComponentTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.cluster.ExistsComponentTemplateRequest existsComponentTemplateRequestES = requestConverter
-				.clusterExistsComponentTemplateRequest(existsComponentTemplateRequest);
+		return observeMono(ElasticsearchOperationName.EXISTS_COMPONENT_TEMPLATE, null, Mono.defer(() -> {
+			final var existsComponentTemplateRequestES = requestConverter
+					.clusterExistsComponentTemplateRequest(existsComponentTemplateRequest);
 
-		return Mono
-				.from(clusterTemplate.execute(client -> client.existsComponentTemplate(existsComponentTemplateRequestES)))
-				.map(BooleanResponse::value);
+			return Mono
+					.from(clusterTemplate.execute(client -> client.existsComponentTemplate(existsComponentTemplateRequestES)))
+					.map(BooleanResponse::value);
+		}));
 	}
 
 	@Override
@@ -330,11 +362,13 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(deleteComponentTemplateRequest, "deleteComponentTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateRequest deleteComponentTemplateRequestES = requestConverter
-				.clusterDeleteComponentTemplateRequest(deleteComponentTemplateRequest);
-		return Mono
-				.from(clusterTemplate.execute(client -> client.deleteComponentTemplate(deleteComponentTemplateRequestES)))
-				.map(AcknowledgedResponseBase::acknowledged);
+		return observeMono(ElasticsearchOperationName.DELETE_COMPONENT_TEMPLATE, null, Mono.defer(() -> {
+			final var deleteComponentTemplateRequestES = requestConverter
+					.clusterDeleteComponentTemplateRequest(deleteComponentTemplateRequest);
+			return Mono
+					.from(clusterTemplate.execute(client -> client.deleteComponentTemplate(deleteComponentTemplateRequestES)))
+					.map(AcknowledgedResponseBase::acknowledged);
+		}));
 	}
 
 	@Override
@@ -342,11 +376,13 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(putIndexTemplateRequest, "putIndexTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.PutIndexTemplateRequest putIndexTemplateRequestES = requestConverter
-				.indicesPutIndexTemplateRequest(putIndexTemplateRequest);
+		return observeMono(ElasticsearchOperationName.PUT_INDEX_TEMPLATE, null, Mono.defer(() -> {
+			final var putIndexTemplateRequestES = requestConverter
+					.indicesPutIndexTemplateRequest(putIndexTemplateRequest);
 
-		return Mono.from(execute(client -> client.putIndexTemplate(putIndexTemplateRequestES)))
-				.map(PutIndexTemplateResponse::acknowledged);
+			return Mono.from(execute(client -> client.putIndexTemplate(putIndexTemplateRequestES)))
+					.map(PutIndexTemplateResponse::acknowledged);
+		}));
 	}
 
 	@Override
@@ -354,10 +390,12 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(existsIndexTemplateRequest, "existsIndexTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest existsIndexTemplateRequestES = requestConverter
-				.indicesExistsIndexTemplateRequest(existsIndexTemplateRequest);
-		return Mono.from(execute(client -> client.existsIndexTemplate(existsIndexTemplateRequestES)))
-				.map(BooleanResponse::value);
+		return observeMono(ElasticsearchOperationName.EXISTS_INDEX_TEMPLATE, null, Mono.defer(() -> {
+			final var existsIndexTemplateRequestES = requestConverter
+					.indicesExistsIndexTemplateRequest(existsIndexTemplateRequest);
+			return Mono.from(execute(client -> client.existsIndexTemplate(existsIndexTemplateRequestES)))
+					.map(BooleanResponse::value);
+		}));
 	}
 
 	@Override
@@ -365,10 +403,12 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(getIndexTemplateRequest, "getIndexTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.GetIndexTemplateRequest getIndexTemplateRequestES = requestConverter
-				.indicesGetIndexTemplateRequest(getIndexTemplateRequest);
-		return Mono.from(execute(client -> client.getIndexTemplate(getIndexTemplateRequestES)))
-				.flatMapIterable(responseConverter::getIndexTemplates);
+		return observeFlux(ElasticsearchOperationName.GET_INDEX_TEMPLATE, null, Flux.defer(() -> {
+			final var getIndexTemplateRequestES = requestConverter
+					.indicesGetIndexTemplateRequest(getIndexTemplateRequest);
+			return Mono.from(execute(client -> client.getIndexTemplate(getIndexTemplateRequestES)))
+					.flatMapIterable(responseConverter::getIndexTemplates);
+		}));
 	}
 
 	@Override
@@ -376,10 +416,12 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(deleteIndexTemplateRequest, "deleteIndexTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.DeleteIndexTemplateRequest deleteIndexTemplateRequestES = requestConverter
-				.indicesDeleteIndexTemplateRequest(deleteIndexTemplateRequest);
-		return Mono.from(execute(client -> client.deleteIndexTemplate(deleteIndexTemplateRequestES)))
-				.map(AcknowledgedResponseBase::acknowledged);
+		return observeMono(ElasticsearchOperationName.DELETE_INDEX_TEMPLATE, null, Mono.defer(() -> {
+			final var deleteIndexTemplateRequestES = requestConverter
+					.indicesDeleteIndexTemplateRequest(deleteIndexTemplateRequest);
+			return Mono.from(execute(client -> client.deleteIndexTemplate(deleteIndexTemplateRequestES)))
+					.map(AcknowledgedResponseBase::acknowledged);
+		}));
 	}
 
 	@Override
@@ -387,22 +429,24 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(getTemplateRequest, "getTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.GetTemplateRequest getTemplateRequestES = requestConverter
-				.indicesGetTemplateRequest(getTemplateRequest);
-		Mono<GetTemplateResponse> getTemplateResponse = Mono
-				.from(execute(client -> client.getTemplate(getTemplateRequestES)))
-                .onErrorComplete(ResourceNotFoundException.class);
+		return observeMono(ElasticsearchOperationName.GET_TEMPLATE, null, Mono.defer(() -> {
+			final var getTemplateRequestES = requestConverter
+					.indicesGetTemplateRequest(getTemplateRequest);
+			final var getTemplateResponse = Mono
+					.from(execute(client -> client.getTemplate(getTemplateRequestES)))
+					.onErrorComplete(ResourceNotFoundException.class);
 
-		return getTemplateResponse.flatMap(response -> {
-			if (response != null) {
-				TemplateData templateData = responseConverter.indicesGetTemplateData(response,
-						getTemplateRequest.getTemplateName());
-				if (templateData != null) {
-					return Mono.just(templateData);
+			return getTemplateResponse.flatMap(response -> {
+				if (response != null) {
+					final var templateData = responseConverter.indicesGetTemplateData(response,
+							getTemplateRequest.getTemplateName());
+					if (templateData != null) {
+						return Mono.just(templateData);
+					}
 				}
-			}
-			return Mono.empty();
-		});
+				return Mono.empty();
+			});
+		}));
 	}
 
 	@Override
@@ -410,9 +454,11 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(existsTemplateRequest, "existsTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.ExistsTemplateRequest existsTemplateRequestES = requestConverter
-				.indicesExistsTemplateRequest(existsTemplateRequest);
-		return Mono.from(execute(client -> client.existsTemplate(existsTemplateRequestES))).map(BooleanResponse::value);
+		return observeMono(ElasticsearchOperationName.EXISTS_TEMPLATE, null, Mono.defer(() -> {
+			final var existsTemplateRequestES = requestConverter
+					.indicesExistsTemplateRequest(existsTemplateRequest);
+			return Mono.from(execute(client -> client.existsTemplate(existsTemplateRequestES))).map(BooleanResponse::value);
+		}));
 	}
 
 	@Override
@@ -420,20 +466,24 @@ public class ReactiveIndicesTemplate
 
 		Assert.notNull(deleteTemplateRequest, "deleteTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.DeleteTemplateRequest deleteTemplateRequestES = requestConverter
-				.indicesDeleteTemplateRequest(deleteTemplateRequest);
-		return Mono.from(execute(client -> client.deleteTemplate(deleteTemplateRequestES)))
-				.map(DeleteTemplateResponse::acknowledged);
+		return observeMono(ElasticsearchOperationName.DELETE_TEMPLATE, null, Mono.defer(() -> {
+			final var deleteTemplateRequestES = requestConverter
+					.indicesDeleteTemplateRequest(deleteTemplateRequest);
+			return Mono.from(execute(client -> client.deleteTemplate(deleteTemplateRequestES)))
+					.map(DeleteTemplateResponse::acknowledged);
+		}));
 	}
 
 	@Override
 	public Flux<IndexInformation> getInformation(IndexCoordinates index) {
 
-		GetIndexRequest request = requestConverter.indicesGetIndexRequest(index);
+		return observeFlux(ElasticsearchOperationName.GET_INDEX_INFORMATION, index, Flux.defer(() -> {
+			final var request = requestConverter.indicesGetIndexRequest(index);
 
-		return Mono.from(execute(client -> client.get(request))) //
-				.map(responseConverter::indicesGetIndexInformations) //
-				.flatMapMany(Flux::fromIterable);
+			return Mono.from(execute(client -> client.get(request))) //
+					.map(responseConverter::indicesGetIndexInformations) //
+					.flatMapMany(Flux::fromIterable);
+		}));
 	}
 
 	@Override

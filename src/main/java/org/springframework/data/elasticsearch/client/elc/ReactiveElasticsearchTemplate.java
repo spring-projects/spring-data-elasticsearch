@@ -27,10 +27,8 @@ import co.elastic.clients.transport.Version;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationRegistry;
-import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.context.ContextView;
 import reactor.util.function.Tuple2;
 
 import java.time.Duration;
@@ -91,6 +89,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	private static final Log LOGGER = LogFactory.getLog(ReactiveElasticsearchTemplate.class);
 
 	@Nullable private ElasticsearchObservationConvention observationConvention;
+	private final ElasticsearchObservationSupport observationSupport = this::createObservation;
 
 	private final ReactiveElasticsearchClient client;
 	private final ReactiveElasticsearchSqlClient sqlClient;
@@ -144,41 +143,23 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	private <T> Flux<T> observeFlux(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			Flux<T> flux) {
-		return Flux.deferContextual(contextView -> {
-			Observation observation = createObservation(operationName, index, null, contextView);
-			return flux.doOnError(observation::error) //
-					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation))
-					.doOnSubscribe(subscription -> observation.start());
-		});
+		return observationSupport.observeFlux(operationName, index, flux);
 	}
 
 	private <T> Mono<T> observeMono(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			@Nullable Integer batchSize, Mono<T> mono) {
-		return Mono.deferContextual(contextView -> {
-			Observation observation = createObservation(operationName, index, batchSize, contextView);
-			return mono.doOnError(observation::error) //
-					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation))
-					.doOnSubscribe(subscription -> observation.start());
-		});
+		return observationSupport.observeMono(operationName, index, batchSize, mono);
 	}
 
 	private Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
-			@Nullable Integer batchSize, ContextView contextView) {
+			@Nullable Integer batchSize) {
 
-		ElasticsearchObservationContext context = new ElasticsearchObservationContext(operationName, index);
+		final var context = new ElasticsearchObservationContext(operationName, index);
 		context.setBatchSize(batchSize);
 
-		Observation observation = ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(
+		return ElasticsearchObservation.ELASTICSEARCH_COMMAND_OBSERVATION.observation(
 				observationConvention, DefaultElasticsearchObservationConvention.INSTANCE, () -> context,
 				observationRegistry);
-
-		Observation parent = contextView.getOrDefault(ObservationThreadLocalAccessor.KEY, null);
-		if (parent != null) {
-			observation.parentObservation(parent);
-		}
-		return observation;
 	}
 
 	// region Document operations
@@ -316,11 +297,13 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
-				true);
+		return observeMono(ElasticsearchOperationName.REINDEX, reindexRequest.getSource().getIndexes(), Mono.defer(() -> {
+			final var reindexRequestES = requestConverter.reindex(reindexRequest,
+					true);
 
-		return Mono.from(execute( //
-				client -> client.reindex(reindexRequestES))).map(responseConverter::reindexResponse);
+			return Mono.from(execute( //
+					client -> client.reindex(reindexRequestES))).map(responseConverter::reindexResponse);
+		}));
 	}
 
 	@Override
@@ -328,15 +311,17 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
-				false);
+		return observeMono(ElasticsearchOperationName.SUBMIT_REINDEX, reindexRequest.getSource().getIndexes(), Mono.defer(() -> {
+			final var reindexRequestES = requestConverter.reindex(reindexRequest,
+					false);
 
-		return Mono.from(execute( //
-				client -> client.reindex(reindexRequestES)))
-				.flatMap(response -> (response.task() == null)
-						? Mono.error(
-								new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
-						: Mono.just(response.task()));
+			return Mono.from(execute( //
+					client -> client.reindex(reindexRequestES)))
+					.flatMap(response -> (response.task() == null)
+							? Mono.error(
+									new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
+							: Mono.just(response.task()));
+		}));
 	}
 
 	@Override
@@ -679,8 +664,10 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(keepAlive, "keepAlive must not be null");
 		Assert.notNull(ignoreUnavailable, "ignoreUnavailable must not be null");
 
-		var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
-		return Mono.from(execute(client -> client.openPointInTime(request))).map(OpenPointInTimeResponse::id);
+		return observeMono(ElasticsearchOperationName.OPEN_POINT_IN_TIME, index, Mono.defer(() -> {
+			final var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
+			return Mono.from(execute(client -> client.openPointInTime(request))).map(OpenPointInTimeResponse::id);
+		}));
 	}
 
 	@Override
@@ -688,8 +675,10 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(pit, "pit must not be null");
 
-		ClosePointInTimeRequest request = requestConverter.searchClosePointInTime(pit);
-		return Mono.from(execute(client -> client.closePointInTime(request))).map(ClosePointInTimeResponse::succeeded);
+		return observeMono(ElasticsearchOperationName.CLOSE_POINT_IN_TIME, null, Mono.defer(() -> {
+			final var request = requestConverter.searchClosePointInTime(pit);
+			return Mono.from(execute(client -> client.closePointInTime(request))).map(ClosePointInTimeResponse::succeeded);
+		}));
 	}
 
 	// endregion
@@ -700,8 +689,10 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(script, "script must not be null");
 
-		var request = requestConverter.scriptPut(script);
-		return Mono.from(execute(client -> client.putScript(request))).map(PutScriptResponse::acknowledged);
+		return observeMono(ElasticsearchOperationName.PUT_SCRIPT, null, Mono.defer(() -> {
+			final var request = requestConverter.scriptPut(script);
+			return Mono.from(execute(client -> client.putScript(request))).map(PutScriptResponse::acknowledged);
+		}));
 	}
 
 	@Override
@@ -709,16 +700,21 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(name, "name must not be null");
 
-		var request = requestConverter.scriptGet(name);
-		return Mono.from(execute(client -> client.getScript(request))).mapNotNull(responseConverter::scriptResponse);
+		return observeMono(ElasticsearchOperationName.GET_SCRIPT, null, Mono.defer(() -> {
+			final var request = requestConverter.scriptGet(name);
+			return Mono.from(execute(client -> client.getScript(request))).mapNotNull(responseConverter::scriptResponse);
+		}));
 	}
 
 	@Override
 	public Mono<Boolean> deleteScript(String name) {
+
 		Assert.notNull(name, "name must not be null");
 
-		var request = requestConverter.scriptDelete(name);
-		return Mono.from(execute(client -> client.deleteScript(request))).map(DeleteScriptResponse::acknowledged);
+		return observeMono(ElasticsearchOperationName.DELETE_SCRIPT, null, Mono.defer(() -> {
+			final var request = requestConverter.scriptDelete(name);
+			return Mono.from(execute(client -> client.deleteScript(request))).map(DeleteScriptResponse::acknowledged);
+		}));
 	}
 	// endregion
 
@@ -734,21 +730,27 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 	@Override
 	public Mono<String> getClusterVersion() {
-		return Mono.from(execute((ReactiveElasticsearchClient reactiveElasticsearchClient) -> {
-			try (var ignored = DANGEROUS_disableRequiredPropertiesCheck(true)) {
-				return reactiveElasticsearchClient.info();
-			}
-		})).map(infoResponse -> infoResponse.version().number());
+
+		return observeMono(ElasticsearchOperationName.CLUSTER_INFO, null,
+				Mono.defer(() -> Mono.from(execute(reactiveElasticsearchClient -> {
+					try (final var ignored = DANGEROUS_disableRequiredPropertiesCheck(true)) {
+						return reactiveElasticsearchClient.info();
+					}
+				})).map(infoResponse -> infoResponse.version().number())));
 	}
 
 	@Override
 	public ReactiveIndexOperations indexOps(IndexCoordinates index) {
-		return new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, index);
+		final var template = new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, index);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override
 	public ReactiveIndexOperations indexOps(Class<?> clazz) {
-		return new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, clazz);
+		final var template = new ReactiveIndicesTemplate(client.indices(), getReactiveClusterTemplate(), converter, clazz);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override
@@ -760,7 +762,9 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	 * @since 5.1
 	 */
 	private ReactiveClusterTemplate getReactiveClusterTemplate() {
-		return new ReactiveClusterTemplate(client.cluster(), converter);
+		final var template = new ReactiveClusterTemplate(client.cluster(), converter);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override

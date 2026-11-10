@@ -88,6 +88,7 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	private static final Log LOGGER = LogFactory.getLog(ElasticsearchTemplate.class);
 
 	@Nullable private ElasticsearchObservationConvention observationConvention;
+	private final ElasticsearchObservationSupport observationSupport = this::createObservation;
 
 	private final ElasticsearchClient client;
 	private final ElasticsearchSqlClient sqlClient;
@@ -162,14 +163,12 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	private <T> T observe(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
 			Supplier<T> action) {
-		Observation observation = createObservation(operationName, index, null);
-		return observation.observe(action);
+		return observationSupport.observe(operationName, index, null, action);
 	}
 
 	private <T> T observe(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index, int batchSize,
 			Supplier<T> action) {
-		Observation observation = createObservation(operationName, index, batchSize);
-		return observation.observe(action);
+		return observationSupport.observe(operationName, index, batchSize, action);
 	}
 
 	Observation createObservation(ElasticsearchOperationName operationName, @Nullable IndexCoordinates index,
@@ -186,12 +185,16 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	// region child templates
 	@Override
 	public IndexOperations indexOps(Class<?> clazz) {
-		return new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, clazz);
+		final var template = new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, clazz);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override
 	public IndexOperations indexOps(IndexCoordinates index) {
-		return new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, index);
+		final var template = new IndicesTemplate(client.indices(), getClusterTemplate(), elasticsearchConverter, index);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 
 	@Override
@@ -200,7 +203,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 	}
 
 	private ClusterTemplate getClusterTemplate() {
-		return new ClusterTemplate(client.cluster(), elasticsearchConverter);
+		final var template = new ClusterTemplate(client.cluster(), elasticsearchConverter);
+		template.observationSupport = observationSupport;
+		return template;
 	}
 	// endregion
 
@@ -376,26 +381,32 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
-				true);
-		co.elastic.clients.elasticsearch.core.ReindexResponse reindexResponse = execute(
-				client -> client.reindex(reindexRequestES));
-		return responseConverter.reindexResponse(reindexResponse);
+		return observe(ElasticsearchOperationName.REINDEX, reindexRequest.getSource().getIndexes(), () -> {
+			final var reindexRequestES = requestConverter.reindex(reindexRequest,
+					true);
+			final var reindexResponse = execute(
+					client -> client.reindex(reindexRequestES));
+			return responseConverter.reindexResponse(reindexResponse);
+		});
 	}
 
 	@Override
 	public String submitReindex(ReindexRequest reindexRequest) {
 
-		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
-				false);
-		co.elastic.clients.elasticsearch.core.ReindexResponse reindexResponse = execute(
-				client -> client.reindex(reindexRequestES));
+		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		if (reindexResponse.task() == null) {
-			throw new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request");
-		}
+		return observe(ElasticsearchOperationName.SUBMIT_REINDEX, reindexRequest.getSource().getIndexes(), () -> {
+			final var reindexRequestES = requestConverter.reindex(reindexRequest,
+					false);
+			final var reindexResponse = execute(
+					client -> client.reindex(reindexRequestES));
 
-		return reindexResponse.task();
+			if (reindexResponse.task() == null) {
+				throw new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request");
+			}
+
+			return reindexResponse.task();
+		});
 	}
 
 	@Override
@@ -445,7 +456,9 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 	@Override
 	public String getClusterVersion() {
-		return execute(client -> client.info().version().number());
+
+		return observe(ElasticsearchOperationName.CLUSTER_INFO, null,
+				() -> execute(client -> client.info().version().number()));
 	}
 
 	@Override
@@ -757,8 +770,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(keepAlive, "keepAlive must not be null");
 		Assert.notNull(ignoreUnavailable, "ignoreUnavailable must not be null");
 
-		var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
-		return execute(client -> client.openPointInTime(request)).id();
+		return observe(ElasticsearchOperationName.OPEN_POINT_IN_TIME, index, () -> {
+			final var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
+			return execute(client -> client.openPointInTime(request)).id();
+		});
 	}
 
 	@Override
@@ -766,9 +781,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(pit, "pit must not be null");
 
-		ClosePointInTimeRequest request = requestConverter.searchClosePointInTime(pit);
-		var response = execute(client -> client.closePointInTime(request));
-		return response.succeeded();
+		return observe(ElasticsearchOperationName.CLOSE_POINT_IN_TIME, null, () -> {
+			final var request = requestConverter.searchClosePointInTime(pit);
+			final var response = execute(client -> client.closePointInTime(request));
+			return response.succeeded();
+		});
 	}
 
 	// endregion
@@ -779,8 +796,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(script, "script must not be null");
 
-		var request = requestConverter.scriptPut(script);
-		return execute(client -> client.putScript(request)).acknowledged();
+		return observe(ElasticsearchOperationName.PUT_SCRIPT, null, () -> {
+			final var request = requestConverter.scriptPut(script);
+			return execute(client -> client.putScript(request)).acknowledged();
+		});
 	}
 
 	@Nullable
@@ -789,16 +808,20 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(name, "name must not be null");
 
-		var request = requestConverter.scriptGet(name);
-		return responseConverter.scriptResponse(execute(client -> client.getScript(request)));
+		return observe(ElasticsearchOperationName.GET_SCRIPT, null, () -> {
+			final var request = requestConverter.scriptGet(name);
+			return responseConverter.scriptResponse(execute(client -> client.getScript(request)));
+		});
 	}
 
 	public boolean deleteScript(String name) {
 
 		Assert.notNull(name, "name must not be null");
 
-		DeleteScriptRequest request = requestConverter.scriptDelete(name);
-		return execute(client -> client.deleteScript(request)).acknowledged();
+		return observe(ElasticsearchOperationName.DELETE_SCRIPT, null, () -> {
+			final var request = requestConverter.scriptDelete(name);
+			return execute(client -> client.deleteScript(request)).acknowledged();
+		});
 	}
 
 	@Override

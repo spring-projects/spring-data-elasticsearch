@@ -115,6 +115,35 @@ class ReactiveObservabilityIntegrationTests {
 	}
 
 	@Test
+	void shouldObserveIndexClusterAndLifecycleOperations() {
+		final var index = operations.getIndexCoordinatesFor(SampleEntity.class);
+		final var indexOps = operations.indexOps(index);
+		final var script = new org.springframework.data.elasticsearch.core.script.Script(index.getIndexName(),
+				"painless", "return 1");
+
+		indexOps.exists().block();
+		indexOps.refresh().block();
+		indexOps.getMapping().block();
+		indexOps.getSettings().block();
+		indexOps.getInformation().blockLast();
+		indexOps.getAliasesForIndex(index.getIndexName()).block();
+		operations.cluster().health().block();
+		final var pit = operations.openPointInTime(index, java.time.Duration.ofMinutes(1)).block();
+		assertThat(operations.closePointInTime(pit).block()).isTrue();
+		try {
+			assertThat(operations.putScript(script).block()).isTrue();
+			assertThat(operations.getScript(script.id()).block()).isEqualTo(script);
+		} finally {
+			operations.deleteScript(script.id()).block();
+		}
+
+		for (final var operation : List.of("indexExists", "indexRefresh", "getMapping", "getSettings", "getIndexInformation",
+				"getAliases", "clusterHealth", "openPointInTime", "closePointInTime", "putScript", "getScript", "deleteScript")) {
+			assertOperation(operation);
+		}
+	}
+
+	@Test
 	@DisplayName("should record search observation for searchForPage")
 	void shouldRecordObservationForSearchForPage() {
 

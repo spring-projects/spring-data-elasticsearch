@@ -15,8 +15,6 @@
  */
 package org.springframework.data.elasticsearch.client.elc;
 
-import co.elastic.clients.elasticsearch.cluster.HealthRequest;
-import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import reactor.core.publisher.Mono;
 
@@ -40,9 +38,11 @@ public class ReactiveClusterTemplate
 	@Override
 	public Mono<ClusterHealth> health() {
 
-		HealthRequest healthRequest = requestConverter.clusterHealthRequest();
-		Mono<HealthResponse> healthResponse = Mono.from(execute(client -> client.health(healthRequest)));
-		return healthResponse.map(responseConverter::clusterHealth);
+		return observeMono(ElasticsearchOperationName.CLUSTER_HEALTH, null, Mono.defer(() -> {
+			final var healthRequest = requestConverter.clusterHealthRequest();
+			final var healthResponse = Mono.from(execute(client -> client.health(healthRequest)));
+			return healthResponse.map(responseConverter::clusterHealth);
+		}));
 	}
 
 }

@@ -115,6 +115,36 @@ class ObservabilityIntegrationTests {
 	}
 
 	@Test
+	void shouldObserveIndexClusterAndLifecycleOperations() {
+		final var index = operations.getIndexCoordinatesFor(SampleEntity.class);
+		final var indexOps = operations.indexOps(index);
+		final var script = new org.springframework.data.elasticsearch.core.script.Script(index.getIndexName(),
+				"painless", "return 1");
+
+		indexOps.exists();
+		indexOps.refresh();
+		indexOps.getMapping();
+		indexOps.getSettings();
+		indexOps.getInformation();
+		indexOps.getAliasesForIndex(index.getIndexName());
+		operations.cluster().health();
+		final var pit = operations.openPointInTime(index, java.time.Duration.ofMinutes(1));
+		assertThat(operations.closePointInTime(pit)).isTrue();
+		try {
+			assertThat(operations.putScript(script)).isTrue();
+			assertThat(operations.getScript(script.id())).isEqualTo(script);
+		} finally {
+			operations.deleteScript(script.id());
+		}
+
+		assertThat(STOPPED).filteredOn(context -> context instanceof ElasticsearchObservationContext)
+				.extracting(context -> ((ElasticsearchObservationContext) context).getOperationName().getValue())
+				.contains("indexExists", "indexRefresh", "getMapping", "getSettings", "getIndexInformation",
+						"getAliases", "clusterHealth", "openPointInTime", "closePointInTime",
+						"putScript", "getScript", "deleteScript");
+	}
+
+	@Test
 	@DisplayName("should record observation for save operation")
 	void shouldRecordObservationForSave() {
 

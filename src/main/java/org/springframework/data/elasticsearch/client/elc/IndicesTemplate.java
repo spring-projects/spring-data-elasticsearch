@@ -137,21 +137,26 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 	protected boolean doCreate(IndexCoordinates indexCoordinates, Map<String, @Nullable Object> settings,
 			@Nullable Document mapping) {
-		Set<Alias> aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<>();
-		CreateIndexSettings indexSettings = CreateIndexSettings.builder(indexCoordinates)
-				.withAliases(aliases)
-				.withSettings(settings)
-				.withMapping(mapping)
-				.build();
 
-		CreateIndexRequest createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
-		CreateIndexResponse createIndexResponse = execute(client -> client.create(createIndexRequest));
-		return Boolean.TRUE.equals(createIndexResponse.acknowledged());
+		return observe(ElasticsearchOperationName.INDEX_CREATE, indexCoordinates, () -> {
+			final var aliases = (boundClass != null) ? getAliasesFor(boundClass) : new HashSet<Alias>();
+			final var indexSettings = CreateIndexSettings.builder(indexCoordinates)
+					.withAliases(aliases)
+					.withSettings(settings)
+					.withMapping(mapping)
+					.build();
+
+			final var createIndexRequest = requestConverter.indicesCreateRequest(indexSettings);
+			final var createIndexResponse = execute(client -> client.create(createIndexRequest));
+			return Boolean.TRUE.equals(createIndexResponse.acknowledged());
+		});
 	}
 
 	@Override
 	public boolean delete() {
-		return doDelete(getIndexCoordinates());
+
+		return observe(ElasticsearchOperationName.INDEX_DELETE, getIndexCoordinates(),
+				() -> doDelete(getIndexCoordinates()));
 	}
 
 	private boolean doDelete(IndexCoordinates indexCoordinates) {
@@ -159,8 +164,8 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
 		if (doExists(indexCoordinates)) {
-			DeleteIndexRequest deleteIndexRequest = requestConverter.indicesDeleteRequest(indexCoordinates);
-			DeleteIndexResponse deleteIndexResponse = execute(client -> client.delete(deleteIndexRequest));
+			final var deleteIndexRequest = requestConverter.indicesDeleteRequest(indexCoordinates);
+			final var deleteIndexResponse = execute(client -> client.delete(deleteIndexRequest));
 			return deleteIndexResponse.acknowledged();
 		}
 
@@ -169,7 +174,9 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 	@Override
 	public boolean exists() {
-		return doExists(getIndexCoordinates());
+
+		return observe(ElasticsearchOperationName.INDEX_EXISTS, getIndexCoordinates(),
+				() -> doExists(getIndexCoordinates()));
 	}
 
 	private boolean doExists(IndexCoordinates indexCoordinates) {
@@ -184,8 +191,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 	@Override
 	public void refresh() {
 
-		RefreshRequest refreshRequest = requestConverter.indicesRefreshRequest(getIndexCoordinates());
-		execute(client -> client.refresh(refreshRequest));
+		observe(ElasticsearchOperationName.INDEX_REFRESH, getIndexCoordinates(), () -> {
+			final var refreshRequest = requestConverter.indicesRefreshRequest(getIndexCoordinates());
+			execute(client -> client.refresh(refreshRequest));
+			return null;
+		});
 	}
 
 	@Override
@@ -227,19 +237,23 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(mapping, "mapping must not be null");
 
-		PutMappingRequest putMappingRequest = requestConverter.indicesPutMappingRequest(getIndexCoordinates(), mapping);
-		PutMappingResponse putMappingResponse = execute(client -> client.putMapping(putMappingRequest));
-		return putMappingResponse.acknowledged();
+		return observe(ElasticsearchOperationName.PUT_MAPPING, getIndexCoordinates(), () -> {
+			final var putMappingRequest = requestConverter.indicesPutMappingRequest(getIndexCoordinates(), mapping);
+			final var putMappingResponse = execute(client -> client.putMapping(putMappingRequest));
+			return putMappingResponse.acknowledged();
+		});
 	}
 
 	@Override
 	public Map<String, @Nullable Object> getMapping() {
 
-		IndexCoordinates indexCoordinates = getIndexCoordinates();
-		GetMappingRequest getMappingRequest = requestConverter.indicesGetMappingRequest(indexCoordinates);
-		GetMappingResponse getMappingResponse = execute(client -> client.getMapping(getMappingRequest));
+		return observe(ElasticsearchOperationName.GET_MAPPING, getIndexCoordinates(), () -> {
+			final var indexCoordinates = getIndexCoordinates();
+			final var getMappingRequest = requestConverter.indicesGetMappingRequest(indexCoordinates);
+			final var getMappingResponse = execute(client -> client.getMapping(getMappingRequest));
 
-		return responseConverter.indicesGetMapping(getMappingResponse, indexCoordinates);
+			return responseConverter.indicesGetMapping(getMappingResponse, indexCoordinates);
+		});
 	}
 
 	@Override
@@ -262,17 +276,20 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 	@Override
 	public Settings getSettings() {
+
 		return getSettings(false);
 	}
 
 	@Override
 	public Settings getSettings(boolean includeDefaults) {
 
-		GetIndicesSettingsRequest getIndicesSettingsRequest = requestConverter
-				.indicesGetSettingsRequest(getIndexCoordinates(), includeDefaults);
-		GetIndicesSettingsResponse getIndicesSettingsResponse = execute(
-				client -> client.getSettings(getIndicesSettingsRequest));
-		return responseConverter.indicesGetSettings(getIndicesSettingsResponse, getIndexCoordinates().getIndexName());
+		return observe(ElasticsearchOperationName.GET_SETTINGS, getIndexCoordinates(), () -> {
+			final var getIndicesSettingsRequest = requestConverter
+					.indicesGetSettingsRequest(getIndexCoordinates(), includeDefaults);
+			final var getIndicesSettingsResponse = execute(
+					client -> client.getSettings(getIndicesSettingsRequest));
+			return responseConverter.indicesGetSettings(getIndicesSettingsResponse, getIndexCoordinates().getIndexName());
+		});
 	}
 
 	@Override
@@ -280,9 +297,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(aliasActions, "aliasActions must not be null");
 
-		UpdateAliasesRequest updateAliasesRequest = requestConverter.indicesUpdateAliasesRequest(aliasActions);
-		UpdateAliasesResponse updateAliasesResponse = execute(client -> client.updateAliases(updateAliasesRequest));
-		return updateAliasesResponse.acknowledged();
+		return observe(ElasticsearchOperationName.ALIAS, null, () -> {
+			final var updateAliasesRequest = requestConverter.indicesUpdateAliasesRequest(aliasActions);
+			final var updateAliasesResponse = execute(client -> client.updateAliases(updateAliasesRequest));
+			return updateAliasesResponse.acknowledged();
+		});
 	}
 
 	@Override
@@ -290,9 +309,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(aliasNames, "aliasNames must not be null");
 
-		GetAliasRequest getAliasRequest = requestConverter.indicesGetAliasRequest(aliasNames, null);
-		var getAliasResponse = execute(client -> client.getAlias(getAliasRequest));
-		return responseConverter.indicesGetAliasData(getAliasResponse);
+		return observe(ElasticsearchOperationName.GET_ALIASES, null, () -> {
+			final var getAliasRequest = requestConverter.indicesGetAliasRequest(aliasNames, null);
+			final var getAliasResponse = execute(client -> client.getAlias(getAliasRequest));
+			return responseConverter.indicesGetAliasData(getAliasResponse);
+		});
 	}
 
 	@Override
@@ -300,9 +321,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(indexNames, "indexNames must not be null");
 
-		GetAliasRequest getAliasRequest = requestConverter.indicesGetAliasRequest(null, indexNames);
-		var getAliasResponse = execute(client -> client.getAlias(getAliasRequest));
-		return responseConverter.indicesGetAliasData(getAliasResponse);
+		return observe(ElasticsearchOperationName.GET_ALIASES, indexNames.length > 0 ? IndexCoordinates.of(indexNames) : null, () -> {
+			final var getAliasRequest = requestConverter.indicesGetAliasRequest(null, indexNames);
+			final var getAliasResponse = execute(client -> client.getAlias(getAliasRequest));
+			return responseConverter.indicesGetAliasData(getAliasResponse);
+		});
 	}
 
 	@Override
@@ -310,9 +333,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(putTemplateRequest, "putTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.PutTemplateRequest putTemplateRequestES = requestConverter
-				.indicesPutTemplateRequest(putTemplateRequest);
-		return execute(client -> client.putTemplate(putTemplateRequestES)).acknowledged();
+		return observe(ElasticsearchOperationName.PUT_TEMPLATE, null, () -> {
+			final var putTemplateRequestES = requestConverter
+					.indicesPutTemplateRequest(putTemplateRequest);
+			return execute(client -> client.putTemplate(putTemplateRequestES)).acknowledged();
+		});
 	}
 
 	@Override
@@ -320,16 +345,18 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(getTemplateRequest, "getTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.GetTemplateRequest getTemplateRequestES = requestConverter
-				.indicesGetTemplateRequest(getTemplateRequest);
+		return observe(ElasticsearchOperationName.GET_TEMPLATE, null, () -> {
+			final var getTemplateRequestES = requestConverter
+					.indicesGetTemplateRequest(getTemplateRequest);
 
-		try {
-			GetTemplateResponse getTemplateResponse = execute(client -> client.getTemplate(getTemplateRequestES));
-			return responseConverter.indicesGetTemplateData(getTemplateResponse, getTemplateRequest.getTemplateName());
-		} catch (ResourceNotFoundException e) {
-			// since Elasticsearch 9.1.0 we get an exception (404) instead of an empty result
-			return null;
-		}
+			try {
+				final var getTemplateResponse = execute(client -> client.getTemplate(getTemplateRequestES));
+				return responseConverter.indicesGetTemplateData(getTemplateResponse, getTemplateRequest.getTemplateName());
+			} catch (ResourceNotFoundException e) {
+				// since Elasticsearch 9.1.0 we get an exception (404) instead of an empty result
+				return null;
+			}
+		});
 	}
 
 	@Override
@@ -337,9 +364,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(existsTemplateRequest, "existsTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.ExistsTemplateRequest existsTemplateRequestSO = requestConverter
-				.indicesExistsTemplateRequest(existsTemplateRequest);
-		return execute(client -> client.existsTemplate(existsTemplateRequestSO)).value();
+		return observe(ElasticsearchOperationName.EXISTS_TEMPLATE, null, () -> {
+			final var existsTemplateRequestSO = requestConverter
+					.indicesExistsTemplateRequest(existsTemplateRequest);
+			return execute(client -> client.existsTemplate(existsTemplateRequestSO)).value();
+		});
 	}
 
 	@Override
@@ -347,18 +376,22 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(deleteTemplateRequest, "deleteTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.DeleteTemplateRequest deleteTemplateRequestES = requestConverter
-				.indicesDeleteTemplateRequest(deleteTemplateRequest);
-		return execute(client -> client.deleteTemplate(deleteTemplateRequestES)).acknowledged();
+		return observe(ElasticsearchOperationName.DELETE_TEMPLATE, null, () -> {
+			final var deleteTemplateRequestES = requestConverter
+					.indicesDeleteTemplateRequest(deleteTemplateRequest);
+			return execute(client -> client.deleteTemplate(deleteTemplateRequestES)).acknowledged();
+		});
 	}
 
 	@Override
 	public boolean putIndexTemplate(PutIndexTemplateRequest putIndexTemplateRequest) {
 
-		co.elastic.clients.elasticsearch.indices.PutIndexTemplateRequest putIndexTemplateRequestES = requestConverter
-				.indicesPutIndexTemplateRequest(putIndexTemplateRequest);
+		return observe(ElasticsearchOperationName.PUT_INDEX_TEMPLATE, null, () -> {
+			final var putIndexTemplateRequestES = requestConverter
+					.indicesPutIndexTemplateRequest(putIndexTemplateRequest);
 
-		return execute(client -> client.putIndexTemplate(putIndexTemplateRequestES)).acknowledged();
+			return execute(client -> client.putIndexTemplate(putIndexTemplateRequestES)).acknowledged();
+		});
 	}
 
 	@Override
@@ -366,9 +399,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(existsIndexTemplateRequest, "existsIndexTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.ExistsIndexTemplateRequest existsTemplateRequestES = requestConverter
-				.indicesExistsIndexTemplateRequest(existsIndexTemplateRequest);
-		return execute(client -> client.existsIndexTemplate(existsTemplateRequestES)).value();
+		return observe(ElasticsearchOperationName.EXISTS_INDEX_TEMPLATE, null, () -> {
+			final var existsTemplateRequestES = requestConverter
+					.indicesExistsIndexTemplateRequest(existsIndexTemplateRequest);
+			return execute(client -> client.existsIndexTemplate(existsTemplateRequestES)).value();
+		});
 	}
 
 	@Override
@@ -376,10 +411,12 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(getIndexTemplateRequest, "getIndexTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.GetIndexTemplateRequest getIndexTemplateRequestES = requestConverter
-				.indicesGetIndexTemplateRequest(getIndexTemplateRequest);
-		var getIndexTemplateResponse = execute(client -> client.getIndexTemplate(getIndexTemplateRequestES));
-		return responseConverter.getIndexTemplates(getIndexTemplateResponse);
+		return observe(ElasticsearchOperationName.GET_INDEX_TEMPLATE, null, () -> {
+			final var getIndexTemplateRequestES = requestConverter
+					.indicesGetIndexTemplateRequest(getIndexTemplateRequest);
+			final var getIndexTemplateResponse = execute(client -> client.getIndexTemplate(getIndexTemplateRequestES));
+			return responseConverter.getIndexTemplates(getIndexTemplateResponse);
+		});
 	}
 
 	@Override
@@ -387,9 +424,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(deleteIndexTemplateRequest, "deleteIndexTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.indices.DeleteIndexTemplateRequest deleteIndexTemplateRequestES = requestConverter
-				.indicesDeleteIndexTemplateRequest(deleteIndexTemplateRequest);
-		return execute(client -> client.deleteIndexTemplate(deleteIndexTemplateRequestES)).acknowledged();
+		return observe(ElasticsearchOperationName.DELETE_INDEX_TEMPLATE, null, () -> {
+			final var deleteIndexTemplateRequestES = requestConverter
+					.indicesDeleteIndexTemplateRequest(deleteIndexTemplateRequest);
+			return execute(client -> client.deleteIndexTemplate(deleteIndexTemplateRequestES)).acknowledged();
+		});
 	}
 
 	@Override
@@ -397,10 +436,12 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(putComponentTemplateRequest, "putComponentTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.cluster.PutComponentTemplateRequest putComponentTemplateRequestES = requestConverter
-				.clusterPutComponentTemplateRequest(putComponentTemplateRequest);
-		// the new Elasticsearch client has this call in the cluster index
-		return clusterTemplate.execute(client -> client.putComponentTemplate(putComponentTemplateRequestES)).acknowledged();
+		return observe(ElasticsearchOperationName.PUT_COMPONENT_TEMPLATE, null, () -> {
+			final var putComponentTemplateRequestES = requestConverter
+					.clusterPutComponentTemplateRequest(putComponentTemplateRequest);
+			// the new Elasticsearch client has this call in the cluster index
+			return clusterTemplate.execute(client -> client.putComponentTemplate(putComponentTemplateRequestES)).acknowledged();
+		});
 	}
 
 	@Override
@@ -408,18 +449,22 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(existsComponentTemplateRequest, "existsComponentTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.cluster.ExistsComponentTemplateRequest existsComponentTemplateRequestES = requestConverter
-				.clusterExistsComponentTemplateRequest(existsComponentTemplateRequest);
-		return clusterTemplate.execute(client -> client.existsComponentTemplate(existsComponentTemplateRequestES)).value();
+		return observe(ElasticsearchOperationName.EXISTS_COMPONENT_TEMPLATE, null, () -> {
+			final var existsComponentTemplateRequestES = requestConverter
+					.clusterExistsComponentTemplateRequest(existsComponentTemplateRequest);
+			return clusterTemplate.execute(client -> client.existsComponentTemplate(existsComponentTemplateRequestES)).value();
+		});
 	}
 
 	@Override
 	public List<TemplateResponse> getComponentTemplate(GetComponentTemplateRequest getComponentTemplateRequest) {
 
-		co.elastic.clients.elasticsearch.cluster.GetComponentTemplateRequest getComponentTemplateRequestES = requestConverter
-				.clusterGetComponentTemplateRequest(getComponentTemplateRequest);
-		var response = clusterTemplate.execute(client -> client.getComponentTemplate(getComponentTemplateRequestES));
-		return responseConverter.clusterGetComponentTemplates(response);
+		return observe(ElasticsearchOperationName.GET_COMPONENT_TEMPLATE, null, () -> {
+			final var getComponentTemplateRequestES = requestConverter
+					.clusterGetComponentTemplateRequest(getComponentTemplateRequest);
+			final var response = clusterTemplate.execute(client -> client.getComponentTemplate(getComponentTemplateRequestES));
+			return responseConverter.clusterGetComponentTemplates(response);
+		});
 	}
 
 	@Override
@@ -427,10 +472,12 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(deleteComponentTemplateRequest, "deleteComponentTemplateRequest must not be null");
 
-		co.elastic.clients.elasticsearch.cluster.DeleteComponentTemplateRequest deleteComponentTemplateRequestES = requestConverter
-				.clusterDeleteComponentTemplateRequest(deleteComponentTemplateRequest);
-		return clusterTemplate.execute(client -> client.deleteComponentTemplate(deleteComponentTemplateRequestES))
-				.acknowledged();
+		return observe(ElasticsearchOperationName.DELETE_COMPONENT_TEMPLATE, null, () -> {
+			final var deleteComponentTemplateRequestES = requestConverter
+					.clusterDeleteComponentTemplateRequest(deleteComponentTemplateRequest);
+			return clusterTemplate.execute(client -> client.deleteComponentTemplate(deleteComponentTemplateRequestES))
+					.acknowledged();
+		});
 	}
 
 	@Override
@@ -438,9 +485,11 @@ public class IndicesTemplate extends ChildTemplate<ElasticsearchTransport, Elast
 
 		Assert.notNull(indexCoordinates, "indexCoordinates must not be null");
 
-		GetIndexRequest getIndexRequest = requestConverter.indicesGetIndexRequest(indexCoordinates);
-		GetIndexResponse getIndexResponse = execute(client -> client.get(getIndexRequest));
-		return responseConverter.indicesGetIndexInformations(getIndexResponse);
+		return observe(ElasticsearchOperationName.GET_INDEX_INFORMATION, indexCoordinates, () -> {
+			final var getIndexRequest = requestConverter.indicesGetIndexRequest(indexCoordinates);
+			final var getIndexResponse = execute(client -> client.get(getIndexRequest));
+			return responseConverter.indicesGetIndexInformations(getIndexResponse);
+		});
 	}
 
 	// region Helper functions

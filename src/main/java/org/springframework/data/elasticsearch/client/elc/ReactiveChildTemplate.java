@@ -18,10 +18,14 @@ package org.springframework.data.elasticsearch.client.elc;
 import co.elastic.clients.ApiClient;
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.Transport;
+import io.micrometer.observation.Observation;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.data.elasticsearch.core.convert.ElasticsearchConverter;
+import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.util.Assert;
 
 /**
@@ -36,6 +40,17 @@ public class ReactiveChildTemplate<T extends Transport, CLIENT extends ApiClient
 	protected final RequestConverter requestConverter;
 	protected final ResponseConverter responseConverter;
 	protected final ElasticsearchExceptionTranslator exceptionTranslator;
+	ElasticsearchObservationSupport observationSupport = (operation, index, batchSize) -> Observation.NOOP;
+
+	protected <RESULT> Mono<RESULT> observeMono(final ElasticsearchOperationName operation,
+			@Nullable final IndexCoordinates index, final Mono<RESULT> mono) {
+		return observationSupport.observeMono(operation, index, null, mono);
+	}
+
+	protected <RESULT> Flux<RESULT> observeFlux(final ElasticsearchOperationName operation,
+			@Nullable final IndexCoordinates index, final Flux<RESULT> flux) {
+		return observationSupport.observeFlux(operation, index, flux);
+	}
 
 	public ReactiveChildTemplate(CLIENT client, ElasticsearchConverter elasticsearchConverter) {
 		this.client = client;

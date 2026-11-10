@@ -39,7 +39,38 @@ public enum ElasticsearchOperationName {
 	SCROLL_START("scrollStart"), //
 	SCROLL_CONTINUE("scrollContinue"), //
 	SCROLL_CLEAR("scrollClear"), //
-	SQL("sql");
+	SQL("sql"), //
+	OPEN_POINT_IN_TIME("openPointInTime"), //
+	CLOSE_POINT_IN_TIME("closePointInTime"), //
+	REINDEX("reindex"), //
+	SUBMIT_REINDEX("submitReindex"), //
+	PUT_SCRIPT("putScript"), //
+	GET_SCRIPT("getScript"), //
+	DELETE_SCRIPT("deleteScript"), //
+	INDEX_CREATE("indexCreate"), //
+	INDEX_DELETE("indexDelete"), //
+	INDEX_EXISTS("indexExists"), //
+	INDEX_REFRESH("indexRefresh"), //
+	PUT_MAPPING("putMapping"), //
+	GET_MAPPING("getMapping"), //
+	GET_SETTINGS("getSettings"), //
+	ALIAS("alias"), //
+	GET_ALIASES("getAliases"), //
+	PUT_TEMPLATE("putTemplate"), //
+	GET_TEMPLATE("getTemplate"), //
+	EXISTS_TEMPLATE("existsTemplate"), //
+	DELETE_TEMPLATE("deleteTemplate"), //
+	PUT_INDEX_TEMPLATE("putIndexTemplate"), //
+	GET_INDEX_TEMPLATE("getIndexTemplate"), //
+	EXISTS_INDEX_TEMPLATE("existsIndexTemplate"), //
+	DELETE_INDEX_TEMPLATE("deleteIndexTemplate"), //
+	PUT_COMPONENT_TEMPLATE("putComponentTemplate"), //
+	GET_COMPONENT_TEMPLATE("getComponentTemplate"), //
+	EXISTS_COMPONENT_TEMPLATE("existsComponentTemplate"), //
+	DELETE_COMPONENT_TEMPLATE("deleteComponentTemplate"), //
+	GET_INDEX_INFORMATION("getIndexInformation"), //
+	CLUSTER_HEALTH("clusterHealth"), //
+	CLUSTER_INFO("clusterInfo");
 
 	private final String value;
 
