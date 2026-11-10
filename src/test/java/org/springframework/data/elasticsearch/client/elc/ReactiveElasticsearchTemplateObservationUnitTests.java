@@ -32,6 +32,9 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
@@ -74,26 +77,37 @@ class ReactiveElasticsearchTemplateObservationUnitTests {
 		template.setObservationRegistry(registry);
 	}
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
 	@DisplayName("should use the observation from the Reactor context as parent")
-	void shouldUseContextObservationAsParent() {
+	void shouldUseContextObservationAsParent(final boolean useEntityType) {
 
-		var parent = Observation.createNotStarted("parent", registry).start();
+		final var parent = Observation.createNotStarted("parent", registry).start();
+		final var exists = useEntityType ? template.exists("1", TestEntity.class) : template.exists("1", INDEX);
 
-		template.exists("1", INDEX).contextWrite(ctx -> ctx.put(ObservationThreadLocalAccessor.KEY, parent))
+		exists.contextWrite(ctx -> ctx.put(ObservationThreadLocalAccessor.KEY, parent))
 				.as(StepVerifier::create).expectNext(true).verifyComplete();
 		parent.stop();
 
-		var child = started.stream().filter(c -> c.getName().equals("spring.data.elasticsearch.command")).findFirst()
-				.orElseThrow();
-		assertThat(child.getParentObservation()).isSameAs(parent);
+		assertThat(started).filteredOn(c -> c.getName().equals("spring.data.elasticsearch.command")).singleElement()
+				.satisfies(child -> {
+					assertThat(child.getParentObservation()).isSameAs(parent);
+					assertThat(child).isInstanceOfSatisfying(ElasticsearchObservationContext.class, context -> {
+						assertThat(context.getOperationName()).isEqualTo(ElasticsearchOperationName.EXISTS);
+						assertThat(context.getIndexCoordinates()).isEqualTo(INDEX);
+					});
+					assertThat(downstreamContext.<Observation> get(ObservationThreadLocalAccessor.KEY).getContext())
+							.isSameAs(child);
+				});
 	}
 
-	@Test
+	@ParameterizedTest
+	@ValueSource(booleans = { false, true })
 	@DisplayName("should be a root observation without a parent in the context")
-	void shouldBeRootWithoutParent() {
+	void shouldBeRootWithoutParent(final boolean useEntityType) {
 
-		template.exists("1", INDEX).as(StepVerifier::create).expectNext(true).verifyComplete();
+		final var exists = useEntityType ? template.exists("1", TestEntity.class) : template.exists("1", INDEX);
+		exists.as(StepVerifier::create).expectNext(true).verifyComplete();
 
 		assertThat(started).hasSize(1);
 		assertThat(started.get(0).getParentObservation()).isNull();
@@ -125,4 +139,7 @@ class ReactiveElasticsearchTemplateObservationUnitTests {
 		assertThat(commands).hasSize(2);
 		assertThat(commands).allSatisfy(c -> assertThat(c.getParentObservation()).isSameAs(parent));
 	}
+
+	@Document(indexName = "test-index")
+	static class TestEntity {}
 }
