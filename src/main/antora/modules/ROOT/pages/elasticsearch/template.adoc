@@ -47,6 +47,13 @@ To customize these defaults, register a javadoc:org.springframework.data.elastic
 A custom convention can include `spring.data.collection` as a low-cardinality key if index names have a bounded set of values.
 Both `ElasticsearchTemplate` and `ReactiveElasticsearchTemplate` support custom conventions.
 
+Both templates observe point-in-time operations, reindex requests, and stored script operations.
+These operations use the observation name `spring.data.elasticsearch.command`.
+The operation values are `openPointInTime`, `closePointInTime`, `reindex`, `submitReindex`, `putScript`, `getScript`, and `deleteScript`.
+Reindex observations record the source index names.
+`submitReindex` measures task submission, not the background task.
+Point-in-time operations inside a reactive search produce child observations under the search observation.
+
 [[elasticsearch.operations.usage]]
 == Usage examples
 

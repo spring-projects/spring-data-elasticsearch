@@ -376,26 +376,32 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
-				true);
-		co.elastic.clients.elasticsearch.core.ReindexResponse reindexResponse = execute(
-				client -> client.reindex(reindexRequestES));
-		return responseConverter.reindexResponse(reindexResponse);
+		return observe(ElasticsearchOperationName.REINDEX, reindexRequest.getSource().getIndexes(), () -> {
+			final var reindexRequestES = requestConverter.reindex(reindexRequest,
+					true);
+			final var reindexResponse = execute(
+					client -> client.reindex(reindexRequestES));
+			return responseConverter.reindexResponse(reindexResponse);
+		});
 	}
 
 	@Override
 	public String submitReindex(ReindexRequest reindexRequest) {
 
-		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
-				false);
-		co.elastic.clients.elasticsearch.core.ReindexResponse reindexResponse = execute(
-				client -> client.reindex(reindexRequestES));
+		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		if (reindexResponse.task() == null) {
-			throw new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request");
-		}
+		return observe(ElasticsearchOperationName.SUBMIT_REINDEX, reindexRequest.getSource().getIndexes(), () -> {
+			final var reindexRequestES = requestConverter.reindex(reindexRequest,
+					false);
+			final var reindexResponse = execute(
+					client -> client.reindex(reindexRequestES));
 
-		return reindexResponse.task();
+			if (reindexResponse.task() == null) {
+				throw new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request");
+			}
+
+			return reindexResponse.task();
+		});
 	}
 
 	@Override
@@ -757,8 +763,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 		Assert.notNull(keepAlive, "keepAlive must not be null");
 		Assert.notNull(ignoreUnavailable, "ignoreUnavailable must not be null");
 
-		var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
-		return execute(client -> client.openPointInTime(request)).id();
+		return observe(ElasticsearchOperationName.OPEN_POINT_IN_TIME, index, () -> {
+			final var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
+			return execute(client -> client.openPointInTime(request)).id();
+		});
 	}
 
 	@Override
@@ -766,9 +774,11 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(pit, "pit must not be null");
 
-		ClosePointInTimeRequest request = requestConverter.searchClosePointInTime(pit);
-		var response = execute(client -> client.closePointInTime(request));
-		return response.succeeded();
+		return observe(ElasticsearchOperationName.CLOSE_POINT_IN_TIME, null, () -> {
+			final var request = requestConverter.searchClosePointInTime(pit);
+			final var response = execute(client -> client.closePointInTime(request));
+			return response.succeeded();
+		});
 	}
 
 	// endregion
@@ -779,8 +789,10 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(script, "script must not be null");
 
-		var request = requestConverter.scriptPut(script);
-		return execute(client -> client.putScript(request)).acknowledged();
+		return observe(ElasticsearchOperationName.PUT_SCRIPT, null, () -> {
+			final var request = requestConverter.scriptPut(script);
+			return execute(client -> client.putScript(request)).acknowledged();
+		});
 	}
 
 	@Nullable
@@ -789,16 +801,20 @@ public class ElasticsearchTemplate extends AbstractElasticsearchTemplate {
 
 		Assert.notNull(name, "name must not be null");
 
-		var request = requestConverter.scriptGet(name);
-		return responseConverter.scriptResponse(execute(client -> client.getScript(request)));
+		return observe(ElasticsearchOperationName.GET_SCRIPT, null, () -> {
+			final var request = requestConverter.scriptGet(name);
+			return responseConverter.scriptResponse(execute(client -> client.getScript(request)));
+		});
 	}
 
 	public boolean deleteScript(String name) {
 
 		Assert.notNull(name, "name must not be null");
 
-		DeleteScriptRequest request = requestConverter.scriptDelete(name);
-		return execute(client -> client.deleteScript(request)).acknowledged();
+		return observe(ElasticsearchOperationName.DELETE_SCRIPT, null, () -> {
+			final var request = requestConverter.scriptDelete(name);
+			return execute(client -> client.deleteScript(request)).acknowledged();
+		});
 	}
 
 	@Override

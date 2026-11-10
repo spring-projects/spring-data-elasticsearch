@@ -316,11 +316,13 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
-				true);
+		return observeMono(ElasticsearchOperationName.REINDEX, reindexRequest.getSource().getIndexes(), Mono.defer(() -> {
+			final var reindexRequestES = requestConverter.reindex(reindexRequest,
+					true);
 
-		return Mono.from(execute( //
-				client -> client.reindex(reindexRequestES))).map(responseConverter::reindexResponse);
+			return Mono.from(execute( //
+					client -> client.reindex(reindexRequestES))).map(responseConverter::reindexResponse);
+		}));
 	}
 
 	@Override
@@ -328,15 +330,17 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(reindexRequest, "reindexRequest must not be null");
 
-		co.elastic.clients.elasticsearch.core.ReindexRequest reindexRequestES = requestConverter.reindex(reindexRequest,
-				false);
+		return observeMono(ElasticsearchOperationName.SUBMIT_REINDEX, reindexRequest.getSource().getIndexes(), Mono.defer(() -> {
+			final var reindexRequestES = requestConverter.reindex(reindexRequest,
+					false);
 
-		return Mono.from(execute( //
-				client -> client.reindex(reindexRequestES)))
-				.flatMap(response -> (response.task() == null)
-						? Mono.error(
-								new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
-						: Mono.just(response.task()));
+			return Mono.from(execute( //
+					client -> client.reindex(reindexRequestES)))
+					.flatMap(response -> (response.task() == null)
+							? Mono.error(
+									new UnsupportedBackendOperation("ElasticsearchClient did not return a task id on submit request"))
+							: Mono.just(response.task()));
+		}));
 	}
 
 	@Override
@@ -679,8 +683,10 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 		Assert.notNull(keepAlive, "keepAlive must not be null");
 		Assert.notNull(ignoreUnavailable, "ignoreUnavailable must not be null");
 
-		var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
-		return Mono.from(execute(client -> client.openPointInTime(request))).map(OpenPointInTimeResponse::id);
+		return observeMono(ElasticsearchOperationName.OPEN_POINT_IN_TIME, index, Mono.defer(() -> {
+			final var request = requestConverter.searchOpenPointInTimeRequest(index, keepAlive, ignoreUnavailable);
+			return Mono.from(execute(client -> client.openPointInTime(request))).map(OpenPointInTimeResponse::id);
+		}));
 	}
 
 	@Override
@@ -688,8 +694,10 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(pit, "pit must not be null");
 
-		ClosePointInTimeRequest request = requestConverter.searchClosePointInTime(pit);
-		return Mono.from(execute(client -> client.closePointInTime(request))).map(ClosePointInTimeResponse::succeeded);
+		return observeMono(ElasticsearchOperationName.CLOSE_POINT_IN_TIME, null, Mono.defer(() -> {
+			final var request = requestConverter.searchClosePointInTime(pit);
+			return Mono.from(execute(client -> client.closePointInTime(request))).map(ClosePointInTimeResponse::succeeded);
+		}));
 	}
 
 	// endregion
@@ -700,8 +708,10 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(script, "script must not be null");
 
-		var request = requestConverter.scriptPut(script);
-		return Mono.from(execute(client -> client.putScript(request))).map(PutScriptResponse::acknowledged);
+		return observeMono(ElasticsearchOperationName.PUT_SCRIPT, null, Mono.defer(() -> {
+			final var request = requestConverter.scriptPut(script);
+			return Mono.from(execute(client -> client.putScript(request))).map(PutScriptResponse::acknowledged);
+		}));
 	}
 
 	@Override
@@ -709,16 +719,21 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 
 		Assert.notNull(name, "name must not be null");
 
-		var request = requestConverter.scriptGet(name);
-		return Mono.from(execute(client -> client.getScript(request))).mapNotNull(responseConverter::scriptResponse);
+		return observeMono(ElasticsearchOperationName.GET_SCRIPT, null, Mono.defer(() -> {
+			final var request = requestConverter.scriptGet(name);
+			return Mono.from(execute(client -> client.getScript(request))).mapNotNull(responseConverter::scriptResponse);
+		}));
 	}
 
 	@Override
 	public Mono<Boolean> deleteScript(String name) {
+
 		Assert.notNull(name, "name must not be null");
 
-		var request = requestConverter.scriptDelete(name);
-		return Mono.from(execute(client -> client.deleteScript(request))).map(DeleteScriptResponse::acknowledged);
+		return observeMono(ElasticsearchOperationName.DELETE_SCRIPT, null, Mono.defer(() -> {
+			final var request = requestConverter.scriptDelete(name);
+			return Mono.from(execute(client -> client.deleteScript(request))).map(DeleteScriptResponse::acknowledged);
+		}));
 	}
 	// endregion
 

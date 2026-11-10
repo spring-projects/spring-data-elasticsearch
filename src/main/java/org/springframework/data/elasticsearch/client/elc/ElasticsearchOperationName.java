@@ -39,7 +39,14 @@ public enum ElasticsearchOperationName {
 	SCROLL_START("scrollStart"), //
 	SCROLL_CONTINUE("scrollContinue"), //
 	SCROLL_CLEAR("scrollClear"), //
-	SQL("sql");
+	SQL("sql"), //
+	OPEN_POINT_IN_TIME("openPointInTime"), //
+	CLOSE_POINT_IN_TIME("closePointInTime"), //
+	REINDEX("reindex"), //
+	SUBMIT_REINDEX("submitReindex"), //
+	PUT_SCRIPT("putScript"), //
+	GET_SCRIPT("getScript"), //
+	DELETE_SCRIPT("deleteScript");
 
 	private final String value;
 
