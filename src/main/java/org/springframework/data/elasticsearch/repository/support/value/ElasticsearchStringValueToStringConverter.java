@@ -17,7 +17,6 @@ package org.springframework.data.elasticsearch.repository.support.value;
 
 import java.util.Collections;
 import java.util.Set;
-import java.util.regex.Matcher;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.core.convert.TypeDescriptor;
@@ -44,7 +43,6 @@ public class ElasticsearchStringValueToStringConverter implements GenericConvert
 	}
 
 	private String escape(@Nullable Object source) {
-		// escape the quotes in the string, because the string should already be quoted manually
-		return String.valueOf(source).replaceAll("\"", Matcher.quoteReplacement("\\\""));
+		return String.valueOf(source).replace("\\", "\\\\").replace("\"", "\\\"");
 	}
 }

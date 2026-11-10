@@ -51,22 +51,19 @@ public class QueryStringProcessor {
 	}
 
 	/**
-	 * Process the query string with SpEL evaluation and placeholder replacement.
-	 * Important: SpEL evaluation is done before replacing placeholders.
+	 * Process the query string with SpEL evaluation and placeholder replacement. Placeholders are replaced in the literal
+	 * parts of the query string only. Parameter values are inserted once and not processed again, neither as SpEL
+	 * expressions nor as placeholders.
 	 *
 	 * @param parameterAccessor parameter info
 	 * @return processed string
 	 */
 	public String createQuery(ElasticsearchParametersParameterAccessor parameterAccessor) {
 
+		QueryStringPlaceholderReplacer replacer = new QueryStringPlaceholderReplacer(conversionService);
 		QueryStringSpELEvaluator evaluator = new QueryStringSpELEvaluator(query, parameterAccessor, queryMethod,
 				evaluationContextProvider, conversionService);
-		var evaluated = evaluator.evaluate();
 
-		// replace positional parameters after SpEL evaluation
-		String evaluatedAndReplaced = new QueryStringPlaceholderReplacer(conversionService)
-				.replacePlaceholders(evaluated, parameterAccessor);
-
-        return evaluatedAndReplaced;
+		return evaluator.evaluate(literal -> replacer.replacePlaceholders(literal, parameterAccessor));
 	}
 }

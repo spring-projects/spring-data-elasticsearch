@@ -55,18 +55,14 @@ final public class QueryStringPlaceholderReplacer {
 	public String replacePlaceholders(String input, ParameterAccessor accessor) {
 
 		Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
-		String result = input;
+		StringBuilder result = new StringBuilder();
 
 		while (matcher.find()) {
-			String placeholder = Pattern.quote(matcher.group()) + "(?!\\d+)";
 			int index = NumberUtils.parseNumber(matcher.group(1), Integer.class);
 			String replacement = Matcher.quoteReplacement(getParameterWithIndex(accessor, index, input));
-			result = result.replaceAll(placeholder, replacement);
-			// need to escape backslashes that are not escapes for quotes so that they are sent as double-backslashes
-			// to Elasticsearch
-			result = result.replaceAll("\\\\([^\"'])", "\\\\\\\\$1");
+			matcher.appendReplacement(result, replacement);
 		}
-		return result;
+		return matcher.appendTail(result).toString();
 	}
 
 	private String getParameterWithIndex(ParameterAccessor accessor, int index, String input) {

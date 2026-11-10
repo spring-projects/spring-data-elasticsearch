@@ -15,7 +15,7 @@
  */
 package org.springframework.data.elasticsearch.repository.support.spel;
 
-import java.util.Optional;
+import java.util.function.Function;
 
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.elasticsearch.core.convert.ConversionException;
@@ -42,16 +42,16 @@ import org.springframework.util.ConcurrentLruCache;
  * To evaluate the SpEL expressions of the query string.
  *
  * @author Haibo Liu
+ * @author Peter-Josef Meisch
+ * @author Mark Paluch
  * @since 5.3
  */
 public class QueryStringSpELEvaluator {
 
 	private static final SpelExpressionParser PARSER = new SpelExpressionParser();
-	// ConcurrentLruCache does not support nullable V, so we use Optional here :-(
-	private static final ConcurrentLruCache<String, Optional<Expression>> QUERY_EXPRESSIONS_CACHE = new ConcurrentLruCache<>(
+	private static final ConcurrentLruCache<String, Expression> QUERY_EXPRESSIONS_CACHE = new ConcurrentLruCache<>(
 			256, queryString -> {
-				Expression expr = PARSER.parseExpression(queryString, ParserContext.TEMPLATE_EXPRESSION);
-				return Optional.ofNullable(expr instanceof LiteralExpression ? null : expr);
+				return PARSER.parseExpression(queryString, ParserContext.TEMPLATE_EXPRESSION);
 			});
 
 	private final String queryString;
@@ -84,20 +84,36 @@ public class QueryStringSpELEvaluator {
 	 * @return a plain string with values evaluated
 	 */
 	public String evaluate() {
-		return QUERY_EXPRESSIONS_CACHE.get(queryString)
-				.map(expression -> {
-					EvaluationContext context = evaluationContextProvider.getEvaluationContext(parameterAccessor.getValues())
-							.getEvaluationContext();
+		return evaluate(Function.identity());
+	}
 
-					if (context instanceof StandardEvaluationContext standardEvaluationContext) {
-						standardEvaluationContext.setTypeConverter(elasticsearchSpELTypeConverter);
-					}
+	/**
+	 * Evaluate the SpEL parts of the query string and apply {@code literalMapper} to its literal parts. Evaluated SpEL
+	 * values are not passed to {@code literalMapper}.
+	 *
+	 * @param literalMapper function to apply to the literal parts of the query string
+	 * @return a plain string with values evaluated
+	 */
+	public String evaluate(Function<String, String> literalMapper) {
 
-					String parsed = parseExpressions(expression, context);
-					Assert.notNull(parsed, "Query parsed by SpEL should not be null");
-					return parsed;
-				})
-				.orElse(queryString);
+		Assert.notNull(literalMapper, "literalMapper must not be null");
+
+		Expression expression = QUERY_EXPRESSIONS_CACHE.get(queryString);
+
+		if (expression instanceof LiteralExpression) {
+			return literalMapper.apply(queryString);
+		}
+
+		EvaluationContext context = evaluationContextProvider.getEvaluationContext(parameterAccessor.getValues())
+				.getEvaluationContext();
+
+		if (context instanceof StandardEvaluationContext standardEvaluationContext) {
+			standardEvaluationContext.setTypeConverter(elasticsearchSpELTypeConverter);
+		}
+
+		String parsed = parseExpressions(expression, context, literalMapper);
+		Assert.notNull(parsed, "Query parsed by SpEL should not be null");
+		return parsed;
 	}
 
 	/**
@@ -107,12 +123,13 @@ public class QueryStringSpELEvaluator {
 	 * expression should not be processed with these converters. So we just get the string value from
 	 * {@link LiteralExpression} directly rather than {@link LiteralExpression#getValue(EvaluationContext, Class)}.
 	 */
-	private String parseExpressions(Expression rootExpr, EvaluationContext context) {
+	private String parseExpressions(Expression rootExpr, EvaluationContext context,
+			Function<String, String> literalMapper) {
 		StringBuilder parsed = new StringBuilder();
 
 		if (rootExpr instanceof LiteralExpression literalExpression) {
 			// get the string literal directly
-			parsed.append(literalExpression.getExpressionString());
+			parsed.append(literalMapper.apply(literalExpression.getExpressionString()));
 		} else if (rootExpr instanceof SpelExpression spelExpression) {
 			// evaluate the value
 			String value = spelExpression.getValue(context, String.class);
@@ -128,7 +145,7 @@ public class QueryStringSpELEvaluator {
 			Expression[] expressions = compositeStringExpression.getExpressions();
 
 			for (Expression exp : expressions) {
-				parsed.append(parseExpressions(exp, context));
+				parsed.append(parseExpressions(exp, context, literalMapper));
 			}
 		} else {
 			// no more

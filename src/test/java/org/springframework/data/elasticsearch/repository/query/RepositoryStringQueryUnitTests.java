@@ -15,9 +15,8 @@
  */
 package org.springframework.data.elasticsearch.repository.query;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import static org.assertj.core.api.Assertions.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +27,8 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.core.convert.converter.Converter;
@@ -46,8 +47,6 @@ import org.springframework.data.elasticsearch.core.query.StringQuery;
 import org.springframework.data.elasticsearch.repositories.custommethod.QueryParameter;
 import org.springframework.data.repository.Repository;
 import org.springframework.data.repository.query.ValueExpressionDelegate;
-
-import static org.assertj.core.api.Assertions.*;
 
 /**
  * @author Christoph Strobl
@@ -408,26 +407,72 @@ public class RepositoryStringQueryUnitTests extends RepositoryStringQueryUnitTes
 				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota-Prius' } } } }");
 	}
 
-	@Test // #CVE-SpEL-RCE
-	@DisplayName("should not execute SpEL passed as parameter value")
-	void shouldNotExecuteSpElPassedAsParameterValue() throws NoSuchMethodException, IOException {
+	@ParameterizedTest // GH-3390
+	@ValueSource(strings = { "findByCar", "findByCarSpEL" })
+	void shouldEscapeCustomConverterValues(String methodName) throws Exception {
 
-		Path path = Path.of(System.getProperty("java.io.tmpdir"), "sde_cve_spel_rce.txt");
-		Files.deleteIfExists(path);
-		// make sure test file does not exist
-		assertThat(Files.exists(path))
-				.as("file " + path + " should not exist before test")
-				.isFalse();
+		Car car = new Car();
+		car.setName("Toyota\\Limited");
+		car.setModel("\"Prius\"");
 
-		//create query injecting RCE code that writes the test file
-		String payload = "#{T(java.lang.String).valueOf(T(java.lang.Runtime).getRuntime().exec(new String[]{'/bin/sh','-c','id > " +
-				path.toString() + "'}).waitFor())}";
-        org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByName", payload);
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery(methodName, car);
 
-		// make sure file does not exists
-		assertThat(Files.exists(path))
-				.as("file " + path + " should not exist after test")
-				.isFalse();
+		assertThat(((StringQuery) query).getSource()).isEqualTo(
+				"{ 'bool' : { 'must' : { 'term' : { 'car' : 'Toyota\\\\Limited-\\\"Prius\\\"' } } } }");
+	}
+
+	@Test // GH-3390
+	@DisplayName("should render SpEL correctly")
+	void shouldRenderSpelCorrectly() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByName", "#{'hello'}");
+
+		assertThat(((StringQuery) query).getSource())
+				.isEqualTo("{ 'bool' : { 'must' : { 'term' : { 'name' : '#{'hello'}' } } } }");
+	}
+
+	@Test // GH-3390
+	@DisplayName("should retain positional values")
+	void shouldRetainPositionalValues() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameSpELAndCity", "?1",
+				"#{'evaluated'}");
+
+		assertThat(((StringQuery) query).getSource()).isEqualTo(
+				"{ 'bool' : { 'must' : [ { 'term' : { 'name' : '?1' } }, { 'term' : { 'city' : '#{'evaluated'}' } } ] } }");
+
+		query = createQuery("findByNameAndCity", "?1", "Berlin");
+		String expected = """
+				{
+				  "bool":{
+				    "must":[
+				      { "term":{ "name": "?1" } },
+				      { "term":{ "city": "Berlin" } }
+				    ]
+				  }
+				}
+				""";
+
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
+	}
+
+	@Test // GH-3390
+	@DisplayName("should escape backslashes only once in placeholder values")
+	void shouldEscapeBackslashesOnlyOnceInPlaceholderValues() throws Exception {
+
+		org.springframework.data.elasticsearch.core.query.Query query = createQuery("findByNameAndCity", "\\\"", "\\\"");
+		String expected = """
+				{
+				  "bool":{
+				    "must":[
+				      { "term":{ "name": "\\\\\\"" } },
+				      { "term":{ "city": "\\\\\\"" } }
+				    ]
+				  }
+				}
+				""";
+
+		JSONAssert.assertEquals(((StringQuery) query).getSource(), expected, JSONCompareMode.NON_EXTENSIBLE);
 	}
 
 	private RepositoryStringQuery queryForMethod(ElasticsearchQueryMethod queryMethod) {
@@ -445,6 +490,21 @@ public class RepositoryStringQueryUnitTests extends RepositoryStringQueryUnitTes
 
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'name' : '?0' } } } }")
 		Person findByName(String name);
+
+		@Query("""
+				{
+				  "bool":{
+				    "must":[
+				      { "term":{ "name": "?0" } },
+				      { "term":{ "city": "?1" } }
+				    ]
+				  }
+				}
+				""")
+		Person findByNameAndCity(String name, String city);
+
+		@Query("{ 'bool' : { 'must' : [ { 'term' : { 'name' : '#{#name}' } }, { 'term' : { 'city' : '?1' } } ] } }")
+		Person findByNameSpELAndCity(String name, String city);
 
 		@Query("""
 				{
@@ -523,6 +583,9 @@ public class RepositoryStringQueryUnitTests extends RepositoryStringQueryUnitTes
 
 		@Query("{ 'bool' : { 'must' : { 'term' : { 'car' : '?0' } } } }")
 		Person findByCar(Car car);
+
+		@Query("{ 'bool' : { 'must' : { 'term' : { 'car' : '#{[0]}' } } } }")
+		Person findByCarSpEL(Car car);
 	}
 
 	/**
