@@ -411,12 +411,6 @@ public class ReactiveRepositoryStringQueryUnitTests extends ReactiveRepositoryQu
 		return elasticsearchStringQuery.createQuery(new ElasticsearchParametersParameterAccessor(queryMethod, args));
 	}
 
-	private ReactiveRepositoryStringQuery createQueryForMethod(String name, Class<?>... parameters) throws Exception {
-
-		ReactiveElasticsearchQueryMethod queryMethod = getQueryMethod(SampleRepository.class, name, parameters);
-		return queryForMethod(queryMethod);
-	}
-
 	private ReactiveRepositoryStringQuery queryForMethod(ReactiveElasticsearchQueryMethod queryMethod) {
 		return new ReactiveRepositoryStringQuery(queryMethod, operations,
 				ValueExpressionDelegate.create());
