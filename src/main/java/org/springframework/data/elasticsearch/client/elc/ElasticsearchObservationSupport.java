@@ -32,11 +32,11 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 @FunctionalInterface
 interface ElasticsearchObservationSupport {
 
-	Observation createObservation(final ElasticsearchOperationName operation, @Nullable final IndexCoordinates index,
-			@Nullable final Integer batchSize);
+	Observation createObservation(ElasticsearchOperationName operation, @Nullable IndexCoordinates index,
+			@Nullable Integer batchSize);
 
-	default <T> T observe(final ElasticsearchOperationName operation, @Nullable final IndexCoordinates index,
-			@Nullable final Integer batchSize, final Supplier<T> action) {
+	default <T> T observe(ElasticsearchOperationName operation, @Nullable IndexCoordinates index,
+			@Nullable Integer batchSize, Supplier<T> action) {
 		return createObservation(operation, index, batchSize).observe(action);
 	}
 }

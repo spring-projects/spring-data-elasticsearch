@@ -21,9 +21,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.ContextView;
 
-import java.util.function.Supplier;
-
 import org.jspecify.annotations.Nullable;
+
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 
 /**
@@ -34,15 +33,12 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
  * @since 6.2
  */
 @FunctionalInterface
-interface ReactiveElasticsearchObservationSupport {
+interface ReactiveElasticsearchObservationSupport extends ElasticsearchObservationSupport {
 
-	Observation createObservation(final ElasticsearchOperationName operation, @Nullable final IndexCoordinates index,
-			@Nullable final Integer batchSize);
-
-	default <T> Mono<T> observeMono(final ElasticsearchOperationName operation, @Nullable final IndexCoordinates index,
-			@Nullable final Integer batchSize, final Mono<T> mono) {
+	default <T> Mono<T> observeMono(ElasticsearchOperationName operation, @Nullable IndexCoordinates index,
+			@Nullable Integer batchSize, Mono<T> mono) {
 		return Mono.deferContextual(contextView -> {
-			final var observation = createObservation(operation, index, batchSize);
+			var observation = createObservation(operation, index, batchSize);
 			setParent(observation, contextView);
 			observation.start();
 			return mono.doOnError(observation::error)
@@ -51,10 +47,10 @@ interface ReactiveElasticsearchObservationSupport {
 		});
 	}
 
-	default <T> Flux<T> observeFlux(final ElasticsearchOperationName operation, @Nullable final IndexCoordinates index,
-			final Flux<T> flux) {
+	default <T> Flux<T> observeFlux(ElasticsearchOperationName operation, @Nullable IndexCoordinates index,
+			Flux<T> flux) {
 		return Flux.deferContextual(contextView -> {
-			final var observation = createObservation(operation, index, null);
+			var observation = createObservation(operation, index, null);
 			setParent(observation, contextView);
 			observation.start();
 			return flux.doOnError(observation::error)
@@ -63,8 +59,8 @@ interface ReactiveElasticsearchObservationSupport {
 		});
 	}
 
-	private static void setParent(final Observation observation, final ContextView contextView) {
-		final var parent = contextView.<Observation>getOrDefault(ObservationThreadLocalAccessor.KEY, null);
+	private static void setParent(Observation observation, ContextView contextView) {
+		var parent = contextView.<Observation> getOrDefault(ObservationThreadLocalAccessor.KEY, null);
 		if (parent != null) {
 			observation.parentObservation(parent);
 		}
