@@ -89,7 +89,7 @@ public class ReactiveElasticsearchTemplate extends AbstractReactiveElasticsearch
 	private static final Log LOGGER = LogFactory.getLog(ReactiveElasticsearchTemplate.class);
 
 	@Nullable private ElasticsearchObservationConvention observationConvention;
-	private final ElasticsearchObservationSupport observationSupport = this::createObservation;
+	private final ReactiveElasticsearchObservationSupport observationSupport = this::createObservation;
 
 	private final ReactiveElasticsearchClient client;
 	private final ReactiveElasticsearchSqlClient sqlClient;
