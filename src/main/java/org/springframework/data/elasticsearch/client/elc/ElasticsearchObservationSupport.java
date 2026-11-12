@@ -16,10 +16,6 @@
 package org.springframework.data.elasticsearch.client.elc;
 
 import io.micrometer.observation.Observation;
-import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-import reactor.util.context.ContextView;
 
 import java.util.function.Supplier;
 
@@ -30,6 +26,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
  * Observation lifecycle shared by ELC templates and their child templates.
  *
  * @author Ralph Ursprung
+ * @author Peter-Josef Meisch
  * @since 6.2
  */
 @FunctionalInterface
@@ -41,36 +38,5 @@ interface ElasticsearchObservationSupport {
 	default <T> T observe(final ElasticsearchOperationName operation, @Nullable final IndexCoordinates index,
 			@Nullable final Integer batchSize, final Supplier<T> action) {
 		return createObservation(operation, index, batchSize).observe(action);
-	}
-
-	default <T> Mono<T> observeMono(final ElasticsearchOperationName operation, @Nullable final IndexCoordinates index,
-			@Nullable final Integer batchSize, final Mono<T> mono) {
-		return Mono.deferContextual(contextView -> {
-			final var observation = createObservation(operation, index, batchSize);
-			setParent(observation, contextView);
-			observation.start();
-			return mono.doOnError(observation::error)
-					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation));
-		});
-	}
-
-	default <T> Flux<T> observeFlux(final ElasticsearchOperationName operation, @Nullable final IndexCoordinates index,
-			final Flux<T> flux) {
-		return Flux.deferContextual(contextView -> {
-			final var observation = createObservation(operation, index, null);
-			setParent(observation, contextView);
-			observation.start();
-			return flux.doOnError(observation::error)
-					.doFinally(signalType -> observation.stop())
-					.contextWrite(context -> context.put(ObservationThreadLocalAccessor.KEY, observation));
-		});
-	}
-
-	private static void setParent(final Observation observation, final ContextView contextView) {
-		final var parent = contextView.<Observation>getOrDefault(ObservationThreadLocalAccessor.KEY, null);
-		if (parent != null) {
-			observation.parentObservation(parent);
-		}
 	}
 }

@@ -40,7 +40,7 @@ public class ReactiveChildTemplate<T extends Transport, CLIENT extends ApiClient
 	protected final RequestConverter requestConverter;
 	protected final ResponseConverter responseConverter;
 	protected final ElasticsearchExceptionTranslator exceptionTranslator;
-	ElasticsearchObservationSupport observationSupport = (operation, index, batchSize) -> Observation.NOOP;
+	ReactiveElasticsearchObservationSupport observationSupport = (operation, index, batchSize) -> Observation.NOOP;
 
 	protected <RESULT> Mono<RESULT> observeMono(final ElasticsearchOperationName operation,
 			@Nullable final IndexCoordinates index, final Mono<RESULT> mono) {
