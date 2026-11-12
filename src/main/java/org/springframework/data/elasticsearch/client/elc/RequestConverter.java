@@ -118,6 +118,7 @@ import org.springframework.util.StringUtils;
  * @author Haibo Liu
  * @author Steven Pearce
  * @author Ralph Ursprung
+ * @author Minju Kim
  * @since 4.4
  */
 class RequestConverter extends AbstractQueryProcessor {
@@ -835,7 +836,7 @@ class RequestConverter extends AbstractQueryProcessor {
 		}
 
 		if (bulkOptions.getWaitForActiveShards() != null) {
-			builder.waitForActiveShards(wasb -> wasb.count(bulkOptions.getWaitForActiveShards().value()));
+			builder.waitForActiveShards(waitForActiveShards(bulkOptions.getWaitForActiveShards()));
 		}
 
 		if (bulkOptions.getPipeline() != null) {
@@ -1047,8 +1048,7 @@ class RequestConverter extends AbstractQueryProcessor {
 				.scroll(time(reindexRequest.getScroll()));
 
 		if (reindexRequest.getWaitForActiveShards() != null) {
-			builder.waitForActiveShards(wfas -> wfas //
-					.count(waitForActiveShardsCount(reindexRequest.getWaitForActiveShards())));
+			builder.waitForActiveShards(waitForActiveShards(reindexRequest.getWaitForActiveShards()));
 		}
 
 		builder //
@@ -1260,7 +1260,7 @@ class RequestConverter extends AbstractQueryProcessor {
 			}
 
 			if (updateQuery.getWaitForActiveShards() != null) {
-				ub.waitForActiveShards(w -> w.count(waitForActiveShardsCount(updateQuery.getWaitForActiveShards())));
+				ub.waitForActiveShards(waitForActiveShards(updateQuery.getWaitForActiveShards()));
 			}
 
 			return ub;
