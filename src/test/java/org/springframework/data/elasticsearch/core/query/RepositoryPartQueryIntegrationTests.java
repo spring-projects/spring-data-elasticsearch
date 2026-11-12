@@ -48,6 +48,7 @@ import org.springframework.data.repository.query.ValueExpressionDelegate;
  *
  * @author Peter-Josef Meisch
  * @author Haibo Liu
+ * @author WooSeung Kim
  */
 @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
 @SpringIntegrationTest
@@ -621,6 +622,114 @@ public abstract class RepositoryPartQueryIntegrationTests {
 		assertEquals(expected, query, false);
 	}
 
+	@Test // #3371
+	void findByNameOrPriceAndSortAuthor_SortName() throws NoSuchMethodException, JSONException {
+		String methodName = "findByNameOrPriceAndSortAuthor_SortName";
+		Class<?>[] parameterClasses = new Class[] { String.class, Integer.class, String.class };
+		Object[] parameters = new Object[] { BOOK_TITLE, BOOK_PRICE, "Author" };
+
+		String query = getQueryString(methodName, parameterClasses, parameters);
+
+		String expected = """
+				{ "query": {
+				  "bool": {
+				    "should": [
+				      { "bool": { "must": [ { "query_string": { "query": "Title", "fields": ["name"] } } ] } },
+				      { "bool": { "must": [
+				        { "query_string": { "query": "42", "fields": ["price"] } },
+				        { "query_string": { "query": "Author", "fields": ["sort_author.sort_name"] } }
+				      ] } }
+				    ]
+				  }
+				} }
+				""";
+
+		assertEquals(expected, query, false);
+	}
+
+	@Test // #3371
+	void findByNameAndPriceOrSortAuthor_SortName() throws NoSuchMethodException, JSONException {
+		String methodName = "findByNameAndPriceOrSortAuthor_SortName";
+		Class<?>[] parameterClasses = new Class[] { String.class, Integer.class, String.class };
+		Object[] parameters = new Object[] { BOOK_TITLE, BOOK_PRICE, "Author" };
+
+		String query = getQueryString(methodName, parameterClasses, parameters);
+
+		String expected = """
+				{ "query": {
+				  "bool": {
+				    "should": [
+				      { "bool": { "must": [
+				        { "query_string": { "query": "Title", "fields": ["name"] } },
+				        { "query_string": { "query": "42", "fields": ["price"] } }
+				      ] } },
+				      { "bool": { "must": [
+				        { "query_string": { "query": "Author", "fields": ["sort_author.sort_name"] } }
+				      ] } }
+				    ]
+				  }
+				} }
+				""";
+
+		assertEquals(expected, query, false);
+	}
+
+	@Test // #3371
+	void findByNameAndPriceOrSortAuthor_SortNameOrAvailable() throws NoSuchMethodException, JSONException {
+		String methodName = "findByNameAndPriceOrSortAuthor_SortNameOrAvailable";
+		Class<?>[] parameterClasses = new Class[] { String.class, Integer.class, String.class, boolean.class };
+		Object[] parameters = new Object[] { BOOK_TITLE, BOOK_PRICE, "Author", true };
+
+		String query = getQueryString(methodName, parameterClasses, parameters);
+
+		String expected = """
+				{ "query": {
+				  "bool": {
+				    "should": [
+				      { "bool": { "must": [
+				        { "query_string": { "query": "Title", "fields": ["name"] } },
+				        { "query_string": { "query": "42", "fields": ["price"] } }
+				      ] } },
+				      { "bool": { "must": [
+				        { "query_string": { "query": "Author", "fields": ["sort_author.sort_name"] } }
+				      ] } },
+				      { "bool": { "must": [ { "query_string": { "query": "true", "fields": ["available"] } } ] } }
+				    ]
+				  }
+				} }
+				""";
+
+		assertEquals(expected, query, false);
+	}
+
+	@Test // #3371
+	void findByNameOrPriceOrAvailableAndSortAuthor_SortName() throws NoSuchMethodException, JSONException {
+		String methodName = "findByNameOrPriceOrAvailableAndSortAuthor_SortName";
+		Class<?>[] parameterClasses = new Class[] { String.class, Integer.class, boolean.class, String.class };
+		Object[] parameters = new Object[] { BOOK_TITLE, BOOK_PRICE, true, "Author" };
+
+		String query = getQueryString(methodName, parameterClasses, parameters);
+
+		String expected = """
+				{ "query": {
+				  "bool": {
+				    "should": [
+				      { "bool": { "should": [
+				        { "query_string": { "query": "Title", "fields": ["name"] } },
+				        { "query_string": { "query": "42", "fields": ["price"] } }
+				      ] } },
+				      { "bool": { "must": [
+				        { "query_string": { "query": "true", "fields": ["available"] } },
+				        { "query_string": { "query": "Author", "fields": ["sort_author.sort_name"] } }
+				      ] } }
+				    ]
+				  }
+				} }
+				""";
+
+		assertEquals(expected, query, false);
+	}
+
 	@Test
 	void findByAvailableTrueOrderByNameDesc() throws NoSuchMethodException, JSONException {
 		String methodName = "findByAvailableTrueOrderByNameDesc";
@@ -784,6 +893,16 @@ public abstract class RepositoryPartQueryIntegrationTests {
 		List<Book> findByNameAndPrice(String name, Integer price);
 
 		List<Book> findByNameOrPrice(String name, Integer price);
+
+		List<Book> findByNameOrPriceAndSortAuthor_SortName(String name, Integer price, String sortName);
+
+		List<Book> findByNameAndPriceOrSortAuthor_SortName(String name, Integer price, String sortName);
+
+		List<Book> findByNameOrPriceOrAvailableAndSortAuthor_SortName(String name, Integer price, boolean available,
+				String sortName);
+
+		List<Book> findByNameAndPriceOrSortAuthor_SortNameOrAvailable(String name, Integer price, String sortName,
+				boolean available);
 
 		List<Book> findByPrice(Integer price);
 
