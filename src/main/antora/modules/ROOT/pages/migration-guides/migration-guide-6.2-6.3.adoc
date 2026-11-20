@@ -13,4 +13,3 @@ This section describes breaking changes from version 6.2.x to 6.3.x and how remo
 === Removals
 
 The old `RestClient` which was deprecated since version 6.0 has been removed, use the `Rest5Client` instead.
-```
