@@ -127,19 +127,6 @@ public interface ClientConfiguration {
 	Optional<String> getCaFingerprint();
 
 	/**
-	 * Returns the {@link HostnameVerifier} to use. Must be {@link Optional#empty()} if not configured.
-	 * Cannot be used with the Rest5Client used from Elasticsearch 9 on as the underlying Apache http components 5 does not offer a way
-	 * to set this. Users that need a hostname verifier must integrate this in a SSLContext.
-	 * Returning a value here is ignored in this case
-	 *
-	 * @return the {@link HostnameVerifier} to use. Can be {@link Optional#empty()} if not configured.
-	 * @deprecated since 6.0
-	 */
-	// todo #3117 document this
-	@Deprecated(since = "6.0", forRemoval=true)
-	Optional<HostnameVerifier> getHostNameVerifier();
-
-	/**
 	 * Returns the {@link java.time.Duration connect timeout}.
 	 *
 	 * @see java.net.Socket#connect(SocketAddress, int)

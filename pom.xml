@@ -156,20 +156,6 @@
 			</exclusions>
 		</dependency>
 
-		<!-- the old RestCLient is an optional dependency for user that still want to use it-->
-		<dependency>
-			<groupId>org.elasticsearch.client</groupId>
-			<artifactId>elasticsearch-rest-client</artifactId>
-			<version>${elasticsearch-rest-client}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>commons-logging</groupId>
-					<artifactId>commons-logging</artifactId>
-				</exclusion>
-			</exclusions>
-			<optional>true</optional>
-		</dependency>
-
 		<dependency>
 			<groupId>com.querydsl</groupId>
 			<artifactId>querydsl-core</artifactId>
@@ -186,21 +172,6 @@
 			<groupId>tools.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 		</dependency>
-
-        <!-- Version 2 to use with the legacy RestClient -->
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-            <scope>provided</scope>
-            <optional>true</optional>
-		</dependency>
-
 		<!-- CDI -->
 		<dependency>
 			<groupId>javax.interceptor</groupId>

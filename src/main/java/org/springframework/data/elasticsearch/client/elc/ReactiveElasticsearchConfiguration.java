@@ -25,7 +25,6 @@ import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 import tools.jackson.databind.cfg.JsonNodeFeature;
 import tools.jackson.databind.json.JsonMapper;
 
-import org.elasticsearch.client.RestClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clients;

@@ -36,10 +36,8 @@ import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.TransportOptions;
-import co.elastic.clients.transport.rest_client.RestClientOptions;
-import org.elasticsearch.client.RestClient;
-import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clients;
-import org.springframework.data.elasticsearch.client.elc.rest_client.RestClients;
+import co.elastic.clients.transport.rest5_client.Rest5ClientOptions;
+import co.elastic.clients.transport.rest5_client.low_level.RequestOptions;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -50,7 +48,6 @@ import java.util.function.Function;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.elasticsearch.client.RequestOptions;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.MethodOrderer;
@@ -58,6 +55,7 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
+import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clients;
 import org.springframework.data.elasticsearch.core.convert.MappingElasticsearchConverter;
 import org.springframework.data.elasticsearch.core.mapping.SimpleElasticsearchMappingContext;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
@@ -80,7 +78,7 @@ public class DevTests {
 	private static final SimpleElasticsearchMappingContext mappingContext = new SimpleElasticsearchMappingContext();
 	private static final MappingElasticsearchConverter converter = new MappingElasticsearchConverter(mappingContext);
 
-	private final TransportOptions transportOptions = new RestClientOptions(RequestOptions.DEFAULT, false).toBuilder()
+	private final TransportOptions transportOptions = new Rest5ClientOptions(RequestOptions.DEFAULT, false).toBuilder()
 			.addHeader("X-SpringDataElasticsearch-AlwaysThere", "true").setParameter("pretty", "true").build();
 
 	private final JsonpMapper jsonpMapper = new JacksonJsonpMapper();

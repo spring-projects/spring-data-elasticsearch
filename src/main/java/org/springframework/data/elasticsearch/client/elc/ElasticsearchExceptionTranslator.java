@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.elasticsearch.client.ResponseException;
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataAccessResourceFailureException;
@@ -35,7 +34,6 @@ import org.springframework.data.elasticsearch.NoSuchIndexException;
 import org.springframework.data.elasticsearch.ResourceNotFoundException;
 import org.springframework.data.elasticsearch.UncategorizedElasticsearchException;
 import org.springframework.data.elasticsearch.VersionConflictException;
-import org.springframework.util.ClassUtils;
 
 /**
  * Simple {@link PersistenceExceptionTranslator} for Elasticsearch. Convert the given runtime exception to an
@@ -48,9 +46,6 @@ import org.springframework.util.ClassUtils;
  * @since 4.4
  */
 public class ElasticsearchExceptionTranslator implements PersistenceExceptionTranslator {
-
-	public static final boolean LEGACY_RESTCLIENT_PRESENT = ClassUtils
-			.isPresent("org.elasticsearch.client.ResponseException", ElasticsearchExceptionTranslator.class.getClassLoader());
 
 	private final JsonpMapper jsonpMapper;
 
@@ -125,11 +120,7 @@ public class ElasticsearchExceptionTranslator implements PersistenceExceptionTra
 		Integer status = null;
 		String message = null;
 
-		if (LEGACY_RESTCLIENT_PRESENT && exception instanceof ResponseException responseException) {
-			// this code is for the old RestClient
-			status = responseException.getResponse().getStatusLine().getStatusCode();
-			message = responseException.getMessage();
-		} else if (exception instanceof ElasticsearchException elasticsearchException) {
+		if (exception instanceof ElasticsearchException elasticsearchException) {
 			// using the RestClient throws this
 			status = elasticsearchException.status();
 			message = elasticsearchException.getMessage();

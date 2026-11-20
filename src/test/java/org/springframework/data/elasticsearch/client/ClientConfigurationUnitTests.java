@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.net.ssl.SSLContext;
 
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.hc.client5.http.ssl.NoopHostnameVerifier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
@@ -145,7 +145,6 @@ public class ClientConfigurationUnitTests {
 		assertThat(clientConfiguration.getSslContext()).contains(sslContext);
 		assertThat(clientConfiguration.getConnectTimeout()).isEqualTo(Duration.ofSeconds(10));
 		assertThat(clientConfiguration.getSocketTimeout()).isEqualTo(Duration.ofSeconds(5));
-		assertThat(clientConfiguration.getHostNameVerifier()).contains(NoopHostnameVerifier.INSTANCE);
 	}
 
 	@Test // #1885
