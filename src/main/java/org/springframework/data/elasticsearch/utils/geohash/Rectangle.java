@@ -173,19 +173,12 @@ public class Rectangle implements Geometry {
 	@Override
 	public int hashCode() {
 		int result;
-		long temp;
-		temp = Double.doubleToLongBits(minY);
-		result = (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(minX);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(maxY);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(maxX);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(minZ);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(maxZ);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = Double.hashCode(minY);
+        result = 31 * result + Double.hashCode(minX);
+        result = 31 * result + Double.hashCode(maxY);
+        result = 31 * result + Double.hashCode(maxX);
+        result = 31 * result + Double.hashCode(minZ);
+        result = 31 * result + Double.hashCode(maxZ);
 		return result;
 	}
 

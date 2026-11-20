@@ -22,6 +22,7 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import io.micrometer.observation.tck.TestObservationRegistry;
+import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.context.ContextView;
@@ -49,7 +50,7 @@ class ReactiveElasticsearchTemplateObservationUnitTests {
 	private final TestObservationRegistry registry = TestObservationRegistry.create();
 	private final List<Observation.Context> started = new ArrayList<>();
 	private ReactiveElasticsearchTemplate template;
-	private volatile ContextView downstreamContext;
+	private volatile @Nullable ContextView downstreamContext;
 
 	@BeforeEach
 	void setUp() {
@@ -89,14 +90,17 @@ class ReactiveElasticsearchTemplateObservationUnitTests {
 				.as(StepVerifier::create).expectNext(true).verifyComplete();
 		parent.stop();
 
-		assertThat(started).filteredOn(c -> c.getName().equals("spring.data.elasticsearch.command")).singleElement()
+		assertThat(started).filteredOn(c -> "spring.data.elasticsearch.command".equals(c.getName())).singleElement()
 				.satisfies(child -> {
 					assertThat(child.getParentObservation()).isSameAs(parent);
 					assertThat(child).isInstanceOfSatisfying(ElasticsearchObservationContext.class, context -> {
 						assertThat(context.getOperationName()).isEqualTo(ElasticsearchOperationName.EXISTS);
 						assertThat(context.getIndexCoordinates()).isEqualTo(INDEX);
 					});
-					assertThat(downstreamContext.<Observation> get(ObservationThreadLocalAccessor.KEY).getContext())
+					//extract var to be able to assert non-null and the get() without warning
+					var dc = downstreamContext;
+					assertThat(dc).isNotNull();
+					assertThat(dc.<Observation> get(ObservationThreadLocalAccessor.KEY).getContext())
 							.isSameAs(child);
 				});
 	}
@@ -120,8 +124,10 @@ class ReactiveElasticsearchTemplateObservationUnitTests {
 		template.exists("1", INDEX).as(StepVerifier::create).expectNext(true).verifyComplete();
 
 		assertThat(started).hasSize(1);
-		assertThat(downstreamContext.hasKey(ObservationThreadLocalAccessor.KEY)).isTrue();
-		assertThat(downstreamContext.hasKey(Observation.class)).isFalse();
+		var dc = downstreamContext;
+		assertThat(dc).isNotNull();
+		assertThat(dc.hasKey(ObservationThreadLocalAccessor.KEY)).isTrue();
+		assertThat(dc.hasKey(Observation.class)).isFalse();
 	}
 
 	@Test
@@ -135,7 +141,7 @@ class ReactiveElasticsearchTemplateObservationUnitTests {
 				.expectNext(true).verifyComplete();
 		parent.stop();
 
-		var commands = started.stream().filter(c -> c.getName().equals("spring.data.elasticsearch.command")).toList();
+		var commands = started.stream().filter(c -> "spring.data.elasticsearch.command".equals(c.getName())).toList();
 		assertThat(commands).hasSize(2);
 		assertThat(commands).allSatisfy(c -> assertThat(c.getParentObservation()).isSameAs(parent));
 	}

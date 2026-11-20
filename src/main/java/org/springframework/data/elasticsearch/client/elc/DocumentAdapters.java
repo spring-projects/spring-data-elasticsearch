@@ -116,7 +116,8 @@ final class DocumentAdapters {
 			} else {
 
 				if (LOGGER.isWarnEnabled()) {
-					LOGGER.warn(String.format("Cannot map from type " + source.getClass().getName()));
+                    //noinspection StringConcatenationInFormatCall
+                    LOGGER.warn(String.format("Cannot map from type " + source.getClass().getName()));
 				}
 				document = Document.create();
 			}
@@ -132,7 +133,8 @@ final class DocumentAdapters {
 		document.setPrimaryTerm(hit.primaryTerm() != null && hit.primaryTerm() > 0 ? hit.primaryTerm() : 0);
 
 		float score = hit.score() != null ? hit.score().floatValue() : Float.NaN;
-		return new SearchDocumentAdapter(document, score, hit.sort().stream().map(TypeUtils::toObject).toArray(),
+        //noinspection DataFlowIssue
+        return new SearchDocumentAdapter(document, score, hit.sort().stream().map(TypeUtils::toObject).toArray(),
 				documentFields, highlightFields, innerHits, nestedMetaData, explanation, matchedQueries, hit.routing());
 	}
 

@@ -106,11 +106,8 @@ public class GeoJsonPoint implements GeoJson<List<Double>> {
 	@Override
 	public int hashCode() {
 		int result;
-		long temp;
-		temp = Double.doubleToLongBits(x);
-		result = (int) (temp ^ (temp >>> 32));
-		temp = Double.doubleToLongBits(y);
-		result = 31 * result + (int) (temp ^ (temp >>> 32));
+        result = Double.hashCode(x);
+        result = 31 * result + Double.hashCode(y);
 		return result;
 	}
 

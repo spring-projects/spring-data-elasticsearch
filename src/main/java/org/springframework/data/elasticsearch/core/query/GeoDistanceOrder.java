@@ -59,10 +59,6 @@ public class GeoDistanceOrder extends Order {
 		return distanceType;
 	}
 
-	public @Nullable Mode getMode() {
-		return mode;
-	}
-
 	public String getUnit() {
 		return unit;
 	}

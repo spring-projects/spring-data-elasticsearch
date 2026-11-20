@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -108,8 +109,8 @@ public class RestClientsTest {
 			AtomicInteger connectionConfigurerCount = new AtomicInteger(0);
 			AtomicInteger connectionManagerConfigurerCount = new AtomicInteger(0);
 			AtomicInteger requestConfigurerCount = new AtomicInteger(0);
-			ThreadLocal<String> threadLocal = ThreadLocal.withInitial(() -> null);
-			AtomicReference<String> supplierThreadName = new AtomicReference<>();
+			ThreadLocal<@Nullable String> threadLocal = ThreadLocal.withInitial(() -> null);
+			AtomicReference<@Nullable String> supplierThreadName = new AtomicReference<>();
 
 			ClientConfigurationBuilder configurationBuilder = new ClientConfigurationBuilder();
 			configurationBuilder //
