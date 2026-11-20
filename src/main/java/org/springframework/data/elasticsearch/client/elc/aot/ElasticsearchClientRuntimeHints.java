@@ -41,11 +41,10 @@ public class ElasticsearchClientRuntimeHints implements RuntimeHintsRegistrar {
 				.registerTypeIfPresent(classLoader, "co.elastic.clients.elasticsearch._types.mapping.TypeMapping",
 						builder -> builder.withField("_DESERIALIZER"));
 
-		if (ClassUtils.isPresent("org.apache.http.impl.auth.BasicScheme",
+		if (ClassUtils.isPresent("org.apache.hc.client5.http.impl.auth.BasicScheme",
 				ElasticsearchClientRuntimeHints.class.getClassLoader())) {
 			hints.serialization()
-					.registerType(org.apache.http.impl.auth.BasicScheme.class)
-					.registerType(org.apache.http.impl.auth.RFC2617Scheme.class)
+					.registerType(org.apache.hc.client5.http.impl.auth.BasicScheme.class)
 					.registerType(java.util.HashMap.class);
 		}
 

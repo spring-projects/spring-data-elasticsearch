@@ -42,7 +42,6 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.data.elasticsearch.client.elc.ElasticsearchClients;
 import org.springframework.data.elasticsearch.client.elc.ReactiveElasticsearchClient;
 import org.springframework.data.elasticsearch.client.elc.rest5_client.Rest5Clients;
-import org.springframework.data.elasticsearch.client.elc.rest_client.RestClients;
 import org.springframework.data.elasticsearch.support.HttpHeaders;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
@@ -152,17 +151,6 @@ public class RestClientsTest {
 						Rest5Clients.ElasticsearchRequestConfigCallback.from(requestConfigBuilder -> {
 							requestConfigurerCount.incrementAndGet();
 							return requestConfigBuilder;
-						}));
-			} else if (clientUnderTestFactory instanceof ELCRestClientUnderTestFactory) {
-				configurationBuilder.withClientConfigurer(
-						RestClients.ElasticsearchHttpClientConfigurationCallback.from(httpClientBuilder -> {
-							httpClientConfigurerCount.incrementAndGet();
-							return httpClientBuilder;
-						}));
-				configurationBuilder.withClientConfigurer(
-						RestClients.ElasticsearchRestClientConfigurationCallback.from(restClientBuilder -> {
-							restClientConfigurerCount.incrementAndGet();
-							return restClientBuilder;
 						}));
 			}
 
@@ -503,51 +491,6 @@ public class RestClientsTest {
 	}
 
 	/**
-	 * {@link ClientUnderTestFactory} implementation for the {@link co.elastic.clients.elasticsearch.ElasticsearchClient}
-	 * using the old Rest_Client.
-	 */
-	static class ELCRestClientUnderTestFactory extends ClientUnderTestFactory {
-
-		@Override
-		protected String getDisplayName() {
-			return "ElasticsearchRestClient";
-		}
-
-		@Override
-		protected Integer getExpectedRestClientConfigurerCalls() {
-			return 1;
-		}
-
-		@Override
-		protected int getElasticsearchMajorVersion() {
-			return 9;
-		}
-
-		@Override
-		ClientUnderTest create(ClientConfiguration clientConfiguration) {
-
-			var restClient = RestClients.getRestClient(clientConfiguration);
-			ElasticsearchClient client = ElasticsearchClients.createImperative(restClient);
-			return new ClientUnderTest() {
-				@Override
-				public boolean ping() throws Exception {
-					return client.ping().value();
-				}
-
-				@Override
-				public boolean usesInitialRequest() {
-					return false;
-				}
-
-				@Override
-				public <T> void index(T entity) throws IOException {
-					client.index(ir -> ir.index("index").id("42").document(entity));
-				}
-			};
-		}
-	}
-
-	/**
 	 * {@link ClientUnderTestFactory} implementation for the {@link ReactiveElasticsearchClient}.
 	 */
 	static class ReactiveELCUnderTestFactory extends ClientUnderTestFactory {
@@ -612,7 +555,6 @@ public class RestClientsTest {
 	 */
 	static Stream<ClientUnderTestFactory> clientUnderTestFactorySource() {
 		return Stream.of(
-				new ELCRestClientUnderTestFactory(),
 				new ELCRest5ClientUnderTestFactory(),
 				new ReactiveELCUnderTestFactory());
 	}

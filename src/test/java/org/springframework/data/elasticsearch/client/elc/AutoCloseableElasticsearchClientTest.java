@@ -19,9 +19,8 @@ import static org.mockito.Mockito.*;
 
 import co.elastic.clients.json.JsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
-import co.elastic.clients.transport.rest_client.RestClientTransport;
-
-import org.elasticsearch.client.RestClient;
+import co.elastic.clients.transport.rest5_client.Rest5ClientTransport;
+import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,14 +34,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class AutoCloseableElasticsearchClientTest {
 
-	@Mock private RestClient restClient;
+	@Mock private Rest5Client restClient;
 	@Mock private JsonpMapper jsonMapper;
 
 	@Test // #1973
 	@DisplayName("should close the RestClient")
 	void shouldCloseTheRestClient() throws Exception {
 
-		ElasticsearchTransport transport = new RestClientTransport(restClient, jsonMapper);
+		ElasticsearchTransport transport = new Rest5ClientTransport(restClient, jsonMapper);
 		// noinspection EmptyTryBlock
 		try (AutoCloseableElasticsearchClient ignored = new AutoCloseableElasticsearchClient(transport)) {}
 

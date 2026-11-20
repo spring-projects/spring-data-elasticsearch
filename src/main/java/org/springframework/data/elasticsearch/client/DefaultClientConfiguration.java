@@ -96,11 +96,6 @@ class DefaultClientConfiguration implements ClientConfiguration {
 	}
 
 	@Override
-	public Optional<HostnameVerifier> getHostNameVerifier() {
-		return Optional.ofNullable(this.hostnameVerifier);
-	}
-
-	@Override
 	public Duration getConnectTimeout() {
 		return this.connectTimeout;
 	}

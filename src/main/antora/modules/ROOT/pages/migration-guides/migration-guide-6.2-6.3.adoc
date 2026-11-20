@@ -1,0 +1,16 @@
+[[elasticsearch-migration-guide-6.2-6.3]]
+= Upgrading from 6.2.x to 6.3.x
+
+This section describes breaking changes from version 6.2.x to 6.3.x and how removed features can be replaced by new introduced features.
+
+[[elasticsearch-migration-guide-6.2-6.3.breaking-changes]]
+== Breaking Changes
+
+[[elasticsearch-migration-guide-6.0-6.3.deprecations]]
+== Deprecations
+
+
+=== Removals
+
+The old `RestClient` which was deprecated since version 6.0 has been removed, use the `Rest5Client` instead.
+```
