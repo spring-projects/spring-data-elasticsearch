@@ -104,7 +104,7 @@ ReactiveElasticsearchOperations operations;      <.>
 ReactiveElasticsearchClient elasticsearchClient; <.>
 
 @Autowired
-Rest5Client rest5Client;                           <.>
+Rest5Client rest5Client;                         <.>
 
 @Autowired
 JsonpMapper jsonpMapper;                         <.>

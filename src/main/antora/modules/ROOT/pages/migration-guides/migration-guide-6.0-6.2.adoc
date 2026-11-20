@@ -1,0 +1,4 @@
+[[elasticsearch-migration-guide-6.0-6.2]]
+= Upgrading from 6.0.x to 6.2.x
+
+There were no changes making a migration necessary.
