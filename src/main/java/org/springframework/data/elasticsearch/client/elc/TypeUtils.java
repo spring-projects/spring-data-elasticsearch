@@ -54,6 +54,7 @@ import org.springframework.data.elasticsearch.core.query.UpdateResponse;
 import org.springframework.data.elasticsearch.core.query.types.ConflictsType;
 import org.springframework.data.elasticsearch.core.query.types.OperatorType;
 import org.springframework.data.elasticsearch.core.reindex.ReindexRequest;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**

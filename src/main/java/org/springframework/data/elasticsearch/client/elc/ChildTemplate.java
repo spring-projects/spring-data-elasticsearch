@@ -46,7 +46,7 @@ public abstract class ChildTemplate<T extends Transport, CLIENT extends ApiClien
 	ElasticsearchObservationSupport observationSupport = (operation, index, batchSize) -> Observation.NOOP;
 
 	protected <RESULT> RESULT observe(final ElasticsearchOperationName operation,
-			@Nullable final IndexCoordinates index, final Supplier<RESULT> action) {
+			@Nullable final IndexCoordinates index, final Supplier<@Nullable RESULT> action) {
 		return observationSupport.observe(operation, index, null, action);
 	}
 

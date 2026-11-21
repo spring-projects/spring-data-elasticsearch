@@ -28,7 +28,7 @@ public interface ReactiveScriptOperations {
 	/**
 	 * Stores the given script in the Elasticsearch cluster.
 	 *
-	 * @return {{@literal true} if successful
+	 * @return Mono resolved to true if successful
 	 */
 	Mono<Boolean> putScript(Script script);
 
@@ -44,7 +44,7 @@ public interface ReactiveScriptOperations {
 	 * Deletes the script with the given name
 	 *
 	 * @param name the name of the script.
-	 * @return true if the request was acknowledged by the cluster.
+	 * @return Mono resolved to true if the request was acknowledged by the cluster.
 	 */
 	Mono<Boolean> deleteScript(String name);
 }

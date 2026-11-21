@@ -35,8 +35,8 @@ interface ElasticsearchObservationSupport {
 	Observation createObservation(ElasticsearchOperationName operation, @Nullable IndexCoordinates index,
 			@Nullable Integer batchSize);
 
-	default <T> T observe(ElasticsearchOperationName operation, @Nullable IndexCoordinates index,
-			@Nullable Integer batchSize, Supplier<T> action) {
+	default <T> @Nullable T observe(ElasticsearchOperationName operation, @Nullable IndexCoordinates index,
+			@Nullable Integer batchSize, Supplier<@Nullable T> action) {
 		return createObservation(operation, index, batchSize).observe(action);
 	}
 }

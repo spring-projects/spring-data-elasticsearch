@@ -26,4 +26,8 @@ public class ClusterConnectionException extends RuntimeException {
 	public ClusterConnectionException(Throwable cause) {
 		super(cause);
 	}
+
+	public ClusterConnectionException(String message, Throwable cause) {
+		super(message, cause);
+	}
 }

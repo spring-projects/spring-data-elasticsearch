@@ -26,6 +26,7 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.core.script.ScriptOperations;
 import org.springframework.data.elasticsearch.core.sql.SqlOperations;
+import org.springframework.lang.Contract;
 
 /**
  * ElasticsearchOperations. Since 4.0 this interface only contains common helper functions, the other methods have been
@@ -162,6 +163,7 @@ public interface ElasticsearchOperations extends DocumentOperations, SearchOpera
 	 * @since 5.0
 	 */
 	@Nullable
+	@Contract("null -> null, !null -> !null")
 	default String convertId(@Nullable Object idValue) {
 		return idValue != null ? getElasticsearchConverter().convertId(idValue) : null;
 	}

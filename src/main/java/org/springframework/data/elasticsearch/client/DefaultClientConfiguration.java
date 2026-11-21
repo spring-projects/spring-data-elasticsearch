@@ -116,7 +116,7 @@ class DefaultClientConfiguration implements ClientConfiguration {
 		return Optional.ofNullable(proxy);
 	}
 
-	@Override
+    @Override
 	public <T> List<ClientConfigurationCallback<?>> getClientConfigurers() {
 		return clientConfigurers;
 	}

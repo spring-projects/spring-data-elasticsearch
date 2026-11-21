@@ -163,10 +163,9 @@ public class WellKnownText {
 
 	private void parseCoordinates(StreamTokenizer stream, ArrayList<Double> lats, ArrayList<Double> lons,
 			ArrayList<Double> alts) throws IOException, ParseException {
-		parseCoordinate(stream, lats, lons, alts);
-		while (nextCloserOrComma(stream).equals(COMMA)) {
-			parseCoordinate(stream, lats, lons, alts);
-		}
+        do {
+            parseCoordinate(stream, lats, lons, alts);
+        } while (nextCloserOrComma(stream).equals(COMMA));
 	}
 
 	private void parseCoordinate(StreamTokenizer stream, ArrayList<Double> lats, ArrayList<Double> lons,
