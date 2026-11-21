@@ -38,8 +38,7 @@ import org.springframework.util.Assert;
  * Base class for a @{@link org.springframework.context.annotation.Configuration} class to set up the Elasticsearch
  * connection using the Elasticsearch Client. This class exposes different parts of the setup as Spring beans. Deriving
  * classes must provide the {@link ClientConfiguration} to use. From Version 6.0 on, this class uses the new Rest5Client
- * from Elasticsearch 9. The old implementation using the RestClient is still available under the name
- * {@link ElasticsearchLegacyRestClientConfiguration}.
+ * from Elasticsearch 9.
  *
  * @author Peter-Josef Meisch
  * @author Ralph Ursprung

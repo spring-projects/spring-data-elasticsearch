@@ -67,7 +67,7 @@ public abstract class ReactiveElasticsearchConfiguration extends ElasticsearchCo
 	}
 
 	/**
-	 * Provides the Elasticsearch transport to be used. The default implementation uses the {@link RestClient} bean and
+	 * Provides the Elasticsearch transport to be used. The default implementation uses the {@link Rest5Client} bean and
 	 * the {@link JsonpMapper} bean provided in this class.
 	 *
 	 * @return the {@link ElasticsearchTransport}
