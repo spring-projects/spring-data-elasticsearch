@@ -20,7 +20,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
@@ -46,6 +48,7 @@ import org.springframework.data.elasticsearch.core.routing.RoutingResolver;
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
 import org.springframework.data.util.StreamUtils;
 import org.springframework.data.util.Streamable;
+import org.springframework.lang.Contract;
 import org.springframework.util.Assert;
 
 /**
@@ -418,10 +421,12 @@ public class SimpleElasticsearchRepository<T, ID> implements ElasticsearchReposi
 
 		Assert.notNull(ids, "ids can't be null.");
 
-		return StreamUtils.createStreamFromIterator(ids.iterator()).map(this::stringIdRepresentation)
-				.collect(Collectors.toList());
+		// we know the ids elements are not null, the compiler still doesn't
+		Stream<String> stringStream = (Stream<String>) StreamUtils.createStreamFromIterator(ids.iterator()).map(this::stringIdRepresentation);
+		return stringStream.collect(Collectors.toList());
 	}
 
+	@Contract("null -> null, !null -> !null")
 	protected @Nullable String stringIdRepresentation(@Nullable ID id) {
 		return operations.convertId(id);
 	}

@@ -53,7 +53,7 @@ public class ClusterConnection implements AutoCloseable {
 
 	private static final ThreadLocal<ClusterConnectionInfo> clusterConnectionInfoThreadLocal = new ThreadLocal();
 
-	@Nullable private final ClusterConnectionInfo clusterConnectionInfo;
+	private final ClusterConnectionInfo clusterConnectionInfo;
 
 	/**
 	 * creates the ClusterConnection, starting a container
@@ -61,16 +61,10 @@ public class ClusterConnection implements AutoCloseable {
 	public ClusterConnection() {
 		clusterConnectionInfo = createClusterConnectionInfo();
 
-		if (clusterConnectionInfo != null) {
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.debug(clusterConnectionInfo.toString());
-			}
-			clusterConnectionInfoThreadLocal.set(clusterConnectionInfo);
-		} else {
-			if (LOGGER.isDebugEnabled()) {
-				LOGGER.error("could not create ClusterConnectionInfo");
-			}
+		if (LOGGER.isDebugEnabled()) {
+			LOGGER.debug(clusterConnectionInfo.toString());
 		}
+		clusterConnectionInfoThreadLocal.set(clusterConnectionInfo);
 	}
 
 	/**
@@ -82,12 +76,10 @@ public class ClusterConnection implements AutoCloseable {
 		return clusterConnectionInfoThreadLocal.get();
 	}
 
-	@Nullable
 	public ClusterConnectionInfo getClusterConnectionInfo() {
 		return clusterConnectionInfo;
 	}
 
-	@Nullable
 	private ClusterConnectionInfo createClusterConnectionInfo() {
 
 		String host = System.getenv(ENV_ELASTICSEARCH_HOST);
@@ -113,8 +105,7 @@ public class ClusterConnection implements AutoCloseable {
 		return startElasticsearchContainer();
 	}
 
-	@Nullable
-	private ClusterConnectionInfo startElasticsearchContainer() {
+	private ClusterConnectionInfo startElasticsearchContainer() throws ClusterConnectionException {
 
 		LOGGER.info("Starting Elasticsearch Container...");
 
@@ -144,10 +135,8 @@ public class ClusterConnection implements AutoCloseable {
 					.withElasticsearchContainer(elasticsearchContainer)
 					.build();
 		} catch (Exception e) {
-			LOGGER.error("Could not start Elasticsearch container", e);
+			throw new ClusterConnectionException("Could not start Elasticsearch container", e);
 		}
-
-		return null;
 	}
 
 	private DockerImageName getDockerImageName(Map<String, String> testcontainersProperties) {

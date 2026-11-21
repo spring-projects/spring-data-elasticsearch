@@ -77,7 +77,8 @@ abstract class AbstractReactiveElasticsearchRepositoryQuery implements Repositor
 	@Override
 	public Object execute(@Nullable Object[] parameters) {
 
-		var parametersNN = Objects.requireNonNull(parameters, "parameters must not be null");
+        //noinspection NullableProblems
+        Object[] parametersNN = Objects.requireNonNull(parameters, "parameters must not be null");
 
 		Object result = queryMethod.hasReactiveWrapperParameter() ? executeDeferred(parametersNN)
 				: execute(new ReactiveElasticsearchParametersParameterAccessor(queryMethod, parametersNN));

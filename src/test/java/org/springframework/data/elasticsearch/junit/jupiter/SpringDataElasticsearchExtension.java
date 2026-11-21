@@ -60,13 +60,13 @@ public class SpringDataElasticsearchExtension
 		initLock.lock();
 		try {
 			ExtensionContext.Store store = getStore(extensionContext);
-			ClusterConnection clusterConnection = store.getOrComputeIfAbsent(STORE_KEY_CLUSTER_CONNECTION, key -> {
+			ClusterConnection clusterConnection = store.computeIfAbsent(STORE_KEY_CLUSTER_CONNECTION, key -> {
 				if (LOGGER.isDebugEnabled()) {
 					LOGGER.debug("creating ClusterConnection");
 				}
 				return createClusterConnection();
 			}, ClusterConnection.class);
-			store.getOrComputeIfAbsent(STORE_KEY_CLUSTER_CONNECTION_INFO,
+			store.computeIfAbsent(STORE_KEY_CLUSTER_CONNECTION_INFO,
 					key -> clusterConnection.getClusterConnectionInfo());
 		} finally {
 			initLock.unlock();

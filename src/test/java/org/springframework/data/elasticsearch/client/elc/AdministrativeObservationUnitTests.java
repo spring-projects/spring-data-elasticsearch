@@ -28,6 +28,7 @@ import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationHandler;
 import io.micrometer.observation.contextpropagation.ObservationThreadLocalAccessor;
 import io.micrometer.observation.tck.TestObservationRegistry;
+import org.jspecify.annotations.Nullable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -94,11 +95,13 @@ class AdministrativeObservationUnitTests {
 	}
 
 	static Stream<Operation> operations() {
+		// need to do this cast because Map.of() is not marked a being able to have nullable values
+		var emptyMap = (Map<String, @Nullable Object>)Map.<String, @Nullable Object>of();
 		return Stream.of(
 				new Operation("indexCreate", t -> t.create(), t -> t.create()),
-				new Operation("indexCreate", t -> t.create(Map.of()), t -> t.create(Map.of())),
-				new Operation("indexCreate", t -> t.create(Map.of(), Document.create()),
-						t -> t.create(Map.of(), Document.create())),
+				new Operation("indexCreate", t -> t.create(emptyMap), t -> t.create(emptyMap)),
+				new Operation("indexCreate", t -> t.create(emptyMap, Document.create()),
+						t -> t.create(emptyMap, Document.create())),
 				new Operation("indexDelete", t -> t.delete(), t -> t.delete()),
 				new Operation("indexExists", t -> t.exists(), t -> t.exists()),
 				new Operation("indexRefresh", t -> { t.refresh(); return null; }, t -> t.refresh()),
@@ -347,7 +350,7 @@ class AdministrativeObservationUnitTests {
 		});
 	}
 
-	record Operation(String name, Function<IndexOperations, Object> imperative,
+	record Operation(String name, Function<IndexOperations, @Nullable Object> imperative,
 			Function<ReactiveIndexOperations, Publisher<?>> reactive) {}
 
 	@org.springframework.data.elasticsearch.annotations.Document(indexName = "entity-index")

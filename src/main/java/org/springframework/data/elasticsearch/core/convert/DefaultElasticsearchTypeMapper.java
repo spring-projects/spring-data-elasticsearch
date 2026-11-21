@@ -78,12 +78,9 @@ public class DefaultElasticsearchTypeMapper extends DefaultTypeMapper<Map<String
 		return typeKey;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see org.springframework.data.convert.DefaultTypeMapper#getFallbackTypeFor(java.lang.Object)
-	 */
-	@Override
-	protected TypeInformation<?> getFallbackTypeFor(Map<String, Object> source) {
+	@SuppressWarnings("NullableProblems")
+    @Override
+	protected @Nullable TypeInformation<?> getFallbackTypeFor(Map<String, Object> source) {
 		return MAP_TYPE_INFO;
 	}
 

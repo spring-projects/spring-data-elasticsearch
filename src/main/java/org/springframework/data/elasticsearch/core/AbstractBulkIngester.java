@@ -67,7 +67,7 @@ public abstract class AbstractBulkIngester<C> implements BulkIngester<C> {
 	private final AbstractElasticsearchTemplate template;
 	private final IndexCoordinates index;
 	private final BulkIngesterListener<C> listener;
-	private final ThreadLocal<Boolean> inCallback = new ThreadLocal<>();
+	private final ThreadLocal<@Nullable Boolean> inCallback = new ThreadLocal<>();
 	private final Object closeLock = new Object();
 	private volatile boolean closed;
 
