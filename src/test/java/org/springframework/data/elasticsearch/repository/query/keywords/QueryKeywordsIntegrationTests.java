@@ -46,6 +46,7 @@ import org.springframework.data.elasticsearch.utils.IndexNameProvider;
  * @author Artur Konczak
  * @author Christoph Strobl
  * @author Peter-Josef Meisch
+ * @author WooSeung Kim
  */
 @SpringIntegrationTest
 abstract class QueryKeywordsIntegrationTests {
@@ -88,6 +89,27 @@ abstract class QueryKeywordsIntegrationTests {
 
 		assertThat(repository.findByNameOrPrice("Sugar", 1.9f)).hasSize(4);
 		assertThat(repository.findByNameOrText("Salt", "Beet sugar")).hasSize(3);
+	}
+
+	@Test // #3371
+	void shouldKeepTheAndClauseOfAnOrAlternative() {
+
+		assertThat(repository.findByNameOrTextAndPrice("Salt", "Cane sugar", 1.2f)).extracting(Product::getId)
+				.containsExactlyInAnyOrder("2", "4", "5");
+	}
+
+	@Test // #3371
+	void shouldMatchTheSingleClauseOredWithAnAndGroup() {
+
+		assertThat(repository.findByNameAndPriceOrText("Salt", 1.9f, "Beet sugar")).extracting(Product::getId)
+				.containsExactlyInAnyOrder("3", "4");
+	}
+
+	@Test // #3371
+	void shouldMatchEveryClauseOredAfterAnAndGroup() {
+
+		assertThat(repository.findByNameAndPriceOrTextOrPrice("Salt", 1.9f, "Beet sugar", 1.0f)).extracting(Product::getId)
+				.containsExactlyInAnyOrder("1", "3", "4");
 	}
 
 	@Test
@@ -375,6 +397,12 @@ abstract class QueryKeywordsIntegrationTests {
 		List<Product> findByNameOrText(String name, String text);
 
 		List<Product> findByNameOrPrice(String name, Float price);
+
+		List<Product> findByNameOrTextAndPrice(String name, String text, Float price);
+
+		List<Product> findByNameAndPriceOrText(String name, Float price, String text);
+
+		List<Product> findByNameAndPriceOrTextOrPrice(String name, Float price, String text, Float otherPrice);
 
 		List<Product> findByAvailableTrue();
 

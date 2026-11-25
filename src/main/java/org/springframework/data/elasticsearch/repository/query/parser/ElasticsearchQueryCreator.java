@@ -17,6 +17,7 @@ package org.springframework.data.elasticsearch.repository.query.parser;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
@@ -45,6 +46,7 @@ import org.springframework.data.repository.query.parser.PartTree;
  * @author Artur Konczak
  * @author Peter-Josef Meisch
  * @author Junghoon Ban
+ * @author WooSeung Kim
  */
 public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuery, CriteriaQuery> {
 
@@ -84,7 +86,33 @@ public class ElasticsearchQueryCreator extends AbstractQueryCreator<CriteriaQuer
 
 	@Override
 	protected CriteriaQuery or(CriteriaQuery base, CriteriaQuery query) {
-		return new CriteriaQuery(base.getCriteria().or(query.getCriteria()));
+
+		Criteria left = base.getCriteria();
+		Criteria right = query.getCriteria();
+
+		// Criteria.or(Criteria) does not take over the criteria chain of right. An Or chained to an And chain only
+		// becomes an optional should, and filter entries like geo queries become a filter of the whole chain. In these
+		// cases the parts are kept as subCriteria of one Or group.
+		if (needsGroup(left) || needsGroup(right)) {
+			// right is always a new chain, only left can already be the Or group
+			if (isBareOrGroup(left)) {
+				return new CriteriaQuery(left.subCriteria(right));
+			}
+			return new CriteriaQuery(Criteria.or().subCriteria(left).subCriteria(right));
+		}
+
+		return new CriteriaQuery(left.or(right));
+	}
+
+	private static boolean isBareOrGroup(Criteria criteria) {
+		return criteria.isOr() && criteria.getField() == null && criteria.getQueryCriteriaEntries().isEmpty()
+				&& criteria.getFilterCriteriaEntries().isEmpty();
+	}
+
+	private static boolean needsGroup(Criteria criteria) {
+		List<Criteria> chain = criteria.getCriteriaChain();
+		return !criteria.getSubCriteria().isEmpty() || chain.stream().skip(1).anyMatch(Criteria::isAnd)
+				|| chain.stream().anyMatch(part -> !part.getFilterCriteriaEntries().isEmpty());
 	}
 
 	@Override
