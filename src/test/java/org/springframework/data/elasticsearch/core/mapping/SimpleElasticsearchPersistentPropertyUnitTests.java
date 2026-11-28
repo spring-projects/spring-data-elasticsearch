@@ -28,7 +28,6 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
 import org.springframework.data.annotation.Id;
 import org.springframework.data.core.TypeInformation;
 import org.springframework.data.elasticsearch.annotations.DateFormat;
@@ -326,7 +325,8 @@ public class SimpleElasticsearchPersistentPropertyUnitTests {
 
 	static class FieldNamingStrategyEntity {
 		@Nullable private String withoutCustomFieldName;
-		@Field(name = "CUStomFIEldnAME")  @Nullable private String withCustomFieldName;
+		@Field(name = "CUStomFIEldnAME")
+		@Nullable private String withCustomFieldName;
 
 		@Nullable
 		public String getWithoutCustomFieldName() {

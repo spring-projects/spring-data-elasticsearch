@@ -150,7 +150,7 @@ public class SimpleElasticsearchPersistentProperty extends
 
 	@Override
 	public boolean hasExplicitFieldName() {
-		return StringUtils.hasText(getAnnotatedFieldName());
+		return annotatedFieldName != null;
 	}
 
 	/**
